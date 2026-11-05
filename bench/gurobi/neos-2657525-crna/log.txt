@@ -1,0 +1,112 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 13:02:25 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/neos-2657525-crna/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/neos-2657525-crna.mps.gz
+Reading time = 0.00 seconds
+neos-2657525-crna: 342 rows, 524 columns, 1690 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 342 rows, 524 columns and 1690 nonzeros (Min)
+Model fingerprint: 0xfdfa2d87
+Model has 32 linear objective coefficients
+Variable types: 0 continuous, 524 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [8e-02, 2e+04]
+  Objective range  [5e-04, 6e-03]
+  Bounds range     [1e+00, 7e+03]
+  RHS range        [1e+00, 2e+04]
+
+Presolve removed 87 rows and 89 columns
+Presolve time: 0.00s
+Presolved: 255 rows, 435 columns, 1456 nonzeros
+Variable types: 0 continuous, 435 integer (125 binary)
+
+Root relaxation: objective 0.000000e+00, 177 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    0.00000    0   40          -    0.00000      -     -    0s
+     0     0    0.00000    0   52          -    0.00000      -     -    0s
+     0     0    0.00000    0   52          -    0.00000      -     -    0s
+     0     0    0.00000    0   44          -    0.00000      -     -    0s
+     0     0    0.00000    0   49          -    0.00000      -     -    0s
+     0     0    0.00000    0   51          -    0.00000      -     -    0s
+     0     0    0.00000    0   46          -    0.00000      -     -    0s
+     0     0    0.00000    0   46          -    0.00000      -     -    0s
+     0     0    0.00000    0   46          -    0.00000      -     -    0s
+     0     2    0.00000    0   39          -    0.00000      -     -    0s
+H  237   144                      53.6523020    0.00000   100%  10.1    0s
+H  237   144                      18.5163834    0.00000   100%  10.1    0s
+H  333   195                      17.2885932    0.00000   100%  13.4    0s
+H  724   394                      15.6585932    0.00000   100%  12.6    0s
+H  726   376                       8.2809932    0.00000   100%  16.2    0s
+  7817  2115    0.00000   39   55    8.28099    0.00000   100%  18.2    5s
+ 15916  5344    0.00000   35   39    8.28099    0.00000   100%  17.4   10s
+H18976  6193                       8.0666482    0.00000   100%  17.7   11s
+H22099  6371                       5.6795480    0.00000   100%  18.0   13s
+H22556  6196                       3.7923480    0.00000   100%  18.1   14s
+H23215  4846                       1.8107480    0.00000   100%  18.3   14s
+ 23383  4880    0.43927   56   49    1.81075    0.00000   100%  18.3   15s
+ 31034  5766    0.00000   42   38    1.81075    0.00000   100%  19.4   20s
+ 37739  6521    0.00000   44   42    1.81075    0.00000   100%  20.4   25s
+ 42636  6692    0.77637   51   50    1.81075    0.00000   100%  21.0   30s
+ 48611  6721    0.00000   50   34    1.81075    0.00000   100%  21.6   35s
+ 54880  6860     cutoff   47         1.81075    0.00000   100%  22.2   40s
+ 61409  7231    0.00000   45   39    1.81075    0.00000   100%  22.7   45s
+ 68273  7715    0.23910   51   49    1.81075    0.00000   100%  23.1   50s
+
+Cutting planes:
+  Gomory: 2
+  Projected implied bound: 1
+  MIR: 6
+  StrongCG: 6
+  Flow cover: 1
+  Inf proof: 5
+
+Explored 73526 nodes (1722815 simplex iterations) in 54.58 seconds (60.00 work units)
+Thread count was 1 (of 22 available processors)
+
+Solution count 9: 1.81075 3.79235 5.67955 ... 53.6523
+
+Work limit reached
+Best objective 1.810748000000e+00, best bound 0.000000000000e+00, gap 100.0000%
+
+User-callback calls 175720, time in user-callback 0.40 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/neos-2657525-crna.mps.gz
+Reading time = 0.00 seconds
+neos-2657525-crna: 342 rows, 524 columns, 1690 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 342 rows, 524 columns and 1690 nonzeros (Min)
+Model fingerprint: 0xfdfa2d87
+Model has 32 linear objective coefficients
+Variable types: 0 continuous, 524 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [8e-02, 2e+04]
+  Objective range  [5e-04, 6e-03]
+  Bounds range     [1e+00, 7e+03]
+  RHS range        [1e+00, 2e+04]
+Presolve removed 87 rows and 89 columns
+Presolve time: 0.00s

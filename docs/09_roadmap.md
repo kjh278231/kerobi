@@ -10,7 +10,7 @@
 - `model` 크레이트: `Model`, `SparseMat`, `Params`(표에서 생성), `Attrs`, MPS/LP 읽기·쓰기, 로그 싱크, `Work`/`Limits`.
 - `driver::optimize` 골격: 분류, Method 확정, 부호 반전, 상태 확정, 요약 로그. 엔진은 현재 `crates/core`의 밀집 simplex·B&B를 임시로 연결.
 - `py` + `python/rsolver`: gurobipy 모양 API 1차 범위([01 §3]), 파라미터 set/get, 속성 `__getattr__`, 콜백 브리지(where=POLLING/MESSAGE만).
-- `tools/port_map.py`로 진척도 집계, `tools/parity.py`(차등 하네스, [10 §6](10_porting.md)), 원본 MPS 리더·지문·파라미터 등록(`ac81d7`) 포팅.
+- 로컬 git 저장소, `tools/parity.py`(차등 하네스, [10 §6](10_porting.md)), 원본 MPS 리더·지문·파라미터 등록(`ac81d7`) 포팅.
 - 완료: Netlib 소형 10개를 MPS로 읽어 밀집 엔진으로 OPTIMAL; `tests/test_api.py` 통과; `cargo clippy` 경고 0; **P0 지문**: Netlib 64개 + `miplib_small` 38개의 지문이 Gurobi와 같음; 파라미터 기본값 전부 일치; parity 하네스가 Gurobi 쪽 추적을 저장함.
 
 ### M1 — LP 엔진 (4–6주)
@@ -49,7 +49,6 @@
 | 결정성 | 같은 입력을 3회 돌려 NodeCount/IterCount/ObjVal 비트 일치 | CI |
 | 회귀 | `bench.py`에 `rsolver` 추가, 결과 CSV를 커밋해 시간·노드·반복 추이 추적 | `re/bench` 확장 |
 | 패리티 | P0 presolved 모델 diff, P1 콜백 추적·첫 분기점, P2 work, P3 시간 | `tools/parity.py`, `bench/parity.csv` |
-| 포팅 진척 | 모듈별 포팅 함수 수 | `tools/port_map.py`(`port:` 태그 집계) |
 | API | gurobipy 예제 스크립트를 import만 바꿔 실행 | `tests/test_examples.py` |
 | 로그 | 앵커 문자열(노트 04)이 같은 순서로 나오는지 | 로그 스냅숏 테스트 |
 
@@ -68,7 +67,7 @@ rsolver/
   python/rsolver/{__init__,grb,core,expr,model,matrix,helpers,nlfunc,exception,tupledict}.py
   tests/                      pytest
   docs/                       이 문서들, port_map.tsv(생성물)
-  tools/                      port_map.py(배정·진척도), parity.py(차등 하네스)
+  tools/                      port_map.py(함수→모듈 배정), parity.py(차등 하네스)
   bench/                      re/bench 연동 스크립트, parity.csv
 ```
 
@@ -76,8 +75,8 @@ rsolver/
 
 | 위험 | 영향 | 대응 |
 |---|---|---|
-| **법적**: 디컴파일 결과를 포팅하므로 결과물은 Gurobi 코드의 2차적 저작물이고 EULA·저작권 위반 소지가 크다(사용자 결정 2026-11-05) | 공개·배포 불가가 확정된다 | 저장소 비공개, 내부 연구용으로 한정. `port:` 태그로 출처를 숨기지 않고 기록한다. 공개가 필요해지면 해당 코드는 클린룸으로 다시 쓰고 법률 검토를 거친다. 라이선스 코드는 포팅하지 않는다 |
-| 규모: 포팅 대상이 의사코드 120만 줄(Rust 24만–40만 줄 추정)로 이전 설계의 4–7배 | 일정 | 기본 경로부터, 마일스톤마다 port_map 진척도와 패리티로 끊는다. M0에서 속도를 재 일정을 다시 잡는다 |
+| **법적**: 디컴파일 결과를 포팅하므로 결과물은 Gurobi 코드의 2차적 저작물이고 EULA·저작권 위반 소지가 크다(사용자 결정 2026-11-05) | 공개·배포 불가가 확정된다 | 로컬 git만 쓰고 원격에 올리지 않는다. 내부 연구용으로 한정. 공개가 필요해지면 해당 코드는 클린룸으로 다시 쓰고 법률 검토를 거친다. 라이선스 코드는 포팅하지 않는다 |
+| 규모: 포팅 대상이 의사코드 120만 줄(Rust 24만–40만 줄 추정)로 이전 설계의 4–7배 | 일정 | 기본 경로부터, 마일스톤마다 패리티로 끊는다. M0에서 속도를 재 일정을 다시 잡는다 |
 | Ghidra 의사코드 오류(goto 재배치, 빠진 인자, 잘못된 타입, 벡터화 루프 레인 손실) | 비트 불일치, 잘못된 동작 | objdump 대조(10 §3), 차등 검사의 첫 분기점으로 범위를 좁힘 |
 | 비트 단위 일치 실패(FMA·연산 순서·libm·MKL 설정) | P1 불일치 | 10 §4 규칙, MKL 설정 호출부 포팅, 차이는 첫 분기점 기록 후 ±5% 허용 |
 | 크기 제한 라이선스(변수·제약 2,000개) | 큰 모델은 Gurobi와 나란히 못 돌림 | 현재 벤치 102개는 모두 한도 안. 큰 모델은 저장 결과와 비교만 |
@@ -89,7 +88,7 @@ rsolver/
 ## 5. 작업 규칙
 
 - 모든 새 모듈은 설계 문서의 절 번호를 doc comment 첫 줄에 적는다(`//! 04 §5.4 BFRT`).
-- 옮긴 함수마다 `/// port: <이름>@0x<오프셋>`을 단다. 원본 구조체 오프셋과 의사코드 줄 번호를 주석에 적어도 된다.
+- 코드에 출처 태그는 달지 않는다. 구조체 필드 doc comment의 원래 오프셋(10 §3-2)은 패리티 디버깅용으로 둔다.
 - 숨은 파라미터는 파라미터 표에 둔다. 원본 코드 안의 상수는 옮긴 자리에 그대로 두고 상수 이름만 붙인다.
 - 원본에 없는 규칙을 더하지 않는다. 불가피하면 `shortcut:` 주석을 달고 `bench/parity.csv`에 기록한다.
 - `shortcut:` 주석 규칙(현재 코드와 같음)으로 미구현·단순화를 남기고, `/ponytail-debt`로 집계한다.

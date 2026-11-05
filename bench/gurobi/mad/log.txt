@@ -1,0 +1,138 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 13:05:59 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/mad/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Warning: more than one unconstrained row,
+         using the first one as the objective.
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/mad.mps.gz
+Reading time = 0.00 seconds
+mad: 51 rows, 220 columns, 2808 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 51 rows, 220 columns and 2808 nonzeros (Min)
+Model fingerprint: 0x72869fea
+Model has 20 linear objective coefficients
+Variable types: 20 continuous, 200 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [4e-04, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+01]
+
+Found heuristic solution: objective 6.9640000
+Presolve removed 11 rows and 0 columns
+Presolve time: 0.00s
+Presolved: 40 rows, 220 columns, 2231 nonzeros
+Variable types: 20 continuous, 200 integer (200 binary)
+
+Root relaxation: objective 0.000000e+00, 34 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    0.00000    0   15    6.96400    0.00000   100%     -    0s
+H    0     0                       2.0760000    0.00000   100%     -    0s
+     0     0    0.00000    0   20    2.07600    0.00000   100%     -    0s
+H    0     0                       1.6632000    0.00000   100%     -    0s
+     0     0    0.00000    0   22    1.66320    0.00000   100%     -    0s
+     0     0    0.00000    0   23    1.66320    0.00000   100%     -    0s
+     0     0    0.00000    0   20    1.66320    0.00000   100%     -    0s
+H    0     0                       1.5592000    0.00000   100%     -    0s
+H    0     0                       1.4280000    0.00000   100%     -    0s
+     0     0    0.00000    0   19    1.42800    0.00000   100%     -    0s
+     0     0    0.00000    0   16    1.42800    0.00000   100%     -    0s
+H    0     0                       0.6612000    0.00000   100%     -    0s
+H    0     0                       0.5914000    0.00000   100%     -    0s
+     0     0    0.00000    0   19    0.59140    0.00000   100%     -    0s
+     0     0    0.00000    0   17    0.59140    0.00000   100%     -    0s
+     0     0    0.00000    0   21    0.59140    0.00000   100%     -    0s
+     0     0    0.00000    0   16    0.59140    0.00000   100%     -    0s
+     0     0    0.00000    0   16    0.59140    0.00000   100%     -    0s
+     0     0    0.00000    0   16    0.59140    0.00000   100%     -    0s
+     0     0    0.00000    0   16    0.59140    0.00000   100%     -    0s
+     0     2    0.00000    0   16    0.59140    0.00000   100%     -    0s
+H   52    49                       0.5598000    0.00000   100%   4.8    0s
+*  162   148              71       0.5348000    0.00000   100%   5.3    0s
+H  344   266                       0.4516000    0.00000   100%   4.5    0s
+H  344   255                       0.3620000    0.00000   100%   4.5    0s
+H  559   381                       0.3616000    0.00000   100%   4.2    0s
+*  571   385              55       0.3600000    0.00000   100%   4.2    0s
+H  633   401                       0.3300000    0.00000   100%   4.3    0s
+H 2135   726                       0.3135999    0.00000   100%   6.0    0s
+H 2135   726                       0.3135999    0.00000   100%   6.0    0s
+H 2326   796                       0.2830000    0.00000   100%   6.0    1s
+H 2326   771                       0.2476000    0.00000   100%   6.0    1s
+H 2326   768                       0.2396000    0.00000   100%   6.0    1s
+H 2326   763                       0.2300000    0.00000   100%   6.0    1s
+H 2953   868                       0.2112000    0.00000   100%   5.9    1s
+H 7760  2327                       0.2038000    0.00000   100%   5.6    2s
+H11626  3190                       0.2018000    0.00000   100%   5.8    3s
+H12921  3457                       0.1899999    0.00000   100%   5.9    3s
+H12921  3097                       0.1447999    0.00000   100%   5.9    3s
+H12921  3097                       0.1447999    0.00000   100%   5.9    3s
+H13097  3108                       0.1447999    0.00000   100%   5.9    4s
+ 16765  3896 infeasible   57         0.14480    0.00000   100%   5.8    5s
+ 35285  9083    0.14302   89    7    0.14480    0.00000   100%   5.7   10s
+ 57125 14791    0.00000   55   15    0.14480    0.00000   100%   5.9   15s
+H58660 14178                       0.1136000    0.00000   100%   5.9   15s
+ 80087 18395    0.00000   62   17    0.11360    0.00000   100%   5.8   20s
+ 99050 21763    0.00000   51   17    0.11360    0.00000   100%   5.9   25s
+H104556 22293                       0.1128000    0.00000   100%   5.9   26s
+ 116037 23690 infeasible   78         0.11280    0.00000   100%   5.9   30s
+H119136 23507                       0.1016000    0.00000   100%   5.9   30s
+ 133619 23251 infeasible   57         0.10160    0.00000   100%   5.8   35s
+ 156957 23801 infeasible   63         0.10160    0.00000   100%   5.7   40s
+ 174875 22729 infeasible   64         0.10160    0.00000   100%   5.7   45s
+ 196762 23451    0.08667   69   15    0.10160    0.00000   100%   5.7   50s
+
+Cutting planes:
+  Implied bound: 1
+  Inf proof: 5
+
+Explored 209618 nodes (1206865 simplex iterations) in 54.00 seconds (60.00 work units)
+Thread count was 1 (of 22 available processors)
+
+Solution count 10: 0.1016 0.1128 0.1136 ... 0.2396
+
+Work limit reached
+Best objective 1.015999999999e-01, best bound 1.909583602355e-16, gap 100.0000%
+
+User-callback calls 438390, time in user-callback 0.67 sec
+Warning: more than one unconstrained row,
+         using the first one as the objective.
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/mad.mps.gz
+Reading time = 0.00 seconds
+mad: 51 rows, 220 columns, 2808 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 51 rows, 220 columns and 2808 nonzeros (Min)
+Model fingerprint: 0x72869fea
+Model has 20 linear objective coefficients
+Variable types: 20 continuous, 200 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [4e-04, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+01]
+Presolve removed 11 rows and 0 columns
+Presolve time: 0.00s

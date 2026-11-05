@@ -1,0 +1,82 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 12:51:09 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/forplan/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Warning: row name 1 in rhs section not defined.
+Warning: row name 100 in rhs section not defined.
+Warning: column name A in bound section not defined
+Warning: column name 1 in bound section not defined
+Warning: column name A in bound section not defined
+Warning: column name 1 in bound section not defined
+Warning: column name A in bound section not defined
+Warning: column name 2 in bound section not defined
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/forplan.mps.gz
+Reading time = 0.00 seconds
+FORPLAN: 161 rows, 422 columns, 4564 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 161 rows, 422 columns and 4564 nonzeros (Min)
+Model fingerprint: 0xf7d53044
+Model has 353 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [7e-03, 3e+03]
+  Objective range  [1e-04, 1e+00]
+  Bounds range     [1e+05, 1e+07]
+  RHS range        [1e+01, 7e+06]
+
+Presolve removed 88 rows and 70 columns
+Presolve time: 0.00s
+Presolved: 73 rows, 352 columns, 3765 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -2.5831359e+03   5.584384e+03   0.000000e+00      0s
+
+Extra simplex iterations after uncrush: 1
+     128   -1.1639158e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 128 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -1.163915769e+03
+
+User-callback calls 199, time in user-callback 0.00 sec
+Warning: row name 1 in rhs section not defined.
+Warning: row name 100 in rhs section not defined.
+Warning: column name A in bound section not defined
+Warning: column name 1 in bound section not defined
+Warning: column name A in bound section not defined
+Warning: column name 1 in bound section not defined
+Warning: column name A in bound section not defined
+Warning: column name 2 in bound section not defined
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/forplan.mps.gz
+Reading time = 0.00 seconds
+FORPLAN: 161 rows, 422 columns, 4564 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 161 rows, 422 columns and 4564 nonzeros (Min)
+Model fingerprint: 0xf7d53044
+Model has 353 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [7e-03, 3e+03]
+  Objective range  [1e-04, 1e+00]
+  Bounds range     [1e+05, 1e+07]
+  RHS range        [1e+01, 7e+06]
+Presolve removed 88 rows and 70 columns

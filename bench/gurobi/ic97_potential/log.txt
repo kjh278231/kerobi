@@ -1,0 +1,162 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 12:54:14 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/ic97_potential/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/ic97_potential.mps.gz
+Reading time = 0.00 seconds
+ic97_potential: 1046 rows, 728 columns, 3138 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 1046 rows, 728 columns and 3138 nonzeros (Min)
+Model fingerprint: 0xbf9e6a51
+Model has 280 linear objective coefficients
+Variable types: 205 continuous, 523 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 6e+01]
+  Objective range  [1e+00, 6e+01]
+  Bounds range     [1e+00, 6e+01]
+  RHS range        [1e+00, 1e+02]
+
+Presolve removed 48 rows and 2 columns
+Presolve time: 0.01s
+Presolved: 998 rows, 726 columns, 3091 nonzeros
+Variable types: 204 continuous, 522 integer (449 binary)
+Found heuristic solution: objective 4137.0000000
+
+Root relaxation: objective 3.868000e+03, 560 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 3868.00000    0  117 4137.00000 3868.00000  6.50%     -    0s
+H    0     0                    4131.0000000 3868.00000  6.37%     -    0s
+H    0     0                    4121.0000000 3868.00000  6.14%     -    0s
+     0     0 3877.87513    0  191 4121.00000 3877.87513  5.90%     -    0s
+     0     0 3879.87513    0  182 4121.00000 3879.87513  5.85%     -    0s
+     0     0 3879.87513    0  176 4121.00000 3879.87513  5.85%     -    0s
+     0     0 3894.73669    0  196 4121.00000 3894.73669  5.49%     -    0s
+     0     0 3894.73669    0  191 4121.00000 3894.73669  5.49%     -    0s
+     0     0 3897.63246    0  215 4121.00000 3897.63246  5.42%     -    0s
+     0     0 3898.38246    0  197 4121.00000 3898.38246  5.40%     -    0s
+     0     0 3898.38246    0  194 4121.00000 3898.38246  5.40%     -    0s
+     0     0 3901.49964    0  194 4121.00000 3901.49964  5.33%     -    0s
+H    0     0                    4087.0000000 3901.49964  4.54%     -    0s
+     0     0 3901.49964    0  214 4087.00000 3901.49964  4.54%     -    0s
+     0     0 3904.51718    0  193 4087.00000 3904.51718  4.46%     -    0s
+     0     0 3906.33536    0  162 4087.00000 3906.33536  4.42%     -    0s
+     0     0 3906.33536    0  160 4087.00000 3906.33536  4.42%     -    0s
+     0     0 3906.33536    0  177 4087.00000 3906.33536  4.42%     -    0s
+H    0     0                    4077.0000000 3906.33536  4.19%     -    0s
+     0     0 3906.33536    0  186 4077.00000 3906.33536  4.19%     -    0s
+     0     0 3908.16295    0  203 4077.00000 3908.16295  4.14%     -    0s
+     0     0 3908.16295    0  198 4077.00000 3908.16295  4.14%     -    0s
+     0     0 3909.18182    0  194 4077.00000 3909.18182  4.12%     -    0s
+H    0     0                    4075.0000000 3909.18182  4.07%     -    0s
+     0     0 3909.18182    0  168 4075.00000 3909.18182  4.07%     -    0s
+     0     0 3909.18182    0  170 4075.00000 3909.18182  4.07%     -    0s
+     0     0 3909.18182    0  164 4075.00000 3909.18182  4.07%     -    0s
+     0     0 3909.18182    0   91 4075.00000 3909.18182  4.07%     -    0s
+     0     2 3909.18182    0   91 4075.00000 3909.18182  4.07%     -    0s
+H   26    26                    4071.0000000 3909.18182  3.97%  20.7    0s
+H   26    26                    4059.0000000 3909.18182  3.69%  20.7    0s
+H   26    26                    4048.2857143 3909.18182  3.44%  20.7    0s
+H   26    26                    4044.0000000 3909.18182  3.33%  20.7    0s
+H   67    65                    4038.0000000 3909.18182  3.19%  16.7    0s
+H   67    65                    4037.0000000 3909.18182  3.17%  16.7    0s
+H   67    65                    4033.0000000 3909.18182  3.07%  16.7    0s
+H   67    65                    4031.0000000 3909.18182  3.02%  16.7    0s
+H   67    65                    4027.0000000 3909.18182  2.93%  16.7    0s
+H  100    91                    4026.0000000 3909.18182  2.90%  16.4    0s
+H  100    87                    4019.0000000 3909.18182  2.73%  16.4    0s
+H  100    86                    4017.0000000 3909.18182  2.68%  16.4    0s
+H  186   154                    4013.0000000 3909.18182  2.59%  19.0    0s
+H  186   153                    4011.0000000 3909.18182  2.54%  19.0    0s
+H  239   188                    3989.0000000 3909.18182  2.00%  16.9    0s
+*  241   186              68    3987.0000000 3909.18182  1.95%  16.8    0s
+H  329   229                    3982.0000000 3909.18182  1.83%  20.9    0s
+H  329   229                    3981.0000000 3909.18182  1.80%  20.9    0s
+H  329   224                    3979.0000000 3909.18182  1.75%  20.9    0s
+H  329   221                    3978.0000000 3909.18182  1.73%  20.9    0s
+H  598   338                    3959.0000000 3909.18182  1.26%  21.4    0s
+H  612   326                    3958.0000000 3916.27298  1.05%  20.9    1s
+H  616   311                    3957.0000000 3916.38356  1.03%  20.8    1s
+H  630   305                    3953.0000000 3918.34702  0.88%  20.3    1s
+H  638   294                    3952.0000000 3918.78503  0.84%  20.1    2s
+   721   351 3928.92658   23  157 3952.00000 3921.65963  0.77%  87.5    5s
+H  745   347                    3950.0000000 3922.24155  0.70%  84.7    6s
+H  839   391                    3947.0000000 3922.81082  0.61%   173    9s
+   879   415 3933.48276   68   85 3947.00000 3922.82350  0.61%   167   10s
+  2416   708 3923.96579   55  200 3947.00000 3922.98447  0.61%  86.4   15s
+  4245  1415 3943.86780   68  147 3947.00000 3923.04257  0.61%  67.9   20s
+  6004  2023 3924.98488   55  231 3947.00000 3923.24877  0.60%  62.1   25s
+  8131  2815 3933.86871   57  180 3947.00000 3923.62447  0.59%  56.8   30s
+ 10006  3545 3924.49234   55  270 3947.00000 3923.96579  0.58%  53.8   35s
+ 10227  3619 3933.02733   56  242 3947.00000 3924.03646  0.58%  53.8   40s
+H10502  3505                    3946.9999993 3924.03646  0.58%  55.6   42s
+ 10942  3583 3926.83646   73  188 3947.00000 3924.03646  0.58%  55.6   45s
+H11132  3442                    3946.9999987 3924.03646  0.58%  55.5   45s
+ 12409  3507 3927.21671   66  324 3947.00000 3924.03646  0.58%  55.6   50s
+ 13823  3596 3944.19490   81   58 3947.00000 3924.03646  0.58%  55.1   55s
+
+Cutting planes:
+  Gomory: 147
+  Cover: 477
+  Implied bound: 99
+  Projected implied bound: 9
+  Clique: 28
+  MIR: 422
+  Mixing: 20
+  Knapsack: 10
+  StrongCG: 55
+  Flow cover: 683
+  Inf proof: 57
+  Zero half: 7
+  Network: 2
+  RLT: 3
+  Relax-and-lift: 23
+
+Explored 14636 nodes (810100 simplex iterations) in 57.68 seconds (60.00 work units)
+Thread count was 1 (of 22 available processors)
+
+Solution count 10: 3947 3950 3952 ... 3982
+
+Work limit reached
+Best objective 3.946999998697e+03, best bound 3.924088712471e+03, gap 0.5805%
+
+User-callback calls 58517, time in user-callback 0.21 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/ic97_potential.mps.gz
+Reading time = 0.00 seconds
+ic97_potential: 1046 rows, 728 columns, 3138 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 1046 rows, 728 columns and 3138 nonzeros (Min)
+Model fingerprint: 0xbf9e6a51
+Model has 280 linear objective coefficients
+Variable types: 205 continuous, 523 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 6e+01]
+  Objective range  [1e+00, 6e+01]
+  Bounds range     [1e+00, 6e+01]
+  RHS range        [1e+00, 1e+02]
+Presolve removed 48 rows and 2 columns
+Presolve time: 0.01s

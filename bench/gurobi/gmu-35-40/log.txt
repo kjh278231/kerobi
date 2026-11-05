@@ -1,0 +1,128 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 13:10:50 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/gmu-35-40/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/gmu-35-40.mps.gz
+Reading time = 0.01 seconds
+gmu-35-40: 424 rows, 1205 columns, 4843 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 424 rows, 1205 columns and 4843 nonzeros (Min)
+Model fingerprint: 0xd499c540
+Model has 687 linear objective coefficients
+Variable types: 5 continuous, 1200 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [8e-01, 3e+03]
+  Objective range  [3e+03, 2e+05]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+
+Found heuristic solution: objective -1487470.619
+Presolve removed 67 rows and 554 columns
+Presolve time: 0.02s
+Presolved: 357 rows, 651 columns, 4137 nonzeros
+Variable types: 5 continuous, 646 integer (646 binary)
+
+Root relaxation: objective -2.406944e+06, 452 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 -2406943.6    0   11 -1487470.6 -2406943.6  61.8%     -    0s
+H    0     0                    -2400627.731 -2406943.6  0.26%     -    0s
+H    0     0                    -2400705.717 -2406943.6  0.26%     -    0s
+     0     0 -2406940.7    0   30 -2400705.7 -2406940.7  0.26%     -    0s
+H    0     0                    -2402191.755 -2406940.7  0.20%     -    0s
+H    0     0                    -2402835.541 -2406940.7  0.17%     -    0s
+H    0     0                    -2402923.152 -2406940.7  0.17%     -    0s
+     0     0 -2406927.3    0   34 -2402923.2 -2406927.3  0.17%     -    0s
+H    0     0                    -2404205.365 -2406927.3  0.11%     -    0s
+H    0     0                    -2405095.466 -2406927.3  0.08%     -    0s
+H    0     0                    -2405163.355 -2406927.3  0.07%     -    0s
+     0     0 -2406926.4    0   28 -2405163.4 -2406926.4  0.07%     -    0s
+     0     0 -2406926.4    0   29 -2405163.4 -2406926.4  0.07%     -    0s
+     0     0 -2406923.4    0   47 -2405163.4 -2406923.4  0.07%     -    0s
+     0     0 -2406923.3    0   47 -2405163.4 -2406923.3  0.07%     -    0s
+     0     0 -2406918.0    0   11 -2405163.4 -2406918.0  0.07%     -    0s
+     0     0 -2406918.0    0   34 -2405163.4 -2406918.0  0.07%     -    0s
+H    0     0                    -2405309.264 -2406918.0  0.07%     -    0s
+H    0     0                    -2405372.619 -2406918.0  0.06%     -    0s
+     0     0 -2406918.0    0   41 -2405372.6 -2406918.0  0.06%     -    0s
+     0     0 -2406918.0    0   51 -2405372.6 -2406918.0  0.06%     -    0s
+     0     0 -2406918.0    0   51 -2405372.6 -2406918.0  0.06%     -    0s
+H    0     0                    -2405530.889 -2406917.4  0.06%     -    0s
+H    0     0                    -2405841.311 -2406917.4  0.04%     -    0s
+     0     2 -2406917.4    0   51 -2405841.3 -2406917.4  0.04%     -    0s
+H    1     1                    -2405959.656 -2406917.4  0.04%   0.0    0s
+H  185   158                    -2406021.864 -2406917.4  0.04%   7.0    0s
+H  185   158                    -2406045.786 -2406917.4  0.04%   7.0    0s
+H  888   520                    -2406048.086 -2406911.1  0.04%  10.1    1s
+H  999   527                    -2406079.644 -2406911.1  0.03%   9.8    1s
+H 7486  3814                    -2406091.765 -2406884.9  0.03%   8.1    3s
+ 10203  5049 -2406585.8   41   47 -2406091.8 -2406878.4  0.03%   8.1    5s
+H11058  5143                    -2406220.087 -2406878.4  0.03%   8.3    6s
+H12007  5135                    -2406223.725 -2406878.4  0.03%   8.5    7s
+H12338  4912                    -2406344.035 -2406878.4  0.02%   8.5    7s
+H15317  5039                    -2406508.609 -2406878.4  0.02%   9.0    8s
+H15350  4807                    -2406540.167 -2406878.4  0.01%   9.0    9s
+ 15383  4829 -2406835.8   41   85 -2406540.2 -2406878.4  0.01%   8.9   10s
+ 24418  4476 -2406835.3   60   48 -2406540.2 -2406839.3  0.01%  10.3   15s
+ 31804  3450 -2406693.7   59   34 -2406540.2 -2406807.8  0.01%  10.9   20s
+ 45394  7867 -2406796.0   79   26 -2406540.2 -2406796.0  0.01%   9.9   25s
+*53338 10075             102    -2406558.646 -2406796.0  0.01%   9.4   27s
+
+Cutting planes:
+  Gomory: 2
+  Cover: 981
+  Clique: 2
+  MIR: 45
+  StrongCG: 9
+  Flow cover: 9
+  GUB cover: 2
+  Inf proof: 10
+
+Explored 53339 nodes (500919 simplex iterations) in 27.62 seconds (33.71 work units)
+Thread count was 1 (of 22 available processors)
+
+Solution count 10: -2.40656e+06 -2.40654e+06 -2.40651e+06 ... -2.40605e+06
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective -2.406558646400e+06, best bound -2.406796025421e+06, gap 0.0099%
+
+User-callback calls 116915, time in user-callback 0.26 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/gmu-35-40.mps.gz
+Reading time = 0.00 seconds
+gmu-35-40: 424 rows, 1205 columns, 4843 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 424 rows, 1205 columns and 4843 nonzeros (Min)
+Model fingerprint: 0xd499c540
+Model has 687 linear objective coefficients
+Variable types: 5 continuous, 1200 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [8e-01, 3e+03]
+  Objective range  [3e+03, 2e+05]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 67 rows and 554 columns
+Presolve time: 0.01s

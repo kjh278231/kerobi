@@ -1,0 +1,64 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 12:51:09 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/fffff800/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/fffff800.mps.gz
+Reading time = 0.00 seconds
+FFFFF800: 524 rows, 854 columns, 6227 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 524 rows, 854 columns and 6227 nonzeros (Min)
+Model fingerprint: 0x12181be3
+Model has 8 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [8e-03, 1e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e-01, 2e+05]
+
+Presolve removed 259 rows and 240 columns
+Presolve time: 0.00s
+Presolved: 265 rows, 614 columns, 4546 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    1.0353702e+05   3.601151e+04   0.000000e+00      0s
+     328    5.5567956e+05   0.000000e+00   0.000000e+00      0s
+
+Solved in 328 iterations and 0.01 seconds (0.01 work units)
+Optimal objective  5.556795648e+05
+
+User-callback calls 411, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/fffff800.mps.gz
+Reading time = 0.00 seconds
+FFFFF800: 524 rows, 854 columns, 6227 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 524 rows, 854 columns and 6227 nonzeros (Min)
+Model fingerprint: 0x12181be3
+Model has 8 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [8e-03, 1e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e-01, 2e+05]
+Presolve removed 259 rows and 240 columns

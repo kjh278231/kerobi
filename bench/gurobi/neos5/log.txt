@@ -1,0 +1,118 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 13:00:01 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/neos5/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/neos5.mps.gz
+Reading time = 0.00 seconds
+neos5: 63 rows, 63 columns, 2016 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 63 rows, 63 columns and 2016 nonzeros (Min)
+Model fingerprint: 0xdde3b3a0
+Model has 63 linear objective coefficients
+Variable types: 10 continuous, 53 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e+00, 8e+00]
+
+Found heuristic solution: objective 24.0000000
+Presolve time: 0.00s
+Presolved: 63 rows, 63 columns, 2016 nonzeros
+Variable types: 10 continuous, 53 integer (53 binary)
+
+Root relaxation: objective 1.300000e+01, 107 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   13.00000    0   35   24.00000   13.00000  45.8%     -    0s
+H    0     0                      19.0000000   13.00000  31.6%     -    0s
+H    0     0                      17.0000000   13.00000  23.5%     -    0s
+H    0     0                      16.5000000   13.00000  21.2%     -    0s
+     0     0   13.08333    0   35   16.50000   13.08333  20.7%     -    0s
+     0     0   13.25000    0   35   16.50000   13.25000  19.7%     -    0s
+     0     0   13.25000    0   35   16.50000   13.25000  19.7%     -    0s
+H    0     0                      16.0000000   13.25000  17.2%     -    0s
+     0     0   13.25000    0   36   16.00000   13.25000  17.2%     -    0s
+     0     0   13.25000    0   36   16.00000   13.25000  17.2%     -    0s
+     0     0   13.25000    0   37   16.00000   13.25000  17.2%     -    0s
+     0     0   13.25000    0   36   16.00000   13.25000  17.2%     -    0s
+     0     0   13.25944    0   36   16.00000   13.25944  17.1%     -    0s
+     0     0   13.26255    0   36   16.00000   13.26255  17.1%     -    0s
+     0     0   13.26401    0   36   16.00000   13.26401  17.1%     -    0s
+     0     0   13.26965    0   37   16.00000   13.26965  17.1%     -    0s
+H    0     0                      15.5000000   13.26965  14.4%     -    0s
+     0     0   13.27534    0   37   15.50000   13.27534  14.4%     -    0s
+     0     0   13.28368    0   37   15.50000   13.28368  14.3%     -    0s
+     0     0   13.29773    0   36   15.50000   13.29773  14.2%     -    0s
+     0     0   13.30660    0   36   15.50000   13.30660  14.2%     -    0s
+     0     0   13.30660    0   36   15.50000   13.30660  14.2%     -    0s
+     0     0   13.30660    0   35   15.50000   13.30660  14.2%     -    0s
+     0     0   13.34615    0   35   15.50000   13.34615  13.9%     -    0s
+     0     0   13.34615    0   34   15.50000   13.34615  13.9%     -    0s
+     0     0   13.34615    0   35   15.50000   13.34615  13.9%     -    0s
+     0     0   13.34615    0   35   15.50000   13.34615  13.9%     -    0s
+     0     0   13.34615    0   35   15.50000   13.34615  13.9%     -    0s
+     0     0   13.34615    0   35   15.50000   13.34615  13.9%     -    0s
+     0     0   13.34615    0   35   15.50000   13.34615  13.9%     -    0s
+     0     2   13.34615    0   35   15.50000   13.34615  13.9%     -    0s
+*  296   185              24      15.0000000   13.75000  8.33%  10.6    0s
+ 11460  4861   14.75000   32    9   15.00000   14.08247  6.12%  12.6    5s
+ 29723  8263   14.40000   33   20   15.00000   14.33333  4.44%  15.1   10s
+ 48944 14466   14.75253   43   17   15.00000   14.40625  3.96%  15.4   15s
+ 68808 19328   14.58442   31   22   15.00000   14.46048  3.60%  15.4   20s
+ 87078 22064   14.62500   36   15   15.00000   14.50000  3.33%  15.5   25s
+ 104879 24236   14.62633   41   19   15.00000   14.53623  3.09%  15.5   30s
+
+Cutting planes:
+  Gomory: 8
+  MIR: 36
+  Flow cover: 213
+  Zero half: 1
+
+Explored 117686 nodes (1823946 simplex iterations) in 33.63 seconds (60.00 work units)
+Thread count was 1 (of 22 available processors)
+
+Solution count 7: 15 15.5 16 ... 24
+
+Work limit reached
+Best objective 1.500000000000e+01, best bound 1.456521739130e+01, gap 2.8986%
+
+User-callback calls 244378, time in user-callback 0.34 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/neos5.mps.gz
+Reading time = 0.00 seconds
+neos5: 63 rows, 63 columns, 2016 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 63 rows, 63 columns and 2016 nonzeros (Min)
+Model fingerprint: 0xdde3b3a0
+Model has 63 linear objective coefficients
+Variable types: 10 continuous, 53 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e+00, 8e+00]
+Presolve time: 0.00s

@@ -1,0 +1,110 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 13:05:12 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/csched008/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/csched008.mps.gz
+Reading time = 0.00 seconds
+csched008: 351 rows, 1536 columns, 5687 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 351 rows, 1536 columns and 5687 nonzeros (Min)
+Model fingerprint: 0x2ff57492
+Model has 1 linear objective coefficients
+Variable types: 252 continuous, 1284 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+02]
+  RHS range        [1e+00, 5e+01]
+
+Presolve removed 118 rows and 77 columns
+Presolve time: 0.01s
+Presolved: 233 rows, 1459 columns, 4415 nonzeros
+Variable types: 0 continuous, 1459 integer (1284 binary)
+
+Root relaxation: objective 1.710000e+02, 563 iterations, 0.01 seconds (0.01 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0  171.00000    0  114          -  171.00000      -     -    0s
+     0     0  171.00000    0  154          -  171.00000      -     -    0s
+     0     0  171.00000    0  134          -  171.00000      -     -    0s
+     0     0  171.00000    0  158          -  171.00000      -     -    0s
+     0     0  171.00000    0  144          -  171.00000      -     -    0s
+     0     0  171.00000    0  142          -  171.00000      -     -    0s
+     0     0  171.00000    0  187          -  171.00000      -     -    0s
+     0     0  171.00000    0  128          -  171.00000      -     -    0s
+     0     0  171.00000    0  128          -  171.00000      -     -    0s
+     0     0  171.00000    0  109          -  171.00000      -     -    0s
+     0     2  171.00000    0  109          -  171.00000      -     -    0s
+   929   603  172.00000   35  117          -  171.00000      -  56.1    5s
+H 1975   770                     177.0000000  171.00000  3.39%  52.9    8s
+H 1975   341                     174.0000000  171.00000  1.72%  52.9    8s
+  2383   550  172.00000   43   66  174.00000  171.03739  1.70%  53.0   10s
+  5918  1927  172.00000   46  134  174.00000  172.00000  1.15%  35.7   15s
+  9264  3204  173.00000   48   31  174.00000  172.00000  1.15%  32.6   20s
+ 10637  3576  173.00000   64   82  174.00000  172.00000  1.15%  34.4   25s
+ 11531  3614  172.12275   39  128  174.00000  172.00000  1.15%  37.3   30s
+ 12020  3660  173.00000   59  123  174.00000  172.00000  1.15%  39.8   35s
+ 12788  3689  172.00000   56  117  174.00000  172.00000  1.15%  43.0   40s
+ 13342  3795  172.00000   54   90  174.00000  172.00000  1.15%  44.5   45s
+
+Cutting planes:
+  Gomory: 8
+  Cover: 3
+  Implied bound: 4
+  MIR: 47
+  StrongCG: 8
+  Flow cover: 99
+  GUB cover: 8
+  Inf proof: 15
+  Zero half: 14
+  RLT: 50
+  Relax-and-lift: 9
+
+Explored 13772 nodes (631514 simplex iterations) in 47.32 seconds (60.01 work units)
+Thread count was 1 (of 22 available processors)
+
+Solution count 2: 174 177 
+
+Work limit reached
+Best objective 1.740000000000e+02, best bound 1.720000000000e+02, gap 1.1494%
+
+User-callback calls 53435, time in user-callback 0.23 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/csched008.mps.gz
+Reading time = 0.00 seconds
+csched008: 351 rows, 1536 columns, 5687 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 351 rows, 1536 columns and 5687 nonzeros (Min)
+Model fingerprint: 0x2ff57492
+Model has 1 linear objective coefficients
+Variable types: 252 continuous, 1284 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+02]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 2e+02]
+  RHS range        [1e+00, 5e+01]
+Presolve removed 118 rows and 77 columns
+Presolve time: 0.01s

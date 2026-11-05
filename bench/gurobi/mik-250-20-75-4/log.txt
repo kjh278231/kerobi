@@ -1,0 +1,134 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 13:00:34 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/mik-250-20-75-4/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/mik-250-20-75-4.mps.gz
+Reading time = 0.00 seconds
+mik-250-20-75-4: 195 rows, 270 columns, 9270 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 195 rows, 270 columns and 9270 nonzeros (Min)
+Model fingerprint: 0x563c4acc
+Model has 270 linear objective coefficients
+Variable types: 20 continuous, 250 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+03]
+  Objective range  [2e+01, 2e+03]
+  Bounds range     [1e+00, 1e+02]
+  RHS range        [1e+00, 1e+03]
+
+Found heuristic solution: objective 0.0000000
+Presolve removed 119 rows and 3 columns
+Presolve time: 0.00s
+Presolved: 76 rows, 267 columns, 7742 nonzeros
+Variable types: 17 continuous, 250 integer (107 binary)
+
+Root relaxation: objective -6.165123e+04, 81 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 -61651.227    0   75    0.00000 -61651.227      -     -    0s
+H    0     0                    -50894.00000 -61651.227  21.1%     -    0s
+     0     0 -56618.000    0   74 -50894.000 -56618.000  11.2%     -    0s
+     0     0 -56618.000    0   74 -50894.000 -56618.000  11.2%     -    0s
+H    0     0                    -51882.00000 -56618.000  9.13%     -    0s
+     0     0 -54895.328    0   72 -51882.000 -54895.328  5.81%     -    0s
+H    0     0                    -52273.00000 -54868.227  4.96%     -    0s
+     0     0 -54868.227    0   72 -52273.000 -54868.227  4.96%     -    0s
+     0     0 -54697.576    0   70 -52273.000 -54697.576  4.64%     -    0s
+     0     0 -54632.430    0   71 -52273.000 -54632.430  4.51%     -    0s
+     0     0 -54566.032    0   65 -52273.000 -54566.032  4.39%     -    0s
+     0     0 -54542.798    0   63 -52273.000 -54542.798  4.34%     -    0s
+     0     0 -54538.798    0   61 -52273.000 -54538.798  4.33%     -    0s
+     0     0 -54424.027    0   60 -52273.000 -54424.027  4.11%     -    0s
+     0     0 -54324.296    0   64 -52273.000 -54324.296  3.92%     -    0s
+     0     0 -54323.308    0   64 -52273.000 -54323.308  3.92%     -    0s
+     0     0 -54249.712    0   64 -52273.000 -54249.712  3.78%     -    0s
+     0     0 -54246.625    0   61 -52273.000 -54246.625  3.78%     -    0s
+     0     0 -54176.753    0   65 -52273.000 -54176.753  3.64%     -    0s
+     0     0 -54166.668    0   64 -52273.000 -54166.668  3.62%     -    0s
+     0     0 -54123.707    0   64 -52273.000 -54123.707  3.54%     -    0s
+H    0     0                    -52287.00000 -54119.072  3.50%     -    0s
+H    0     0                    -52301.00000 -54119.072  3.48%     -    0s
+     0     0 -54104.767    0   64 -52301.000 -54104.767  3.45%     -    0s
+     0     0 -54103.284    0   61 -52301.000 -54103.284  3.45%     -    0s
+     0     0 -53994.221    0   62 -52301.000 -53994.221  3.24%     -    0s
+     0     0 -53956.383    0   66 -52301.000 -53956.383  3.17%     -    0s
+     0     0 -53949.715    0   60 -52301.000 -53949.715  3.15%     -    0s
+     0     0 -53941.810    0   64 -52301.000 -53941.810  3.14%     -    0s
+     0     0 -53890.097    0   64 -52301.000 -53890.097  3.04%     -    0s
+     0     0 -53889.121    0   64 -52301.000 -53889.121  3.04%     -    0s
+     0     0 -53847.145    0   65 -52301.000 -53847.145  2.96%     -    0s
+     0     0 -53844.049    0   63 -52301.000 -53844.049  2.95%     -    0s
+     0     0 -53768.916    0   66 -52301.000 -53768.916  2.81%     -    0s
+     0     0 -53757.254    0   66 -52301.000 -53757.254  2.78%     -    0s
+     0     0 -53729.118    0   68 -52301.000 -53729.118  2.73%     -    0s
+     0     0 -53723.295    0   68 -52301.000 -53723.295  2.72%     -    0s
+     0     0 -53677.387    0   67 -52301.000 -53677.387  2.63%     -    0s
+     0     0 -53677.266    0   67 -52301.000 -53677.266  2.63%     -    0s
+     0     0 -53610.925    0   67 -52301.000 -53610.925  2.50%     -    0s
+     0     0 -53609.030    0   67 -52301.000 -53609.030  2.50%     -    0s
+     0     0 -53562.151    0   67 -52301.000 -53562.151  2.41%     -    0s
+     0     0 -53557.545    0   67 -52301.000 -53557.545  2.40%     -    0s
+     0     0 -53553.074    0   67 -52301.000 -53553.074  2.39%     -    0s
+     0     0 -53552.951    0   67 -52301.000 -53552.951  2.39%     -    0s
+     0     0 -53512.848    0   67 -52301.000 -53512.848  2.32%     -    0s
+     0     0 -53512.057    0   67 -52301.000 -53512.057  2.32%     -    0s
+     0     0 -53491.858    0   67 -52301.000 -53491.858  2.28%     -    0s
+     0     0 -53490.066    0   67 -52301.000 -53490.066  2.27%     -    0s
+     0     0 -53490.066    0   67 -52301.000 -53490.066  2.27%     -    0s
+     0     2 -53488.981    0   67 -52301.000 -53488.981  2.27%     -    0s
+
+Cutting planes:
+  Gomory: 3
+  Implied bound: 5
+  MIR: 568
+  StrongCG: 17
+
+Explored 933 nodes (22216 simplex iterations) in 0.43 seconds (0.53 work units)
+Thread count was 1 (of 22 available processors)
+
+Solution count 7: -52301 -52287 -52273 ... 0
+No other solutions better than -52301
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective -5.230100000000e+04, best bound -5.230100000000e+04, gap 0.0000%
+
+User-callback calls 2442, time in user-callback 0.01 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/mik-250-20-75-4.mps.gz
+Reading time = 0.00 seconds
+mik-250-20-75-4: 195 rows, 270 columns, 9270 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 195 rows, 270 columns and 9270 nonzeros (Min)
+Model fingerprint: 0x563c4acc
+Model has 270 linear objective coefficients
+Variable types: 20 continuous, 250 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 2e+03]
+  Objective range  [2e+01, 2e+03]
+  Bounds range     [1e+00, 1e+02]
+  RHS range        [1e+00, 1e+03]
+Presolve removed 119 rows and 3 columns
+Presolve time: 0.01s

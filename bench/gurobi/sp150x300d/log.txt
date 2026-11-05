@@ -1,0 +1,97 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 13:00:34 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/sp150x300d/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/sp150x300d.mps.gz
+Reading time = 0.00 seconds
+sp150x300d: 450 rows, 600 columns, 1200 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 450 rows, 600 columns and 1200 nonzeros (Min)
+Model fingerprint: 0xebea2c0c
+Model has 300 linear objective coefficients
+Variable types: 300 continuous, 300 integer (300 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+03]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 3e+03]
+  RHS range        [1e+00, 2e+03]
+
+Presolve removed 181 rows and 181 columns
+Presolve time: 0.00s
+Presolved: 269 rows, 419 columns, 844 nonzeros
+Variable types: 208 continuous, 211 integer (211 binary)
+Found heuristic solution: objective 300.0000000
+Found heuristic solution: objective 299.0000000
+Found heuristic solution: objective 298.0000000
+
+Root relaxation: objective 3.459835e+01, 206 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0   34.59835    0   41  298.00000   34.59835  88.4%     -    0s
+H    0     0                      70.0000000   34.59835  50.6%     -    0s
+     0     0   62.61333    0   18   70.00000   62.61333  10.6%     -    0s
+H    0     0                      69.0000000   62.61333  9.26%     -    0s
+     0     0   63.50695    0   22   69.00000   63.50695  7.96%     -    0s
+     0     0   63.53141    0   21   69.00000   63.53141  7.93%     -    0s
+     0     0     cutoff    0        69.00000   69.00000  0.00%     -    0s
+
+Cutting planes:
+  Gomory: 8
+  Lift-and-project: 3
+  Cover: 8
+  Implied bound: 3
+  Clique: 3
+  MIR: 11
+  Flow cover: 33
+  Flow path: 5
+  Network: 33
+  Relax-and-lift: 7
+
+Explored 1 nodes (402 simplex iterations) in 0.01 seconds (0.01 work units)
+Thread count was 1 (of 22 available processors)
+
+Solution count 5: 69 70 298 ... 300
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 6.900000000000e+01, best bound 6.900000000000e+01, gap 0.0000%
+
+User-callback calls 327, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/sp150x300d.mps.gz
+Reading time = 0.00 seconds
+sp150x300d: 450 rows, 600 columns, 1200 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 450 rows, 600 columns and 1200 nonzeros (Min)
+Model fingerprint: 0xebea2c0c
+Model has 300 linear objective coefficients
+Variable types: 300 continuous, 300 integer (300 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 3e+03]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 3e+03]
+  RHS range        [1e+00, 2e+03]
+Presolve removed 181 rows and 181 columns
+Presolve time: 0.00s

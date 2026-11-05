@@ -1,0 +1,35 @@
+{
+ "Fingerprint": 3736708222,
+ "Status": 16,
+ "IterCount": 3891397.0,
+ "BarIterCount": 0,
+ "NodeCount": 1389726.0,
+ "Work": 60.00002299550137,
+ "Runtime": 77.82729578018188,
+ "ObjVal": 27.0,
+ "ObjBound": -0.0,
+ "SolCount": 10,
+ "IsMIP": 1,
+ "NumVars": 74,
+ "NumConstrs": 7,
+ "NumNZs": 434,
+ "log": {
+  "presolve_removed": [
+   0,
+   7
+  ],
+  "root": [
+   "0.000000e+00",
+   23
+  ],
+  "cuts": {
+   "Gomory": 1
+  }
+ },
+ "presolved": [
+  7,
+  67,
+  427
+ ],
+ "trace_rows": 2411
+}

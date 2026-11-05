@@ -2,3 +2,5 @@ target/
 __pycache__/
 *.so
 .pytest_cache/
+bench/gurobi_rerun/
+bench/*.log

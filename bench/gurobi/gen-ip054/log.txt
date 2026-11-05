@@ -1,0 +1,134 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 12:52:35 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi/gen-ip054/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/gen-ip054.mps.gz
+Reading time = 0.00 seconds
+gen-ip054: 27 rows, 30 columns, 532 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Optimize a model with 27 rows, 30 columns and 532 nonzeros (Min)
+Model fingerprint: 0xea2d586b
+Model has 30 linear objective coefficients
+Variable types: 0 continuous, 30 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e-02, 1e+01]
+  Objective range  [3e+01, 3e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [9e-01, 3e+02]
+
+Found heuristic solution: objective 15687.594073
+Presolve time: 0.00s
+Presolved: 27 rows, 30 columns, 532 nonzeros
+Variable types: 0 continuous, 30 integer (0 binary)
+Found heuristic solution: objective 14516.088557
+
+Root relaxation: objective 6.766250e+03, 31 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 6766.24984    0   21 14516.0886 6766.24984  53.4%     -    0s
+H    0     0                    9645.7866279 6766.24984  29.9%     -    0s
+H    0     0                    8050.3634640 6766.24984  16.0%     -    0s
+H    0     0                    7272.5744786 6766.24984  6.96%     -    0s
+H    0     0                    7085.6833135 6766.24984  4.51%     -    0s
+H    0     0                    6996.2239294 6766.24984  3.29%     -    0s
+H    0     0                    6968.5298737 6766.24984  2.90%     -    0s
+H    0     0                    6966.4836850 6766.24984  2.87%     -    0s
+     0     0 6766.80232    0   22 6966.48369 6766.80232  2.87%     -    0s
+H    0     0                    6961.6644870 6766.80232  2.80%     -    0s
+H    0     0                    6959.5866348 6766.80232  2.77%     -    0s
+     0     0 6767.24616    0   21 6959.58663 6767.24616  2.76%     -    0s
+     0     0 6767.32306    0   21 6959.58663 6767.32306  2.76%     -    0s
+     0     0 6767.33800    0   21 6959.58663 6767.33800  2.76%     -    0s
+     0     0 6767.34005    0   21 6959.58663 6767.34005  2.76%     -    0s
+     0     0 6767.57466    0   22 6959.58663 6767.57466  2.76%     -    0s
+H    0     0                    6957.1775846 6767.57466  2.73%     -    0s
+     0     0 6767.59172    0   22 6957.17758 6767.59172  2.73%     -    0s
+     0     0 6767.78634    0   21 6957.17758 6767.78634  2.72%     -    0s
+     0     0 6767.88046    0   21 6957.17758 6767.88046  2.72%     -    0s
+     0     0 6767.88825    0   21 6957.17758 6767.88825  2.72%     -    0s
+     0     0 6767.88871    0   22 6957.17758 6767.88871  2.72%     -    0s
+     0     0 6767.90786    0   20 6957.17758 6767.90786  2.72%     -    0s
+     0     0 6767.90786    0   20 6957.17758 6767.90786  2.72%     -    0s
+     0     2 6767.94474    0   20 6957.17758 6767.94474  2.72%     -    0s
+H    9     9                    6923.9612279 6768.01266  2.25%   4.6    0s
+H 1717   857                    6899.4658201 6770.26050  1.87%   4.0    0s
+H 1717   834                    6897.7215040 6770.26050  1.85%   4.0    0s
+H 3097  1642                    6894.4199319 6772.03006  1.78%   3.9    0s
+H 3097  1619                    6885.8979603 6772.03006  1.65%   3.9    0s
+H 4182  2109                    6863.3534848 6773.03541  1.32%   3.9    0s
+H22645  8003                    6859.1193579 6777.38161  1.19%   3.7    2s
+*23942  7894              49    6856.2311395 6777.65334  1.15%   3.7    2s
+ 74042 30592 6787.62684   40   13 6856.23114 6783.70421  1.06%   3.4    5s
+H113327 46804                    6851.4689192 6785.84083  0.96%   3.4    7s
+ 162809 66755 6805.74135   45   12 6851.46892 6787.73698  0.93%   3.3   10s
+ 250289 100315 6799.98346   47   12 6851.46892 6790.02250  0.90%   3.3   15s
+ 340590 133410 6793.55318   45   14 6851.46892 6791.71225  0.87%   3.2   20s
+ 421630 161904 6850.97624   53    7 6851.46892 6792.88203  0.86%   3.2   25s
+ 505991 190321 6826.01595   49    9 6851.46892 6793.93768  0.84%   3.2   30s
+H584909 204552                    6840.9656418 6794.79718  0.67%   3.2   34s
+ 592930 206792 6830.37974   54    7 6840.96564 6794.88258  0.67%   3.2   35s
+ 680093 229907 6815.65197   48   11 6840.96564 6795.75706  0.66%   3.2   40s
+ 771945 253139 6799.43092   48   14 6840.96564 6796.60027  0.65%   3.1   45s
+ 861288 275398     cutoff   56      6840.96564 6797.32252  0.64%   3.1   50s
+ 945468 295545 6822.07457   55    9 6840.96564 6797.94661  0.63%   3.1   55s
+ 1042108 318159 6809.43483   54   11 6840.96564 6798.59950  0.62%   3.1   60s
+ 1136683 339698 6827.63216   47   10 6840.96564 6799.20277  0.61%   3.1   65s
+ 1243997 363461     cutoff   52      6840.96564 6799.82488  0.60%   3.1   70s
+ 1355554 387236 6800.42315   48   11 6840.96564 6800.42315  0.59%   3.1   75s
+ 1464569 409071 6803.46917   51   16 6840.96564 6800.97862  0.58%   3.1   80s
+ 1573531 431000 6812.65939   47   10 6840.96564 6801.49096  0.58%   3.1   85s
+ 1665014 448430 6831.35658   52    7 6840.96564 6801.90630  0.57%   3.1   90s
+ 1775068 468886 6811.00774   54   11 6840.96564 6802.38737  0.56%   3.1   95s
+
+Cutting planes:
+  Gomory: 8
+  MIR: 1
+  StrongCG: 1
+
+Explored 1858972 nodes (5708581 simplex iterations) in 98.74 seconds (60.00 work units)
+Thread count was 1 (of 22 available processors)
+
+Solution count 10: 6840.97 6851.47 6856.23 ... 6923.96
+
+Work limit reached
+Best objective 6.840965641792e+03, best bound 6.802736656558e+03, gap 0.5588%
+
+User-callback calls 3721701, time in user-callback 3.78 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/miplib/gen-ip054.mps.gz
+Reading time = 0.00 seconds
+gen-ip054: 27 rows, 30 columns, 532 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Threads  1
+
+Presolve a model with 27 rows, 30 columns and 532 nonzeros (Min)
+Model fingerprint: 0xea2d586b
+Model has 30 linear objective coefficients
+Variable types: 0 continuous, 30 integer (0 binary)
+Coefficient statistics:
+  Matrix range     [1e-02, 1e+01]
+  Objective range  [3e+01, 3e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [9e-01, 3e+02]
+Presolve time: 0.00s

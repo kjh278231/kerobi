@@ -18,7 +18,7 @@
 
 ## 2. 포팅 범위 (`port_map.tsv`)
 
-`tools/port_map.py`가 코어 함수 4,362개 전부를 설계 모듈에 배정하고, Rust 코드의 `port:` 태그를 세어 진척도를 낸다.
+`tools/port_map.py`가 코어 함수 4,362개 전부를 설계 모듈에 배정한다. 진척은 함수 수가 아니라 패리티 결과(§6)로 잰다.
 
 ```
 python3 -I rsolver/tools/port_map.py re rsolver .venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so
@@ -63,7 +63,7 @@ python3 -I rsolver/tools/port_map.py re rsolver .venv/lib/python3.13/site-packag
    - Ghidra가 인자를 빠뜨린 호출(예: `5c239f`:444의 `6e713c` 세 번째 인자, 노트 15 §6.3)
 2. **구조체 복원**: `param_1 + 0x470` 같은 오프셋을 이름 있는 Rust 필드로 바꾸고, 필드 doc comment에 원래 오프셋을 적는다(`/// spx+0x470`). env 오프셋은 `re/notes/env_param_offsets.tsv`로 파라미터 이름을 붙인다.
 3. **쓰기**: 제어 흐름, 분기 조건, 상수, 연산 순서를 그대로 옮긴다. 바꾸는 것은 이름뿐이다. goto는 `loop`와 labeled `break`로 구조화하되, 블록의 주소 순서가 아니라 실행 순서를 따른다(Ghidra는 goto 대상을 주소 순으로 늘어놓는다, 노트 12 미확인 3).
-4. **태그**: 함수 doc comment에 `/// port: 6e8eb3@0x5b29d0`를 단다. 여러 원본을 합치면 태그도 여러 개다. double판과 x87 long double판(노트 13 §0.1)처럼 같은 이름을 쓰는 두 벌은 제네릭 함수 하나로 옮기고 태그 두 개를 단다.
+4. **두 벌 합치기**: double판과 x87 long double판(노트 13 §0.1)처럼 같은 이름을 쓰는 두 벌은 제네릭 함수 하나로 옮긴다. 코드에 출처 태그는 달지 않는다([00 §2](00_overview.md)).
 5. **검사**: 단위 테스트를 쓰고, 그 함수가 속한 단계의 차등 검사(§6)를 돌린다.
 
 순서는 마일스톤 범위 안에서 호출 그래프의 **잎부터**다(callee 먼저). `common` 함수는 처음 필요한 마일스톤에서 옮긴다. 노트가 "미확인"으로 남긴 지점은 문헌으로 메우지 않고 해당 함수를 읽어 확정한다. 각 설계 문서의 "포팅으로 확정할 지점" 절이 그 목록이다.
@@ -91,23 +91,28 @@ python3 -I rsolver/tools/port_map.py re rsolver .venv/lib/python3.13/site-packag
 - MKL: 원본은 MKL을 정적 링크한다(노트 03 §4). rsolver는 `intel-mkl-src`(static, lp64)로 같은 라이브러리를 링크한다. 원본의 MKL 스레드 수와 재현성(CBWR) 설정은 미확인이다. barrier를 포팅할 때 `mkl_*` 설정 호출부를 찾아 같게 맞춘다.
 - 스레드: 원본의 스레드 생성과 동기화(alive spin, 라운드 경계 병합, worker 상태 0–3)를 그대로 옮긴다. rayon 같은 작업 훔치기 풀은 쓰지 않는다. 일의 배분이 실행마다 달라져 결정성이 깨진다.
 
-## 6. 차등 검사 하네스 (`tools/parity.py`, M0에서 만든다)
+## 6. 차등 검사 하네스 (`tools/parity.py`)
 
-- **라이선스 한계**: `.venv`의 gurobipy는 pip 크기 제한 라이선스다(변수·선형 제약 각 2,000개, `re/bench/bench.py:GRB_LIMIT`). Netlib 64개(`lp.csv` 전부)와 `miplib_small` 38개 전부가 이 안에 들어가므로 실시간 나란히 실행이 된다. Netlib의 나머지 40개는 저장된 공개 최적값과 비교만 한다.
-- **실행**: 같은 MPS, 같은 파라미터(Threads=1, Seed=0, 나머지 기본값)로 Gurobi와 rsolver를 돌린다.
-- **수집**:
+```
+python tools/parity.py capture gurobipy|rsolver <out_dir> [--work-limit 60] [name ...]
+python tools/parity.py compare <ref_dir> <test_dir> [--csv bench/parity.csv]
+```
 
-  | where | 값 |
-  |---|---|
-  | PRESOLVE(1) | PRE_COLDEL, PRE_ROWDEL, PRE_SENCHG, PRE_BNDCHG, PRE_COECHG |
-  | SIMPLEX(2) | SPX_ITRCNT, SPX_OBJVAL, SPX_PRIMINF, SPX_DUALINF, SPX_ISPERT |
-  | BARRIER(7) | BARRIER_ITRCNT, BARRIER_PRIMOBJ, BARRIER_DUALOBJ, BARRIER_PRIMINF, BARRIER_DUALINF, BARRIER_COMPL |
-  | MIP(3) / MIPSOL(4) | MIP_NODCNT, MIP_OBJBST, MIP_OBJBND, MIP_SOLCNT, MIP_CUTCNT, MIP_ITRCNT / MIPSOL_OBJ, MIPSOL_NODCNT |
-  | 로그 | "Presolved: …", "Root relaxation: …", "Cutting planes:" 절, "Explored … nodes", work 단위 |
-  | 모델 | `Model.presolve()`를 MPS로 쓴 것(P0) |
+- **라이선스 한계**: `.venv`의 gurobipy는 크기 제한 라이선스다(변수·선형 제약 각 2,000개, 2027-11-29 만료). 기본 대상인 Netlib 64개(`re/bench/results/lp.csv`)와 `miplib_small` 38개는 모두 이 안에 든다. Netlib의 나머지 40개는 공개 최적값과만 비교한다.
+- **실행**: 두 백엔드 모두 같은 gurobipy 모양 API로 돌린다. Threads=1, WorkLimit(기본 60), 나머지 기본값이다. TimeLimit은 쓰지 않는다. 시간 한도는 실행마다 멈추는 지점이 달라 궤적 비교가 안 된다.
+- **기준선**: Gurobi 결과는 `bench/gurobi/`에 있다. 같은 설정으로 두 번 실행해 비교했더니 102개 모두 P0·P1이 일치했다(`bench/gurobi_determinism.csv`, 2026-11-05, 두 실행을 동시에 돌린 부하 상태에서도 같음). 따라서 P1 "같음"은 도달 가능한 목표다. 상태 분포는 LP 64개 OPTIMAL, MIP 12개 OPTIMAL·24개 WORK_LIMIT·2개 INFEASIBLE이다.
+- **인스턴스마다 남기는 것**:
 
-- **첫 분기점**: 두 추적이 처음 갈라지는 지점(예: SPX_ITRCNT k에서 목적값이 다름)을 찾아, 그 구간의 함수부터 원본과 대조한다. 결과는 인스턴스별 한 줄로 `rsolver/bench/parity.csv`에 쌓는다.
-- Gurobi 콜백은 매 반복이 아니라 간격을 두고 불린다. 그래서 반복 수가 같은 지점끼리만 비교한다.
+  | 파일 | 내용 | 단계 |
+  |---|---|---|
+  | `summary.json` | Fingerprint, Status, IterCount, BarIterCount, NodeCount, Work, ObjVal, ObjBound, presolved 크기, 로그에서 뽑은 presolve 제거 수·루트 LP(목적값, 반복 수)·"Cutting planes:" 종류별 수 | P0–P2 |
+  | `trace.csv.gz` | SIMPLEX(반복마다: ITRCNT, OBJVAL, PRIMINF, DUALINF, ISPERT), BARRIER(반복마다), MIPSOL(해마다: 노드, 목적값, best, bound), MIPNODE(노드 1,000개까지 전부, 그 뒤 1,000개마다: 노드, 상태, best, bound, 해 수). 값은 `repr`로 써서 비트 단위로 비교한다 | P1 |
+  | `presolved.mps.gz` | `Model.presolve()` 결과. 압축 해제 내용의 SHA-256으로 비교한다 | P0 |
+  | `log.txt` | 전체 로그 | 디버깅 |
+
+- **기록하지 않는 콜백**: PRESOLVE와 MIP 폴링 콜백은 시간 간격으로 불려 실행마다 행 수가 다르다. MIP에서는 루트 LP에도 SIMPLEX 콜백이 오지 않으므로 루트 LP는 로그 값과 노드 0의 MIPNODE 행(루트 cut 패스별 bound)으로 본다.
+- **첫 분기점**: 두 추적이 처음 갈라지는 행을 찾아, `port_map.tsv`에서 그 단계를 맡은 모듈의 함수부터 원본과 대조한다. SIMPLEX 콜백은 반복마다 불린다(25fv47: 반복 2,693회에 콜백 2,696회). 결과는 인스턴스별 한 줄로 `bench/parity.csv`에 쌓는다.
+- **P3**는 콜백 없는 실행으로 잰다(`re/bench/bench.py`). 콜백이 시간을 늘리기 때문이다.
 
 ## 7. 포팅하지 않는 것
 

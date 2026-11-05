@@ -1,0 +1,45 @@
+{
+ "Fingerprint": 1306347883,
+ "Status": 2,
+ "IterCount": 48153.0,
+ "BarIterCount": 0,
+ "NodeCount": 847.0,
+ "Work": 8.94209233230116,
+ "Runtime": 4.920042037963867,
+ "ObjVal": 3201.0,
+ "ObjBound": 3201.0,
+ "SolCount": 10,
+ "IsMIP": 1,
+ "NumVars": 1385,
+ "NumConstrs": 850,
+ "NumNZs": 384329,
+ "log": {
+  "presolve_removed": [
+   282,
+   0
+  ],
+  "root": [
+   "2.035362e+03",
+   487
+  ],
+  "cuts": {
+   "Learned": 2,
+   "Gomory": 1,
+   "Cover": 2,
+   "Implied bound": 41,
+   "Clique": 10,
+   "MIR": 47,
+   "Zero half": 11,
+   "Mod-K": 2,
+   "Network": 2,
+   "RLT": 69,
+   "Relax-and-lift": 27
+  }
+ },
+ "presolved": [
+  568,
+  1466,
+  38040
+ ],
+ "trace_rows": 920
+}

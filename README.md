@@ -18,7 +18,7 @@
 | [08_genconstr_nonlinear](docs/08_genconstr_nonlinear.md) | 일반 제약 번역, SOS 인코딩, 2차·비볼록, NL DAG/FBBT/envelope/OBBT, 전파, NL barrier |
 | [09_roadmap](docs/09_roadmap.md) | 마일스톤 M0–M6, 완료 조건, 검증 전략, 저장소 구성, 위험 |
 | [10_porting](docs/10_porting.md) | 성능 패리티 P0–P3, 포팅 절차, 수치 충실도 규칙, 차등 검사 하네스, 제외 범위 |
-| [port_map.tsv](docs/port_map.tsv) | 코어 함수 4,362개의 모듈 배정과 포팅 여부 (`tools/port_map.py`로 생성) |
+| [port_map.tsv](docs/port_map.tsv) | 코어 함수 4,362개의 모듈 배정 (`tools/port_map.py`로 생성) |
 
 ## 현재 코드 (M0 이전 프로토타입)
 

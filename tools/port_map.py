@@ -1,11 +1,10 @@
-"""Assign every decompiled Gurobi core function to an rsolver design module and report port coverage.
+"""Assign every decompiled Gurobi core function to an rsolver design module.
 
 Ownership (rules in docs/10_porting.md §2): functions named in re/notes/1x go to that note's module (most mentions wins;
 a note's own table row counts 10); module entry points and a few shared helpers are pinned in OVERRIDE; an undocumented
 named helper called from 3+ modules becomes `common`. Callees inherit the owner when only one module reaches them,
 else `common`. The rest are `01_model_api` (reached from a kept GRB* API), `excluded` (license/WLS/batch/tune/server),
 `extern` (MKL, OpenSSL), or `unreached`.
-Coverage: a function counts as ported when some .rs file under crates/ carries `port: <short>@0x<off>`.
 usage: python3 -I tools/port_map.py <re_dir> <rsolver_dir> [libgurobi130.so]   -> writes docs/port_map.tsv, prints the summary
        (with the .so, function pointers in data tables also count as edges; needs objdump and readelf)
 """
@@ -148,23 +147,19 @@ for short, mod in {"c23877": "02_driver", "3cd406": "03_presolve", "cda5b": "04_
                    "6e8eb3": "06_bnb", "7b77cd": "07_cuts_heur", "9ee0cf": "08_genconstr_nl"}.items():
     assert {owner[o] for o in by_short[short]} == {mod}, (short, mod)  # self-check: known entry points keep their module
 
-ported = set()
-for p in glob.glob(f"{rs_dir}/crates/**/*.rs", recursive=True):
-    ported |= {int(o, 16) for o in re.findall(r"port: [0-9a-zA-Z_]+@0x([0-9a-f]+)", open(p).read())}
-
 with open(f"{rs_dir}/docs/port_map.tsv", "w") as out:
-    out.write("off\tshort\tsize\tlines\tmodule\tbasis\ton_optimize_path\tported\n")
+    out.write("off\tshort\tsize\tlines\tmodule\tbasis\ton_optimize_path\n")
     for off in sorted(fn):
         f = fn[off]
         out.write(f"{off:#x}\t{f['short']}\t{f['size']}\t{f.get('lines', 0)}\t{owner[off]}\t{seed_of[off]}\t"
-                  f"{int(off in opt)}\t{int(off in ported)}\n")
+                  f"{int(off in opt)}\n")
 
-rows = defaultdict(lambda: [0, 0, 0, 0, 0, 0])
+rows = defaultdict(lambda: [0, 0, 0, 0, 0])
 for off, f in fn.items():
     r = rows[owner[off]]
-    r[0] += 1; r[1] += f["size"]; r[2] += f.get("lines", 0); r[3] += seed_of[off] == "note"; r[4] += off in opt; r[5] += off in ported
-print("| module | functions | named in notes | on optimize path | code KB | pseudocode lines | ported |")
-print("|---|---:|---:|---:|---:|---:|---:|")
+    r[0] += 1; r[1] += f["size"]; r[2] += f.get("lines", 0); r[3] += seed_of[off] == "note"; r[4] += off in opt
+print("| module | functions | named in notes | on optimize path | code KB | pseudocode lines |")
+print("|---|---:|---:|---:|---:|---:|")
 for mod in sorted(rows):
-    n, sz, ln, seeds, onopt, done = rows[mod]
-    print(f"| {mod} | {n:,} | {seeds:,} | {onopt:,} | {sz // 1024:,} | {ln:,} | {done:,} |")
+    n, sz, ln, seeds, onopt = rows[mod]
+    print(f"| {mod} | {n:,} | {seeds:,} | {onopt:,} | {sz // 1024:,} | {ln:,} |")
