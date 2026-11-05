@@ -7,6 +7,7 @@
 //! shortcut: pricing (DSE max over all rows, not the `15d2d` candidate list), Harris 2-pass instead of BFRT, the
 //! perturbation trigger and the refactor schedule are textbook stand-ins; iteration paths differ from Gurobi's.
 use crate::lu::{sum_squares, Lu, ZERO};
+use crate::bfrt::{bfrt, Cand};
 use crate::pricing::{Pricing, BIG_M_TOL};
 use crate::spx::Spx;
 use crate::start::start_basis;
@@ -531,40 +532,27 @@ impl<'a> Engine<'a> {
             // bound flipping ratio test (1c35c5): walk the breakpoints d̃_j/|α_j| in Harris groups; boxed columns
             // whose flip keeps the slope |δ| − Σ|α|(u−l) positive flip instead of entering (m1_notes §8.1)
             let sgn = if delta < 0.0 { -1.0 } else { 1.0 };
-            let mut cand: Vec<(usize, f64)> = Vec::new(); // (column, d̃)
+            // 1c35c5 in the original sign convention (candidates α < 0, normalized d ≥ 0), structural columns
+            // first, then slacks
+            let mut cands: Vec<Cand> = Vec::new();
             for j in 0..self.n + self.m {
                 let a = alpha[j];
-                if a.abs() <= PIVOT_TOL || self.rejected[j] {
+                if a == 0.0 || self.rejected[j] {
                     continue;
                 }
                 let t = sgn * a;
-                let dj = match self.vstat[j] {
-                    -1 if t > 0.0 => self.d[j],
-                    -2 if t < 0.0 => -self.d[j],
-                    -3 => self.d[j].abs(),
+                let (ag, dg) = match self.vstat[j] {
+                    -1 => (-t, self.d[j]),
+                    -2 => (t, -self.d[j]),
+                    -3 => (-a.abs(), self.d[j].abs()),
                     _ => continue,
                 };
-                cand.push((j, dj));
+                let w = if j < self.n { self.spx.len[j] as f64 * (1.0 * 0.3 + 0.7) } else { 0.5 * (1.0 * 0.3 + 0.7) };
+                cands.push(Cand { j, a: ag, d: dg, range: self.spx.u[j] - self.spx.l[j], back: j >= self.n, w });
             }
-            cand.sort_by(|x, y| (x.1.max(0.0) / alpha[x.0].abs()).total_cmp(&(y.1.max(0.0) / alpha[y.0].abs())));
-            let mut slope = delta.abs();
-            let mut flips: Vec<usize> = Vec::new();
-            let mut q = usize::MAX;
-            // cand is sorted by ratio, so each Harris group is a prefix of what is left
-            while !cand.is_empty() {
-                let theta_max = cand.iter().map(|&(j, dj)| (dj.max(0.0) + OPT_TOL) / alpha[j].abs()).fold(f64::INFINITY, f64::min);
-                let len = cand.iter().take_while(|&&(j, dj)| dj.max(0.0) / alpha[j].abs() <= theta_max).count();
-                let group = &cand[..len];
-                let cap: f64 = group.iter().map(|&(j, _)| alpha[j].abs() * (self.spx.u[j] - self.spx.l[j])).sum();
-                if group.iter().all(|&(j, _)| self.vstat[j] != -3) && slope - cap > FEAS_TOL {
-                    slope -= cap;
-                    flips.extend(group.iter().map(|&(j, _)| j));
-                    cand.drain(..len);
-                    continue;
-                }
-                q = group.iter().map(|&(j, _)| j).max_by(|&x, &y| alpha[x].abs().total_cmp(&alpha[y].abs())).unwrap();
-                break;
-            }
+            let feas = if self.big_m { BIG_M_TOL } else { FEAS_TOL };
+            let (qq, flips) = bfrt(&cands, -delta.abs(), feas);
+            let q = qq.unwrap_or(usize::MAX);
             if q == usize::MAX && flips.is_empty() {
                 if self.lu.n_updates > 0 && !retried {
                     retried = true;
