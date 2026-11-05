@@ -26,6 +26,7 @@ pub mod state;
 mod subst;
 mod stubs;
 pub mod tracker;
+mod transred;
 
 use rsolver_model::Model;
 use state::State;

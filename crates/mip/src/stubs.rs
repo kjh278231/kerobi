@@ -16,8 +16,6 @@ impl State {
     pub fn implied_int(&mut self, p: &Params) -> i32 { 0 }
     /// `578fd2` knapsack coefficient lifting
     pub fn knapsack(&mut self, p: &Params) -> i32 { 0 }
-    /// `5431ee` binary implication graph SCC
-    pub fn trans_red(&mut self, p: &Params) -> i32 { 0 }
     /// `4030c9` dominated columns
     pub fn dominated(&mut self, p: &Params) -> i32 { 0 }
     /// `414c03(st, env, mode, T15)` row nonzero cancellation (`40d2bc` mode 0)
