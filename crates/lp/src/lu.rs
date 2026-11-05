@@ -393,11 +393,9 @@ impl Lu {
     /// ported, and with U off-diagonals or row etas a plain dense solve stands in for the original's paths.
     pub fn btran(&self, x: &[(usize, f64)]) -> Vec<(usize, f64)> {
         assert!(self.complete(), "singular basis");
-        if self.n_updates > 0 {
+        if self.n_updates > 0 || self.general {
+            // Markowitz kernel or FT updates: U is no longer diagonal, the same phase order applies
             return self.btran_updated(x);
-        }
-        if self.general {
-            return self.btran_general(x);
         }
         let m = self.head.len();
         // Uᵀ is the diagonal: sparse (21a941, inputs in order) when (int)(LU+0x108 + LU+0x110)·nnz ≤ m, both 1.5 here
@@ -545,46 +543,6 @@ impl Lu {
             out[r] = (r, dense[k]);
         }
         out
-    }
-
-    /// Dense BTRAN through Uᵀ (in U order), the row etas transposed (newest first) and Lᵀ; all m rows in row order.
-    fn btran_general(&self, x: &[(usize, f64)]) -> Vec<(usize, f64)> {
-        let m = self.head.len();
-        let mut w = vec![0.0; m]; // by step
-        for &(pos, v) in x {
-            w[self.kpos[pos]] += v;
-        }
-        let mut y = vec![0.0; m]; // by row
-        for &k in &self.order {
-            let (r, _, d) = self.steps[k];
-            let t = w[k] / d;
-            if t.abs() <= ZERO {
-                continue;
-            }
-            y[r] = t;
-            for &(j, u) in &self.urow[k] {
-                w[j] -= u * t;
-            }
-        }
-        for (r, mu) in self.retas.iter().rev() {
-            let yr = y[*r];
-            if yr != 0.0 {
-                for &(i, v) in mu {
-                    y[i] -= v * yr;
-                }
-            }
-        }
-        for k in (0..m).rev() {
-            let r = self.steps[k].0;
-            let v = y[r];
-            if ZERO < v.abs() {
-                for &(j, l) in &self.lrow[k] {
-                    let rj = self.steps[j].0;
-                    y[rj] -= l * v;
-                }
-            }
-        }
-        y.into_iter().enumerate().collect()
     }
 
     /// FTRAN through L and the row etas (x by row); the result is the FT spike of the column.
