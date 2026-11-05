@@ -46,13 +46,15 @@ pub struct Params {
     pub agg_fill: i32,
     /// env+0x2594 GURO_PAR_PREPAIRAGG
     pub pre_pair_agg: i32,
+    /// env+0x2534 PreDepRow (-1 auto)
+    pub pre_dep_row: i32,
 }
 
 impl Default for Params {
     fn default() -> Self {
         Params { presolve: -1, feastol: 1e-6, infbound: 1e30, fixtol: -1.0, prelimit: 2_000_000_000, dual_reductions: true, prebound: 1,
                  opttol: 1e-6, numeric_focus: 0, agg_mult_limit: 1e14, precrush: 0, prepasses: -1, aggregate: 1, agg_fill: -1,
-                 pre_pair_agg: 3 }
+                 pre_pair_agg: 3, pre_dep_row: -1 }
     }
 }
 
@@ -76,6 +78,7 @@ impl Params {
                 "aggregate" => p.aggregate = *v as i32,
                 "aggfill" => p.agg_fill = *v as i32,
                 "guro_par_prepairagg" => p.pre_pair_agg = *v as i32,
+                "predeprow" => p.pre_dep_row = *v as i32,
                 _ => {}
             }
         }
@@ -132,6 +135,15 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
             return;
         }
     }
+    // PreDepRow -1 (`390989` L251): 3 when nnz > 2.5 n (Presolve 1 gives 0; Method, INTBASIS, PRESYMMPASSES at
+    // their defaults)
+    let dep_rows = if p.pre_dep_row != -1 {
+        p.pre_dep_row
+    } else if p.presolve == 2 || (p.presolve != 1 && (st.n as f64) * 2.5 < st.nnz as f64) {
+        3
+    } else {
+        0
+    };
     let passes = if p.prepasses < 0 { if p.presolve == 1 { 5 } else { 100 } } else { p.prepasses };
     let mut pass_snap = st.snapshot();
     for k in 0..passes {
@@ -293,10 +305,98 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
         }
-        // shortcut: the rest of the outer pass (5b488d, 47c445) and the finish stage are not ported yet;
-        // stop here like a reached PRELIMIT.
-        let _ = &snap;
+        // `5b488d` (GURO_PAR_PREDERIVED, default 1)
+        if p.dual_reductions && p.precrush == 0 {
+            if st.derived_bounds(tols) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        let rows = st.rows_list();
+        st.activity(Some(&rows), p.infbound);
+        // PRETWOROWS (-1) runs `51aba6` only with Presolve 2.
+        // shortcut: Presolve=2 reductions are not ported; stop like a reached PRELIMIT.
+        if p.presolve == 2 {
+            return;
+        }
+        // shortcut: symmetry detection (`5577ba` -> `551cc0`, pass 0 with >= 500 columns and >= 100 rows left)
+        // is not ported; it only turns automatic PreDepRow off when it finds symmetry. Assumed to find none.
+        if k == 0 && dep_rows & 1 != 0 {
+            if st.dependent_rows(1, tols) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        if k == 0 && dep_rows & 2 != 0 && p.dual_reductions {
+            if st.dependent_rows(2, tols) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        if st.progress(&snap) <= 1e-6 {
+            break;
+        }
+    }
+    finish(st, p, tols, calls);
+}
+
+/// The finish stage (`390989` LAB_0048dff3): level 0, `51a144`, {`50cc90(1)`, `50d878`} until `50d878` removes no
+/// more columns, then `50de61` (and `50d878` once more if it removed rows).
+fn finish(st: &mut State, p: &Params, tols: &ColTols, mut calls: i32) {
+    let limit = p.prelimit;
+    st.tracker.level = 0;
+    st.reset_tracker();
+    if p.prebound != 0 {
+        st.dual_singleton_fix(p.dual_reductions, p.infbound);
+        calls += 1; // counted without a limit check
+    }
+    if limit <= calls {
         return;
+    }
+    // PreSparsify (-1) would run `470936` only at 2; no QP/QC parts for LP
+    loop {
+        if st.redundant_rows(1, p.feastol, p.opttol, p.infbound) != 0 {
+            return;
+        }
+        calls += 1;
+        if limit <= calls {
+            return;
+        }
+        let before = st.cols_removed;
+        if p.dual_reductions {
+            if st.empty_cols(p.opttol, p.feastol, p.infbound) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        if st.cols_removed <= before {
+            break;
+        }
+    }
+    if p.prebound != 0 {
+        let before = st.rows_removed;
+        if st.bound_rows(tols) != 0 {
+            return;
+        }
+        calls += 1;
+        if limit <= calls {
+            return;
+        }
+        if before < st.rows_removed && p.dual_reductions {
+            st.empty_cols(p.opttol, p.feastol, p.infbound);
+        }
     }
 }
 

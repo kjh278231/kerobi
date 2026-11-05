@@ -1231,24 +1231,44 @@ impl State {
     fn propagate_bounds(&mut self, rows: &[i32], feastol: f64, inf: f64, prebound: i32) -> Result<(Vec<f64>, Vec<f64>), i32> {
         let mut lo = self.lb.clone();
         let mut hi = self.ub.clone();
-        // The original copies all bounds when (m+1)*0.3 < nnz*|rows| (QC aside), else only those of the rows'
-        // columns, which are the only ones read; only the second way counts work.
-        if !(((self.m + 1) as f64) * 0.3 < (self.nnz * rows.len() as i64) as f64) {
+        self.propagate_into(rows, &mut lo, &mut hi, feastol, inf, prebound)?;
+        Ok((lo, hi))
+    }
+
+    /// `50108e` on given copies: the bounds are copied in first (all of them when (m+1)*0.3 < nnz*|rows|, QC
+    /// aside, else only those of the rows' live columns; the others keep what the copies held). Returns the
+    /// number of tightenings.
+    pub(super) fn propagate_into(&mut self, rows: &[i32], lo: &mut [f64], hi: &mut [f64], feastol: f64, inf: f64,
+                                 prebound: i32) -> Result<i32, i32> {
+        if ((self.m + 1) as f64) * 0.3 < (self.nnz * rows.len() as i64) as f64 {
+            lo.copy_from_slice(&self.lb);
+            hi.copy_from_slice(&self.ub);
+        } else {
             for &r in rows {
-                if 0 < self.row_cnt[r as usize] {
-                    self.work += self.row_len[r as usize] as f64 * 6.0;
+                let r = r as usize;
+                if 0 < self.row_cnt[r] {
+                    let b = self.row_beg[r] as usize;
+                    for k in b..b + self.row_len[r] as usize {
+                        let j = self.row_ind[k];
+                        if j >= 0 && self.col_cnt[j as usize] >= 0 {
+                            lo[j as usize] = self.lb[j as usize];
+                            hi[j as usize] = self.ub[j as usize];
+                        }
+                    }
+                    self.work += self.row_len[r] as f64 * 6.0;
                 }
             }
         }
         if prebound == 0 {
-            return Ok((lo, hi));
+            return Ok(0);
         }
+        let mut cnt = 0;
         for &rr in rows {
             let r = rr as usize;
             if self.row_cnt[r] <= 0 {
                 continue;
             }
-            let (maxact, nmax, minact, nmin) = self.row_range(r, &lo, &hi, inf);
+            let (maxact, nmax, minact, nmin) = self.row_range(r, lo, hi, inf);
             let b = self.row_beg[r] as usize;
             let len = self.row_len[r] as usize;
             self.work += len as f64 * 5.0;
@@ -1320,6 +1340,7 @@ impl State {
                     }
                     lo[j] = f8;
                     l = f8;
+                    cnt += 1;
                 }
                 if f0 < 1e8 && f0 < hi[j] - feastol * 100.0 {
                     if f0 < l - feastol {
@@ -1327,11 +1348,12 @@ impl State {
                         return Err(INFEASIBLE);
                     }
                     hi[j] = f0;
+                    cnt += 1;
                 }
             }
             self.work += len as f64 * 12.0;
         }
-        Ok((lo, hi))
+        Ok(cnt)
     }
 }
 
@@ -1805,5 +1827,278 @@ impl State {
             self.tracker.mark_row(r as i32);
         }
         self.work += cols.len() as f64 * 20.0;
+    }
+}
+
+impl State {
+    /// `5b488d` (PREDERIVED): derived bounds. shortcut: not ported yet; no-op (Netlib results do not change with
+    /// GURO_PAR_PREDERIVED=0). Port before claiming the default reduction set.
+    pub fn derived_bounds(&mut self, _t: &ColTols) -> i32 {
+        0
+    }
+
+    /// `50de61` (PREBOUND, finish stage): bounds implied by the rows, with 0.001 (|b| + 1) of room, go onto the
+    /// columns, and `<` rows that cannot be violated are dropped. Activities end up recomputed from the new
+    /// bounds (plain sums). Returns 0 or 3 (`bad_row`/`bad_col`).
+    pub fn bound_rows(&mut self, t: &ColTols) -> i32 {
+        let (n, m) = (self.n, self.m);
+        let (inf, ft) = (t.infbound, t.feastol);
+        let mut lc = self.lb.clone();
+        let mut uc = self.ub.clone();
+        let (mut live, mut live_nnz) = (0i64, 0i64);
+        for j in 0..n {
+            if 0 < self.col_cnt[j] {
+                live += 1;
+                live_nnz += self.col_cnt[j] as i64;
+            }
+        }
+        if live == 0 {
+            return 0;
+        }
+        let mut kept: Vec<i32> = Vec::new();
+        let mut tightened = 0;
+        // state+8 (problem type) == 1 would also take this way
+        if live * 1000 <= live_nnz {
+            kept = (0..m as i32).filter(|&i| 0 < self.row_cnt[i as usize]).collect();
+        } else {
+            // activities of copies follow the implied bounds of columns with an infinite bound
+            let (mut imax, mut imin) = (self.inf_max.clone(), self.inf_min.clone());
+            let (mut amax, mut amin) = (self.act_max.clone(), self.act_min.clone());
+            let open = |i: usize, imin: &[i32], imax: &[i32], sense: &[u8]| {
+                let (a, b) = (imin[i], imax[i]);
+                !(a + b < 1 || (1 < a && (1 < b || sense[i] != b'=')))
+            };
+            let mut flag = vec![0i32; m];
+            let mut list: Vec<usize> = Vec::new();
+            for i in 0..m {
+                if 0 < self.row_cnt[i] && open(i, &imin, &imax, &self.sense) {
+                    list.push(i);
+                    flag[i] = 1;
+                }
+            }
+            while !list.is_empty() {
+                let len0 = list.len();
+                for idx in 0..len0 {
+                    let i = list[idx];
+                    let eq = self.sense[i] == b'=';
+                    if (imin[i] == 0 && ft < amin[i]) || (eq && imax[i] == 0 && amax[i] < -ft) {
+                        self.bad_row = i as i32;
+                        return INFEASIBLE;
+                    }
+                    if !open(i, &imin, &imax, &self.sense) {
+                        continue;
+                    }
+                    let d = (amax[i] - amin[i]).max(1.0);
+                    let r = if d <= 1e6 { d } else { 1e6 };
+                    let b = self.row_beg[i] as usize;
+                    for s in b..b + self.row_len[i] as usize {
+                        let kk = self.row_ind[s];
+                        let a = self.row_val[s];
+                        if kk < 0 || self.col_cnt[kk as usize] < 0 || a.abs() < r * 1e-10 {
+                            continue;
+                        }
+                        let k = kk as usize;
+                        let (u, mut l) = (uc[k], lc[k]);
+                        let (mut nl, mut nu) = (l, u);
+                        if a <= 1e-8 || u < inf {
+                            if a < -1e-8 && l <= -inf {
+                                if imin[i] == 0 {
+                                    nl = u - amin[i] / a;
+                                } else if imin[i] == 1 && inf <= u {
+                                    nl = -amin[i] / a;
+                                }
+                            }
+                        } else if imin[i] == 0 {
+                            nu = l - amin[i] / a;
+                        } else if imin[i] == 1 && l <= -inf {
+                            nu = -amin[i] / a;
+                        }
+                        if eq {
+                            if -1e-8 <= a || nu < inf {
+                                if 1e-8 < a && nl <= -inf {
+                                    if imax[i] == 0 {
+                                        nl = u - amax[i] / a;
+                                    } else if imax[i] == 1 && inf <= u {
+                                        nl = -amax[i] / a;
+                                    }
+                                }
+                            } else if imax[i] == 0 {
+                                nu = l - amax[i] / a;
+                            } else if imax[i] == 1 && l <= -inf {
+                                nu = -amax[i] / a;
+                            }
+                        }
+                        // a new finite bound moves the column's rows' copied activities
+                        let mut shift = |x: f64, lower: bool, list: &mut Vec<usize>, st: &State| {
+                            let cb = st.col_beg[k] as usize;
+                            for q in cb..cb + st.col_len[k].max(0) as usize {
+                                let i2 = st.col_ind[q];
+                                if i2 < 0 || st.row_cnt[i2 as usize] < 0 {
+                                    continue;
+                                }
+                                let (i2, a2) = (i2 as usize, st.col_val[q]);
+                                if (a2 <= 0.0) == lower {
+                                    imax[i2] -= 1;
+                                    amax[i2] += a2 * x;
+                                } else {
+                                    imin[i2] -= 1;
+                                    amin[i2] += a2 * x;
+                                }
+                                if flag[i2] == 0 {
+                                    list.push(i2);
+                                }
+                                flag[i2] += 2;
+                            }
+                        };
+                        if -1e8 < nl && l <= -inf {
+                            if u + ft < nl {
+                                self.bad_col = kk;
+                                return INFEASIBLE;
+                            }
+                            tightened += 1;
+                            shift(nl, true, &mut list, self);
+                            lc[k] = nl;
+                            l = nl;
+                        }
+                        if nu < 1e8 && inf <= uc[k] {
+                            if nu < l - ft {
+                                self.bad_col = kk;
+                                return INFEASIBLE;
+                            }
+                            tightened += 1;
+                            shift(nu, false, &mut list, self);
+                            uc[k] = nu;
+                        }
+                    }
+                }
+                let all = std::mem::take(&mut list);
+                for i in all {
+                    if flag[i] < 2 || self.row_cnt[i] < 1 || !open(i, &imin, &imax, &self.sense) {
+                        flag[i] = 0;
+                    } else {
+                        list.push(i);
+                        flag[i] = 1;
+                    }
+                }
+            }
+            // rows: infeasible, cannot be violated (dropped), or kept for the propagation pass
+            let mut removed = 0;
+            for i in 0..m {
+                if self.row_cnt[i] <= 0 {
+                    continue;
+                }
+                let d = (amax[i] - amin[i]).max(1.0);
+                let r = if d <= 1e4 { d } else { 1e4 };
+                let lo_ok = imin[i] != 0 || amin[i] <= ft * r;
+                let hi_ok = imax[i] != 0 || -(r * ft) <= amax[i];
+                if self.sense[i] == b'=' {
+                    if !(lo_ok && hi_ok) {
+                        self.bad_row = i as i32;
+                        return INFEASIBLE;
+                    }
+                } else if imax[i] == 0 && amax[i] < -(ft * r) {
+                    self.drop_row_bounds(i);
+                    removed += 1;
+                    continue;
+                } else if !lo_ok {
+                    self.bad_row = i as i32;
+                    return INFEASIBLE;
+                }
+                kept.push(i as i32);
+            }
+            self.rows_removed += removed;
+        }
+        let rc = match self.propagate_into(&kept, &mut lc, &mut uc, ft, inf, 1) {
+            Ok(c) => {
+                tightened += c;
+                0
+            }
+            Err(rc) => rc,
+        };
+        self.bounds_tightened += tightened;
+        // Method 2, state+0x100 or a frequent prescan pattern (m * 0.05 < state+0x488) would bound only free
+        // columns; the default relaxes every implied bound by 0.001 (|b| + 1) onto columns with a finite bound.
+        if self.agg_scan as f64 > (m as f64) * 0.05 {
+            for j in 0..n {
+                if 0 < self.col_cnt[j] && self.lb[j] <= -inf && inf <= self.ub[j] && self.col_flag[j] & 0x30 == 0 {
+                    if 1e7 <= uc[j].abs() {
+                        if lc[j].abs() < 1e7 {
+                            self.lb[j] = lc[j] - (lc[j].abs() + 1.0) * 0.001;
+                        }
+                    } else {
+                        self.ub[j] = uc[j] + (uc[j].abs() + 1.0) * 0.001;
+                    }
+                }
+            }
+        } else {
+            for j in 0..n {
+                if -inf < self.lb[j] || self.ub[j] < inf {
+                    if lc[j].abs() < 1e7 {
+                        let x = lc[j] - (lc[j].abs() + 1.0) * 0.001;
+                        if self.lb[j] < x {
+                            self.lb[j] = x;
+                        }
+                    }
+                    if uc[j].abs() < 1e7 {
+                        let x = uc[j] + (uc[j].abs() + 1.0) * 0.001;
+                        if x < self.ub[j] {
+                            self.ub[j] = x;
+                        }
+                    }
+                }
+            }
+        }
+        // rows against the implied bounds, then activities from the new bounds
+        let mut removed = 0;
+        for i in 0..m {
+            if self.row_cnt[i] <= 0 {
+                continue;
+            }
+            let (mx, nmx, mn, nmn) = self.row_range(i, &lc, &uc, inf);
+            let d = (mx - mn).max(1.0);
+            let r = if d <= 1e4 { d } else { 1e4 };
+            if self.sense[i] == b'=' {
+                if (nmn == 0 && ft * r < mn) || (nmx == 0 && mx < -(r * ft)) {
+                    self.bad_row = i as i32;
+                    return INFEASIBLE;
+                }
+            } else if nmx == 0 && mx < -(ft * r) {
+                self.drop_row_bounds(i);
+                removed += 1;
+                continue;
+            } else if !(nmn != 0 || mn <= r * ft) {
+                self.bad_row = i as i32;
+                return INFEASIBLE;
+            }
+            let (lb, ub) = (std::mem::take(&mut self.lb), std::mem::take(&mut self.ub));
+            let (mx, nmx, mn, nmn) = self.row_range(i, &lb, &ub, inf);
+            self.lb = lb;
+            self.ub = ub;
+            self.inf_max[i] = nmx;
+            self.inf_min[i] = nmn;
+            self.act_max[i] = mx;
+            self.act_min[i] = mn;
+        }
+        self.rows_removed += removed;
+        rc
+    }
+
+    /// Drop row i (`50de61`): its live columns are marked and lose the entry.
+    fn drop_row_bounds(&mut self, i: usize) {
+        let b = self.row_beg[i] as usize;
+        for s in b..b + self.row_len[i] as usize {
+            let j = self.row_ind[s];
+            if j >= 0 && self.col_cnt[j as usize] >= 0 {
+                self.tracker.mark_col(j);
+                self.col_cnt[j as usize] -= 1;
+                self.row_ind[s] = -1;
+            }
+        }
+        self.row_cnt[i] = -2;
+    }
+
+    /// `47c445` (PreDepRow): dependent rows. shortcut: not ported yet; no-op.
+    pub fn dependent_rows(&mut self, _mode: i32, _t: &ColTols) -> i32 {
+        0
     }
 }
