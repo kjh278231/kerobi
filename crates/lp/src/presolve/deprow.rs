@@ -926,6 +926,8 @@ impl State {
         let mut ent = Vec::new();
         if nf != 0 {
             self.work += (nf + 2 + self.m) as i32 as f64;
+            // gathering the free columns' costs and counts
+            self.work += self.n as f64 * 6.0;
             for i in 0..self.m {
                 if self.row_cnt[i] < 0 {
                     continue;
