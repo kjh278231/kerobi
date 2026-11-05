@@ -1,0 +1,72 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 20:32:31 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 6
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_pdhg_nopre/agg2/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/agg2.mps.gz
+Reading time = 0.00 seconds
+AGG2: 516 rows, 302 columns, 4284 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  6
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 516 rows, 302 columns and 4284 nonzeros (Min)
+Model fingerprint: 0xbc012b3c
+Model has 231 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-05, 4e+02]
+  Objective range  [3e+00, 1e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [8e+01, 1e+06]
+
+Start PDHG using 1 threads
+
+                       Objective                Residual
+     Iter       Primal          Dual         Primal    Dual     Compl    Time
+        0   0.00000000e+00  0.00000000e+00  3.98e+05 8.71e+01  0.00e+00    0s
+     5576  -2.02392231e+07 -2.02392523e+07  6.83e-02 2.86e-07  2.97e-05    0s
+
+PDHG solved model in 5576 iterations and 0.02 seconds (0.19 work units)
+Optimal objective -2.02392231e+07
+
+
+User-callback calls 92, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/agg2.mps.gz
+Reading time = 0.00 seconds
+AGG2: 516 rows, 302 columns, 4284 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  6
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 516 rows, 302 columns and 4284 nonzeros (Min)
+Model fingerprint: 0xbc012b3c
+Model has 231 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-05, 4e+02]
+  Objective range  [3e+00, 1e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [8e+01, 1e+06]

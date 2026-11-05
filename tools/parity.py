@@ -13,8 +13,8 @@ from pathlib import Path
 
 SANDBOX = Path(__file__).resolve().parents[2]
 DATA = SANDBOX / "re/bench/data"
-SUMMARY = ("Fingerprint", "Status", "IterCount", "BarIterCount", "NodeCount", "Work", "Runtime", "ObjVal", "ObjBound",
-           "SolCount", "IsMIP", "NumVars", "NumConstrs", "NumNZs")
+SUMMARY = ("Fingerprint", "Status", "IterCount", "BarIterCount", "PDHGIterCount", "NodeCount", "Work", "Runtime", "ObjVal",
+           "ObjBound", "SolCount", "IsMIP", "NumVars", "NumConstrs", "NumNZs")
 MAX_ROWS = 1_000_000
 
 
@@ -45,6 +45,8 @@ def capture_one(gp, path, d, work_limit, params=()):
     fields = {C.SIMPLEX: ("simplex", (C.SPX_ITRCNT, C.SPX_OBJVAL, C.SPX_PRIMINF, C.SPX_DUALINF, C.SPX_ISPERT)),
               C.BARRIER: ("barrier", (C.BARRIER_ITRCNT, C.BARRIER_PRIMOBJ, C.BARRIER_DUALOBJ, C.BARRIER_PRIMINF,
                                       C.BARRIER_DUALINF, C.BARRIER_COMPL)),
+              C.PDHG: ("pdhg", (C.PDHG_ITRCNT, C.PDHG_PRIMOBJ, C.PDHG_DUALOBJ, C.PDHG_PRIMINF, C.PDHG_DUALINF,
+                                C.PDHG_COMPL)),
               C.MIPSOL: ("mipsol", (C.MIPSOL_NODCNT, C.MIPSOL_OBJ, C.MIPSOL_OBJBST, C.MIPSOL_OBJBND)),
               C.MIPNODE: ("mipnode", (C.MIPNODE_NODCNT, C.MIPNODE_STATUS, C.MIPNODE_OBJBST, C.MIPNODE_OBJBND,
                                       C.MIPNODE_SOLCNT))}
@@ -136,8 +138,8 @@ def first_divergence_rel(ref, test, tol=1e-6):
 
 
 def compare(ref_dir, test_dir, out_csv):
-    cols = ["instance", "p0_fingerprint", "p0_presolved", "status", "iters", "bar_iters", "bar_stats", "nodes", "root", "cuts",
-            "work_ratio", "first_divergence", "first_divergence_1e-6", "errors"]
+    cols = ["instance", "p0_fingerprint", "p0_presolved", "status", "iters", "bar_iters", "pdhg_iters", "bar_stats", "nodes",
+            "root", "cuts", "work_ratio", "first_divergence", "first_divergence_1e-6", "errors"]
     out, tally = [], {"p0": 0, "p1": 0, "n": 0}
     for rd in sorted(p for p in ref_dir.iterdir() if (p / "summary.json").exists()):
         td = test_dir / rd.name
@@ -152,7 +154,8 @@ def compare(ref_dir, test_dir, out_csv):
         row = {"instance": rd.name,
                "p0_fingerprint": same("Fingerprint"),
                "p0_presolved": "ok" if presolved_digest(rd) == presolved_digest(td) else f"{r.get('presolved')} vs {t.get('presolved')}",
-               "status": same("Status"), "iters": same("IterCount"), "bar_iters": same("BarIterCount"), "nodes": same("NodeCount"),
+               "status": same("Status"), "iters": same("IterCount"), "bar_iters": same("BarIterCount"),
+               "pdhg_iters": same("PDHGIterCount"), "nodes": same("NodeCount"),
                "root": same_log("root"), "cuts": same_log("cuts"), "bar_stats": same_log("barstats"),
                "work_ratio": f"{t['Work'] / r['Work']:.4f}" if r.get("Work") and t.get("Work") is not None else "",
                "errors": "; ".join(f"{k}: {v[:60]}" for k, v in t.get("errors", {}).items()),
@@ -160,7 +163,8 @@ def compare(ref_dir, test_dir, out_csv):
                "first_divergence_1e-6": first_divergence_rel(load(rd), load(td))}
         tally["n"] += 1
         tally["p0"] += row["p0_fingerprint"] == row["p0_presolved"] == "ok"
-        tally["p1"] += all(row[k] == "ok" for k in ("status", "iters", "bar_iters", "bar_stats", "nodes", "root", "cuts")) and not row["first_divergence"]
+        tally["p1"] += all(row[k] == "ok" for k in ("status", "iters", "bar_iters", "pdhg_iters", "bar_stats", "nodes", "root",
+                                                    "cuts")) and not row["first_divergence"]
         out.append(row)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
     with open(out_csv, "w", newline="") as f:
