@@ -172,8 +172,8 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 1. **회귀 수정**: israel은 고쳤다(`6013997`, flip이 1e30 규모면 x_B 재계산). perold는 dual이 섭동 상태로 끝난 뒤 교과서식 primal phase 1이 NUMERIC으로 빠진다(원본 primal 이식 때 해결). Method 1 91개 점검은 `bench/lp_check.log`(dfl001은 release에서도 300초 초과: 속도 문제). Method 0은 교과서식 primal이 25fv47에서 300초를 넘겨 점검에서 뺐다.
 2. **P1, dual 반복을 원본 구조로 재작성**(진행 중, 세부는 [m1_notes §8.2–8.4](m1_notes.md)):
    - 도구: `tools/fn_trace.js`(frida로 내부 함수 호출 순서·필드), `bench/oracle/iter0-5p`(64개 반복 0–5, `price` 포함), `tools/proto/list0b.py`(반복 0 목록 63/64).
-   - 이미 Rust에 있는 것: `common::sort_desc`(`aabbe3`), `Lu::row_cost_estimate`(`9e60b`). 엔진에는 아직 안 붙였다.
-   - 다음 작업: (a) `simplex.rs`의 CHUZR를 §8.3 규칙(모드 0 목록·표시·P+0x28 허용 수·P+0x38 예산·15d2d 재구성, 비용 모드, 1e19 인공 bound 단계)으로 바꾸고 `118725`의 단계 종료를 넣는다. (b) 모드 1(Full pricing) 초기화와 반복별 유지(`1bae9c` L560–726, 전체 경로 L1262 이후)를 해독한다. (c) 재분해 시점(§8.2 식, LU 원소 수 L+0x1e0/0x1e8/0x190/0x184를 원본 저장 형식대로). (d) BFRT `1c35c5` 최종 선택과 비용 이동 난수. (e) `48d5f` 섭동.
+   - 엔진에 들어간 것(`899c192`): `pricing.rs` CHUZR 모드 0(목록·표시·허용 수 P+0x28·예산 P+0x38·`15d2d` 재구성·비용 가중 점수·`aabbe3` 정렬), 인공 bound 단계(허용오차 1e19)와 종료(`118725`), P+0x48 평균, 재분해 때 `9e60b` 비용·모드 1 전환. 모드 1은 "전 위치 점수 최대"로 근사(`shortcut:`). 결과: 64/64 정확, 반복 일치 4/64, 작은 LP의 첫 분기는 들어오는 열.
+   - 다음 작업(순서): (a) **BFRT `1c35c5` 이식**: 입력 α(spx+0x208)는 앞 구간(param_2개, 열 번호 오름차순 구조 열)과 뒤 구간(slack·고정 열)으로 나뉜다. 첫 패스(L180–370)는 SIMD 변수 손실이 커서 asm(0xc74a0~)과 대조해야 한다. `tools/trace_specs/bfrt_io.json`으로 입출력(param_4 개수, param_5 α 위치 목록, q)을 64개 반복 0에서 받아 Python 프로토타입을 맞춘 뒤 Rust로 옮긴다. α 행 계산 순서(`0a4109`, 행 사본 spx+0x1d0)도 같이 맞춘다. (b) 모드 1 초기화·유지(`1bae9c` L560–726, 전체 경로), (c) 재분해 시점(§8.2 식), (d) 비용 이동 난수 `a7b54f`·`a7b4d6`, (e) `48d5f` 섭동.
    - 검증: `fn_trace.js`로 반복별 (r, q, 모드, 커서)를 받아 rsolver의 같은 값과 첫 분기점을 비교하는 스크립트를 만든다(`tools/proto/pathcmp.py`를 확장).
 3. **primal 이식**(`0478d3`, `0af361`, `229999` crash, `06dfff` partial pricing, `0736dd`, `055f68/054eef/056973` ratio test)으로 Method 0 P1.
 4. **P2 work**: 커널별 작업량 누적을 원본 식대로 넣는다(`param_3`/`param_27` 누적식이 각 함수 끝에 있다, 계수 spx+0x148).
