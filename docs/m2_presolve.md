@@ -1,0 +1,74 @@
+# M2 MIP presolve 작업 노트 (`3cd406`)
+
+MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolve.md)로 옮긴다. 작업 방식은 LP presolve([m1_presolve.md](m1_presolve.md))와 같다: 재구성 + 오라클 비트 검증, 단계 오라클은 `GURO_PAR_PRELIMIT`.
+
+## 0. 현재 상태 (2026-11-06)
+
+| G6 기준 | 상태 |
+|---|---|
+| (1) miplib_small 38개 기본값 presolved 모델 38/38 | 시작 전 |
+| (2) 기본값에서 도는 MIP reduction 전부(probing·대칭성·연결 성분 포함) | 시작 전. 목록은 §2 |
+| (3) MIP postsolve 레코드 | 시작 전 |
+| (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
+
+운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만.
+
+## 1. 호출 그래프와 실제 호출: MIP presolve는 LP를 풀지 않는다 (2026-11-06)
+
+### 1.1 P0 경로
+`Model.presolve()` = `GRBpresolvemodel`(`999702`). 연속 모델이면 `390989`(LP presolve), MIP(`a7f063` ≠ 0)이면 `3db19d` → `3db15a`(재시도 래퍼: "Presolved model has numerical issues" / "Q matrix is non-PSD after presolve substitutions"면 PREQSUBST=0·AGEQ=0으로 한 번 더) → `3cd406(model, probeMode, mipctx=0, 1, timer, …)`. 비볼록 연속 모델도 `3db19d`로 간다("Continuous model is non-convex -- presolving as a MIP").
+
+### 1.2 정적 호출 그래프 (`re/decomp/callgraph.tsv`)
+`3cd406`의 직접 callee는 158개, 닿는 함수는 2,767개다(04_simplex 318개, 05_barrier 223개, 06_bnb 258개, 07_cuts 377개 포함). `390989`도 같은 2,767개에 닿는다. 둘 다 아래 탈출 간선을 통해 드라이버 `c23877`이 든 거대한 강연결 성분에 들어가기 때문이다(`3cd406 → 5b58f4 → 98b671 → c23877 → 390989`). 그래서 정적 도달만으로는 판정이 안 되고, 탈출 간선을 하나씩 보고 실제 호출을 쟀다.
+
+| 탈출 간선(직접 callee → solver 쪽) | 조건·의미 | 기본값 38개에서 |
+|---|---|---|
+| `5b58f4` → `98b671` → `c23877`/`7a0103` | 해 기반 축약(SOLREDUCTION). 문제 유형(+0x08) == 11, DualReductions, state+0x244 == 0, env+0x2590 ≥ 1, model+0x1b8의 해 정보가 있을 때(3cd406 L1668–1675) | 0회 |
+| `521497` → `522aa2` → `98b671` | 연결 성분 뒤 SOS·QC·일반 제약 블록 | `521497` 38/38, `522aa2` 0회 |
+| `99ceb1`, `49f868`, `58b53e`, `4b2054`, `b44b00`, `b651e5`, `9951ed`, `9a4ba6`, `312e55`, `317cdd`, `451b10`, `ad531f` | 모델 생성(`3b0917`, L9765) 뒤 PWL·일반 제약·QP/QC PSD 검사·PreQLinearize·MIQCP 형식(barrier Cholesky `2d8e22`/`313802`, 스케일링 `7d3ce`로 이어짐) | 0회 |
+| `451195` → … → `300f28` | QC presolve(state+0x27c ≠ 0) | 0회 |
+| `4d3a1d` → `ac761d` | probing의 스레드 분할 | `4d3a1d` 38/38(61회), `ac761d` 0회 |
+| `47c445` → `d07d1` | simplex 반복 로그. spx 문맥(param_3)이 있을 때만(LP와 같음) | `47c445` 38/38, `d07d1` 0회 |
+| `4962bd` → `5eda00` | 재시작 문맥에서 행 3–7개 남은 모델 직접 풀기 | 0회 |
+| `a71757` → `7d3ce` | 결과 계수 통계(numIssue 판정). 스케일링은 부르지 않음 | `a71757` 38/38, `7d3ce` 0회 |
+| `3ba5ac` → `9a91f3` | 콜백 디스패처(where=PRESOLVE). 사용자 콜백이 없으면 바로 돌아온다 | 7,718회(호출만) |
+| `838543` → `83e123` | cut 모듈의 mod-k/zero-half 보조 루틴 재사용(PRESS2MIP·PREPROBE0·PRECOVERS 블록) | 15개 모델 3,860회 |
+
+### 1.3 실제 호출 (`tools/presolve_cov.js`)
+Frida로 38개 모델의 기본값 `Model.presolve()`(Threads=1, WorkLimit 60, `tools/parity.py`와 같은 설정)를 돌리며 `3cd406`에서 닿는 함수 중 common·01_model_api·excluded를 뺀 1,883개에 훅을 걸었다.
+- **04_simplex는 한 번도 불리지 않는다.** simplex 초기화 `1e7531`, LP 드라이버 `c3d0d`, 메인 드라이버 `c23877`, barrier `2d8e22`·`13f716`, 스케일링 `7d3ce` 모두 0회.
+- 불린 비-presolve 함수: 02_driver의 파라미터·로그·모델 질의 헬퍼(`a7f063`, `a7f0ad`, `a7f821`, `bb8b1f` 등, 모델마다 1–6회), `9a91f3`(콜백 디스패처), `ac7c92`/`ac7e13`(모델 질의), `83e123`(위 표), `3bbf87`·`3bde19`·`535d61`·`536369`(평행 처리 `3ff744`·`470936`·`594c0c`의 보조), `57b1ce`(SOS 검사), `ac4062`(해시, probing·대칭성), `b3ee9d`.
+- 결론: **MIP presolve는 LP 풀이·simplex·barrier를 부르지 않는다.** 범위 밖(B&B, cut, 휴리스틱, simplex)과 겹치는 것은 `838543`이 쓰는 cut 모듈 보조 루틴뿐이다.
+
+### 1.4 LP presolve(`390989`)와 공유하는 함수
+`3cd406`과 `390989`가 함께 부르는 직접 callee: `3a484d`(상태 생성), `3b0917`(모델 생성), `3b8cf6`, `3ba5ac`/`3ba9de`(콜백·예산), `3c546c`/`3c5595`(스냅숏·진척도), `3ff744`(평행), `47c445`(PreDepRow), `5577ba`(대칭), `470936`(sparsify), `536971`/`5369b8`/`5383d0`/`538f30`(추적기), `312e55`, `42872b`, `451195`, `9a4ba6`, `88c65` 등.
+
+기본값 38개에서 실제로 불리고 `crates/lp/src/presolve/`에 이미 포팅된 함수: `3a484d`, `534a8b`, 추적기(`5369b8`, `53763f`, `5379f1`, `537da8`, `53802c`, `538353`, `538f30`, `5399fc`, `53a487`, `53af0f`), `3ba5ac`, `3ba9de`, `3c546c`, `3c5595`, `3ff744`, `36dce1`, `47c445`, `5577ba`, `ac4062`, `3b0917`, `5a4d8b`, `5a5eff`, `3a0e1b`, 집계기 `37f484`와 그 보조(`370047`, `36fcb5`, `36f5c4`, `3773aa`, `377cb6`, `3791fd`, `395c97`, `39b9e0`, `53d139`, `53d18c`, `53d2b0`, `53d3d9`), `470936`(호출 지점만).
+
+주의: LP 포트는 CSR 상태(state+0xe0 = 1) 분기만 옮겼다. MIP는 연결 리스트 상태라 `3ff744`의 콜백 묶음, `3a484d`의 MIP 분기(세 번째 인자 1), `3b0917`의 정수 타입 처리가 다르다. LP 하위 모듈은 모두 private(`mod state;` 등)이고 `crates/lp` 기존 파일은 고칠 수 없으므로, **MIP는 `crates/mip`에 자기 상태를 두고 LP 포트의 코드를 옮겨 와 MIP 분기를 더한다**(03 §1의 "따로 포팅" 결정과 같다).
+
+## 2. 기본값에서 도는 reduction (coverage, 38개 전부에서 불림)
+
+`3cd406`의 직접 호출 순서(neos5, 한 패스. 여러 패스·라운드 모델은 가운데가 반복된다). 크기는 기계어 바이트, P는 LP 포트에 있음.
+
+| 단계 | 함수(크기) |
+|---|---|
+| 시작 | `3a484d`(36,718 P), `5b84b1`, `36d89a`(531) 빈·자유 행, `370047`(702 P) activity, `5a9282`(2,465) |
+| 내부 루프 | `3e39a6`(9,318) 열 패스, `36ddf2`(1,965) 행 정리, `37168e`(4,058) bound 강화, `36c5cf`(2,503) singleton 행, `56f793`(2,349) 계수 강화, `56c80e`(6,228) doubleton 집계, `36e6b6`(770) GC |
+| 바깥 패스 | `3e5363`(5,451) XOR, `3ff744`(16,559 P) 평행 ×3, `57627e`(10,175) implied int, `578fd2`(1,281) knapsack, `374521`(12,783) 쌍대 bound, `5431ee`(3,175) 함의 SCC, `4030c9`(21,516) 지배 열, `414c03`→`40d2bc`(17,951) 행 비영 소거, `36ee92`(357) 압축, `3e40d1`(2,622) 부등식→등식, `37168e`, `37f484`(34,685 P) 집계, `414c53`→`40d2bc` 열 비영 소거, `53af0f` + `3dcc78`(1,990) ×행, `418542`(2,645) 쌍대 집계, `57b1ce`, `45885d`(13,962)→`451bed`(15,214) clique, `52be10`(5,691), `46a62d`(20,983), `5466a7`(11,233) VUB 병합, `45feaa`(21,340) two-row, `47c445`(34,430 P) |
+| 라운드 후 | `58d4ce`(361), `5577ba`(2,900 P) 대칭, `5a9282`, `5ab429`(1,113), `59c193`(7,021), `55a779`(10,702) 집계 패스, `594c0c`(11,746), `423e35`(7,059), `419ffc`(7,235), `5a1293`(3,594), `5a4d8b`/`5a5eff`(P), `5aaaf7`(1,221), `838543`(5,003) ×3, `579e67`(2,881), `4d3a1d`(40,233) probing, `5a04fc`(6,792) |
+| 마무리 | `4d3a1d`, `52cba4`(2,377) 연결 성분, `521497`(5,790), `470936`(12,999 P) sparsify, `57999f`(492), `36ddf2`, `36d89a`, `3b0917`(23,326 P) 모델 생성, `a71757`(8,388) 계수 통계, `3b8cf6` 해제 |
+| 일부 모델만 | `3dd6f1`(30개) activity 증분, `39ab33`(20개), `3a061e`(7개, type 9), `3df916`(2개), `564ce0`(1개) |
+
+- 불린 presolve 함수(직접·간접) 158개, 기계어 722KB. 그중 LP 포트에 없는 것 459KB.
+- 불리지 않은 직접 callee(훅을 건 것 중): `37c34c` AGEQ, `3c2f36` 쌍대 정수→이진, `414ca3` clique 부분집합, `416036` 행 포함, `4178ae` 쌍대 slack, `42872b`/`451195`/`56b360`/`564ce0`(Q·QC), `490ab6`/`4962bd` 작은 모델 직접 풀기, `54807f` 대칭 변환, `57b2bf`/`586049` SOS, `585a6e`, `58b41b`, `5a7c0f`, `5b1161` NL, `5b58f4` 해 기반, `9ee0cf` PWL, 일반 제약 블록(`b6fd6f`, `b832dc`, `b84382`).
+- "불림"은 reduction이 모델을 바꿨다는 뜻이 아니다. 무엇이 실제로 모델을 바꾸는지는 PRELIMIT 체크포인트 차이로 잰다(§3).
+
+## 2a. 도구
+
+| 도구 | 내용 |
+|---|---|
+| `node tools/presolve_cov.js <진입 함수> <out.json> [name ...]` | Frida coverage. 모델마다 함수별 호출 수, 비-presolve 함수의 첫 호출 backtrace, 진입 함수의 직접 호출 순서(`seq`: [함수, 복귀 주소]). 기본 모델은 MIPLIB 38개. Gurobi 한 프로세스(`tools/gurun.sh`로 감싼다) |
+| `tools/presolve_oracle.py <dir> --param GURO_PAR_PRELIMIT=k <name ...>` | LP와 같은 PRELIMIT 체크포인트. `3cd406`도 reduction 호출마다 카운터(local_68)를 올리고 state+0x1dc와 비교해 마무리(`LAB_004b2415`)로 간다(L1651) |
+
+확인(2026-11-06): `presolve_oracle.py` 기본값 출력이 `bench/gurobi/<이름>/presolved.mps.gz`와 38/38 바이트 단위로 같다. PRELIMIT k = 0, 1, 2 출력은 38/38이 Presolve=0 출력과 같고, k = 3에서 2개, 5에서 18개, 10에서 29개가 갈라진다. 기본값과 같은 것은 k = 0에서 5개(presolve가 아무것도 안 바꾸는 모델)다.
