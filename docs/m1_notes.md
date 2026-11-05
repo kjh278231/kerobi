@@ -95,11 +95,16 @@ M1 진행 중에 알아낸 사실과 작업 방법. 확정된 내용은 해당 �
 - `d` 저장 규약: 하한·고정 비기저는 `c_j − a_jᵀy`, 상한 비기저(−2)는 `−(c_j − a_jᵀy)`, 기저는 0. 즉 d ≥ 0이면 dual 실행가능이다. 반복 0에는 섭동이 아직 없다(numpy BTRAN과 정확히 일치).
 - DSE 가중치 `w`(P+0x08, 기저 위치별)는 정확한 초기 노름 `‖e_rᵀB⁻¹‖²`이다(모드 1 = EXACTNORM). 58개 전부 상대 1e-12 이내, numpy 역행렬 기준 29개는 비트까지 같다. 비트 일치에는 BTRAN(`221173`)과 제곱합 순서를 맞춰야 한다.
 
+### 6.5 BTRAN·쌍대값·가중치 비트 검증 (2026-11-05)
+
+- `tools/proto/btran_dual.py`: Uᵀ는 단계 순서대로 `t = w[pos]/d`(|t| ≤ ZERO면 0) 뒤 U 행 원소에 `w = −(a·t) + w` 흩뿌리기, Lᵀ는 단계 역순으로 `y[r] −= (a/d)·y[i]`(열 원소 순서), `d_j = c_j − Σ a_ij·y_i`(열 순서, 상한 비기저는 부호 반대). **고정(−4) 구조 열은 행 방향 비기저 사본에 없어 `d_j = c_j` 그대로**(347/347 확인), 고정 slack은 계산한다. → 반복 0의 `d`가 60/60 비트 일치.
+- DSE 가중치: 값은 맞지만 합산 순서 미해결. 행 번호 순서 34/56, 피벗 단계 순서 32/56, 2레인 35/56 비트 일치. 희소 BTRAN 결과의 생성 순서로 더하는 것으로 추정한다. `0534f7` L420–465(EXACTNORM 노름 계산)를 읽어 확정할 것.
+
 ## 7. 진행
 
 | 단계 | 대상 | 상태 |
 |---|---|---|
 | A | 스케일링 `07d3ce`(ScaleFlag 3 경로) | **완료**: `crates/lp/src/scaling.rs`, 열·행·목적 스케일 64/64 비트 일치(`tests/test_scaling.py`, 기준 `bench/gurobi_spx0`) |
 | B | setup `02f7e1`, dual 초기화 `0534f7`(시작 기저) | 해독 중(§5). C 이후 |
-| C | LU(`036ade`, `1da0b2`, MKL dgetrf), FTRAN/BTRAN, LU 갱신 `05b257` | singleton 단계 + 조밀 FTRAN: xB 60/60 비트 일치(`crates/lp/src/lu.rs`, `tests/test_scaling.py`). BTRAN, Markowitz, LU 갱신 남음 |
+| C | LU(`036ade`, `1da0b2`, MKL dgetrf), FTRAN/BTRAN, LU 갱신 `05b257` | singleton 단계 + 조밀 FTRAN: xB 60/60 비트 일치(`crates/lp/src/lu.rs`, `tests/test_scaling.py`). BTRAN·d 60/60 비트 일치(프로토타입). DSE 가중치 합산 순서, Markowitz, LU 갱신 남음 |
 | D | dual 반복(`028c93` 외) → 반복 0·1 궤적 일치 | 대기 |
