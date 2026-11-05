@@ -42,3 +42,50 @@
 | 3 | 본체: 초기화(ω, η power iteration `351b1f`), 반복(`35207d`/`3524ec`/`3528a6`/`352bcb`), 평가 `354824`, restart `350614`/`350723`, 종료 `355602`, work 누적 | |
 | 4 | Rust `crates/lp/src/pdhg/`, Python `Method=6` 경로, PDHG 콜백·`cbGet`, `tools/parity.py capture rsolver` | |
 | 5 | 비트 일치(SpMV·내적 합 순서, libm), 64개 PDHGIterCount | |
+
+## 4. 커널 (`kern.rs`, 해독 2026-11-05, asm 기준)
+
+- **FMA 없음.** 모두 SSE2(`mulsd/addsd`, 2레인 `mulpd/addpd`)라 곱·합마다 반올림한다. max/min은 x86 `maxsd`/`minsd` 의미(앞 피연산자가 엄격히 클/작을 때만 그것, NaN·±0이면 뒤 피연산자)다.
+- **합 순서 `red8`**(SpMV `35645c`/`3565e5`, 내적 `2f9515`): 길이 < peel+8이면 0.0부터 차례로 더한다. 아니면 peel(0/1, 정렬 기준 피연산자가 8 mod 16에서 시작하면 1) 항을 A 레인 0의 시작값으로 두고, 8개씩 2레인 누산기 4개(A,B,C,D)에 더한 뒤 레인마다 (A+B)+(C+D), lo+hi, 남은 항을 차례로 더한다(Ghidra의 ((A+B)+C)+D는 틀림). A·x는 행 방향 사본(D+0x118/0x120/0x130/0x138, CSC를 열 순서로 전치한 것과 같음, afiro 확인), Aᵀy는 CSC. D+0x110·D+0x138은 16바이트 정렬(오라클)이라 peel = 구간 시작 & 1. 내적은 둘째 벡터가 peel을 정하고 1스레드에서 `0.0 + 내적`이다.
+- **primal `35207d`**: τ = η/ω, t = x − (c − Aᵀy)·τ, x̂ = minsd(maxsd(t, l), u), x_ref = (x̂ + x̂) − x. 평가 반복이면 x̂(P+0xb8)와 (x̂ − t)/τ(P+0xc8)를 저장한다.
+- **dual `3524ec`**: σ = η·ω, t = y − (A·x_ref)·σ, lo = (−σ)·b, ŷ = t − (‘=’면 lo, 아니면 maxsd(t, lo)), y_ref = (ŷ − y) + ŷ. '='만 검사하므로 부등식 행은 모두 y ≤ 0이다. D는 '>' 행을 σ = −1로 뒤집어 둔 상태다(A와 b의 부호, sense 문자는 '>' 그대로).
+- **고정점 노름 `352bcb`**(평가 반복과 restart 직후에만, Halpern 앞): dx = x − x_ref, dy = y − y_ref, Aᵀdy, g = √((⟨dx,Aᵀdy⟩·2)·η + (‖dx‖²·ω + ‖dy‖²/ω))(음수·NaN이면 0) → P+0x110, restart 직후면 P+0x120에도.
+- **Halpern `3528a6`**: w = (k+1)/(k+2)(k = P+0x10), z = z_ref·w + z⁰·(1 − w).
+- **반복 순서**: primal → dual → [고정점 노름] → Halpern → P[0], P[1], P[2] += 1.
+- **work**(1스레드, 덧셈 순서 그대로): SpMV마다 +nnz·3, primal +n·6, dual +m·6, Halpern +(n+m)·3.
+
+## 5. 전처리 (`scale.rs`, `07d3ce(m, 4)`)
+
+PDLP식이다. s = r = 1에서 Ruiz ∞-노름 10회(같은 (s, r)로 행·열 최댓값을 함께 구하는 Jacobi 갱신, 수렴 판정 없음), Pock–Chambolle(α = 1) 1회, [2⁻⁴⁷, 2⁴⁷]로 자르기(열은 abs 먼저)를 한다. 각 |r_i a_ij s_j|는 fl(fl(s_j·r_i)·|a|), 인수는 1/√x(x = 0이면 1)를 곱한다. **2의 거듭제곱으로 반올림하지 않는다**(flag 5만 한다). 적용: a' = fl(fl(r_i·s_j)·a), l/s, u/s(유한할 때), b·r(유한할 때), c·s 다음 목적 스케일 ω(2의 거듭제곱)를 곱한다. ω는 공통 꼬리의 LP 규칙 x = min(100/cmax, 1/(10t)), t = √(max(1e-6, cmin)·cmax), x < 2면 1, x > 1000이면 512, 아니면 2^⌊log₂x⌋다.
+
+- **오라클 검증**: 64/64에서 열·행 인수, A, c, l, u, b, ω가 비트 같다(`D` 스냅숏, '>' 행 σ 반영).
+- **M1 `scaling.rs` 참고**(오케스트레이터용, 이 브랜치에서는 고치지 않음): 같은 공통 꼬리의 목적 스케일을 `0.1/t`, `x ≤ 2`, x > 10000 상한으로 옮겼는데 asm은 `1/(10t)`, `x < 2`, x > 1000 → 512다. 64개에서는 결과가 같다.
+- 옮기지 않은 분기: lb = −inf·유한 ub 열 뒤집기(`*(m+0xf8) == 0`일 때, 64개에서 bound 비트 일치로 안 탐 확인), 저장된 스케일 재사용(D+0x3f0), 모델 등급 D[0] = 1의 ObjScale −2 규칙, RHSSCALE ≠ 1.
+
+## 6. 본체 흐름·평가·restart·step (`mod.rs`, `eval.rs`)
+
+**초기화**(`34c004` L355–1583): `07d3ce(m,4)` 전에 원 데이터 사본을 뜬다(끝에 복원). wc = 1/s(D+0x3e0), wr = 1/r(D+0x3d8), ‖c‖ = √Σ(c·wc)², ‖b‖ = √Σ(b·wr)²(`red8` 순서, b는 ±1e30도 그대로), cnt(P+0x168) = 유한 bound 열 수 + 부등식 행 수, ω₀ = ‖c‖/‖b‖(하나라도 0이면 1), tol = 1e-4, ε = 1e100, η = 0. work += (nnz + 5m) + 9n. 시작점 x = clamp(0, l, u)(같으면 bound), y = 0, x̂·ŷ·anchor도 같은 값. A·x, Aᵀy(+3nnz씩). power iteration 시작 벡터(P+0x180)는 모델 RNG(`a7b54f`, state 0)에서 m개(afiro 27/27 비트).
+
+**주 루프**(asm 0x36195b–0x361db1):
+```
+ev = 1
+loop:
+  rs = 0
+  if ev or P[0] ≥ IterLimit:
+     eval(first = P[0]==0); if P[1] % 100 == 0: 콜백(where 10); st = 355602; if st ≠ 1: 끝
+     rs = 350614(); g₋ = g
+     if rs ≠ 0 or P[0] == 0: (rs ≠ 0이면 350723) ; 351b1f(청크마다 콜백·355602, st ≠ 1이면 끝)
+     work += 3(m+n)
+  ev = (P[1]+1) % 100 == 0
+  primal(ev); dual; if ev or rs: g = 352bcb (rs면 g₀ = g); Halpern(k = P[2]); P[0]++, P[1]++, P[2]++
+끝: eval(first = 1); x = x̂·s(`7a069`), 목적 = P+0x38·sense
+```
+P[0]은 PDHG + power 반복(= 콜백 ITRCNT = PDHGIterCount), P[1]은 PDHG 반복만, P[2]는 restart 뒤 반복, P[3]은 power 반복 누계다. 콜백이 0, 93, 193…으로 찍히는 이유: 반복 0 평가 뒤 power iteration이 93회 돌며 청크 끝에 콜백을 한 번 더 부르고, 다음 평가는 P[1] = 100(P[0] = 193)이다.
+
+**평가 `354824`**: A·x̂, Aᵀŷ(+3nnz씩). compl = Σ_j[l 유한·d > 1e-10: (x̂−l)·d, u 유한·d < −1e-10: (x̂−u)·d] + Σ_i[부등식·s > 1e-10: (−s)·ŷ](d = c − Aᵀŷ, s = b − Ax̂) / cnt, 0 이상. 원 잔차 r = (b − Ax̂)·wr, 위반량 v = maxsd(0, −r)('='면 maxsd(v, r)), ∞-노름(P+0x50)과 2-노름(P+0x60). pobj = (0 + `2f9515`(x̂, c))/ω_obj + objcon. 쌍대: first면 열마다 d·wc를 bound 종류별로(자유 |d|, 양쪽 유한 0, 위만 max(0,d), 아래만 max(0,−d)), dobj = Σŷb + Σ(d > 0·l 유한: d·l, d < 0·u 유한: u·d). first가 아니면 r = ((c − Aᵀŷ) − λ)·wc(λ = P+0xc8), dobj = Σŷb + Σ(λ > 0: λ·l, λ < 0: u·λ). 상대값 P+0x70 = ‖r_p‖₂/(‖b‖+1), P+0x78 = ‖r_d‖₂/(‖c‖+1), gap = |p − d|/((1 + |p|) + |d|). work += 8m + 14n. 콜백은 PRIMOBJ P+0x38, DUALOBJ P+0x40, PRIMINF P+0x60(2-노름), DUALINF P+0x68, COMPL P+0x48이고, 로그와 종료 판정은 ∞-노름(P+0x50/0x58)을 쓴다.
+
+**종료 `355602`**: (‖r_p‖∞ < AbsTol && ‖r_d‖∞ < AbsTol && gap < ConvTol) 또는 (RelTol > 0 && rel_p < RelTol && rel_d < RelTol && gap < ConvTol) → 2. IterLimit ≤ P[0] → 7. WorkLimit·1e9 < W → 16. |pobj|, |dobj|, |compl| 중 1e100 초과·NaN → 12. 그래서 한도는 100회마다(와 power 청크마다)만 검사한다.
+
+**restart `350614`**: P[1] < 100 → 0, == 100 → 1, g == 0 → 5, 0.2·g₀ ≥ g → 2, 0.5·g₀ ≥ g && g > g₋ → 3, P[1]·0.36 ≤ P[2] → 4. **`350723`**: Δx = ‖x̂ − x⁰‖, Δy = ‖ŷ − y⁰‖(`354f42`). Δ가 (1e-16, 1e12) 안이고 rel_d/rel_p가 (1e-8, 1e8) 안이면 e = (ln Δy − ln Δx) − ln ω, I = 0.3I + e, ω ← ω·exp(0.99e + 0.01I). 아니면 ω = ω₀, I = 0. 그다음 k = 0, g₋ = 1e100, anchor와 현재점을 (x̂, ŷ)로 둔다. "최선 균형 ω"(P+0xf0/0xf8)는 P+0xf8이 0에서 시작해 새 solve에서는 갱신되지 않는다.
+
+**step `351b1f`**: AAᵀ(행 공간) power iteration. 예산은 처음 250, g == 0이면 1000(ε ≤ tol이면 tol ← max(0.1·tol, 1e-16)), 아니면 trunc(0.1·P[0] − P[3])이고, ε > tol이며 예산 > 100일 때만 돈다. 100회 청크마다: u = v/‖v‖(참 나눗셈), w = Aᵀu, v = Aw, λ = vᵀu, u = v − u·λ, ε = ‖u‖, tol > ε이면 멈춤. 청크 끝에 work += m + 8m·it, P[0]·P[3] += it, 콜백·종료 판정. 끝에 ‖A‖ = √λ, η = ((1 − ε) − ε)/‖A‖(ε ≥ 0.5면 0.01/‖A‖), work += 2(m+n). 첫 실행이 수렴하면(ε ≤ tol) 다시 돌지 않는다(afiro 93회).

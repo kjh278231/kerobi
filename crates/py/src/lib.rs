@@ -161,6 +161,32 @@ impl PyCoreModel {
             None => Ok((r.status, r.obj, r.bar_iters, r.x, r.work)),
         }
     }
+    /// PDHG (05 §4; Method=6, Presolve=0, Crossover=0): `callback(iter, pobj, dobj, priminf, dualinf, compl)` runs at
+    /// every PDHG callback. Returns (status, objective, PDHGIterCount, x, work units).
+    #[pyo3(signature = (callback, iter_limit=1e100, rel_tol=1e-6, abs_tol=1e-6, conv_tol=1e-6, work_limit=1e100))]
+    #[allow(clippy::too_many_arguments)]
+    fn pdhg(
+        &self,
+        py: Python<'_>,
+        callback: PyObject,
+        iter_limit: f64,
+        rel_tol: f64,
+        abs_tol: f64,
+        conv_tol: f64,
+        work_limit: f64,
+    ) -> PyResult<(i32, f64, i64, Vec<f64>, f64)> {
+        let p = rsolver_lp::pdhg::Params { iter_limit, rel_tol, abs_tol, conv_tol, work_limit };
+        let mut err = None;
+        let r = rsolver_lp::pdhg::solve(&self.inner, &p, &mut |i| {
+            if err.is_none() {
+                err = callback.call1(py, (i.iter as f64, i.pobj, i.dobj, i.priminf, i.dualinf, i.compl)).err();
+            }
+        });
+        match err {
+            Some(e) => Err(e),
+            None => Ok((r.status, r.obj, r.iters, r.x, r.work / 1e9)),
+        }
+    }
     /// LP solve without presolve: (status, objective, x, iterations, trace rows, pivot path).
     #[allow(clippy::type_complexity)]
     fn solve(

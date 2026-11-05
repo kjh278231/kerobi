@@ -62,11 +62,18 @@ def main():
                                                             C.PDHG_DUALINF, C.PDHG_COMPL)],
              "P": arr(P, P_SIZE // 8)}
         if not recs:
-            r["D"] = snap_D(L(mp + 0xe8))
+            Dm = L(mp + 0xe8)
+            r["D"] = snap_D(Dm)
+            if L(Dm + 0x118):  # row-wise copy used by A·x (35645c): column index D+0x130, values D+0x138
+                k = max(r["D"]["rend"]) if r["D"]["m"] else 0
+                r["D"]["rcol"], r["D"]["rval"] = arr(L(Dm + 0x130), k, "i"), arr(L(Dm + 0x138), k)
             r["D_objsense"] = ctypes.c_int.from_address(L(mp + 0xe8) + 4).value
+            r["D"]["a50"] = L(Dm + 0x50) % 64  # c decides the peel of the objective dot in 354824
         if a.vec:
             r["vec"] = heap_vectors(P)
         recs.append(r)
+        if want is not None and len(recs) == len(want):
+            mdl.terminate()  # everything asked for is recorded
 
     model.optimize(cb)
     with (gzip.open(a.out, "wt") if a.out.endswith(".gz") else open(a.out, "w")) as f:

@@ -21,6 +21,7 @@ class GRB:
         MIPSOL_SOL, MIPSOL_OBJ, MIPSOL_OBJBST, MIPSOL_OBJBND, MIPSOL_NODCNT, MIPSOL_SOLCNT = 4001, 4002, 4003, 4004, 4005, 4006
         MIPNODE_STATUS, MIPNODE_REL, MIPNODE_OBJBST, MIPNODE_OBJBND, MIPNODE_NODCNT, MIPNODE_SOLCNT = 5001, 5002, 5003, 5004, 5005, 5006
         BARRIER_ITRCNT, BARRIER_PRIMOBJ, BARRIER_DUALOBJ, BARRIER_PRIMINF, BARRIER_DUALINF, BARRIER_COMPL = 7001, 7002, 7003, 7004, 7005, 7006
+        PDHG_ITRCNT, PDHG_PRIMOBJ, PDHG_DUALOBJ, PDHG_PRIMINF, PDHG_DUALINF, PDHG_COMPL = 10001, 10002, 10003, 10004, 10005, 10006
 
 
 class GurobiError(Exception):
@@ -203,6 +204,8 @@ class Model:
     def optimize(self, callback=None):
         if self._core is not None and self.Params.get("Method") == 2:
             return self._barrier(callback)
+        if self._core is not None and self.Params.get("Method") == 6:
+            return self._pdhg(callback)
         core, built = self._core, self._core is None
         if built:  # a model built through the API: same engine, minimization form, ranged rows as slack columns
             obj = [0.0] * len(self._vars)
@@ -261,9 +264,28 @@ class Model:
             cb, float(p.get("BarConvTol", 1e-8)), int(p.get("BarIterLimit", 1000)), int(p.get("BarCorrectors", -1)))
         self.Runtime, self.IterCount, self.NodeCount = time.perf_counter() - t0, 0, 0
 
+    def _pdhg(self, callback):
+        """M3 PDHG (Presolve=0, Crossover=0 assumed): PDHG callback (where = 10) on every evaluation pass."""
+        import time
+
+        C = GRB.Callback
+        keys = (C.PDHG_ITRCNT, C.PDHG_PRIMOBJ, C.PDHG_DUALOBJ, C.PDHG_PRIMINF, C.PDHG_DUALINF, C.PDHG_COMPL)
+
+        def cb(*vals):
+            if callback:
+                self._cbdata = dict(zip(keys, vals))
+                callback(self, C.PDHG)
+
+        t0 = time.perf_counter()
+        prm = [float(self._param(k, d)) for k, d in (("PDHGIterLimit", 1e100), ("PDHGRelTol", 1e-6),
+                                                     ("PDHGAbsTol", 1e-6), ("PDHGConvTol", 1e-6), ("WorkLimit", 1e100))]
+        self.Status, self._objval, it, self._x, self.Work = self._core.pdhg(cb, *prm)
+        self.PDHGIterCount, self.SolCount = float(it), 1  # a PDHG iterate is a solution even at a limit
+        self.Runtime, self.IterCount, self.BarIterCount, self.NodeCount = time.perf_counter() - t0, 0.0, 0, 0.0
+
     @property
     def ObjVal(self):
-        if self.Status != GRB.OPTIMAL:
+        if self.Status != GRB.OPTIMAL and not getattr(self, "SolCount", 0):
             raise AttributeError("no solution available")
         return self._objval
 
