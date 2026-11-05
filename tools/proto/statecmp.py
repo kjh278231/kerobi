@@ -69,4 +69,7 @@ for it in sorted(set(g) & set(mine)):
         out.append(f"lu k/allow g {lu.get('k')}/{pr.get('allow')} mine {b.get('k')}/{b.get('allow') if b.get('mode') != 1 else len(b['list'])}")
     if lu and "eta" in b and (lu.get("eta"), lu.get("cols")) != (b["eta"], b["cols"]):
         out.append(f"lu eta/cols g {lu.get('eta')}/{lu.get('cols')} mine {b['eta']}/{b['cols']}")
+    gp, mp = a.get("pt") or {}, b.get("pt") or {}
+    if mp and any(gp.get(k) != mp[k] for k in ("rc", "deg", "deg0")) or mp and gp.get("it0") != float(mp["it0"]):
+        out.append(f"pt g {[gp.get(k) for k in ('rc', 'deg', 'deg0', 'it0')]} mine {[mp[k] for k in ('rc', 'deg', 'deg0', 'it0')]}")
     print(f"iter {it}: " + ("OK" if not out else "; ".join(out)))

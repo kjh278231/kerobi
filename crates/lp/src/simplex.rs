@@ -84,6 +84,8 @@ pub struct Engine<'a> {
     col_nnz: usize,
     /// max|b − N·x_N| of the last x_B computation (spx+0x2c8 test of `1bae9c` L1691–1743).
     rhs_max: f64,
+    /// Last dual pivot for snapshots: τ = B⁻¹ρ by position, α_r, β = ‖ρ‖².
+    last_dse: (Vec<f64>, f64, f64),
     /// spx+0x2c8: CHUZR tests violations with the infinite-bound guard (artificial-bound phase or x_B past 1e20).
     c8: bool,
     /// Pivot path: (iteration, entering column, leaving column); bound flips of the entering column leave −1.
@@ -139,6 +141,7 @@ impl<'a> Engine<'a> {
             upd_cols: 0,
             col_nnz: 0,
             rhs_max: 0.0,
+            last_dse: (Vec::new(), 0.0, 0.0),
             c8: false,
             path: Vec::new(),
         }
@@ -507,10 +510,12 @@ impl<'a> Engine<'a> {
             .map(|j| self.d[j])
             .collect();
         let line = format!(
-            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{}}}\n",
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
             self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr),
             self.pr.allow, self.lu.n_updates, self.pr.avg, hex(&self.pr.score), self.pr.cost_mode, hex(&self.pr.row_cost),
-            hex(&self.pr.var_cost), self.lu.n_singleton, self.lu.eta_nnz(), self.upd_cols
+            hex(&self.pr.var_cost), self.lu.n_singleton, self.lu.eta_nnz(), self.upd_cols,
+            hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), self.pt_rc, self.pt_deg, self.pt_deg0,
+            self.pt_it0
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
             let _ = f.write_all(line.as_bytes());
@@ -710,6 +715,7 @@ impl<'a> Engine<'a> {
         // with fresh duals.
         let free: Vec<usize> = (0..self.n).filter(|&q| self.vstat[q] == -3).collect();
         let pivots = self.iter;
+        let mut factors = 1; // spx+0x2c0 counts every factorization of the start
         let mut left = Vec::new();
         for q in free {
             if !self.free_pivot(q, 3e-8) {
@@ -718,6 +724,7 @@ impl<'a> Engine<'a> {
         }
         if !left.is_empty() {
             self.refactor();
+            factors += 1;
             for q in left {
                 self.compute_duals_only();
                 let t = self.spx.col(q).fold(self.c[q], |t, (i, a)| t - a * self.y[i]);
@@ -729,6 +736,7 @@ impl<'a> Engine<'a> {
         }
         if self.iter > pivots {
             self.refactor(); // spx+0x294 = 1: the dual starts from a fresh factorization
+            factors += 1;
         }
         self.compute_xb();
         self.compute_duals();
@@ -737,7 +745,7 @@ impl<'a> Engine<'a> {
         self.exact_weights();
         self.big_m = (0..self.n + self.m).any(|j| self.vstat[j] < 0 && self.x_nonbasic(j).abs() >= INFINITY);
         self.rc_build();
-        self.pt_rc = 1;
+        self.pt_rc = factors;
         self.in_dual = true;
         self.price_full();
     }
@@ -1039,6 +1047,9 @@ impl<'a> Engine<'a> {
             // w_i = max(1e-8, (β·t·t − (t+t)·τ_i) + w_i) with t = α_i/α_r
             let beta = sum_squares(&self.lu.btran(&[(r, 1.0)]).iter().map(|e| e.1).collect::<Vec<_>>());
             let ar = if arq.abs() >= 1e-8 { arq } else if arq < 0.0 { -1e-8 } else { 1e-8 };
+            if std::env::var_os("RSOLVER_SNAP").is_some() {
+                self.last_dse = (taup.clone(), arq, beta);
+            }
             self.w[r] = if beta == 0.0 { 1e-8 } else { (beta / ar) / ar };
             for p in 0..self.m {
                 if p != r && col[p] != 0.0 {
