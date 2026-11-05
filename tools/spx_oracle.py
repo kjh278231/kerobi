@@ -31,7 +31,12 @@ def dump(spx, it, full):
     P = L(spx + 0x478)
     out = {"iter": it, "m": m, "n": n, "status": I(spx + 0xf0), "obj": D(spx + 0x118).hex(), "objscale": D(spx + 0xd8).hex(),
            "pert": D(spx + 0x348).hex(), "pert_level": I(spx + 0x338), "mode": I(spx + 0x3ec), "quad": I(spx + 0x28),
-           "r": I(spx + 0x2f8), "q": I(spx + 0x2fc), "refactor_reason": I(spx + 0x294),
+           "r": I(spx + 0x2f8),
+           # perturbation trigger counters (48d5f): refactor count, degenerate count and its mark, iteration mark, flag
+           # 0x110, objective record 0x140, 0x3e0, restarts 0x35c
+           "pt": {"rc": I(spx + 0x2c0), "deg": I(spx + 0x330), "deg0": I(spx + 0x334), "it0": D(spx + 0x2b0),
+                  "f110": I(spx + 0x110), "rec": D(spx + 0x140), "x3e0": D(spx + 0x3e0), "sw": I(spx + 0x35c),
+                  "x2a8": D(spx + 0x2a8)}, "q": I(spx + 0x2fc), "refactor_reason": I(spx + 0x294),
            "vstat": arr(L(spx + 0x168), n + m, "i"), "d": arr(L(spx + 0x1e0), n + m), "xB": arr(L(spx + 0x1e8), m),
            "c": arr(L(spx + 0x98), n + m), "l": arr(L(spx + 0xa8), n + m), "u": arr(L(spx + 0xb0), n + m),
            "w": arr(L(P + 0x08), m) if P else None,

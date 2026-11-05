@@ -54,6 +54,17 @@ pub struct Engine<'a> {
     perturbed: bool,
     /// Perturbation size spx+0x348 (PerturbValue 2e-4 at the start).
     pert_size: f64,
+    /// 48d5f trigger state: level 0x338 (2 shifted, 3 perturbed), refactor count 0x2c0, degenerate pivots 0x330 and
+    /// the marks 0x334/0x2b0, objective record 0x140, ratio 0.9 or 0.97 (min |c| ≥ 1e-6, spx+0x3e0).
+    pt_lvl: u32,
+    pt_rc: u64,
+    pt_deg: u64,
+    pt_deg0: u64,
+    pt_it0: u64,
+    pt_rec: f64,
+    pt_ratio: f64,
+    /// COSTSCALE factor 0x350 applied to the working costs (spx+0xd8 grows with it).
+    cost_scale: f64,
     /// Primal bound shift s (P+0x30) added to b by row; empty when there is none.
     rhs_shift: Vec<f64>,
     /// The primal may hand a shifted optimum over to the dual (PRIMDUALSWITCH, round budget left).
@@ -100,6 +111,18 @@ impl<'a> Engine<'a> {
             lu_interval: interval,
             perturbed: false,
             pert_size: 2e-4,
+            pt_lvl: 0,
+            pt_rc: 0,
+            pt_deg: 0,
+            pt_deg0: 0,
+            pt_it0: 0,
+            pt_rec: -1e100,
+            cost_scale: 1.0,
+            pt_ratio: if spx.c[..spx.n].iter().filter(|&&c| c != 0.0).fold(f64::INFINITY, |a, &c| a.min(c.abs())) >= 1e-6 {
+                0.9
+            } else {
+                0.97
+            },
             rhs_shift: Vec::new(),
             primal_switch: true,
             markowitz_tol: crate::lu::MARKOWITZ_TOL,
@@ -198,8 +221,33 @@ impl<'a> Engine<'a> {
             } else {
                 self.shift_costs();
             }
+            self.pt_rc += 1;
+            self.perturb_trigger();
             self.price_full();
         }
+    }
+
+    /// TRIGGER of `48d5f` (m1_notes §8.9) after a refactor: every K-th factorization (K = 2, 5 once perturbed), perturb
+    /// when more than 90% (97%) of the pivots since the last mark were degenerate or the objective has not moved past
+    /// its record; then mark.
+    /// shortcut: flag 0x110 taken as 1, the artificial-bound count test and COSTSCALE are left out.
+    fn perturb_trigger(&mut self) {
+        let k = if self.pt_lvl <= 2 { 2 } else { 5 };
+        if self.pt_rc % k != 1 || self.pert_size <= 0.0 {
+            return;
+        }
+        // spx+0x118: objective under the working costs
+        let x = self.x();
+        let obj: f64 = (0..self.n + self.m).map(|j| self.c[j] * x[j]).sum();
+        let degenerate = (self.pt_deg - self.pt_deg0) as f64 > self.pt_ratio * (self.iter - self.pt_it0) as f64;
+        if degenerate || ZERO * (obj.abs().min(1e10) + 1.0) + self.pt_rec > obj {
+            self.perturb();
+            self.pt_rec = -1e100;
+        } else {
+            self.pt_rec = self.pt_rec.max(obj);
+        }
+        self.pt_deg0 = self.pt_deg;
+        self.pt_it0 = self.iter;
     }
 
     /// SHIFT of `48d5f` (m1_notes §8.9): a dual-infeasible nonbasic gets its working cost moved so that d = 0.
@@ -215,6 +263,7 @@ impl<'a> Engine<'a> {
             self.c[j] -= shift; // raw reduced cost −shift·(sign) becomes 0
             self.d[j] = 0.0;
             self.perturbed = true;
+            self.pt_lvl = self.pt_lvl.max(2);
         }
     }
 
@@ -650,6 +699,7 @@ impl<'a> Engine<'a> {
         self.exact_weights();
         self.big_m = (0..self.n + self.m).any(|j| self.vstat[j] < 0 && self.x_nonbasic(j).abs() >= INFINITY);
         self.rc_build();
+        self.pt_rc = 1;
         self.in_dual = true;
         self.price_full();
     }
@@ -670,8 +720,8 @@ impl<'a> Engine<'a> {
         let out = self.head[p];
         let st = if self.spx.u[out] - self.spx.l[out] <= 0.0 { -4 } else { -1 };
         self.col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
-        self.pivot(p, q, st, &spike);
         self.iter += 1;
+        self.pivot(p, q, st, &spike);
         self.log();
         true
     }
@@ -707,6 +757,35 @@ impl<'a> Engine<'a> {
     /// moves to its lower bound. The size then triples up to 0.01.
     /// shortcut: the trigger is still "50 degenerate pivots in a row" instead of the original's counters.
     fn perturb(&mut self) {
+        if self.pt_lvl <= 1 && self.spx.scaling.obj * self.cost_scale >= 1.0 {
+            // COSTSCALE (48d5f L1503-1957): s = 128 when the largest dual infeasibility is below OptTol/128, 64 when
+            // it reaches OptTol, else 1; working costs and d are multiplied by s
+            let mi = (0..self.n + self.m).fold(0.0f64, |mi, j| match self.vstat[j] {
+                -1 | -2 if self.d[j] < -mi => -self.d[j],
+                -3 => mi.max(self.d[j].abs()),
+                _ => mi,
+            });
+            let s = if OPT_TOL > 128.0 * mi {
+                128.0
+            } else {
+                let mut s = 1.0;
+                loop {
+                    if OPT_TOL > mi * s {
+                        break;
+                    }
+                    s += s;
+                    if s >= 128.0 {
+                        break;
+                    }
+                }
+                if s > 2.0 { 0.5 * s } else { 1.0 }
+            };
+            if s > 1.0 {
+                self.c.iter_mut().for_each(|c| *c *= s);
+                self.d.iter_mut().for_each(|d| *d *= s);
+                self.cost_scale *= s;
+            }
+        }
         let mut rng = Rng(self.iter);
         let pp = self.pert_size / 500.0;
         let mut moved = false;
@@ -740,13 +819,13 @@ impl<'a> Engine<'a> {
         }
         self.pert_size = (3.0 * self.pert_size).min(0.01);
         self.perturbed = true;
+        self.pt_lvl = 3;
     }
 
     /// Dual simplex until primal feasible. Returns Optimal (for the working costs), Infeasible, or a status that
     /// asks the driver to switch to primal (Unbounded stands for "artificial bounds are in the way").
     pub fn dual(&mut self) -> Status {
         self.in_dual = true;
-        let mut degenerate = 0usize;
         let mut retried = false;
         loop {
             if self.iter >= self.iter_limit {
@@ -871,6 +950,9 @@ impl<'a> Engine<'a> {
             };
             // cost shifting: an entering column that sits slightly on the wrong side gets d_q = 0
             let dq_t = self.d[q];
+            if dq_t <= OPT_TOL {
+                self.pt_deg += 1; // 28c93 L822-831
+            }
             if self.vstat[q] != -3 && dq_t < 0.0 {
                 self.c[q] -= self.raw_d(q);
                 self.d[q] = 0.0;
@@ -896,11 +978,6 @@ impl<'a> Engine<'a> {
             // 48d5f L170-215: θ = d_q/α_q with the row value α_q, d_j −= α_j·θ over the pivot row (the entering
             // column keeps its rounding residue); the leaving column's row entry is 1 (structural) or ρ_i (slack)
             let theta_d = self.raw_d(q) / alpha[q];
-            if theta_d.abs() <= 1e-12 {
-                degenerate += 1;
-            } else {
-                degenerate = 0;
-            }
             if theta_d != 0.0 {
                 for j in 0..self.n + self.m {
                     if alpha[j] != 0.0 && self.vstat[j] < 0 && !(self.vstat[j] == -4 && j < self.n) {
@@ -945,6 +1022,7 @@ impl<'a> Engine<'a> {
             let col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
             self.col_nnz = col_nnz;
             let updates_before = self.lu.n_updates;
+            self.iter += 1; // 28c93 L820: counted before the LU update or refactor (seeds, marks)
             self.pivot(r, q, leave, &spike);
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;
@@ -953,7 +1031,6 @@ impl<'a> Engine<'a> {
                 // outside the artificial-bound phase a 1e30-scale step would leave residue in x_B: recompute
                 self.compute_xb();
             }
-            self.iter += 1;
             // P+0x48 = (2·nnz(α_q) + (k − 2)·P+0x48)/k with k the iteration count
             let k = self.iter as f64;
             self.pr.avg = (2.0 * col_nnz as f64 + (k - 2.0) * self.pr.avg) / k;
@@ -977,9 +1054,6 @@ impl<'a> Engine<'a> {
                 let changed: Vec<usize> = (0..self.m).filter(|&p| p == r || col[p] != 0.0).collect();
                 self.price_touch(&changed, Some(r), true);
             }
-            if !self.perturbed && degenerate > 50 {
-                self.perturb();
-            }
             self.log();
         }
     }
@@ -1002,6 +1076,7 @@ impl<'a> Engine<'a> {
             }
         }
         self.c = self.spx.c.clone();
+        self.cost_scale = 1.0;
         self.perturbed = false;
         self.compute_xb();
         let (n, m, nm) = (self.n, self.m, self.n + self.m);
@@ -1232,21 +1307,21 @@ impl<'a> Engine<'a> {
                 st = -1;
             }
             self.col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
+            self.iter += 1;
             self.pivot(r, q, st, &spike);
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;
             } else {
                 // just refactored: b1da8 when 90% of the pivots since the last mark were degenerate
                 refactors += 1;
-                if removals < 3 && refactors % (lvl as u64 + 2) == 1 && 0.9 * ((self.iter + 1 - it0) as f64) < ((deg - deg0) as f64) {
+                if removals < 3 && refactors % (lvl as u64 + 2) == 1 && 0.9 * ((self.iter - it0) as f64) < ((deg - deg0) as f64) {
                     self.shift_bounds(pv);
                     lvl += 2;
                     pv = (pv * 3.0).min(1e6 * 2e-4);
                 }
-                it0 = self.iter + 1;
+                it0 = self.iter;
                 deg0 = deg;
             }
-            self.iter += 1;
             self.log();
         }
     }
@@ -1338,6 +1413,7 @@ impl<'a> Engine<'a> {
                 Status::Optimal => {
                     if self.perturbed {
                         self.c = self.spx.c.clone();
+        self.cost_scale = 1.0;
                         self.perturbed = false;
                         self.compute_duals();
                     }
@@ -1365,6 +1441,7 @@ impl<'a> Engine<'a> {
     fn dual_resume(&mut self) {
         self.rhs_shift.clear();
         self.c = self.spx.c.clone();
+        self.cost_scale = 1.0;
         self.perturbed = false;
         self.big_m = false;
         self.refactor();
