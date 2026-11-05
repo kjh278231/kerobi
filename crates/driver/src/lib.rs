@@ -6,7 +6,7 @@ use rsolver_lp::presolve::{self, postsolve};
 use rsolver_lp::simplex::{Engine, Status, TraceRow};
 use rsolver_lp::spx::Spx;
 use rsolver_lp::{barrier, pdhg};
-use rsolver_model::mps_write::c_exp;
+use rsolver_model::mps_write::{c_exp, c_g};
 use rsolver_model::params::Params;
 use rsolver_model::Model;
 use std::time::Instant;
@@ -18,6 +18,10 @@ pub struct Outcome {
     pub obj: f64,
     /// columns of the original model
     pub x: Vec<f64>,
+    /// row slacks, row duals (Pi) and reduced costs (RC) of the original model; empty without a solution
+    pub slack: Vec<f64>,
+    pub pi: Vec<f64>,
+    pub rc: Vec<f64>,
     pub iter_count: u64,
     pub bar_iter_count: usize,
     pub pdhg_iter_count: i64,
@@ -165,7 +169,9 @@ fn presolve_logged(md: &Model, p: &Params, log: &mut dyn FnMut(&str)) -> Option<
         log(&format!("Presolve removed {rows} rows and {cols} columns\n"));
     }
     log(&format!("Presolve time: {:.2}s\n", t.elapsed().as_secs_f64()));
-    if q.num_constrs() == 0 && q.num_vars() == 0 {
+    if post.status != 0 {
+        // a proved status frees the presolved model before its size is logged
+    } else if q.num_constrs() == 0 && q.num_vars() == 0 {
         log("Presolve: All rows and columns removed\n");
     } else {
         log(&format!("Presolved: {} rows, {} columns, {} nonzeros\n", q.num_constrs(), q.num_vars(), q.num_nz()));
@@ -173,23 +179,79 @@ fn presolve_logged(md: &Model, p: &Params, log: &mut dyn FnMut(&str)) -> Option<
     Some((q, post))
 }
 
-/// Statuses a presolve with dual reductions cannot prove (`36578f` → 03 §3.6): INFEASIBLE becomes INF_OR_UNBD
-/// unless the objective is bounded by the variable bounds (`a7fc52`). shortcut: UNBOUNDED always becomes
-/// INF_OR_UNBD (`a80155`, which can keep it, is not read); no Netlib LP reaches this.
-fn presolve_status(md: &Model, p: &Params, st: i32) -> i32 {
-    if !matches!(st, 3 | 5) || p.int("DualReductions") == 0 {
-        return st;
-    }
+/// `0c3d0d` L2696–2703 and L2944–2952: a presolved simplex result 3 or 5 is INF_OR_UNBD under DualReductions; at the
+/// end INF_OR_UNBD is INFEASIBLE when the objective is bounded by the variable bounds (`a7fc52`, min(INFBOUND,
+/// PREINFBND)). shortcut: the InfUnbdInfo and dual-model (model+0xf0, PreDual) branches are not ported.
+fn simplex_status(md: &Model, p: &Params, st: i32, presolved: bool) -> i32 {
+    let st = if presolved && p.int("DualReductions") != 0 && matches!(st, 3 | 5) { 4 } else { st };
     let thr = p.get("GURO_PAR_INFBOUND").min(p.get("GURO_PAR_PREINFBND"));
-    let bounded = (0..md.num_vars()).all(|j| {
-        let c = md.obj[j] * md.sense as f64;
-        md.vtype[j] == b'B' || c == 0.0 || if c > 0.0 { md.lb[j] > -thr } else { md.ub[j] < thr }
-    });
-    if st == 3 && bounded {
+    if st == 4 && presolve::objective_bounded(md, thr) {
         3
     } else {
-        4
+        st
     }
+}
+
+/// `36578f` L25–55: with DualReductions and Presolve on, INFEASIBLE becomes INF_OR_UNBD unless the objective is
+/// bounded by the variable bounds (`a7fc52`, INFBOUND), and UNBOUNDED unless the model has no rows (`a80155`).
+fn interior_status(md: &Model, p: &Params, st: i32) -> i32 {
+    if !matches!(st, 3 | 5) || p.int("DualReductions") == 0 || p.int("Presolve") == 0 {
+        return st;
+    }
+    match st {
+        3 if !presolve::objective_bounded(md, p.get("GURO_PAR_INFBOUND")) => 4,
+        5 if !presolve::no_rows_consistent(md) => 4,
+        s => s,
+    }
+}
+
+/// `a91184`, LP part: the largest row violation (r = rhs − Ax; `=` |r|, `<` −r, `>` r when positive) or finite
+/// bound violation of x. shortcut: Ax is summed column by column as `a8ff5e` does; a91184's own order is not read
+/// (the value only enters the big-uncrush-violation threshold).
+fn max_violation(md: &Model, x: &[f64]) -> f64 {
+    let mut act = vec![0.0; md.num_constrs()];
+    for (j, &xj) in x.iter().enumerate().take(md.num_vars()) {
+        let b = md.col_beg[j] as usize;
+        for k in b..b + md.col_len[j] as usize {
+            act[md.col_ind[k] as usize] += xj * md.col_val[k];
+        }
+    }
+    let mut v = 0f64;
+    for (i, &a) in act.iter().enumerate() {
+        let r = md.rhs[i] - a;
+        v = v.max(match md.row_sense[i] {
+            b'=' => r.abs(),
+            b'<' => -r,
+            _ => r,
+        });
+    }
+    for (j, &xj) in x.iter().enumerate().take(md.num_vars()) {
+        if -1e30 < md.lb[j] {
+            v = v.max(md.lb[j] - xj);
+        }
+        if md.ub[j] < 1e30 {
+            v = v.max(xj - md.ub[j]);
+        }
+    }
+    v
+}
+
+/// The log and outcome when presolve itself decided the status (`390989` *param_3, see `presolve::proved_status`):
+/// no presolved model, no solution, "… solved model in 0 iterations" (`0c3d0d`, `2bb770`, `34f033`).
+fn proved(st: i32, name: &str, h: &mut Hooks, t0: Instant, work: f64) -> Outcome {
+    let secs = t0.elapsed().as_secs_f64();
+    (h.log)(&format!("\n{name} in 0 iterations and {secs:.2} seconds ({:.2} work units)\n", work * 1e-9));
+    if name == "Solved" {
+        (h.log)(&status_line(st, 0.0));
+    } else {
+        (h.log)(match st {
+            3 => "Model is infeasible\n",
+            5 => "Model is unbounded\n",
+            4 => "Model is infeasible or unbounded\n",
+            _ => "",
+        });
+    }
+    Outcome { status: st, work: work * 1e-9, ..Default::default() }
 }
 
 fn objective(md: &Model, x: &[f64]) -> f64 {
@@ -212,6 +274,48 @@ fn status_line(st: i32, obj: f64) -> String {
     }
 }
 
+/// Attributes from arrays in `363daa`/`365159` output form (x then slack, d then y with `>` rows already signed,
+/// duals of the minimization form): (x, Slack, Pi = −y, RC = d), duals in the model's sense.
+fn attrs(md: &Model, x: &[f64], dual: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {
+    let (n, sg) = (md.num_vars(), md.sense as f64);
+    (x[..n].to_vec(), x[n..].to_vec(), dual[n..].iter().map(|v| -(sg * v)).collect(), dual[..n].iter().map(|v| sg * v).collect())
+}
+
+/// Spx arrays of the original model (no presolve record) into the uncrush output form: slack rhs − Ax as `a8ff5e`
+/// sums it, `>` row duals negated as `363daa`/`365159` end.
+fn identity_out(md: &Model, x: &[f64], dj: &[f64]) -> (Vec<f64>, Vec<f64>) {
+    let n = md.num_vars();
+    let mut sl = vec![0.0; md.num_constrs()];
+    for (j, &xj) in x.iter().enumerate().take(n) {
+        let b = md.col_beg[j] as usize;
+        for k in b..b + md.col_len[j] as usize {
+            sl[md.col_ind[k] as usize] += xj * md.col_val[k];
+        }
+    }
+    let mut xo = x[..n].to_vec();
+    xo.extend((0..sl.len()).map(|i| md.rhs[i] - sl[i]));
+    let mut d = dj.to_vec();
+    for (i, &c) in md.row_sense.iter().enumerate() {
+        if c == b'>' {
+            d[n + i] = -d[n + i];
+        }
+    }
+    (xo, d)
+}
+
+/// The engine's solution as the original's spx arrays: x (slack for rows) and dj (dual y for rows), unscaled.
+fn spx_arrays(e: &Engine, spx: &Spx) -> (Vec<f64>, Vec<f64>) {
+    let (n, sc) = (spx.n, &spx.scaling);
+    let xs = e.x();
+    let dt = |j: usize| if e.vstat[j] == -2 { -e.d[j] } else { e.d[j] };
+    let sigma = |i: usize| if spx.sense[i] == b'>' { -1.0 } else { 1.0 };
+    let mut x: Vec<f64> = (0..n).map(|j| xs[j] * sc.col[j]).collect();
+    x.extend((0..spx.m).map(|i| xs[n + i] / sc.row[i]));
+    let mut dj: Vec<f64> = (0..n).map(|j| dt(j) / (sc.col[j] * sc.obj)).collect();
+    dj.extend((0..spx.m).map(|i| dt(n + i) * sigma(i) * sc.row[i] / sc.obj));
+    (x, dj)
+}
+
 /// Simplex on a (presolved) model: status, iterations, trace, and its solution as `363daa` reads it — x (slack
 /// for rows), dj (dual y for rows) and status, columns then rows, unscaled.
 #[allow(clippy::type_complexity)]
@@ -225,48 +329,108 @@ pub fn simplex(md: &Model, method: i32, iter_limit: u64) -> (Status, u64, Vec<Tr
     let mut e = Engine::new(&spx);
     e.iter_limit = iter_limit;
     let st = e.solve(method);
-    let (n, sc) = (spx.n, &spx.scaling);
-    let xs = e.x();
-    let dt = |j: usize| if e.vstat[j] == -2 { -e.d[j] } else { e.d[j] };
-    let sigma = |i: usize| if spx.sense[i] == b'>' { -1.0 } else { 1.0 };
-    let mut x: Vec<f64> = (0..n).map(|j| xs[j] * sc.col[j]).collect();
-    x.extend((0..spx.m).map(|i| xs[n + i] / sc.row[i]));
-    let mut dj: Vec<f64> = (0..n).map(|j| dt(j) / (sc.col[j] * sc.obj)).collect();
-    dj.extend((0..spx.m).map(|i| dt(n + i) * sigma(i) * sc.row[i] / sc.obj));
-    let scale = sc.obj * md.sense as f64;
+    let (x, dj) = spx_arrays(&e, &spx);
+    let scale = spx.scaling.obj * md.sense as f64;
     let trace = e.trace.iter().map(|&(k, z, pi, di, pt)| (k, z / scale + md.objcon, pi, di, pt)).collect();
     (st, e.iter, trace, x, dj, e.vstat.clone())
 }
 
-/// `0c3d0d` without warm starts, PreDual, network, sifting or concurrent: presolve → simplex → `363daa` → status.
-/// shortcut: the simplex on the original model after uncrush ("Extra simplex iterations after uncrush") needs a
-/// warm-start entry the engine lacks; the uncrushed solution is reported as is.
-fn simplex_driver(md: &Model, p: &Params, method: i32, h: &mut Hooks, t0: Instant) -> Outcome {
-    let pre = presolve_logged(md, p, &mut *h.log);
-    let q = pre.as_ref().map_or(md, |(q, _)| q);
-    let lim = p.get("IterationLimit");
-    let lim = if lim >= 1e18 { u64::MAX } else { lim as u64 };
-    let (st, iter, trace, x, dj, vs) = simplex(q, method, lim);
-    let code = match st {
+fn code(st: Status) -> i32 {
+    match st {
         Status::Optimal => 2,
         Status::Infeasible => 3,
         Status::Unbounded => 5,
         Status::IterLimit => 7,
         Status::Numeric => 12,
-    };
-    let (status, x) = match &pre {
-        Some((_, post)) => {
-            let u = postsolve::uncrush(post, md, &postsolve::PreSol { x: &x, dj: &dj, st: &vs }, None);
-            (presolve_status(md, p, code), u.x[..md.num_vars()].to_vec())
+    }
+}
+
+/// `cda5b` on the original model started from the uncrushed basis (`0c3d0d` L444–476, "Extra simplex iterations
+/// after uncrush"): (status, iterations, x). None when the basis does not give a complete factorization.
+/// shortcut: the engine's dual needs its own start (`dual_start` crashes a new basis), so the primal runs from the
+/// basis; 0c3d0d passes the method's algorithm (dual for Method 1). Both stop at once on an optimal basis.
+fn reoptimize(md: &Model, basis: &[i32], lim: u64) -> Option<(Status, u64, Vec<f64>, Vec<f64>)> {
+    use rsolver_lp::lu::Lu;
+    use rsolver_model::INFINITY;
+    let mut spx = Spx::new(md);
+    if md.sense < 0 {
+        for c in &mut spx.c {
+            *c = -*c;
         }
-        None => (code, x[..md.num_vars()].to_vec()),
+    }
+    let (n, m) = (spx.n, spx.m);
+    let (mut vstat, mut head) = (vec![0i32; n + m], Vec::with_capacity(m));
+    for j in 0..n + m {
+        vstat[j] = if basis[j] >= 0 {
+            head.push(j);
+            head.len() as i32 - 1
+        } else if spx.u[j] - spx.l[j] <= 0.0 {
+            -4
+        } else if basis[j] == -2 && spx.u[j] < INFINITY || basis[j] != -2 && spx.l[j] <= -INFINITY && spx.u[j] < INFINITY {
+            -2
+        } else if spx.l[j] <= -INFINITY && INFINITY <= spx.u[j] {
+            -3
+        } else {
+            -1
+        };
+    }
+    if head.len() != m {
+        return None;
+    }
+    let lu = Lu::factor(&spx, &head);
+    if !lu.complete() {
+        return None;
+    }
+    let mut e = Engine::new(&spx);
+    e.iter_limit = lim;
+    (e.vstat, e.head, e.lu) = (vstat, head, lu);
+    let st = e.primal();
+    e.compute_duals();
+    let (x, dj) = spx_arrays(&e, &spx);
+    Some((st, e.iter, x, dj))
+}
+
+/// `0c3d0d` without warm starts, PreDual, network, sifting or concurrent: presolve → simplex → `363daa` → simplex
+/// on the original model from the uncrushed basis → status.
+fn simplex_driver(md: &Model, p: &Params, method: i32, h: &mut Hooks, t0: Instant) -> Outcome {
+    let pre = presolve_logged(md, p, &mut *h.log);
+    let work = pre.as_ref().map_or(0.0, |(_, post)| post.work);
+    if let Some((_, post)) = pre.as_ref().filter(|(_, post)| post.status != 0) {
+        return proved(post.status, "Solved", h, t0, post.work);
+    }
+    let q = pre.as_ref().map_or(md, |(q, _)| q);
+    let lim = p.get("IterationLimit");
+    let lim = if lim >= 1e18 { u64::MAX } else { lim as u64 };
+    let (st, mut iter, trace, x, dj, vs) = simplex(q, method, lim);
+    let none = (vec![], vec![], vec![], vec![]);
+    let (status, (x, slack, pi, rc)) = match &pre {
+        Some((_, post)) if code(st) == 2 && !post.is_identity() => {
+            let u = postsolve::uncrush(post, md, &postsolve::PreSol { x: &x, dj: &dj, st: &vs }, None);
+            match reoptimize(md, &u.basis, lim.saturating_sub(iter)) {
+                Some((st2, extra, x2, d2)) => {
+                    if extra > 0 {
+                        (h.log)(&format!("\nExtra simplex iterations after uncrush: {extra}\n"));
+                    }
+                    iter += extra;
+                    let (xo, d) = identity_out(md, &x2, &d2);
+                    (simplex_status(md, p, code(st2), false), attrs(md, &xo, &d))
+                }
+                None => (2, attrs(md, &u.x, &u.dual)),
+            }
+        }
+        // a non-optimal presolved result is not uncrushed: no solution
+        Some((_, post)) if !post.is_identity() => (simplex_status(md, p, code(st), true), none),
+        _ => {
+            let (xo, d) = identity_out(md, &x, &dj);
+            (simplex_status(md, p, code(st), false), attrs(md, &xo, &d))
+        }
     };
-    let obj = objective(md, &x);
-    let work = pre.as_ref().map_or(0.0, |(_, post)| post.work) * 1e-9;
+    let obj = if x.is_empty() { 0.0 } else { objective(md, &x) };
+    let work = work * 1e-9;
     (h.log)(&format!("\nSolved in {iter} iterations and {:.2} seconds ({work:.2} work units)\n", t0.elapsed().as_secs_f64()));
     (h.log)(&status_line(status, obj));
     // shortcut: simplex work is not counted yet (P2 of G1); Work holds the presolve part only
-    Outcome { status, obj, x, iter_count: iter, trace, work, ..Default::default() }
+    Outcome { status, obj, x, slack, pi, rc, iter_count: iter, trace, work, ..Default::default() }
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -296,14 +460,19 @@ fn flip_upper_only(q: &Model) -> Option<(Model, Vec<usize>)> {
     Some((f, cols))
 }
 
-/// `2bb770` / `34f033` without crossover: presolve → barrier or PDHG → uncrush → status.
+/// `2bb770` / `34f033` without crossover: presolve → barrier or PDHG → `36578f` (status rules, `365159` uncrush,
+/// big-uncrush-violation check).
 fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Outcome {
+    let name = if alg == Alg::Barrier { "Barrier" } else { "PDHG" };
     let pre = presolve_logged(md, p, &mut *h.log);
+    if let Some((_, post)) = pre.as_ref().filter(|(_, post)| post.status != 0) {
+        return proved(post.status, &format!("{name} solved model"), h, t0, post.work);
+    }
     let q = pre.as_ref().map_or(md, |(q, _)| q);
     let flipped = flip_upper_only(q);
     let qe = flipped.as_ref().map_or(q, |(f, _)| f);
     let mut out = Outcome::default();
-    let (status, xq) = match alg {
+    let (engine_status, (mut xq, slq, mut dq, yq)) = match alg {
         Alg::Barrier => {
             let bp = barrier::Params {
                 bar_conv_tol: p.get("BarConvTol"),
@@ -313,7 +482,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
             let r = barrier::solve(qe, &bp, &mut *h.barrier);
             out.bar_iter_count = r.bar_iters;
             out.work = pre.as_ref().map_or(0.0, |(_, post)| post.work) * 1e-9 + r.work;
-            (r.status, r.x)
+            (r.status, (r.x, r.slack, r.d, r.y))
         }
         Alg::Pdhg => {
             (h.log)("\nStart PDHG using 1 threads\n\n");
@@ -328,44 +497,69 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
             let r = pdhg::solve(qe, &pp, &mut *h.pdhg);
             out.pdhg_iter_count = r.iters;
             out.work = r.work / 1e9;
-            (r.status, r.x)
+            (r.status, (r.x, r.slack, r.d, r.y))
         }
     };
-    let mut xq = xq;
     for &j in flipped.as_ref().map_or(&[][..], |(_, c)| c) {
         xq[j] = -xq[j];
+        dq[j] = -dq[j];
     }
-    // shortcut: `36578f` (primal 363164, dual 365159, big-uncrush-violation check) is not ported; x goes through
-    // `363daa` with slacks and a dummy all-basic status, which recovers the primal values; duals are not reported.
-    let x = match &pre {
-        Some((_, post)) => {
-            let mut act = vec![0.0; q.num_constrs()];
-            for (j, &xj) in xq.iter().enumerate() {
-                let b = q.col_beg[j] as usize;
-                for k in b..b + q.col_len[j] as usize {
-                    act[q.col_ind[k] as usize] += q.col_val[k] * xj;
-                }
+    let mut status = if pre.is_some() { interior_status(md, p, engine_status) } else { engine_status };
+    // `36578f`: no solution for 3, 4, 5, 6, 12; otherwise `365159` on the presolved solution as `7a069` hands it
+    // over (x then slack, d then y, the presolved model's space; 64/64 bitwise on the oracle, docs/m1_driver.md §8)
+    let (x, slack, pi, rc) = if matches!(status, 3..=6 | 12) {
+        (vec![], vec![], vec![], vec![])
+    } else {
+        let (xs, dj) = ([&xq[..], &slq[..]].concat(), [&dq[..], &yq[..]].concat());
+        let u = match &pre {
+            Some((_, post)) => postsolve::uncrush_nonbasic(post, md, &postsolve::PreSol { x: &xs, dj: &dj, st: &[] }, None),
+            None => {
+                let (x, dual) = identity_out(md, &xq, &dj);
+                postsolve::Uncrushed { basis: vec![], x, dual }
             }
-            let mut xs = xq.clone();
-            xs.extend((0..act.len()).map(|i| if q.row_sense[i] == b'>' { act[i] - q.rhs[i] } else { q.rhs[i] - act[i] }));
-            let (dj, st) = (vec![0.0; xs.len()], vec![0; xs.len()]);
-            postsolve::uncrush(post, md, &postsolve::PreSol { x: &xs, dj: &dj, st: &st }, None).x[..md.num_vars()].to_vec()
-        }
-        None => xq,
+        };
+        attrs(md, &u.x, &u.dual)
     };
-    let status = if pre.is_some() { presolve_status(md, p, status) } else { status };
-    let obj = objective(md, &x);
-    let name = if alg == Alg::Barrier { "Barrier" } else { "PDHG" };
+    let obj = if x.is_empty() { 0.0 } else { objective(md, &x) };
     let it = if alg == Alg::Barrier { out.bar_iter_count as f64 } else { out.pdhg_iter_count as f64 };
     let secs = t0.elapsed().as_secs_f64();
-    if status == 2 {
+    if engine_status == 2 {
         (h.log)(&format!("\n{name} solved model in {it:.0} iterations and {secs:.2} seconds ({:.2} work units)\n", out.work));
         (h.log)(&format!("Optimal objective {}\n", c_exp(obj, 8)));
     } else {
         (h.log)(&format!("\n{name} performed {it:.0} iterations in {secs:.2} seconds ({:.2} work units)\n", out.work));
         (h.log)(&status_line(status, obj));
     }
-    Outcome { status, obj, x, ..out }
+    // `36578f` big uncrush violation: an OPTIMAL solution whose violation in the original model exceeds
+    // max(1e4, 1/min scale) · max(FeasibilityTol, violation in the presolved model) is SUBOPTIMAL.
+    // shortcut: the presolved violation (result+0x58) is recomputed here from the presolved model and x.
+    if let (2, Some((_, post))) = (status, &pre) {
+        let (smin, pre_viol) = if post.is_identity() {
+            (1.0, 0.0)
+        } else {
+            let smin = match alg {
+                Alg::Barrier => {
+                    let sc = rsolver_lp::scaling::scale_flag3(qe);
+                    sc.col.iter().chain(&sc.row).fold(f64::INFINITY, |a, &v| a.min(v))
+                }
+                Alg::Pdhg => {
+                    let d = pdhg::scale::scale_flag4(qe);
+                    d.s.iter().chain(&d.r).fold(f64::INFINITY, |a, &v| a.min(v))
+                }
+            };
+            (smin, max_violation(q, &xq))
+        };
+        let viol = max_violation(md, &x);
+        if 1e4f64.max(1.0 / smin) * p.get("FeasibilityTol").max(pre_viol) < viol {
+            (h.log)(&format!(
+                "Warning: Changing status from GRB_OPTIMAL to GRB_SUBOPTIMALdue to big uncrush violation {} (presolved model = {}).\n",
+                c_g(viol, 6),
+                c_g(pre_viol, 6)
+            ));
+            status = 13;
+        }
+    }
+    Outcome { status, obj, x, slack, pi, rc, ..out }
 }
 
 #[cfg(test)]

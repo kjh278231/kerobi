@@ -27,6 +27,8 @@ pub struct Post {
     pub counts: [i32; 5],
     /// deterministic presolve work (*state+0x458) when model generation starts (`tools/work_oracle.py`)
     pub work: f64,
+    /// status presolve proved (`390989` *param_3 after its final rules): 0 none, 3, 4, 5; the model is not usable then
+    pub status: i32,
 }
 
 fn r8(x: i64) -> i64 {
@@ -151,7 +153,7 @@ impl Post {
             used += size;
         }
         Post { recs: st.post.clone(), aligns, col_map, row_map, n_base, n_pre: n_base + st.splits.len(), m_pre, infbound,
-               counts: [st.bounds_tightened, st.coefs_changed, st.ineq_to_eq, st.rows_removed, st.cols_removed], work }
+               counts: [st.bounds_tightened, st.coefs_changed, st.ineq_to_eq, st.rows_removed, st.cols_removed], work, status: 0 }
     }
 }
 
@@ -202,7 +204,20 @@ pub struct Uncrushed {
 /// `363daa` on the LP simplex path. `orig` is the model presolve ran on (for the final slack and the `>` sign
 /// of y). `aligns` overrides `post.aligns` when given.
 pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]]>) -> Uncrushed {
-    if post.is_identity() {
+    run(post, orig, pre, aligns, true)
+}
+
+/// `365159`, the uncrush of a solution without a basis (`36578f`: barrier or PDHG without crossover). `pre` holds
+/// x then slack and d then y of the presolved model, already in its own (unflipped) space; `pre.st` is not read.
+/// The output basis is meaningless. Differences to `363daa` are the record types whose basis test becomes a test
+/// of the reduced cost (6, 7), the substitution that no longer skips basic rows (2) and the split row (14).
+pub fn uncrush_nonbasic(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]]>) -> Uncrushed {
+    run(post, orig, pre, aligns, false)
+}
+
+fn run(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]]>, basis: bool) -> Uncrushed {
+    // 365159 has no identity shortcut: it still maps, recomputes the slacks and signs the `>` duals
+    if basis && post.is_identity() {
         // no presolved model: the solution already lives in the original space
         return Uncrushed { basis: pre.st.to_vec(), x: pre.x.to_vec(), dual: pre.dj.to_vec() };
     }
@@ -228,7 +243,7 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
             let c = cm as usize;
             x[j] = pre.x[c];
             dual[j] = pre.dj[c];
-            bs[j] = conv(pre.st[c]);
+            bs[j] = if basis { conv(pre.st[c]) } else { 0 };
         }
     }
     for i in 0..m {
@@ -242,7 +257,8 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
         } else {
             let c = n_pre + rm as usize;
             dual[n + i] = pre.dj[c];
-            let s = pre.st[c];
+            // 365159 copies every kept row's slack; 363daa only those of basic rows (a8ff5e redoes all anyway)
+            let s = if basis { pre.st[c] } else { 0 };
             if s < 0 {
                 bs[n + i] = s;
             } else {
@@ -268,7 +284,7 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
                 x[j] = simd_sum(*c0, a[0] != 0, &p);
                 dual[j] = 0.0;
                 if *mode < 0 {
-                    if bs[n + r] >= 0 {
+                    if basis && bs[n + r] >= 0 {
                         bs[j] = bs[n + r];
                         bs[n + r] = -1;
                         continue;
@@ -310,7 +326,7 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
             }
             PostRec::SingletonRow { j, r, code, a: av, x: xr } => {
                 let (j, r) = (*j as usize, *r as usize);
-                let s = bs[j];
+                let s = if basis { bs[j] } else { dj_status(dual[j]) };
                 if code & 8 != 0 && (x[j] - xr).abs() > 1e-6 {
                     continue;
                 }
@@ -367,6 +383,15 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
                     dual[n + ra] = 0.0;
                 }
             }
+            PostRec::SplitRow { a: ra, b, ratio, .. } if !basis => {
+                // `365159` case 14: a negative dual moves to the dropped row
+                let (ra, b) = (*ra as usize, *b as usize);
+                let y = dual[n + ra];
+                if y < 0.0 {
+                    dual[n + b] = *ratio * y;
+                    dual[n + ra] = 0.0;
+                }
+            }
             PostRec::SplitRow { a: ra, b, k, ratio, .. } => {
                 let (ra, b) = (*ra as usize, *b as usize);
                 let s = pre.st[n_base + *k as usize];
@@ -391,9 +416,9 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
                 parallel_col(&mut x, &mut dual, &mut bs, (*xc as usize, *yc as usize), [*lx, *ly, *ux, *uy, *r], post.infbound)
             }
             PostRec::AggBound { code, e, k, r: rr, ae, ak, .. } => {
-                // `363daa` case 6, basis path. shortcut: code bit 8 (col_flag 0x80, PWL) is not ported.
+                // case 6. shortcut: code bit 8 (col_flag 0x80, PWL) is not ported.
                 let (e, k, rr) = (*e as usize, *k as usize, *rr as usize);
-                let s = bs[k];
+                let s = if basis { bs[k] } else { dj_status(dual[k]) };
                 let hit = match s {
                     -1 => code & 1 != 0,
                     -2 => code & 2 != 0,
@@ -546,6 +571,18 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
         }
     }
     Uncrushed { basis: bs, x, dual }
+}
+
+/// `365159`'s stand-in for a column's bound status: -1 when d > 1e-6 (at its lower bound), -2 when d < -1e-6,
+/// else 0 (neither).
+fn dj_status(d: f64) -> i32 {
+    if 1e-6 < d {
+        -1
+    } else if d < -1e-6 {
+        -2
+    } else {
+        0
+    }
 }
 
 /// `35d235` for type 4 (x' = x + r y was merged into column x; split the merged value back into x and y). The

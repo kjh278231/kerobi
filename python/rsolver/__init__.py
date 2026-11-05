@@ -268,6 +268,14 @@ class Model:
         v = self._cbrow[k]
         return int(v) if k == 4 else v
 
+    def getAttr(self, attrname, objs=None):
+        """Array attributes of the last optimize: X, RC (columns), Slack, Pi (rows); all entries when objs is None."""
+        vals = {"x": self._x, "rc": getattr(self, "_rc", []), "slack": getattr(self, "_slack", []),
+                "pi": getattr(self, "_pi", [])}.get(attrname.lower())
+        if vals is None or not len(vals):
+            raise GurobiError(10005, f"Unable to retrieve attribute '{attrname}'")
+        return list(vals) if objs is None else [vals[o.index] for o in objs]
+
     @property
     def ObjBound(self):
         return self.ObjVal
@@ -293,9 +301,9 @@ class Model:
         pairs = [(k, float(v)) for k, v in self.Params.items() if isinstance(v, (int, float))]
         t0 = time.perf_counter()
         (self.Status, self._objval, self._x, self.IterCount, self.BarIterCount, self.PDHGIterCount, self.Work, trace,
-         log) = self._core.optimize(pairs, bar, pdhg)
+         log, self._slack, self._pi, self._rc) = self._core.optimize(pairs, bar, pdhg)
         self.Runtime, self.NodeCount = time.perf_counter() - t0, 0.0
-        self.SolCount = int(self.Status == GRB.OPTIMAL or self.PDHGIterCount > 0)  # a PDHG iterate is a solution
+        self.SolCount = int(len(self._x) > 0)  # the driver hands out x only when the status has a solution
         if self._param("LogFile", ""):
             with open(self._param("LogFile", ""), "a") as f:
                 f.write(log)

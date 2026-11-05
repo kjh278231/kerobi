@@ -22,7 +22,7 @@ pub struct Scaled {
     pub s: Vec<f64>,
     pub r: Vec<f64>,
     pub objscale: f64,
-    /// objective constant (D+0x60, unscaled)
+    /// objective constant (D+0x60, unscaled; minimization form)
     pub objcon: f64,
     /// 16-byte phase of c (D+0x50), which decides the peel of the objective dot in `354824`
     pub peel_c: usize,
@@ -86,7 +86,9 @@ pub fn scale_flag4(md: &Model) -> Scaled {
     }
     let lb: Vec<f64> = (0..n).map(|j| if md.lb[j] > -INFINITY { md.lb[j] / s[j] } else { md.lb[j] }).collect();
     let ub: Vec<f64> = (0..n).map(|j| if md.ub[j] < INFINITY { md.ub[j] / s[j] } else { md.ub[j] }).collect();
-    let mut c: Vec<f64> = (0..n).map(|j| md.obj[j] * s[j]).collect();
+    // the engines work on the minimization form (a maximization's costs and constant negated)
+    let sg = md.sense as f64;
+    let mut c: Vec<f64> = (0..n).map(|j| (sg * md.obj[j]) * s[j]).collect();
     let b: Vec<f64> = (0..m)
         .map(|i| {
             let b = if md.row_sense[i] == b'>' { -md.rhs[i] } else { md.rhs[i] };
@@ -100,7 +102,7 @@ pub fn scale_flag4(md: &Model) -> Scaled {
         }
     }
     let a = Mat::from_csc(m, cbeg, cind, val);
-    Scaled { a, c, lb, ub, b, sense: md.row_sense.clone(), s, r, objscale, objcon: md.objcon, peel_c: 0 }
+    Scaled { a, c, lb, ub, b, sense: md.row_sense.clone(), s, r, objscale, objcon: sg * md.objcon, peel_c: 0 }
 }
 
 /// Shared LP objective scale (ObjScale = 0, `07d3ce` L2633–2819 + L5362–5399): from the scaled nonzero |c|.

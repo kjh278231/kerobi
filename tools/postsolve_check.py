@@ -1,6 +1,7 @@
 """Compare rsolver's uncrush (postsolve.rs) with an uncrush oracle capture (tools/uncrush_oracle.py), bit for bit.
 
 usage: PYTHONPATH=python python tools/postsolve_check.py <oracle_dir> [--param Name=Value ...] [--oracle-align] [-v] [name ...]
+       ... --nonbasic: compare 365159 (uncrush without a basis, Method 2/6 with Crossover 0) with the capture's "c159"
 The input of the uncrush is the oracle's `pre_after` (what 363daa reads), so simplex plays no part. Models for which
 the oracle never reached 363daa (nothing presolved) must give an identity postsolve. --oracle-align takes the value-array parities from
 the oracle's real record addresses instead of the arena simulation. Needs no Gurobi.
@@ -39,6 +40,7 @@ def main():
     ap.add_argument("--align", action="store_true", help="first parity mismatch per model")
     ap.add_argument("--arena", action="store_true", help="list unexplained arena gaps instead of comparing")
     ap.add_argument("-v", action="store_true")
+    ap.add_argument("--nonbasic", action="store_true", help="365159 path (captures with c159)")
     ap.add_argument("names", nargs="*")
     a = ap.parse_args()
     params = [(k, float(v)) for k, v in (p.split("=", 1) for p in a.param)]
@@ -47,6 +49,9 @@ def main():
     ok = skipped = identity = 0
     for name in names:
         cap = json.load(open(Path(a.oracle) / f"{name}.json"))
+        if a.nonbasic:
+            ok += check_nonbasic(name, cap, insts, params)
+            continue
         if not cap["daa"]:
             # Gurobi never calls 363daa: presolve removed nothing, the original model is solved. rsolver must say the
             # same and hand a solution (here the oracle's final attributes) back unchanged.
@@ -116,6 +121,29 @@ def main():
         else:
             ok += 1
     print(f"match {ok}/{len(names)}" + (f" ({identity} without uncrush: identity)" if identity else ""))
+
+
+def check_nonbasic(name, cap, insts, params):
+    """365159 input = the capture's presolved x, slack, d, y as 36578f passes them (columns marked in D+0x408 still
+    flipped: 365159 flips them back first, our port takes them unflipped)."""
+    if not cap.get("c159"):
+        print(f"{name:12s} no 365159 call in the capture")
+        return 0
+    e = cap["c159"][-1]
+    core = rsolver.read(str(insts[name]))._core
+    q = core.presolve(params)
+    x, d = H(e["in"]["x"]), H(e["in"]["d"])
+    for j, (lo, up) in enumerate(zip(q.lb, q.ub)):
+        if lo <= -1e30 and up < 1e30:  # 07d3ce flip mark
+            x[j], d[j] = -x[j], -d[j]
+    gx, gd = core.uncrush_nonbasic(params, x + H(e["in"]["slack"]), d + H(e["in"]["y"]))
+    n = e["n_m"][0]
+    bad = [tag + "@" + str(idx[:6]) for tag, got, want in (("x", gx[:n], e["out"]["x"]), ("slack", gx[n:], e["out"]["slack"]),
+                                                          ("d", gd[:n], e["out"]["d"]), ("y", gd[n:], e["out"]["y"]))
+           if (idx := [i for i, (u, v) in enumerate(zip(got, want)) if u.hex() != v])]
+    if bad:
+        print(f"{name:12s} " + " ".join(bad))
+    return not bad
 
 
 if __name__ == "__main__":

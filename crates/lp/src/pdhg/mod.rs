@@ -50,6 +50,11 @@ pub struct PdhgResult {
     pub x: Vec<f64>,
     /// work counter W[0] (1e-9 work units) at the end of `34c004`
     pub work: f64,
+    /// slack, reduced costs and row duals in the model's space (`7a069`: (b − Ax̂)/r, (c − Aᵀŷ)/(s·ω), −(r/ω)·ŷ;
+    /// rows of the model as stored, `>` rows negated)
+    pub slack: Vec<f64>,
+    pub d: Vec<f64>,
+    pub y: Vec<f64>,
 }
 
 /// `355602` (one thread): 2 optimal, 7 iteration limit, 16 work limit, 12 numeric, 1 running.
@@ -103,10 +108,11 @@ fn dump(st: &State) {
 pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResult {
     let d = scale::scale_flag4(md);
     let (n, m, nnz) = (d.a.n, d.a.m, d.a.nnz());
+    let sg = md.sense as f64; // callback objectives in the model's sense
     let info = |st: &State| IterInfo {
         iter: st.it,
-        pobj: st.pobj,
-        dobj: st.dobj,
+        pobj: sg * st.pobj,
+        dobj: sg * st.dobj,
         priminf: st.rp2,
         dualinf: st.rd2,
         compl: st.compl,
@@ -210,5 +216,9 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
     };
     st.eval(&d, true, &mut work);
     let x = (0..n).map(|j| st.v.xhat[j] * d.s[j]).collect();
-    PdhgResult { status: code, obj: st.pobj * md.sense as f64, iters: st.it, x, work }
+    let v = &st.v;
+    let slack = (0..m).map(|i| (d.b[i] - v.ax[i]) / d.r[i]).collect();
+    let dj = (0..n).map(|j| (d.c[j] - v.aty[j]) / (d.s[j] * d.objscale)).collect();
+    let y = (0..m).map(|i| -((d.r[i] / d.objscale) * v.yhat[i])).collect(); // `7a542` negates y
+    PdhgResult { status: code, obj: st.pobj * md.sense as f64, iters: st.it, x, work, slack, d: dj, y }
 }

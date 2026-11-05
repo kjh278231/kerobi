@@ -151,6 +151,18 @@ impl PyCoreModel {
             (x, dj, st)
         })
     }
+    /// Presolve, then `365159` (uncrush without a basis) of a presolved solution given as x and slack, d and y:
+    /// (x, dual) of this model, columns then rows.
+    fn uncrush_nonbasic(&self, py: Python<'_>, params: Vec<(String, f64)>, x: Vec<f64>, dj: Vec<f64>) -> (Vec<f64>, Vec<f64>) {
+        let p = rsolver_lp::presolve::Params::from_pairs(&params);
+        py.allow_threads(|| {
+            let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
+            let st = vec![0; x.len()];
+            let r = rsolver_lp::presolve::postsolve::uncrush_nonbasic(
+                &post, &self.inner, &rsolver_lp::presolve::postsolve::PreSol { x: &x, dj: &dj, st: &st }, None);
+            (r.x, r.dual)
+        })
+    }
     /// Record kinds (oldest first) and simulated array parities of the presolve of this model.
     fn post_records(&self, params: Vec<(String, f64)>) -> Vec<(i32, u8, u8, i64)> {
         let p = rsolver_lp::presolve::Params::from_pairs(&params);
@@ -244,7 +256,8 @@ impl PyCoreModel {
     }
     /// optimize() of a continuous model through the driver (docs/m1_driver.md) with Gurobi parameter (name, value)
     /// pairs; `bar_cb`/`pdhg_cb(iter, pobj, dobj, priminf, dualinf, compl)` run per BARRIER/PDHG callback. Returns
-    /// (status, objective, x, IterCount, BarIterCount, PDHGIterCount, work, SIMPLEX trace rows, log text).
+    /// (status, objective, x, IterCount, BarIterCount, PDHGIterCount, work, SIMPLEX trace rows, log text, Slack, Pi,
+    /// RC).
     #[allow(clippy::type_complexity)]
     fn optimize(
         &self,
@@ -252,7 +265,7 @@ impl PyCoreModel {
         params: Vec<(String, f64)>,
         bar_cb: PyObject,
         pdhg_cb: PyObject,
-    ) -> PyResult<(i32, f64, Vec<f64>, f64, usize, f64, f64, Vec<(f64, f64, f64, f64, bool)>, String)> {
+    ) -> PyResult<(i32, f64, Vec<f64>, f64, usize, f64, f64, Vec<(f64, f64, f64, f64, bool)>, String, Vec<f64>, Vec<f64>, Vec<f64>)> {
         let p = rsolver_model::params::Params::from_pairs(&params);
         let (mut log, mut err_b, mut err_p) = (String::new(), Ok(()), Ok(()));
         let out = {
@@ -273,7 +286,18 @@ impl PyCoreModel {
         err_b?;
         err_p?;
         let trace = out.trace.iter().map(|&(k, z, pi, di, pt)| (k as f64, z, pi, di, pt)).collect();
-        Ok((out.status, out.obj, out.x, out.iter_count as f64, out.bar_iter_count, out.pdhg_iter_count as f64, out.work, trace, log))
+        Ok((out.status, out.obj, out.x, out.iter_count as f64, out.bar_iter_count, out.pdhg_iter_count as f64, out.work, trace, log,
+            out.slack, out.pi, out.rc))
+    }
+    /// Barrier duals for checks: (slack, d, y) in the model's space as `7a069` hands them to `365159`.
+    fn barrier_duals(&self, py: Python<'_>) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+        let r = py.allow_threads(|| rsolver_lp::barrier::solve(&self.inner, &rsolver_lp::barrier::Params::default(), &mut |_| {}));
+        (r.slack, r.d, r.y)
+    }
+    /// PDHG duals for checks: (slack, d, y) in the model's space as `7a069` hands them to `365159`.
+    fn pdhg_duals(&self, py: Python<'_>) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+        let r = py.allow_threads(|| rsolver_lp::pdhg::solve(&self.inner, &rsolver_lp::pdhg::Params::default(), &mut |_| {}));
+        (r.slack, r.d, r.y)
     }
     /// LP solve without presolve: (status, objective, x, iterations, trace rows, pivot path).
     #[allow(clippy::type_complexity)]

@@ -3,7 +3,8 @@ inputs and outputs, then compare the uncrushed arrays with the final model attri
 usage: python uncrush_oracle.py <model.mps.gz> <out.json> [Param=Value ...]   (Gurobi: one process at a time)
 Captured: post record list (type, data ptr, val-array alignment), presolved spx arrays (x/dj/status, n_pre+m_pre)
 before and after the call, the 363daa outputs (basis int[n+m], x[n+m], dual[n+m]) and final X/Slack/RC/Pi/VBasis/CBasis.
-Also counts hits of the 36578f-path calls (365159 x2, 363164) to show which path ran."""
+Also counts hits of the 36578f-path calls (365159 x2, 363164) to show which path ran; on that path (Method 2/6 with
+Crossover 0) the 365159 inputs and outputs are captured under "c159"."""
 import ctypes, json, sys
 import gurobipy as gp
 
@@ -98,9 +99,32 @@ def counter(key, T, off):
 
 T9 = ctypes.CFUNCTYPE(None, *[ctypes.c_void_p] * 9)
 T6 = ctypes.CFUNCTYPE(None, *[ctypes.c_void_p] * 6)
+cap["c159"] = []
+
+
+def c159(key):
+    """365159(model, x, slack, d, y of the presolved model, then x, slack, d, y of the original): the nonbasic LP
+    uncrush of 36578f (barrier/PDHG without crossover). Records inputs, outputs and the record list."""
+    f = T9(base + 0x3734F0)
+
+    def h(model, xi, si, di, yi, xo, so, do, yo):
+        cap["hits"][key] += 1
+        od, pd = L(model + 0xE8), L(L(model + 0x1D8) + 0xE8)
+        n, m, npre, mpre = I(od + 0xC), I(od + 8), I(pd + 0xC), I(pd + 8)
+        cs, rs = L(pd + 0x3E0), L(pd + 0x3D8)  # presolved model's scale arrays (36578f's 1/min scale term)
+        e = {"site": key, "n_m": [n, m], "pre_n_m": [npre, mpre], "records": records(L(model + 0x1D0)),
+             "pre_scale": [dbl(cs, npre), dbl(rs, mpre)] if cs else None,
+             "pre_viol": D(L(L(model + 0x1D8) + 0x1B0) + 0x58),
+             "in": {"x": dbl(xi, npre), "slack": dbl(si, mpre), "d": dbl(di, npre), "y": dbl(yi, mpre)}}
+        f(model, xi, si, di, yi, xo, so, do, yo)
+        e["out"] = {"x": dbl(xo, n), "slack": dbl(so, m), "d": dbl(do, n), "y": dbl(yo, m)}
+        cap["c159"].append(e)
+    return T9(h)
+
+
 patch_call(0x14B2F5, T363daa(daa))
-patch_call(0x372458, T9(counter("365159@372458", T9, 0x3734F0)))
-patch_call(0x372E6E, T9(counter("365159@372e6e", T9, 0x3734F0)))
+patch_call(0x372458, c159("365159@372458"))
+patch_call(0x372E6E, c159("365159@372e6e"))
 patch_call(0x3729D4, T6(counter("363164@3729d4", T6, 0x36C2D0)))
 # warm-start simplex on the original model after 363daa: which start vectors does it get (nonzero = passed)?
 Tcda = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_int, *[ctypes.c_void_p] * 7)
@@ -135,15 +159,22 @@ cap["user_model"] = hex(api.PyCapsule_GetPointer(mod._cmodel, api.PyCapsule_GetN
 mod.optimize()
 fin = {a: [float(v).hex() for v in mod.getAttr(a, mod.getVars() if a in ("X", "RC") else mod.getConstrs())]
        for a in ("X", "RC", "Slack", "Pi")}
-fin["VBasis"] = mod.getAttr("VBasis", mod.getVars())
-fin["CBasis"] = mod.getAttr("CBasis", mod.getConstrs())
+try:
+    fin["VBasis"] = mod.getAttr("VBasis", mod.getVars())
+    fin["CBasis"] = mod.getAttr("CBasis", mod.getConstrs())
+except gp.GurobiError:  # no basis without crossover
+    fin["VBasis"] = fin["CBasis"] = None
 fin["sense"] = "".join(mod.getAttr("Sense", mod.getConstrs()))
 cap["final"] = fin
 cap["status"], cap["iters"], cap["obj"] = mod.Status, mod.IterCount, mod.ObjVal.hex()
 json.dump(cap, open(sys.argv[2], "w"))
 
 # bitwise comparison of the 363daa output with the final attributes
-if cap["daa"]:
+if cap["c159"]:
+    o, n = cap["c159"][-1]["out"], len(fin["X"])
+    print("365159", cap["hits"], "status", cap["status"], "X == out.x", fin["X"] == o["x"], "RC == out.d", fin["RC"] == o["d"],
+          "Pi == -out.y?", [float.fromhex(v) for v in fin["Pi"]][:3], [float.fromhex(v) for v in o["y"]][:3])
+elif cap["daa"]:
     o, n, m = cap["daa"][-1]["out"], len(fin["X"]), len(fin["Pi"])
     neq = lambda a, b: [i for i, (u, v) in enumerate(zip(a, b)) if u != v]
     print("hits", cap["hits"], "status", cap["status"], "iters", cap["iters"], "cda5b", cap["cda5b"], "user", cap["user_model"])

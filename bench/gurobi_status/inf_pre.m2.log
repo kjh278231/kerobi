@@ -1,0 +1,36 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 05:32:39 2026
+
+Set parameter LogToConsole to value 0
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "/tmp/claude-1000/-home-sds-workspace-gurobi-sandbox-rsolver-presolve/d4a482b2-7940-4a87-826b-3ecc1bf73bd3/scratchpad/st/inf_pre.mps.g2.log"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /tmp/claude-1000/-home-sds-workspace-gurobi-sandbox-rsolver-presolve/d4a482b2-7940-4a87-826b-3ecc1bf73bd3/scratchpad/st/inf_pre.mps
+Reading time = 0.00 seconds
+INFPRE: 2 rows, 2 columns, 4 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 2 rows, 2 columns and 4 nonzeros (Min)
+Model fingerprint: 0x77c6f232
+Model has 2 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 3e+00]
+
+Presolve time: 0.00s
+
+Barrier solved model in 0 iterations and 0.00 seconds (0.00 work units)
+Model is infeasible

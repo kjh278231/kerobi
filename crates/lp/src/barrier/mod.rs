@@ -52,6 +52,10 @@ pub struct BarResult {
     /// column values in the model's space
     pub x: Vec<f64>,
     pub work: f64,
+    /// slack, reduced costs and row duals in the model's space (`7a069`), rows as stored (`>` negated)
+    pub slack: Vec<f64>,
+    pub d: Vec<f64>,
+    pub y: Vec<f64>,
 }
 
 /// Solve the LP `m` with the barrier; `cb` runs once per iteration (BARRIER callback, before the termination test).

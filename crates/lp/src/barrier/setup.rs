@@ -51,6 +51,9 @@ pub struct Lp {
     pub ptol: f64,
     pub dtol: f64,
     col_scale: Vec<f64>,
+    /// row factors and the ordering position of each model row (for the dual values in the model's space)
+    row_scale: Vec<f64>,
+    perm: Vec<usize>,
 }
 
 /// Internal LP from the model, rows placed at `perm[i]` (ordering result).
@@ -133,6 +136,8 @@ pub fn lp_from_model(md: &Model, perm: &[i32], tol: f64) -> Lp {
         ptol: 0.0,
         dtol: 0.0,
         col_scale: sc.col,
+        row_scale: sc.row,
+        perm: p,
     };
     lp.cnorminf = lp.c.iter().fold(0.0, |a: f64, v| a.max(v.abs()));
     lp.ptol = ((m as f64 + 1.0).sqrt() + dot(&b0, &b0).sqrt()) * tol;
@@ -216,6 +221,16 @@ impl Lp {
     }
 
     /// Internal column values back to the model's space: undo the lb shift and the column scale.
+    /// (slack, d, y) of the model rows / columns as `7a069` unscales them: slack_i/r_i, d_j/(s_j·ω), −(r_i/ω)·y_i,
+    /// with d = z − s (lower minus upper bound dual) and the slack of row i its slack column; `>` rows negated.
+    pub fn duals_orig(&self, x: &[f64], z: &[f64], s: &[f64], y: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+        let w = self.objscale;
+        let slack = (0..self.m).map(|i| if self.eq[self.perm[i]] { 0.0 } else { x[self.n + self.perm[i]] } / self.row_scale[i]).collect();
+        let d = (0..self.n).map(|j| (z[j] - s[j]) / (self.col_scale[j] * w)).collect();
+        let yo = (0..self.m).map(|i| -((self.row_scale[i] / w) * y[self.perm[i]])).collect(); // stored negated
+        (slack, d, yo)
+    }
+
     pub fn x_orig(&self, x: &[f64]) -> Vec<f64> {
         (0..self.n).map(|j| (if self.lb[j] > -BIG { x[j] + self.lb[j] } else { x[j] }) * self.col_scale[j]).collect()
     }
