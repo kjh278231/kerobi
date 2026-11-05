@@ -45,6 +45,8 @@ pub struct Engine<'a> {
     lu_interval: usize,
     perturbed: bool,
     pub trace: Vec<TraceRow>,
+    /// Pivot path: (iteration, entering column, leaving column); bound flips of the entering column leave −1.
+    pub path: Vec<(u64, i64, i64)>,
 }
 
 impl<'a> Engine<'a> {
@@ -74,6 +76,7 @@ impl<'a> Engine<'a> {
             lu_interval: interval,
             perturbed: false,
             trace: Vec::new(),
+            path: Vec::new(),
         }
     }
 
@@ -215,6 +218,7 @@ impl<'a> Engine<'a> {
     /// Replace basis position r by column q (status of the leaving variable given), update the LU or refactor.
     fn pivot(&mut self, r: usize, q: usize, leave_status: i32, spike: &[f64]) {
         let out = self.head[r];
+        self.path.push((self.iter, q as i64, out as i64));
         self.vstat[out] = leave_status;
         self.vstat[q] = r as i32;
         self.head[r] = q;
@@ -658,6 +662,7 @@ impl<'a> Engine<'a> {
 
 /// Result of an LP solve in the original space.
 pub struct LpResult {
+    pub path: Vec<(u64, i64, i64)>,
     pub status: Status,
     pub obj: f64,
     pub x: Vec<f64>,
@@ -683,5 +688,5 @@ pub fn solve_model(md: &rsolver_model::Model, method: i32, iter_limit: u64) -> L
     let obj = md.obj.iter().zip(&x).map(|(c, x)| c * x).sum::<f64>() + md.objcon;
     let scale = spx.scaling.obj * md.sense as f64;
     let trace = e.trace.iter().map(|&(k, z, p, d, pt)| (k, z / scale + md.objcon, p, d, pt)).collect();
-    LpResult { status, obj, x, iter: e.iter, trace }
+    LpResult { status, obj, x, iter: e.iter, trace, path: std::mem::take(&mut e.path) }
 }

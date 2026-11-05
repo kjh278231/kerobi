@@ -1,5 +1,5 @@
 """gurobipy-shaped Python layer over the Rust core (re/notes/01: Python -> extension -> engine)."""
-from ._core import INF, read_model, solve_problem
+from ._core import INF, build_model, read_model
 
 
 class GRB:
@@ -133,7 +133,7 @@ class Model:
         self.Status, self._x, self._objval = None, [], None
         self._core, self.Params = None, {}
 
-    # Attributes of a model read from a file (01 §1.4); built models keep the prototype path below.
+    # Attributes of a model read from a file (01 §1.4).
     @property
     def Fingerprint(self):
         return self._core.fingerprint()
@@ -201,29 +201,28 @@ class Model:
         return default
 
     def optimize(self, callback=None):
-        if self._core is not None:
-            if self.IsMIP:
-                raise GurobiError(10024, "MIP engine is not ported yet (M2)")
-            import time
-            t0 = time.perf_counter()
-            st, obj, x, it, trace = self._core.solve(int(self._param("Method", -1)), float(self._param("IterationLimit", 1e100)))
-            self.Runtime = time.perf_counter() - t0
-            self.Status, self._objval, self._x, self.IterCount = st, obj, x, it
-            self.BarIterCount, self.NodeCount, self.SolCount, self.Work = 0, 0.0, int(st == GRB.OPTIMAL), 0.0
-            if callback is not None:  # SIMPLEX callbacks replayed in iteration order after the solve
-                for row in trace:
-                    self._cbrow = row
-                    callback(self, GRB.Callback.SIMPLEX)
-                self._cbrow = None
-            return
-        n = len(self._vars)
-        obj = [0.0] * n
-        for v, c in self._obj.terms.items():
-            obj[v.index] += c * self.ModelSense
-        self.Status, val, self._x = solve_problem(
-            obj, self._rows, [v.lb for v in self._vars], [v.ub for v in self._vars],
-            [v.vtype != GRB.CONTINUOUS for v in self._vars])
-        self._objval = val * self.ModelSense + self._obj.const
+        core, built = self._core, self._core is None
+        if built:  # a model built through the API: same engine, minimization form, ranged rows as slack columns
+            obj = [0.0] * len(self._vars)
+            for v, c in self._obj.terms.items():
+                obj[v.index] += c * self.ModelSense
+            core = build_model(obj, self._rows, [v.lb for v in self._vars], [v.ub for v in self._vars],
+                               "".join("C" if v.vtype == GRB.CONTINUOUS else "I" for v in self._vars))
+        if any(t != "C" for t in core.vtype):
+            raise GurobiError(10024, "MIP engine is not ported yet (M2)")
+        import time
+        t0 = time.perf_counter()
+        st, obj, x, it, trace, self._path = core.solve(int(self._param("Method", -1)), float(self._param("IterationLimit", 1e100)))
+        self.Runtime = time.perf_counter() - t0
+        self.Status, self.IterCount = st, it
+        self._x = x[:len(self._vars)] if built else x
+        self._objval = obj * self.ModelSense + self._obj.const if built else obj
+        self.BarIterCount, self.NodeCount, self.SolCount, self.Work = 0, 0.0, int(st == GRB.OPTIMAL), 0.0
+        if callback is not None:  # SIMPLEX callbacks replayed in iteration order after the solve
+            for row in trace:
+                self._cbrow = row
+                callback(self, GRB.Callback.SIMPLEX)
+            self._cbrow = None
 
     def cbGet(self, what):
         k = {GRB.Callback.SPX_ITRCNT: 0, GRB.Callback.SPX_OBJVAL: 1, GRB.Callback.SPX_PRIMINF: 2,

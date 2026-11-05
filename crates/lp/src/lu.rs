@@ -180,26 +180,50 @@ impl Lu {
         }
         let mut upos: Vec<Vec<(usize, f64)>> = vec![Vec::new(); m]; // U row of a Markowitz step, by position
         let get = |row: &Vec<(usize, f64)>, p: usize| row.iter().find(|e| e.0 == p).map(|e| e.1);
-        loop {
-            let left: Vec<usize> = (0..m).filter(|&p| ppos[p] < 0).collect();
-            if left.is_empty() {
-                break;
-            }
+        use std::collections::BTreeSet;
+        let mut cols: BTreeSet<(usize, usize)> = (0..m).filter(|&p| ppos[p] < 0).map(|p| (acol[p].len(), p)).collect();
+        let mut rset: BTreeSet<(usize, usize)> = (0..m).filter(|&i| self.prow[i] < 0).map(|i| (arow[i].len(), i)).collect();
+        while !cols.is_empty() {
+            // lowest Markowitz cost (r−1)(c−1) by count order; stop once no smaller count can beat the best
             let mut best: Option<(usize, usize, f64, usize)> = None; // (row, pos, value, cost)
-            for &p in &left {
-                let cmax = acol[p].iter().filter_map(|&i| get(&arow[i], p)).fold(0.0f64, |a, v| a.max(v.abs()));
-                if cmax <= ZERO {
-                    continue;
+            let mut seen = 0;
+            let cmax = |p: usize, arow: &Vec<Vec<(usize, f64)>>, acol: &Vec<Vec<usize>>| {
+                acol[p].iter().filter_map(|&i| get(&arow[i], p)).fold(0.0f64, |a, v| a.max(v.abs()))
+            };
+            let maxc = cols.iter().next_back().map_or(0, |e| e.0).max(rset.iter().next_back().map_or(0, |e| e.0));
+            for k in 1..=maxc {
+                if best.is_some_and(|b| b.3 <= (k - 1) * (k - 1)) || seen >= 4 {
+                    break;
                 }
-                let cc = acol[p].len();
-                for &i in &acol[p] {
-                    let v = get(&arow[i], p).unwrap();
-                    if v.abs() < MARKOWITZ_TOL * cmax || v.abs() <= ZERO {
-                        continue;
+                for &(_, p) in cols.range((k, 0)..(k + 1, 0)) {
+                    let cm = cmax(p, &arow, &acol);
+                    for &i in &acol[p] {
+                        let v = get(&arow[i], p).unwrap();
+                        if v.abs() >= MARKOWITZ_TOL * cm && v.abs() > ZERO {
+                            let cost = (arow[i].len() - 1) * (k - 1);
+                            if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
+                                best = Some((i, p, v, cost));
+                            }
+                        }
                     }
-                    let cost = (arow[i].len() - 1) * (cc - 1);
-                    if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
-                        best = Some((i, p, v, cost));
+                    seen += 1;
+                    if seen >= 4 {
+                        break;
+                    }
+                }
+                for &(_, i) in rset.range((k, 0)..(k + 1, 0)) {
+                    for &(p, v) in &arow[i] {
+                        let cm = cmax(p, &arow, &acol);
+                        if v.abs() >= MARKOWITZ_TOL * cm && v.abs() > ZERO {
+                            let cost = (k - 1) * (acol[p].len() - 1);
+                            if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
+                                best = Some((i, p, v, cost));
+                            }
+                        }
+                    }
+                    seen += 1;
+                    if seen >= 4 {
+                        break;
                     }
                 }
             }
@@ -209,14 +233,18 @@ impl Lu {
             ppos[p] = k as i64;
             self.steps.push((r, p, v));
             self.ucol[k] = std::mem::take(&mut early[p]);
+            cols.remove(&(acol[p].len(), p));
+            rset.remove(&(arow[r].len(), r));
             let prow_r: Vec<(usize, f64)> = arow[r].iter().copied().filter(|e| e.0 != p).collect();
             for &(p2, _) in &prow_r {
+                cols.remove(&(acol[p2].len(), p2));
                 acol[p2].retain(|&i| i != r);
             }
             for &i in &acol[p].clone() {
                 if i == r {
                     continue;
                 }
+                rset.remove(&(arow[i].len(), i));
                 let l = get(&arow[i], p).unwrap() / v;
                 self.lcol[k].push((i, l));
                 arow[i].retain(|e| e.0 != p);
@@ -228,6 +256,10 @@ impl Lu {
                         acol[p2].push(i);
                     }
                 }
+                rset.insert((arow[i].len(), i));
+            }
+            for &(p2, _) in &prow_r {
+                cols.insert((acol[p2].len(), p2));
             }
             acol[p].clear();
             upos[k] = prow_r;
