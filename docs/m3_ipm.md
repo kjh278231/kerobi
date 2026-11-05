@@ -15,6 +15,8 @@ Gurobi 13.0.3 barrier(Method=2, LP, Presolve=0, Crossover=0, Threads=1)의 수�
 | 전체 | 목적 상대오차 ≤ 1e-6 | **64/64** (최대 5e-8) | `summary.json` ObjVal |
 | 전체 | **BarIterCount 같음** | **56/64** (±5% 안 57/64) | 같은 곳 |
 
+**2026-11-06 갱신(Rust, [m3_chol.md](m3_chol.md))**: 분해·해법·합 순서를 비트로 맞추고 재시작을 옮겨 **BarIterCount 64/64**, BARRIER 궤적 비트 동일 55/64, 상대 1e-6 안 63/64(modszk1 반복 16)이다. 반복 상태 x, y, z, w, s는 afiro·adlittle·sc50a 전 반복, perold 반복 0–3·50, fffff800 0–5에서 원소 전부 비트 같다. 아래 표와 §7·§8은 조밀 LDLᵀ 프로토타입 시절 기록이다.
+
 전체 실행은 `PYTHONPATH=$PWD/python python tools/proto/bar_ipm_check.py`로 한다. 선형계는 조밀 LDLᵀ(Gurobi의 작은 피벗 규칙 포함)라서 값은 반올림 수준까지만 같다. 불일치 8개는 §8에 있다.
 
 ## 1. 내부 표준형 (`lp_from_model`, 64/64 비트)
@@ -132,10 +134,11 @@ Gurobi 13.0.3 barrier(Method=2, LP, Presolve=0, Crossover=0, Threads=1)의 수�
    - min p < 0.01·avg이면 η = max(η₀, 0.01·η₀·avg/min p)이고, 그다음 η ≤ 0.5다.
    - 최종 a = min(α(1−η), 1)이다. x, z(T&1)와 w, s(T&2)는 max(·, 1e-30)이고, 나머지 x, z는 그대로, y += a_d·dy다.
    - sqrtl은 SOC 전용이다.
-9. **재시작/homogeneous**(L900–1017, 64개에서 발동하지 않는 것으로 보이지만 확인하지 않았다):
-   - 정체하면 B+0x30 = max(1000, 10·B+0x38)로 두고 `2d0663`을 다시 부른다.
-   - 잔차가 1e15·max(1, ‖b‖∞)를 넘거나, 반복 ≥ 10에서 1e8배를 넘고 줄지 않으면 homogeneous로 바꾼다.
-   - 프로토타입은 재시작과 homogeneous를 옮기지 않았다.
+9. **재시작/homogeneous**(L896–1017). 재시작은 **perold(반복 99), pilot4(57)에서 발동**하고 Rust에 옮겼다(`ipm.rs` `restart_due`):
+   - 갱신 뒤 B+0xf8 = 0(아직 재시작 안 함)일 때 cg' = ncomp·compl/(|ctx|+1)(rp_rel, rd_rel < 1e-7이면 ×0.1), r = μ[it]/μ[it−3](it − f8 < 3이면 0, μ[it−3] = 0이면 1).
+   - 조건: cg' > 1e-4이고, (step 곱 B+0x5e0/0x5e8/0x5f0 셋 다 < 0.001, r > 0.98, B+0x770, B+0x780 < 0.001) 또는 (B+0x5e0 = B+0x5e8 = 0).
+   - 그러면 B+0x30 = max(1000, 10·B+0x38)(이동 하한), `2d0663` 재호출(분해 타이머 B+0x2a8에 1 + 0.75·F+0x168), B+0xf8 = it + 1. 이 반복은 "직전 step이 작으면 K = 10" 규칙을 건너뛴다.
+   - homogeneous 전환(잔차가 1e15·max(1, ‖b‖∞)를 넘거나, 반복 ≥ 10에서 1e8배를 넘고 줄지 않음)은 64개에서 안 탄다(옮기지 않음).
 
 ## 5. 종료 `b2aecf` (Crossover=0이면 B+0x2a0 = 0)
 

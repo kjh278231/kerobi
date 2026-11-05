@@ -1,8 +1,8 @@
 //! 05 §2 Barrier iterations for LP (`2bf1ea` L455–1030), port of tools/proto/bar_ipm.py (docs/m3_ipm.md §2–§5):
 //! starting point `2d0663`/`2d252f`/`2d8838`, residuals `2d4977`, directions `2f59f1`/`2ee6c5` + refinement
 //! `2f9699`, step `2f15ba`/`2f4fe9`, correctors `2d64b4`, corrector count from the work timers, update `2f2e95`,
-//! termination `b2aecf`. Sums run in index order (Gurobi's SIMD lane order is not reproduced).
-//! Restart (`2bf1ea` L956–994, fires on perold and pilot4 in Gurobi) is ported.
+//! termination `b2aecf`. Sums follow Gurobi's SSE2 lane order and x87 Kahan sums (docs/m3_chol.md §4), so the
+//! iterates are bit-equal to Gurobi on the oracle instances. Restart (`2bf1ea` L956–994, perold and pilot4) is ported.
 //! shortcut: no homogeneous switch (`2d35d7`, `2f8f0e`), no status-13 stall rules and no best-iterate
 //! choice (`2c4689`); the last iterate is returned. None of them fires on the 64 bench LPs (docs/m3_ipm.md §8).
 #![allow(clippy::needless_range_loop)] // index loops over parallel arrays, as in the original
@@ -27,6 +27,20 @@ struct State {
 fn dot8(a: &[f64], b: &[f64], peel: usize) -> f64 {
     let p: Vec<f64> = a.iter().zip(b).map(|(x, y)| x * y).collect();
     vsum(0.0, &p, peel, 8)
+}
+
+/// Debug aid: with BARDUMP=<file>, append one JSON line (iterates, steps; doubles as bit patterns) for
+/// tools/proto/bar_cmp.py / bar_cmp_step.py, which compare them bit for bit with the oracle.
+fn dump(line: impl FnOnce() -> String) {
+    if let Ok(path) = std::env::var("BARDUMP") {
+        use std::io::Write;
+        let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path).expect("BARDUMP file");
+        writeln!(f, "{}", line()).expect("BARDUMP write");
+    }
+}
+
+fn hx(v: &[f64]) -> String {
+    format!("[{}]", v.iter().map(|x| format!("\"{:016x}\"", x.to_bits())).collect::<Vec<_>>().join(","))
 }
 
 /// `2f28c2` slack/box sums: 4 lanes (lane 0 seeded by `acc`) over 8-element blocks after a `peel`, reduced
@@ -324,12 +338,7 @@ impl<'a> Ipm<'a> {
         }
         let st = &mut self.st;
         st.x = self.fac.solve(&rx, &lp.b).0;
-        if let Ok(path) = std::env::var("BARDUMP") {
-            use std::io::Write;
-            let hx = |v: &[f64]| v.iter().map(|x| format!("\"{:016x}\"", x.to_bits())).collect::<Vec<_>>().join(",");
-            let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap();
-            writeln!(f, "{{\"iter\":-1,\"x\":[{}]}}", hx(&st.x)).unwrap();
-        }
+        dump(|| format!("{{\"iter\":-1,\"x\":{}}}", hx(&st.x)));
         st.w = (0..n).map(|j| if lp.up[j] { lp.ub[j] - st.x[j] } else { 0.0 }).collect();
         // candidate 1: y = 0, c split between z (lower) and s (upper) by column type
         st.y = vec![0.0; m];
@@ -606,15 +615,14 @@ impl<'a> Ipm<'a> {
                 ad = (lim / d0.res[1]).min(ad);
             }
         }
-        if let Ok(path) = std::env::var("BARDUMP") {
-            use std::io::Write;
-            let hx = |v: &[f64]| v.iter().map(|x| format!("\"{:016x}\"", x.to_bits())).collect::<Vec<_>>().join(",");
-            let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap();
-            writeln!(f, "{{\"step\":{it},\"theta\":[{}],\"dx\":[{}],\"dy\":[{}],\"dz\":[{}],\"dw\":[{}],\"ds\":[{}],\"a\":[{}],\"ncorr\":{ncorr},\"mu_t\":\"{:016x}\",\"d1x\":[{}],\"d1y\":[{}],\"oms\":[{}]}}",
-                hx(&th), hx(&d0.dx), hx(&d0.dy), hx(&d0.dz), hx(&d0.dw), hx(&d0.ds), hx(&[ap, ad]), mu_t.to_bits(),
-                hx(&last_d1.as_ref().map_or(vec![], |d| d.dx.clone())), hx(&last_d1.as_ref().map_or(vec![], |d| d.dy.clone())),
-                hx(&oms.iter().flat_map(|&(a, b)| [a, b]).collect::<Vec<_>>())).unwrap();
-        }
+        dump(|| {
+            let d1 = last_d1.as_ref().map_or((vec![], vec![]), |d: &Dir| (d.dx.clone(), d.dy.clone()));
+            let oms: Vec<f64> = oms.iter().flat_map(|&(a, b)| [a, b]).collect();
+            format!(
+                "{{\"step\":{it},\"theta\":{},\"dx\":{},\"dy\":{},\"dz\":{},\"dw\":{},\"ds\":{},\"a\":{},\"ncorr\":{ncorr},\"mu_t\":{},\"d1x\":{},\"d1y\":{},\"oms\":{}}}",
+                hx(&th), hx(&d0.dx), hx(&d0.dy), hx(&d0.dz), hx(&d0.dw), hx(&d0.ds), hx(&[ap, ad]), hx(&[mu_t]), hx(&d1.0), hx(&d1.1), hx(&oms)
+            )
+        });
         self.ab = [ap * ad, self.ab[0], self.ab[1]];
         self.last_res = d0.res;
         self.update(&d0, ap, ad, it);
@@ -713,16 +721,13 @@ pub fn run(lp: &Lp, sym: &Symbolic, f160: f64, f168: f64, p: &Params, cb: &mut d
         if it >= 11 && hmu[it - 1] > hmu[it - 2] * 0.99 {
             recenter(lp, &mut ipm.st, &mut r.rd, r.compl);
         }
-        if let Ok(path) = std::env::var("BARDUMP") {
-            // debug: iterate at the callback, doubles as bit patterns (tools/proto/bar_cmp.py)
-            use std::io::Write;
-            let st = &ipm.st;
-            let hx = |v: &[f64]| v.iter().map(|x| format!("\"{:016x}\"", x.to_bits())).collect::<Vec<_>>().join(",");
-            let sc = [r.compl, r.mu, r.rp2, r.rd2, r.ru2, r.pobj, r.dobj, r.rp_rel, r.rd_rel, r.ctx];
-            let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap();
-            writeln!(f, "{{\"iter\":{it},\"x\":[{}],\"y\":[{}],\"z\":[{}],\"w\":[{}],\"s\":[{}],\"sc\":[{}],\"rd\":[{}],\"rp\":[{}]}}",
-                hx(&st.x), hx(&st.y), hx(&st.z), hx(&st.w), hx(&st.s), hx(&sc), hx(&r.rd), hx(&r.rp)).unwrap();
-        }
+        dump(|| {
+            let (st, sc) = (&ipm.st, [r.compl, r.mu, r.rp2, r.rd2, r.ru2, r.pobj, r.dobj, r.rp_rel, r.rd_rel, r.ctx]);
+            format!(
+                "{{\"iter\":{it},\"x\":{},\"y\":{},\"z\":{},\"w\":{},\"s\":{},\"sc\":{},\"rd\":{},\"rp\":{}}}",
+                hx(&st.x), hx(&st.y), hx(&st.z), hx(&st.w), hx(&st.s), hx(&sc), hx(&r.rd), hx(&r.rp)
+            )
+        });
         cb(&IterInfo {
             iter: it,
             pobj: lp.sense * r.pobj,
