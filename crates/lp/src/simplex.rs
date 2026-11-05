@@ -507,6 +507,10 @@ impl<'a> Engine<'a> {
             self.lu_interval = self.lu_interval.min(((self.m as f64).powf(0.65) as usize).max(20));
         }
         if self.pr.mode == 0 {
+            // after a factorization the list is built from scratch: no old entries kept, budget P+0x38 back to 40
+            self.pr.mark.iter_mut().for_each(|k| *k = 1);
+            self.pr.budget = 40;
+            self.pr.cursor = 0;
             self.price_rebuild();
         } else {
             let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol(p)).collect();
