@@ -255,6 +255,7 @@ impl State {
             "45885d" => (self.clique(p), 0),
             "52be10" => (self.set_packing(p), 0),
             "46a62d" => (self.clique_rows(p, if p.presolve > 1 || p.preclique > 1 { 2 } else { 1 }), 0),
+            "5a9282" => (self.r5a9282(p), 0),
             "370047" => {
                 self.activity(None);
                 (0, 0)

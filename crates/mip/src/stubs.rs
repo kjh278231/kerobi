@@ -6,8 +6,6 @@ use crate::state::State;
 use crate::Params;
 
 impl State {
-    /// `5a9282` (before the loop and at round end; PREBOUND && DualReductions)
-    pub fn r5a9282(&mut self, p: &Params) -> i32 { 0 }
     /// `3e5363` XOR / parity rows
     pub fn xor_rows(&mut self, p: &Params) -> i32 { 0 }
     /// `3ff744(st, env, T6, mode, flag, 0)` parallel rows / columns
@@ -42,8 +40,6 @@ impl State {
     pub fn two_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
     /// `47c445(mode)` linear dependent rows (2: dual side)
     pub fn dep_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// `58d4ce` (Q diagonal columns; nothing without Q)
-    pub fn q_diag(&mut self, p: &Params) -> i32 { 0 }
     /// `5577ba(env, st, nodes, 1, &f4; 1.01, limit)` symmetry
     pub fn symmetry(&mut self, p: &Params, nodes: i32, limit: f64) -> i32 { 0 }
     /// `5ab429`
