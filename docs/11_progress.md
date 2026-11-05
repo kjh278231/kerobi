@@ -40,6 +40,9 @@
 | 2026-11-05 | M1 presolve 1c–1g | 열 패스, singleton 행, forcing 행, 중복 행, 바깥 패스. PRELIMIT 1–14 64/64 | `3bed233` (`m1-lp-presolve`) |
 | 2026-11-05 | M1 LP 엔진 종단 연결 | dual·primal simplex가 스케일된 작업 공간에서 돈다. 읽은 모델에서 Python `optimize()` 동작 | `ac30617` |
 | 2026-11-05 | M3 준비 | 호출 범위 확인(simplex·LU·presolve와 독립, 공유는 스케일링 `07d3ce`뿐), Method=2 기준값, barrier 오라클·모듈 뼈대 | `8405f7c` (`m3-barrier`) |
+| 2026-11-05 | M1 dual 반복 경로 | BFRT·cost shifting, 수치 안전장치 사다리, 가중치 리셋, 재분해 뒤 flip. `crates/core` 삭제(만든 LP도 LP 엔진 사용), Markowitz count bucket | `c9fddee`, `33a2342` |
+| 2026-11-05 | M1 postsolve 준비 | uncrush 오라클(`363daa` 훅), 저장·종료 규칙과 LP uncrush 경로를 03에 반영 | `e707fea`, `f0622fa` (`m1-lp-presolve`) |
+| 2026-11-05 | M3 정규방정식·ordering | 결정성 64/64, small-pivot 규칙의 LDLᵀ, A·Θ·Aᵀ 조립, AAᵀ 패턴 64/64, AMD 순열·symbolic 53/64 | `66054a0` (`m3-barrier`) |
 
 ## 4. goal 원문
 
