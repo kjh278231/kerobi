@@ -85,8 +85,9 @@ pub fn run(md: &Model, p: &Params) -> Model {
             precrush: p.precrush,
         };
         reduce(&mut st, p, &tols);
-        // `3b0917` with PRESPLITROWS (default -1, assumed): opposite parallel rows 3ff744 left (state+0x42c)
-        // become `=` rows with a range column, unless PreCrush > 1.
+        // `3b0917`: opposite parallel rows 3ff744 left (state+0x42c) become `=` rows with a range column, unless
+        // PreCrush > 1. shortcut: PRESPLITROWS is not in Params and assumed at its default (-1, on); add it
+        // before running with GURO_PAR_PRESPLITROWS=0.
         if st.antipar != 0 && p.precrush <= 1 {
             st.parallel(2, &tols);
         }
@@ -238,7 +239,8 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
         }
-        // parallel columns and rows (PREPARALLEL, default 1, assumed on; the 0.8 timer test is always true)
+        // parallel columns and rows (the 0.8 timer test is always true). shortcut: PREPARALLEL is not in Params
+        // and assumed at its default (1, on); add it before running with GURO_PAR_PREPARALLEL=0.
         if p.dual_reductions {
             // shortcut: Presolve=2 runs 51f5ab here, not ported; stop like a reached PRELIMIT. Port it with
             // the other Presolve=2 reductions.
