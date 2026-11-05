@@ -179,14 +179,42 @@ python tools/postsolve_check.py ... --arena          # 레코드 크기로 설�
 - 첫 청크 크기는 **생성자 시점의 nnz**/5 + 10이다. 집계가 `st.nnz`(+0xd8)를 바꾸므로 `run_post`가 `State::new` 직후의 값을 저장해 `Post::new`에 넘긴다.
 - 청크 전환 위치는 59개 모델 모두 시뮬레이션과 일치했다.
 
-### type 24 (`361ab1`, `3a008f`가 만든다) — presolve가 아직 안 쌓는다
-`3a008f`의 호출자는 `5a4d8b`, `5a5eff`(둘 다 `3cd406`에서 부른다)뿐이다. 기본값 오라클의 4개 모델에 14개가 있다.
-- 데이터: j@0, lb@8, ub@0x10, vtype(바이트)@0x18, y_idx@0x1c, y_add@0x20, 행 수@0x28, start@0x30, rowid@0x38, sense@0x40, rhs@0x48, ind@0x50, val@0x58. 크기 `u20+(8K−8)+u16+u17+8c+0x98`(K 총 항 수, c 행 수, u20=(4K−1)&~7, u16=(4c+3)&~7, u17=(c−1)&~7).
-- `y_idx`는 행, `y_add`는 −obj_j로 보이다(forplan 하나로 확인).
+### type 24 (`361ab1`) — LP presolve에서는 `5b488d`가 쌓는다
+`3a008f`(MIP 경로, 호출자 `5a4d8b`/`5a5eff`)는 쌍둥이일 뿐이다. LP는 `5b488d`(L1483 `ac68d7` 호출, L1495 `*puVar21 = 0x18`)다. 기본값 오라클의 4개 모델에 14개가 있다.
+
+**기록 내용** (`PostRec::ColRows { j, lb, ub, vtype, y_idx, y_add, rows: Vec<ColRow{row, sense, rhs, terms}> }`)
+- j: 열. lb/ub: push 시점 `state+0xa0/0xa8`. vtype: 'C'(0x43) 고정.
+- rows: 열 j의 **열 CSR**(`col_beg[j]`, 길이 `col_len[j]`)을 순서대로 걸으며 `row_ind ≥ 0 && row_cnt ≥ 0`인 행마다 하나.
+  - sense = `state+0xc0`[행], rhs = `state+0xb8`[행].
+  - terms = 그 행의 **행 CSR** 항목 중 `col_ind ≥ 0 && col_cnt[col] ≥ 0`인 것을 CSR 순서로(열 j 자신 포함).
+- c = rows 수, K = Σ `row_cnt[행]`(push 시점 값. terms 수와 같아야 한다).
+- y_idx / y_add: 열 j에 대해 `|x| ≤ 1e−10`(x는 `5b488d`의 `local_90[j]`. 어느 배열인지 확인하지 못했고, 아마 obj)이면 **−1 / 0.0**. 아니면 y_idx = 기준 행(`local_160`), y_add = `−obj[j] / a_ij`(a_ij는 그 행의 열 j 항목. 행이 비었거나 못 찾으면 1.0이 들어간다. 그리고 아래 obj, objcon 갱신에 같은 값이 쓰인다). forplan에서 y_idx = 159, y_add = −obj(a = 1)로 확인했다.
+
+**바이트 배치** (rec = 할당 시작, data = rec+0x18. 필드를 쓰는 순서는 L1486–1514 순)
+| 순서 | 위치 | 내용 |
+|---|---|---|
+| 1 | rec+0x08 | data 포인터 = rec+0x18 |
+| 2 | data+0x30 | int* start = rec+0x78 |
+| 3 | rec+0x00, data+0x00, data+0x18 | type 0x18, int j, byte vtype 'C' |
+| 4 | data+0x38 | int* rowid = rec+0x80+u41 |
+| 5 | data+0x50 | int* ind = rec+0x88+u41+u20 |
+| 6 | data+0x58 | double* val = ind + 8 + u39 |
+| 7 | data+0x40 | char* sense = val + 8 + (8K−8) |
+| 8 | data+0x48 | double* rhs = sense + u38 + 8 |
+| 9 | rec+0x10 | 다음 레코드 = 옛 `st+0x370`, 그다음 `st+0x370` = 새 레코드 |
+| 10 | data+0x08 / 0x10 | lb / ub |
+| 11 | data+0x1c / 0x20 | int y_idx / double y_add |
+| 12 | data+0x28 | int c |
+| 13 | 배열 | rows를 걸으며 start[t], rowid[t], sense[t], rhs[t]와 ind/val |
+
+- 크기 = `(8K−8) + u39 + u41 + u20 + u38 + 8c + 0xa0` (u39 = (4K−1)&~7, u41 = (4c+3)&~7, u20 = (4c−1)&~7, u38 = (c−1)&~7). **`3a008f`와 다르다**: `5b488d`에는 행 번호 배열(u20 항)이 더 있어서 u20 항이 추가되고 상수가 0x98 → 0xa0이다. `layout()`을 이 식으로 고쳤다.
+- 배열 순서(작은 주소부터): start(c+1개 int, rec+0x78), rowid(c개), ind(K개), val(K개 double), sense(c바이트), rhs(c개 double). 이 중 정렬 의존 내적에 쓰이는 것은 없다.
+- 레코드를 쌓은 뒤 `5b488d`가 하는 일(presolve 쪽): 열 j의 live 행마다 `row_cnt = −1`, 그 행의 항목들을 열에서 지움(`col_cnt −1`, `row_ind = −1`), `+0x404`++. 마지막에 `col_len[j] = −1`, **`col_cnt[j] = −2`**, `+0x408`++. 지운 행의 `row_cnt`가 −1이라서 uncrush 준비에서 행이 "자기 번호 기저"로 남는다(위 forplan 불일치의 원인이 `−3`이었다).
+
 - uncrush: 각 행에서 `v = (rhs − Σ_{k≠j} a·x_k)/a_ij`. 상한 후보(a_ij > 0 또는 `=`)는 최솟값, 하한 후보(a_ij < 0 또는 `=`)는 최댓값을 잡는다(초기값은 ub, lb). 하한이 그대로 lb이면서 유한하거나, (상한이 무한이거나 ub−1e−10 이하이고 |L| < |U|)이면 L, 아니면 U를 x_j로 둔다. 상태: lb와 같으면 −1, ub와 같으면 −2, 아니면 그 한계를 낸 행의 기저를 받고 그 행은 −1이다. 마지막에 `y[y_idx] += y_add`.
-- `PostRec::ColRows`, `layout`, `kind`, 위 uncrush를 넣었다. **쌓는 쪽이 없어 단위로는 검증하지 못했다.** 임시로 forplan의 Subst(빈 행, 빈 열)를 ColRows로 바꿔 보니 x, d, y가 모두 맞고 기저만 한 곳 달랐다(행 159: Gurobi는 −1/−2 상태, 곧 자기 번호 기저로 남는데 rsolver의 `row_cnt`는 −3이라 −1이 된다).
-- 원인은 presolve 쪽이다. Gurobi는 이 "열 하나가 든 행"(열은 lb=0, ub=∞ 또는 유한, 행의 다른 열은 없음)을 `5a5eff`/`5a4d8b`로 먼저(집계보다 앞에, 한꺼번에) 지우고, rsolver는 집계 단계 A에서 type 2로 지운다. presolved 모델은 같지만 레코드 종류와 순서, `row_cnt`(−1/−2 대 −3)가 다르다.
-  - forplan: Subst(j 72, r 159, row [], col [], c0 0) ↔ type 24(j 72, lb 0, ub ∞, 행 1개).
+- `PostRec::ColRows`, `layout`, `kind`, 위 uncrush를 넣었다. 쌓는 쪽이 없어 단위로는 검증하지 못했다. 임시로 forplan의 Subst(빈 행, 빈 열)를 ColRows로 바꿔 보니 x, d, y가 모두 맞고 기저만 한 곳 달랐다(행 159의 `row_cnt`가 −3이라 −1이 된다. 위 `5b488d`처럼 −1이면 맞을 것이다).
+- 기본값 오라클과의 차이(rsolver는 type 2, Gurobi는 type 24):
+  - forplan: Subst(j 72, r 159, 빈 행·열) ↔ type 24(j 72, lb 0, ub ∞, 행 1개).
   - finnis: Subst(j 55, r 19, mode −1) ↔ type 24(j 155, lb −0.001, ub ∞).
-  - beaconfd: Subst(빈 행) 6개가 Gurobi는 24 5개로, 위치도 앞쪽에 몰려 있다.
-  - ganges: 24가 7개이고(열 1039, 1050 등은 행이 4–6개) type 1 몇 개가 사라진다.
+  - beaconfd: Subst(빈 행) 6개 ↔ type 24 5개(위치도 앞쪽에 몰림).
+  - ganges: type 24 7개(열 1039, 1050 등은 행 4–6개), type 1 몇 개가 사라진다.

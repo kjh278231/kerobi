@@ -66,10 +66,12 @@ pub fn layout(r: &PostRec) -> (i64, [i64; 2]) {
         PostRec::AggBound { .. } => (0x50, [0, 0]),
         PostRec::SlackCol { .. } => (0x28, [0, 0]),
         PostRec::ColRows { rows, .. } => {
-            // `3a008f`: u20 + (8K - 8) + u16 + u17 + 8c + 0x98; K entries in all, c rows
+            // `5b488d` (LP): (8K-8) + u39 + u41 + u20 + u38 + 8c + 0xa0 with K entries in all, c rows,
+            // u39 = (4K-1)&~7, u41 = (4c+3)&~7, u20 = (4c-1)&~7, u38 = (c-1)&~7. (`3a008f`, the MIP twin, has no
+            // row-id array: no u20 term and 0x98.)
             let c = rows.len() as i64;
             let k: i64 = rows.iter().map(|r| r.terms.len() as i64).sum();
-            (((4 * k - 1) & !7) + 8 * k - 8 + ((4 * c + 3) & !7) + ((c - 1) & !7) + 8 * c + 0x98, [0, 0])
+            (8 * k - 8 + ((4 * k - 1) & !7) + ((4 * c + 3) & !7) + ((4 * c - 1) & !7) + ((c - 1) & !7) + 8 * c + 0xa0, [0, 0])
         }
         PostRec::PairAgg { n1, n2, .. } => {
             let lt = (n1 + n2) as i64;
