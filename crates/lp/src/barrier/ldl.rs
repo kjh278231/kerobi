@@ -12,7 +12,9 @@ pub struct Ldl {
     li: Vec<usize>,
     lx: Vec<f64>,
     pub d: Vec<f64>,
-    /// Pivots replaced by the small-pivot rule in the last `numeric` call.
+    /// F+0xe8: 1/d, or 0 for a dropped pivot; multipliers and solves multiply by it.
+    e: Vec<f64>,
+    /// Pivots dropped by the small-pivot rule in the last `numeric` call.
     pub fixed: usize,
 }
 
@@ -41,7 +43,7 @@ impl Ldl {
             lp[k + 1] = lp[k] + cnt[k];
         }
         let nz = lp[n];
-        Ldl { n, parent, lp, li: vec![0; nz], lx: vec![0.0; nz], d: vec![0.0; n], fixed: 0 }
+        Ldl { n, parent, lp, li: vec![0; nz], lx: vec![0.0; nz], d: vec![0.0; n], e: vec![0.0; n], fixed: 0 }
     }
 
     /// Number of off-diagonal entries of `L` (Factor NZ counts these plus the diagonal).
@@ -49,9 +51,9 @@ impl Ldl {
         self.lp[self.n]
     }
 
-    /// Numeric factorization of the upper triangle `(ap, ai, ax)`. A pivot with `|d| ≤ max(1e-12, min(1e-6,
-    /// 1e-10·|M_kk|))` (or NaN) is replaced by that threshold with its sign kept (`32af6a` L264–280; a zero pivot
-    /// becomes +thr). Returns F+0x100 = min |d/M_kk| over the pivots before replacement (0 on a NaN pivot).
+    /// Numeric factorization of the upper triangle `(ap, ai, ax)`. LP pivot rule (`2d8ee5` L767–815, F+0x110 = 0):
+    /// a pivot with `|d| ≤ 1e-16·|M_kk|` (or NaN) is dropped (d = 0, 1/d = 0); any other pivot is kept however small
+    /// (oracle: degen2 keeps d = −3.6e-15 against M_kk = 12). Returns F+0x100 = min |d/M_kk| before dropping (0 on NaN).
     pub fn numeric(&mut self, ap: &[usize], ai: &[usize], ax: &[f64]) -> f64 {
         let n = self.n;
         let (mut y, mut pattern, mut flag, mut lnz) = (vec![0.0; n], vec![0usize; n], vec![NONE; n], vec![0usize; n]);
@@ -90,7 +92,7 @@ impl Ldl {
                 for p in self.lp[i]..p2 {
                     y[self.li[p]] -= self.lx[p] * yi;
                 }
-                let l_ki = yi / self.d[i];
+                let l_ki = yi * self.e[i];
                 dk -= l_ki * yi;
                 self.li[p2] = k;
                 self.lx[p2] = l_ki;
@@ -101,9 +103,11 @@ impl Ldl {
             } else if diag != 0.0 {
                 min_ratio = min_ratio.min((dk / diag).abs());
             }
-            let thr = 1e-12f64.max(1e-6f64.min(1e-10 * diag.abs()));
-            if dk.abs() <= thr || dk.is_nan() {
-                dk = if dk < 0.0 { -thr } else { thr };
+            if diag.abs() * 1e-16 < dk.abs() {
+                self.e[k] = 1.0 / dk;
+            } else {
+                dk = 0.0;
+                self.e[k] = 0.0;
                 self.fixed += 1;
             }
             self.d[k] = dk;
@@ -118,8 +122,8 @@ impl Ldl {
                 x[self.li[p]] -= self.lx[p] * x[j];
             }
         }
-        for (xj, dj) in x.iter_mut().zip(&self.d) {
-            *xj /= dj;
+        for (xj, ej) in x.iter_mut().zip(&self.e) {
+            *xj *= ej;
         }
         for j in (0..self.n).rev() {
             for p in self.lp[j]..self.lp[j + 1] {
@@ -185,6 +189,6 @@ mod tests {
         let mut f = Ldl::symbolic(3, &ap, &ai);
         f.numeric(&ap, &ai, &ax);
         assert_eq!(f.fixed, 1);
-        assert_eq!(f.d[1], 1e-10);
+        assert_eq!(f.d[1], 0.0);
     }
 }
