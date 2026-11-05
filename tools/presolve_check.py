@@ -1,6 +1,6 @@
 """Compare rsolver's presolved model with a presolve oracle capture (tools/presolve_oracle.py), byte for byte.
 
-usage: PYTHONPATH=python python tools/presolve_check.py <oracle_dir> [--param Name=Value ...] [-v] [name ...]
+usage: PYTHONPATH=python python tools/presolve_check.py <oracle_dir> [--param Name=Value ...] [--src DIR] [-v] [name ...]
 Prints one line per mismatch (first differing line) and the match count. Needs no Gurobi.
 """
 import argparse, sys
@@ -16,6 +16,7 @@ def main():
     ap.add_argument("oracle")
     ap.add_argument("--param", action="append", default=[])
     ap.add_argument("-v", action="store_true", help="also print the size of each mismatching model")
+    ap.add_argument("--src", help="read the models from DIR/<name>.mps instead of the instance list")
     ap.add_argument("names", nargs="*")
     a = ap.parse_args()
     params = [(k, float(v)) for k, v in (p.split("=", 1) for p in a.param)]
@@ -24,7 +25,7 @@ def main():
     ok = 0
     for name in names:
         want = (Path(a.oracle) / f"{name}.mps").read_text().splitlines()
-        core = rsolver.read(str(insts[name]))._core
+        core = rsolver.read(str(Path(a.src) / f"{name}.mps" if a.src else insts[name]))._core
         try:
             got = core.presolve(params).to_mps().splitlines()
         except BaseException as e:  # a Rust panic surfaces as PanicException (BaseException)

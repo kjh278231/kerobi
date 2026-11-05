@@ -155,9 +155,39 @@ pub(super) fn guarded_add(old: f64, t: f64, up: bool) -> f64 {
     s * if grow { 1.0000000000000002 } else { 0.9999999999999998 }
 }
 
+/// `5118e6` LAB_0057d177, problem types 5 (all -1 entries, `>= 1` rows) and 6 (all +1, rhs 1): when every column
+/// is a 0/1 column (fixed at 0 or 1, or lb 0 and ub >= 1) and one has a finite ub, the rows imply the ubs, which are
+/// freed: type 5 on columns with cost > 0.001, type 6 on unfixed columns with entries. Returns the work.
+fn relax_zero_one(md: &Model, mu: f64, ub: &mut [f64], ty: i32) -> f64 {
+    const INF: f64 = rsolver_model::INFINITY; // env+0x2458 (GURO_PAR_INFBOUND) at its default
+    let n = md.num_vars();
+    let mut finite = 0;
+    for j in 0..n {
+        let (l, u) = (md.lb[j], md.ub[j]);
+        let ok = if u - l < 1e-10 { !(1e-10 <= l.abs() && 1e-10 <= (l - 1.0).abs()) } else { !(1e-10 < l.abs() || u < 0.9999999999) };
+        if !ok {
+            return (j as f64 + j as f64) * mu;
+        }
+        if !(u - l < 1e-10) && u < INF {
+            finite += 1;
+        }
+    }
+    let nf = n as f64;
+    if finite == 0 {
+        return (nf + nf) * mu;
+    }
+    for j in 0..n {
+        let free = if ty == 5 { ub[j] < INF && 0.001 < md.obj[j] } else { 1e-10 <= ub[j] - md.lb[j] && md.col_len[j] != 0 };
+        if free {
+            ub[j] = INF;
+        }
+    }
+    (nf + nf) * mu + (nf + nf) * mu
+}
+
 /// Work the constructor counts (`3a484d` with `5118e6` CSR build and `534a8b` tracker; docs/m1_presolve.md
 /// appendix A), in the original order. Checked against `tools/work_oracle.py` at PRELIMIT=1.
-fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, contiguous: bool) -> f64 {
+fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, contiguous: bool, ub: &mut [f64]) -> f64 {
     let mu = if nnz <= 100_000 { 1.0 } else { (nnz as f64 / 1e4).log10().sqrt() };
     let (nf, mf, zf) = (n as f64, m as f64, nnz as f64);
     let mut w = nf;
@@ -180,8 +210,9 @@ fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, cont
     }
     w += (nf + nf) * mu;
     w += (mf + mf) * mu;
-    // `5118e6` problem-type scans (appendix A 11) on the model's coefficients (the `>` flip comes later). A type
-    // (+0x08) of 1/4/5/6 changes PreDepRow's auto value, the aggregation ratio or the bounds, none of it ported.
+    // `5118e6` problem-type scans (appendix A 11) on the model's coefficients (the `>` flip comes later). LP
+    // presolve reads the type (+0x08) only as 1 (PreDepRow auto, `50de61`) or 4 (aggregation ratio, `local_38`),
+    // not ported; types 5 and 6 only free implied ubs.
     let (mut p1, mut m1, mut oth) = (0, 0, 0);
     for j in 0..n {
         let b = md.col_beg[j] as usize;
@@ -209,11 +240,15 @@ fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, cont
         if oth == 0 && m1 == 0 {
             let c = lead(&|i| (md.rhs[i] - 1.0).abs() <= 1e-10);
             w += c as f64 * mu;
-            assert!(c < m, "5118e6 problem type 6 is not ported");
+            if m <= c {
+                w += relax_zero_one(md, mu, ub, 6);
+            }
         } else if oth == 0 && p1 == 0 {
             let c = lead(&|i| md.row_sense[i] != b'=' && (md.rhs[i] + 1.0).abs() <= 1e-10);
             w += (c as f64 + c as f64) * mu;
-            assert!(c < m, "5118e6 problem type 5 is not ported");
+            if m <= c {
+                w += relax_zero_one(md, mu, ub, 5);
+            }
         }
     } else {
         let c = lead(&|i| md.row_sense[i] == b'=');
@@ -292,6 +327,8 @@ impl State {
         let spare = if raw_nnz / 10 <= 2_000_000_000 { (raw_nnz as i64 / 10).max(n.max(m).max(10000) as i64) } else { 2_000_000_000 };
         let rhs = md.rhs.iter().zip(&neg).map(|(&r, &g)| if g { -r } else { r }).collect();
         let sense = md.row_sense.iter().map(|&c| if c == b'>' { b'<' } else { c }).collect();
+        let mut ub = md.ub.clone();
+        let work = constructor_work(md, n, m, raw_nnz, spare, contiguous, &mut ub);
         State {
             n,
             m,
@@ -310,7 +347,7 @@ impl State {
             inf_min: vec![0; m],
             act_min: vec![0.0; m],
             lb: md.lb.clone(),
-            ub: md.ub.clone(),
+            ub,
             obj: md.obj.clone(),
             rhs,
             sense,
@@ -328,7 +365,7 @@ impl State {
             splits: Vec::new(),
             bad_col: -1,
             bad_row: -1,
-            work: constructor_work(md, n, m, raw_nnz, spare, contiguous),
+            work,
             work_mult: if raw_nnz <= 100_000 { 1.0 } else { (raw_nnz as f64 / 1e4).log10().sqrt() },
             prelimit: i32::MAX,
             budget: 1e100,
@@ -495,6 +532,12 @@ impl State {
             q.lb.push(0.0);
             q.ub.push(self.rhs[i as usize] - lo);
             q.vtype.push(b'C');
+        }
+        // nothing left: presolve solved the model (status != 0), `3cd406` drops it and `999702` makes an empty
+        // model named "Presolved". shortcut: that model's objective constant (+0x60, copied from the uncrush data)
+        // is kept as ours; check it on a fully removed model with a nonzero constant before relying on it.
+        if q.rhs.is_empty() && q.obj.is_empty() {
+            q.name = "Presolved".into();
         }
         q
     }

@@ -125,7 +125,7 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 6. Aggregate≠0이고 (k==0 또는 Aggregate>1)이면: state+0x278≠0 && env+0x2728==0 && AggFill>0일 때 `517fa8`, 그다음 `519a52`.
 7. PREDERIVED && DualReductions && PreCrush==0이면 `5b488d`.
 8. `538f30` 행 목록으로 `4f79a1` activity 재계산(카운트 없음).
-9. PRETWOROWS(−1)는 Presolve==2일 때만 `51aba6`. k==0 && PRESYMMPASSES<0이면 대칭 블록(Symmetry>1일 때 `5577ba`, 세부 미확인).
+9. PRETWOROWS(−1)는 Presolve==2일 때만 `51aba6`. k==0 && PRESYMMPASSES<0이면 대칭 블록 `5577ba`(Symmetry는 노드·작업 한도만 바꾼다. [m1_presolve_symmetry.md](m1_presolve_symmetry.md)).
 10. k==0이고 PreDepRow&1이면 `47c445(mode 1)`, &2이고 DualReductions면 `47c445(mode 2)`. PreDepRow 자동값: `2.5·n < nnz`이면 3, 아니면 0(Method −1, INTBASIS −1 기준).
 11. `3ba5ac`/`3ba9de`. ρ(마지막 내부 반복 스냅숏 대비) ≤ 1e-6이면 마무리. k+1 ≥ 패스 수여도 마무리. 아니면 다음 패스.
 
@@ -167,7 +167,7 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 
 **포팅 완료(2026-11-05, stage 4–5)**:
 - 집계 `519a52`/`37f484`: [m1_presolve_agg.md](m1_presolve_agg.md)대로 옮겼고 집계 직후 체크포인트 64/64가 첫 시도에 맞았다. 확인한 것: 노드 arena 여유는 `3a484d`의 spare = max(10000, max(m,n), nnz/10)(LP는 model+0x18과 QC 수가 0), +0x198 초기값 = spare. 단계 C의 n1/n2 맞바꿈은 asm(0x389dcc)에서 계수도 함께 바꾼다(디컴파일은 N1을 안 바꾼 것처럼 보인다). B1/B2는 리스트 순서와 activity가 같고 pending·+0xd8만 다르다.
-- 집계 뒤: `5b488d`(DualReductions && PreCrush==0, 카운트), `538f30` 행 목록으로 `4f79a1`, PRETWOROWS는 Presolve 2에서만, 대칭 블록(위 지름길), `47c445` mode 1·2(pass 0, PreDepRow 비트), 그다음 ρ(마지막 내부 반복 스냅숏 대비) ≤ 1e-6이면 마무리.
+- 집계 뒤: `5b488d`(DualReductions && PreCrush==0, 카운트), `538f30` 행 목록으로 `4f79a1`, PRETWOROWS는 Presolve 2에서만, 대칭 블록(`symmetry.rs`, 열 CSR 압축 포함), `47c445` mode 1·2(pass 0, PreDepRow 비트), 그다음 ρ(마지막 내부 반복 스냅숏 대비) ≤ 1e-6이면 마무리.
 - PreDepRow 자동(`390989` L251): Presolve==2이면 3, Presolve==1이면 0, 아니면 Method 2·state+0x100·문제 유형 1이면 3, Method≠6이고 INTBASIS < 1이면 `2.5·n < nnz`(state+0xd8, 시작 시점)일 때 3, 아니면 0.
 - 마무리(`LAB_0048dff3`): 추적기 레벨 0과 reset, PREBOUND면 `51a144`(카운트만, 한도 검사 없음). 카운트가 PRELIMIT보다 작을 때만 `LAB_0048e0de`: (QP·QC·PreSparsify==2 블록은 LP 기본값에서 안 돎) {`50cc90(1)`, DualReductions면 `50d878`}을 `50d878`이 +0x408을 늘리는 동안 반복, PREBOUND면 `50de61`, 그것이 행을 지웠고 DualReductions면 `50d878`. 그다음 `3b0917`.
 - `50de61`(7.9KB): bound 사본 lc/uc와 activity 사본으로 시작한다. 살아 있는 열 수·1000 ≤ 그 열들의 nnz이면 행 전부를 목록으로 바로 3단계. 아니면 (1) 무한 개수 조건(`inf_min+inf_max ≥ 1`이고 `inf_min ≤ 1` 또는 (`=`이고 `inf_max ≤ 1`))을 만족하는 행의 작업 목록으로, **무한 bound인 쪽만** 함의 bound를 구한다(R = min(max(max−min,1),1e6), |a| ≥ R·1e-10, `=` 행은 max activity로 반대쪽도). 새 bound가 들어가면 그 열의 행 사본 activity를 그대로 더해 고치고(가드 없음) 행을 다시 목록에 넣는다(flag += 2, 다음 라운드는 flag ≥ 2인 행만). (2) 행마다 R = min(max(max−min,1),1e4): `=`는 실행 불가 판정, `<`는 inf_max==0 && max < −ft·R이면 지운다(−2, 열 표시), 나머지는 목록. (3) 그 목록으로 `50108e`(시작에서 bound를 사본에 다시 복사한다: (m+1)·0.3 < nnz·|목록|이면 전부, 아니면 목록 행의 열만. 그래서 (1)의 값은 목록에 안 걸린 열에만 남는다). (4) Method 2·state+0x100·m·0.05 < +0x488이 아니면, 유한 bound가 하나라도 있는 열마다 |lc| < 1e7이면 lb = max(lb, lc − (|lc|+1)·0.001), |uc| < 1e7이면 ub = min(ub, uc + (|uc|+1)·0.001). (5) 행마다 lc/uc로 activity를 다시 더해 실행 불가·넘칠 수 없는 `<` 행 삭제를 판정하고, 남는 행은 새 lb/ub로 activity를 다시 더해 저장한다(가드 없음). 기본값 Netlib 59개가 여기서 bound를 얻는다(예: israel A301 ub 305 → 305.306).
