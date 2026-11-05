@@ -222,6 +222,11 @@ class Model:
                 callback(self, C.BARRIER)
 
         p, t0 = self.Params, time.perf_counter()
+        if p.get("LogFile"):  # the "Barrier statistics" block (2e8590) that tools/parity.py compares
+            _, aat, nz, ops, free = self._core.barrier_symbolic()
+            with open(p["LogFile"], "a") as f:
+                f.write("\nBarrier statistics:\n" + (f" Free vars  : {free}\n" if free else "")
+                        + f" AA' NZ     : {aat / 2:.3e}\n Factor NZ  : {nz:.3e}\n Factor Ops : {ops:.3e}\n Threads    : 1\n\n")
         self.Status, self._objval, self.BarIterCount, self._x, self.Work = self._core.barrier(
             cb, float(p.get("BarConvTol", 1e-8)), int(p.get("BarIterLimit", 1000)), int(p.get("BarCorrectors", -1)))
         self.Runtime, self.IterCount, self.NodeCount = time.perf_counter() - t0, 0, 0

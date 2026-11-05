@@ -14,8 +14,9 @@ def test_barrier_statistics_equal_gurobi_log():
     assert len(files) == 64
     for f in files:
         g = json.load(open(f))["log"]["barstats"]
-        _, aat, nz, ops = rsolver.read(DATA / f"{f.parent.name}.mps.gz")._core.barrier_symbolic()
+        _, aat, nz, ops, free = rsolver.read(DATA / f"{f.parent.name}.mps.gz")._core.barrier_symbolic()
         assert (f"{aat / 2:.3e}", f"{nz:.3e}", f"{ops:.3e}") == (g["AA' NZ"], g["Factor NZ"], g["Factor Ops"]), f.parent.name
+        assert str(free) == g.get("Free vars", "0"), f.parent.name
 
 
 def test_barrier_solves_64_lps_like_gurobi():

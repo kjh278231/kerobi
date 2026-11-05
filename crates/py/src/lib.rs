@@ -91,10 +91,12 @@ impl PyCoreModel {
         rsolver_lp::start::start_basis(&rsolver_lp::spx::Spx::new(&self.inner))
     }
     /// Barrier ordering and symbolic analysis (05 §2.3): (perm = final position of each row, AA' NZ both triangles,
-    /// Factor NZ, Factor Ops); M3 parity tests.
-    fn barrier_symbolic(&self) -> (Vec<i32>, i64, i64, f64) {
+    /// Factor NZ, Factor Ops, free columns left after `30f5b9`) — the "Barrier statistics" log block.
+    fn barrier_symbolic(&self) -> (Vec<i32>, i64, i64, f64, usize) {
         let s = rsolver_lp::barrier::ordering::analyze(&self.inner);
-        (s.perm, s.aat_nnz, s.nnz_l, s.ops)
+        let lp = rsolver_lp::barrier::setup::lp_from_model(&self.inner, &s.perm, 1e-8);
+        let free = lp.t[..lp.n].iter().filter(|&&t| t == 0).count();
+        (s.perm, s.aat_nnz, s.nnz_l, s.ops, free)
     }
     /// Barrier (05 §2; Method=2, Presolve=0, Crossover=0): `callback(iter, pobj, dobj, priminf, dualinf, compl)` runs
     /// every iteration. Returns (status, objective, BarIterCount, x, work).
