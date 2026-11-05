@@ -233,5 +233,190 @@ def recenter(lp, st, rd, mu):
             rd[i] -= t
 
 
+def predictor_rhs(lp, st, R):
+    """2d4977 tail: rxz = -x z (T&1), rws = -w s (T&2), rhs_x = r_d - rxz/x + (rws - r_u s)/w."""
+    n, up = lp.n, lp.up[:lp.n]
+    rxz = np.where(lp.lo, -st.x * st.z, 0.0)
+    rws = np.where(up, -st.w * st.s, 0.0)
+    rhs = R["rd"].copy()
+    rhs[lp.lo] -= rxz[lp.lo] / st.x[lp.lo]
+    rhs[:n][up] += (rws[up] - R["ru"][up] * st.s[up]) / st.w[up]
+    return rxz, rws, rhs
+
+
+def direction(lp, st, th, rhs_x, rhs_y, ru, rxz, rws):
+    """2f59f1: solve, then dw = r_u - dx, ds = (rws - s dw)/w (T&2), dz = (rxz - z dx)/x (T&1)."""
+    n, up = lp.n, lp.up[:lp.n]
+    dx, dy = solve_aug(lp, th, rhs_x, rhs_y)
+    dw = np.where(up, ru - dx[:n], 0.0)
+    ds = np.zeros(n)
+    ds[up] = (rws[up] - st.s[up] * dw[up]) / st.w[up]
+    dz = np.zeros(lp.m + n)
+    dz[lp.lo] = (rxz[lp.lo] - st.z[lp.lo] * dx[lp.lo]) / st.x[lp.lo]
+    return {"dx": dx, "dy": dy, "dz": dz, "dw": dw, "ds": ds}
+
+
+def ratio(v, d, a):
+    """2f15ba RT rule, sequential: a shrinks only when the current a crosses the bound of that entry."""
+    with np.errstate(divide="ignore", invalid="ignore"):
+        hit = a * d + v < 0
+        while hit.any():  # same result as the index-order loop: each firing lowers a, later entries re-test
+            k = np.argmax(hit)
+            a = -(v[k] + -1e-30) / d[k] - 1e-13
+            v, d = v[k + 1:], d[k + 1:]
+            hit = a * d + v < 0
+    return a
+
+
+def step_lengths(lp, st, D, om=0.0, D1=None):
+    """2f15ba / 2f4fe9 inner test: max step (cap 1.001) along D (+ om*D1) for x, w (primal) and z, s (dual)."""
+    n, up = lp.n, lp.up[:lp.n]
+    g = (lambda k: D[k] + om * D1[k]) if D1 is not None else (lambda k: D[k])
+    ap = ratio(st.x[lp.lo], g("dx")[lp.lo], 1.001)
+    ap = max(ratio(st.w[up], g("dw")[up], ap), 0.0)
+    ad = ratio(st.z[lp.lo], g("dz")[lp.lo], 1.001)
+    ad = max(ratio(st.s[up], g("ds")[up], ad), 0.0)
+    return ap, ad
+
+
+def mu_aff(lp, st, D, ap, ad):
+    """2f28c2: complementarity at the trial point / ncomp (floor 1e-30)."""
+    up = lp.up[:lp.n]
+    S = np.sum((D["dx"][lp.lo] * ap + st.x[lp.lo]) * (D["dz"][lp.lo] * ad + st.z[lp.lo]))
+    S += np.sum((D["dw"][up] * ap + st.w[up]) * (D["ds"][up] * ad + st.s[up]))
+    return max((st.tau * st.kappa + S) / lp.ncomp, 1e-30)
+
+
+def update(lp, st, D, alpha_p, alpha_d, it, B):
+    """2f2e95: damped step (1-eta) with eta from the worst trial product, then x,z,w,s floored at 1e-30."""
+    up, lo = lp.up[:lp.n], lp.lo
+    eta0, gam = 1e-6, 0.01
+    ap, ad = min(alpha_p * (1 - eta0), 1.0), min((1 - eta0) * alpha_d, 1.0)
+    if ap * ad > 5e-5:
+        B["f4"] = it + 1
+    p = np.concatenate([(D["dx"][lo] * ap + st.x[lo]) * (D["dz"][lo] * ad + st.z[lo]),
+                        (D["dw"][up] * ap + st.w[up]) * (D["ds"][up] * ad + st.s[up])])
+    mn = p.min(initial=1e100)
+    avg = (p.sum() + st.kappa * st.tau) / lp.ncomp
+    eta = max(eta0, (gam * eta0 * avg) / mn) if mn < gam * avg else eta0
+    eta = min(eta, 0.5)
+    ap, ad = min(alpha_p * (1 - eta), 1.0), min((1 - eta) * alpha_d, 1.0)
+    x = st.x + ap * D["dx"]
+    z = st.z + ad * D["dz"]
+    st.x = np.where(lo, np.maximum(x, 1e-30), x)
+    st.z = np.where(lo, np.maximum(z, 1e-30), z)
+    st.w = np.where(up, np.maximum(st.w + ap * D["dw"], 1e-30), st.w)
+    st.s = np.where(up, np.maximum(st.s + ad * D["ds"], 1e-30), st.s)
+    st.y = st.y + ad * D["dy"]
+    return ap, ad, eta
+
+
+def corrector_rhs(lp, st, D0, mu_t, k, alpha_p, alpha_d):
+    """2d64b4: k=1 Mehrotra (mu_t - dx dz of the affine direction), k>=2 Gondzio box [mu_t/10, 10 mu_t] at the
+    trial point with alphas 1.5 a + 0.3 (cap 1.001). Correctors carry no r_p, r_d, r_u terms."""
+    n, up, lo = lp.n, lp.up[:lp.n], lp.lo
+    rxz, rws = np.zeros(lp.m + n), np.zeros(n)
+    if k == 1:
+        rxz[lo] = mu_t - D0["dx"][lo] * D0["dz"][lo]
+        rws[up] = mu_t - D0["dw"][up] * D0["ds"][up]
+    else:
+        ap, ad = min(1.5 * alpha_p + 0.3, 1.001), min(1.5 * alpha_d + 0.3, 1.001)
+
+        def box(v):
+            return np.where(v < mu_t / 10, mu_t / 10 - v, np.where(v > 10 * mu_t, np.maximum(10 * mu_t - v, -10 * mu_t), 0.0))
+        rxz[lo] = box((st.x[lo] + ap * D0["dx"][lo]) * (st.z[lo] + ad * D0["dz"][lo]))
+        rws[up] = box((st.w[up] + ap * D0["dw"][up]) * (st.s[up] + ad * D0["ds"][up]))
+    rhs = np.zeros(lp.m + n)
+    rhs[lo] -= rxz[lo] / st.x[lo]
+    rhs[:n][up] = rws[up] / st.w[up] + rhs[:n][up]
+    return rxz, rws, rhs
+
+
+def line_search(lp, st, D0, D1, k, N, alpha_p, alpha_d):
+    """2f4fe9: grid over omega from 1 down to lo (lo = clamp(ap ad, 0.01, 1) for k=1, 0 for k>=2); primal and dual
+    pick their own omega (first strict 1.0001x improvement); set 0 += omega * set 1."""
+    lo_ = max(min(alpha_p * alpha_d, 1.0), 0.01) if k < 2 else 0.0
+    bp = bd = -1e100
+    wp = wd = 0.0
+    for i in range(N):
+        om = (float(N - 1 - i) * (1 - lo_)) / float(N - 1) + lo_
+        if om != 0:
+            ap, ad = step_lengths(lp, st, D0, om, D1)
+        else:
+            ap, ad = alpha_p, alpha_d
+        if bp * 1.0001 < ap:
+            bp, wp = ap, om
+        if bd * 1.0001 < ad:
+            bd, wd = ad, om
+    for key in ("dx", "dw"):
+        D0[key] = D0[key] + wp * D1[key]
+    for key in ("dz", "ds", "dy"):
+        D0[key] = D0[key] + wd * D1[key]
+    return bp, bd, (wp == 0 and wd == 0)
+
+
+def adjust_K(K, ratio, avg, base):
+    """2bf1ea L780-835: corrector count from the work ratio t(extra correctors)/t(factor+pred+first corr+update)."""
+    if K < 20:
+        if ratio < 0.25:
+            return K + 1
+        if K < base:
+            if ratio < 0.5 and avg < 0.1:
+                return K + 1
+        elif base < K and ratio > 0.25:
+            return K - 1
+        if K > 1 and ratio > 0.25 and avg > 0.1:
+            return K - 1
+        return K
+    if K < base:
+        if ratio < 0.5 and avg < 0.1:
+            return K + 1
+        if ratio > 0.25 and avg > 0.1:
+            return K - 1
+        return K
+    if K <= base or ratio <= 0.25:
+        if ratio <= 0.25:
+            return K
+        return K - 1 if avg > 0.1 else K
+    return K - 1
+
+
+def iteration(lp, st, R, ctx):
+    """One pass of the 2bf1ea loop body after the termination test: factor (theta), predictor, correctors, update.
+    ctx carries B state: it, K (B+0x298), N (B+0x29c), f4 (B+0xf4), ab (B+0x5e0/0x5e8/0x5f0), BarCorrectors."""
+    it = ctx["it"]
+    th = theta(lp, st, R)
+    rxz, rws, rhs = predictor_rhs(lp, st, R)
+    D0 = direction(lp, st, th, rhs, R["rp"], R["ru"], rxz, rws)
+    ap, ad = step_lengths(lp, st, D0)
+    ma = mu_aff(lp, st, D0, ap, ad)
+    compl = R["compl"]
+    r = ma / max(compl, 1e-30)
+    sigma = r * r * min(r, 0.1)
+    mu_t = compl * 0.9 if ctx["f4"] < it else compl * sigma
+    K = ctx["K"] if ctx.get("barcorrectors", -1) < 0 else max(1, ctx["barcorrectors"])
+    if ctx.get("barcorrectors", -1) >= 0:
+        ctx["K"] = K
+    ncorr = 0
+    Daff = {k: v.copy() for k, v in D0.items()}
+    for k in range(1, K + 1):
+        cxz, cws, crhs = corrector_rhs(lp, st, Daff if k == 1 else D0, mu_t, k, ap, ad)
+        D1 = direction(lp, st, th, crhs, np.zeros(lp.m), np.zeros(lp.n), cxz, cws)
+        nap, nad, none = line_search(lp, st, D0, D1, k, ctx["N"], ap, ad)
+        ncorr += 1
+        stop = none or (nap >= 1.001 and nad >= 1.001) or (k > 1 and nad * nap < 1e-100)
+        if k > max(1, ctx["K"] // 10) and nap * 0.99 * nad < ap * ad:
+            stop = True
+        ap, ad = nap, nad
+        if stop:
+            break
+    ctx["ncorr_done"] = ncorr
+    ab = ctx["ab"]
+    ctx["ab"] = [ap * ad, ab[0], ab[1]]
+    fap, fad, eta = update(lp, st, D0, ap, ad, it, ctx)
+    ctx["alpha"] = (ap, ad, fap, fad, eta)
+    return D0
+
+
 if __name__ == "__main__":
     sys.exit("prototype driver not written yet")
