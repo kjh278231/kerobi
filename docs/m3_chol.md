@@ -46,7 +46,7 @@ Gurobi 13.0.3 barrier(Method=2, Presolve=0, Crossover=0, Threads=1, LP)의 수�
 
 - DGEMM('T','N'): m = 1 또는 n = 1 → dgemv_t(4레인, 8개 블록마다 fma(x,a, x'·a') + acc, 꼬리 마스크 fma, (a0+a1)+(a2+a3)); k = 1 → fma(a, b, C); `k ≤ 128이고 m·n/(m+n) ≤ 10이고 (m ≤ 100 또는 (n ≤ 3, k ≤ 3))` 또는 그 밖에서 m < 56 또는 n < 56 → nocopy 커널(행 8/4 블록, 열 6 묶음, 열 묶음 폭에 따라 fma 한 줄/짝홀 fma/짝홀 mul+add, C + acc, k·n 블록 분할); 나머지 → 패킹 12×4 커널(타일 모양별 누산기 수 1/2/4).
 - DTRSM('L','U','T','U'): n = 1 → dtrsv; m ≤ 12 또는 (m % 4 = 0, m ≤ 88) → v1 경로(fma 사슬 + dtrsm_pst); 나머지 → 패킹 경로(행 12/8/4/2/1 블록).
-- 원본 실험 도구·C 에뮬레이터·벡터 파일은 작업 scratchpad의 `mkl/`에 있다(저장소 밖). `shortcut:` dtrsv m > 32(64개 최대 7), 패킹 DGEMM k > 256, DTRSM m > 254(블록 폭 ≤ 240이라 안 나옴), AVX-512 커널은 옮기지 않았다.
+- 실험 도구와 C/Rust 에뮬레이터 원본은 `tools/proto/mkl/`에 옮겨 두었다(바이너리·어셈블리·벡터 파일 제외). `build_emu.sh`가 `part_*.c`를 합쳐 `libmkl_emu.so`를 만들고, `test_all.py`가 `gshapes.json`/`tshapes.json`의 모든 모양을 libgurobi130.so 안의 진짜 MKL과 비트 비교한다. `syms.txt`는 `nm libgurobi130.so > tools/proto/mkl/syms.txt`로, 재생 입력(`../mkl_*.json.gz`, `../shapes/`)과 `vectors.jsonl`은 `tools/proto/bar_mkl_hook.py`·`gen_vectors.py`로 다시 만든다. `shortcut:` dtrsv m > 32(64개 최대 7), 패킹 DGEMM k > 256, DTRSM m > 254(블록 폭 ≤ 240이라 안 나옴), AVX-512 커널은 옮기지 않았다.
 
 ## 3. 해법 `2ee6c5`
 
