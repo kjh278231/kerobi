@@ -62,6 +62,14 @@ pub fn layout(r: &PostRec) -> (i64, [i64; 2]) {
             let n = entries.len() as i64;
             (r8(4 * n) + 8 * n + 0x50, [0, 0])
         }
+        // aggregation records (docs/m1_presolve_agg.md §9); the value array of type 21 is at 0x90 + Q
+        PostRec::AggBound { .. } => (0x50, [0, 0]),
+        PostRec::SlackCol { .. } => (0x28, [0, 0]),
+        PostRec::PairAgg { n1, n2, .. } => {
+            let lt = (n1 + n2) as i64;
+            let q = (4 * lt - 1) & !7;
+            (q + 8 * lt + 0x90, [0x90 + q, 0])
+        }
     }
 }
 
@@ -77,6 +85,9 @@ impl PostRec {
             PostRec::SingletonRow { .. } => 7,
             PostRec::Forcing { .. } => 8,
             PostRec::SplitRow { .. } => 14,
+            PostRec::AggBound { .. } => 6,
+            PostRec::SlackCol { .. } => 11,
+            PostRec::PairAgg { .. } => 21,
         }
     }
 }
@@ -350,6 +361,11 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
             }
             PostRec::ParallelCol { x: xc, y: yc, lx, ly, ux, uy, r } => {
                 parallel_col(&mut x, &mut dual, &mut bs, (*xc as usize, *yc as usize), [*lx, *ly, *ux, *uy, *r], post.infbound)
+            }
+            // shortcut: aggregation records (types 6, 11, 21) are not decoded yet; uncrush stops on them. Port them
+            // (363daa / 365159 :472, :608, 35fd68) before running the uncrush at default parameters.
+            PostRec::AggBound { .. } | PostRec::SlackCol { .. } | PostRec::PairAgg { .. } => {
+                panic!("uncrush of aggregation record type {} is not ported", r.kind())
             }
         }
     }
