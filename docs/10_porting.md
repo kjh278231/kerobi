@@ -173,7 +173,7 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 
 1. **LU 갱신 뒤 BTRAN 출력 순서**(명세 [m1_notes §8.10](m1_notes.md), 미검증): m < 250이면 최종 순서는 Lᵀ 힙이 정하므로 `btran_general` 대신 희소 Uᵀ(갱신 순서) → 희소 eta → 기존 Lᵀ 경로로 바꾸면 순서가 맞을 것으로 본다. eta는 교과서식 μ가 아니라 η = Uᵀ⁻¹e_r(대각 = η·S). 그 뒤 FT 저장 전체. `tools/proto/alphacmp.py <name>`로 보면 grow7·scsd1·e226·lotfi 모두 BFRT 첫 호출의 α는 순서·비트가 같고, LU 갱신 1회 뒤 호출부터 ρ 순서가 다르다(Gurobi는 희소 출력에 나가는 행이 먼저, 우리 `btran_general`은 조밀 뒤 행 순서). Forrest–Tomlin 갱신 저장(`5b257` L860–975)과 `221173`의 갱신 경로(Uᵀ 희소 → 행 eta → Lᵀ)를 원본대로 옮긴다. 옛 2·3번(Markowitz `036ade`, FT 회계 L+0x184)이 여기에 묶인다. 재분해 시점도 이 회계에 달려 있다.
 2. **`48d5f` 이식**(§8.9): 보통의 재분해 뒤 비용 이동(SHIFT)은 넣었다(`reinvert`, 이유 4·인공 bound 종료는 FLIP; 기하평균 1.025 → 1.014). RNG(`common::Rng`, libgurobi 자체 함수와 비트 일치, `tools/proto/rng_oracle.py`)와 GLOBAL 섭동 식도 넣었다(pilot4 해결). 남은 것: 섭동 발동 조건(지금은 퇴화 50회 대용품), 첫 분해 뒤 RANDSMALL, 이유 4 등에서 FLIP, 섭동 GLOBAL과 그 발동 조건(0x2c0 % K, 퇴화 비율), RNG(`a7b4d6`·`a7b54f`·`895c5`, common에 둔다). 지금 엔진은 박스 열만 flip하고 나머지 쌍대 위반을 남겨 maros 같은 경로가 흔들렸다. 오라클의 `pert`·`pert_level` 필드로 검증한다.
-3. **primal 원본 이식**(`0478d3` 계열): bandm(인공 bound 단계 뒤 상태 5 상황, 지금은 shortcut으로 dual을 이어 감)이 교과서식 primal phase 1에서 정체한다. Method 0 정확성에도 필요하다.
+3. **primal 원본 이식**(`0478d3` 계열, 명세 [m1_primal_spec.md](m1_primal_spec.md), 미검증): bandm(인공 bound 단계 뒤 상태 5 상황, 지금은 shortcut으로 dual을 이어 감)이 교과서식 primal phase 1에서 정체한다. Method 0 정확성에도 필요하다.
 4. BFRT 나머지(코퍼스 불일치 18건, 후보 없음 경로), 행 사본의 같은 |a| 분할(`9edd1`), CHUZR 모드 1 열 원소 처리, P2 work, P3 속도(희소 FTRAN/BTRAN), Quad.
 
 ### 9.4 기준값·오라클 위치
