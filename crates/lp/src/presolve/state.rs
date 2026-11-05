@@ -177,6 +177,46 @@ fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, cont
     }
     w += (nf + nf) * mu;
     w += (mf + mf) * mu;
+    // `5118e6` problem-type scans (appendix A 11) on the model's coefficients (the `>` flip comes later). A type
+    // (+0x08) of 1/4/5/6 changes PreDepRow's auto value, the aggregation ratio or the bounds, none of it ported.
+    let (mut p1, mut m1, mut oth) = (0, 0, 0);
+    for j in 0..n {
+        let b = md.col_beg[j] as usize;
+        for &v in &md.col_val[b..b + md.col_len[j] as usize] {
+            if !(1e-13 < v.abs()) {
+                continue;
+            }
+            if v == 1.0 {
+                p1 += 1;
+            } else if v == -1.0 {
+                m1 += 1;
+            } else {
+                oth += 1;
+            }
+        }
+    }
+    let lead = |f: &dyn Fn(usize) -> bool| (0..m).position(|i| !f(i)).unwrap_or(m);
+    let maxcol = md.col_len.iter().copied().max().unwrap_or(0);
+    if maxcol >= 5 && p1 > 0 && m1 > 0 && oth == 0 {
+        w += mf * mu;
+        let eq = md.row_sense.iter().filter(|&&s| s == b'=').count();
+        assert!(2 * eq <= m, "5118e6 problem type 1 is not ported");
+    } else if maxcol > 2 || oth != 0 || p1 != m1 {
+        // env+0x26e0 < 1 and no PWL/QC/SOS hold for an LP; Method != 2 is assumed (Params has no Method)
+        if oth == 0 && m1 == 0 {
+            let c = lead(&|i| (md.rhs[i] - 1.0).abs() <= 1e-10);
+            w += c as f64 * mu;
+            assert!(c < m, "5118e6 problem type 6 is not ported");
+        } else if oth == 0 && p1 == 0 {
+            let c = lead(&|i| md.row_sense[i] != b'=' && (md.rhs[i] + 1.0).abs() <= 1e-10);
+            w += (c as f64 + c as f64) * mu;
+            assert!(c < m, "5118e6 problem type 5 is not ported");
+        }
+    } else {
+        let c = lead(&|i| md.row_sense[i] == b'=');
+        w += c as f64 * mu;
+        assert!(c < m || m == 0, "5118e6 problem type 4 is not ported");
+    }
     w += mf * mu;
     w += (mf + mf) * mu;
     for &l in &md.col_len {
