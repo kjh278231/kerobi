@@ -367,3 +367,65 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
     }
     Outcome { status, obj, x, ..out }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// An LP with `nnz` nonzeros in one row: min x_0, 0 <= x <= 1, sum x <= nnz.
+    fn lp(nnz: usize) -> Model {
+        let mut m = Model { sense: 1, ..Default::default() };
+        for j in 0..nnz {
+            m.obj.push(if j == 0 { 1.0 } else { 0.0 });
+            m.lb.push(0.0);
+            m.ub.push(1.0);
+            m.vtype.push(b'C');
+            m.col_beg.push(j as i64);
+            m.col_len.push(1);
+            m.col_ind.push(0);
+            m.col_val.push(1.0);
+        }
+        m.col_beg.push(nnz as i64);
+        m.row_sense.push(b'<');
+        m.rhs.push(nnz as f64);
+        m
+    }
+
+    fn resolve(md: &Model, pairs: &[(&str, f64)]) -> (i32, Params, String) {
+        let mut p = Params::from_pairs(&pairs.iter().map(|&(k, v)| (k.to_string(), v)).collect::<Vec<_>>());
+        let mut log = String::new();
+        let m = resolve_method(md, &mut p, &mut |t| log.push_str(t));
+        (m, p, log)
+    }
+
+    #[test]
+    fn method_table() {
+        let (small, big) = (lp(3), lp(30000));
+        assert_eq!(resolve(&small, &[]).0, 1); // nnz < 30,000: dual
+        assert_eq!(resolve(&big, &[]).0, 3); // concurrent
+        assert_eq!(resolve(&small, &[("NetworkAlg", 1.0), ("Method", 2.0)]).0, 0);
+        let (m, p, log) = resolve(&small, &[("Method", 5.0), ("ConcurrentMethod", 1.0)]);
+        assert_eq!((m, p.int("Method"), p.int("ConcurrentMethod")), (3, 3, 3));
+        assert!(log.contains("(5) has been deprecated") && log.contains("Ignoring non-default concurrent method 1."));
+        let (m, p, _) = resolve(&small, &[("SolutionTarget", 1.0)]);
+        assert_eq!((m, p.int("Method")), (3, 3));
+        assert_eq!(resolve(&small, &[("SolutionTarget", 0.0)]).0, 2); // no large statistics: barrier
+        assert_eq!(resolve(&small, &[("SolutionTarget", 0.0), ("Crossover", 0.0)]).0, 1);
+        assert_eq!(resolve(&small, &[("Method", 6.0)]).1.int("LPWarmStart"), 2);
+        assert_eq!(resolve(&small, &[("Method", 1.0)]).1.int("LPWarmStart"), 1);
+        assert_eq!(resolve(&small, &[]).1.int("LPWarmStart"), 1);
+    }
+
+    #[test]
+    fn adjust_table() {
+        let mut p = Params::from_pairs(&[("Presolve".into(), 0.0), ("NumericFocus".into(), 2.0)]);
+        adjust(&mut p);
+        assert_eq!(p.int("DualReductions"), 0);
+        assert_eq!(p.get("GURO_PAR_AGGMULTLIMIT"), 1e6);
+        assert_eq!(p.get("MarkowitzTol"), 0.9);
+        assert_eq!((p.int("GURO_PAR_SIMPLEXENDFAC"), p.int("GomoryPasses"), p.int("CutPasses")), (2, 0, 3));
+        let mut q = Params::default();
+        adjust(&mut q);
+        assert_eq!((q.int("DualReductions"), q.get("MarkowitzTol"), q.int("UpdateMode")), (1, Params::default().get("MarkowitzTol"), 0));
+    }
+}

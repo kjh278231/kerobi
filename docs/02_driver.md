@@ -2,6 +2,8 @@
 
 포팅 원본: [port_map.tsv](port_map.tsv)의 `02_driver`(169개). `GRBoptimize → 9828a1 → c23877`을 `driver` 크레이트 하나로 옮긴다. 근거: 노트 10, 11 전체.
 
+**포팅 상태(2026-11-06, G5)**: 연속 LP 몫이 `crates/driver`에 있다(헤더 `header.rs`, `optimize`·`resolve_method`·`adjust`·세 LP 경로 `lib.rs`). 파라미터 표는 `crates/model/src/params.rs`(548개, gurobipy와 같음). Netlib 64개에서 Presolve 기본값의 Method 2·6(Crossover 0)은 상태·목적·BarIterCount/PDHGIterCount 64/64, Method 1은 상태·목적 64/64. 세부·지름길은 [m1_driver.md](m1_driver.md).
+
 ## 1. 진입 순서
 
 ```
@@ -26,7 +28,7 @@ driver::optimize(model, env, cb) -> Result<(), SolverError>
 |---|---|---|
 | A 초기화 | `isMIP = classify(model)` (§3). 이전 presolved 모델이 OptimalityTarget이 바뀐 채 남았으면 폐기. ObjNumber·ScenarioNumber·SolutionNumber·StartNumber를 0으로 | 11 §3.1 |
 | B 병렬 플래그 | `par = isMIP && ConcurrentMIP ≥ 2 && Threads ≠ 1`. 분산은 비목표 | 11 §3.2 |
-| C 헤더 | 최상위 모델이고 first_call일 때 "Optimize a model with %d rows, %d columns and %lu nonzeros (%s)", 지문, "Model has …", "Variable types …", 계수 범위 통계 | 11 §3.3 |
+| C 헤더 | 최상위 모델이고 first_call일 때 "Optimize a model with %d rows, %d columns and %lu nonzeros (%s)", 지문, "Model has …", "Variable types …", 계수 범위 통계(`a9a78e` → `a71757`). 102/102 로그와 같다([m1_driver §3](m1_driver.md)) | 11 §3.3 |
 | D 국소 최적화 제약 | OptimalityTarget=1이면 다중 시나리오·정수·SOS·PWL 목적·다목적·lazy가 있을 때 오류 10016/10024 | 11 §3.4 |
 | E 다목적 | `multiobj.len() > 1` → `multiobj::solve` (§6) 후 종료 처리로 | 11 §3.5 |
 | F Method 확정 | §4 | 11 §3.6 |
@@ -72,6 +74,8 @@ match method {
 }
 ```
 끝나면 LP 결과 속성(x, pi, rc, basis 또는 비기저 해)을 `Result`에 쓴다. `ConcurrentWinMethod` 기록.
+
+각 경로는 presolve(`390989`, env의 Method·Crossover·SolutionTarget이 `state+0x100`과 PreDepRow 등을 바꾼다) → 엔진 → uncrush 순서다. `2bb770`·`34f033`으로 넘어가는 것: 상한만 있는 열을 뒤집은 모델 데이터(`07d3ce`, D+0x408), presolved 모델의 RNG 상태(`3b0917`→`895c5`: 13·n + 7·m + 23·nnz + Seed), presolve 작업량이 쌓인 전역 작업량 타이머(WorkLimit 판정). 셋 다 반복 수를 바꾼다([m1_driver §5–6](m1_driver.md)).
 
 ## 5. 자동 조정 표 (한 번의 optimize 동안만)
 
@@ -125,7 +129,7 @@ MIP 경로에서만(국소 NLP 포함). 순서: "Explored %.0f nodes (%.0f simpl
 
 ## 10. 포팅으로 확정할 지점 (노트 11 §5.2)
 
-- `model+0x2d8` 통계 배열을 채우는 함수. SolutionTarget=0/1 자동 선택(§4 표)이 이 값으로 갈린다.
+- ~~`model+0x2d8` 통계 배열을 채우는 함수~~: `a71757`(계수 범위 통계, `a9a78e`가 부름). [0,1] 목적 max/min, [4,5] bound, [6,7] RHS, [8,9] 행렬. SolutionTarget=0/1 자동 선택에 쓴다([m1_driver §3](m1_driver.md)).
 - `0c3d0d` 경로의 concurrent(PLPCONCURRENT=-1 → `172cc6`)와 `9b029d`의 실제 차이(원래 모델 vs presolved 모델).
 - `48c43a`(QCPCLEAN), `48dcf2`(MINLP 다듬기), `75bf1e`, `086113`, `085968`, `75bc23`의 역할.
 - TRIGGERRESTART가 세우는 B&B 플래그(+0x600, +0x604)의 소비처.
@@ -133,6 +137,9 @@ MIP 경로에서만(국소 NLP 포함). 순서: "Explored %.0f nodes (%.0f simpl
 - NumericFocus가 MarkowitzTol(0x2478)을 올리는 값(오프셋 대응 재확인).
 
 ## 11. 테스트
+
+있는 것(G5): `tests/test_params.py`(파라미터 548개 = gurobipy), `tests/test_header.py`(헤더 102개), `tests/test_driver.py`(Presolve 켠 세 경로 64개와 로그 앵커), `crates/driver` 단위 테스트(Method 확정·자동 조정 표). 계획:
+
 
 - 패리티 P0: 로그 앵커가 Gurobi와 같은 순서로 나온다(배너, "Optimize a model with …", 계수 범위 통계, 요약). 같은 인스턴스에서 `Method` 확정 결과와 `ConcurrentWinMethod`가 같다.
 - LP/QP/QCP/MIP 분류 단위 테스트(각 요소 하나씩 넣은 모델).

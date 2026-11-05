@@ -8,9 +8,9 @@ G5([11 §4](11_progress.md)) 작업 중에 알아낸 사실. 확정된 내용은
 |---|---|---|
 | (1) 파라미터 표 548개 = gurobipy | **충족** | §2, `tests/test_params.py` 548/548 |
 | (2) Optimize 헤더 로그 102개 | **충족** | §3, `tests/test_header.py` 102/102 |
-| (3) 분류·Method 확정·자동 조정·상태·요약 로그 | 진행 중(LP 몫 구현, 단위 테스트 없음) | §4 |
-| (4) Presolve 켠 연속 경로 (Method 2·6 반복 수, Method 1 상태·목적) | 경로 동작. Method 1 상태·목적 **64/64**. Method 2 상태·목적 64/64, **BarIterCount 20/64**. Method 6 상태 62/64, 목적 43/64, **PDHGIterCount 4/64**. 원인: presolve 포트가 Method·Crossover를 모름(§4.3). 사용자 승인(2026-11-06)으로 `crates/lp/src/presolve/`만 고쳐 맞춘다 | §4 |
-| (5) clippy 0, 테스트, 문서 | 진행 중 | |
+| (3) 분류·Method 확정·자동 조정·상태·요약 로그 | **충족(연속 LP 몫)**: Method 확정·자동 조정 단위 테스트, 경로별 로그 앵커 3/3(afiro·grow7). MIP 분류·요약은 범위 밖 | §4, `crates/driver` 테스트, `tests/test_driver.py` |
+| (4) Presolve 켠 연속 경로 (Method 2·6 반복 수, Method 1 상태·목적) | **충족**: Method 2·Crossover 0 상태·목적·BarIterCount **64/64**, Method 6·Crossover 0 상태·목적·PDHGIterCount **64/64**(bnl1 WORK_LIMIT는 Work까지 비트 일치), Method 1 상태·목적 **64/64** | §4–§6, `tests/test_driver.py` |
+| (5) clippy 0, 테스트, 문서 | **충족**: clippy 경고 0, cargo test 전부, pytest 140 통과(1 xfail은 기존 MIP 배낭), barrier·PDHG Presolve=0 64/64 유지 | |
 
 ## 1. 호출 범위 (2026-11-06)
 
@@ -112,9 +112,49 @@ d10b1  a7aa8f  c9457 (상태 메시지 "Optimal objective …")  d10b1 ×2  10f5
 - 검증: `bench/gurobi_uncrush`의 Gurobi 입력(`pre_after`)과 비교해 afiro·forplan·fit1d는 x·dj·상태가 1e-7 안에서 같고, scfxm1·gfrd-pnc는 퇴화 LP의 다른 최적 기저라 일부만 다르다(스크래치 `cmpspx.py`, `CoreModel.presolved_spx`).
 - 지름길: uncrush 뒤 원래 모델 simplex("Extra simplex iterations after uncrush")는 엔진에 웜스타트 입구가 없어 하지 않는다. Gurobi도 Netlib 64개 중 5개만 추가 반복이 있다.
 
-### 4.3 barrier·PDHG 경로와 막힌 점
+### 4.3 barrier·PDHG 경로
 
 - 경로: presolve → `barrier::solve`/`pdhg::solve`(presolved 모델) → uncrush → 상태. 지름길: `36578f`(원시 `363164`, 쌍대 `365159`, "big uncrush violation"으로 13 만들기)를 옮기지 않고, x는 `363daa`에 slack과 모두 기저인 가짜 상태를 넣어 되돌린다(원시값만 씀, 쌍대는 내보내지 않음). Netlib 64개 기준값은 모두 상태 2라 13 규칙이 걸린 사례가 없다.
-- **막힌 점**: Gurobi presolve는 `state+0x100`(SolutionTarget ≤ 0 && Method ∈ {2,6} && Crossover = 0이면 1)과 Method 값으로 PreDepRow 자동값, `505077` 쌍대 bound 행, `50de61` 4단계, 함의 bound 완화 등을 바꾼다(m1_presolve §7). 포트는 이를 기본값(-1)으로 가정한 지름길이다(`reduce.rs` 1380·1745·2024줄, `state.rs` 248줄, `mod.rs` 142줄, `agg.rs` 1899줄, `parallel.rs` 483줄). 측정: `tools/presolve_oracle.py`·`presolve_check.py`를 `--param Method=2|6 --param Crossover=0`으로 돌리면 **8/64**만 같다. 그래서 BarIterCount 20/64. 고치려면 `crates/lp/src/presolve/`의 기존 파일을 바꿔야 한다. 사용자가 2026-11-06에 이 디렉터리만 예외로 허용했다(simplex.rs·lu.rs는 여전히 금지).
+- presolve가 Method를 알아야 했다(§5), 상한만 있는 열을 뒤집어야 했다(§6.1), presolved 모델의 RNG와 작업량 타이머를 원본대로 넘겨야 했다(§6.2–6.3). 셋을 넣은 뒤 64/64.
 - 기준값: `bench/gurobi_bar_pre`(Method 2, Crossover 0), `bench/gurobi_pdhg_pre`(Method 6, Crossover 0), `bench/gurobi_dual_pre`(Method 1). 모두 Presolve 기본값, Threads 1, WorkLimit 60, `tools/parity.py capture gurobipy … --lp-only`. 상태: barrier 64×2, PDHG 63×2 + bnl1 16(WORK_LIMIT), dual 64×2.
 - 점검: `PYTHONPATH=$PWD/python python tools/driver_check.py <기준값> [--iters BarIterCount|PDHGIterCount] --param …`(Gurobi 불필요).
+
+## 5. presolve의 Method 분기 (`crates/lp/src/presolve/`, 2026-11-06 수정 허용)
+
+`3a484d`가 `state+0x100`을 정한다: SolutionTarget = 1이거나 (SolutionTarget ≤ 0, Q·QC 없음, Method ∈ {2,6}, Crossover = 0)이면 1, 아니고 SolutionTarget < 2이며 NumericFocus > 0이면 2, 나머지 0(`Params::sol_mode`). 이전 포트는 Method·Crossover·SolutionTarget을 기본값으로 가정해 NumericFocus로 대신했다. 바꾼 곳(원본 줄):
+
+| 원본 | 규칙 | 포트 |
+|---|---|---|
+| `390989` L250–270 | PreDepRow −1: PRESYMMPASSES ≥ 1이나 Presolve 1이면 0, Presolve 2·Method 2·state+0x100 ≠ 0이면 3, 아니면 Method ≠ 6일 때 유형 1이나 2.5n < nnz면 3 | `mod.rs` `reduce` |
+| `5118e6` L554 | 유형 6(0/1 행 완화)은 Method ≠ 2일 때만 | `state.rs` `constructor_work` |
+| `505077` L118 | 함의 bound를 자유로 보는 것은 state+0x100 = 0이고 (Method ≠ 2 또는 Crossover = 0 또는 SolutionTarget > 0)일 때 | `reduce.rs` `dual_bound_rows` |
+| `51a144` L91 | 쌍대 singleton 고정은 state+0x100 = 0도 요구 | `mod.rs` 두 호출 |
+| `50de61` L769 | Method 2나 state+0x100 ≠ 0이면 자유 열에만 함의 bound | `reduce.rs` `bound_rows` |
+| `37f484` L512–516 | state+0x100 ≠ 0이면 첫 라운드도 전파 없이 `53c9ee` 목록 | `agg.rs` `agg_round` |
+| `37f484` L1432 | 쌍 집계 비용 보정은 state+0x100 = 0일 때만 | `agg.rs` |
+| `509fd0` L58 | 평행 열 허용치·함의 bound는 state+0x100 = 0일 때 | `parallel.rs` |
+
+- `50fe2b`의 완화 여부는 state+0x100 = 0이면서 INTBASIS > 0이거나 env+0x2728 > 1일 때만 꺼져서 기본값에서는 그대로다. `+0x104`(Method 2/6·crossover 없음이면 0)는 sparsify `470936`만 읽어 기본값과 무관하다.
+- 검증: `tools/presolve_oracle.py <dir> --param Method=2|6 --param Crossover=0`과 `presolve_check.py`가 8/64 → **64/64**(두 Method 모두). 기본값 P0·postsolve·대칭 테스트(`test_presolve`, `test_postsolve`, `test_symmetry`)도 그대로 통과.
+
+## 6. barrier·PDHG로 넘기는 것
+
+### 6.1 상한만 있는 열 뒤집기 (`07d3ce`)
+
+presolved perold에는 하한 −∞·상한 유한 열이 1개 있고 Netlib 원본 64개에는 없다(G3·G4가 못 본 경우). `07d3ce`는 모델 데이터 표시 D+0x408 = 1인 열을 c·a 부호 반전, (lb, ub) → (−ub, −lb)로 바꾼다(L395–500, D+0x3c = 1). 조건은 D+0x3c = 0, Q·QC·PWL 없음. `363daa`는 같은 표시로 x·dj를 되돌린다(postsolve 포트 입력은 되돌린 뒤의 값). 표시를 세우는 함수는 못 찾았지만 Gurobi가 presolved MPS를 읽어 풀어도 같은 결과라 모델 수준 규칙(하한 −∞, 상한 유한)으로 옮겼다(`driver::flip_upper_only`, 엔진 전 뒤집고 x를 되돌림). 이것으로 perold BarIterCount 99 → 94(= Gurobi). 지름길: Presolve=0 경로(`Model._barrier`·`_pdhg`)는 이 변환을 거치지 않는다. 그런 열이 있는 모델을 그 경로로 풀 일이 생기면 barrier·PDHG setup으로 옮긴다.
+
+### 6.2 presolved 모델의 RNG (`3b0917` → `895c5`)
+
+Frida로 `a7b4d6`/`a7b54f`의 상태 포인터를 따라가면 presolve 경로의 PDHG는 presolved 모델의 RNG(model+0xb0)에서 power iteration 시작 벡터를 뽑는데, 그 상태가 0이 아니다(afiro 757). `3b0917`이 `895c5(presolved, 13·n + 7·m + 23·nnz)`로 정하고 `895c5`가 Seed(env+0x2cd0)를 더한다(n, m, nnz는 presolved 모델). 포트: `Model::rng` 필드(모델 데이터, 새 모델은 0), `presolve::run_post`가 설정, `pdhg::solve`가 `md.rng`에서 시작(전에는 0 고정). Gurobi도 presolved MPS를 Presolve=0으로 풀면 상태 0이라 우리 이전 값과 같았다(afiro 828, seba 310, vtpbase 1257). 이 수정으로 PDHGIterCount 9/64 → 63/64.
+
+### 6.3 작업량 타이머
+
+`34f033`은 전역 타이머(`param_2`)를 그대로 `34c004`에 넘기므로 PDHG 작업량은 presolve 작업량(`Post::work`, state+0x458)에서 시작한다(`pdhg::Params::work0`). WorkLimit 판정이 이 합을 본다. bnl1: PDHGIterCount 1,470,820과 Work 60.00225091963458이 Gurobi와 비트 단위로 같다 → 64/64. barrier는 반복 판단에 내부 단계 타이머만 써서 영향이 없고, Work 속성에는 presolve 작업량을 더해 둔다. simplex 작업량은 아직 없다(G1 P2).
+
+## 7. 안 한 것·남은 위험
+
+- 범위 밖: MIP 경로·분류(Python이 `IsMIP`이면 기존 오류), 다목적, concurrent(스레드 1개 dual로 대신), crossover(Crossover ≠ 0인 Method 2·6도 crossover 없이 끝냄), PreDual 쌍대화, network·sifting, 웜스타트.
+- `36578f` 미포팅: barrier·PDHG 해는 `363daa`에 가짜 기저로 원시값만 되돌린다. 쌍대값·기저는 내보내지 않고 "big uncrush violation" → 13 규칙도 없다(64개 기준값에 사례 없음).
+- simplex 경로: uncrush 뒤 원래 모델 simplex(웜스타트)를 하지 않는다. Netlib 64개 중 Gurobi도 5개만 추가 반복이 있다. 최대화 모델의 `363daa` 입력 규약은 확인하지 않았다(Netlib은 모두 최소화).
+- 반복 로그(barrier·PDHG·simplex의 Iter 표)와 barrier의 "Ordering time"/"Barrier statistics"는 드라이버 로그에 아직 없다. 로그 앵커 테스트는 헤더·presolve·요약 줄만 본다.
+- `presolve_status`의 UNBOUNDED → INF_OR_UNBD는 `a80155`를 읽지 않은 근사다(Netlib에 사례 없음).
