@@ -4,7 +4,30 @@
 
 각 단계는 "완료 조건"을 통과해야 다음으로 간다. 완료 조건은 패리티 단계 P0–P3([10 §1](10_porting.md))로 적는다. 추정 규모는 [00 §7](00_overview.md).
 
-기간: 이전 추정(합 30–40주)은 재작성 기준이라 폐기한다. 포팅 규모가 4–7배이므로 M0에서 포팅 속도(의사코드 줄/주)를 재고 다시 잡는다. 아래 괄호의 주 수는 이전 값이고 참고용이다.
+**마일스톤마다 속도 스냅숏**: 관문을 통과하면 Gurobi·OR-Tools·rsolver의 속도를 한 표로 남긴다. 분석이 아니라 확인용이다.
+- `re/bench/bench.py`의 `LP_SOLVERS`(M2부터 `MIP_SOLVERS`에도)에 `rsolver_M<n>` 항목을 더한다. 설정은 옆 Gurobi 항목과 같게 한다(LP는 Threads=1, 기본 Method). 이전 마일스톤 항목은 지우지 않는다.
+- `python re/bench/bench.py lp`(M2부터 `mip`도)를 돌린다. 이미 있는 (인스턴스, 솔버) 쌍은 건너뛰므로 새 rsolver 줄만 쌓이고, Gurobi·OR-Tools는 기존 값을 쓴다.
+- `python re/bench/report.py lp`의 요약 표를 그 마일스톤의 "상태" 줄 아래에 붙인다.
+- 기계가 한가할 때 돌린다. 다른 세션이 돌고 있으면 시간이 부풀어 비교가 안 된다.
+
+기간: 이전 추정(합 30–40주)은 사람이 재작성하는 기준이라 폐기한다. 아래 괄호의 주 수는 이전 값이고 참고용이다.
+
+**재산정 (2026-11-05, 에이전트 실측 기준)**
+- 실측: 설계와 M0에 약 2.8시간(11:00–13:49) 들었다. M1의 반복 0 상태 비트 일치(스케일링, 시작 기저, singleton LU, FTRAN·BTRAN, DSE 가중치)까지 약 1.2시간 들었다. 이때 손댄 함수는 10개, 의사코드 약 2.5만 줄이다. 기본 경로만 옮겼으므로 실효 속도는 시간당 약 1만 줄로 본다.
+- 남은 양은 약 108만 줄이다(`port_map.tsv` optimize 경로 121만 줄 기준). 반복마다 오차가 쌓이는 코드(simplex 반복, B&B, cut)는 더 느리므로 시간당 3천–8천 줄로 잡는다.
+
+| 단계 | 의사코드 | 에이전트 작업 시간 |
+|---|---:|---:|
+| M1 나머지 | 약 27만 줄 | 15–40시간 |
+| M2 | 약 45만 줄 | 60–150시간 |
+| M3 | 약 12만 줄 | 15–40시간 |
+| M4 | 약 8만 줄 | 10–25시간 |
+| M5 | 약 10만 줄 | 15–35시간 |
+| M6 | 약 5만 줄 | 15–40시간 |
+| 합계 | | 130–330시간 |
+
+- 하루 10시간, 에이전트 1개 기준으로 약 2–5주다. 병렬로 돌려도 Gurobi 한 프로세스 제한 때문에 절반까지는 줄지 않는다.
+- 근거가 반복 0 구간의 1.2시간 측정 하나라 오차가 크다. M1 반복 단계를 몇 시간 진행한 뒤 다시 잰다. 크게 틀어질 수 있는 곳은 세 가지다: 반복 1 이후의 P1 90%, M2 노드 수 일치, 사용량 한도로 인한 중단.
 
 ### M0 — 뼈대 (1–2주) — 관문 통과 2026-11-05
 - `model` 크레이트: `Model`, `SparseMat`, `Params`(표에서 생성), `Attrs`, MPS/LP 읽기·쓰기, 로그 싱크, `Work`/`Limits`.
@@ -16,7 +39,7 @@
 
 ### M1 — LP 엔진 (4–6주)
 - `lp::lu`(Markowitz + FT + hypersparse + 밀집 단계), `lp::simplex::{dual, primal}`(원본 pricing·ratio test·섭동·안전장치·비스케일 검사), crash, Quad(`F80`), 스케일링, `lp::presolve`(`390989`) 중 기본값에서 도는 reduction 전부, postsolve, LP 드라이버(`0c3d0d`), 난수 `a7b4d6`·정렬·해시 등 `common`.
-- 완료: Netlib 104개 전부 상태 일치, 목적 상대 1e-6(Presolve 켬/끔 모두); **P0** Netlib 64개 presolved 모델 일치; **P1** Netlib 64개의 Method 0/1/기본 `IterCount`가 Gurobi와 같은 인스턴스 ≥ 90%, 나머지는 ±5%이고 첫 분기점 기록; **P2** work ±5%; **P3** 시간 기하평균 ≤ 1.2배; `crates/core` 삭제.
+- 완료: Netlib 91개 전부 상태 일치, 목적 상대 1e-6(Presolve 켬/끔 모두); **P0** Netlib 64개 presolved 모델 일치; **P1** Netlib 64개의 Method 0/1/기본 `IterCount`가 Gurobi와 같은 인스턴스 ≥ 90%, 나머지는 ±5%이고 첫 분기점 기록; **P2** work ±5%; **P3** 시간 기하평균 ≤ 1.2배; `crates/core` 삭제.
 
 ### M2 — MIP 엔진 (6–8주)
 - `mip::presolve`(`3cd406`, 기본값에서 도는 reduction 전부 + probing·대칭성·연결 성분), `mip::bnb`(노드 선택 규칙 12개 전부, reliability branching, 원본 pseudocost 갱신, termination, 재시작, 로그), `mip::propagate`, `mip::cuts`(기본값 1 이상인 separator 전부, pool, 선택, LP 안 cut 정리), `mip::heur`(스케줄러가 기본값에서 부르는 휴리스틱 전부, sub-MIP 엔진), 콜백 MIP/MIPSOL/MIPNODE + cbCut/cbLazy/cbSetSolution, MIP start.
@@ -24,7 +47,7 @@
 
 ### M3 — Barrier, PDHG, Concurrent (4–5주)
 - `lp::barrier`(원본 ordering + ND, 밀집 열, supernodal LDLᵀ + MKL, 반복 루프, 종료 판정), `lp::crossover`(push, cleanup, 재시작), `lp::pdhg`(원본 전처리 포함), `lp::concurrent`(공유형 + 복제형), Method 자동 선택 표 전체, PreDual, network simplex, sifting.
-- 완료: Netlib 104개 Method=2(Crossover 0/기본), 6, 3, 4에서 상태·목적 일치; Method=4 결정성; **P1** `BarIterCount`가 `grb_barrier`의 `bar=`와, PDHG 반복 수가 `grb_pdhg`와 같음; Factor NZ 일치; **P3** 시간 기하평균 ≤ 1.2배.
+- 완료: Netlib 91개 Method=2(Crossover 0/기본), 6, 3, 4에서 상태·목적 일치; Method=4 결정성; **P1** `BarIterCount`가 `grb_barrier`의 `bar=`와, PDHG 반복 수가 `grb_pdhg`와 같음; Factor NZ 일치; **P3** 시간 기하평균 ≤ 1.2배.
 
 ### M4 — 일반 제약, SOS, 2차 (4–5주)
 - `mip::genconstr::translate`, SOS 분기·인코딩, `mip::quad`(PSD 검사, epigraph, bilinear 분해, McCormick, OA cut, QP simplex, QP/QCP barrier, QCPDual), 공간 분기 점수, presolve Q reduction, NORM, PWL 목적.

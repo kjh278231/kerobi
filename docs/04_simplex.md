@@ -179,7 +179,7 @@ dual이 `-1003`(열이 매우 많음)을 내면 진입. 작은 reduced cost 열 
 - 패리티 P3: 같은 64개에서 시간 기하평균이 Gurobi의 1.2배 이내.
 
 - LU: 무작위 희소 행렬·Netlib basis에 대해 `L·U = P·B·Q` 잔차 < 1e-10, FT 갱신 50회 뒤 잔차, 특이 행렬 감지.
-- dual/primal: Netlib 104개 **전부 OPTIMAL**이고 목적값이 공개 최적값(`netlib_readme.txt`)과 상대 1e-6 이내. 불가능 인스턴스(`klein*`, `forplan` 등)는 상태 일치. 실행 시간은 보고만.
+- dual/primal: Netlib 91개 **전부 OPTIMAL**이고 목적값이 공개 최적값(`netlib_readme.txt`)과 상대 1e-6 이내. 불가능 인스턴스(`klein*`, `forplan` 등)는 상태 일치. 실행 시간은 보고만.
 - hot start: 노드 LP 재풀이 반복 수가 cold start보다 작은지(통계 단언).
 - 수치 사다리: 의도적으로 나쁜 스케일의 LP(`pilot87`, `greenbea`)에서 NUMERIC 없이 끝나는지.
 - Rust `proptest`: 작은 무작위 LP를 밀집 참조 구현(현재 `crates/core`)과 비교.

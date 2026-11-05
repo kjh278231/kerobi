@@ -1,5 +1,5 @@
 """Singleton-phase LU (1da0b2 phases 1-5) + column-oriented FTRAN; compare xB at iteration 0 with the oracle."""
-import json, sys, glob, os
+import gzip, json, sys, glob, os
 H = float.fromhex
 ZERO = 1e-13
 
@@ -70,9 +70,9 @@ def solve(m, n, beg, ind, val, head, steps, prow, rhs):
     return xb
 
 ok = full = tot = 0
-for f in sorted(glob.glob(sys.argv[1] + "/or0/*.jsonl")):
-    name = os.path.basename(f)[:-6]
-    o = json.loads(open(f).readline()); n, m = o["n"], o["m"]
+for f in sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../bench/oracle/iter0/*.jsonl.gz"))):
+    name = os.path.basename(f)[:-9]
+    o = json.loads(gzip.open(f, "rt").readline()); n, m = o["n"], o["m"]
     beg, ind, val = o["beg"], o["ind"], [H(v) for v in o["val"]]
     b = [H(v) for v in o["b"]]; l = [H(v) for v in o["l"]]; u = [H(v) for v in o["u"]]; vs = o["vstat"]
     head = [None] * m

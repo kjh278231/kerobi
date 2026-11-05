@@ -1,0 +1,90 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/ship04s/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/ship04s.mps.gz
+Reading time = 0.00 seconds
+SHIP04S: 402 rows, 1458 columns, 4352 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 402 rows, 1458 columns and 4352 nonzeros (Min)
+Model fingerprint: 0xacf267b9
+Model has 1458 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-02, 5e+00]
+  Objective range  [1e+01, 7e+03]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e-02, 1e+02]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 2.912e+03
+ Factor NZ  : 5.869e+03 (roughly 1 MB of memory)
+ Factor Ops : 1.347e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   5.97525504e+07  0.00000000e+00  6.50e+03 0.00e+00  1.63e+05     0s
+   1   1.49722636e+07  1.70838471e+05  1.22e+03 3.34e+02  3.38e+04     0s
+   2   5.42419957e+06  1.06378819e+06  2.14e+02 1.59e+01  6.39e+03     0s
+   3   2.02558450e+06  1.40026139e+06  2.72e+00 4.06e-01  4.55e+02     0s
+   4   1.89054466e+06  1.67834591e+06  4.52e-01 9.09e-13  1.44e+02     0s
+   5   1.84711765e+06  1.77198688e+06  1.83e-01 9.09e-13  5.05e+01     0s
+   6   1.82073377e+06  1.79175574e+06  6.67e-02 9.09e-13  1.94e+01     0s
+   7   1.80306195e+06  1.79689565e+06  9.37e-03 9.09e-13  4.12e+00     0s
+   8   1.79907229e+06  1.79862702e+06  4.86e-04 1.82e-12  2.97e-01     0s
+   9   1.79873320e+06  1.79871265e+06  2.25e-05 9.09e-13  1.37e-02     0s
+  10   1.79871711e+06  1.79871463e+06  2.89e-06 9.09e-13  1.65e-03     0s
+  11   1.79871476e+06  1.79871469e+06  2.93e-07 9.09e-13  4.81e-05     0s
+  12   1.79871470e+06  1.79871470e+06  8.95e-10 1.96e-12  6.05e-08     0s
+  13   1.79871470e+06  1.79871470e+06  6.03e-11 2.22e-12  2.67e-13     0s
+
+Barrier solved model in 13 iterations and 0.00 seconds (0.00 work units)
+Optimal objective 1.79871470e+06
+
+
+User-callback calls 65, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/ship04s.mps.gz
+Reading time = 0.00 seconds
+SHIP04S: 402 rows, 1458 columns, 4352 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 402 rows, 1458 columns and 4352 nonzeros (Min)
+Model fingerprint: 0xacf267b9
+Model has 1458 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-02, 5e+00]
+  Objective range  [1e+01, 7e+03]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e-02, 1e+02]

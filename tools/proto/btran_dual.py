@@ -1,4 +1,4 @@
-import json, sys, glob, os
+import gzip, json, sys, glob, os
 sys.path.insert(0, "/home/sds/workspace/gurobi-sandbox/rsolver/tools/proto")
 H = float.fromhex
 src = open("/home/sds/workspace/gurobi-sandbox/rsolver/tools/proto/lu_singleton.py").read().split("ok = full = tot = 0")[0]
@@ -20,10 +20,10 @@ def btran(m, n, beg, ind, val, head, steps, prow, cb):
     return None
 
 ok = tot = 0
-for f in sorted(glob.glob(sys.argv[1] + "/or0/*.jsonl")):
-    name = os.path.basename(f)[:-6]
+for f in sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../bench/oracle/iter0/*.jsonl.gz"))):
+    name = os.path.basename(f)[:-9]
     if name in ("capri", "perold", "pilot4", "tuff"): continue
-    o = json.loads(open(f).readline()); n, m = o["n"], o["m"]
+    o = json.loads(gzip.open(f, "rt").readline()); n, m = o["n"], o["m"]
     beg, ind, val = o["beg"], o["ind"], [H(v) for v in o["val"]]
     c = [H(v) for v in o["c"]]; vs = o["vstat"]
     head = [None] * m

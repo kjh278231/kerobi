@@ -1,0 +1,153 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/fffff800/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/fffff800.mps.gz
+Reading time = 0.00 seconds
+FFFFF800: 524 rows, 854 columns, 6227 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 524 rows, 854 columns and 6227 nonzeros (Min)
+Model fingerprint: 0x12181be3
+Model has 8 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [8e-03, 1e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e-01, 2e+05]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 1.009e+04
+ Factor NZ  : 2.142e+04 (roughly 1 MB of memory)
+ Factor Ops : 1.164e+06 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   3.90480053e+05  0.00000000e+00  7.54e+06 0.00e+00  4.95e+03     0s
+   1   1.02279612e+05  1.13129476e+04  1.80e+06 2.90e-02  1.21e+03     0s
+   2   6.40388927e+04  9.74520571e+04  9.43e+05 9.52e-04  6.33e+02     0s
+   3   8.55003589e+04  2.27936822e+05  5.73e+05 2.94e-04  3.95e+02     0s
+   4   1.75264780e+05  2.47291561e+05  3.08e+05 1.52e-05  2.33e+02     0s
+   5   2.33176963e+05  3.08336838e+05  1.83e+05 1.56e-06  1.45e+02     0s
+   6   2.66222589e+05  3.29846799e+05  1.28e+05 1.24e-06  9.77e+01     0s
+   7   2.95407503e+05  3.34331570e+05  8.14e+04 0.00e+00  6.50e+01     0s
+   8   2.97587400e+05  3.38999310e+05  7.77e+04 4.47e-17  6.16e+01     0s
+   9   2.98161763e+05  3.82287100e+05  7.68e+04 6.44e-17  6.01e+01     0s
+  10   3.02123190e+05  3.82251120e+05  7.36e+04 1.78e-17  5.76e+01     0s
+  11   3.05615442e+05  3.53433590e+05  7.11e+04 6.25e-17  5.84e+01     0s
+  12   3.11091437e+05  3.76830745e+05  6.80e+04 7.98e-17  5.58e+01     0s
+  13   3.32123882e+05  3.51534273e+05  5.16e+04 6.33e-15  5.58e+01     0s
+  14   3.39576436e+05  4.04049917e+05  4.62e+04 3.05e-16  4.25e+01     0s
+  15   3.54072822e+05  3.92379757e+05  3.80e+04 8.22e-15  3.92e+01     0s
+  16   3.56045089e+05  4.18004069e+05  3.66e+04 4.88e-15  3.66e+01     0s
+  17   3.58633607e+05  4.54213374e+05  3.53e+04 1.42e-14  3.53e+01     0s
+  18   3.71737360e+05  4.44404207e+05  3.20e+04 1.42e-14  3.55e+01     0s
+  19   3.83422494e+05  4.34211687e+05  2.83e+04 1.78e-14  3.61e+01     0s
+  20   4.13431987e+05  4.54771422e+05  2.07e+04 1.42e-14  3.32e+01     0s
+  21   4.28544735e+05  4.69772517e+05  1.63e+04 1.58e-14  2.53e+01     0s
+  22   4.30547763e+05  4.80964711e+05  1.57e+04 1.60e-14  2.23e+01     0s
+  23   4.35880605e+05  4.77561278e+05  1.44e+04 1.78e-14  2.14e+01     0s
+  24   4.37296267e+05  4.82002381e+05  1.40e+04 2.13e-14  2.04e+01     0s
+  25   4.41093603e+05  4.82766486e+05  1.31e+04 2.13e-14  1.97e+01     0s
+  26   4.44267391e+05  4.85282566e+05  1.24e+04 2.66e-14  1.83e+01     0s
+  27   4.50137107e+05  4.91984007e+05  1.10e+04 1.60e-14  1.59e+01     0s
+  28   4.54859967e+05  4.91033963e+05  9.99e+03 2.49e-14  1.52e+01     0s
+  29   4.64273445e+05  4.95861290e+05  8.10e+03 2.31e-14  1.31e+01     0s
+  30   4.68540247e+05  5.02024672e+05  7.24e+03 2.13e-14  1.09e+01     0s
+  31   4.71263217e+05  5.07930969e+05  6.89e+03 1.95e-14  1.08e+01     0s
+  32   4.72107586e+05  5.13857079e+05  6.76e+03 1.78e-14  1.02e+01     0s
+  33   4.72536875e+05  5.20188106e+05  6.69e+03 2.89e-14  9.88e+00     0s
+  34   4.75793249e+05  5.25464338e+05  6.28e+03 2.15e-14  9.02e+00     0s
+  35   4.82038705e+05  5.23024166e+05  5.58e+03 2.60e-14  8.97e+00     0s
+  36   4.89097935e+05  5.27299775e+05  4.81e+03 1.55e-14  7.40e+00     0s
+  37   4.93798642e+05  5.30516498e+05  4.31e+03 1.28e-14  6.16e+00     0s
+  38   4.99492314e+05  5.31722995e+05  3.71e+03 1.15e-14  5.40e+00     0s
+  39   5.00299074e+05  5.33521828e+05  3.62e+03 1.38e-14  5.18e+00     0s
+  40   5.00583179e+05  5.32063879e+05  3.60e+03 1.95e-14  5.16e+00     0s
+  41   5.00810014e+05  5.32896889e+05  3.57e+03 1.78e-14  4.98e+00     0s
+  42   5.01158803e+05  5.33489012e+05  3.54e+03 1.60e-14  4.92e+00     0s
+  43   5.01700518e+05  5.34026848e+05  3.48e+03 1.78e-14  4.86e+00     0s
+  44   5.02036163e+05  5.37277510e+05  3.45e+03 1.95e-14  4.77e+00     0s
+  45   5.02185699e+05  5.40730493e+05  3.44e+03 1.42e-14  4.77e+00     0s
+  46   5.03450491e+05  5.35625165e+05  3.33e+03 1.60e-14  4.85e+00     0s
+  47   5.06478926e+05  5.38006252e+05  3.10e+03 2.31e-14  4.88e+00     0s
+  48   5.08218410e+05  5.40201108e+05  2.96e+03 3.97e-14  4.66e+00     0s
+  49   5.09874683e+05  5.41138934e+05  2.83e+03 2.48e-14  4.56e+00     0s
+  50   5.10893189e+05  5.41718713e+05  2.75e+03 3.99e-14  4.46e+00     0s
+  51   5.12751295e+05  5.42412285e+05  2.62e+03 4.30e-14  4.43e+00     0s
+  52   5.17733944e+05  5.41343424e+05  2.24e+03 2.42e-14  4.77e+00     0s
+  53   5.22693011e+05  5.42201479e+05  1.86e+03 1.78e-14  4.62e+00     0s
+  54   5.23727308e+05  5.43107809e+05  1.78e+03 1.99e-14  4.43e+00     0s
+  55   5.24382616e+05  5.45923935e+05  1.73e+03 1.42e-14  4.41e+00     0s
+  56   5.31037415e+05  5.44822124e+05  1.30e+03 2.84e-14  4.57e+00     0s
+  57   5.33428801e+05  5.49481422e+05  1.16e+03 3.20e-14  3.26e+00     0s
+  58   5.35330945e+05  5.51732933e+05  1.06e+03 1.84e-14  2.81e+00     0s
+  59   5.41808545e+05  5.51384920e+05  6.92e+02 2.49e-14  2.56e+00     0s
+  60   5.42672961e+05  5.52559948e+05  6.45e+02 1.87e-14  2.04e+00     0s
+  61   5.42928053e+05  5.53260533e+05  6.30e+02 1.42e-14  1.94e+00     0s
+  62   5.43133248e+05  5.53123763e+05  6.21e+02 1.78e-14  1.95e+00     0s
+  63   5.44563216e+05  5.53377368e+05  5.49e+02 1.42e-14  1.92e+00     0s
+  64   5.49669418e+05  5.54436342e+05  2.88e+02 2.13e-14  1.01e+00     0s
+  65   5.50418908e+05  5.54915164e+05  2.47e+02 1.42e-14  7.15e-01     0s
+  66   5.51320346e+05  5.55075097e+05  2.08e+02 2.84e-14  7.76e-01     0s
+  67   5.52039114e+05  5.55173734e+05  1.74e+02 2.84e-14  6.77e-01     0s
+  68   5.53375438e+05  5.55461912e+05  1.09e+02 2.40e-14  3.50e-01     0s
+  69   5.53559902e+05  5.55572617e+05  1.00e+02 1.78e-14  2.74e-01     0s
+  70   5.54551493e+05  5.55628997e+05  5.50e+01 2.04e-14  2.05e-01     0s
+  71   5.55541276e+05  5.55672863e+05  6.85e+00 1.42e-14  2.87e-02     0s
+  72   5.55678136e+05  5.55679193e+05  7.79e-02 1.44e-10  7.56e-04     0s
+  73   5.55679546e+05  5.55679527e+05  1.51e-03 2.46e-09  5.29e-05     0s
+  74   5.55679557e+05  5.55679555e+05  5.81e-04 1.50e-09  1.58e-05     0s
+  75   5.55679565e+05  5.55679565e+05  1.67e-05 3.71e-10  5.13e-07     0s
+  76   5.55679565e+05  5.55679565e+05  4.82e-09 3.17e-11  1.52e-09     0s
+
+Barrier solved model in 76 iterations and 0.03 seconds (0.05 work units)
+Optimal objective 5.55679565e+05
+
+
+User-callback calls 192, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/fffff800.mps.gz
+Reading time = 0.00 seconds
+FFFFF800: 524 rows, 854 columns, 6227 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 524 rows, 854 columns and 6227 nonzeros (Min)
+Model fingerprint: 0x12181be3
+Model has 8 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [8e-03, 1e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e-01, 2e+05]

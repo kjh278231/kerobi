@@ -1,0 +1,63 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:01:14 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter LogFile to value "bench/gurobi_default_nopre/grow7/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/grow7.mps.gz
+Reading time = 0.00 seconds
+GROW7: 140 rows, 301 columns, 2612 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 140 rows, 301 columns and 2612 nonzeros (Min)
+Model fingerprint: 0x9091daec
+Model has 21 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [6e-06, 1e+00]
+  Objective range  [1e+00, 7e+00]
+  Bounds range     [3e+03, 1e+06]
+  RHS range        [0e+00, 0e+00]
+
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -5.7750000e+07   3.718750e+06   0.000000e+00      0s
+     316   -4.7787812e+07   0.000000e+00   0.000000e+00      0s
+
+Solved in 316 iterations and 0.01 seconds (0.01 work units)
+Optimal objective -4.778781181e+07
+
+User-callback calls 346, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/grow7.mps.gz
+Reading time = 0.00 seconds
+GROW7: 140 rows, 301 columns, 2612 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 140 rows, 301 columns and 2612 nonzeros (Min)
+Model fingerprint: 0x9091daec
+Model has 21 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [6e-06, 1e+00]
+  Objective range  [1e+00, 7e+00]
+  Bounds range     [3e+03, 1e+06]
+  RHS range        [0e+00, 0e+00]

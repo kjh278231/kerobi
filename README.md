@@ -20,13 +20,14 @@
 | [10_porting](docs/10_porting.md) | 성능 패리티 P0–P3, 포팅 절차, 수치 충실도 규칙, 차등 검사 하네스, 제외 범위 |
 | [port_map.tsv](docs/port_map.tsv) | 코어 함수 4,362개의 모듈 배정 (`tools/port_map.py`로 생성) |
 
-## 현재 코드 (M0 이전 프로토타입)
+## 현재 코드 (M1 진행 중)
 
 ```
-crates/core   순수 Rust: Problem/solve, lp.rs(2단계 primal simplex, 밀집), mip.rs(B&B)   cargo test -p rsolver-core
-crates/py     PyO3 확장 rsolver._core: solve_problem()  (solve 동안 GIL 해제)
+crates/lp     LP 엔진: 스케일링, LU(Markowitz·FT), crash, dual·primal simplex, 드라이버   cargo test -p rsolver-lp
+crates/model  모델 배열, MPS 리더, 지문
+crates/py     PyO3 확장 rsolver._core: read_model(), build_model(), CoreModel.solve()  (solve 동안 GIL 해제)
 python/       rsolver: Model / Var / LinExpr / GRB
 tests/        pytest
 ```
 
-빌드·테스트: `. ~/.cargo/env && ../.venv/bin/maturin develop && ../.venv/bin/python -m pytest`
+빌드·테스트: `. ~/.cargo/env && ../.venv/bin/maturin develop --release && ../.venv/bin/python -m pytest` (디버그 빌드는 10배 이상 느리다)

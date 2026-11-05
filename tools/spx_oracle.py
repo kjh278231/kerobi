@@ -34,7 +34,15 @@ def dump(spx, it, full):
            "r": I(spx + 0x2f8), "q": I(spx + 0x2fc), "refactor_reason": I(spx + 0x294),
            "vstat": arr(L(spx + 0x168), n + m, "i"), "d": arr(L(spx + 0x1e0), n + m), "xB": arr(L(spx + 0x1e8), m),
            "c": arr(L(spx + 0x98), n + m), "l": arr(L(spx + 0xa8), n + m), "u": arr(L(spx + 0xb0), n + m),
-           "w": arr(L(P + 0x08), m) if P else None}
+           "w": arr(L(P + 0x08), m) if P else None,
+           # CHUZR state (2896a3): mode P+0x40 (0 = ordered list), list P+0x10 of length P+0x3c, cursor spx+0x2c4,
+           # per-position skip flags spx+0x280, rebuild budget P+0x38
+           "price": {"mode": I(P + 0x40), "list": arr(L(P + 0x10), I(P + 0x3c), "i"), "cursor": I(spx + 0x2c4),
+                     "flags": list(ctypes.string_at(L(spx + 0x280), m)), "budget": I(P + 0x38), "allow": I(P + 0x28),
+                     "avg": D(P + 0x48)} if P else None,
+           # LU counters (spx+0x470): updates done, refactor interval, row-eta count, Σ nnz of update columns
+           "lu": {"k": I(L(spx + 0x470) + 0x18c), "interval": I(L(spx + 0x470) + 0x188),
+                  "eta": I(L(spx + 0x470) + 0x184), "cols": L(L(spx + 0x470) + 0x190)} if L(spx + 0x470) else None}
     if full:
         beg = arr(L(spx + 0x70), n + 1, "l")
         nnz = beg[n] if beg else 0

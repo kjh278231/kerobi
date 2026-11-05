@@ -1,0 +1,94 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/gfrd-pnc/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Warning: found different names for bound vectors (P1AG and P1AF), names are ignored
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/gfrd-pnc.mps.gz
+Reading time = 0.00 seconds
+GFRD-PNC: 616 rows, 1092 columns, 2377 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 616 rows, 1092 columns and 2377 nonzeros (Min)
+Model fingerprint: 0xd3f05925
+Model has 1090 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+03]
+  Objective range  [2e-01, 8e+04]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [9e+02, 1e+03]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 8.350e+02
+ Factor NZ  : 6.531e+03 (roughly 1 MB of memory)
+ Factor Ops : 8.009e+04 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   1.20918654e+09 -1.64808046e+07  1.59e+04 1.50e+02  3.44e+06     0s
+   1   4.18168429e+08 -3.24237836e+06  5.45e+03 1.85e+02  8.27e+05     0s
+   2   2.72817369e+08  1.62519142e+07  3.50e+03 1.03e+02  5.18e+05     0s
+   3   8.44370143e+07  7.57257367e+06  9.93e+02 3.42e+01  1.61e+05     0s
+   4   2.39162371e+07 -9.15720594e+05  1.96e+02 6.02e+00  3.65e+04     0s
+   5   8.33731593e+06  1.18998607e+06  3.21e+00 1.66e+00  8.13e+03     0s
+   6   7.73688398e+06  5.73093584e+06  4.97e-01 3.82e-01  2.01e+03     0s
+   7   7.26150304e+06  6.35248700e+06  3.18e-02 1.70e-01  8.55e+02     0s
+   8   7.03913840e+06  6.74990900e+06  2.54e-03 3.45e-02  2.43e+02     0s
+   9   6.93098192e+06  6.83477326e+06  2.83e-04 1.47e-02  8.31e+01     0s
+  10   6.91065615e+06  6.87516559e+06  6.12e-05 6.28e-03  3.13e+01     0s
+  11   6.90330113e+06  6.89451850e+06  2.82e-07 1.81e-03  8.05e+00     0s
+  12   6.90236097e+06  6.90162752e+06  1.64e-08 1.40e-04  6.63e-01     0s
+  13   6.90224222e+06  6.90223107e+06  1.84e-09 1.90e-09  7.86e-03     0s
+  14   6.90223601e+06  6.90223599e+06  6.48e-06 1.19e-09  1.08e-05     0s
+  15   6.90223600e+06  6.90223600e+06  3.51e-09 1.60e-09  2.36e-10     0s
+
+Barrier solved model in 15 iterations and 0.00 seconds (0.01 work units)
+Optimal objective 6.90223600e+06
+
+
+User-callback calls 69, time in user-callback 0.00 sec
+Warning: found different names for bound vectors (P1AG and P1AF), names are ignored
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/gfrd-pnc.mps.gz
+Reading time = 0.00 seconds
+GFRD-PNC: 616 rows, 1092 columns, 2377 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 616 rows, 1092 columns and 2377 nonzeros (Min)
+Model fingerprint: 0xd3f05925
+Model has 1090 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+03]
+  Objective range  [2e-01, 8e+04]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [9e+02, 1e+03]

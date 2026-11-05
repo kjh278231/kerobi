@@ -1,0 +1,87 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/sctap2/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/sctap2.mps.gz
+Reading time = 0.00 seconds
+SCTAP2: 1090 rows, 1880 columns, 6714 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 1090 rows, 1880 columns and 6714 nonzeros (Min)
+Model fingerprint: 0x4e40aa9d
+Model has 1410 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 8e+01]
+  Objective range  [1e+00, 8e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 5e+01]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 5.505e+03
+ Factor NZ  : 2.087e+04 (roughly 1 MB of memory)
+ Factor Ops : 5.354e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   4.68445476e+04  0.00000000e+00  2.84e+01 0.00e+00  3.65e+01     0s
+   1   1.36004470e+04 -2.44082827e+03  5.43e+00 2.12e-02  7.47e+00     0s
+   2   4.90535825e+03  1.01734805e+02  1.33e+00 1.07e-14  1.98e+00     0s
+   3   2.88551843e+03  1.18539485e+03  3.72e-01 1.78e-14  6.68e-01     0s
+   4   1.97915494e+03  1.57609180e+03  5.71e-02 1.78e-14  1.58e-01     0s
+   5   1.79002907e+03  1.67727266e+03  1.07e-02 1.42e-14  4.44e-02     0s
+   6   1.74122610e+03  1.70743185e+03  2.93e-03 2.13e-14  1.33e-02     0s
+   7   1.73200235e+03  1.71808192e+03  1.15e-03 1.78e-14  5.49e-03     0s
+   8   1.72691309e+03  1.72393465e+03  3.55e-04 2.13e-14  1.17e-03     0s
+   9   1.72481222e+03  1.72480091e+03  9.35e-07 2.13e-14  4.46e-06     0s
+  10   1.72480714e+03  1.72480714e+03  9.45e-13 2.13e-14  4.51e-12     0s
+
+Barrier solved model in 10 iterations and 0.01 seconds (0.01 work units)
+Optimal objective 1.72480714e+03
+
+
+User-callback calls 60, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/sctap2.mps.gz
+Reading time = 0.00 seconds
+SCTAP2: 1090 rows, 1880 columns, 6714 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 1090 rows, 1880 columns and 6714 nonzeros (Min)
+Model fingerprint: 0x4e40aa9d
+Model has 1410 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 8e+01]
+  Objective range  [1e+00, 8e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 5e+01]

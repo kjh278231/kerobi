@@ -163,7 +163,7 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 - 패리티 P0(합격 기준): Netlib 64개와 `miplib_small` 38개에서 Gurobi `Model.presolve()` 결과를 MPS로 쓴 것과 rsolver presolved 모델이 행·열 순서까지 같다. "Presolve removed …" 통계와 presolve work도 같다.
 - reduction 단위 테스트: 각 reduction에 교과서 예(Achterberg 2020 그림)를 넣고 presolved 모델과 **uncrush 뒤 원래 해의 실행가능성·목적값**을 확인.
 - 속성 테스트(proptest): 무작위 작은 LP/MIP를 presolve 있음/없음으로 풀어 목적값 일치(1e-6), uncrush 해 위반 ≤ FeasTol.
-- Netlib 104개: presolve 켠/끈 결과 일치.
+- Netlib 91개: presolve 켠/끈 결과 일치.
 
 ## 10. LP presolve 포팅 결과 (M1, `crates/lp/src/presolve/`)
 

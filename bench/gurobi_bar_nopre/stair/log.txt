@@ -1,0 +1,91 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/stair/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/stair.mps.gz
+Reading time = 0.00 seconds
+STAIR: 356 rows, 467 columns, 3856 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 356 rows, 467 columns and 3856 nonzeros (Min)
+Model fingerprint: 0xb21a7a5a
+Model has 1 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-05, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e-01, 3e+02]
+  RHS range        [3e-02, 9e+01]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 6.215e+03
+ Factor NZ  : 1.846e+04
+ Factor Ops : 1.358e+06 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0  -6.79202474e+01 -1.64708117e+01  6.57e+02 6.76e-01  4.45e+01     0s
+   1  -3.53688266e+01 -6.19302151e+01  3.19e+02 2.15e-01  1.89e+01     0s
+   2  -1.16075425e+02  2.76316752e+01  1.29e+02 1.27e-01  8.86e+00     0s
+   3  -1.43962473e+02 -1.83549382e+02  9.11e+01 7.11e-02  5.96e+00     0s
+   4  -2.20181731e+02 -2.52498048e+02  2.01e+01 5.19e-02  1.93e+00     0s
+   5  -2.18409329e+02 -3.73266914e+02  3.18e+00 7.60e-03  4.82e-01     0s
+   6  -2.34518815e+02 -2.71692610e+02  5.26e-01 1.63e-03  9.82e-02     0s
+   7  -2.46326673e+02 -2.59476872e+02  1.25e-01 3.85e-04  3.08e-02     0s
+   8  -2.48611497e+02 -2.55342748e+02  4.86e-02 1.78e-04  1.50e-02     0s
+   9  -2.50079872e+02 -2.53800192e+02  2.21e-02 9.97e-05  8.17e-03     0s
+  10  -2.50948033e+02 -2.51975107e+02  4.59e-03 2.87e-05  2.22e-03     0s
+  11  -2.51203614e+02 -2.51627111e+02  8.41e-04 1.45e-05  9.29e-04     0s
+  12  -2.51261674e+02 -2.51290270e+02  4.13e-05 7.06e-07  5.68e-05     0s
+  13  -2.51266832e+02 -2.51267034e+02  3.44e-08 9.72e-11  2.95e-07     0s
+  14  -2.51266951e+02 -2.51266951e+02  2.55e-09 5.16e-14  6.02e-10     0s
+
+Barrier solved model in 14 iterations and 0.01 seconds (0.01 work units)
+Optimal objective -2.51266951e+02
+
+
+User-callback calls 67, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/stair.mps.gz
+Reading time = 0.00 seconds
+STAIR: 356 rows, 467 columns, 3856 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 356 rows, 467 columns and 3856 nonzeros (Min)
+Model fingerprint: 0xb21a7a5a
+Model has 1 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-05, 1e+01]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e-01, 3e+02]
+  RHS range        [3e-02, 9e+01]

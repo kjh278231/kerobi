@@ -1,5 +1,5 @@
 """gurobipy-shaped Python layer over the Rust core (re/notes/01: Python -> extension -> engine)."""
-from ._core import INF, read_model, solve_problem
+from ._core import INF, build_model, read_model
 
 
 class GRB:
@@ -21,6 +21,7 @@ class GRB:
         MIPSOL_SOL, MIPSOL_OBJ, MIPSOL_OBJBST, MIPSOL_OBJBND, MIPSOL_NODCNT, MIPSOL_SOLCNT = 4001, 4002, 4003, 4004, 4005, 4006
         MIPNODE_STATUS, MIPNODE_REL, MIPNODE_OBJBST, MIPNODE_OBJBND, MIPNODE_NODCNT, MIPNODE_SOLCNT = 5001, 5002, 5003, 5004, 5005, 5006
         BARRIER_ITRCNT, BARRIER_PRIMOBJ, BARRIER_DUALOBJ, BARRIER_PRIMINF, BARRIER_DUALINF, BARRIER_COMPL = 7001, 7002, 7003, 7004, 7005, 7006
+        PDHG_ITRCNT, PDHG_PRIMOBJ, PDHG_DUALOBJ, PDHG_PRIMINF, PDHG_DUALINF, PDHG_COMPL = 10001, 10002, 10003, 10004, 10005, 10006
 
 
 class GurobiError(Exception):
@@ -133,7 +134,7 @@ class Model:
         self.Status, self._x, self._objval = None, [], None
         self._core, self.Params = None, {}
 
-    # Attributes of a model read from a file (01 §1.4); built models keep the prototype path below.
+    # Attributes of a model read from a file (01 §1.4).
     @property
     def Fingerprint(self):
         return self._core.fingerprint()
@@ -211,21 +212,97 @@ class Model:
     def setObjective(self, expr, sense=GRB.MINIMIZE):
         self._obj, self.ModelSense = _lin(expr), sense
 
+    def _param(self, name, default):
+        for k, v in self.Params.items():
+            if k.lower() == name.lower():
+                return v
+        return default
+
     def optimize(self, callback=None):
-        if self._core is not None:
-            raise GurobiError(10024, "LP/MIP engines are not ported yet (M1)")
-        n = len(self._vars)
-        obj = [0.0] * n
-        for v, c in self._obj.terms.items():
-            obj[v.index] += c * self.ModelSense
-        self.Status, val, self._x = solve_problem(
-            obj, self._rows, [v.lb for v in self._vars], [v.ub for v in self._vars],
-            [v.vtype != GRB.CONTINUOUS for v in self._vars])
-        self._objval = val * self.ModelSense + self._obj.const
+        if self._core is not None and self.Params.get("Method") == 2:
+            return self._barrier(callback)
+        if self._core is not None and self.Params.get("Method") == 6:
+            return self._pdhg(callback)
+        core, built = self._core, self._core is None
+        if built:  # a model built through the API: same engine, minimization form, ranged rows as slack columns
+            obj = [0.0] * len(self._vars)
+            for v, c in self._obj.terms.items():
+                obj[v.index] += c * self.ModelSense
+            core = build_model(obj, self._rows, [v.lb for v in self._vars], [v.ub for v in self._vars],
+                               "".join("C" if v.vtype == GRB.CONTINUOUS else "I" for v in self._vars))
+        if any(t != "C" for t in core.vtype):
+            raise GurobiError(10024, "MIP engine is not ported yet (M2)")
+        import time
+        t0 = time.perf_counter()
+        st, obj, x, it, trace, self._path = core.solve(int(self._param("Method", -1)), float(self._param("IterationLimit", 1e100)))
+        self.Runtime = time.perf_counter() - t0
+        self.Status, self.IterCount = st, it
+        self._x = x[:len(self._vars)] if built else x
+        self._objval = obj * self.ModelSense + self._obj.const if built else obj
+        self.BarIterCount, self.NodeCount, self.SolCount, self.Work = 0, 0.0, int(st == GRB.OPTIMAL), 0.0
+        if callback is not None:  # SIMPLEX callbacks replayed in iteration order after the solve
+            for row in trace:
+                self._cbrow = row
+                callback(self, GRB.Callback.SIMPLEX)
+            self._cbrow = None
+
+    def cbGet(self, what):
+        if getattr(self, "_cbrow", None) is None:  # BARRIER callback (set by _barrier)
+            return self._cbdata[what]
+        k = {GRB.Callback.SPX_ITRCNT: 0, GRB.Callback.SPX_OBJVAL: 1, GRB.Callback.SPX_PRIMINF: 2,
+             GRB.Callback.SPX_DUALINF: 3, GRB.Callback.SPX_ISPERT: 4}[what]
+        v = self._cbrow[k]
+        return int(v) if k == 4 else v
+
+    @property
+    def ObjBound(self):
+        return self.ObjVal
+
+    def _barrier(self, callback):
+        """M3 barrier (Presolve=0, Crossover=0 assumed): BARRIER callback (where = 7) once per iteration."""
+        import time
+
+        C = GRB.Callback
+        keys = (C.BARRIER_ITRCNT, C.BARRIER_PRIMOBJ, C.BARRIER_DUALOBJ, C.BARRIER_PRIMINF, C.BARRIER_DUALINF,
+                C.BARRIER_COMPL)
+
+        def cb(*vals):
+            if callback:
+                self._cbdata = dict(zip(keys, vals))
+                callback(self, C.BARRIER)
+
+        p, t0 = self.Params, time.perf_counter()
+        if p.get("LogFile"):  # the "Barrier statistics" block (2e8590) that tools/parity.py compares
+            _, aat, nz, ops, free = self._core.barrier_symbolic()
+            with open(p["LogFile"], "a") as f:
+                f.write("\nBarrier statistics:\n" + (f" Free vars  : {free}\n" if free else "")
+                        + f" AA' NZ     : {aat / 2:.3e}\n Factor NZ  : {nz:.3e}\n Factor Ops : {ops:.3e}\n Threads    : 1\n\n")
+        self.Status, self._objval, self.BarIterCount, self._x, self.Work = self._core.barrier(
+            cb, float(p.get("BarConvTol", 1e-8)), int(p.get("BarIterLimit", 1000)), int(p.get("BarCorrectors", -1)))
+        self.Runtime, self.IterCount, self.NodeCount = time.perf_counter() - t0, 0, 0
+
+    def _pdhg(self, callback):
+        """M3 PDHG (Presolve=0, Crossover=0 assumed): PDHG callback (where = 10) on every evaluation pass."""
+        import time
+
+        C = GRB.Callback
+        keys = (C.PDHG_ITRCNT, C.PDHG_PRIMOBJ, C.PDHG_DUALOBJ, C.PDHG_PRIMINF, C.PDHG_DUALINF, C.PDHG_COMPL)
+
+        def cb(*vals):
+            if callback:
+                self._cbdata = dict(zip(keys, vals))
+                callback(self, C.PDHG)
+
+        t0 = time.perf_counter()
+        prm = [float(self._param(k, d)) for k, d in (("PDHGIterLimit", 1e100), ("PDHGRelTol", 1e-6),
+                                                     ("PDHGAbsTol", 1e-6), ("PDHGConvTol", 1e-6), ("WorkLimit", 1e100))]
+        self.Status, self._objval, it, self._x, self.Work = self._core.pdhg(cb, *prm)
+        self.PDHGIterCount, self.SolCount = float(it), 1  # a PDHG iterate is a solution even at a limit
+        self.Runtime, self.IterCount, self.BarIterCount, self.NodeCount = time.perf_counter() - t0, 0.0, 0, 0.0
 
     @property
     def ObjVal(self):
-        if self.Status != GRB.OPTIMAL:
+        if self.Status != GRB.OPTIMAL and not getattr(self, "SolCount", 0):
             raise AttributeError("no solution available")
         return self._objval
 
