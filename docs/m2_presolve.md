@@ -85,7 +85,7 @@ Frida로 38개 모델의 기본값 `Model.presolve()`(Threads=1, WorkLimit 60, `
 |---|---|
 | `node tools/presolve_cov.js <진입 함수> <out.json> [name ...]` | Frida coverage. 모델마다 함수별 호출 수, 비-presolve 함수의 첫 호출 backtrace, 진입 함수의 직접 호출 순서(`seq`: [함수, 복귀 주소]). 기본 모델은 MIPLIB 38개. Gurobi 한 프로세스(`tools/gurun.sh`로 감싼다) |
 | `tools/prelimit_sweep.py <out> [name ...]` | 모델마다 PRELIMIT k = 0, 1, 2, …의 presolved 모델. 앞 k와 달라진 k의 MPS만 남기고 `sweep.tsv`(k, 해시, 바뀜)를 쓴다. 기본값 결과와 40번 연달아 같으면 멈춘다. 38개 약 2분 |
-| `node tools/mip_state_dump.js <model> <함수> <n번째\|all> <out.json> [Param=Value ...]` | 상태 오라클. `5b84b1(env, state+0x3f0)`에서 상태 포인터를 잡고, 지정 함수의 n번째 호출 진입·복귀 때 연결 리스트(행·열 순서 그대로 [행, 열, 값]), lb/ub/obj/vtype, rhs/sense, 개수, activity, 카운터(+0x3f8부터 14개), 작업량을 JSON으로 덤프한다. reduction 하나를 따로 맞출 때 쓴다(진입 상태를 넣고 돌려 복귀 상태와 비교). glass4 `3b0917` 진입에서 행 390·열 316·nnz 1803이 presolved 모델과 같음을 확인 |
+| `node tools/mip_state_dump.js <model> <함수> <n번째\|all> <out.json> [Param=Value ...]` | 상태 오라클. `5b84b1(env, state+0x3f0)`에서 상태 포인터를 잡고, 지정 함수의 n번째 호출 진입·복귀 때 연결 리스트(행·열 순서 그대로 [행, 열, 값]), lb/ub/obj/vtype, rhs/sense, 개수, activity, 카운터(+0x3f8부터 14개), 작업량, 레코드 목록(state+0x370, push 순서로 [type, 원시 바이트, rec 주소, data 주소])을 JSON으로 덤프한다. MIP type 1 레코드는 16바이트 {열 i32, 패딩, 값 f64}로 LP(쌍대 정보 포함)와 다르다(glass4). reduction 하나를 따로 맞출 때 쓴다(진입 상태를 넣고 돌려 복귀 상태와 비교). glass4 `3b0917` 진입에서 행 390·열 316·nnz 1803이 presolved 모델과 같음을 확인 |
 | `docs/m2_param_offsets.tsv` | `ac81d7` 등록 표의 파라미터 415개(이름, env 오프셋)와 getParamInfo 기본값·범위 |
 | `tools/presolve_oracle.py <dir> --param GURO_PAR_PRELIMIT=k <name ...>` | LP와 같은 PRELIMIT 체크포인트. `3cd406`도 reduction 호출마다 카운터(local_68)를 올리고 state+0x1dc와 비교해 마무리(`LAB_004b2415`)로 간다(L1651) |
 

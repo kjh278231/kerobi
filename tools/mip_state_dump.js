@@ -1,6 +1,6 @@
 // MIP presolve state oracle (docs/m2_presolve.md §2a): run Gurobi Model.presolve() on one model under Frida and dump
 // the 3cd406 presolve state (linked-list matrix, bounds, types, rows, activities, counters, work) at entry and return
-// of the n-th call of a chosen function, so one reduction can be checked in isolation (load "before", run, compare "after").
+// and the postsolve record list (type + raw data bytes, push order) of the n-th call of a chosen function, so one reduction can be checked in isolation (load "before", run, compare "after").
 // usage: node tools/mip_state_dump.js <model> <fn short id> <call no. (1-based) | all> <out.json> [Param=Value ...]
 // The state pointer comes from 5b84b1(env, state+0x3f0), which 3cd406 calls right after building the state.
 // Gurobi: one process at a time (wrap in tools/gurun.sh).
@@ -53,6 +53,18 @@ function dump(tag) {
   if (!rh.isNull()) { s.rows = []; for (let i = 0; i < m; i++) s.rows.push(walk(rh, i, 0x10)); }
   if (!ch.isNull()) { s.cols = []; for (let j = 0; j < n; j++) s.cols.push(walk(ch, j, 0x18)); }
   s.free = [st.add(0x198).readS64().toString(), st.add(0x188).readS64().toString()];
+  // postsolve records (list at +0x370, newest first; rec = {type, data, next} + data in a bump arena), in push order
+  // with their raw data bytes (size = gap to the next record, capped at 64 KiB when the next one is in another chunk)
+  const recs = []; let r = Pt(st, 0x370), guard = 0;
+  while (!r.isNull() && guard++ < 10000000) { recs.push(r); r = r.add(0x10).readPointer(); }
+  recs.reverse();
+  s.recs = recs.map((q, i) => {
+    const t = q.readS32(), d = q.add(8).readPointer();
+    let len = 512;
+    if (i + 1 < recs.length) { const g = recs[i + 1].sub(d).toInt32(); if (g > 0 && g < 65536) len = g; }
+    const b = new Uint8Array(d.readByteArray(len));
+    return [t, Array.from(b, x => x.toString(16).padStart(2, "0")).join(""), q.toString(), d.toString()];
+  });
   return s;
 }
 function install() {
