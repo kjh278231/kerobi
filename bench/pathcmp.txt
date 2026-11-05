@@ -21,7 +21,7 @@ fffff800  gurobi 490 pivots 490  mine 480 pivots 480  first diff at pivot 45: g 
 finnis    gurobi 475 pivots 475  mine 478 pivots 478  first diff at pivot 53: g ((583,), (885,)) mine ((577,), (891,))
 fit1d     gurobi 66 pivots 66  mine 67 pivots 67  first diff at pivot 18: g ((948,), (988,)) mine ((909,), (988,))
 fit1p     gurobi 568 pivots 568  mine 562 pivots 562  first diff at pivot 10: g ((14,), (268,)) mine ((14,), (1057,))
-forplan   gurobi 151 pivots 151  mine 162 pivots 162  first diff at pivot 3: g ((73,), (582,)) mine ((72,), (581,))
+forplan   gurobi 151 pivots 151  mine 163 pivots 163  first diff at pivot 3: g ((73,), (582,)) mine ((72,), (581,))
 ganges    gurobi 859 pivots 859  mine 833 pivots 833  first diff at pivot 49: g ((1302,), (2574,)) mine ((444,), (2173,))
 gfrd-pnc  gurobi 558 pivots 558  mine 560 pivots 560  first diff at pivot 88: g ((238,), (1200,)) mine ((155,), (1201,))
 grow15    gurobi 1033 pivots 1033  mine 923 pivots 923  first diff at pivot 8: g ((324,), (805,)) mine ((260,), (283,))

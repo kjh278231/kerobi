@@ -1268,9 +1268,36 @@ impl<'a> Engine<'a> {
     pub fn solve(&mut self, method: i32) -> Status {
         self.dual_start();
         self.log();
+        self.drive(method == 0)
+    }
+
+    /// `2e9ae` on the unscaled workspace: with the basis of a scaled optimum, recompute x_B and d; if a basic
+    /// violates its bounds by more than FeasTol or a nonbasic d its sign by more than OptTol, go on with the dual from
+    /// that basis. Returns None when the basis is already optimal here.
+    pub fn resolve_unscaled(&mut self, vstat: Vec<i32>) -> Option<Status> {
+        self.set_basis(vstat);
+        self.refactor();
+        self.compute_xb();
+        self.compute_duals();
+        let pinf = (0..self.m).any(|p| self.primal_infeas(p) != 0.0);
+        let dinf = (0..self.n + self.m).any(|j| match self.vstat[j] {
+            -1 | -2 => self.d[j] < -OPT_TOL,
+            -3 => self.d[j].abs() > OPT_TOL,
+            _ => false,
+        });
+        if !pinf && !dinf {
+            return None;
+        }
+        self.pr.mode = 1; // shortcut: Full pricing from the start of the re-solve
+        self.dual_resume();
+        Some(self.drive(false))
+    }
+
+    /// cda5b loop from the current state, starting with the primal or the dual.
+    fn drive(&mut self, start_primal: bool) -> Status {
         // cda5b: primal and dual hand over to each other (status −1004) up to 20 times; a primal that ends on
         // shifted bounds goes to the dual, a dual that ends on shifted costs or artificial bounds goes to the primal
-        let mut primal = method == 0;
+        let mut primal = start_primal;
         let mut st = if primal { self.primal() } else { self.dual() };
         for round in 0..20 {
             if std::env::var("RSOLVER_DEBUG").is_ok() {
@@ -1392,10 +1419,32 @@ pub fn solve_model(md: &rsolver_model::Model, method: i32, iter_limit: u64) -> L
             }
         }
     }
+    let scale = spx.scaling.obj * md.sense as f64;
+    let mut trace: Vec<TraceRow> = e.trace.iter().map(|&(k, z, p, d, pt)| (k, z / scale + md.objcon, p, d, pt)).collect();
+    let mut path = std::mem::take(&mut e.path);
+    // 2e9ae: an optimum that the unscaled problem does not accept is re-solved there from the same basis
+    if status == Status::Optimal {
+        let mut sp2 = Spx::unscaled(md);
+        if md.sense < 0 {
+            for c in &mut sp2.c {
+                *c = -*c;
+            }
+        }
+        let mut e2 = Engine::new(&sp2);
+        e2.iter = e.iter;
+        e2.iter_limit = iter_limit;
+        if let Some(st) = e2.resolve_unscaled(e.vstat.clone()) {
+            let xs = e2.x();
+            let x: Vec<f64> = xs[..sp2.n].to_vec();
+            let obj = md.obj.iter().zip(&x).map(|(c, x)| c * x).sum::<f64>() + md.objcon;
+            let s2 = md.sense as f64;
+            trace.extend(e2.trace.iter().map(|&(k, z, p, d, pt)| (k, z / s2 + md.objcon, p, d, pt)));
+            path.extend(e2.path.iter().copied());
+            return LpResult { status: st, obj, x, iter: e2.iter, trace, path };
+        }
+    }
     let xs = e.x();
     let x: Vec<f64> = (0..spx.n).map(|j| xs[j] * spx.scaling.col[j]).collect();
     let obj = md.obj.iter().zip(&x).map(|(c, x)| c * x).sum::<f64>() + md.objcon;
-    let scale = spx.scaling.obj * md.sense as f64;
-    let trace = e.trace.iter().map(|&(k, z, p, d, pt)| (k, z / scale + md.objcon, p, d, pt)).collect();
-    LpResult { status, obj, x, iter: e.iter, trace, path: std::mem::take(&mut e.path) }
+    LpResult { status, obj, x, iter: e.iter, trace, path }
 }

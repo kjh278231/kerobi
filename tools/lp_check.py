@@ -12,6 +12,20 @@ DATA = ROOT.parent / "re/bench/data"
 BASE = {1: "gurobi_dual_nopre", 0: "gurobi_primal_nopre", -1: "gurobi_default_nopre"}
 
 
+# More accurate optima for the Netlib files outside the license (W. Hager, "Objective value comparisons for Netlib
+# test problems", https://people.clas.ufl.edu/hager/objective-value-comparisons-for-netlib-test-problems/: the
+# archive values with Bixby's CPLEX substitutions (FINNIS, D2Q06C, PILOT87 replaced) and LP DASA at 1e-12)
+ACCURATE = {
+    "80bau3b": [987224.192409], "bnl2": [1811.23654036], "cycle": [-5.22639302489], "czprob": [2185196.69886],
+    "d2q06c": [122784.210814], "d6cube": [315.491666667], "dfl001": [11266396.0467], "fit2d": [-68464.2932938],
+    "fit2p": [68464.2932938], "greenbea": [-72555250.3916, -72555248.130], "greenbeb": [-4302260.26121],
+    "maros-r7": [1497185.16648], "pilot": [-557.489729284], "pilot87": [301.710347333], "pilotnov": [-4497.27618822],
+    "scsd8": [904.999999925], "sctap3": [1424.0], "ship04l": [1793324.53797], "ship08l": [1909055.21139],
+    "ship08s": [1920098.21053], "ship12l": [1470187.91933], "ship12s": [1489236.13441], "sierra": [15394362.1836],
+    "stocfor2": [-39024.4085379], "wood1p": [1.44290241157], "woodw": [1.30447633308],
+}
+
+
 def published():
     text = (DATA / "netlib_readme.txt").read_text()
     a = text.index("Name       Rows   Cols")
@@ -26,6 +40,8 @@ def published():
         t = line.split()
         if t:
             vals.setdefault(t[0].lower().replace(".", ""), []).extend(float(x) for x in t[1:] if re.fullmatch(r"-?\d\.\d+E[+-]\d+", x))
+    for k, v in ACCURATE.items():
+        vals.setdefault(k, []).extend(v)
     return vals
 
 
