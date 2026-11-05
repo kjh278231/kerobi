@@ -46,4 +46,29 @@
 | 3 | 표준형·초기점·잔차·반복 규칙(프로토타입) | **프로토타입 완료**(`tools/proto/bar_ipm.py`, `docs/m3_ipm.md`): 내부 LP 64/64 비트, 반복 0 점 ≤4e-12, 한 반복 1e-16~1e-9, corrector 수 K·work 타이머 정확히 같음(벽시계 아님). 전체: 상태 64/64, 목적 ≤1e-6 64/64, **BarIterCount 56/64**(±5% 안 57/64). 불일치 8개(agg, agg3, maros, degen2, bnl1, fffff800, perold, pilot4)는 해법 반올림이 쌓여 갈라짐 |
 | 4 | 수치 분해(supernodal LDLᵀ, `31c54b` → `2d8ee5` supernode 커널, `32af6a` Bunch–Kaufman, MKL DGEMM/DTRSM) | 지금은 `ldl.rs`(스칼라 up-looking LDLᵀ + 작은 피벗 규칙, 반올림 수준 일치)와 `normal.rs`(AΘAᵀ 조립). supernode 커널 비트 이식은 반복 수가 분해 반올림 때문에 갈릴 때 한다. `2d8e22`: F+0x178 정규화 모드 = 안전 모드·SOC면 2, 자유 변수·밀집 열이면 1, 아니면 0. 분해 뒤 모드 0이고 F+0x100 < 1e-10이면 1로 올림 |
 | 5 | Rust 본체, Python 경로(`Method=2`), `tools/parity.py capture rsolver` | **완료**(`docs/m3_rust.md`): `barrier::solve`, `CoreModel.barrier`, `Model.optimize` Method=2 분기, BARRIER 콜백·`cbGet`, LogFile에 "Barrier statistics". `bench/parity_bar.csv`: 상태 64/64, 목적 ≤1e-6 64/64, Barrier statistics 64/64, **BarIterCount 56/64**(불일치 agg, agg3, degen2, degen3, fffff800, maros, perold, pilot4). F+0x160/0x168(work)는 오라클과 64/64 비트 같음(CPU 상수는 CPUID, 이 머신 AVX2 → 30). 64개 약 2초 |
-| 6 | 비트 일치(분해·해법·합 순서)로 불일치 8개 줄이기 | 진행 중, `docs/m3_chol.md` |
+| 6 | 비트 일치(분해·해법·합 순서)로 불일치 8개 줄이기 | **중단**(2026-11-05 사용량 한도). 미완 WIP 커밋만 있음, `docs/m3_chol.md`는 아직 없음. §5 참조 |
+
+## 5. 일시 정지 메모 (2026-11-05, 사용량 한도)
+
+**완료 기준 현황**(Presolve=0, Threads=1, Crossover=0, Netlib 64)
+
+| 기준 | 상태 |
+|---|---|
+| (1) 상태·목적 ≤1e-6 | 64/64, 64/64 (Rust, `bench/parity_bar.csv`) |
+| (2) BarIterCount 같음 ≥90% | **56/64 (87.5%)**, 목표 58/64. 불일치: agg 17(18), agg3 17(18), degen2 11(12), degen3 15(14), fffff800 83(76), maros 20(19), perold 165(130), pilot4 112(85) (괄호 Gurobi). 첫 분기점은 `docs/m3_rust.md`, `docs/m3_ipm.md` §8 |
+| (3) ordering·Factor NZ | 64/64 (`tests/test_barrier.py`, parity `bar_stats`) |
+| (4) 반복별 오라클 도구 | `tools/bar_oracle.py`(`--iters all`, `--vec`, WIP `--chol`) |
+| (5) clippy·테스트·문서 | 내 파일 경고 0(남은 4개는 M1 파일), `cargo test --workspace`·pytest 통과, docs/05 갱신 |
+
+**중단 시점 WIP**(커밋 `M3 chol WIP`, 비트 일치 에이전트가 남긴 것, 검증 안 됨):
+- `tools/proto/bar_ipm.py`: LP 분해 피벗 규칙을 `2d8ee5` L767–815(F+0x110 = 0) 기준으로 바꿈: |d| ≤ 1e-16·|원 대각|(또는 NaN)이면 d = 0·역수 0, 아니면 그대로, 승수는 col·(1/d). ±clamp(1e-10|diag|, 1e-12, 1e-6) 대체는 F+0x110≠0 경로와 Bunch–Kaufman(`32af6a`, F+0xa0≠0) 경로라 이 64개에서는 안 탄다는 주장이다. **Rust `ldl.rs`는 아직 clamp 규칙**이다. 64개 중 36개까지 돈 부분 결과: fffff800 81(76)로 조금 나아졌지만 modszk1 21(20), degen3 15(14)가 새로 어긋남(agg, bnl1, degen2, perold는 그대로). 규칙 자체를 오라클(분해 결과)로 먼저 확인할 것.
+- `tools/bar_oracle.py --chol`: F 안의 수치 인수(블록 시작 c마다 F+0xb8[c]에 w×w 하삼각 행 순 + (len−w)×w 직사각, F+0xe0 피벗 d, F+0xf0 조립 대각, F+0x100/0x114/0x118/0x178 스칼라)를 덤프.
+- `tools/proto/bar_mkl_hook.py`: libgurobi 안 MKL DGEMM/DTRSM 입구를 메모리 패치(movabs+jmp)해 호출 인자·입출력을 기록하는 도구. 64개에서 실제 호출 여부와 모양(`--shapes`)을 보려던 것.
+
+**다음에 할 일**(순서대로)
+1. `bar_oracle.py --chol`로 분해 결과(d, L)를 뜨고, 피벗 규칙(1e-16 버림 대 clamp)을 오라클로 확정한다. 확정되면 `ldl.rs`(또는 `chol.rs`)와 프로토타입을 맞추고 64개 재측정.
+2. `bar_mkl_hook.py --shapes`로 64개에서 DGEMM/DTRSM 호출 여부와 크기를 본다. 불리면 작은 입력으로 MKL 누적 순서·FMA 여부를 실험해 재현 규칙을 찾는다.
+3. supernodal 수치 순서(`31c54b` 스케줄, `2d8ee5`/`2d946c`, AΘAᵀ 조립 순서), 해법(`2ee6c5` → `337be3`/`34d5fa`@0x34c880), SIMD 8레인·long double 합(`2d4977`, `2d252f`, `2f28c2`, `2f2e95`)을 프로토타입에서 비트로 맞춰 반복 0부터 비트 일치를 넓힌다. 그다음 `chol.rs`에 같은 `Factor` 시그니처(`new`, `factor(theta, theta_slack) -> (min_ratio, n_small)`, `solve(rhs_x, rhs_y) -> (dx, dy)`)로 쓰고 `ipm.rs`의 `use super::normal::Factor`를 바꾼다.
+4. 목표: BarIterCount ≥58/64, 나머지 ±5%. 그 뒤 재시작·homogeneous·상태 13·`2c4689` 최선 해를 옮기고 오라클로 확인(64개에서는 안 걸림).
+
+실행 메모: Rust 확장 빌드 `PYO3_PYTHON=$PWD/../.venv/bin/python cargo build --release -p rsolver && cp target/release/lib_core.so python/rsolver/_core.cpython-313-x86_64-linux-gnu.so`, rsolver 캡처 `PYTHONPATH=$PWD/python ../.venv/bin/python tools/parity.py capture rsolver <dir> --lp-only --param Method=2 --param Presolve=0 --param Crossover=0`(64개 약 2초), 프로토타입 검사 `PYTHONPATH=$PWD/python python tools/proto/bar_ipm_check.py`(조밀 LDLᵀ라 느림, BLAS 스레드 4개 제한 권장). Herdr pane w4:pH(내 것), w4:pN(비트 일치 에이전트 것)은 비어 있다.
