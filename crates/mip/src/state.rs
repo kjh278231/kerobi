@@ -3,6 +3,7 @@
 //! Field comments give the original state offset. Removal is lazy as in the LP port: a removed node stays in both
 //! lists with column -1, removed rows and columns get a negative live count. Model generation (`3b0917`) walks the
 //! column lists, so node order is what decides the presolved model's entry order.
+use crate::post::PostRec;
 use crate::tracker::Tracker;
 use crate::Params;
 use rsolver_model::Model;
@@ -116,6 +117,10 @@ pub struct State {
     pub bad_row: i32,
     /// +0x490 objective cutoff: 1e100 without a MIP context or incumbent
     pub cutoff: f64,
+    /// +0x370 postsolve records, in push order
+    pub post: Vec<PostRec>,
+    /// +0x3b0 per-row scratch of `3e39a6`'s integrality check (0.0 = not computed; reset at the end of each call)
+    pub row_int: Vec<f64>,
 }
 
 /// Rounding guard of `4f79a1`/`36fcb5`: if `s = old + t` was inexact, push `s` one ulp in the safe direction.
@@ -375,6 +380,8 @@ impl State {
             bad_col: -1,
             bad_row: -1,
             cutoff: 1e100,
+            post: Vec::new(),
+            row_int: vec![0.0; m],
         }
     }
 
@@ -504,7 +511,10 @@ impl State {
             q.obj.push(self.obj[j] * s);
             q.lb.push(self.lb[j]);
             q.ub.push(self.ub[j]);
-            q.vtype.push(self.vtype[j]);
+            // an integer column left at [0, 1] comes out binary (never 'I' with these bounds in Gurobi's presolved
+            // models, e.g. enlight_hard at PRELIMIT 6 after `37168e`; fixed integers stay 'I')
+            let int01 = self.vtype[j] == b'I' && self.lb[j] == 0.0 && self.ub[j] == 1.0;
+            q.vtype.push(if int01 { b'B' } else { self.vtype[j] });
             q.var_names.push(md.var_names[j].clone());
         }
         if q.rhs.is_empty() && q.obj.is_empty() {

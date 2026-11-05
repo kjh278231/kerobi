@@ -4,10 +4,16 @@
 //! generation. Every reduction call counts toward GURO_PAR_PRELIMIT; reaching it jumps to finishing, which makes each
 //! reduction checkable on its own against `tools/presolve_oracle.py --param GURO_PAR_PRELIMIT=k`.
 // Ported comparisons keep the original's form (`!(a < b)` differs from `a >= b` on NaN), and loops index several
-// parallel arrays at once.
-#![allow(clippy::neg_cmp_op_on_partial_ord, clippy::needless_range_loop)]
+// parallel arrays at once; `x = t + x` keeps the original operand order.
+#![allow(clippy::neg_cmp_op_on_partial_ord, clippy::needless_range_loop, clippy::assign_op_pattern)]
 pub mod driver;
+pub mod dump;
+mod helpers;
+mod inner;
+mod colpass;
+mod doubleton;
 mod lists;
+pub mod post;
 pub mod state;
 mod stubs;
 pub mod tracker;
@@ -61,6 +67,16 @@ params! {
     feastol: f64 = 1e-6, "feasibilitytol";
     /// env+0x2468 IntFeasTol
     intfeastol: f64 = 1e-5, "intfeastol";
+    /// env+0x2470 OptimalityTol
+    opttol: f64 = 1e-6, "optimalitytol";
+    /// env+0x2718 NumericFocus
+    numeric_focus: i32 = 0, "numericfocus";
+    /// env+0x257c GURO_PAR_PRESINGLECOL (-1 auto)
+    presinglecol: i32 = -1, "guro_par_presinglecol";
+    /// env+0x26c0 GURO_PAR_AGGMULTLIMIT
+    agg_mult_limit: f64 = 1e14, "guro_par_aggmultlimit";
+    /// env+0x2584 GURO_PAR_PREQSUBST (-1 auto)
+    preqsubst: i32 = -1, "guro_par_preqsubst";
     /// env+0x242c Aggregate
     aggregate: i32 = 1, "aggregate";
     /// env+0x2534 PreDepRow (read as is, no auto value in MIP presolve)
