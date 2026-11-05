@@ -936,7 +936,7 @@ impl<'a> Engine<'a> {
                 }
             }
             let xq = self.x_nonbasic(q) + theta_p;
-            let leave = if delta < 0.0 { -1 } else { -2 };
+            let leave = if sgn < 0.0 { -1 } else { -2 }; // 28c93 L845: the direction of the selected violation
             let leave = if self.spx.u[out] - self.spx.l[out] <= 0.0 { -4 } else { leave };
             let col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
             self.col_nnz = col_nnz;
