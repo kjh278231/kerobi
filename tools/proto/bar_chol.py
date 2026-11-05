@@ -73,6 +73,31 @@ def dot8(acc, x, y, n, peel=None):
     return s
 
 
+def vsum(acc, prods, peel, lanes=8):
+    """acc + sum(prods) in the order of Gurobi's SSE2 loops: sequential below lanes + peel terms (and below 8 for
+    8 lanes); else `peel` terms sequentially, `lanes` accumulators with lane 0 seeded by acc, reduction
+    ((l0+l2)+(l4+l6)) + ((l1+l3)+(l5+l7)) (2 lanes: l0+l1), then the tail sequentially. A subtraction a - p is
+    passed as the product -p (exact)."""
+    n = len(prods)
+    if n < peel + lanes or (lanes == 8 and n < 8):
+        for p in prods:
+            acc = acc + p
+        return acc
+    for p in prods[:peel]:
+        acc = acc + p
+    nv = n - ((n - peel) % lanes)
+    lane = [acc] + [0.0] * (lanes - 1)
+    for k in range(peel, nv):
+        lane[(k - peel) % lanes] = lane[(k - peel) % lanes] + prods[k]
+    if lanes == 8:
+        acc = ((lane[0] + lane[2]) + (lane[4] + lane[6])) + ((lane[1] + lane[3]) + (lane[5] + lane[7]))
+    else:
+        acc = lane[0] + lane[1]
+    for p in prods[nv:]:
+        acc = acc + p
+    return acc
+
+
 class Chol:
     def __init__(self, st, A):
         """st: oracle static structure (snode, blocks, col_len, rows, f88, f90, f98, F80); A: dict with m, n, beg, ind,
@@ -260,6 +285,147 @@ class Chol:
         b[:] = L
         self.Lbuf[c] = b
 
+    # ---- solve 2ee6c5 -------------------------------------------------------------------------------------------
+    def offsets(self):
+        """Offsets (doubles) of each block in the one storage array (F+0xb8 blocks are contiguous; base 16-aligned)."""
+        off, cum = {}, 0
+        for c in self.starts:
+            w = self.blocks[c]
+            off[c] = cum
+            cum += w * (w + 1) // 2 + (len(self.rows[c]) - w) * w
+        return off
+
+    def rowdot(self, x, i, c, p, peel_addr, lanes=8):
+        """x[i] - L_c[row position p] . x[c:c+w] with the peel of the row address."""
+        w = self.blocks[c]
+        tri = w * (w + 1) // 2
+        o = tri + (p - w) * w
+        L = self.L[c]
+        prods = [-(L[o + q] * x[c + q]) for q in range(w)]
+        return prods, (peel_addr + o) & 1
+
+    def fwd(self, x, tasks):
+        off, bl = self.offsets(), self.blocks
+        for a, b in tasks:
+            c = a
+            while c < b:
+                w, R, L = bl[c], self.rows[c], self.L[c]
+                tri = w * (w + 1) // 2
+                if a + w == b:  # one-block task: pull from the descendants (2efdb8 L40-345)
+                    srcs = []
+                    for u in range(self.f88[c], self.f88[c + 1]):
+                        s0 = self.f90[u]
+                        p0 = self.f98[u]
+                        s = s0
+                        while s < s0 + self.snode[s0]:
+                            srcs.append((s, p0 + s0 - s))
+                            s += bl[s]
+                    s = c + min(self.snode[c], 0)
+                    while s != c:
+                        srcs.append((s, c - s))
+                        s += bl[s]
+                    for s, p0 in srcs:
+                        Rs = self.rows[s]
+                        p1 = p0
+                        while p1 < len(Rs) and Rs[p1] < c + w:
+                            p1 += 1
+                        self.push(x, s, p0, p1, off[s])
+                for i in range(w):
+                    if i:
+                        o = i * (i + 1) // 2
+                        x[c + i] = vsum(x[c + i], [-(L[o + p] * x[c + p]) for p in range(i)], (off[c] + o) & 1)
+                    if self.d[c + i] == 0.0 and self.e[c + i] == 0.0:
+                        x[c + i] = 0.0
+                p1 = w
+                while p1 < len(R) and R[p1] < b:
+                    p1 += 1
+                self.push(x, c, w, p1, off[c])
+                c += w
+
+    def push(self, x, c, p0, p1, base):
+        """x[R[p]] -= L_c[p] . x[c:c+w] for positions p0..p1: groups of 4 rows with 2 lanes (peel from the 4th row's
+        address), then single rows with 8 lanes."""
+        w, R, L = self.blocks[c], self.rows[c], self.L[c]
+        tri = w * (w + 1) // 2
+        ro = lambda p: tri + (p - w) * w
+        p = p0
+        if p0 < p1 - 3:
+            while p + 4 <= p1:
+                pe = (base + ro(p + 3)) & 1
+                for k in range(4):
+                    o = ro(p + k)
+                    x[R[p + k]] = vsum(x[R[p + k]], [-(L[o + q] * x[c + q]) for q in range(w)], pe, 2)
+                p += 4
+        while p < p1:
+            o = ro(p)
+            x[R[p]] = vsum(x[R[p]], [-(L[o + q] * x[c + q]) for q in range(w)], (base + o) & 1)
+            p += 1
+
+    def bwd(self, x, tasks):
+        bl = self.blocks
+        for a, b in reversed(tasks):
+            c = b - 1
+            while c >= a:
+                if bl[c] < 0:
+                    c += bl[c]
+                w, R, L = bl[c], self.rows[c], self.L[c]
+                tri = w * (w + 1) // 2
+                ro = lambda p: tri + (p - w) * w
+                top = len(R)
+                while top > w:  # segments: rows >= task end by owning block, then the rest
+                    if R[top - 1] >= b:
+                        blk = R[top - 1]
+                        if bl[blk] < 0:
+                            blk += bl[blk]
+                        lo = top - 1
+                        while lo >= w and R[lo] >= blk:
+                            lo -= 1
+                        lo += 1
+                    else:
+                        lo = w
+                    p = top - 1
+                    while p - 3 >= lo:
+                        for q in range(w):
+                            sm = ((L[ro(p - 3) + q] * x[R[p - 3]] + L[ro(p - 2) + q] * x[R[p - 2]])
+                                  + L[ro(p - 1) + q] * x[R[p - 1]]) + L[ro(p) + q] * x[R[p]]
+                            x[c + q] = x[c + q] - sm
+                        p -= 4
+                    while p >= lo:
+                        for q in range(w):
+                            x[c + q] = x[c + q] - L[ro(p) + q] * x[R[p]]
+                        p -= 1
+                    top = lo
+                for i in range(w - 1, 0, -1):
+                    o = i * (i + 1) // 2
+                    for q in range(i):
+                        x[c + q] = x[c + q] - L[o + q] * x[c + i]
+                c -= 1
+
+    def solve(self, theta, rhs_x, rhs_y, tasks):
+        """2ee6c5: dy = (L D L^T)^-1 (rhs_y + A (theta rhs_x)), dx = (A^T dy - rhs_x) theta."""
+        A, m = self.A, self.m
+        n = A["n"]
+        v = [rhs_x[j] * theta[j] for j in range(n + m)]
+        y = []
+        for i in range(m):  # 2d3b3e: row-wise, peel on the row's value address (16-aligned base)
+            prods = [A["rval"][k] * v[A["rcol"][k]] for k in range(A["rbeg"][i], A["rbeg"][i + 1])]
+            t = vsum(0.0, prods, A["rbeg"][i] & 1)
+            if A["sense"][i] != "=":
+                t = t + v[n + i]
+            y.append(rhs_y[i] + t)
+        self.fwd(y, tasks)
+        y = [y[i] * self.e[i] for i in range(m)]
+        self.bwd(y, tasks)
+        dx = []
+        for j in range(n):  # 2d3d91: column-wise
+            b0, b1 = A["beg"][j], A["beg"][j + 1]
+            t = vsum(0.0, [A["val"][k] * y[A["ind"][k]] for k in range(b0, b1)], b0 & 1)
+            dx.append((t - rhs_x[j]) * theta[j])
+        for i in range(m):
+            t = 0.0 if A["sense"][i] == "=" else y[i]
+            dx.append((t - rhs_x[n + i]) * theta[n + i])
+        return dx, y
+
     def pivot(self, k, dk):
         d0 = self.diag0[k]
         if math.isnan(dk):
@@ -280,6 +446,15 @@ def load(path):
     m, n = Dm["m"], Dm["n"]
     beg = [b for b in Dm["beg"]] + [Dm["beg"][-1] + Dm["len"][-1]]
     A = {"m": m, "n": n, "beg": beg, "ind": Dm["ind"], "val": h(Dm["val"]), "sense": Dm["sense"]}
+    rows = [[] for _ in range(m)]
+    for j in range(n):
+        for k in range(beg[j], beg[j + 1]):
+            rows[A["ind"][k]].append((j, A["val"][k]))
+    A["rbeg"], A["rcol"], A["rval"] = [0], [], []
+    for r in rows:
+        A["rcol"] += [j for j, _ in r]
+        A["rval"] += [v for _, v in r]
+        A["rbeg"].append(len(A["rcol"]))
     import struct
     F = r0["F"]
     st = dict(r0["chol"])
@@ -319,8 +494,26 @@ def compare(ch, rec):
     return res
 
 
+def check_solve(ch, rec, tasks):
+    """Factor from the oracle record, then 2ee6c5 on its probe (rhs, theta = B+0x808 at that callback)."""
+    c, s = rec["chol"], rec["solve"]
+    h = lambda v: [float.fromhex(x) for x in v]
+    ch.L = {int(k): h(v) for k, v in c["vals"].items()}
+    ch.d, ch.e = h(c["d"]), h(c["e"])
+    dx, dy = ch.solve(h(rec["theta"]), h(s["rhs_x"]), h(s["rhs_y"]), tasks)
+    gx, gy = h(s["dx"]), h(s["dy"])
+    eq = lambda a, b: a == b or (a != a and b != b)
+    return {"dy": (sum(map(eq, dy, gy)), len(gy)), "dx": (sum(map(eq, dx, gx)), len(gx)),
+            "dy_first": next((i for i in range(len(gy)) if not eq(dy[i], gy[i])), None)}
+
+
 if __name__ == "__main__":
     recs, A, st = load(sys.argv[1])
+    if "solve" in recs[0]:
+        ch = Chol(st, A)
+        for r in recs:  # Threads=1: 31cfeb/31d3c7 run the block kernels once on [0, m), the task list is unused
+            print(r["iter"], "solve", check_solve(ch, r, [(0, ch.m)]))
+        sys.exit()
     ch = Chol(st, A)
     its = [int(x) for x in sys.argv[2:]] or [0]
     byit = {r["iter"]: r for r in recs}

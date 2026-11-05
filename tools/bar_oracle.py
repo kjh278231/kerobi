@@ -2,14 +2,18 @@
 docs/m3_barrier.md §3) from inside BARRIER callbacks and dump it per iteration, so a port can be compared array by
 array at the first divergence.
 
-usage: python tools/bar_oracle.py <model.mps.gz> <out.jsonl> [--iters 0,1,2|all] [--vec] [--chol] [--param Name=Value ...]
+usage: python tools/bar_oracle.py <model.mps.gz> <out.jsonl> [--iters 0,1,2|all] [--vec] [--chol] [--solve]
+       [--param Name=Value ...]
 Default params: Threads=1, Method=2, Presolve=0, Crossover=0. One JSON object per recorded iteration. Doubles are
 float.hex() so they compare bit for bit. The first recorded iteration also carries the raw B block (0xa00 bytes as
 doubles), the factor structure F, found on the stack frame of the main loop 2bf1ea, and the model data D as the
 barrier sees it ("D": scaled, rows permuted, docs/m3_ipm.md §1). --vec adds per iteration the raw B block, the
 history arrays and the work vectors in VEC (residuals, theta, directions of the previous iteration). --chol adds per
 iteration the numeric factor in F (chol_dump: the factor of the theta recorded one iteration earlier; at iteration 0 the
-factor of the starting theta) and, in the first record, the supernode structure it lives in.
+factor of the starting theta) and, in the first record, the supernode structure it lives in. --solve calls Gurobi's
+solve 2ee6c5 in the callback on test right-hand sides (rhs_x = B+0x7a8, rhs_y = B+0x7a0) with the factor in F and the
+theta in B+0x808 (not the pair Gurobi uses, which is fine for a bit test) and records rhs and (dx, dy); the B
+workspace it overwrites (B+0x6c8) and F+0x100..0x110 are restored. It implies --chol (the factor values are needed).
 Field meanings: docs/m3_ipm.md, docs/m3_chol.md.
 """
 import argparse, ctypes, gzip, json
@@ -79,10 +83,41 @@ def snap_D(Dm):
             "ind": arr(L(Dm + 0x108), nnz, "i"), "val": arr(L(Dm + 0x110), nnz), "obj": arr(L(Dm + 0x50), n),
             "rhs": arr(L(Dm + 0x380), m), "lb": arr(L(Dm + 0x390), n), "ub": arr(L(Dm + 0x398), n),
             "sense": bytes((ctypes.c_char * m).from_address(L(Dm + 0x388))).decode(),
-            "scale": arr(L(Dm + 0x3e0), m + n), "objscale": D(Dm + 0x3e8).hex(), "objcon": D(Dm + 0x60).hex()}
+            "scale": arr(L(Dm + 0x3e0), m + n), "objscale": D(Dm + 0x3e8).hex(), "objcon": D(Dm + 0x60).hex(),
+            # row-wise copy (D+0x118 begin, D+0x120 end; the barrier's A x runs on it) and the 16-byte phase of the
+            # value arrays (vectorised loops peel one element on an 8-mod-16 address)
+            "rbeg": arr(L(Dm + 0x118), m, "l") if L(Dm + 0x118) else None,
+            "rend": arr(L(Dm + 0x120), m, "l") if L(Dm + 0x120) else None,
+            "a110": L(Dm + 0x110) % 64, "a138": L(Dm + 0x138) % 64 if L(Dm + 0x138) else None}
 
 
 _F = {}
+_BASE = next(int(ln.split("-")[0], 16) for ln in open("/proc/self/maps")
+             if "libgurobi130.so" in ln and ln.split()[2] == "00000000")
+_SOLVE = ctypes.CFUNCTYPE(ctypes.c_int, *[ctypes.c_void_p] * 8)(_BASE + 0x305f10)  # 2ee6c5
+_TRI = {k: ctypes.CFUNCTYPE(None, *[ctypes.c_void_p] * 3)(_BASE + o) for k, o in (("fwd", 0x3338e0), ("bwd", 0x333bb0))}
+
+
+def solve_probe(Mp, B, F, m, n):
+    """2ee6c5(model, B, F, dx, dy, rhs_x, rhs_y, work) on (B+0x7a8, B+0x7a0), state restored afterwards."""
+    k = m + n + 64
+    rx = (ctypes.c_double * k)(*(ctypes.c_double * (m + n)).from_address(L(B + 0x7a8)))
+    ry = (ctypes.c_double * k)(*(ctypes.c_double * m).from_address(L(B + 0x7a0)))
+    dx, dy = (ctypes.c_double * k)(), (ctypes.c_double * k)()
+    ws = bytes((ctypes.c_char * (8 * (m + n))).from_address(L(B + 0x6c8)))
+    fs = bytes((ctypes.c_char * 0x98).from_address(F + 0x100))  # F+0x100..0x198 scalars incl. the task counter
+    rc = _SOLVE(Mp, B, F, ctypes.addressof(dx), ctypes.addressof(dy), ctypes.addressof(rx), ctypes.addressof(ry), 0)
+    tri = {}
+    for nm, f in _TRI.items():  # 31cfeb forward / 31d3c7 backward substitution alone on rhs_y
+        t = (ctypes.c_double * k)(*ry[:m])
+        f(Mp, F, ctypes.addressof(t))
+        tri[nm] = [x.hex() for x in t[:m]]
+    ctypes.memmove(L(B + 0x6c8), ws, len(ws))
+    ctypes.memmove(F + 0x100, fs, len(fs))
+    hx = lambda a, c: [x.hex() for x in a[:c]]
+    return {"rc": rc, "rhs_x": hx(rx, m + n), "rhs_y": hx(ry, m), "dx": hx(dx, m + n), "dy": hx(dy, m), **tri,
+            "align": {"rx": ctypes.addressof(rx) % 64, "ry": ctypes.addressof(ry) % 64, "dx": ctypes.addressof(dx) % 64,
+                      "dy": ctypes.addressof(dy) % 64}}
 
 
 def chol_dump(F, m, static):
@@ -94,18 +129,21 @@ def chol_dump(F, m, static):
     vp = (ctypes.c_long * m).from_address(L(F + 0xb8))
     out = {"vals": {c: arr(vp[c], blocks[c] * (blocks[c] + 1) // 2 + (clen[c] - blocks[c]) * blocks[c])
                     for c in range(m) if blocks[c] > 0},
+           "addr64": {c: vp[c] % 64 for c in range(m) if blocks[c] > 0},
            "d": arr(L(F + 0xe0), m), "e": arr(L(F + 0xe8), m), "diag0": arr(L(F + 0xf0), m), "f8": arr(L(F + 0xf8), m),
            "F100": D(F + 0x100).hex(), "F114": I(F + 0x114), "F118": I(F + 0x118), "F178": I(F + 0x178)}
     if static:
         rp = (ctypes.c_long * m).from_address(L(F + 0xb0))
         f88 = arr(L(F + 0x88), m + 1, "i")
+        nt = I(F + 0x17c)
+        out["tasks"] = list(zip(arr(L(F + 0x180), nt, "i"), arr(L(F + 0x188), nt, "i")))
         out.update({"snode": arr(L(F + 0x70), m, "i"), "blocks": blocks, "col_len": clen, "f88": f88,
                     "f90": arr(L(F + 0x90), f88[m], "i"), "f98": arr(L(F + 0x98), f88[m], "i"),
                     "rows": {c: arr(rp[c], clen[c], "i") for c in range(m) if blocks[c] > 0}})
     return out
 
 
-def dump(B, it, full, vec=False, Dm=0, chol=False):
+def dump(B, it, full, vec=False, Dm=0, chol=False, solve=False, Mp=0):
     m, n = I(B + 0x18), I(B + 0x20)
     out = {k: (I(B + o) if t == "i" else D(B + o).hex()) for k, (o, t) in SCALARS.items()}
     out.update({"m": m, "n": n, "ncomp": L(B + 0x210),
@@ -121,6 +159,9 @@ def dump(B, it, full, vec=False, Dm=0, chol=False):
             _F["F"] = find_F(B, m)
         out["theta"] = arr(L(B + 0x808), m + n)
         out["chol"] = chol_dump(_F["F"], m, full)
+        if solve:
+            out["solve"] = solve_probe(Mp, B, _F["F"], m, n)
+            out["D138_64"] = L(Dm + 0x138) % 64 if Dm else None
     if full:
         out["B"] = arr(B, 0xa00 // 8)
         out["lb"], out["ub"], out["obj"] = arr(L(B + 0x5f8), n), arr(L(B + 0x600), n), arr(L(B + 0x608), n)
@@ -143,6 +184,7 @@ def main():
     ap.add_argument("--iters", default="0")
     ap.add_argument("--vec", action="store_true")
     ap.add_argument("--chol", action="store_true")
+    ap.add_argument("--solve", action="store_true")
     ap.add_argument("--param", action="append", default=[])
     a = ap.parse_args()
     params = {"OutputFlag": 0, "Threads": 1, "Method": 2, "Presolve": 0, "Crossover": 0}
@@ -162,7 +204,8 @@ def main():
         if want is None or it in want:
             c = mdl._callback._cbdata
             B = L(api.PyCapsule_GetPointer(c, api.PyCapsule_GetName(c)) + 0x68)
-            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L(mp + 0xe8), chol=a.chol)
+            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L(mp + 0xe8), chol=a.chol or a.solve, solve=a.solve,
+                             Mp=mp)
 
     model.optimize(cb)
     with (gzip.open(a.out, "wt") if a.out.endswith(".gz") else open(a.out, "w")) as f:
