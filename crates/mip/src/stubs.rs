@@ -24,8 +24,6 @@ impl State {
     pub fn dominated(&mut self, p: &Params) -> i32 { 0 }
     /// `414c03(st, env, mode, T15)` row nonzero cancellation (`40d2bc` mode 0)
     pub fn cancel_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// `36ee92` compression (no count)
-    pub fn compress(&mut self, p: &Params) -> i32 { 0 }
     /// `37f484` aggregation
     pub fn aggregate(&mut self, p: &Params) -> i32 { 0 }
     /// `414c53(st, env, mode, T16)` column nonzero cancellation (`40d2bc` mode 1)

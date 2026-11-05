@@ -159,7 +159,7 @@ impl PyCoreModel {
             mult_lo: get(d, "mult_lo")?, mult_hi: get(d, "mult_hi")?, col_flag: get(d, "col_flag")?, objcon: get(d, "objcon")?,
             nnz: get(d, "nnz")?, work: get(d, "work")?, work_mult: get(d, "work_mult")?, counters: get(d, "counters")?,
             nfree: get(d, "nfree")?, npend: get(d, "npend")?, rows: get(d, "rows")?, cols: get(d, "cols")?,
-            level: get(d, "level")?, active: get(d, "active")?, r: q("tr_r")?, c: q("tr_c")?,
+            level: get(d, "level")?, active: get(d, "active")?, r: q("tr_r")?, c: q("tr_c")?, node_cap: 0, chunk: 0,
         };
         let p = rsolver_mip::Params::from_pairs(&get::<Vec<(String, f64)>>(d, "params")?);
         let mut st = rsolver_mip::state::State::from_parts(&parts, &p);
@@ -495,6 +495,7 @@ fn mip_dump_run<'py>(py: Python<'py>, name: &str, d: &Bound<'py, pyo3::types::Py
         nnz: g(d, "nnz")?, work: g(d, "work")?, work_mult: g(d, "work_mult")?, counters: g(d, "counters")?,
         nfree: g(d, "nfree")?, npend: g(d, "npend")?, rows: g(d, "rows")?, cols: g(d, "cols")?,
         level: g(d, "level")?, active: [active[0], active[1], active[2]], r: q("r")?, c: q("c")?,
+        node_cap: g(d, "node_cap").unwrap_or(0), chunk: g(d, "chunk").unwrap_or(0),
     };
     let p = rsolver_mip::Params::from_pairs(&params);
     let mut st = rsolver_mip::state::State::from_parts(&parts, &p);

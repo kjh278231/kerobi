@@ -28,6 +28,7 @@ def to_parts(s):
     d["nnz"] = int(s["nnz"])
     d["counters"] = s["counters"][:13]
     d["nfree"], d["npend"] = int(s["free"][0]), int(s["free"][1])
+    d["node_cap"], d["chunk"] = int(s.get("node_cap", 0)), int(s.get("chunk", 0))  # 0: not in older dumps
     d["rows"] = [[tuple(x) for x in r] for r in s["rows"]]
     d["cols"] = [[tuple(x) for x in c] for c in s["cols"]]
     t = s["tracker"]

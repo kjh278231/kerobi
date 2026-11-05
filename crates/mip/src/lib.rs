@@ -13,6 +13,7 @@ pub mod dump;
 mod helpers;
 mod inner;
 mod colpass;
+mod compress;
 mod doubleton;
 mod dualeq;
 mod lists;

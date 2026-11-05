@@ -55,6 +55,7 @@ function dump(tag) {
   if (!rh.isNull()) { s.rows = []; for (let i = 0; i < m; i++) s.rows.push(walk(rh, i, 0x10)); }
   if (!ch.isNull()) { s.cols = []; for (let j = 0; j < n; j++) s.cols.push(walk(ch, j, 0x18)); }
   s.free = [st.add(0x198).readS64().toString(), st.add(0x188).readS64().toString()];
+  s.node_cap = st.add(0x158).readS64().toString(); s.chunk = st.add(0x1a8).readS64().toString();  // arena size, next chunk
   // postsolve records (list at +0x370, newest first; rec = {type, data, next} + data in a bump arena), in push order
   // with their raw data bytes (size = gap to the next record, capped at 64 KiB when the next one is in another chunk)
   const recs = []; let r = Pt(st, 0x370), guard = 0;
