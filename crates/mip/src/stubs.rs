@@ -76,9 +76,6 @@ impl State {
     pub fn mod_k(&mut self, p: &Params, k: i32) -> i32 { 0 }
     /// `579e67`
     pub fn r579e67(&mut self, p: &Params) -> i32 { 0 }
-    /// `4d3a1d(model, 0, st, env, T, mode, a7, a8, a9, a10)` probing (round end: (mode, 0, 0, 0, 0), final: (mode, 1, 1,
-    /// flag, 1))
-    pub fn probe(&mut self, p: &Params, mode: i32, a7: i32, a8: i32, a9: i32, a10: i32) -> i32 { 0 }
     /// `5a04fc` smart disaggregation (PRESMARTDISAGG >= 2)
     pub fn smart_disagg(&mut self, p: &Params) -> i32 { 0 }
     /// `52cba4(st, env, T21, &ncomp)` connected components

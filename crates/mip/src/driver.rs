@@ -33,6 +33,13 @@ impl Timer {
             (self.acc + if self.running { w } else { 0.0 }) / self.limit
         }
     }
+    /// accumulated value and running flag (probing reads its timer, `4d3a1d` param_5)
+    pub fn acc(&self) -> f64 {
+        self.acc
+    }
+    pub fn running(&self) -> bool {
+        self.running
+    }
     /// `adf00e`: work used so far
     pub fn used(&self, w: f64) -> f64 {
         self.acc + if self.running { w } else { 0.0 }
@@ -475,7 +482,8 @@ impl Driver<'_> {
         self.budget();
         if self.run.probe != 0 && self.ok(9) {
             let mode = self.run.probe.max(2);
-            rc(self.timed(9, |s, p| s.probe(p, mode, 0, 0, 0, 0)))?;
+            let t = self.t[9];
+            rc(self.timed(9, |s, p| s.probe(p, mode, 0, 0, 0, 0, t)))?;
             self.count("probe")?;
             self.budget();
         }
@@ -552,7 +560,8 @@ impl Driver<'_> {
             return Ok(());
         }
         let mode = pr.max(2);
-        rc(self.timed(8, |s, p| s.probe(p, mode, 1, 1, flag as i32, 1)))?;
+        let t = self.t[8];
+        rc(self.timed(8, |s, p| s.probe(p, mode, 1, 1, flag as i32, 1, t)))?;
         self.count("probe")?;
         self.budget();
         Ok(())

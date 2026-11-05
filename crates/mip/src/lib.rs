@@ -17,8 +17,10 @@ mod doubleton;
 mod lists;
 pub mod post;
 pub mod probe;
+mod probe_apply;
 pub mod probe_engine;
 pub mod state;
+mod subst;
 mod stubs;
 pub mod tracker;
 

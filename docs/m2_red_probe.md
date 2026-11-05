@@ -1488,3 +1488,13 @@ return 0
 - 확인: `tools/probe_trace.js <model> <out.json>`(모든 4d3a1d 패스의 시작 상태·conflict graph·ctx 입출력·함의 내보내기 전후)과 `tools/probe_check.py <dir>`(py 바인딩 `mip_probe_pass`로 패스마다 다시 돌려 비교). 38개 모델, 61호출, 62패스 전부 같다: merge 뒤 graph와 W, ctx 전체(후보 순서, CSR, activity, range, 예산), 엔진 출력(bound, activity, sense, 집계, 함의 묶음, 중복 행 기록, 카운터, 중단 표시, 마지막 f)과 W, 함의 내보내기 뒤 pending과 마지막 merge의 graph·`*out`·W.
 - 비교에서 ctx+0x150/+0x158(aggmul/aggoff)은 집계된 열만 본다. +0x150은 `396a2d`의 임시 버퍼로도 쓰이고 +0x158은 초기화되지 않는다.
 - Frida 덤프가 가끔 멈춘다(gmu-35-50, neos-4338804-snowy에서 한 번씩, 다시 돌리면 정상).
+
+## 7. 포팅 상태 (2026-11-06, part B)
+
+`probe` stub을 `State::probe`(crates/mip/src/probe_apply.rs)로 바꿨다. 4d3a1d 전체가 들어갔다.
+- 패스 루프와 시작 merge, 후보 루프 안의 거의 고정 열(`fix_col`, 레코드 type 1), 집계(`subst.rs`의 `substitute` = `564ce0`/`55e383`/`aa6825`, `push_agg`로 type 2), bound 반영(정수 ceil/floor, `fix_near`), `=` 행, lifting(`451bed`는 clique 쪽 `clique_table(None, true)`, 새 노드 `new_node` = `3bea24`), 함의 내보내기와 끝 merge, 2패스 판정.
+- conflict graph는 `State::cg`(st+0x3f0)에 둔다. 타이머는 `driver::Timer::acc()/running()`으로 `timed(9|8)` 안에서 시작된 값과 같은 view를 만든다.
+- 확인:
+  - `tools/probe_apply_check.py <state_dir> <trace_dir>`: `mip_state_dump.js`의 4d3a1d 진입 상태와 `probe_trace.js`의 graph·타이머로 호출 전체를 돌려 복귀 상태(bound, rhs, sense, 개수, activity, 행·열 리스트, 추적기, 카운터, free 수, work, 새 레코드 바이트)를 비교한다. 13호출(gmu-35-40/50 고정, timtab1 집계, tr12-30·ic97 bound와 lifting, glass4·graphdraw-domain·neos-4954672-berkel lifting, assign1-5-8·cod105·fhnw-binpack4-4) 전부 같다.
+  - `tools/probe_check.py`: 62/62 패스 그대로 같다.
+  - `tools/sweep_check.py`: 첫 차이가 `probe`인 모델은 없다(glass4는 k=76 lifting을 지나 k=93 `dominated`에서 갈라진다). default 일치는 9/38 그대로다.

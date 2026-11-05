@@ -689,12 +689,12 @@ impl State {
     /// `4e48f7(st, ctx, cand, ncand, W)` on one thread. `cand` is sorted in place on the first call (p7 = 0).
     /// shortcut: the `a83b2f` branch of the 1e7 check (ctx+0xec / no state) and the SOS / QC / GUB steps are not
     /// ported; none runs from Model.presolve() on linear models.
-    pub fn probe_engine(&self, p: &Params, g: &ConflictGraph, c: &mut Ctx, cand: &mut [i32], w: &mut f64) -> EngineEnd {
+    pub fn probe_engine(&self, p: &Params, c: &mut Ctx, cand: &mut [i32], w: &mut f64) -> EngineEnd {
         let (nr, nc, n) = (c.nr as i32, c.nc, c.n);
         let mu = c.mu;
         let mut e = Eng {
             st: self,
-            g,
+            g: &self.cg,
             ftol: p.feastol,
             aggm: p.agg_mult_limit,
             w: *w,
