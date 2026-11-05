@@ -205,8 +205,9 @@ def main():
             c = mdl._callback._cbdata
             B = L(api.PyCapsule_GetPointer(c, api.PyCapsule_GetName(c)) + 0x68)
             # with presolve the barrier runs on the presolved model (model+0x1d8)
-            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L((L(mp + 0x1D8) or mp) + 0xe8), chol=a.chol or a.solve, solve=a.solve,
-                             Mp=mp)
+            mb = L(mp + 0x1D8) or mp
+            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L(mb + 0xe8), chol=a.chol or a.solve, solve=a.solve,
+                             Mp=mb)
 
     model.optimize(cb)
     with (gzip.open(a.out, "wt") if a.out.endswith(".gz") else open(a.out, "w")) as f:
