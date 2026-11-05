@@ -515,7 +515,7 @@ impl Lu {
                         if w[j] != 0.0 {
                             seen[j] = true;
                             ev[g] -= l * w[j];
-                            if !(ZERO <= ev[g].abs()) {
+                            if ev[g].is_nan() || ev[g].abs() < ZERO {
                                 ec[g] = DEAD;
                                 rcs[i] -= 1;
                                 ccs[j] -= 1;
