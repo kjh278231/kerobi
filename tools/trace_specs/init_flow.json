@@ -1,0 +1,93 @@
+{
+"model": "beaconfd",
+"params": {
+"Method": 1
+},
+"max": 400,
+"fns": [
+{
+"name": "init534f7",
+"off": "0xe7c50",
+"leave": [
+"ret",
+"Pi:0x3c",
+"Pi:0x40"
+]
+},
+{
+"name": "crash1e7531",
+"off": "0xeaaa0"
+},
+{
+"name": "price1bae9c",
+"off": "0xc0050",
+"enter": [
+"Pi:0x3c",
+"Pi:0x44",
+"Pi:0x40"
+],
+"leave": [
+"ret",
+"Pi:0x3c",
+"Pi:0x44",
+"Pi:0x40",
+"Pdv:0x68:109",
+"Pdv:0x70:301",
+"Pdv:0x68:104",
+"Pdv:0x70:296",
+"Pdv:0x8:109"
+]
+},
+{
+"name": "recomp1ca57",
+"off": "0xbf5b0"
+},
+{
+"name": "build15d2d",
+"off": "0xbdc10"
+},
+{
+"name": "dual6268b",
+"off": "0xf6a00"
+},
+{
+"name": "lu5b257",
+"off": "0xf15c0"
+},
+{
+"name": "df51",
+"off": "0xcd250"
+},
+{
+"name": "lu36ade",
+"off": "0xd4190"
+},
+{
+"name": "pert48d5f",
+"off": "0xe45c0"
+},
+{
+"name": "chuzr",
+"off": "0xccbc0",
+"leave": [
+"i:0x2f8",
+"Pi:0x40",
+"Pi:0x3c",
+"i:0x2c4"
+]
+},
+{
+"name": "sort",
+"off": "0x8bccb0",
+"enter": [
+"ai:0",
+"aD:1:n0",
+"aI:2:n0"
+],
+"leave": [
+"aD:1:n0",
+"aI:2:n0"
+]
+}
+]
+}

@@ -4,7 +4,7 @@
 // spec: {"model": "afiro", "params": {"Method": 1}, "max": 200000,
 //        "fns": [{"name": "chuzr", "off": "0xccbc0", "enter": ["i:0x2f8"], "leave": ["i:0x2f8", "Pi:0x40"]}]}
 // field codes, relative to args[0] (spx) saved at entry: i:/d:/l: int/double/long at spx+off;
-// Pi:/Pd: at P+off with P = *(spx+0x478); ai:N / al:N raw integer argument N; ret = return value (rax).
+// Pi:/Pd: at P+off with P = *(spx+0x478); dv:/Pdv:off:k = k-th double of the array *(base+off), iw:/Piw: int; ai:N / al:N raw integer argument N; aD:i:N / aI:i:N arrays at args[i] (N = n0: args[0]); ret = return value (rax).
 // Gurobi may run in one process only (gurobi_guard.pth): retry later on "already running".
 const FRIDA = process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida';
 const frida = require(FRIDA);
@@ -39,10 +39,22 @@ function rd(spx, code, args, ret) {
   const [k, v] = code.split(':');
   if (k === 'ret') return ret.toString();
   if (k === 'ai') return args[+v].toInt32();
+  if (k === 'aD' || k === 'aI') {  // aD:i:N / aI:i:N: N doubles/ints at args[i]; N = 'n0' takes args[0]
+    const c = code.split(':')[2], cnt = c === 'n0' ? args[0].toInt32() : +c, out = [];
+    for (let t = 0; t < cnt; t++) out.push(k === 'aD' ? args[+v].add(8 * t).readDouble() : args[+v].add(4 * t).readS32());
+    return out;
+  }
   if (k === 'al') return args[+v].toString();
   let p = spx;
   if (k[0] === 'P') p = spx.add(0x478).readPointer();
-  const a = p.add(parseInt(v));
+  let a = p.add(parseInt(v));
+  if (k === 'A' || k === 'PA' || k === 'AI' || k === 'PAI') {  // A:/PA:off:N first N doubles (AI/PAI: ints) of *(base+off)
+    const b = a.readPointer(), cnt = +code.split(':')[2], out = [];
+    for (let t = 0; t < cnt; t++) out.push(k.endsWith('I') ? b.add(4 * t).readS32() : b.add(8 * t).readDouble());
+    return out;
+  }
+  if (k.endsWith('v')) { a = a.readPointer().add(8 * parseInt(code.split(':')[2])); return a.readDouble(); }
+  if (k.endsWith('w')) { a = a.readPointer().add(4 * parseInt(code.split(':')[2])); return a.readS32(); }
   const t = k[k.length - 1];
   return t === 'i' ? a.readS32() : t === 'd' ? a.readDouble() : a.readS64().toString();
 }
