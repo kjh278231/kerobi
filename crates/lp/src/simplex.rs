@@ -172,7 +172,7 @@ impl<'a> Engine<'a> {
                 {
                     // renumber positions as the original does after every factorization; position-indexed
                     // state (DSE weights, pricing) moves along
-                    let old_of_new = self.lu.renumbered(self.n);
+                    let old_of_new = self.lu.renumbered();
                     self.lu.relabel(&old_of_new);
                     self.head = self.lu.head.clone();
                     for (p, &j) in self.head.iter().enumerate() {
@@ -190,13 +190,8 @@ impl<'a> Engine<'a> {
                 }
                 break;
             }
-            let mut pivoted_pos = vec![false; self.m];
-            for &(_, p, _) in &self.lu.steps {
-                pivoted_pos[p] = true;
-            }
-            let free_rows: Vec<usize> = (0..self.m).filter(|&i| self.lu.prow[i] < 0).collect();
-            let free_pos: Vec<usize> = (0..self.m).filter(|&p| !pivoted_pos[p]).collect();
-            for (&p, &i) in free_pos.iter().zip(&free_rows) {
+            // 5b257 L1517–1600: each singular tail position takes the slack of its paired row
+            for &(p, i) in &self.lu.singular.clone() {
                 let out = self.head[p];
                 self.vstat[out] = self.bound_status(out, self.xb.get(p).copied().unwrap_or(0.0));
                 if self.rc_on && out < self.n && self.vstat[out] != -4 {

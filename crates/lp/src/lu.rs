@@ -41,6 +41,53 @@ pub struct Lu {
     pub n_updates: usize,
     /// Steps taken by the singleton phases (the rest is the Markowitz kernel).
     pub n_singleton: usize,
+    /// U rows of the kernel steps by step: (position, u), moved into `ucol` after the factor.
+    kernel_u: Vec<Vec<(usize, f64)>>,
+    /// Singular factor: (position, row) pairs of the empty columns and rows in discovery order (tail steps m−1,
+    /// m−2, … of `036ade`); 5b257 puts the row's slack at that position.
+    pub singular: Vec<(usize, usize)>,
+}
+
+/// Count buckets of the `036ade` kernel: circular doubly linked lists; insert goes after the head and becomes the
+/// head, walks go head → prv (last inserted first).
+struct Buckets {
+    head: Vec<i64>,
+    nxt: Vec<usize>,
+    prv: Vec<usize>,
+}
+
+impl Buckets {
+    fn new(m: usize) -> Buckets {
+        Buckets { head: vec![-1; m + 1], nxt: vec![0; m], prv: vec![0; m] }
+    }
+
+    fn ins(&mut self, i: usize, k: usize) {
+        let h = self.head[k];
+        if h < 0 {
+            self.nxt[i] = i;
+            self.prv[i] = i;
+        } else {
+            let h = h as usize;
+            self.nxt[i] = self.nxt[h];
+            self.nxt[h] = i;
+            self.prv[i] = h;
+            self.prv[self.nxt[i]] = i;
+        }
+        self.head[k] = i as i64;
+    }
+
+    fn rem(&mut self, i: usize, k: usize) {
+        if self.nxt[i] == i {
+            self.head[k] = -1;
+            return;
+        }
+        if self.head[k] == i as i64 {
+            self.head[k] = self.prv[i] as i64;
+        }
+        let (n, p) = (self.nxt[i], self.prv[i]);
+        self.prv[n] = p;
+        self.nxt[p] = n;
+    }
 }
 
 /// Markowitz threshold (MarkowitzTol default 2⁻⁷, spx+0x390).
@@ -86,17 +133,10 @@ impl Lu {
         self.retas.iter().map(|e| e.1.len()).sum()
     }
 
-    /// Basis positions after a factorization (0534f7/5b257): structural singleton steps in step order, then the
-    /// singleton slacks by row, then the Markowitz kernel in step order. Returns the old position of each new one.
-    pub fn renumbered(&self, n: usize) -> Vec<usize> {
-        let ns = self.n_singleton;
-        let mut order: Vec<usize> =
-            self.steps[..ns].iter().map(|s| s.1).filter(|&p| self.head[p] < n).collect();
-        let mut slacks: Vec<usize> = self.steps[..ns].iter().map(|s| s.1).filter(|&p| self.head[p] >= n).collect();
-        slacks.sort_by_key(|&p| self.head[p]);
-        order.extend(slacks);
-        order.extend(self.steps[ns..].iter().map(|s| s.1));
-        order
+    /// Basis positions after a refactor (5b257 LAB_001f474e): the new position of a basic variable is its factor
+    /// step. Returns the old position of each new one.
+    pub fn renumbered(&self) -> Vec<usize> {
+        self.steps.iter().map(|s| s.1).collect()
     }
 
     /// Relabel basis positions: `old_of_new[p]` is the old position of new position p.
@@ -162,6 +202,8 @@ impl Lu {
             general: false,
             n_updates: 0,
             n_singleton: 0,
+            kernel_u: Vec::new(),
+            singular: Vec::new(),
         };
         let mut ppos = vec![-1i64; m];
         let pivot = |lu: &mut Lu, ppos: &mut Vec<i64>, r: usize, pos: usize, d: f64| {
@@ -188,6 +230,7 @@ impl Lu {
                 }
             }
         }
+        let s1 = lu.steps.len();
         // slacks of rows without structural entries
         for (pos, &j) in head.iter().enumerate() {
             if j >= n && rc[j - n] == m + 1 {
@@ -213,146 +256,302 @@ impl Lu {
                 pivot(&mut lu, &mut ppos, i, pos, 1.0);
             }
         }
+        // phase 4 (1da0b2 L530–690): column singletons of the active part from a stack seeded in ascending position
+        // order; skipped when phases 2–3 pivoted nothing
+        let s3 = lu.steps.len();
+        {
+            let mut cc = vec![0usize; m];
+            let mut rcopy: Vec<Vec<usize>> = vec![Vec::new(); m]; // active row copy, ascending position
+            for c in 0..m {
+                if ppos[c] == -1 {
+                    for (i, _) in spx.col(head[c]) {
+                        if lu.prow[i] < 0 {
+                            cc[c] += 1;
+                            rcopy[i].push(c);
+                        }
+                    }
+                }
+            }
+            let mut stack: Vec<usize> = if s3 != s1 { (0..m).filter(|&c| cc[c] == 1).collect() } else { Vec::new() };
+            while let Some(c) = stack.pop() {
+                if cc[c] == 0 {
+                    continue;
+                }
+                let (r, d) = spx.col(head[c]).find(|&(i, _)| lu.prow[i] == -1).expect("active entry");
+                pivot(&mut lu, &mut ppos, r, c, d);
+                for &c2 in &rcopy[r] {
+                    if ppos[c2] == -1 {
+                        cc[c2] -= 1;
+                        if cc[c2] == 1 {
+                            stack.push(c2);
+                        }
+                    }
+                }
+            }
+        }
         let ns = lu.steps.len();
         lu.n_singleton = ns;
         lu.lcol = vec![Vec::new(); m];
         lu.ucol = vec![Vec::new(); m];
-        if ns < m && !lu.markowitz(spx, &mut ppos, tol) {
+        if ns < m && !lu.kernel(spx, &mut ppos, tol) {
             return lu; // singular: incomplete
         }
         // L and U of the singleton steps come straight from the columns (their pivot rows have no other active
-        // entries, so the Markowitz values are unaffected); taken after Markowitz so every row has its step
-        for k in 0..ns {
+        // entries, so the kernel values are unaffected); kernel columns keep their entries in singleton rows as U
+        for k in 0..m {
             let (_, pos, d) = lu.steps[k];
             for (i, a) in spx.col(head[pos]) {
-                let ki = lu.prow[i];
-                if ki > k as i64 {
+                let ki = lu.prow[i] as usize;
+                if k < ns && ki > k {
                     lu.lcol[k].push((i, a / d));
-                } else if ki < k as i64 {
+                } else if ki < k && ki < ns {
                     lu.ucol[k].push((i, a));
                 }
+            }
+        }
+        for (k, ku) in std::mem::take(&mut lu.kernel_u).into_iter().enumerate() {
+            let r = lu.steps[k].0;
+            for (p2, u) in ku {
+                lu.ucol[ppos[p2] as usize].push((r, u));
             }
         }
         lu.finish();
         lu
     }
 
-    /// Markowitz threshold pivoting on the part the singleton phases leave (rows and positions not yet pivoted).
-    /// shortcut: a plain lowest-cost search, not `036ade`'s candidate lists, tie rules, 2x2 blocks or dense dgetrf
-    /// switch; the pivot sequence (so the bits) differs from Gurobi's on non-triangular bases.
-    fn markowitz(&mut self, spx: &Spx, ppos: &mut [i64], tol: f64) -> bool {
+    /// Sparse Markowitz kernel of `036ade` (L546–2570, docs/m1_notes.md §6.7) on the rows and positions the singleton
+    /// phases leave: column singletons, then row singletons, then a Markowitz search over count buckets (LIFO
+    /// circular lists, rotated heads), threshold `tol·max < |a|` on the searched line's max, ties to the larger
+    /// |a|/max; multipliers a/v, updates a − l·u and fill −(l·u) dropped under ZERO, fill prepended to its lists.
+    /// Empty rows and columns pair up in discovery order as the singular tail (`self.singular`).
+    /// shortcut: no 2x2 block phase, no dense switches (036ade L1542/L1762: fill > 0.325·n² with n > 50, or
+    /// 201 ≤ n ≤ 9999 with a costly search) and no 1e99 pivot cap; those cases stay sparse.
+    fn kernel(&mut self, spx: &Spx, ppos: &mut [i64], tol: f64) -> bool {
         let m = self.head.len();
-        // active rows by position with current values; U entries of the column in rows already pivoted
-        let mut arow: Vec<Vec<(usize, f64)>> = vec![Vec::new(); m];
-        let mut acol: Vec<Vec<usize>> = vec![Vec::new(); m];
-        let mut early: Vec<Vec<(usize, f64)>> = vec![Vec::new(); m]; // by position
+        // element pool: (value, row, position; position usize::MAX = dead). Lists are stored reversed so that
+        // pushing prepends; iterate with .rev() for the original order.
+        let mut ev: Vec<f64> = Vec::new();
+        let mut er: Vec<usize> = Vec::new();
+        let mut ec: Vec<usize> = Vec::new();
+        const DEAD: usize = usize::MAX;
+        let mut rl: Vec<Vec<usize>> = vec![Vec::new(); m];
+        let mut cl: Vec<Vec<usize>> = vec![Vec::new(); m];
+        let mut rcs = vec![-1i64; m]; // count − 1
+        let mut ccs = vec![-1i64; m];
         for pos in 0..m {
             if ppos[pos] >= 0 {
                 continue;
             }
             for (i, a) in spx.col(self.head[pos]) {
-                if self.prow[i] < 0 {
-                    arow[i].push((pos, a));
-                    acol[pos].push(i);
-                } else {
-                    early[pos].push((i, a));
+                if self.prow[i] < 0 && ZERO <= a.abs() {
+                    let e = ev.len();
+                    ev.push(a);
+                    er.push(i);
+                    ec.push(pos);
+                    rl[i].push(e);
+                    cl[pos].push(e);
+                    rcs[i] += 1;
+                    ccs[pos] += 1;
                 }
             }
         }
-        let mut upos: Vec<Vec<(usize, f64)>> = vec![Vec::new(); m]; // U row of a Markowitz step, by position
-        let get = |row: &Vec<(usize, f64)>, p: usize| row.iter().find(|e| e.0 == p).map(|e| e.1);
-        use std::collections::BTreeSet;
-        let mut cols: BTreeSet<(usize, usize)> = (0..m).filter(|&p| ppos[p] < 0).map(|p| (acol[p].len(), p)).collect();
-        let mut rset: BTreeSet<(usize, usize)> = (0..m).filter(|&i| self.prow[i] < 0).map(|i| (arow[i].len(), i)).collect();
-        while !cols.is_empty() {
-            // lowest Markowitz cost (r−1)(c−1) by count order; stop once no smaller count can beat the best
-            let mut best: Option<(usize, usize, f64, usize)> = None; // (row, pos, value, cost)
-            let mut seen = 0;
-            let cmax = |p: usize, arow: &Vec<Vec<(usize, f64)>>, acol: &Vec<Vec<usize>>| {
-                acol[p].iter().filter_map(|&i| get(&arow[i], p)).fold(0.0f64, |a, v| a.max(v.abs()))
-            };
-            let maxc = cols.iter().next_back().map_or(0, |e| e.0).max(rset.iter().next_back().map_or(0, |e| e.0));
-            for k in 1..=maxc {
-                // stop at a pivot no smaller count can beat, or after 4 searched lines once a pivot is found
-                if best.is_some_and(|b| b.3 <= (k - 1) * (k - 1)) || (best.is_some() && seen >= 4) {
+        let mut rb = Buckets::new(m);
+        let mut cb = Buckets::new(m);
+        let (mut erows, mut ecols) = (Vec::new(), Vec::new());
+        for i in 0..m {
+            if self.prow[i] < 0 {
+                if rcs[i] < 0 {
+                    erows.push(i);
+                } else {
+                    rb.ins(i, rcs[i] as usize);
+                }
+            }
+            if ppos[i] < 0 {
+                if ccs[i] < 0 {
+                    ecols.push(i);
+                } else {
+                    cb.ins(i, ccs[i] as usize);
+                }
+            }
+        }
+        let alive = |l: &Vec<usize>, ec: &Vec<usize>| -> Vec<usize> { l.iter().rev().copied().filter(|&e| ec[e] != DEAD).collect() };
+        self.kernel_u = vec![Vec::new(); m];
+        let mut w = vec![0.0f64; m];
+        let mut seen = vec![false; m];
+        let pivot = |lu: &mut Lu, ppos: &mut [i64], r: usize, pos: usize, d: f64| {
+            let k = lu.steps.len() as i64;
+            lu.prow[r] = k;
+            ppos[pos] = k;
+            lu.steps.push((r, pos, d));
+        };
+        loop {
+            if cb.head[0] >= 0 {
+                // column singleton (L1003–1140): no threshold
+                let c = cb.head[0] as usize;
+                cb.rem(c, 0);
+                let e = alive(&cl[c], &ec)[0];
+                let r = er[e];
+                rb.rem(r, rcs[r] as usize);
+                ec[e] = DEAD;
+                pivot(self, ppos, r, c, ev[e]);
+                let k = self.steps.len() - 1;
+                for f in alive(&rl[r], &ec) {
+                    let j = ec[f];
+                    self.kernel_u[k].push((j, ev[f]));
+                    ec[f] = DEAD;
+                    cb.rem(j, ccs[j] as usize);
+                    ccs[j] -= 1;
+                    if ccs[j] < 0 { ecols.push(j) } else { cb.ins(j, ccs[j] as usize) }
+                }
+                rcs[r] = -1;
+                ccs[c] = -1;
+            } else if rb.head[0] >= 0 {
+                // row singleton (L821–1002): no threshold
+                let r = rb.head[0] as usize;
+                rb.rem(r, 0);
+                let e = alive(&rl[r], &ec)[0];
+                let c = ec[e];
+                cb.rem(c, ccs[c] as usize);
+                let d = ev[e];
+                ec[e] = DEAD;
+                pivot(self, ppos, r, c, d);
+                let k = self.steps.len() - 1;
+                for f in alive(&cl[c], &ec) {
+                    let i = er[f];
+                    self.lcol[k].push((i, ev[f] / d));
+                    ec[f] = DEAD;
+                    rb.rem(i, rcs[i] as usize);
+                    rcs[i] -= 1;
+                    if rcs[i] < 0 { erows.push(i) } else { rb.ins(i, rcs[i] as usize) }
+                }
+                rcs[r] = -1;
+                ccs[c] = -1;
+            } else {
+                let nact = (m - self.steps.len()) - ecols.len();
+                if nact == 0 {
                     break;
                 }
-                for &(_, p) in cols.range((k, 0)..(k + 1, 0)) {
-                    let cm = cmax(p, &arow, &acol);
-                    for &i in &acol[p] {
-                        let v = get(&arow[i], p).unwrap();
-                        if v.abs() >= tol * cm && v.abs() > ZERO {
-                            let cost = (arow[i].len() - 1) * (k - 1);
-                            if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
-                                best = Some((i, p, v, cost));
+                let cidx = (1..m).find(|&k| cb.head[k] >= 0).unwrap_or(m);
+                let ridx = (1..m).find(|&k| rb.head[k] >= 0).unwrap_or(m);
+                let k0 = cidx.min(ridx);
+                if k0 >= m {
+                    break; // 0x2732
+                }
+                let limit = ((k0 as f64 * 0.5) as usize).max(4).min(nact);
+                let mut best: Option<usize> = None;
+                let (mut bcost, mut bratio, mut ns) = (m as f64 * m as f64, 0.0f64, 0usize);
+                let mut bound = cidx as f64 * ridx as f64;
+                let mut k = k0;
+                'search: while k < m {
+                    let fk = k as f64;
+                    bound = bound.max(fk * fk);
+                    for side in 0..2 {
+                        let bk = if side == 0 { &mut cb } else { &mut rb };
+                        let h = bk.head[k];
+                        if h < 0 {
+                            if bcost <= bound {
+                                break 'search;
+                            }
+                            continue;
+                        }
+                        let h = h as usize;
+                        let mut x = h;
+                        loop {
+                            let line = if side == 0 { alive(&cl[x], &ec) } else { alive(&rl[x], &ec) };
+                            let mx = line.iter().fold(0.0f64, |a, &f| if ev[f].abs() <= a { a } else { ev[f].abs() });
+                            for &f in &line {
+                                let cost = if side == 0 { rcs[er[f]] as f64 * fk } else { ccs[ec[f]] as f64 * fk };
+                                let a = ev[f].abs();
+                                if (cost < bcost && tol * mx < a) || (cost == bcost && bratio * mx < a) {
+                                    best = Some(f);
+                                    bcost = cost;
+                                    bratio = a / mx;
+                                }
+                            }
+                            ns += 1;
+                            if ns < limit && bound < bcost {
+                                x = bk.prv[x];
+                                if x == h {
+                                    break;
+                                }
+                                continue;
+                            }
+                            // rotate the bucket head (asm debdb / d8380)
+                            let on = best.is_some_and(|f| if side == 0 { ec[f] == x } else { er[f] == x });
+                            bk.head[k] = if on { x as i64 } else { bk.prv[x] as i64 };
+                            break 'search;
+                        }
+                        if bcost <= bound {
+                            break 'search;
+                        }
+                    }
+                    k += 1;
+                }
+                let Some(best) = best else { break };
+                let (r, c, v) = (er[best], ec[best], ev[best]);
+                cb.rem(c, ccs[c] as usize);
+                rb.rem(r, rcs[r] as usize);
+                ec[best] = DEAD;
+                pivot(self, ppos, r, c, v);
+                let sk = self.steps.len() - 1;
+                let mut u_row = Vec::new();
+                for f in alive(&rl[r], &ec) {
+                    let j = ec[f];
+                    u_row.push((j, ev[f]));
+                    w[j] = ev[f];
+                    ec[f] = DEAD;
+                    cb.rem(j, ccs[j] as usize);
+                    ccs[j] -= 1;
+                }
+                for f in alive(&cl[c], &ec) {
+                    let i = er[f];
+                    let l = ev[f] / v;
+                    self.lcol[sk].push((i, l));
+                    ec[f] = DEAD;
+                    rb.rem(i, rcs[i] as usize);
+                    rcs[i] -= 1;
+                    for g in alive(&rl[i], &ec) {
+                        let j = ec[g];
+                        if w[j] != 0.0 {
+                            seen[j] = true;
+                            ev[g] -= l * w[j];
+                            if !(ZERO <= ev[g].abs()) {
+                                ec[g] = DEAD;
+                                rcs[i] -= 1;
+                                ccs[j] -= 1;
                             }
                         }
                     }
-                    seen += 1;
-                    if seen >= 4 && best.is_some() {
-                        break;
-                    }
-                }
-                for &(_, i) in rset.range((k, 0)..(k + 1, 0)) {
-                    for &(p, v) in &arow[i] {
-                        let cm = cmax(p, &arow, &acol);
-                        if v.abs() >= tol * cm && v.abs() > ZERO {
-                            let cost = (k - 1) * (acol[p].len() - 1);
-                            if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
-                                best = Some((i, p, v, cost));
+                    for &(j, u) in &u_row {
+                        if !seen[j] {
+                            let p = -(l * u);
+                            if ZERO <= p.abs() {
+                                let e = ev.len();
+                                ev.push(p);
+                                er.push(i);
+                                ec.push(j);
+                                rl[i].push(e);
+                                cl[j].push(e);
+                                rcs[i] += 1;
+                                ccs[j] += 1;
                             }
                         }
+                        seen[j] = false;
                     }
-                    seen += 1;
-                    if seen >= 4 && best.is_some() {
-                        break;
-                    }
+                    if rcs[i] < 0 { erows.push(i) } else { rb.ins(i, rcs[i] as usize) }
                 }
-            }
-            let Some((r, p, v, _)) = best else { return false };
-            let k = self.steps.len();
-            self.prow[r] = k as i64;
-            ppos[p] = k as i64;
-            self.steps.push((r, p, v));
-            self.ucol[k] = std::mem::take(&mut early[p]);
-            cols.remove(&(acol[p].len(), p));
-            rset.remove(&(arow[r].len(), r));
-            let prow_r: Vec<(usize, f64)> = arow[r].iter().copied().filter(|e| e.0 != p).collect();
-            for &(p2, _) in &prow_r {
-                cols.remove(&(acol[p2].len(), p2));
-                acol[p2].retain(|&i| i != r);
-            }
-            for &i in &acol[p].clone() {
-                if i == r {
-                    continue;
+                for &(j, _) in &u_row {
+                    w[j] = 0.0;
+                    if ccs[j] < 0 { ecols.push(j) } else { cb.ins(j, ccs[j] as usize) }
                 }
-                rset.remove(&(arow[i].len(), i));
-                let l = get(&arow[i], p).unwrap() / v;
-                self.lcol[k].push((i, l));
-                arow[i].retain(|e| e.0 != p);
-                for &(p2, u) in &prow_r {
-                    if let Some(e) = arow[i].iter_mut().find(|e| e.0 == p2) {
-                        e.1 -= l * u;
-                    } else {
-                        arow[i].push((p2, -(l * u)));
-                        acol[p2].push(i);
-                    }
-                }
-                rset.insert((arow[i].len(), i));
+                rcs[r] = -1;
+                ccs[c] = -1;
+                self.kernel_u[sk] = u_row;
             }
-            for &(p2, _) in &prow_r {
-                cols.insert((acol[p2].len(), p2));
-            }
-            acol[p].clear();
-            upos[k] = prow_r;
-            arow[r].clear();
         }
-        // Markowitz rows' U entries become entries of the later columns
-        for k in 0..self.steps.len() {
-            for &(p2, u) in &std::mem::take(&mut upos[k]) {
-                let k2 = ppos[p2] as usize;
-                self.ucol[k2].push((self.steps[k].0, u));
-            }
+        if self.steps.len() < m {
+            self.singular = ecols.into_iter().zip(erows).collect();
+            return false;
         }
         true
     }
