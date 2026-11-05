@@ -2,8 +2,8 @@
 //! the MIP presolve uses, up to five aggregation rounds run on it, and it goes back to gap-free CSR in list order.
 //! Later reductions and the presolved model read that order, so nodes, the free/pending lists and the +0xd8 count
 //! are simulated as the original keeps them (node addresses are not visible; list order and counts are).
-//! shortcut: deterministic work (+0x458) is not counted in aggregation; nothing reads it yet. Add it with the
-//! constructor work terms (P2).
+//! Deterministic work (+0x458) is added term by term in the original order (docs/m1_presolve_agg.md §10); only
+//! `519a52`'s own terms skip the +0x448 multiplier.
 use super::reduce::ColTols;
 use super::sort::sort_by_key;
 use super::state::{guarded_add, PostRec, State};
@@ -97,6 +97,8 @@ impl State {
                     self.mark[i as usize] = true;
                 }
             }
+            // 519a52's own terms carry no multiplier
+            self.work += self.tracker.rows.b[lv] as f64 * 4.0;
             for idx in 0..self.tracker.cols.b[lv] {
                 let j = self.tracker.cols.list[lv][idx] as usize;
                 if self.tracker.cols.flag[j] & 0x20 == 0 {
@@ -104,15 +106,22 @@ impl State {
                 }
                 flagged += 1;
                 let mut p = mat.ch[j];
+                let mut live = 0;
                 while p != NIL {
                     let q = mat.nd[p as usize];
-                    if q.col >= 0 && !self.mark[q.row as usize] {
-                        self.mark[q.row as usize] = true;
-                        list.push(q.row);
+                    if q.col >= 0 {
+                        if !self.mark[q.row as usize] {
+                            self.mark[q.row as usize] = true;
+                            list.push(q.row);
+                        }
+                        live += 1;
                     }
                     p = q.nc;
                 }
+                self.work += live as f64 * 4.0;
             }
+            let bc = self.tracker.cols.b[lv] as f64;
+            self.work += bc + bc;
             self.agg_activity(&mat, &list, t.infbound);
             for &i in &list {
                 self.mark[i as usize] = false;
@@ -143,6 +152,7 @@ impl State {
             start[i + 1] = start[i] + self.row_cnt[i].max(0) as usize;
         }
         let used = start[m] as i64;
+        self.work += m as f64 * 3.0;
         if self.node_extra || self.node_cap < used + self.node_free {
             self.node_cap = used + self.node_free;
             self.node_extra = false;
@@ -172,7 +182,9 @@ impl State {
                 }
                 tail = p as u32;
             }
+            self.work += self.col_len[j] as f64 * 7.0;
         }
+        self.work += n as f64 * 4.0;
         let mut rh = vec![NIL; m];
         for i in 0..m {
             debug_assert_eq!(fill[i], start[i + 1], "row {i}: live count differs from the column CSR");
@@ -181,8 +193,10 @@ impl State {
                 for p in start[i]..start[i + 1] - 1 {
                     nd[p].nr = (p + 1) as u32;
                 }
+                self.work += (start[i + 1] - 1 - start[i]) as f64 * 4.0;
             }
         }
+        self.work += m as f64 * 6.0;
         for p in used as usize..cap {
             nd[p].nc = if p + 1 < cap { (p + 1) as u32 } else { NIL };
         }
@@ -192,6 +206,7 @@ impl State {
 
     /// Lists -> CSR (`519a52` L405-694): no gaps, list order; live counts stay as aggregation kept them.
     fn agg_csr(&mut self, mat: &Mat) {
+        self.work += self.n as f64 + self.n as f64;
         self.row_ind.clear();
         self.row_val.clear();
         for i in 0..self.m {
@@ -208,8 +223,10 @@ impl State {
                 p = q.nr;
             }
             self.row_len[i] = c;
+            self.work += c as f64 * 3.0;
             debug_assert!(self.row_cnt[i] < 0 || self.row_cnt[i] == c, "row {i}");
         }
+        self.work += self.m as f64 * 4.0;
         self.col_ind.clear();
         self.col_val.clear();
         for j in 0..self.n {
@@ -226,14 +243,17 @@ impl State {
                 p = q.nc;
             }
             self.col_len[j] = c;
+            self.work += c as f64 * 3.0;
             debug_assert!(self.col_cnt[j] < 0 || self.col_cnt[j] == c, "col {j}");
         }
+        self.work += self.n as f64 * 4.0;
     }
 
     /// `53c507` (set) / `53c72d` (clear): bit on every row and column of the current level's a-list.
     fn agg_bits(&mut self, bit: u8, set: bool) {
         let lv = self.tracker.level;
         for q in [&mut self.tracker.rows, &mut self.tracker.cols] {
+            self.work += (q.a[lv] as f64 + q.a[lv] as f64) * self.work_mult;
             for idx in 0..q.a[lv] {
                 let f = &mut q.flag[q.list[lv][idx] as usize];
                 if set {
@@ -254,9 +274,11 @@ impl State {
             }
             let (mut mx, mut mn, mut imx, mut imn) = (0.0, 0.0, 0, 0);
             let mut p = mat.rh[i];
+            let mut visited = 0;
             while p != NIL {
                 let q = mat.nd[p as usize];
                 p = q.nr;
+                visited += 1;
                 if q.col < 0 {
                     continue;
                 }
@@ -270,6 +292,7 @@ impl State {
                     if -inf < l { mn = guarded_add(mn, a * l, false) } else { imn += 1 }
                 }
             }
+            self.work += self.work_mult * 7.0 * visited as f64;
             self.inf_max[i] = imx;
             self.inf_min[i] = imn;
             self.act_max[i] = guarded_add(mx, -self.rhs[i], true);
@@ -282,6 +305,7 @@ impl State {
                 self.act_max[i] = 0.0;
             }
         }
+        self.work += self.work_mult * 8.0 * rows.len() as f64;
     }
 
     /// Add (`add`) or remove the contribution `a * bound` of a column with bounds [l, u] to row i's activities
@@ -305,6 +329,7 @@ impl State {
     /// `53d18c`: mark (tracker + 0x30) every live column of row r.
     fn agg_mark_row(&mut self, mat: &Mat, r: usize) {
         let mut p = mat.rh[r];
+        let mut k = 0;
         while p != NIL {
             let q = mat.nd[p as usize];
             if q.col >= 0 {
@@ -312,12 +337,15 @@ impl State {
                 self.tracker.cols.flag[q.col as usize] |= 0x30;
             }
             p = q.nr;
+            k += 1;
         }
+        self.work += self.work_mult * 4.0 * k as f64;
     }
 
     /// `53d2b0`: mark (tracker + 0x30) the row of every live node of column j.
     fn agg_mark_col(&mut self, mat: &Mat, j: usize) {
         let mut p = mat.ch[j];
+        let mut k = 0;
         while p != NIL {
             let q = mat.nd[p as usize];
             if q.col >= 0 {
@@ -325,14 +353,18 @@ impl State {
                 self.tracker.rows.flag[q.row as usize] |= 0x30;
             }
             p = q.nc;
+            k += 1;
         }
+        self.work += self.work_mult * 5.0 * k as f64;
     }
 
-    /// `36f5c4`: dead nodes leave column j for the pending list.
+    /// `36f5c4` (also inlined in `3791fd`): dead nodes leave column j for the pending list.
     fn agg_compact_col(&mut self, mat: &mut Mat, j: usize) {
         let mut p = mat.ch[j];
         let mut prev = NIL;
+        let mut k = 0.0;
         while p != NIL {
+            k += 1.0;
             let next = mat.nd[p as usize].nc;
             if mat.nd[p as usize].col < 0 {
                 mat.nd[p as usize].nc = mat.pend;
@@ -346,13 +378,16 @@ impl State {
             p = next;
         }
         if prev == NIL { mat.ch[j] = NIL } else { mat.nd[prev as usize].nc = NIL }
+        self.work += (k + k) * self.work_mult;
     }
 
     /// Inline row compaction: dead nodes are only unlinked from row r.
-    fn agg_compact_row(mat: &mut Mat, r: usize) {
+    fn agg_compact_row(&mut self, mat: &mut Mat, r: usize) {
         let mut p = mat.rh[r];
         let mut prev = NIL;
+        let mut k = 0.0;
         while p != NIL {
+            k += 1.0;
             let next = mat.nd[p as usize].nr;
             if mat.nd[p as usize].col >= 0 {
                 if prev == NIL { mat.rh[r] = p } else { mat.nd[prev as usize].nr = p }
@@ -361,12 +396,15 @@ impl State {
             p = next;
         }
         if prev == NIL { mat.rh[r] = NIL } else { mat.nd[prev as usize].nr = NIL }
+        self.work += (k + k) * self.work_mult;
     }
 
     /// `36f8e0` + head reset: every node of column e goes to pending; live ones leave their row's count.
     fn agg_release_col(&mut self, mat: &mut Mat, e: usize) {
         let mut p = mat.ch[e];
+        let mut k = 0;
         while p != NIL {
+            k += 1;
             let q = mat.nd[p as usize];
             if q.col >= 0 {
                 self.row_cnt[q.row as usize] -= 1;
@@ -379,26 +417,34 @@ impl State {
             p = q.nc;
         }
         mat.ch[e] = NIL;
+        self.work += k as f64 * 3.0 * self.work_mult;
     }
 
-    /// Kill every node of row r and drop the row's list.
-    fn agg_kill_row(mat: &mut Mat, r: usize) {
+    /// Kill every node of row r and drop the row's list. Returns the nodes visited (work).
+    fn agg_kill_row(mat: &mut Mat, r: usize) -> f64 {
         let mut p = mat.rh[r];
+        let mut k = 0.0;
         while p != NIL {
             mat.nd[p as usize].col = -1;
             p = mat.nd[p as usize].nr;
+            k += 1.0;
         }
         mat.rh[r] = NIL;
+        k
     }
 
     /// `53d3d9`: pending nodes join the free list; columns and rows flagged 0x10 in the current level's b-lists
     /// are compacted (dead column nodes go straight to free) and lose the flag.
     fn agg_gc(&mut self, mat: &mut Mat) {
+        let mu = self.work_mult;
         if mat.pend != NIL {
             let mut tail = mat.pend;
+            let mut k = 0;
             while mat.nd[tail as usize].nc != NIL {
                 tail = mat.nd[tail as usize].nc;
+                k += 1;
             }
+            self.work += k as f64 * mu;
             mat.nd[tail as usize].nc = mat.free;
             mat.free = mat.pend;
             mat.nfree += mat.npend;
@@ -414,7 +460,9 @@ impl State {
             self.tracker.cols.flag[j] &= !0x10;
             let mut p = mat.ch[j];
             let mut prev = NIL;
+            let mut k = 0.0;
             while p != NIL {
+                k += 1.0;
                 let next = mat.nd[p as usize].nc;
                 if mat.nd[p as usize].col < 0 {
                     mat.nd[p as usize].nc = mat.free;
@@ -428,7 +476,9 @@ impl State {
                 p = next;
             }
             if prev == NIL { mat.ch[j] = NIL } else { mat.nd[prev as usize].nc = NIL }
+            self.work += (k + k) * mu;
         }
+        self.work += self.tracker.cols.b[lv] as f64 * 3.0 * mu;
         for idx in 0..self.tracker.rows.b[lv] {
             let i = self.tracker.rows.list[lv][idx] as usize;
             if self.tracker.rows.flag[i] & 0x10 == 0 {
@@ -439,6 +489,7 @@ impl State {
             let mut left = self.row_cnt[i];
             let mut p = mat.rh[i];
             let mut prev = NIL;
+            let mut k = 0.0;
             while p != NIL {
                 let next = mat.nd[p as usize].nr;
                 if mat.nd[p as usize].col >= 0 {
@@ -450,9 +501,12 @@ impl State {
                     }
                 }
                 p = next;
+                k += 1.0;
             }
             if prev == NIL { mat.rh[i] = NIL } else { mat.nd[prev as usize].nr = NIL }
+            self.work += (k + k) * mu;
         }
+        self.work += self.tracker.rows.b[lv] as f64 * 3.0 * mu;
     }
 
     /// A node for (i, k) with value v at the front of column k: the reused node of the eliminated column (it keeps
@@ -523,9 +577,11 @@ impl State {
             let (mut lo, mut hi) = (1.0f64, 1.0f64);
             let mut bad = false;
             let mut s = mat.rh[r];
+            let mut visited = 0;
             while s != NIL {
                 let x = mat.nd[s as usize];
                 s = x.nr;
+                visited += 1;
                 if x.col < 0 {
                     continue;
                 }
@@ -549,9 +605,11 @@ impl State {
                     }
                 } {
                     bad = true;
+                    visited -= 1;
                     break;
                 }
             }
+            self.work += self.work_mult * 4.0 * visited as f64;
             if bad {
                 rc.hi[r] = lim + lim;
                 rc.lo[r] = 1.0 / (lim + lim);
@@ -567,7 +625,15 @@ impl State {
     }
 
     /// `378c30__0` (`upper`) / `__1`: is column j's upper (lower) bound implied by one of its rows?
-    fn agg_implied(&self, mat: &Mat, j: usize, upper: bool, tol_i: f64, t: &ColTols) -> bool {
+    fn agg_implied(&mut self, mat: &Mat, j: usize, upper: bool, tol_i: f64, t: &ColTols) -> bool {
+        let mut visited = 0;
+        let found = self.agg_implied_walk(mat, j, upper, tol_i, t, &mut visited);
+        self.work += self.work_mult * 8.0 * visited as f64;
+        found
+    }
+
+    /// `agg_implied` without the work: `visited` gets the nodes passed before the one that implies the bound.
+    fn agg_implied_walk(&self, mat: &Mat, j: usize, upper: bool, tol_i: f64, t: &ColTols, visited: &mut i32) -> bool {
         let inf = t.infbound;
         let mut p = mat.ch[j];
         let (base, f) = if upper {
@@ -580,6 +646,7 @@ impl State {
         while p != NIL {
             let q = mat.nd[p as usize];
             p = q.nc;
+            *visited += 1;
             if q.col < 0 || q.val.abs() < tol_i {
                 continue;
             }
@@ -598,6 +665,7 @@ impl State {
                     self.act_min[i] / -a
                 };
                 if -self.ub[j] - t.feastol <= base - v {
+                    *visited -= 1;
                     return true;
                 }
             } else {
@@ -613,6 +681,7 @@ impl State {
                     self.act_min[i]
                 };
                 if self.lb[j] - t.feastol <= base - v / a {
+                    *visited -= 1;
                     return true;
                 }
             }
@@ -636,9 +705,11 @@ impl State {
             let (mut mx, mut mn) = (-self.rhs[r], -self.rhs[r]);
             let (mut nmx, mut nmn) = (0, 0);
             let mut p = mat.rh[r];
+            let mut visited = 0;
             while p != NIL {
                 let q = mat.nd[p as usize];
                 p = q.nr;
+                visited += 1;
                 if q.col < 0 {
                     continue;
                 }
@@ -651,6 +722,7 @@ impl State {
                     if -inf < lc[k] { mn = guarded_add(mn, a * lc[k], false) } else { nmn += 1 }
                 }
             }
+            self.work += visited as f64 * 5.0 * self.work_mult;
             let d = (mx - mn).max(1.0);
             if 1e13 < d {
                 continue;
@@ -723,46 +795,48 @@ impl State {
                     uc[k] = fu;
                 }
             }
+            self.work += self.row_cnt[r] as f64 * 6.0 * self.work_mult;
         }
+        self.work += rows.len() as f64 * 4.0 * self.work_mult;
         Ok(cnt)
     }
 
     /// `37f484` prescan (first call only): an `=` row with a tiny coefficient that the special two-term
-    /// aggregation of stage D targets.
-    fn agg_prescan(&self, mat: &Mat, rows: &[i32]) -> bool {
+    /// aggregation of stage D targets. Follows the original's walk for its work terms.
+    fn agg_prescan(&mut self, mat: &Mat, rows: &[i32]) -> bool {
         let inf = 1e30;
-        let first_two = |r: usize| {
-            let mut v = Vec::new();
-            let mut p = mat.rh[r];
-            while p != NIL && v.len() < 2 {
-                let q = mat.nd[p as usize];
-                if q.col >= 0 {
-                    v.push((q.col as usize, q.val));
-                }
-                p = q.nr;
-            }
-            v
-        };
+        let mu = self.work_mult;
+        // first live node of row r whose column is not t (the row is known to have one), and the nodes skipped
         let first_other = |r: usize, t: usize| {
             let mut p = mat.rh[r];
-            while p != NIL {
-                let q = mat.nd[p as usize];
-                if q.col >= 0 && q.col as usize != t {
-                    return Some((q.col as usize, q.val));
-                }
-                p = q.nr;
+            let mut k = 0;
+            while mat.nd[p as usize].col < 0 || mat.nd[p as usize].col as usize == t {
+                p = mat.nd[p as usize].nr;
+                k += 1;
             }
-            None
+            (mat.nd[p as usize], k)
         };
-        for &r in rows {
+        for (idx, &r) in rows.iter().enumerate() {
             let r = r as usize;
             if self.row_cnt[r] != 2 || self.sense[r] != b'=' {
                 continue;
             }
-            let v = first_two(r);
-            if v.len() < 2 {
-                continue;
+            // first two live nodes; k = position of the second
+            let mut v = Vec::new();
+            let mut p = mat.rh[r];
+            let mut k = 0;
+            while p != NIL {
+                let q = mat.nd[p as usize];
+                if q.col >= 0 {
+                    v.push((q.col as usize, q.val));
+                    if v.len() == 2 {
+                        break;
+                    }
+                }
+                p = q.nr;
+                k += 1;
             }
+            self.work += mu * 3.0 * k as f64;
             let ((c1, a1), (c2, a2)) = (v[0], v[1]);
             if 1e-6 <= a1.abs() && 1e-6 <= a2.abs() {
                 continue;
@@ -781,53 +855,57 @@ impl State {
             if self.col_cnt[t] != 3 {
                 continue;
             }
-            let mut others = Vec::new();
-            let mut ok = true;
+            // first and last other rows of t before one that is not a two-term inequality
+            let (mut r1, mut r2) = (usize::MAX, usize::MAX);
+            let mut k = 0;
             let mut p = mat.ch[t];
             while p != NIL {
                 let q = mat.nd[p as usize];
+                if q.col >= 0 && q.row as usize != r {
+                    let i = q.row as usize;
+                    if self.row_cnt[i] != 2 || self.sense[i] == b'=' {
+                        break;
+                    }
+                    if r1 == usize::MAX { r1 = i } else { r2 = i }
+                }
                 p = q.nc;
-                if q.col < 0 || q.row as usize == r {
-                    continue;
-                }
-                let i = q.row as usize;
-                if self.row_cnt[i] != 2 || self.sense[i] == b'=' {
-                    ok = false;
-                    break;
-                }
-                others.push(i);
+                k += 1;
             }
-            if !ok || others.len() < 2 {
+            self.work += mu * 5.0 * k as f64;
+            if r2 == usize::MAX {
                 continue;
             }
-            let (r1, r2) = (others[0], others[others.len() - 1]);
-            let Some((x, ax)) = first_other(r1, t) else { continue };
-            if 1e-10 <= (ax.abs() - 1.0).abs() {
+            let (q, k) = first_other(r1, t);
+            self.work += mu * 3.0 * k as f64;
+            if 1e-10 <= (q.val.abs() - 1.0).abs() {
                 continue;
             }
-            let Some((x2, ax2)) = first_other(r2, t) else { continue };
-            if 1e-10 < (ax2.abs() - 1.0).abs() || x2 != x {
+            let x = q.col as usize;
+            let (q2, k) = first_other(r2, t);
+            self.work += mu * 3.0 * k as f64;
+            if 1e-10 < (q2.val.abs() - 1.0).abs() || q2.col as usize != x {
                 continue;
             }
             if !(self.col_cnt[x] == 3 && self.lb[x] <= -inf && inf <= self.ub[x]) {
                 continue;
             }
             let mut p = mat.ch[x];
-            let mut r3 = None;
+            let mut k = 0;
             while p != NIL {
                 let q = mat.nd[p as usize];
-                if q.col >= 0 && 2 < self.row_cnt[q.row as usize] {
-                    r3 = Some(q);
+                // original tests col_cnt of the node's column (x, already 3): the first live node is r3
+                if q.col >= 0 && 2 < self.col_cnt[q.col as usize] {
                     break;
                 }
                 p = q.nc;
+                k += 1;
             }
-            let Some(q3) = r3 else { continue };
-            if 1e-10 < (q3.val.abs() - 1.0).abs() {
+            self.work += mu * 3.0 * k as f64;
+            if p == NIL || 1e-10 < (mat.nd[p as usize].val.abs() - 1.0).abs() {
                 continue;
             }
-            let i3 = q3.row as usize;
-            let mut big = 0;
+            let i3 = mat.nd[p as usize].row as usize;
+            let (mut big, mut k) = (0, 0);
             let mut p = mat.rh[i3];
             while p != NIL {
                 let q = mat.nd[p as usize];
@@ -835,11 +913,15 @@ impl State {
                     big += 1;
                 }
                 p = q.nr;
+                k += 1;
             }
+            self.work += mu * 3.0 * k as f64;
             if big == self.row_cnt[i3] - 1 {
+                self.work += mu * 5.0 * idx as f64;
                 return true;
             }
         }
+        self.work += mu * 5.0 * rows.len() as f64;
         false
     }
 
@@ -859,17 +941,20 @@ impl State {
         if self.agg_scan == 0 {
             // shortcut: the tiny-coefficient pattern switches stage D to a special path (37f484 L2325-2470)
             // that is not ported; no Netlib model has it. Port it when a model trips this.
-            assert!(!self.agg_prescan(mat, &rlist), "37f484 prescan pattern found: special stage D path not ported");
+            let found = self.agg_prescan(mat, &rlist); // adds work: keep out of the assert
+            assert!(!found, "37f484 prescan pattern found: special stage D path not ported");
             self.agg_scan = -1;
         }
         let (tol_a, tol_i) = if self.agg_scan > 0 { (1e-8, 1e-8) } else { (pmin, t.feastol) };
         let mut rc = RowCache { hi: vec![0.0; m], lo: vec![0.0; m], amax: vec![0.0; m], amin: vec![0.0; m], rowmax: vec![0.0; m] };
 
         // candidate columns and their class (0 both bounds needed, 1 upper only, 2 lower only, 3 implied free)
+        let mu = self.work_mult;
         let cand: Vec<i32> = if ccnt == n && first {
             let mut lc = self.lb.clone();
             let mut uc = self.ub.clone();
             let all: Vec<i32> = (0..m as i32).collect();
+            self.work += m as f64 * mu;
             match self.agg_propagate(mat, &all, &mut lc, &mut uc, t, ap.prebound) {
                 Err(s) => return s,
                 Ok(c) => {
@@ -880,6 +965,7 @@ impl State {
                     }
                 }
             }
+            self.work += n as f64 * mu;
             for j in 0..n {
                 if self.col_cnt[j] > 0 && self.col_flag[j] == 0 {
                     let (l, u) = (self.lb[j], self.ub[j]);
@@ -891,11 +977,14 @@ impl State {
                     };
                 }
             }
+            self.work += n as f64 * 7.0 * mu;
             self.agg_bits(0x20, false); // 53c72d
             (0..n as i32).collect()
         } else {
             // 53c9ee: columns flagged 0x20, then the columns of rows flagged 0x20
             assert!(!first, "37f484 entered with a partial column list (53af0f path) is not ported");
+            let mu3 = mu * 3.0;
+            self.work += ccnt as f64 * mu3;
             let mut l = Vec::new();
             for idx in 0..ccnt {
                 let j = self.tracker.cols.list[lv][idx] as usize;
@@ -911,6 +1000,7 @@ impl State {
                     continue;
                 }
                 let mut p = mat.rh[i];
+                let mut k = 0;
                 while p != NIL {
                     let q = mat.nd[p as usize];
                     if q.col >= 0 && !self.mark[q.col as usize] {
@@ -918,9 +1008,13 @@ impl State {
                         l.push(q.col);
                     }
                     p = q.nr;
+                    k += 1;
                 }
+                self.work += mu3 * k as f64;
                 self.tracker.rows.flag[i] &= !0x20;
             }
+            self.work += self.tracker.rows.a[lv] as f64 * mu3;
+            self.work += l.len() as f64 * mu3;
             for &j in &l {
                 self.mark[j as usize] = false;
             }
@@ -932,6 +1026,7 @@ impl State {
                     cls[j] = if -inf < l { if u < inf { 0 } else { 2 } } else if u < inf { 1 } else { 3 };
                 }
             }
+            self.work += l.len() as f64 * 6.0 * mu;
             l
         };
 
@@ -995,6 +1090,7 @@ impl State {
                     best = self.row_cnt[r];
                 }
             }
+            self.work += c as f64 * 7.0 * self.work_mult;
             if best != lim {
                 let c2 = c - 2;
                 if (c2 as f64) * ((best - 2) as f64) <= (fill + 2) as f64 {
@@ -1006,9 +1102,12 @@ impl State {
                 }
             }
         }
+        let mu = self.work_mult;
+        self.work += cand.len() as f64 * 6.0 * mu;
         for i in 1..m + 2 {
             bucket[i] += bucket[i - 1];
         }
+        self.work += (m + 1) as f64 * mu;
         let mut order = vec![0i32; bucket[m + 1] as usize];
         let mut saved = vec![0i32; n];
         for &j in cand {
@@ -1020,6 +1119,7 @@ impl State {
                 saved[j] = self.col_cnt[j];
             }
         }
+        self.work += cand.len() as f64 * 5.0 * mu;
         let total = bucket[m] as usize;
         let mut keys: Vec<f64> = Vec::new();
         let mut nodes: Vec<i32> = Vec::new();
@@ -1044,6 +1144,7 @@ impl State {
             nodes.clear();
             let mut give_up = false;
             let mut p = mat.ch[j];
+            let mut visited = 0.0;
             while p != NIL {
                 let q = mat.nd[p as usize];
                 if q.col >= 0 {
@@ -1062,8 +1163,14 @@ impl State {
                     }
                 }
                 p = q.nc;
+                visited += 1.0;
             }
-            if give_up || keys.is_empty() {
+            if give_up {
+                keys.clear();
+            }
+            let kk = keys.len() as f64;
+            self.work += (visited * 6.0 + kk + kk) * mu;
+            if keys.is_empty() {
                 continue;
             }
             if keys.len() >= 2 {
@@ -1071,23 +1178,28 @@ impl State {
             }
             let thr = colmax * rho;
             let (mut ratio_best, mut cnt_best, mut piv) = (0.0f64, lim, NIL);
+            let mut seen = 0;
             for (&key, &p) in keys.iter().zip(nodes.iter()) {
                 let cnt = key as i32;
                 if cnt_best < cnt {
                     break;
                 }
+                seen += 1;
                 let q = mat.nd[p as usize];
                 let r = q.row as usize;
                 if rc.rowmax[r] == 0.0 {
                     let mut mx = 0.0f64;
                     let mut s = mat.rh[r];
+                    let mut k = 0;
                     while s != NIL {
                         let x = mat.nd[s as usize];
                         if x.col >= 0 && mx <= x.val.abs() {
                             mx = x.val.abs();
                         }
                         s = x.nr;
+                        k += 1;
                     }
+                    self.work += k as f64 * 3.0 * mu;
                     rc.rowmax[r] = mx;
                 }
                 let rmax = rc.rowmax[r];
@@ -1101,6 +1213,7 @@ impl State {
                     cnt_best = cnt;
                 }
             }
+            self.work += seen as f64 * 4.0 * mu;
             if piv == NIL {
                 continue;
             }
@@ -1114,11 +1227,13 @@ impl State {
             let r = mat.nd[piv as usize].row as usize;
             let a = mat.nd[piv as usize].val;
             mat.nd[piv as usize].col = -1;
-            Self::agg_compact_row(mat, r);
+            self.agg_compact_row(mat, r);
             self.agg_compact_col(mat, j);
             self.agg_subst(mat, rc, a, r, j, t.infbound);
-            Self::agg_kill_row(mat, r);
+            let k = Self::agg_kill_row(mat, r);
+            self.work += (k + k) * mu;
         }
+        self.work += total as f64 * 10.0 * mu;
         Ok(())
     }
 
@@ -1129,9 +1244,11 @@ impl State {
         let lc = self.col_cnt[j] - 1;
         let mut row = Vec::with_capacity(cnt.max(0) as usize);
         let mut p = mat.rh[r];
+        let mut k = 0;
         while p != NIL {
             let q = mat.nd[p as usize];
             p = q.nr;
+            k += 1;
             if q.col < 0 {
                 continue;
             }
@@ -1149,16 +1266,20 @@ impl State {
                 }
             }
         }
+        self.work += k as f64 * 5.0 * self.work_mult;
         let mut col = Vec::new();
         if 0 < lc {
             let mut p = mat.ch[j];
+            let mut k = 0;
             while p != NIL {
                 let q = mat.nd[p as usize];
                 p = q.nc;
+                k += 1;
                 if q.col >= 0 && q.row as usize != r {
                     col.push((q.row, q.val));
                 }
             }
+            self.work += k as f64 * 6.0 * self.work_mult;
         }
         self.cols_removed += 1;
         self.rows_removed += 1;
@@ -1172,7 +1293,9 @@ impl State {
         rc.hi[r] = 0.0;
         rc.rowmax[r] = 0.0;
         self.objcon += self.obj[j] * (rhs_r / a);
+        let mu = self.work_mult;
         let mut s_row = 0.0f64;
+        let mut len_r = 0;
         let mut p = mat.rh[r];
         while p != NIL {
             let q = mat.nd[p as usize];
@@ -1181,7 +1304,9 @@ impl State {
             self.col_cnt[k] -= 1;
             self.obj[k] -= (self.obj[j] * q.val) / a;
             s_row += self.col_cnt[k] as f64;
+            len_r += 1;
         }
+        self.work += len_r as f64 * 4.0 * mu;
         self.agg_mark_row(mat, r);
         self.agg_mark_col(mat, j);
         let (lj, uj) = (self.lb[j], self.ub[j]);
@@ -1204,6 +1329,9 @@ impl State {
             slot.push(p);
             p = q.nc;
         }
+        let u = rows.len() as f64;
+        self.work += u * 5.0 * mu;
+        self.work += u * 6.0 * mu;
         self.row_cnt[r] = -3;
         self.obj[j] = 0.0;
         self.col_cnt[j] = -3 - r as i32;
@@ -1219,10 +1347,13 @@ impl State {
                     self.agg_compact_col(mat, k);
                 }
                 let mut s = mat.ch[k];
+                let mut ns = 0.0;
                 while s != NIL {
                     mat.scat[mat.nd[s as usize].row as usize] = s;
                     s = mat.nd[s as usize].nc;
+                    ns += 1.0;
                 }
+                self.work += (ns + ns) * mu;
                 for tt in 0..rows.len() {
                     let i = rows[tt];
                     let v = (-vals[tt] * qk.val) / a;
@@ -1234,34 +1365,44 @@ impl State {
                         mat.scat[i] = NIL;
                     }
                 }
+                self.work += ns * 16.0 * mu;
                 let mut s = mat.ch[k];
+                let mut nc = 0.0;
                 while s != NIL {
                     let x = mat.nd[s as usize];
                     if x.col >= 0 {
                         mat.scat[x.row as usize] = NIL;
                     }
                     s = x.nc;
+                    nc += 1.0;
                 }
+                self.work += (nc + nc) * mu;
             }
+            self.work += len_r as f64 * 5.0 * mu;
         } else {
             // B2: j's entries outside, row r's columns inside (scatter by column)
             for tt in 0..rows.len() {
                 let i = rows[tt];
                 if self.tracker.rows.flag[i] & 0x10 != 0 {
-                    Self::agg_compact_row(mat, i);
+                    self.agg_compact_row(mat, i);
                 }
                 let mut s = mat.rh[i];
+                let mut ns = 0.0;
                 while s != NIL {
                     let x = mat.nd[s as usize];
                     if x.col >= 0 {
                         mat.scat[x.col as usize] = s;
                     }
                     s = x.nr;
+                    ns += 1.0;
                 }
+                self.work += (ns + ns) * mu;
                 let mut p = mat.rh[r];
+                let mut ni = 0;
                 while p != NIL {
                     let qk = mat.nd[p as usize];
                     p = qk.nr;
+                    ni += 1;
                     let k = qk.col as usize;
                     let v = (-qk.val * vals[tt]) / a;
                     let e = mat.scat[k];
@@ -1275,15 +1416,20 @@ impl State {
                         mat.scat[k] = NIL;
                     }
                 }
+                self.work += ni as f64 * 16.0 * mu;
                 let mut s = mat.rh[i];
+                let mut nc = 0.0;
                 while s != NIL {
                     let x = mat.nd[s as usize];
                     if x.col >= 0 {
                         mat.scat[x.col as usize] = NIL;
                     }
                     s = x.nr;
+                    nc += 1.0;
                 }
+                self.work += (nc + nc) * mu;
             }
+            self.work += u * 5.0 * mu;
         }
         // nodes of j not reused for fill leave their rows
         for &s in &slot {
@@ -1297,6 +1443,7 @@ impl State {
                 self.nnz -= 1;
             }
         }
+        self.work += u * 3.0 * mu;
     }
 
     /// Stage B (`37f484` L1288-1430, L2555-3890): a `<` row turns a free-ish column into its slack.
@@ -1304,6 +1451,7 @@ impl State {
     fn agg_stage_b(&mut self, mat: &mut Mat, rc: &mut RowCache, cls: &[u8], cand: &[i32], tol_a: f64, tol_i: f64, rho: f64,
                    t: &ColTols, fill: i32) {
         let n = self.n;
+        let mu = self.work_mult;
         let lim_l = t.agg_mult_limit;
         let ff = fill as f64;
         let (mut keys, mut nodes) = (Vec::new(), Vec::new());
@@ -1331,6 +1479,7 @@ impl State {
             nodes.clear();
             let mut give_up = false;
             let mut p = mat.ch[j];
+            let mut visited = 0.0;
             while p != NIL {
                 let q = mat.nd[p as usize];
                 if q.col >= 0 {
@@ -1349,8 +1498,13 @@ impl State {
                     }
                 }
                 p = q.nc;
+                visited += 1.0;
             }
-            if give_up || keys.is_empty() {
+            if give_up {
+                keys.clear();
+            }
+            self.work += (visited * 3.0 + keys.len() as f64 * 4.0) * mu;
+            if keys.is_empty() {
                 continue;
             }
             if keys.len() >= 2 {
@@ -1358,11 +1512,13 @@ impl State {
             }
             let thr = colmax * rho;
             let (mut best, mut cnt_best, mut piv) = (0.0f64, n as i32 + 1, NIL);
+            let mut seen = 0;
             for (&key, &p) in keys.iter().zip(nodes.iter()) {
                 let cnt = key as i32;
                 if cnt_best < cnt {
                     break;
                 }
+                seen += 1;
                 let x = if cnt < cnt_best { thr } else { best };
                 let a = mat.nd[p as usize].val.abs();
                 if x < a && self.agg_mult_ok(mat, rc, p as u32, lim_l) {
@@ -1371,6 +1527,7 @@ impl State {
                     cnt_best = cnt;
                 }
             }
+            self.work += seen as f64 * 3.0 * mu;
             if piv == NIL {
                 continue;
             }
@@ -1383,6 +1540,7 @@ impl State {
             }
             self.agg_slack(mat, rc, piv, j, t.infbound);
         }
+        self.work += cand.len() as f64 * 9.0 * mu;
     }
 
     /// Stage B substitution: with `<` row r (pivot a on column j), x_j = rhs/a - sum(a_rk/a x_k) - s x'_j where
@@ -1393,11 +1551,14 @@ impl State {
         let s = if a < 0.0 { -1.0 } else { 1.0 };
         let aa = a.abs();
         let (lj, uj) = (self.lb[j], self.ub[j]);
+        let mu = self.work_mult;
         let mut s_col = 0.0f64;
         let mut p = mat.ch[j];
+        let mut k = 0;
         while p != NIL {
             let q = mat.nd[p as usize];
             p = q.nc;
+            k += 1;
             if q.col < 0 {
                 continue;
             }
@@ -1406,15 +1567,19 @@ impl State {
             rc.hi[i] = 0.0;
             self.agg_contrib(i, q.val, lj, uj, false, inf);
         }
+        self.work += k as f64 * 3.0 * mu;
         let mut s_row = 0.0f64;
         let mut p = mat.rh[r];
+        let mut k = 0;
         while p != NIL {
             let q = mat.nd[p as usize];
             p = q.nr;
+            k += 1;
             if q.col >= 0 {
                 s_row += self.col_cnt[q.col as usize] as f64;
             }
         }
+        self.work += k as f64 * 3.0 * mu;
         mat.nd[piv as usize].val = aa;
         let rhs_r = self.rhs[r];
         self.agg_push_subst(mat, j, r, rhs_r / a, a, self.row_cnt[r]);
@@ -1429,40 +1594,50 @@ impl State {
         self.col_cnt[j] -= 1;
         self.objcon += (rhs_r / a) * self.obj[j];
         let mut p = mat.rh[r];
+        let mut k = 0;
         while p != NIL {
             let q = mat.nd[p as usize];
             p = q.nr;
+            k += 1;
             if q.col >= 0 {
                 let k = q.col as usize;
                 self.col_cnt[k] -= 1;
                 self.obj[k] -= (self.obj[j] * q.val) / a;
             }
         }
+        self.work += k as f64 * 5.0 * mu;
         self.obj[j] = -self.obj[j] * s;
-        Self::agg_compact_row(mat, r);
+        self.agg_compact_row(mat, r);
         self.agg_compact_col(mat, j);
         self.agg_mark_row(mat, r);
         self.agg_mark_col(mat, j);
         self.row_cnt[r] = -3;
         let mut none = NIL;
+        let mut outer = 0;
         if s_row <= s_col {
             let mut p = mat.rh[r];
             while p != NIL {
                 let qk = mat.nd[p as usize];
                 p = qk.nr;
+                outer += 1;
                 let k = qk.col as usize;
                 if self.tracker.cols.flag[k] & 0x10 != 0 {
                     self.agg_compact_col(mat, k);
                 }
                 let mut x = mat.ch[k];
+                let mut ns = 0;
                 while x != NIL {
                     mat.scat[mat.nd[x as usize].row as usize] = x;
                     x = mat.nd[x as usize].nc;
+                    ns += 1;
                 }
+                self.work += ns as f64 * 3.0 * mu;
                 let mut y = mat.ch[j];
+                let mut ni = 0;
                 while y != NIL {
                     let qi = mat.nd[y as usize];
                     y = qi.nc;
+                    ni += 1;
                     let i = qi.row as usize;
                     let v = (-qi.val * qk.val) / a;
                     let e = mat.scat[i];
@@ -1471,36 +1646,46 @@ impl State {
                         mat.scat[i] = NIL;
                     }
                 }
+                self.work += ni as f64 * 10.0 * mu;
                 let mut x = mat.ch[k];
+                let mut nc = 0;
                 while x != NIL {
                     let q = mat.nd[x as usize];
                     if q.col >= 0 {
                         mat.scat[q.row as usize] = NIL;
                     }
                     x = q.nc;
+                    nc += 1;
                 }
+                self.work += nc as f64 * 3.0 * mu;
             }
         } else {
             let mut y = mat.ch[j];
             while y != NIL {
                 let qi = mat.nd[y as usize];
                 y = qi.nc;
+                outer += 1;
                 let i = qi.row as usize;
                 if self.tracker.rows.flag[i] & 0x10 != 0 {
-                    Self::agg_compact_row(mat, i);
+                    self.agg_compact_row(mat, i);
                 }
                 let mut x = mat.rh[i];
+                let mut ns = 0;
                 while x != NIL {
                     let q = mat.nd[x as usize];
                     if q.col >= 0 {
                         mat.scat[q.col as usize] = x;
                     }
                     x = q.nr;
+                    ns += 1;
                 }
+                self.work += ns as f64 * 3.0 * mu;
                 let mut p = mat.rh[r];
+                let mut ni = 0;
                 while p != NIL {
                     let qk = mat.nd[p as usize];
                     p = qk.nr;
+                    ni += 1;
                     let k = qk.col as usize;
                     let v = (-qi.val * qk.val) / a;
                     let e = mat.scat[k];
@@ -1509,23 +1694,30 @@ impl State {
                         mat.scat[k] = NIL;
                     }
                 }
+                self.work += ni as f64 * 10.0 * mu;
                 let mut x = mat.rh[i];
+                let mut nc = 0;
                 while x != NIL {
                     let q = mat.nd[x as usize];
                     if q.col >= 0 {
                         mat.scat[q.col as usize] = NIL;
                     }
                     x = q.nr;
+                    nc += 1;
                 }
+                self.work += nc as f64 * 3.0 * mu;
             }
         }
+        self.work += outer as f64 * 6.0 * mu;
         self.tracker.mark_col(j as i32); // 53d139
         self.tracker.cols.flag[j] |= 0x30;
         let mut y = mat.ch[j];
+        let mut k = 0;
         while y != NIL {
             let cur = y as usize;
             let q = mat.nd[cur];
             y = q.nc;
+            k += 1;
             let i = q.row as usize;
             let d = (rhs_r * q.val) / a;
             self.rhs[i] -= d;
@@ -1535,7 +1727,9 @@ impl State {
             self.act_min[i] = guarded_add(self.act_min[i], d, false);
             self.act_max[i] = guarded_add(self.act_max[i], d, true);
         }
-        Self::agg_kill_row(mat, r);
+        self.work += k as f64 * 5.0 * mu;
+        let k = Self::agg_kill_row(mat, r);
+        self.work += k * mu;
     }
 
     /// Stage C (`37f484` L1431-1925): a 4-term `=` row with zero rhs, P1(x_p1 - x_n1) + P2(x_p2 - x_n2) = 0, whose
@@ -1551,24 +1745,26 @@ impl State {
             let mut neg: Vec<(usize, f64)> = Vec::new();
             let mut fail = false;
             let mut p = mat.rh[r];
+            let mut visited = 0;
             while p != NIL {
                 let q = mat.nd[p as usize];
                 p = q.nr;
-                if q.col < 0 {
-                    continue;
+                if q.col >= 0 {
+                    let k = q.col as usize;
+                    if self.col_flag[k] != 0 || 1e-10 < self.lb[k].abs() || self.ub[k] - self.lb[k] < 1e-10 {
+                        fail = true;
+                        break;
+                    }
+                    let side = if q.val <= 0.0 { &mut neg } else { &mut pos };
+                    if side.len() == 2 {
+                        fail = true;
+                        break;
+                    }
+                    side.push((k, q.val));
                 }
-                let k = q.col as usize;
-                if self.col_flag[k] != 0 || 1e-10 < self.lb[k].abs() || self.ub[k] - self.lb[k] < 1e-10 {
-                    fail = true;
-                    break;
-                }
-                let side = if q.val <= 0.0 { &mut neg } else { &mut pos };
-                if side.len() == 2 {
-                    fail = true;
-                    break;
-                }
-                side.push((k, q.val));
+                visited += 1;
             }
+            self.work += visited as f64 * 4.0 * self.work_mult;
             let mut committed = false;
             if !fail && pos.len() == 2 && neg.len() == 2 {
                 let ((p1, pv1), (p2, pv2)) = (pos[0], pos[1]);
@@ -1589,6 +1785,7 @@ impl State {
             }
             if !committed {
                 let mut p = mat.rh[r];
+                let mut k = 0.0;
                 while p != NIL {
                     let q = mat.nd[p as usize];
                     p = q.nr;
@@ -1596,9 +1793,13 @@ impl State {
                         failed.push(q.col as usize);
                         self.col_flag[q.col as usize] = 0x1000;
                     }
+                    k += 1.0;
                 }
+                self.work += (k + k) * self.work_mult;
             }
         }
+        let nf = failed.len() as f64;
+        self.work += (nf + nf) * self.work_mult;
         for j in failed {
             self.col_flag[j] = 0;
         }
@@ -1606,23 +1807,29 @@ impl State {
 
     /// `395c97`: can columns p and n be shifted together (rows only allow it if p + n stays put on `=` rows and does
     /// not go down on `<` rows, and rows with only one of them do not mind it going up)?
-    fn agg_pairable(&self, mat: &mut Mat, pc: usize, nc: usize) -> bool {
+    fn agg_pairable(&mut self, mat: &mut Mat, pc: usize, nc: usize) -> bool {
         if self.obj[pc] + self.obj[nc] < -1e-10 {
             return false;
         }
+        let mu = self.work_mult;
         let mut x = mat.ch[nc];
+        let mut k = 0;
         while x != NIL {
             let q = mat.nd[x as usize];
             if q.col >= 0 {
                 mat.scat[q.row as usize] = x;
             }
             x = q.nc;
+            k += 1;
         }
+        self.work += mu * 3.0 * k as f64;
         let mut ok = true;
         let mut x = mat.ch[pc];
+        let mut k = 0;
         while x != NIL {
             let q = mat.nd[x as usize];
             x = q.nc;
+            k += 1;
             if q.col < 0 {
                 continue;
             }
@@ -1632,22 +1839,27 @@ impl State {
             if e == NIL {
                 if eq || q.val < 0.0 {
                     ok = false;
+                    k -= 1;
                     break;
                 }
             } else {
                 let s = q.val + mat.nd[e as usize].val;
                 if (eq && 1e-10 < s.abs()) || (!eq && s < -1e-10) {
                     ok = false;
+                    k -= 1;
                     break;
                 }
                 mat.scat[i] = NIL;
             }
         }
+        self.work += mu * 4.0 * k as f64;
         // rows of n left in the scatter (no p entry), and cleanup
         let mut x = mat.ch[nc];
+        let mut k = 0;
         while x != NIL {
             let q = mat.nd[x as usize];
             x = q.nc;
+            k += 1;
             if q.col < 0 {
                 continue;
             }
@@ -1659,6 +1871,7 @@ impl State {
                 mat.scat[i] = NIL;
             }
         }
+        self.work += mu * 3.0 * k as f64;
         ok
     }
 
@@ -1719,13 +1932,16 @@ impl State {
         for (e, cnt) in [(e1, c1), (e2, c2)] {
             if 0 < cnt {
                 let mut x = mat.ch[e];
+                let mut k = 0;
                 while x != NIL {
                     let q = mat.nd[x as usize];
                     if q.col >= 0 && q.row as usize != r {
                         entries.push((q.row, q.val));
                     }
                     x = q.nc;
+                    k += 1;
                 }
+                self.work += self.work_mult * 6.0 * k as f64;
             }
         }
         self.cols_removed += 2;
@@ -1739,7 +1955,8 @@ impl State {
         self.agg_mark_col(mat, e2);
         self.ub[k1] = if inf <= self.ub[e1] { inf } else { self.ub[e1] / f1 };
         self.ub[k2] = if inf <= self.ub[e2] { inf } else { self.ub[e2] / f2 };
-        Self::agg_kill_row(mat, r);
+        let k = Self::agg_kill_row(mat, r);
+        self.work += k * self.work_mult;
         self.row_cnt[r] = -3;
         self.obj[k1] += f1 * self.obj[e1];
         self.obj[k2] += f2 * self.obj[e2];
@@ -1757,19 +1974,25 @@ impl State {
     /// Fold column e into column k: entries f * a_ie are added (no activity update), with `rhs` = (b, a_e) also
     /// moving b a_ie / a_e out of each row's rhs (stage D). Then e's nodes go to pending and k is compacted.
     fn agg_fold(&mut self, mat: &mut Mat, e: usize, k: usize, f: f64, rhs: Option<(f64, f64)>) {
+        let mu = self.work_mult;
         let mut x = mat.ch[k];
+        let mut c = 0;
         while x != NIL {
             let q = mat.nd[x as usize];
             if q.col >= 0 {
                 mat.scat[q.row as usize] = x;
             }
             x = q.nc;
+            c += 1;
         }
+        self.work += c as f64 * 3.0 * mu;
         let mut none = NIL;
         let mut y = mat.ch[e];
+        let mut c = 0;
         while y != NIL {
             let q = mat.nd[y as usize];
             y = q.nc;
+            c += 1;
             if q.col < 0 {
                 continue;
             }
@@ -1787,14 +2010,18 @@ impl State {
                 mat.scat[i] = NIL;
             }
         }
+        self.work += c as f64 * 10.0 * mu;
         let mut x = mat.ch[k];
+        let mut c = 0;
         while x != NIL {
             let q = mat.nd[x as usize];
             if q.col >= 0 {
                 mat.scat[q.row as usize] = NIL;
             }
             x = q.nc;
+            c += 1;
         }
+        self.work += c as f64 * 3.0 * mu;
         self.agg_release_col(mat, e);
         if rhs.is_none() {
             self.agg_compact_col(mat, k);
@@ -1807,20 +2034,28 @@ impl State {
         let inf = t.infbound;
         let lim_l = t.agg_mult_limit;
         let inv = 1.0 / lim_l;
+        let mu = self.work_mult;
         for &r in rlist {
             let r = r as usize;
             if self.row_cnt[r] != 2 || self.sense[r] != b'=' {
                 continue;
             }
+            // first two live nodes; pos = position of the second
             let mut two = Vec::with_capacity(2);
             let mut p = mat.rh[r];
-            while p != NIL && two.len() < 2 {
+            let mut pos = 0;
+            while p != NIL {
                 let q = mat.nd[p as usize];
                 if q.col >= 0 {
                     two.push((q.col as usize, q.val));
+                    if two.len() == 2 {
+                        break;
+                    }
                 }
                 p = q.nr;
+                pos += 1;
             }
+            self.work += pos as f64 * 3.0 * mu;
             let ((c1, a1), (c2, a2)) = (two[0], two[1]);
             if !(pmin <= a1.abs() && pmin <= a2.abs()) {
                 continue; // the tiny-coefficient path needs the prescan pattern (asserted absent)
@@ -1871,32 +2106,40 @@ impl State {
                 self.post.push(PostRec::AggBound { code, e: e as i32, k: k as i32, r: r as i32, b, ae, ak });
             }
             let mut p = mat.rh[r];
+            let mut ke = 0.0;
             while mat.nd[p as usize].col != e as i32 {
                 p = mat.nd[p as usize].nr;
+                ke += 1.0;
             }
+            self.work += (ke + ke) * mu;
             mat.nd[p as usize].col = -1;
             let c0 = b / ae;
             self.agg_push_subst(mat, e, r, c0, ae, 1);
             self.objcon += self.obj[e] * c0;
             let mut p = mat.rh[r];
+            let mut c = 0;
             while p != NIL {
                 let q = mat.nd[p as usize];
                 p = q.nr;
+                c += 1;
                 if q.col >= 0 {
                     let kk = q.col as usize;
                     self.col_cnt[kk] -= 1;
                     self.obj[kk] -= (self.obj[e] * q.val) / ae;
                 }
             }
+            self.work += c as f64 * 5.0 * mu;
             self.agg_mark_row(mat, r);
             self.agg_mark_col(mat, e);
             self.obj[e] = 0.0;
             self.row_cnt[r] = -3;
             self.col_cnt[e] = -3 - r as i32;
             self.agg_fold(mat, e, k, ak, Some((b, ae)));
-            Self::agg_kill_row(mat, r);
+            let c = Self::agg_kill_row(mat, r);
+            self.work += (c + c) * mu;
             self.agg_compact_col(mat, k);
         }
+        self.work += rlist.len() as f64 * 12.0 * mu;
     }
 }
 
