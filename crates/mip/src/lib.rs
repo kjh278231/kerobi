@@ -12,6 +12,7 @@ pub mod conflict;
 pub mod driver;
 pub mod dump;
 mod helpers;
+mod iint;
 mod inner;
 mod colpass;
 mod doubleton;

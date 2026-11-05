@@ -10,8 +10,6 @@ impl State {
     pub fn r5a9282(&mut self, p: &Params) -> i32 { 0 }
     /// `3ff744(st, env, T6, mode, flag, 0)` parallel rows / columns
     pub fn parallel(&mut self, p: &Params, mode: i32, flag: i32) -> i32 { 0 }
-    /// `57627e` implied integers, integer equations
-    pub fn implied_int(&mut self, p: &Params) -> i32 { 0 }
     /// `578fd2` knapsack coefficient lifting
     pub fn knapsack(&mut self, p: &Params) -> i32 { 0 }
     /// `4030c9` dominated columns
