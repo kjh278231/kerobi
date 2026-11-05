@@ -194,9 +194,28 @@ class Model:
     def setObjective(self, expr, sense=GRB.MINIMIZE):
         self._obj, self.ModelSense = _lin(expr), sense
 
+    def _param(self, name, default):
+        for k, v in self.Params.items():
+            if k.lower() == name.lower():
+                return v
+        return default
+
     def optimize(self, callback=None):
         if self._core is not None:
-            raise GurobiError(10024, "LP/MIP engines are not ported yet (M1)")
+            if self.IsMIP:
+                raise GurobiError(10024, "MIP engine is not ported yet (M2)")
+            import time
+            t0 = time.perf_counter()
+            st, obj, x, it, trace = self._core.solve(int(self._param("Method", -1)), float(self._param("IterationLimit", 1e100)))
+            self.Runtime = time.perf_counter() - t0
+            self.Status, self._objval, self._x, self.IterCount = st, obj, x, it
+            self.BarIterCount, self.NodeCount, self.SolCount, self.Work = 0, 0.0, int(st == GRB.OPTIMAL), 0.0
+            if callback is not None:  # SIMPLEX callbacks replayed in iteration order after the solve
+                for row in trace:
+                    self._cbrow = row
+                    callback(self, GRB.Callback.SIMPLEX)
+                self._cbrow = None
+            return
         n = len(self._vars)
         obj = [0.0] * n
         for v, c in self._obj.terms.items():
@@ -205,6 +224,16 @@ class Model:
             obj, self._rows, [v.lb for v in self._vars], [v.ub for v in self._vars],
             [v.vtype != GRB.CONTINUOUS for v in self._vars])
         self._objval = val * self.ModelSense + self._obj.const
+
+    def cbGet(self, what):
+        k = {GRB.Callback.SPX_ITRCNT: 0, GRB.Callback.SPX_OBJVAL: 1, GRB.Callback.SPX_PRIMINF: 2,
+             GRB.Callback.SPX_DUALINF: 3, GRB.Callback.SPX_ISPERT: 4}[what]
+        v = self._cbrow[k]
+        return int(v) if k == 4 else v
+
+    @property
+    def ObjBound(self):
+        return self.ObjVal
 
     @property
     def ObjVal(self):

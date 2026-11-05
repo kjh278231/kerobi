@@ -134,22 +134,23 @@ impl Lu {
             }
         }
         let ns = lu.steps.len();
-        // L and U of the singleton steps come straight from the columns (no value changes yet)
         lu.lcol = vec![Vec::new(); m];
         lu.ucol = vec![Vec::new(); m];
+        if ns < m && !lu.markowitz(spx, &mut ppos) {
+            return lu; // singular: incomplete
+        }
+        // L and U of the singleton steps come straight from the columns (their pivot rows have no other active
+        // entries, so the Markowitz values are unaffected); taken after Markowitz so every row has its step
         for k in 0..ns {
             let (_, pos, d) = lu.steps[k];
             for (i, a) in spx.col(head[pos]) {
                 let ki = lu.prow[i];
                 if ki > k as i64 {
                     lu.lcol[k].push((i, a / d));
-                } else if ki >= 0 && ki < k as i64 {
+                } else if ki < k as i64 {
                     lu.ucol[k].push((i, a));
                 }
             }
-        }
-        if ns < m && !lu.markowitz(spx, &mut ppos) {
-            return lu; // singular: incomplete
         }
         lu.finish();
         lu
@@ -649,6 +650,21 @@ mod tests {
                 assert!((dot - if p == q { 1.0 } else { 0.0 }).abs() < 1e-9, "btran row {p}");
             }
         }
+    }
+
+    #[test]
+    fn mixed_singleton_and_markowitz_basis_of_sc50a() {
+        // a basis the dual simplex reaches on sc50a: 8 singleton steps, the rest by Markowitz
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../re/bench/data/netlib/sc50a.mps.gz");
+        let md = rsolver_model::mps::read_file(path).unwrap();
+        let spx = Spx::new(&md);
+        let head = vec![
+            47, 40, 39, 38, 3, 25, 18, 7, 2, 17, 6, 1, 69, 58, 13, 14, 4, 11, 48, 50, 37, 19, 22, 8, 9, 10, 15, 30, 12, 29, 35,
+            20, 21, 36, 26, 27, 28, 34, 33, 31, 32, 0, 23, 24, 41, 42, 43, 44, 45, 46,
+        ];
+        let lu = Lu::factor(&spx, &head);
+        assert!(lu.complete());
+        check(&spx, &lu);
     }
 
     #[test]

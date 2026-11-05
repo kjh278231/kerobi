@@ -90,6 +90,22 @@ impl PyCoreModel {
     fn start_basis(&self) -> Vec<i32> {
         rsolver_lp::start::start_basis(&rsolver_lp::spx::Spx::new(&self.inner))
     }
+    /// LP solve without presolve: (status, objective, x, iterations, trace rows).
+    #[allow(clippy::type_complexity)]
+    fn solve(&self, py: Python<'_>, method: i32, iter_limit: f64) -> (i32, f64, Vec<f64>, f64, Vec<(f64, f64, f64, f64, bool)>) {
+        use rsolver_lp::simplex::{solve_model, Status};
+        let lim = if iter_limit >= 1e18 { u64::MAX } else { iter_limit as u64 };
+        let r = py.allow_threads(|| solve_model(&self.inner, method, lim));
+        let code = match r.status {
+            Status::Optimal => 2,
+            Status::Infeasible => 3,
+            Status::Unbounded => 5,
+            Status::IterLimit => 7,
+            Status::Numeric => 12,
+        };
+        let trace = r.trace.iter().map(|&(k, z, p, d, pt)| (k as f64, z, p, d, pt)).collect();
+        (code, r.obj, r.x, r.iter as f64, trace)
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)
