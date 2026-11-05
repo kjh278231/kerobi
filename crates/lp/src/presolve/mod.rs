@@ -130,7 +130,14 @@ fn reduce(st: &mut State, p: &Params) {
             if limit <= calls {
                 return;
             }
-            // shortcut: 4ffe11, 4ff158, 50cc90 not ported yet (PRELIMIT 5+).
+            if st.singleton_rows(p.feastol, p.infbound) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+            // shortcut: 4ff158, 50cc90 not ported yet (PRELIMIT 6+).
             let _ = (&snap, &mut i);
             return;
         }

@@ -16,6 +16,9 @@ pub enum PostRec {
     /// type 3 (`4f39e3`): column `j` with its rows dropped; it moves toward `dir` (1 up, 0 down) as far as the
     /// rows allow. `rows[t]` = (row, rhs/a), `terms[t]` = the row's other (column, -a_k/a).
     DualFix { j: i32, dir: i32, rows: Vec<(i32, f64)>, terms: Vec<Vec<(i32, f64)>> },
+    /// type 7 (`4ffe11`): singleton row `r` became bound(s) of column `j` (`code` 1 lower, 2 upper, 3 both)
+    /// at `x`; its dual is recovered from `j`'s reduced cost and `a`.
+    SingletonRow { j: i32, r: i32, code: i32, a: f64, x: f64 },
 }
 
 #[derive(Clone, Debug)]
@@ -678,5 +681,57 @@ impl State {
         }
         self.work += self.col_len[j] as f64 * 8.0;
         (lo, hi)
+    }
+
+    /// `4fe49b`: move column `j`'s bounds from (ol, ou) to (nl, nu) in the activities of its rows
+    /// (remove the old contributions, add the new, with the rounding guard).
+    pub fn bound_change(&mut self, j: usize, ol: f64, ou: f64, nl: f64, nu: f64, inf: f64) {
+        let lb_changed = nl != ol;
+        let ub_changed = nu != ou;
+        if !lb_changed && !ub_changed {
+            return;
+        }
+        let b = self.col_beg[j] as usize;
+        for k in b..b + self.col_len[j].max(0) as usize {
+            let i = self.col_ind[k];
+            if i < 0 || self.row_cnt[i as usize] < 0 {
+                continue;
+            }
+            let i = i as usize;
+            let a = self.col_val[k];
+            let lb_on_max = a <= 0.0; // a <= 0: lb feeds the max activity, ub the min; a > 0 the other way
+            if lb_changed && ub_changed {
+                self.act_side(i, !lb_on_max, ou, a, -1, ou < inf);
+                self.act_side(i, lb_on_max, ol, a, -1, -inf < ol);
+                self.act_side(i, !lb_on_max, nu, a, 1, nu < inf);
+                self.act_side(i, lb_on_max, nl, a, 1, -inf < nl);
+            } else if lb_changed {
+                self.act_side(i, lb_on_max, ol, a, -1, -inf < ol);
+                self.act_side(i, lb_on_max, nl, a, 1, -inf < nl);
+            } else {
+                self.act_side(i, !lb_on_max, ou, a, -1, ou < inf);
+                self.act_side(i, !lb_on_max, nu, a, 1, nu < inf);
+            }
+        }
+        self.work += self.col_len[j] as f64 * 7.0;
+    }
+
+    /// One activity update of `4fe49b`: add (`sign` 1) or remove (-1) the contribution `v * a` on the max
+    /// (`on_max`) or min side of row `i`, or adjust the infinite count when `v` is infinite.
+    fn act_side(&mut self, i: usize, on_max: bool, v: f64, a: f64, sign: i32, finite: bool) {
+        if !finite {
+            if on_max {
+                self.inf_max[i] += sign;
+            } else {
+                self.inf_min[i] += sign;
+            }
+            return;
+        }
+        let t = if sign < 0 { -(v * a) } else { v * a };
+        if on_max {
+            self.act_max[i] = guarded_add(self.act_max[i], t, true);
+        } else {
+            self.act_min[i] = guarded_add(self.act_min[i], t, false);
+        }
     }
 }

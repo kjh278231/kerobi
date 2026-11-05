@@ -554,3 +554,108 @@ impl State {
         self.post.push(PostRec::DualFix { j: j as i32, dir, rows, terms });
     }
 }
+
+impl State {
+    /// `4ffe11`: singleton rows among the rows marked at this level (raw list, `538353`): the row becomes a
+    /// bound on its column (both bounds for `=`, which fixes the column via `4fa83a`), or proves infeasibility.
+    /// Bound changes within tolerance of the old bound are ignored; slightly violated ones are clipped.
+    pub fn singleton_rows(&mut self, feastol: f64, inf: f64) -> i32 {
+        let lv = self.tracker.level;
+        let rows: Vec<i32> = self.tracker.rows.list[lv][..self.tracker.rows.a[lv]].to_vec();
+        let mut removed = 0;
+        for &rr in &rows {
+            let r = rr as usize;
+            if self.row_cnt[r] != 1 {
+                continue;
+            }
+            let b = self.row_beg[r] as usize;
+            let end = b + self.row_len[r] as usize;
+            let mut k = b;
+            while k < end && (self.row_ind[k] < 0 || self.col_cnt[self.row_ind[k] as usize] < 0) {
+                k += 1;
+            }
+            self.work += self.row_len[r] as f64 * 2.0;
+            let a = self.row_val[k];
+            let aa = a.abs();
+            if aa < 1e-8 {
+                continue;
+            }
+            let rhs = self.rhs[r];
+            let mut x = rhs / a;
+            let jj = self.row_ind[k];
+            let j = jj as usize;
+            let code: u32;
+            if self.sense[r] == b'=' {
+                let (l, u) = (self.lb[j], self.ub[j]);
+                if x < l - feastol || feastol + u < x {
+                    code = 4;
+                } else if x < l - feastol / aa || feastol / aa + u < x {
+                    continue;
+                } else {
+                    code = (l + 1e-10 < x) as u32 + if x < u - 1e-10 { 2 } else { 0 };
+                }
+            } else if a <= 0.0 {
+                if self.lb[j] + 1e-10 < x {
+                    let u = self.ub[j];
+                    if feastol + u < x {
+                        code = 4;
+                    } else if (feastol * 10.0) / aa + u < x {
+                        continue;
+                    } else {
+                        code = 1;
+                    }
+                } else {
+                    code = 0;
+                }
+            } else if x < self.ub[j] - 1e-10 {
+                let l = self.lb[j];
+                if x < l - feastol {
+                    code = 4;
+                } else if x < l - (feastol * 10.0) / aa {
+                    continue;
+                } else {
+                    code = 2;
+                }
+            } else {
+                code = 0;
+            }
+            if code & 1 != 0 && self.ub[j] < x {
+                let t = if a <= 0.0 { feastol + rhs } else { rhs - feastol };
+                x = if t / a <= self.ub[j] { self.ub[j] } else { t / a };
+            }
+            if code & 2 != 0 && x < self.lb[j] {
+                let t = if a <= 0.0 { rhs - feastol } else { rhs + feastol };
+                x = if self.lb[j] <= t / a { self.lb[j] } else { t / a };
+            }
+            if code == 4 {
+                self.row_ind[k] = -1;
+                if feastol <= self.act_min[r] || (self.act_max[r] <= -feastol && self.sense[r] == b'=') {
+                    self.bad_row = rr;
+                    self.bad_col = jj;
+                    return INFEASIBLE;
+                }
+                self.row_ind[k] = jj;
+                continue;
+            }
+            self.row_ind[k] = -1;
+            if code != 0 {
+                self.post.push(PostRec::SingletonRow { j: jj, r: rr, code: code as i32, a, x });
+                let (ol, ou) = (self.lb[j], self.ub[j]);
+                let nl = if code & 1 != 0 { if x < ou { x } else { ou } } else { ol };
+                let nu = if code & 2 != 0 { if x > nl { x } else { nl } } else { ou };
+                self.bound_change(j, ol, ou, nl, nu, inf);
+                self.lb[j] = nl;
+                self.ub[j] = nu;
+            }
+            self.tracker.mark_col(jj);
+            self.row_cnt[r] = -1;
+            self.col_cnt[j] -= 1;
+            if code == 3 {
+                self.fix_at(j, x, inf, true);
+            }
+            removed += 1;
+        }
+        self.rows_removed += removed;
+        0
+    }
+}
