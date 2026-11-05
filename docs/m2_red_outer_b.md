@@ -7,6 +7,7 @@
 | 함수 | 크기 | 가드(3cd406) | 하는 일 | 38개 호출 | 덤프 비교 |
 |---|---|---|---|---|---|
 | `3e40d1(st, env)` | 2,622 | DualReductions | 쌍대 논리로 `<` 행을 `=`로 | 78(바꾼 것 5) | 78/78 |
+| `418542(st, env)` | 2,645 | Aggregate && DualReductions | 쌍대 집계: 행의 이진 열과 다른 열 묶기(`3bb6fe`) | 78(`3bb6fe` 0회: 작업량만) | 78/78 |
 | `36ee92(env, st)` | 357 | 없음(카운트 없음) | 노드 배열 압축(`510953` CSR 복사 → `514031` 다시 깔기) | 78(압축 1: neos-860300 첫 호출) | 78/78 |
 
 ## 2. `3e40d1` 부등식 → 등식 (`004c3920`)
@@ -62,6 +63,65 @@ INTROW(r, a):                                     // x_j를 정수 걸음으로 
 
 ### 2.3 오라클 확인
 `mip_state_dump.js <model> 3e40d1 all`(38개, 78호출). 바꾼 호출 5개(gmu-35-40·gmu-35-50·neos-2657525-crna·neos-4954672-berkel·neos859080 각 첫 호출, 행 하나씩). `tools/mip_dump_check.py 3e40d1`: **78/78 일치**(sense, +0x400, 추적기, 작업량 포함).
+
+## 3. `418542` 쌍대 집계 (`004e12c0`)
+
+### 3.1 서명·가드·반환
+`int 418542(st, env)`. 3cd406은 Aggregate && DualReductions일 때 T4 안에서 부르고 센다(카운트 28). 반환 0, 할당 실패 0x2711, `3bb6fe`가 0이 아닌 값을 주면 그 값.
+
+### 3.2 알고리즘
+```
+ft = minsd(FeasibilityTol, 1e-6)
+neg[n], pos[n] = 0 (calloc); mark[m] = 0 (calloc); buf = malloc(8m)(3bb6fe 작업 공간)
+for j in 0..n:                                         // 열마다 `<` 행의 계수 부호 세기
+  walked = 0
+  for node in col j list:
+    if node.col ≥ 0:
+      if sense[node.row] == '=': pos[node.col] = neg[node.col] = 2e9; break    // 이 노드는 walked에 안 셈
+      node.val > 0 ? pos[node.col]++ : neg[node.col]++
+    walked++
+  W += walked · (3·μ)
+W += μ · n
+pass = 0
+loop:
+  succ = 0
+  for i in 0..m:
+    if mark[i]: 370047(st, env, 1, &i); mark[i] = 0              // 3bb6fe가 표시한 행만
+    if sense[i] == '=' || row_cnt[i] ≤ 0 || inf_min[i] ≠ 0 || inf_max[i] ≠ 0: continue
+    // 행을 혼자 느슨하게 만들 수 있는 첫 이진 열 k
+    before = 0
+    for node in row i list:
+      if node.col ≥ 0 && vtype ≠ 'C' && lb == 0.0 && ub == 1.0
+         && act_min[i] + |a| >= −1e-10 && ft >= act_max[i] − |a|: k = node.col, a_k = a; break
+      before++
+    W += before · (4·μ)
+    if k 없음: continue
+    walked = 0
+    for node in row i list (처음부터):
+      c = node.col
+      if c ≥ 0 && c ≠ k:
+        d = ub[c] − lb[c]
+        if d > 1e-6 && |a|·d > 1e-6 && colflag[c] == 0:
+          if a > 1e-4 && 1e-10 >= obj[c] && pos[c] == 1: s = +1
+          elif −1e-4 > a && obj[c] >= −1e-10 && neg[c] == 1: s = −1
+          else: s 없음
+          if s: (x, b) = (0 > s·a_k) ? (d, lb[c]) : (−d, ub[c])
+                rc = 3bb6fe(x, b, env, st, c, k, buf, mark, 0, 0, pass == 0, &ok)
+                if rc ≠ 0: return rc
+                if ok: succ++; if pass > 0: pos[k] = neg[k] = 2e9
+      walked++                                        // 모든 노드
+    W += (4·μ) · walked
+  W += (5·μ) · m
+  if pass == 1 && succ > 0: 표시된 행마다 370047(…, 1, &i), 표시 지움; W += m · μ
+  if succ < (n − +0x408) / 50: break                  // i32 나눗셈(0 쪽 버림)
+  pass++; if pass ≥ 2: break                          // succ는 다음 pass에서 0부터
+```
+- 열 c는 비용이 그 방향을 막지 않고(a > 0이면 obj ≤ 1e-10) 그 부호로는 이 `<` 행 하나에만 있다. 그러면 최적해에서 x_c를 이진 x_k에 묶을 수 있다는 논리로 `3bb6fe`(2,389 B, x_c = b + x·x_k 꼴 집계, `5431ee`도 부른다)를 부른다.
+- 기본값 38개에서는 `3bb6fe`가 한 번도 불리지 않는다(coverage `cov2.json` 0회, 훅 있음). 그래서 mark·succ는 늘 0이고, (n − 지운 열) < 50이면 둘째 pass가 돈다(작업량만 다시 더함).
+- 곱 순서는 asm 그대로: `walked·(3·μ)`, `μ·n`, `before·(4·μ)`, `(4·μ)·walked`, `(5·μ)·m`.
+
+### 3.3 오라클 확인과 지름길
+`mip_dump_check.py 418542`: **78/78**(작업량 비트 일치, 둘째 pass를 도는 작은 모델 포함). 포트는 `3bb6fe`를 옮기지 않았다(`shortcut:`): 후보에 닿으면 집계하지 않은 것으로 센다. `5431ee`의 SCC 분기와 함께 옮길 것.
 
 ## 4. `36ee92` 노드 배열 압축 (`00478040`)
 

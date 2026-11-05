@@ -28,8 +28,6 @@ impl State {
     pub fn aggregate(&mut self, p: &Params) -> i32 { 0 }
     /// `414c53(st, env, mode, T16)` column nonzero cancellation (`40d2bc` mode 1)
     pub fn cancel_cols(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// `418542` dual aggregation
-    pub fn dual_agg(&mut self, p: &Params) -> i32 { 0 }
     /// 3cd406 inline dual binarization candidates (m2_spine_b.md §5.4; `3c2f36` never runs on the 38 models)
     pub fn dual_conv_bin(&mut self, p: &Params) -> i32 { 0 }
     /// `45885d` cliques

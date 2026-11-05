@@ -15,6 +15,7 @@ mod inner;
 mod colpass;
 mod compress;
 mod doubleton;
+mod dualagg;
 mod dualeq;
 mod lists;
 pub mod post;

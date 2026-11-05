@@ -256,6 +256,7 @@ impl State {
             }
             "3e40d1" => (self.dual_ineq_to_eq(p), 0),
             "36ee92" => (self.compress(p), 0),
+            "418542" => (self.dual_agg(p), 0),
             "370047" => {
                 self.activity(None);
                 (0, 0)
