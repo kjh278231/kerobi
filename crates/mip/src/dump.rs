@@ -264,6 +264,10 @@ impl State {
             "5431ee" => (self.trans_red(p), 0),
             "3e5363" => (self.xor_rows(p), 0),
             "57627e" => (self.implied_int(p), 0),
+            _ if name.starts_with("3ff744:") => {
+                let a: Vec<i32> = name.split(':').skip(1).map(|x| x.parse().unwrap_or(0)).collect();
+                (self.parallel(p, a[0], a[1]), 0)
+            }
             "370047" => {
                 self.activity(None);
                 (0, 0)
