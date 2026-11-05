@@ -22,8 +22,6 @@ impl State {
     pub fn trans_red(&mut self, p: &Params) -> i32 { 0 }
     /// `4030c9` dominated columns
     pub fn dominated(&mut self, p: &Params) -> i32 { 0 }
-    /// `37f484` aggregation
-    pub fn aggregate(&mut self, p: &Params) -> i32 { 0 }
     /// 3cd406 inline dual binarization candidates (m2_spine_b.md §5.4; `3c2f36` never runs on the 38 models)
     pub fn dual_conv_bin(&mut self, p: &Params) -> i32 { 0 }
     /// `45885d` cliques
