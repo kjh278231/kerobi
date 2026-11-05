@@ -117,7 +117,7 @@ impl State {
             for &i in &list {
                 self.mark[i as usize] = false;
             }
-            if !((self.m as f64) * ratio <= (self.rows_removed - base) as f64) {
+            if (self.m as f64) * ratio > (self.rows_removed - base) as f64 {
                 break;
             }
             it += 1;
@@ -1171,7 +1171,7 @@ impl State {
         self.agg_push_subst(mat, j, r, rhs_r / a, a, self.row_cnt[r] - 1);
         rc.hi[r] = 0.0;
         rc.rowmax[r] = 0.0;
-        self.objcon = self.obj[j] * (rhs_r / a) + self.objcon;
+        self.objcon += self.obj[j] * (rhs_r / a);
         let mut s_row = 0.0f64;
         let mut p = mat.rh[r];
         while p != NIL {
@@ -1427,7 +1427,7 @@ impl State {
         rc.hi[r] = 0.0;
         mat.nd[piv as usize].col = -1;
         self.col_cnt[j] -= 1;
-        self.objcon = (rhs_r / a) * self.obj[j] + self.objcon;
+        self.objcon += (rhs_r / a) * self.obj[j];
         let mut p = mat.rh[r];
         while p != NIL {
             let q = mat.nd[p as usize];
@@ -1547,7 +1547,8 @@ impl State {
             if !(self.row_cnt[r] == 4 && self.sense[r] == b'=' && self.rhs[r].abs() <= 1e-10) {
                 continue;
             }
-            let (mut pos, mut neg): (Vec<(usize, f64)>, Vec<(usize, f64)>) = (Vec::new(), Vec::new());
+            let mut pos: Vec<(usize, f64)> = Vec::new();
+            let mut neg: Vec<(usize, f64)> = Vec::new();
             let mut fail = false;
             let mut p = mat.rh[r];
             while p != NIL {
@@ -1740,8 +1741,8 @@ impl State {
         self.ub[k2] = if inf <= self.ub[e2] { inf } else { self.ub[e2] / f2 };
         Self::agg_kill_row(mat, r);
         self.row_cnt[r] = -3;
-        self.obj[k1] = f1 * self.obj[e1] + self.obj[k1];
-        self.obj[k2] = f2 * self.obj[e2] + self.obj[k2];
+        self.obj[k1] += f1 * self.obj[e1];
+        self.obj[k2] += f2 * self.obj[e2];
         self.obj[e1] = 0.0;
         self.obj[e2] = 0.0;
         self.col_cnt[k1] -= 1;
@@ -1876,7 +1877,7 @@ impl State {
             mat.nd[p as usize].col = -1;
             let c0 = b / ae;
             self.agg_push_subst(mat, e, r, c0, ae, 1);
-            self.objcon = self.obj[e] * c0 + self.objcon;
+            self.objcon += self.obj[e] * c0;
             let mut p = mat.rh[r];
             while p != NIL {
                 let q = mat.nd[p as usize];
