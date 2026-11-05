@@ -103,6 +103,8 @@
 | 2026-11-06 | M1 Markowitz 커널·CHUZR 모드 1 | 비트 일치 프로토타입에서 `036ade` Markowitz 커널 이식, `1bae9c`/`2896a3` CHUZR 모드 1 임계값, 시작 단계 섭동 카운터(tuff가 Gurobi처럼 반복 27에서 섭동) | `f513cd2`, `5b21c30`, `6aa3b46` |
 | 2026-11-06 | M1 드라이버: 엔진 로그 | barrier·PDHG·simplex 반복 로그 행, 증명 상태 로그, `tools/log_check.py`, 전체 로그 테스트 | `73491b9` (`m1-lp-driver`) |
 | 2026-11-06 | M2 바깥 reduction A·B | 함의 그래프 추이 축소(`5431ee`), dual bound(`374521`), 부등식→등식(`3e40d1`), 노드 아레나 압축(`36ee92`), dual 집계(`418542`). 덤프 호출 78/78 | `f280d7c`, `0ea348a`, `8624df7`, `d1d083d`, `2ebdf67` (`m2-outer-a`, `m2-outer-b`) |
+| 2026-11-06 | M1 simplex 속도 개선 | 비트는 그대로(피벗 경로 64/64 동일). BTRAN 출력 재사용, α 지지 집합만 순회, LU 평면 배열, FT 갱신에서 U 위치 역순열 유지 | `61ccd6b`, `2cb6739` |
+| 2026-11-06 | M2 round end·바깥 reduction 추가 | 지배된 singleton 열(`5a9282`), 비용 singleton mod gcd(`5ab429`), VUB lifting(`59c193`), 계수 패턴 사전(`55a779` 1부), XOR 행(`3e5363`), 함의 정수(`57627e`), 평행 행·열 MIP 분기(`3ff744`), 비영 소거(`40d2bc`), MIP 집계(`37f484`) | `dff8109`, `91c379b`, `2b791f0`, `79ae5aa`, `f001cff`, `b14499b` (`m2-*`) |
 
 ## 4. goal 원문
 
