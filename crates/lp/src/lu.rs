@@ -41,6 +41,34 @@ pub struct Lu {
 pub const MARKOWITZ_TOL: f64 = 0.0078125;
 
 impl Lu {
+    /// `9e60b`: estimated nonzeros of row k of B⁻¹ by factor step (P+0x68), for the BTRAN-cost pricing weights.
+    /// Each step starts at 1 and absorbs its Lᵀ row, then its U row from the last step down, as `p + q − pq/m`.
+    /// Returns the costs (`min(p + 100, 0.1m + 100)`) and false when Σp exceeds m·(0.1m + 100) (cost mode 2,
+    /// every cost at the cap).
+    pub fn row_cost_estimate(&self) -> (Vec<f64>, bool) {
+        let k = self.steps.len();
+        let mf = self.head.len() as f64;
+        let mut p = vec![1.0; k];
+        for s in 0..k {
+            for &(t, _) in &self.lrow[s] {
+                p[s] = (p[s] + p[t]) - p[t] * p[s] / mf;
+            }
+        }
+        for s in (0..k).rev() {
+            for &(t, _) in &self.urow[s] {
+                p[s] = (p[s] + p[t]) - p[t] * p[s] / mf;
+            }
+        }
+        let cap = mf * 0.1 + 100.0;
+        // shortcut: plain left-to-right sum; the original sums in 8 lanes (only matters at the threshold)
+        let total: f64 = p.iter().sum();
+        if total <= mf * cap {
+            (p.iter().map(|&x| (x + 100.0).min(cap)).collect(), true)
+        } else {
+            (vec![cap; k], false)
+        }
+    }
+
     pub fn complete(&self) -> bool {
         self.steps.len() == self.head.len()
     }
@@ -562,7 +590,7 @@ pub fn basic_solution(spx: &Spx, vstat: &[i32]) -> Vec<f64> {
     Lu::factor(spx, &head).ftran_dense(rhs)
 }
 
-fn basis_head(m: usize, vstat: &[i32]) -> Vec<usize> {
+pub fn basis_head(m: usize, vstat: &[i32]) -> Vec<usize> {
     let mut head = vec![usize::MAX; m];
     for (j, &s) in vstat.iter().enumerate() {
         if s >= 0 {

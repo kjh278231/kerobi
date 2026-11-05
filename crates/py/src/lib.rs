@@ -119,6 +119,13 @@ impl PyCoreModel {
         let spx = rsolver_lp::spx::Spx::new(&self.inner);
         rsolver_lp::lu::dual_start(&spx, &vstat)
     }
+    /// (`9e60b` row-cost estimate by factor step, basis position of each step, estimate usable) for a status array.
+    fn row_costs(&self, vstat: Vec<i32>) -> (Vec<f64>, Vec<usize>, bool) {
+        let spx = rsolver_lp::spx::Spx::new(&self.inner);
+        let lu = rsolver_lp::lu::Lu::factor(&spx, &rsolver_lp::lu::basis_head(spx.m, &vstat));
+        let (c, ok) = lu.row_cost_estimate();
+        (c, lu.steps.iter().map(|s| s.1).collect(), ok)
+    }
     /// Status array of the dual start basis (crash + first factorization); M1 parity tests.
     fn start_basis(&self) -> Vec<i32> {
         rsolver_lp::start::start_basis(&rsolver_lp::spx::Spx::new(&self.inner))
@@ -150,6 +157,13 @@ impl PyCoreModel {
     }
 }
 
+/// `aabbe3` descending sort (index order of the result), for parity checks.
+#[pyfunction]
+fn sort_desc(mut key: Vec<f64>, mut idx: Vec<i32>) -> (Vec<f64>, Vec<i32>) {
+    rsolver_lp::common::sort_desc(&mut key, &mut idx);
+    (key, idx)
+}
+
 #[pyfunction]
 fn read_model(py: Python<'_>, path: String) -> PyResult<PyCoreModel> {
     let m = py.allow_threads(|| rsolver_model::mps::read_file(&path));
@@ -160,6 +174,7 @@ fn read_model(py: Python<'_>, path: String) -> PyResult<PyCoreModel> {
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(build_model, m)?)?;
     m.add_function(wrap_pyfunction!(read_model, m)?)?;
+    m.add_function(wrap_pyfunction!(sort_desc, m)?)?;
     m.add_class::<PyCoreModel>()?;
     m.add("INF", f64::INFINITY)
 }
