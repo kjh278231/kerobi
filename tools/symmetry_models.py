@@ -47,12 +47,47 @@ def block_lp(name, k, p, q, qe, density, seed):
     return "\n".join(out) + "\n"
 
 
+def cube_lp(name, k, eps):
+    """3-index assignment x_abc (a, b, c < k), `=` rows over each pair of indices, cost 1. All columns form one
+    cell and each row family one; two coefficients of row (0, 0) are 1 + eps (still integral to `54ad3b`, so the
+    hashes agree), which makes `54d420` reject the partition when 2 eps > 1e-9: local_f4 0, two retries, then -2."""
+    cols = [(a, b, c) for a in range(k) for b in range(k) for c in range(k)]
+    rows = [f"P{f}_{i}_{j}" for f in range(3) for i in range(k) for j in range(k)]
+    out = [f"NAME {name}", "ROWS", " N  OBJ"] + [f" E  {r}" for r in rows] + ["COLUMNS"]
+    for a, b, c in cols:
+        out.append(f"    X{a}_{b}_{c}  OBJ  1")
+        for f, (i, j) in enumerate(((a, b), (a, c), (b, c))):
+            v = 1 + eps if f == 0 and (i, j) == (0, 0) and c < 2 else 1
+            out.append(f"    X{a}_{b}_{c}  P{f}_{i}_{j}  {v!r}")
+    out += ["RHS"] + [f"    RHS  {r}  1" for r in rows] + ["ENDATA"]
+    return "\n".join(out) + "\n"
+
+
+def cycles_lp(name, k, length):
+    """k copies of a cycle of `length` columns, rows x_i + x_{i+1} <= 1, cost -1 (-2 for x_0), bounds [0, 1]: the
+    refinement moves around from x_0 a step at a time, so the node limit (5 rounds) ends it before it settles."""
+    out = [f"NAME {name}", "ROWS", " N  OBJ"]
+    out += [f" L  R{c}_{i}" for c in range(k) for i in range(length)] + ["COLUMNS"]
+    for c in range(k):
+        for i in range(length):
+            out.append(f"    X{c}_{i}  OBJ  {-2 if i == 0 else -1}")
+            out += [f"    X{c}_{i}  R{c}_{r}  1" for r in sorted(((i - 1) % length, i))]
+    out += ["RHS"] + [f"    RHS  R{c}_{i}  1" for c in range(k) for i in range(length)]
+    out += ["BOUNDS"] + [f" UP BND  X{c}_{i}  1" for c in range(k) for i in range(length)] + ["ENDATA"]
+    return "\n".join(out) + "\n"
+
+
+EXTRA = {"sym_cube8": lambda: cube_lp("sym_cube8", 8, 6e-10), "sym_cycles": lambda: cycles_lp("sym_cycles", 13, 41)}
+
+
 def main():
     out = Path(sys.argv[1])
     out.mkdir(parents=True, exist_ok=True)
     for name, spec in MODELS.items():
         (out / f"{name}.mps").write_text(block_lp(name, *spec))
-    print(f"{len(MODELS)} models -> {out}")
+    for name, make in EXTRA.items():
+        (out / f"{name}.mps").write_text(make())
+    print(f"{len(MODELS) + len(EXTRA)} models -> {out}")
 
 
 if __name__ == "__main__":
