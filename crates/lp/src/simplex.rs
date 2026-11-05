@@ -55,6 +55,11 @@ pub struct Engine<'a> {
     /// Dual pricing state (P = spx+0x478) and the artificial-bound phase flag spx+0x2cc.
     pub pr: Pricing,
     pub big_m: bool,
+    /// Refactor bookkeeping: (nnz L, nnz U) of the last factor, Σ nnz of the update columns, and the current
+    /// entering column's nonzeros (set by the iteration before `pivot`).
+    fac_nnz: (usize, usize),
+    upd_cols: usize,
+    col_nnz: usize,
     /// Pivot path: (iteration, entering column, leaving column); bound flips of the entering column leave −1.
     pub path: Vec<(u64, i64, i64)>,
 }
@@ -91,6 +96,9 @@ impl<'a> Engine<'a> {
             trace: Vec::new(),
             pr: Pricing::new(m, n, &spx.len),
             big_m: false,
+            fac_nnz: (m, m),
+            upd_cols: 0,
+            col_nnz: 0,
             path: Vec::new(),
         }
     }
@@ -115,8 +123,10 @@ impl<'a> Engine<'a> {
 
     /// Factor the current basis; a singular basis gets slacks of the unpivoted rows in its unpivoted positions.
     fn refactor(&mut self) {
+        self.upd_cols = 0;
         loop {
             self.lu = Lu::factor_tol(self.spx, &self.head, self.markowitz_tol);
+            self.fac_nnz = self.lu.factor_nnz();
             if self.lu.complete() {
                 break;
             }
@@ -246,8 +256,24 @@ impl<'a> Engine<'a> {
         }
         self.vstat[q] = r as i32;
         self.head[r] = q;
-        if !self.lu.update(r, q, spike) || self.lu.n_updates >= self.lu_interval {
+        // 6268b LAB_001f6eb5: decided before this pivot's update with k updates done; refactor at the interval
+        // (reason 2) or when the update file costs more than a fresh factor (reason 10)
+        let k = self.lu.n_updates;
+        let m = self.m as f64;
+        let c46 = m.powf(0.45) as usize; // spx+0x46c (2f7e1 L882)
+        let refactor = k >= self.lu_interval || {
+            let (ln, un) = self.fac_nnz;
+            let t = (ln + un) as f64 - 1.5 * m;
+            k >= c46 && {
+                let f = (t * t).min(c46 as f64 * (4.0 * m * m));
+                (self.upd_cols as f64 * 1.5 + self.lu.eta_nnz() as f64 * 2.0) * m - f > 0.0
+            }
+        };
+        if refactor || !self.lu.update(r, q, spike) {
             self.reinvert();
+        } else {
+            // LU+0x190: nonzeros of the FTRAN'd entering column (pivot included)
+            self.upd_cols += self.col_nnz;
         }
     }
 
@@ -466,6 +492,7 @@ impl<'a> Engine<'a> {
             if let Some(p) = best.filter(|&p| col[p].abs() >= 3e-8) {
                 let out = self.head[p];
                 let st = if self.spx.u[out] - self.spx.l[out] <= 0.0 { -4 } else { -1 };
+                self.col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
                 self.pivot(p, q, st, &spike);
             }
         }
@@ -708,7 +735,8 @@ impl<'a> Engine<'a> {
             let xq = self.x_nonbasic(q) + theta_p;
             let leave = if delta < 0.0 { -1 } else { -2 };
             let leave = if self.spx.u[out] - self.spx.l[out] <= 0.0 { -4 } else { leave };
-            let col_nnz = col.iter().filter(|&&a| a != 0.0).count();
+            let col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
+            self.col_nnz = col_nnz;
             let updates_before = self.lu.n_updates;
             self.pivot(r, q, leave, &spike);
             if self.lu.n_updates > 0 {
@@ -859,6 +887,7 @@ impl<'a> Engine<'a> {
             }
             let xq = self.x_nonbasic(q) + t * dir;
             let st = if self.spx.u[j] - self.spx.l[j] <= 0.0 { -4 } else if leave_upper { -2 } else { -1 };
+            self.col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
             self.pivot(r, q, st, &spike);
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;

@@ -69,6 +69,17 @@ impl Lu {
         }
     }
 
+    /// (nnz of L, nnz of U) of the factorization including the diagonals (LU+0x1e0, LU+0x1e8 after a factor).
+    pub fn factor_nnz(&self) -> (usize, usize) {
+        let m = self.head.len();
+        (m + self.lcol.iter().map(|c| c.len()).sum::<usize>(), m + self.ucol.iter().map(|c| c.len()).sum::<usize>())
+    }
+
+    /// Entries of all Forrest–Tomlin row etas (LU+0x184).
+    pub fn eta_nnz(&self) -> usize {
+        self.retas.iter().map(|e| e.1.len()).sum()
+    }
+
     pub fn complete(&self) -> bool {
         self.steps.len() == self.head.len()
     }
