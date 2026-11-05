@@ -4,8 +4,8 @@ BTRAN of e_p (221173) on the singleton LU: sparse U^T (21a941, ascending step), 
 heap path (descending step) when LU+0x140 = -1, else level path (036ade L5850-5912 levels, buckets in insertion
 order, L^T rows in descending step). Output is sparse, by row, in processing order; 1bae9c sums squares in that
 order with 8 accumulators combined ((0+2)+(4+6)) + ((1+3)+(5+7)) (asm 0xc3a26).
-usage: python tools/proto/dse_weights.py <dir with or0/*.jsonl from tools/spx_oracle.py>"""
-import glob, heapq, json, os, sys
+usage: python tools/proto/dse_weights.py  (reads bench/oracle/iter0, from tools/spx_oracle.py)"""
+import gzip, glob, heapq, json, os, sys
 H = float.fromhex
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "lu_singleton.py")).read().split("ok = full = tot = 0")[0])
 
@@ -92,10 +92,10 @@ def sum_squares(v):
 
 if __name__ == "__main__":
     ok = tot = 0
-    for f in sorted(glob.glob(sys.argv[1] + "/or0/*.jsonl")):
-        name = os.path.basename(f)[:-6]
+    for f in sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../bench/oracle/iter0/*.jsonl.gz"))):
+        name = os.path.basename(f)[:-9]
         if name in ("capri", "perold", "pilot4", "tuff"): continue  # iteration-0 snapshot taken before x_B exists
-        o = json.loads(open(f).readline()); n, m = o["n"], o["m"]
+        o = json.loads(gzip.open(f, "rt").readline()); n, m = o["n"], o["m"]
         beg, ind, val = o["beg"], o["ind"], [H(v) for v in o["val"]]
         head = [None] * m
         for j, s in enumerate(o["vstat"]):

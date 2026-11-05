@@ -8,6 +8,9 @@ M1 진행 중에 알아낸 사실과 작업 방법. 확정된 내용은 해당 �
 |---|---|---|
 | `bench/gurobi/` | 기본값(Method=-1, presolve 켬), Threads=1, WorkLimit 60 | 최종 P1 |
 | `bench/gurobi_dual_nopre/` | Method=1, Presolve=0, Threads=1 (LP 64개) | M1 첫 목표: dual simplex 단독 |
+| `bench/oracle/iter0/` | `tools/spx_oracle.py` 반복 0 전체 스냅숏(행렬 포함), 64개 | 프로토타입 기준(`tools/proto/*.py`) |
+| `bench/oracle/iter0-3/` | 같은 오라클, 반복 0–3, 작은 LP 12개 | 반복 단위 비교 |
+| `bench/oracle/btran0/` | `tools/proto/btran_oracle.py`, e_p BTRAN 출력 | §6.6 근거 |
 
 ## 2. 상태 오라클 (`tools/spx_oracle.py`)
 
