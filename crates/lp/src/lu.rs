@@ -26,6 +26,8 @@ pub struct Lu {
     urow: Vec<Vec<(usize, f64)>>,
     /// U order of the steps (LU+0x48 ord: position → step); identity after a factor, permuted by FT updates.
     order: Vec<usize>,
+    /// U position of each step (LU+0x40 pos), the inverse of `order`.
+    upos: Vec<usize>,
     /// Prefix of U positions with empty U columns as the original tracks it (LU+0x100).
     prefix: usize,
     /// Cache of the highest U position with an empty column (LU+0xe8).
@@ -174,12 +176,19 @@ impl Lu {
                 rc[j - n] += 1 + m; // slack-basic row marker
             }
         }
-        let mut rows: Vec<Vec<(usize, f64)>> = vec![Vec::new(); m];
+        // rows of the basic structurals (rows without a basic slack), position order, as one flat array
+        let mut rstart = vec![0usize; m + 1];
+        for i in 0..m {
+            rstart[i + 1] = rstart[i] + if rc[i] <= m { rc[i] } else { 0 };
+        }
+        let mut rent = vec![(0usize, 0.0f64); rstart[m]];
+        let mut fill = rstart.clone();
         for (pos, &j) in head.iter().enumerate() {
             if j < n {
                 for (i, a) in spx.col(j) {
                     if rc[i] <= m {
-                        rows[i].push((pos, a));
+                        rent[fill[i]] = (pos, a);
+                        fill[i] += 1;
                     }
                 }
             }
@@ -194,6 +203,7 @@ impl Lu {
             ucol: Vec::new(),
             urow: Vec::new(),
             order: Vec::new(),
+            upos: Vec::new(),
             prefix: 0,
             e8: 0,
             retas: Vec::new(),
@@ -219,7 +229,7 @@ impl Lu {
                 continue;
             }
             rc[r] = 0;
-            let &(pos, d) = rows[r].iter().find(|(p, _)| ppos[*p] == -1).expect("row singleton has a free column");
+            let &(pos, d) = rent[rstart[r]..rstart[r + 1]].iter().find(|(p, _)| ppos[*p] == -1).expect("row singleton has a free column");
             pivot(&mut lu, &mut ppos, r, pos, d);
             for (i, _) in spx.col(head[pos]) {
                 if lu.prow[i] == -1 {
@@ -263,13 +273,29 @@ impl Lu {
         let s3 = lu.steps.len();
         {
             let mut cc = vec![0usize; m];
-            let mut rcopy: Vec<Vec<usize>> = vec![Vec::new(); m]; // active row copy, ascending position
+            // active row copy, ascending position, flat
+            let mut cstart = vec![0usize; m + 1];
             for c in 0..m {
                 if ppos[c] == -1 {
                     for (i, _) in spx.col(head[c]) {
                         if lu.prow[i] < 0 {
                             cc[c] += 1;
-                            rcopy[i].push(c);
+                            cstart[i + 1] += 1;
+                        }
+                    }
+                }
+            }
+            for i in 0..m {
+                cstart[i + 1] += cstart[i];
+            }
+            let mut rcopy = vec![0usize; cstart[m]];
+            let mut fill = cstart.clone();
+            for c in 0..m {
+                if ppos[c] == -1 {
+                    for (i, _) in spx.col(head[c]) {
+                        if lu.prow[i] < 0 {
+                            rcopy[fill[i]] = c;
+                            fill[i] += 1;
                         }
                     }
                 }
@@ -281,7 +307,7 @@ impl Lu {
                 }
                 let (r, d) = spx.col(head[c]).find(|&(i, _)| lu.prow[i] == -1).expect("active entry");
                 pivot(&mut lu, &mut ppos, r, c, d);
-                for &c2 in &rcopy[r] {
+                for &c2 in &rcopy[cstart[r]..cstart[r + 1]] {
                     if ppos[c2] == -1 {
                         cc[c2] -= 1;
                         if cc[c2] == 1 {
@@ -580,6 +606,7 @@ impl Lu {
             self.kpos[pos] = k;
         }
         self.order = (0..m).collect();
+        self.upos = (0..m).collect();
         // 5b257 L2595–2733 after a factor: t = leading empty U columns, LU+0xe8 = highest empty column above t
         self.prefix = self.ucol.iter().take_while(|c| c.is_empty()).count();
         self.e8 = m.saturating_sub(1);
@@ -830,10 +857,7 @@ impl Lu {
         // shortcut: the dot product never peels an element (pool alignment unknown)
         let kp = self.kpos[pos];
         let rp = self.steps[kp].0;
-        let mut at = vec![0; self.order.len()];
-        for (i, &k) in self.order.iter().enumerate() {
-            at[k] = i;
-        }
+        let mut at = std::mem::take(&mut self.upos);
         let q = at[kp];
         let t = self.prefix;
         let p0 = q.max(t.saturating_sub(1));
@@ -941,12 +965,13 @@ impl Lu {
             }
         }
         self.prefix = (local40 + 1) as usize;
+        self.upos = at;
         for &i in &others {
             self.ucol[kp].push((i, spike[i]));
             self.urow[self.prow[i] as usize].push((kp, spike[i]));
         }
         if others.is_empty() {
-            self.e8 = self.e8.max(at[kp]);
+            self.e8 = self.e8.max(self.upos[kp]);
         }
         self.steps[kp].2 = diag;
         self.head[pos] = var;

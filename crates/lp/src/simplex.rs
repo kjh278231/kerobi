@@ -963,6 +963,9 @@ impl<'a> Engine<'a> {
                     -3 => (-a.abs(), self.d[j].abs()),
                     _ => continue,
                 };
+                if ag >= -1e-10 {
+                    continue; // bfrt skips it first thing
+                }
                 let w = if j < self.n { self.spx.len[j] as f64 * (1.0 * 0.3 + 0.7) } else { 0.5 * (1.0 * 0.3 + 0.7) };
                 cands.push(Cand { j, a: ag, d: dg, range: self.spx.u[j] - self.spx.l[j], back: j >= self.n, w });
             }
