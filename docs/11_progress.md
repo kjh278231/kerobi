@@ -17,6 +17,7 @@
 - Gurobi는 한 프로세스만 돌린다(`gurobi_guard.pth`). "already running"이면 기다렸다 다시 시도한다.
 - 공유 `.venv`에 `maturin develop`이나 `pip install`은 main 트리만 한다. worktree는 cargo로 빌드한 `.so`를 자기 `python/rsolver`에 두고 `PYTHONPATH=$PWD/python`으로 쓴다.
 - worktree는 `crates/lp`의 기존 파일을 고치지 않는다(`lib.rs` 모듈 등록은 허용). 커밋은 자기 브랜치에만, 단계마다 한다.
+- `docs/11_progress.md`는 오케스트레이터가 main에서만 고친다. worktree 에이전트는 자기 인수인계 메모에만 적는다.
 - 답변은 한국어로 한다.
 
 ## 2. 작업 흐름
@@ -43,6 +44,9 @@
 | 2026-11-05 | M1 dual 반복 경로 | BFRT·cost shifting, 수치 안전장치 사다리, 가중치 리셋, 재분해 뒤 flip. `crates/core` 삭제(만든 LP도 LP 엔진 사용), Markowitz count bucket | `c9fddee`, `33a2342` |
 | 2026-11-05 | M1 postsolve 준비 | uncrush 오라클(`363daa` 훅), 저장·종료 규칙과 LP uncrush 경로를 03에 반영 | `e707fea`, `f0622fa` (`m1-lp-presolve`) |
 | 2026-11-05 | M3 정규방정식·ordering | 결정성 64/64, small-pivot 규칙의 LDLᵀ, A·Θ·Aᵀ 조립, AAᵀ 패턴 64/64, AMD 순열·symbolic 53/64 | `66054a0` (`m3-barrier`) |
+| 2026-11-05 | M1 presolve 2a–2c | 비용 선호점 고정, 함의 중복 행, dual bound 전파. PRELIMIT 1–14 64/64. PreDepRow는 Netlib에서 degen2·degen3만 바꿈 | `eb471f7` (`m1-lp-presolve`) |
+| 2026-11-05 | M3 ordering·symbolic | AAᵀ NZ, 순열(AMD + bisection), supernode, Factor NZ/Ops 64/64 | `f1d0841`, `8bc322b` (`m3-barrier`) |
+| 2026-11-05 | M3 IPM 프로토타입 | 초기점, predictor, Mehrotra/Gondzio corrector, line search, Gurobi pivot 규칙 LDLᵀ와 refinement | `06308ed` (`m3-barrier`) |
 
 ## 4. goal 원문
 
