@@ -1838,6 +1838,8 @@ impl State {
         let (inf, ft) = (t.infbound, t.feastol);
         let mut lc = self.lb.clone();
         let mut uc = self.ub.clone();
+        let (nf, mf) = (n as f64, m as f64);
+        self.work += nf + nf;
         let (mut live, mut live_nnz) = (0i64, 0i64);
         for j in 0..n {
             if 0 < self.col_cnt[j] {
@@ -1845,6 +1847,7 @@ impl State {
                 live_nnz += self.col_cnt[j] as i64;
             }
         }
+        self.work += nf + nf;
         if live == 0 {
             return 0;
         }
@@ -1853,10 +1856,12 @@ impl State {
         // state+8 (problem type) == 1 would also take this way
         if live * 1000 <= live_nnz {
             kept = (0..m as i32).filter(|&i| 0 < self.row_cnt[i as usize]).collect();
+            self.work += mf + mf;
         } else {
             // activities of copies follow the implied bounds of columns with an infinite bound
             let (mut imax, mut imin) = (self.inf_max.clone(), self.inf_min.clone());
             let (mut amax, mut amin) = (self.act_max.clone(), self.act_min.clone());
+            self.work += mf * 4.0;
             let open = |i: usize, imin: &[i32], imax: &[i32], sense: &[u8]| {
                 let (a, b) = (imin[i], imax[i]);
                 !(a + b < 1 || (1 < a && (1 < b || sense[i] != b'=')))
@@ -1869,6 +1874,7 @@ impl State {
                     flag[i] = 1;
                 }
             }
+            self.work += mf * 8.0;
             while !list.is_empty() {
                 let len0 = list.len();
                 for idx in 0..len0 {
@@ -1950,6 +1956,7 @@ impl State {
                             }
                             tightened += 1;
                             shift(nl, true, &mut list, self);
+                            self.work += self.col_len[k] as f64 * 8.0;
                             lc[k] = nl;
                             l = nl;
                         }
@@ -1960,11 +1967,14 @@ impl State {
                             }
                             tightened += 1;
                             shift(nu, false, &mut list, self);
+                            self.work += self.col_len[k] as f64 * 8.0;
                             uc[k] = nu;
                         }
                     }
+                    self.work += self.row_len[i] as f64 * 15.0;
                 }
                 let all = std::mem::take(&mut list);
+                self.work += all.len() as f64 * 11.0;
                 for i in all {
                     if flag[i] < 2 || self.row_cnt[i] < 1 || !open(i, &imin, &imax, &self.sense) {
                         flag[i] = 0;
@@ -1991,6 +2001,7 @@ impl State {
                     }
                 } else if imax[i] == 0 && amax[i] < -(ft * r) {
                     self.drop_row_bounds(i);
+                    self.work += self.row_len[i] as f64 * 4.0;
                     removed += 1;
                     continue;
                 } else if !lo_ok {
@@ -1999,15 +2010,17 @@ impl State {
                 }
                 kept.push(i as i32);
             }
+            self.work += mf + mf + removed as f64 * 5.0 + kept.len() as f64 * 7.0;
             self.rows_removed += removed;
         }
-        let rc = match self.propagate_into(&kept, &mut lc, &mut uc, ft, inf, 1) {
-            Ok(c) => {
-                tightened += c;
-                0
-            }
-            Err(rc) => rc,
-        };
+        match self.propagate_into(&kept, &mut lc, &mut uc, ft, inf, 1) {
+            Ok(c) => tightened += c,
+            Err(rc) => return rc,
+        }
+        // nothing implied: no relaxation, row pass or activity recomputation
+        if tightened == 0 {
+            return 0;
+        }
         self.bounds_tightened += tightened;
         // Method 2, state+0x100 or a frequent prescan pattern (m * 0.05 < state+0x488) would bound only free
         // columns; the default relaxes every implied bound by 0.001 (|b| + 1) onto columns with a finite bound.
@@ -2023,6 +2036,7 @@ impl State {
                     }
                 }
             }
+            self.work += nf * 8.0;
         } else {
             for j in 0..n {
                 if -inf < self.lb[j] || self.ub[j] < inf {
@@ -2040,14 +2054,18 @@ impl State {
                     }
                 }
             }
+            self.work += nf * 12.0;
         }
         // rows against the implied bounds, then activities from the new bounds
-        let mut removed = 0;
+        let (mut removed, mut live_rows, mut cnt_sum) = (0, 0, 0.0f64);
         for i in 0..m {
             if self.row_cnt[i] <= 0 {
                 continue;
             }
+            live_rows += 1;
+            cnt_sum += self.row_cnt[i] as f64;
             let (mx, nmx, mn, nmn) = self.row_range(i, &lc, &uc, inf);
+            self.work += self.row_len[i] as f64 * 5.0;
             let d = (mx - mn).max(1.0);
             let r = if d <= 1e4 { d } else { 1e4 };
             if self.sense[i] == b'=' {
@@ -2057,6 +2075,7 @@ impl State {
                 }
             } else if nmx == 0 && mx < -(ft * r) {
                 self.drop_row_bounds(i);
+                self.work += self.row_len[i] as f64 * 4.0;
                 removed += 1;
                 continue;
             } else if !(nmn != 0 || mn <= r * ft) {
@@ -2071,9 +2090,11 @@ impl State {
             self.inf_min[i] = nmn;
             self.act_max[i] = mx;
             self.act_min[i] = mn;
+            self.work += self.row_len[i] as f64 * 5.0;
         }
+        self.work += mf + mf + removed as f64 * 5.0 + live_rows as f64 * 6.0 + cnt_sum * 10.0;
         self.rows_removed += removed;
-        rc
+        0
     }
 
     /// Drop row i (`50de61`): its live columns are marked and lose the entry.
