@@ -4,6 +4,14 @@
 use super::tracker::Tracker;
 use rsolver_model::Model;
 
+/// Postsolve records (12 §4.2), newest last. Only what presolve pushes so far; uncrush is not ported yet.
+#[derive(Clone, Debug)]
+pub enum PostRec {
+    /// type 1: column `j` fixed at `v`; `obj` its cost then, `status` the bound it sits at (-1 lower, -2 upper,
+    /// -3 between, -4 fixed), `entries` its live (row, value) pairs for the dual.
+    FixCol { j: i32, v: f64, obj: f64, status: i32, entries: Vec<(i32, f64)> },
+}
+
 #[derive(Clone, Debug)]
 pub struct State {
     /// +0x0c / +0x10
@@ -55,6 +63,10 @@ pub struct State {
     pub work_mult: f64,
     /// +0x3d8
     pub tracker: Tracker,
+    /// +0x370 record list
+    pub post: Vec<PostRec>,
+    /// +0x3a8 scratch marks for the tracker list getters
+    mark: Vec<bool>,
 }
 
 /// Snapshot of the progress counters (`3c546c`); LP uses the first nine.
@@ -153,6 +165,8 @@ impl State {
             work: 0.0,
             work_mult: 1.0,
             tracker: Tracker::new(m, n),
+            post: Vec::new(),
+            mark: vec![false; n.max(m)],
         }
     }
 
@@ -289,7 +303,9 @@ impl State {
                     q.col_val.push(self.col_val[k]);
                 }
             }
-            q.col_len.push((q.col_ind.len() as i64 - q.col_beg.last().unwrap()) as i32);
+            // `3b0917` takes the length from the live count; a mismatch means the state is inconsistent.
+            debug_assert_eq!(q.col_ind.len() as i64 - q.col_beg.last().unwrap(), self.col_cnt[j] as i64, "col {j}");
+            q.col_len.push(self.col_cnt[j]);
             q.obj.push(self.obj[j]);
             q.lb.push(self.lb[j]);
             q.ub.push(self.ub[j]);
@@ -297,5 +313,203 @@ impl State {
             q.var_names.push(md.var_names[j].clone());
         }
         q
+    }
+
+    /// `538f30`: rows to visit at the tracker's level: marked rows, then rows of marked columns in column-CSR
+    /// order, live ones only; all live rows in index order when that would be most of them.
+    pub fn rows_list(&mut self) -> Vec<i32> {
+        let lv = self.tracker.level;
+        if lv == 0 {
+            let q = &self.tracker.rows;
+            return q.list[0][..q.a[0]].to_vec();
+        }
+        if let Some(c) = &self.tracker.rows.cache[lv] {
+            return c.clone();
+        }
+        let (nr, nc) = (self.tracker.rows.a[lv], self.tracker.cols.a[lv]);
+        let mut dense = (self.n as f64) <= nc as f64 * 5.0 || (self.m as f64) <= nr as f64 * 4.0;
+        if !dense {
+            let mut sum = 0i64;
+            for &j in &self.tracker.cols.list[lv][..nc] {
+                sum += self.col_cnt[j as usize].max(0) as i64;
+            }
+            self.work += (nc as f64 + nc as f64) * self.work_mult;
+            dense = (self.m as f64) < nr as f64 * 3.0 + sum as f64;
+        }
+        let out: Vec<i32> = if dense {
+            self.work += (self.m as f64 + self.m as f64) * self.work_mult;
+            (0..self.m as i32).filter(|&i| self.row_cnt[i as usize] >= 0).collect()
+        } else {
+            let mut l: Vec<i32> = self.tracker.rows.list[lv][..nr].to_vec();
+            for &i in &l {
+                self.mark[i as usize] = true;
+            }
+            self.work += self.work_mult * 3.0 * nr as f64;
+            for t in 0..nc {
+                let j = self.tracker.cols.list[lv][t] as usize;
+                let (b, len) = (self.col_beg[j] as usize, self.col_len[j].max(0) as usize);
+                for k in b..b + len {
+                    let i = self.col_ind[k];
+                    if i >= 0 && !self.mark[i as usize] {
+                        self.mark[i as usize] = true;
+                        l.push(i);
+                    }
+                }
+                self.work += self.work_mult * 3.0 * len as f64;
+            }
+            self.work += (nc as f64 + nc as f64) * self.work_mult;
+            for &i in &l {
+                self.mark[i as usize] = false;
+            }
+            self.work += self.work_mult * 3.0 * l.len() as f64;
+            l.retain(|&i| self.row_cnt[i as usize] >= 0);
+            l
+        };
+        self.tracker.rows.cache[lv] = Some(out.clone());
+        out
+    }
+
+    /// `5399fc`: the column counterpart of `rows_list`.
+    pub fn cols_list(&mut self) -> Vec<i32> {
+        let lv = self.tracker.level;
+        if lv == 0 {
+            let q = &self.tracker.cols;
+            return q.list[0][..q.a[0]].to_vec();
+        }
+        if let Some(c) = &self.tracker.cols.cache[lv] {
+            return c.clone();
+        }
+        let (nr, nc) = (self.tracker.rows.a[lv], self.tracker.cols.a[lv]);
+        let mut dense = (self.m as f64) <= nr as f64 * 5.0 || (self.n as f64) <= nc as f64 * 4.0;
+        if !dense {
+            let mut sum = 0i64;
+            for &i in &self.tracker.rows.list[lv][..nr] {
+                sum += self.row_cnt[i as usize].max(0) as i64;
+            }
+            self.work += (nr as f64 + nr as f64) * self.work_mult;
+            dense = (self.n as f64) < nc as f64 * 3.0 + sum as f64;
+        }
+        let out: Vec<i32> = if dense {
+            self.work += (self.n as f64 + self.n as f64) * self.work_mult;
+            (0..self.n as i32).filter(|&j| self.col_cnt[j as usize] >= 0).collect()
+        } else {
+            let mut l: Vec<i32> = self.tracker.cols.list[lv][..nc].to_vec();
+            for &j in &l {
+                self.mark[j as usize] = true;
+            }
+            self.work += self.work_mult * 3.0 * nc as f64;
+            for t in 0..nr {
+                let i = self.tracker.rows.list[lv][t] as usize;
+                let (b, len) = (self.row_beg[i] as usize, self.row_len[i].max(0) as usize);
+                for k in b..b + len {
+                    let j = self.row_ind[k];
+                    if j >= 0 && !self.mark[j as usize] {
+                        self.mark[j as usize] = true;
+                        l.push(j);
+                    }
+                }
+                self.work += self.work_mult * 3.0 * len as f64;
+            }
+            self.work += (nr as f64 + nr as f64) * self.work_mult;
+            for &j in &l {
+                self.mark[j as usize] = false;
+            }
+            self.work += self.work_mult * 3.0 * l.len() as f64;
+            l.retain(|&j| self.col_cnt[j as usize] >= 0);
+            l
+        };
+        self.tracker.cols.cache[lv] = Some(out.clone());
+        out
+    }
+
+    /// `53802c`: mark every row of column `j` (column CSR, removed rows included).
+    pub fn mark_rows_of_col(&mut self, j: usize) {
+        let b = self.col_beg[j] as usize;
+        let len = self.col_len[j].max(0) as usize;
+        for k in b..b + len {
+            let i = self.col_ind[k];
+            if i >= 0 {
+                self.tracker.mark_row(i);
+            }
+        }
+        self.work += self.work_mult * 3.0 * len as f64;
+    }
+
+    /// Type-1 record of column `j` fixed at `v` (the push inlined in `51a144`, `4fe113`, `503985`).
+    pub fn push_fix(&mut self, j: usize, v: f64) {
+        let (l, u) = (self.lb[j], self.ub[j]);
+        let status = if u - l < 1e-10 {
+            -4
+        } else if l < v {
+            if v < u { -3 } else { -2 }
+        } else {
+            -1
+        };
+        let mut entries = Vec::new();
+        if self.col_cnt[j] > 0 {
+            let b = self.col_beg[j] as usize;
+            for k in b..b + self.col_len[j] as usize {
+                let i = self.col_ind[k];
+                if i >= 0 && self.row_cnt[i as usize] >= 0 {
+                    entries.push((i, self.col_val[k]));
+                }
+            }
+            self.work += self.col_len[j] as f64 * 6.0;
+        }
+        self.cols_removed += 1;
+        self.post.push(PostRec::FixCol { j: j as i32, v, obj: self.obj[j], status, entries });
+    }
+
+    /// Fix column `j` at `v` and take it out of its rows (inlined in `51a144`; plain LP column, no flags):
+    /// record, objective constant, row marks, rhs and both activities, then the column is gone (-2).
+    pub fn fix_col(&mut self, j: usize, v: f64, infbound: f64) {
+        self.push_fix(j, v);
+        self.objcon += self.obj[j] * v;
+        self.obj[j] = 0.0;
+        self.mark_rows_of_col(j);
+        let (l, u) = (self.lb[j], self.ub[j]);
+        let b = self.col_beg[j] as usize;
+        for k in b..b + self.col_len[j] as usize {
+            let i = self.col_ind[k];
+            if i < 0 || self.row_cnt[i as usize] < 0 {
+                continue;
+            }
+            let i = i as usize;
+            self.col_ind[k] = -1;
+            self.row_cnt[i] -= 1;
+            let a = self.col_val[k];
+            let t = v * a;
+            self.rhs[i] -= t;
+            self.act_max[i] += t;
+            let s = self.act_min[i] + t;
+            if a <= 0.0 {
+                if u < infbound {
+                    self.act_min[i] = s - a * u;
+                } else {
+                    self.act_min[i] = s;
+                    self.inf_min[i] -= 1;
+                }
+                if -infbound < l {
+                    self.act_max[i] -= a * l;
+                } else {
+                    self.inf_max[i] -= 1;
+                }
+            } else {
+                self.act_min[i] = s;
+                if u < infbound {
+                    self.act_max[i] -= a * u;
+                } else {
+                    self.inf_max[i] -= 1;
+                }
+                if -infbound < l {
+                    self.act_min[i] -= a * l;
+                } else {
+                    self.inf_min[i] -= 1;
+                }
+            }
+        }
+        self.work += self.col_len[j] as f64 * 10.0;
+        self.col_len[j] = -1;
+        self.col_cnt[j] = -2;
     }
 }

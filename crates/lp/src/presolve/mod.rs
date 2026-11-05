@@ -2,6 +2,8 @@
 //! docs/m1_presolve.md). Entry from `Model.presolve()` is `999702`, which names the result `<name>_pre`.
 //! Every reduction call counts toward GURO_PAR_PRELIMIT; reaching it jumps straight to model generation, which
 //! is what makes each reduction checkable on its own.
+mod reduce;
+mod sort;
 mod state;
 mod tracker;
 
@@ -21,11 +23,15 @@ pub struct Params {
     pub fixtol: f64,
     /// env+0x26ec GURO_PAR_PRELIMIT: number of reduction calls before presolve stops
     pub prelimit: i32,
+    /// env+0x2430 DualReductions
+    pub dual_reductions: bool,
+    /// env+0x2544 GURO_PAR_PREBOUND
+    pub prebound: i32,
 }
 
 impl Default for Params {
     fn default() -> Self {
-        Params { presolve: -1, feastol: 1e-6, infbound: 1e30, fixtol: -1.0, prelimit: 2_000_000_000 }
+        Params { presolve: -1, feastol: 1e-6, infbound: 1e30, fixtol: -1.0, prelimit: 2_000_000_000, dual_reductions: true, prebound: 1 }
     }
 }
 
@@ -39,6 +45,8 @@ impl Params {
                 "guro_par_infbound" => p.infbound = *v,
                 "guro_par_fixtol" => p.fixtol = *v,
                 "guro_par_prelimit" => p.prelimit = *v as i32,
+                "dualreductions" => p.dual_reductions = *v != 0.0,
+                "guro_par_prebound" => p.prebound = *v as i32,
                 _ => {}
             }
         }
@@ -73,4 +81,11 @@ fn reduce(st: &mut State, p: &Params) {
         return;
     }
     st.activity(None, p.infbound);
+    if p.prebound != 0 {
+        st.dual_singleton_fix(p.dual_reductions, p.infbound);
+        calls += 1;
+        if limit <= calls {
+            return;
+        }
+    }
 }
