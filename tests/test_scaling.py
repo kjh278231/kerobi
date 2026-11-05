@@ -30,3 +30,17 @@ def test_iteration0_basic_solution_bitwise_equal():
         assert [x.hex() for x in xb] == g["xB"], f.stem
         n_checked += 1
     assert n_checked == 60
+
+
+def test_iteration0_reduced_costs_and_dse_weights_bitwise_equal():
+    """BTRAN (221173 paths), d = c - A^T y, and EXACTNORM weights summed in BTRAN output order (docs/m1_notes.md §6.6)."""
+    n_checked = 0
+    for f in sorted((ROOT / "bench/gurobi_spx0").glob("*.json")):
+        g = json.load(open(f))
+        if not g["xB_valid"]:
+            continue
+        d, w = rsolver.read(DATA / f"{f.stem}.mps.gz")._core.dual_start(g["vstat"])
+        assert [x.hex() for x in d] == g["d"], f.stem
+        assert [x.hex() for x in w] == g["w"], f.stem
+        n_checked += 1
+    assert n_checked == 60

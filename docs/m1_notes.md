@@ -122,5 +122,5 @@ M1 진행 중에 알아낸 사실과 작업 방법. 확정된 내용은 해당 �
 |---|---|---|
 | A | 스케일링 `07d3ce`(ScaleFlag 3 경로) | **완료**: `crates/lp/src/scaling.rs`, 열·행·목적 스케일 64/64 비트 일치(`tests/test_scaling.py`, 기준 `bench/gurobi_spx0`) |
 | B | setup `02f7e1`, dual 초기화 `0534f7`(시작 기저) | 해독 중(§5). C 이후 |
-| C | LU(`036ade`, `1da0b2`, MKL dgetrf), FTRAN/BTRAN, LU 갱신 `05b257` | singleton 단계 + 조밀 FTRAN: xB 60/60 비트 일치(`crates/lp/src/lu.rs`, `tests/test_scaling.py`). BTRAN·d 60/60 비트 일치(프로토타입). 희소 BTRAN 순서 + DSE 가중치 60/60 비트 일치(프로토타입, §6.6). Rust 이식, Markowitz, LU 갱신 남음 |
+| C | LU(`036ade`, `1da0b2`, MKL dgetrf), FTRAN/BTRAN, LU 갱신 `05b257` | singleton 단계 + 조밀 FTRAN: xB 60/60 비트 일치(`crates/lp/src/lu.rs`, `tests/test_scaling.py`). BTRAN·d 60/60 비트 일치(프로토타입). BTRAN·d·DSE 가중치 60/60 비트 일치(`Lu::btran`, `dual_start`, §6.6). Markowitz, LU 갱신 남음 |
 | D | dual 반복(`028c93` 외) → 반복 0·1 궤적 일치 | 대기 |

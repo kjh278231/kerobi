@@ -81,6 +81,11 @@ impl PyCoreModel {
         let spx = rsolver_lp::spx::Spx::new(&self.inner);
         rsolver_lp::lu::basic_solution(&spx, &vstat)
     }
+    /// (reduced costs d, DSE weights w) of the LP simplex workspace for a given status array; M1 parity tests.
+    fn dual_start(&self, vstat: Vec<i32>) -> (Vec<f64>, Vec<f64>) {
+        let spx = rsolver_lp::spx::Spx::new(&self.inner);
+        rsolver_lp::lu::dual_start(&spx, &vstat)
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)
