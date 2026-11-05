@@ -16,3 +16,20 @@ def test_barrier_statistics_equal_gurobi_log():
         g = json.load(open(f))["log"]["barstats"]
         _, aat, nz, ops = rsolver.read(DATA / f"{f.parent.name}.mps.gz")._core.barrier_symbolic()
         assert (f"{aat / 2:.3e}", f"{nz:.3e}", f"{ops:.3e}") == (g["AA' NZ"], g["Factor NZ"], g["Factor Ops"]), f.parent.name
+
+
+def test_barrier_solves_64_lps_like_gurobi():
+    """Method=2 path of Model.optimize: status and objective (rel. err <= 1e-6) on all 64, BarIterCount equal on at
+    least 56 (measured 2026-11-05, docs/m3_rust.md §3), one BARRIER callback per iteration including the last."""
+    same = 0
+    for f in sorted((ROOT / "bench/gurobi_bar_nopre").glob("*/summary.json")):
+        g = json.load(open(f))
+        m = rsolver.read(DATA / f"{f.parent.name}.mps.gz")
+        m.setParam("Method", 2)
+        its = []
+        m.optimize(lambda model, where: its.append((where, model.cbGet(rsolver.GRB.Callback.BARRIER_ITRCNT))))
+        assert m.Status == g["Status"], f.parent.name
+        assert abs(m.ObjVal - g["ObjVal"]) <= 1e-6 * max(1.0, abs(g["ObjVal"])), f.parent.name
+        assert its == [(rsolver.GRB.Callback.BARRIER, k) for k in range(m.BarIterCount + 1)], f.parent.name
+        same += m.BarIterCount == g["BarIterCount"]
+    assert same >= 56

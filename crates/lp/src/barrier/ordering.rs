@@ -19,6 +19,8 @@ pub struct Symbolic {
     pub nnz_l: i64,
     /// F+0x60: `Factor Ops`, Σ over columns of (column length)².
     pub ops: f64,
+    /// F+0x68: the part of `ops` in supernodes narrower than 5 columns (`2e4f14` L2058-2084; feeds the work estimate).
+    pub ops_small: f64,
     /// F+0x48: Σ over columns of A of (column length)², the cost of forming A·D·Aᵀ.
     pub ops_aat: f64,
     /// F+0x70: supernode widths by new column: width at the first column, −k at the k-th column after it.
@@ -44,8 +46,8 @@ pub fn analyze(m: &Model) -> Symbolic {
     for (k, &c) in sns.iter().flatten().enumerate() {
         newpos[c] = k;
     }
-    let (mut nz, mut ops, mut snode, mut col_len, mut row_idx, mut col_ptr) =
-        (0.0f64, 0.0f64, Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let (mut nz, mut ops, mut ops_small, mut snode, mut col_len, mut row_idx, mut col_ptr) =
+        (0.0f64, 0.0f64, 0.0f64, Vec::new(), Vec::new(), Vec::new(), Vec::new());
     for (cols, &r) in sns.iter().zip(&rows) {
         let w = cols.len();
         let start = row_idx.len();
@@ -63,12 +65,16 @@ pub fn analyze(m: &Model) -> Symbolic {
         let (rf, wf) = (r as f64, w as f64);
         nz += (rf - (wf - 1.0) * 0.5) * wf;
         let (a, b) = (r as f64, (r - w) as f64);
-        ops += a * (a + 1.0) * (2.0 * a + 1.0) / 6.0 - b * (b + 1.0) * (2.0 * b + 1.0) / 6.0;
+        let o = a * (a + 1.0) * (2.0 * a + 1.0) / 6.0 - b * (b + 1.0) * (2.0 * b + 1.0) / 6.0;
+        ops += o;
+        if w < 5 {
+            ops_small += o;
+        }
     }
     let ops_aat: f64 = m.col_len.iter().map(|&l| (l as f64) * (l as f64)).sum();
     let blocks = split_blocks(&snode, &col_len, ops < 2.0 * ops_aat);
     let perm = pos.iter().map(|&p| newpos[p] as i32).collect();
-    Symbolic { aat_nnz: cp[nr] as i64, perm, nnz_l: nz as i64, ops, ops_aat, snode, blocks, col_len, row_idx, col_ptr }
+    Symbolic { aat_nnz: cp[nr] as i64, perm, nnz_l: nz as i64, ops, ops_small, ops_aat, snode, blocks, col_len, row_idx, col_ptr }
 }
 
 /// `303e2a`: pattern of A·Aᵀ without the diagonal, both triangles, rows ascending in each column.

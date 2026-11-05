@@ -195,6 +195,8 @@ class Model:
         self._obj, self.ModelSense = _lin(expr), sense
 
     def optimize(self, callback=None):
+        if self._core is not None and self.Params.get("Method") == 2:
+            return self._barrier(callback)
         if self._core is not None:
             raise GurobiError(10024, "LP/MIP engines are not ported yet (M1)")
         n = len(self._vars)
@@ -205,6 +207,27 @@ class Model:
             obj, self._rows, [v.lb for v in self._vars], [v.ub for v in self._vars],
             [v.vtype != GRB.CONTINUOUS for v in self._vars])
         self._objval = val * self.ModelSense + self._obj.const
+
+    def _barrier(self, callback):
+        """M3 barrier (Presolve=0, Crossover=0 assumed): BARRIER callback (where = 7) once per iteration."""
+        import time
+
+        C = GRB.Callback
+        keys = (C.BARRIER_ITRCNT, C.BARRIER_PRIMOBJ, C.BARRIER_DUALOBJ, C.BARRIER_PRIMINF, C.BARRIER_DUALINF,
+                C.BARRIER_COMPL)
+
+        def cb(*vals):
+            if callback:
+                self._cbdata = dict(zip(keys, vals))
+                callback(self, C.BARRIER)
+
+        p, t0 = self.Params, time.perf_counter()
+        self.Status, self._objval, self.BarIterCount, self._x, self.Work = self._core.barrier(
+            cb, float(p.get("BarConvTol", 1e-8)), int(p.get("BarIterLimit", 1000)), int(p.get("BarCorrectors", -1)))
+        self.Runtime, self.IterCount, self.NodeCount = time.perf_counter() - t0, 0, 0
+
+    def cbGet(self, what):
+        return self._cbdata[what]
 
     @property
     def ObjVal(self):

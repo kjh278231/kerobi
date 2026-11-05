@@ -96,6 +96,29 @@ impl PyCoreModel {
         let s = rsolver_lp::barrier::ordering::analyze(&self.inner);
         (s.perm, s.aat_nnz, s.nnz_l, s.ops)
     }
+    /// Barrier (05 §2; Method=2, Presolve=0, Crossover=0): `callback(iter, pobj, dobj, priminf, dualinf, compl)` runs
+    /// every iteration. Returns (status, objective, BarIterCount, x, work).
+    #[pyo3(signature = (callback, bar_conv_tol=1e-8, bar_iter_limit=1000, bar_correctors=-1))]
+    fn barrier(
+        &self,
+        py: Python<'_>,
+        callback: PyObject,
+        bar_conv_tol: f64,
+        bar_iter_limit: i64,
+        bar_correctors: i32,
+    ) -> PyResult<(i32, f64, usize, Vec<f64>, f64)> {
+        let p = rsolver_lp::barrier::Params { bar_conv_tol, bar_iter_limit, bar_correctors };
+        let mut err = None;
+        let r = rsolver_lp::barrier::solve(&self.inner, &p, &mut |i| {
+            if err.is_none() {
+                err = callback.call1(py, (i.iter, i.pobj, i.dobj, i.priminf, i.dualinf, i.compl)).err();
+            }
+        });
+        match err {
+            Some(e) => Err(e),
+            None => Ok((r.status, r.obj, r.bar_iters, r.x, r.work)),
+        }
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)

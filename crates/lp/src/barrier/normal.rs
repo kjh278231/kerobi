@@ -1,4 +1,44 @@
-//! 05 §2.1 Normal-equation matrix `M = A Θ Aᵀ + diag(r)` on the fixed pattern of `AAᵀ` (upper triangle, CSC).
+//! 05 §2.1 Normal-equation matrix `M = A Θ Aᵀ + diag(r)` on the fixed pattern of `AAᵀ` (upper triangle, CSC), and
+//! [`Factor`], the factor/solve pair the IPM uses.
+use super::ldl::Ldl;
+use super::setup::Lp;
+
+/// Factor of `A Θ Aᵀ + diag(θ_slack)` (`2d8e22` → `31c54b`) and the solves with it (`2ee6c5`). The IPM sees only
+/// `factor` and `solve`; the supernodal kernel (chol.rs) replaces this one by offering the same three calls.
+/// Rows are already in ordering order, so the pivot order is natural.
+pub struct Factor<'a> {
+    lp: &'a Lp,
+    nm: Normal,
+    ldl: Ldl,
+    th: Vec<f64>,
+}
+
+impl<'a> Factor<'a> {
+    pub fn new(lp: &'a Lp) -> Factor<'a> {
+        let nm = Normal::new(lp.m, &lp.beg, &lp.ind);
+        let ldl = Ldl::symbolic(lp.m, &nm.ap, &nm.ai);
+        Factor { lp, nm, ldl, th: vec![] }
+    }
+
+    /// Factor with column scaling `theta` (n) and slack scaling `theta_slack` (m, 0 on '=' rows). Returns
+    /// (F+0x100 = min |pivot/diagonal|, number of pivots replaced by the small-pivot rule).
+    pub fn factor(&mut self, theta: &[f64], theta_slack: &[f64]) -> (f64, usize) {
+        self.nm.assemble(&self.lp.val, theta, theta_slack);
+        let min_ratio = self.ldl.numeric(&self.nm.ap, &self.nm.ai, &self.nm.ax);
+        self.th = [theta, theta_slack].concat();
+        (min_ratio, self.ldl.fixed)
+    }
+
+    /// `2ee6c5`: −Θ⁻¹dx + Aᵀdy = rhs_x (m+n), A dx = rhs_y (m), i.e. (AΘAᵀ) dy = rhs_y + AΘ rhs_x and
+    /// dx = Θ(Aᵀdy − rhs_x).
+    pub fn solve(&self, rhs_x: &[f64], rhs_y: &[f64]) -> (Vec<f64>, Vec<f64>) {
+        let tr: Vec<f64> = self.th.iter().zip(rhs_x).map(|(t, r)| t * r).collect();
+        let mut dy: Vec<f64> = rhs_y.iter().zip(self.lp.ax(&tr)).map(|(r, v)| r + v).collect();
+        self.ldl.solve(&mut dy);
+        let dx = self.lp.aty(&dy).iter().zip(rhs_x).zip(&self.th).map(|((a, r), t)| t * (a - r)).collect();
+        (dx, dy)
+    }
+}
 
 /// Pattern of the upper triangle of `AAᵀ` (diagonal always present) and, per structural column, the positions its
 /// outer product `a_j a_jᵀ` adds into.

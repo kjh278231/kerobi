@@ -50,11 +50,13 @@ impl Ldl {
     }
 
     /// Numeric factorization of the upper triangle `(ap, ai, ax)`. A pivot with `|d| ≤ max(1e-12, min(1e-6,
-    /// 1e-10·|M_kk|))` is replaced by that threshold with its sign kept (`32af6a` L264–280; a zero pivot becomes +thr).
-    pub fn numeric(&mut self, ap: &[usize], ai: &[usize], ax: &[f64]) {
+    /// 1e-10·|M_kk|))` (or NaN) is replaced by that threshold with its sign kept (`32af6a` L264–280; a zero pivot
+    /// becomes +thr). Returns F+0x100 = min |d/M_kk| over the pivots before replacement (0 on a NaN pivot).
+    pub fn numeric(&mut self, ap: &[usize], ai: &[usize], ax: &[f64]) -> f64 {
         let n = self.n;
         let (mut y, mut pattern, mut flag, mut lnz) = (vec![0.0; n], vec![0usize; n], vec![NONE; n], vec![0usize; n]);
         self.fixed = 0;
+        let mut min_ratio = 1e100f64;
         for k in 0..n {
             let mut top = n;
             flag[k] = k;
@@ -94,13 +96,19 @@ impl Ldl {
                 self.lx[p2] = l_ki;
                 lnz[i] += 1;
             }
+            if dk.is_nan() {
+                min_ratio = 0.0;
+            } else if diag != 0.0 {
+                min_ratio = min_ratio.min((dk / diag).abs());
+            }
             let thr = 1e-12f64.max(1e-6f64.min(1e-10 * diag.abs()));
-            if dk.abs() <= thr {
+            if dk.abs() <= thr || dk.is_nan() {
                 dk = if dk < 0.0 { -thr } else { thr };
                 self.fixed += 1;
             }
             self.d[k] = dk;
         }
+        min_ratio
     }
 
     /// Solve `L D Lᵀ x = b` in place.
