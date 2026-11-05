@@ -21,8 +21,9 @@ def test_barrier_statistics_equal_gurobi_log():
 
 def test_barrier_solves_64_lps_like_gurobi():
     """Method=2 path of Model.optimize: status and objective (rel. err <= 1e-6) on all 64, BarIterCount equal on at
-    least 59 (measured 2026-11-06 with the 2d8ee5 drop-pivot rule, docs/m3_barrier.md §4), one BARRIER callback per iteration including the last."""
-    same = 0
+    least 59 (measured 2026-11-06 with the 2d8ee5 drop-pivot rule, docs/m3_barrier.md §4) and within 5% on at least 62
+    (with the 2bf1ea restart, which perold needs), one BARRIER callback per iteration including the last."""
+    same = near = 0
     for f in sorted((ROOT / "bench/gurobi_bar_nopre").glob("*/summary.json")):
         g = json.load(open(f))
         m = rsolver.read(DATA / f"{f.parent.name}.mps.gz")
@@ -33,4 +34,5 @@ def test_barrier_solves_64_lps_like_gurobi():
         assert abs(m.ObjVal - g["ObjVal"]) <= 1e-6 * max(1.0, abs(g["ObjVal"])), f.parent.name
         assert its == [(rsolver.GRB.Callback.BARRIER, k) for k in range(m.BarIterCount + 1)], f.parent.name
         same += m.BarIterCount == g["BarIterCount"]
-    assert same >= 59
+        near += abs(m.BarIterCount - g["BarIterCount"]) <= 0.05 * g["BarIterCount"]
+    assert same >= 59 and near >= 62

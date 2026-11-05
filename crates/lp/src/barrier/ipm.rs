@@ -2,7 +2,8 @@
 //! starting point `2d0663`/`2d252f`/`2d8838`, residuals `2d4977`, directions `2f59f1`/`2ee6c5` + refinement
 //! `2f9699`, step `2f15ba`/`2f4fe9`, correctors `2d64b4`, corrector count from the work timers, update `2f2e95`,
 //! termination `b2aecf`. Sums run in index order (Gurobi's SIMD lane order is not reproduced).
-//! shortcut: no restart / homogeneous switch (`2d35d7`, `2f8f0e`), no status-13 stall rules and no best-iterate
+//! Restart (`2bf1ea` L956–994, fires on perold and pilot4 in Gurobi) is ported.
+//! shortcut: no homogeneous switch (`2d35d7`, `2f8f0e`), no status-13 stall rules and no best-iterate
 //! choice (`2c4689`); the last iterate is returned. None of them fires on the 64 bench LPs (docs/m3_ipm.md §8).
 #![allow(clippy::needless_range_loop)] // index loops over parallel arrays, as in the original
 use super::normal::Factor;
@@ -150,8 +151,8 @@ fn recenter(lp: &Lp, st: &mut State, rd: &mut [f64], mu: f64) {
 }
 
 /// `2d252f`: Mehrotra-type shifts (δx, δz) of the starting point; sums run over the pairs in column order (lower,
-/// upper), then the slacks.
-fn shifts(lp: &Lp, st: &State) -> (f64, f64) {
+/// upper), then the slacks. `floor` = B+0x30 (0 → 0.1 for LP).
+fn shifts(lp: &Lp, st: &State, floor: f64) -> (f64, f64) {
     let (n, mn) = (lp.n, lp.m + lp.n);
     let mut pairs = vec![]; // (x or w, z or s)
     for j in 0..mn {
@@ -179,7 +180,8 @@ fn shifts(lp: &Lp, st: &State) -> (f64, f64) {
     if (lp.cnorminf * 1.0001 * ez).sqrt() >= ez {
         ez = (ez * lp.cnorminf * 1.0001).sqrt();
     }
-    (ex.max(0.1), ez.max(0.1)) // floor B+0x30: BARSAFE = 0, no restart
+    let fl = if floor == 0.0 { 0.1 } else { floor };
+    (ex.max(fl), ez.max(fl))
 }
 
 /// `2f15ba`: the step shrinks only when the current one crosses the bound of that entry (index order).
@@ -251,6 +253,13 @@ struct Ipm<'a> {
     ngrid: usize,
     f4: usize,
     ab: [f64; 3],
+    /// B+0x30 shift floor (0 until a restart), B+0x38 = min(δx, δz) of the last start, B+0xf8 = iteration after the
+    /// restart (0: none yet)
+    floor: f64,
+    shift_min: f64,
+    f8: usize,
+    /// (B+0x770, B+0x780) of the last combined direction
+    last_res: [f64; 2],
 }
 
 impl<'a> Ipm<'a> {
@@ -290,7 +299,7 @@ impl<'a> Ipm<'a> {
                 _ => {}
             }
         }
-        let mut da = shifts(lp, st);
+        let mut da = shifts(lp, st, self.floor);
         // candidate 2: (v, y) from the solve with rhs_x = [c; 0], z = −v (T&1), s = v (T&2)
         let mut cx = lp.c.clone();
         cx.resize(m + n, 0.0);
@@ -298,13 +307,14 @@ impl<'a> Ipm<'a> {
         let zb = (0..m + n).map(|j| if lp.lo[j] { -v[j] } else { 0.0 }).collect();
         let sb = (0..n).map(|j| if lp.up[j] { v[j] } else { 0.0 }).collect();
         let old = (std::mem::replace(&mut st.y, yb), std::mem::replace(&mut st.z, zb), std::mem::replace(&mut st.s, sb));
-        let db = shifts(lp, st);
+        let db = shifts(lp, st, self.floor);
         if db.1 < da.1 {
             da = db;
         } else {
             (st.y, st.z, st.s) = old;
         }
         let (ex, ez) = da;
+        self.shift_min = ex.min(ez);
         for j in 0..m + n {
             if lp.lo[j] {
                 st.x[j] = (st.x[j] + ex).min(1e10);
@@ -539,9 +549,29 @@ impl<'a> Ipm<'a> {
             }
         }
         self.ab = [ap * ad, self.ab[0], self.ab[1]];
+        self.last_res = d0.res;
         self.update(&d0, ap, ad, it);
         ncorr
     }
+}
+
+/// `2bf1ea` L896–994 restart test before any restart (B+0xf8 = 0; LP, B+0x24 = 0): μ flat over three iterations with
+/// tiny steps and an accurate solve, or two zero steps, while the complementarity gap is not small. `ab` = (B+0x5e0,
+/// 0x5e8, 0x5f0) step products, `res` = (B+0x770, B+0x780).
+fn restart_due(lp: &Lp, r: &Res, it: usize, hmu: &[f64], ab: [f64; 3], res: [f64; 2]) -> bool {
+    let mut cg = lp.ncomp as f64 * r.compl / (r.ctx.abs() + 1.0);
+    if r.rp_rel < 1e-7 && r.rd_rel < 1e-7 {
+        cg *= 0.1;
+    }
+    let ratio = if it < 3 {
+        0.0
+    } else if hmu[it - 3] == 0.0 {
+        1.0
+    } else {
+        hmu[it] / hmu[it - 3]
+    };
+    let slow = ab.iter().all(|&a| a < 0.001) && ratio > 0.98 && res[0] < 0.001 && res[1] < 0.001;
+    cg > 1e-4 && (slow || (ab[0] == 0.0 && ab[1] == 0.0))
 }
 
 /// `b2aecf` for LP with Crossover=0: 2 optimal, 13 numeric trouble, 7 iteration limit, 1 continue.
@@ -600,6 +630,10 @@ pub fn run(lp: &Lp, f160: f64, f168: f64, p: &Params, cb: &mut dyn FnMut(&IterIn
         ngrid: if r0 > 0.2 { 3 } else { 5 },
         f4: 0,
         ab: [1e100; 3],
+        floor: 0.0,
+        shift_min: 0.0,
+        f8: 0,
+        last_res: [0.0; 2],
     };
     ipm.initial_point();
     let base = 1.max((n.max(1.0)).log10().floor() as i32 - 2);
@@ -645,7 +679,13 @@ pub fn run(lp: &Lp, f160: f64, f168: f64, p: &Params, cb: &mut dyn FnMut(&IterIn
         }
         ipm.ngrid = 3.max((ipm.k + 1).min(10)) as usize;
         tu += 1.0;
-        if ipm.f4 < it && p.bar_correctors == -1 {
+        if ipm.f8 == 0 && restart_due(lp, &r, it, &hmu, ipm.ab, ipm.last_res) {
+            // 2bf1ea L956–994: restart from 2d0663 with the shift floor raised, factor timed as in the loop
+            ipm.floor = 1000f64.max(10.0 * ipm.shift_min);
+            tf += 1.0 + 0.75 * f168;
+            ipm.initial_point();
+            ipm.f8 = it + 1;
+        } else if ipm.f4 < it && p.bar_correctors == -1 {
             if ipm.k < 11 {
                 ipm.k = 10;
             }
