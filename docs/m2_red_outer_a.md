@@ -228,3 +228,109 @@ return 3ba5ac(env, st, 0, 0, −1)
 ### 6.3 오라클 확인
 - 38개 78호출 전부 일치(`s_dual.py`): 연속 열이 없어 바로 끝난 호출 11, 1단계 67. 자유로 푼 bound ub 5,955·lb 187, ylo 올림 551(유한에서 100, 무한에서 451), yhi 내림 106(71/35), `=`로 바꾼 행 71(neos-4338804-snowy 21, csched007 50).
 - 고정(`3de18e`) 경로, 불가능 반환, 10바퀴 제한, Presolve 2 분기는 오라클을 지나지 않았다.
+
+## 7. `5431ee(st, env)` 이진 함의 그래프 (3,175 B, `00599080`)
+
+### 7.1 흐름
+리터럴 2n개: k < n은 x_k, k ≥ n은 ¬x_{k−n}. 보조 함수 반환값 ≠ 0이면 그 값으로 끝(0x2711 할당).
+```
+if 2e9 < (f64)n + (f64)n: return 0
+p = PRETRANSRED(env+0x2574); p == −1이면 1
+(deg, beg, adj, rowof, ne, flag) = 53dce0(env, st, mode=1, W)
+if ne != 0:
+  changed = 53fa62(env, st, 1, beg, deg, adj, W)        // SCC
+  if changed: 그래프를 53dce0(mode 1)로 다시 만든다(ne == 0이면 끝)
+  (order, res) = 5416c3(st, n, beg, deg, adj, W)        // 위상 정렬
+  if res >= 0: 541d96(env, st, res, beg, deg, adj, rowof, order, W)   // 이행 축소
+if p < 2 || n <= st+0xf0(이진 수) || flag == 0: return 0  // 기본값(p=1)은 여기서 끝
+(p >= 2: mode 2로 같은 일을 한 번 더 하고 deg 합 작업량을 더한다. 해독 안 함)
+```
+
+### 7.2 `53dce0(env, st, mode, deg, beg, &adj, &rowof, &ne, &flag, W)` 그래프 (2,723 B)
+```
+deg[0..2n] = 0; lit1[i] = lit2[i] = −1; ne = 0; flag = 0
+for i in 0..m:
+  if row_cnt[i] != 2 || sense[i] != '<': continue                       // 작업량 없음
+  b = rhs[i]
+  if !(1e-10 >= |b|) && (mode != 1 || (n <= st+0xf4 && !(1e-10 >= ||b| − 1|))): continue
+  c1 = c2 = −1; a1 = a2 = 0; vis = 0; 첫 살아 있는 노드로(죽은 노드마다 vis += 1)
+  노드마다:
+    unit = ||a| − 1| <= 1e-10
+    d = ub[c] − lb[c]; if 1e-10 >= d: break                              // 고정 열: 짝 미완성
+    mode 1: vtype[c]=='C'면 lb <= −1e30 || ub >= 1e30 || d > 1e4이면 FAIL, 아니면 b = b − lb[c]·a, scale = d
+            아니면 |lb| > 1e-10 || |ub − 1| > 1e-10이면 FAIL, 아니면 vtype[c] = 'B', lb[c] = 0.0, ub[c] = 1.0, scale = 1
+    mode 2: !unit이면 FAIL; scale = 1
+    if c1 != −1: a2 = a·scale, c2 = c, break                            // 둘째 열은 vis에 안 셈
+    a1 = a·scale, c1 = c; 다음 살아 있는 노드로(지난 노드마다 vis += 1)
+  W += (μ·4)·vis
+  ok = c2 >= 0
+  mode 1이고 ok: s = 1/|a1|; a2·=s, a1·=s, b·=s; ||a2|−1| > 1e-10이면 !ok; |b| > 1e-10이고 ||b|−1| > 1e-10이면 !ok
+  if !ok: (unit && |rhs[i]| <= 1e-10)이면 flag = 1; continue           // unit = 마지막으로 본 노드
+  if a1 < 0 && a2 > 0: (c1,a1) ↔ (c2,a2)
+  |b| <= 1e-10:  a1 > 0 && a2 < 0 → (lit1, lit2) = (c1, c2)             // x1 ≤ x2: x1 → x2
+  b > 0.5:       a1 > 0 && a2 > 0 → (c1, ¬c2)                            // x1 + x2 ≤ 1
+  그 밖:         a1 < 0 && a2 < 0 → (¬c1, c2)                            // x1 + x2 ≥ 1
+  (¬k = (k + n) % 2n. |b|, b는 mode 1에서 배율을 곱한 값)
+  if lit1[i] >= 0: ne += 2; deg[lit1]++; deg[¬lit2]++
+W += (m·5 + ne)·μ
+if ne == 0: return
+beg = 앞 누적합(beg[0] = 0, beg[k] = beg[k−1] + deg[k−1], k < 2n); W += (2n + 2n)·μ
+행 순서로 lit1[i] = u >= 0이면 adj[beg[u]++] = lit2[i], rowof = i; adj[beg[¬lit2]++] = ¬u, rowof = i
+W += (ne·4 + m)·μ; beg를 다시 누적합; W += (2n + 2n)·μ
+```
+- 간선 u→v와 그 대우 ¬v→¬u를 둘 다 넣으므로 deg는 나가는 차수이고 들어오는 차수(v) = deg[¬v]다.
+- mode 1은 [0,1] 정수 열을 'B'로, bound를 정확히 0/1로 쓴다(상태를 바꾼다. 38개에서 차이 없음).
+
+### 7.3 `53fa62(env, st, mode, beg, deg, adj, &changed, W)` Tarjan SCC (3,547 B)
+```
+W += (n + n)·μ; idx = low = −1, onstack = 0
+for r in 0..2n: if idx[r] < 0:
+  idx[r] = low[r] = 0; counter = 1; 스택 [r], DFS [r](간선 위치 0)
+  loop: u = DFS 꼭대기, e = 그 간선 위치, ed = 0
+    while e < deg[u]: v = adj[beg[u] + e]
+      idx[v] < 0: 위치 e+1 저장, idx[v] = low[v] = counter++, 스택·DFS에 v, W += 10·μ, W += (μ·4)·ed, v로 내려감
+      onstack[v]: low[u] = min(low[u], idx[v]); W += 2·μ;  e++, ed++
+      그 밖: e++, ed++
+    W += (μ·4)·ed
+    low[u] == idx[u]: 스택에서 u까지 꺼낸다. u가 아닌 원소 w마다 MEMBER(u, w); W += (μ·5)·(w 수)
+    DFS pop; 비면 다음 r. 부모 p: low[p] = min(low[p], low[u]); W += 4·μ
+W += (μ·7)·2n
+```
+index는 뿌리마다 0부터 다시 센다(원본 그대로). MEMBER(u, w): 같은 값이 되는 리터럴. 변수 xu, xw 중 없앨 쪽 elim을 고른다(타입이 같으면 xw, 단 colflag[xw] ≠ 0이면 xu; xw가 'C'면 xw; xw가 'I'이고 xu가 'C'면 xu; …). colflag[elim] == 0이고 두 col_cnt ≥ 0이면 `3bb6fe(±d_elim/d_keep, …)`(집계, 2,389 B, 해독 안 함) 또는 x ≡ ¬x이면 정수는 불가능(3)·연속은 `3de18e`, changed = 1. **38개에서 크기 2 이상 SCC가 없어 이 경로는 오라클을 지나지 않았다.**
+
+### 7.4 `5416c3(st, n, beg, deg, adj, order, lvl(0), cnt, &res, W)` 위상 정렬 (1,248 B)
+```
+order = [k for k in 0..2n if deg[¬k] == 0 && deg[k] > 0]           // 들어오는 간선 없는 시작점
+W += ((2n + 2n) + len(order))·μ
+cnt = deg 복사
+t = 0; while t < len(order):                                       // BFS, 목록이 자란다
+  u = order[t]; 간선 u→v마다: lvl[v] = max(lvl[v], lvl[u] + 1); cnt[¬v] −= 1; 0이 되면 order에 v
+  W += (5·μ)·deg[u]; t += 1
+W += μ·(q + q)                                                     // q = len(order)
+res = q; 간선 k→v 중 lvl[v] <= lvl[k]가 하나라도 있으면 res = −1     // 순환
+W += Σ_k deg[k]·(4·μ)  — 벡터화된 합: 8칸(L0은 W에서, 나머지 0에서 시작) → ((L0+L2)+(L4+L6)) + ((L1+L3)+(L5+L7)), 나머지(2n mod 8, 짝수)는 2칸 → P0+P1
+```
+
+### 7.5 `541d96(env, st, q, beg, deg, adj, rowof, order, W)` 이행 축소 (2,038 B)
+```
+W0 = W(진입 값); dist = −1, done = 0; W += (n + n)·μ; removed = 0
+for idx = q−1 down to 0:
+  if W > ((removed·1000) + (nnz·100 + 1e7)) + W0: return 0     // nnz = st+0xd8
+  u = order[idx]; if done[u]: continue
+  dist[u] = 2n; vis = []
+  CHAIN:
+    vis.push(u); 스택 [u]; pops = 0
+    스택에서 w를 꺼내 간선 w→v마다: dist[v] == −1이면 v를 스택·vis에; dist[v] = max(dist[v], dist[w] + 1); W += (4·μ)·deg[w]; pops += 1
+    W += (pops + pops)·μ
+    for k in 0..deg[u]: v = adj[beg[u]+k]; if dist[u] + 1 < dist[v] && row_cnt[rowof] >= 0: 415f4f(st, rowof), removed++
+    W += (μ·3)·deg[u]
+    done[u] = 1
+    ¬u의 간선을 차례로 보아 done[¬v] == 0인 첫 ¬v를 x로(못 찾으면 −1); W += (3·μ)·k(k = 찾은 위치 또는 deg[¬u])
+    x != −1이면 dist[x] = dist[u] − 1, u = x, CHAIN으로(dist와 vis는 그대로 이어 간다)
+  vis의 dist를 −1로; W += (len(vis) + len(vis))·μ
+```
+`415f4f(st, r)`(69 B): 행 리스트의 살아 있는 노드마다 `col_cnt −= 1`, `col = −1`; `row_cnt[r] = −2`; `+0x404 += 1`. **추적기 표시도 작업량도 없다.** 뜻: u에서 v로 가는 더 긴 경로가 있으면 간선 u→v(행 r)는 다른 함의에서 나오므로 지운다.
+
+### 7.6 오라클 확인
+- 38개 42호출 전부 일치(`s_scc.py`). 그래프가 있는 호출 12(모두 DAG), 함의 행 2,321, CHAIN 3,411, 지운 행 1(fhnw-binpack4-4).
+- 오라클을 지나지 않은 것: SCC 원소 처리(`3bb6fe` 집계, x ≡ ¬x), changed 뒤 재구성, 예산 멈춤, PRETRANSRED ≥ 2의 mode 2 단계, `53dce0` mode 1이 실제로 bound/타입을 바꾸는 경우.
