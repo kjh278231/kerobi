@@ -1,7 +1,7 @@
 //! MPS writer (01 §1.5): the text `Model.write("*.mps")` produces, byte for byte. P0 compares the SHA-256 of the
 //! presolved model written this way (docs/10 §6), so section order, padding and number format follow `a4590c`.
-//! shortcut: LP part only (no integer MARKER, Q, SOS, general constraints, multi-objective, names over 254 bytes);
-//! extend with those sections when M2 compares MIP presolved models.
+//! shortcut: linear part only (no Q, SOS, general constraints, multi-objective, names over 254 bytes); extend with
+//! those sections when a compared model has them.
 use crate::Model;
 use std::fmt::Write;
 
@@ -71,7 +71,16 @@ pub fn to_string(m: &Model) -> String {
         let _ = writeln!(o, " {c}  {:<8}", row_names[i]);
     }
     o.push_str("COLUMNS\n");
+    // `a7f063`: any non-continuous column makes it a MIP (integer markers, BV/LI bounds)
+    let mip = m.vtype.iter().any(|&t| t != b'C');
+    let mut marker = false;
     for (j, name) in col_names.iter().enumerate() {
+        // integer columns ('B', 'I', 'N'; not 'S') sit between INTORG and INTEND markers
+        let int = mip && !matches!(m.vtype[j], b'C' | b'S');
+        if int != marker {
+            let _ = writeln!(o, "    MARKER    'MARKER'                 '{}'", if int { "INTORG" } else { "INTEND" });
+            marker = int;
+        }
         let c = m.obj[j];
         if c != 0.0 || m.col_len[j] == 0 {
             let _ = writeln!(o, "    {name:<8}  OBJ       {}", fmt_num(c));
@@ -80,6 +89,9 @@ pub fn to_string(m: &Model) -> String {
         for k in b..b + m.col_len[j] as usize {
             let _ = writeln!(o, "    {name:<8}  {:<8}  {}", row_names[m.col_ind[k] as usize], fmt_num(m.col_val[k]));
         }
+    }
+    if marker {
+        o.push_str("    MARKER    'MARKER'                 'INTEND'\n");
     }
     o.push_str("RHS\n");
     if m.objcon != 0.0 {
@@ -92,7 +104,13 @@ pub fn to_string(m: &Model) -> String {
     }
     o.push_str("BOUNDS\n");
     for (j, name) in col_names.iter().enumerate() {
-        let (l, u) = (m.lb[j], m.ub[j]);
+        let (mut l, mut u, t) = (m.lb[j], m.ub[j], m.vtype[j]);
+        let bin = mip && t == b'B';
+        if bin {
+            // binaries are written clipped to [0, 1]
+            u = u.min(1.0);
+            l = l.max(0.0);
+        }
         if l <= -1e30 {
             if u >= 1e30 {
                 let _ = writeln!(o, " FR BND1      {name:<8}");
@@ -100,18 +118,33 @@ pub fn to_string(m: &Model) -> String {
                 let _ = writeln!(o, " MI BND1      {name:<8}");
                 let _ = writeln!(o, " UP BND1      {name:<8}  {}", fmt_num(u));
             }
-        } else if l == u {
+            continue;
+        }
+        if l == u && t != b'S' && t != b'N' {
             let _ = writeln!(o, " FX BND1      {name:<8}  {}", fmt_num(l));
-        } else {
-            if l != 0.0 {
+            if bin {
+                let _ = writeln!(o, " BV BND1      {name:<8}");
+            }
+            continue;
+        }
+        if bin {
+            let _ = writeln!(o, " BV BND1      {name:<8}");
+            if l == 0.0 && u == 1.0 {
+                continue;
+            }
+        }
+        if mip && t == b'I' && u >= 1e30 {
+            let _ = writeln!(o, " LI BND1      {name:<8}  {}", fmt_num(l));
+        } else if l != 0.0 {
+            let _ = writeln!(o, " LO BND1      {name:<8}  {}", fmt_num(l));
+        }
+        if t == b'S' || t == b'N' {
+            let _ = writeln!(o, " SC BND1      {name:<8}  {}", fmt_num(u));
+        } else if u < 1e30 {
+            if u < 0.0 && l == 0.0 {
                 let _ = writeln!(o, " LO BND1      {name:<8}  {}", fmt_num(l));
             }
-            if u < 1e30 {
-                if u < 0.0 && l == 0.0 {
-                    let _ = writeln!(o, " LO BND1      {name:<8}  {}", fmt_num(l));
-                }
-                let _ = writeln!(o, " UP BND1      {name:<8}  {}", fmt_num(u));
-            }
+            let _ = writeln!(o, " UP BND1      {name:<8}  {}", fmt_num(u));
         }
     }
     o.push_str("ENDATA\n");
