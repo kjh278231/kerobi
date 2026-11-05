@@ -30,7 +30,7 @@
 | ↳ ~~derived·PreDepRow~~ (완료, 병합, 브랜치 삭제) | — / `m1-derived`, `m1-deprow` | `5b488d`, `47c445` | `docs/m1_presolve.md` | G2의 일부 |
 | ↳ symmetry (presolve 하위 에이전트, pane `w4:pV`) | `rsolver-symmetry` / `m1-symmetry` | 대칭 검출 `5577ba`→`551cc0` | `docs/m1_presolve.md` | G2의 일부 |
 | ~~M3 barrier~~ (완료, main 병합) | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
-| M3 PDHG | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3_pdhg.md` | G4 |
+| ~~M3 PDHG~~ (완료, main 병합) | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3_pdhg.md` | G4 |
 
 ## 3. 완료 기록
 
@@ -76,6 +76,7 @@
 | 2026-11-05 | M1 presolve 작업량 예산 | `50de61`·`516cb4` 작업량 항, `3ba9de` 예산 정지 | `9130f4f` (`m1-lp-presolve`) |
 | 2026-11-05 | M1 대칭 검출 게이트 | `5577ba`/`551cc0` LP 경로 이식, 합성 대칭 LP 회귀 | `fcb1bb2`, `6e30a98` (`m1-symmetry`) |
 | 2026-11-05 | M3 PDHG (G4) 에이전트 보고 완료 | Rust PDHG(Method=6)가 Netlib 64에서 Gurobi와 비트 일치, 콜백별 상태 비교 도구. **오케스트레이터 검증·병합 대기** | `60b0b84`, `1479067` (`m3-pdhg`) |
+| 2026-11-06 | **M3 PDHG (G4) 완료** | 오케스트레이터가 따로 검증(기준값 로그의 파라미터 그대로, WorkLimit 60): 상태 64/64, 목적 ≤1e-6 64/64, **PDHGIterCount 64/64**. clippy 0, cargo test·pytest 통과. main 병합 뒤 barrier 64/64도 다시 확인 | `60b0b84`, `1479067`, 병합 `1d0118c` |
 
 ## 4. goal 원문
 
