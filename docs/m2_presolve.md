@@ -19,7 +19,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | `../rsolver-m2-skel` / `m2-skel` | 뼈대 구현: `crates/mip` 상태(`3a484d` MIP 분기, 연결 리스트), `3cd406` 시작부·Presolve=0 경로·마무리, `3b0917` MIP 모델 생성, MPS 정수 MARKER, py 분기. 기준 Presolve=0·PRELIMIT 0–2 38/38 | 코드, `docs/m2_presolve_state.md` |
 | `../rsolver-m2-spine-b` / `m2-spine-b` | `3cd406` 패스 루프(L1696–4400) 해독 | `docs/m2_spine_b.md` |
 | ~~`m2-spine-c`~~ (완료, 병합 `e492342`) | 라운드 후 단계 해독. 라운드 0–4 × 바깥 반복 2, PRELIMIT 카운트 round 0은 19, 이후 16. 호출 없이 세는 곳 목록 | [m2_spine_c.md](m2_spine_c.md) |
-| `../rsolver-m2-spine-d` / `m2-spine-d` | FINAL 단계(L6582–9600) 해독 | `docs/m2_spine_d.md` |
+| ~~`m2-spine-d`~~ (완료, 병합) | FINAL 단계 해독. 두 번째 probing 뒤 ρ > 1e-4면 라운드 루프 재시작(최대 1회), 마무리 사슬 `52cba4`→`521497`→`470936`→`57999f`→{`36ddf2`+inline 쌍대 고정}→inline implied int. 카운트 C1–C23 | [m2_spine_d.md](m2_spine_d.md) |
 | `../rsolver-m2-probe` / `m2-probe` | probing `4d3a1d`와 보조 함수 해독(뒤에 포팅) | `docs/m2_red_probe.md` |
 | `../rsolver-m2-clique` / `m2-clique` | clique `45885d`/`451bed`/`52be10`/`46a62d` 해독(뒤에 포팅) | `docs/m2_red_clique.md` |
 | `../rsolver-m2-inner` / `m2-inner` | 내부 루프 reduction 7개와 보조 함수 해독(뼈대 병합 뒤 같은 에이전트가 포팅) | `docs/m2_red_inner.md` |
