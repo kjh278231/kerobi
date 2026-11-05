@@ -19,6 +19,8 @@ pub enum PostRec {
     /// type 7 (`4ffe11`): singleton row `r` became bound(s) of column `j` (`code` 1 lower, 2 upper, 3 both)
     /// at `x`; its dual is recovered from `j`'s reduced cost and `a`.
     SingletonRow { j: i32, r: i32, code: i32, a: f64, x: f64 },
+    /// type 8 (`4ff158`): forcing row `r` (`dir` 1 at min activity, -1 at max) with its live entries.
+    Forcing { r: i32, dir: f64, entries: Vec<(i32, f64)> },
 }
 
 #[derive(Clone, Debug)]

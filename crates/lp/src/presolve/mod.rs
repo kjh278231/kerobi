@@ -137,7 +137,13 @@ fn reduce(st: &mut State, p: &Params) {
             if limit <= calls {
                 return;
             }
-            // shortcut: 4ff158, 50cc90 not ported yet (PRELIMIT 6+).
+            // state+0x278 (set by aggregation 517fa8, unported) would skip 4ff158
+            st.forcing_rows(p.feastol, p.infbound);
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+            // shortcut: 50cc90 not ported yet (PRELIMIT 7+).
             let _ = (&snap, &mut i);
             return;
         }

@@ -659,3 +659,67 @@ impl State {
         0
     }
 }
+
+impl State {
+    /// `4ff158`: forcing rows. If a row's min activity (any row) or max activity (`=` rows) equals its rhs
+    /// with no infinite contribution, every column sits at the bound giving that activity: fix them all
+    /// (`4fa83a`) and drop the row with a type-8 record. Skipped when some column's range times its
+    /// coefficient is below 100 feastol.
+    pub fn forcing_rows(&mut self, feastol: f64, inf: f64) -> i32 {
+        let rows = self.rows_list();
+        let mut removed = 0;
+        for &rr in &rows {
+            let r = rr as usize;
+            let c = self.row_cnt[r];
+            if c <= 1 {
+                continue;
+            }
+            let dir = if !(self.inf_min[r] != 0 || self.act_min[r] <= -1e-10 || feastol <= self.act_min[r]) {
+                1.0
+            } else if self.sense[r] == b'=' && self.inf_max[r] == 0 && self.act_max[r] < 1e-10 && -feastol < self.act_max[r] {
+                -1.0
+            } else {
+                continue;
+            };
+            let b = self.row_beg[r] as usize;
+            let len = self.row_len[r] as usize;
+            let tiny = (b..b + len).any(|k| {
+                let j = self.row_ind[k];
+                j >= 0
+                    && self.col_cnt[j as usize] >= 0
+                    && ((self.ub[j as usize] - self.lb[j as usize]) * self.row_val[k]).abs() < feastol * 100.0
+            });
+            self.work += len as f64 * 5.0;
+            if tiny {
+                continue;
+            }
+            let mut entries = Vec::new();
+            for k in b..b + len {
+                let j = self.row_ind[k];
+                if j >= 0 && self.col_cnt[j as usize] >= 0 {
+                    entries.push((j, self.row_val[k]));
+                }
+            }
+            self.work += len as f64 * 6.0;
+            self.post.push(PostRec::Forcing { r: rr, dir, entries });
+            self.row_cnt[r] = -1;
+            for k in b..b + len {
+                let j = self.row_ind[k];
+                if j < 0 || self.col_cnt[j as usize] < 0 {
+                    continue;
+                }
+                let j = j as usize;
+                let a = self.row_val[k];
+                self.row_ind[k] = -1;
+                self.col_cnt[j] -= 1;
+                let v = if dir * a <= 0.0 { self.ub[j] } else { self.lb[j] };
+                self.fix_at(j, v, inf, true);
+            }
+            removed += 1;
+            self.row_cnt[r] = -2;
+            self.work += self.row_len[r] as f64 * 6.0;
+        }
+        self.rows_removed += removed;
+        0
+    }
+}
