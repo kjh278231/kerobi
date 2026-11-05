@@ -82,6 +82,7 @@ def bfrt(e, lens=None):
         else:
             c = (l[t] - u[t]) * a
             upd = feas - delta < c
+            c = min(c, delta * -2.0)
         nb = bound
         if upd and d[t] >= 0.0:
             nb = max(bound, OPT / a + ratio)
