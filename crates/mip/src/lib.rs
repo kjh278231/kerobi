@@ -18,6 +18,7 @@ mod lists;
 pub mod post;
 pub mod probe;
 pub mod probe_engine;
+mod setpack;
 pub mod state;
 mod stubs;
 pub mod tracker;

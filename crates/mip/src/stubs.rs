@@ -36,8 +36,6 @@ impl State {
     pub fn dual_agg(&mut self, p: &Params) -> i32 { 0 }
     /// 3cd406 inline dual binarization candidates (m2_spine_b.md §5.4; `3c2f36` never runs on the 38 models)
     pub fn dual_conv_bin(&mut self, p: &Params) -> i32 { 0 }
-    /// `52be10` set packing / partitioning rows
-    pub fn set_packing(&mut self, p: &Params) -> i32 { 0 }
     /// `46a62d(st, env, T12, mode)`
     pub fn clique_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
     /// `5466a7` VUB merging
