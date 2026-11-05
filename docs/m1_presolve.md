@@ -20,10 +20,17 @@ LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03
 - 대칭 병합(`5ccc35a`): `5577ba`가 열 CSR을 압축하는 상태 변화까지(ganges 후반 작업량 차이 해소). 병합하면서 생성자 유형 5/6의 ub 풀기를 옮겨 sym_cycles·sym_paths·cod105 완화의 1.002 bound 차이를 고쳤고, 행·열이 모두 지워진 결과의 이름을 `Presolved`로 했다(enlight_hard 완화).
 - 도구(2차 세션 스크래치 `/tmp/claude-1000/-home-sds-workspace-gurobi-sandbox-rsolver-presolve/4dd2adfa-0778-4c24-bb6b-2ced1e335a0c/scratchpad/`, 커밋 안 함): `work/lim{1..160}.json`·`def.json`(`tools/work_oracle.py`), `wsteps.py`(단계별 증분), `wfirst.py`, `wcmp.py`, `dep_oracle.py`(`47c445` 호출 지점 0x38f28f/0x38df02 전후), `slot_oracle.py`, `file_work.py`, `budget_test.py`.
 
-### 남은 것(G2 밖)
-- 문제 유형 1·4(PreDepRow 자동값·집계 비율에 쓰임)는 assert로 막았다. 빈 결과 모델의 목적 상수는 확인하지 않았다.
-- 예산 정지가 실제로 걸리는 사례로 오라클 비교.
-- postsolve worktree `../rsolver-postsolve`와 pane `w4:pP`/`w4:pQ`는 다른 세션 소유라 남겨 두었다.
+### G2 이후 추가로 한 일 (2026-11-06)
+- 최대화(`04198f7`): presolve는 최소화형(비용·상수 부호 반전)으로 돌고 출력 때 되돌린다. 전부 지워진 결과는 새 최소화 모델 `Presolved`(최소화형 상수). MPS 라이터는 비용을 읽은 그대로 쓴다(리더 규약과 맞춤). 확인: 행이 남는 MAX 모델 1개, 전부 지워지는 모델 3개(min·max, 상수 ≠ 0) Gurobi와 같음.
+- 문제 유형 1·4(`58322e7`, assert 대신 포팅): 유형 1은 자동 PreDepRow 켜기와 `50de61` 전체 행 경로. 유형 4(네트워크)는 `390989` 축소 모드 `local_38`(시작 reduction·`51a144` 생략, 패스 10, 내부 1라운드, early 묶음·평행·대칭 생략, 집계는 n < 20m일 때 비율 0.1·첫 호출도 `53c9ee` 목록). PreDepRow 자동값은 reduction 전에 정하고 PRESYMMPASSES > 0이면 0. 확인: 합성 네트워크 LP 3개·±1 LP 2개에서 PRELIMIT=1과 기본값의 모델·작업량이 Gurobi와 같음.
+- 큰 합성 등식계(n ≤ 1990, nnz ≤ 12만) 4개에서 기본값 모델·작업량이 Gurobi와 비트 단위로 같음(예산의 약 52%).
+- 회귀(`58322e7`): Netlib P0 64/64, 작업량 64/64, postsolve 64/64, MIPLIB 완화 38/38, 합성 대칭 7/7, pytest 27, clippy 0.
+
+### 남은 것
+- **Presolve=1 예산이 틀림(조사 중 멈춤)**: Gurobi는 Presolve=1에서 +0x1f0 = 1e100(+1e7)인데 포트는 200·nnz + 1e7이다. 그래서 Presolve=1·PreDepRow=1의 합성 b12·b14에서 포트만 `47c445`가 예산에 걸려 작업량이 다르다(모델은 같음). `3cd406` L778–790이 PrePasses 자동값을 Presolve=1이면 20으로 정하는데, 그 값이 `390989`의 `1 < PrePasses` 판정에 들어가는지(그러면 1e100) 확인해 `run_post`의 예산 식을 고치면 된다. 재현: 2차 세션 스크래치 `budget_p1.py budget b12 b14`.
+- 예산 정지가 Gurobi에서도 실제로 걸리는 사례는 아직 없다(기본값은 예산의 52%까지만 확인).
+- Presolve=1·2의 다른 경로는 오라클로 전수 확인하지 않았다(Presolve=2 전용 reduction은 지름길).
+- postsolve worktree `../rsolver-postsolve`, 브랜치 `m1-postsolve`(병합됨), pane `w4:pP`/`w4:pQ` 정리는 자동 모드가 거부해 남겨 두었다. 셸 pane `w4:pF`는 1차 세션이 만든 빌드용이다.
 
 ### 주의점
 - 운영 규칙: 이 브랜치에만 커밋, `crates/lp`의 main 기존 파일 수정 금지(`presolve/`는 이 브랜치 소유), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`).
