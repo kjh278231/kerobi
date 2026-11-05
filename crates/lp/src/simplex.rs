@@ -54,6 +54,10 @@ pub struct Engine<'a> {
     perturbed: bool,
     /// Perturbation size spx+0x348 (PerturbValue 2e-4 at the start).
     pert_size: f64,
+    /// Primal bound shift s (P+0x30) added to b by row; empty when there is none.
+    rhs_shift: Vec<f64>,
+    /// The primal may hand a shifted optimum over to the dual (PRIMDUALSWITCH, round budget left).
+    primal_switch: bool,
     markowitz_tol: f64,
     in_dual: bool,
     /// Columns refused as entering after a pivot mismatch on a fresh factorization; cleared after a pivot.
@@ -96,6 +100,8 @@ impl<'a> Engine<'a> {
             lu_interval: interval,
             perturbed: false,
             pert_size: 2e-4,
+            rhs_shift: Vec::new(),
+            primal_switch: true,
             markowitz_tol: crate::lu::MARKOWITZ_TOL,
             in_dual: false,
             rejected: vec![false; n + m],
@@ -228,6 +234,9 @@ impl<'a> Engine<'a> {
 
     pub fn compute_xb(&mut self) {
         let mut rhs = self.spx.b.clone();
+        for (r, s) in rhs.iter_mut().zip(&self.rhs_shift) {
+            *r += s;
+        }
         for j in 0..self.n + self.m {
             if self.vstat[j] < 0 {
                 let xj = self.x_nonbasic(j);
@@ -739,7 +748,7 @@ impl<'a> Engine<'a> {
                 self.w.iter_mut().for_each(|w| *w = 1.0);
             }
             self.snap();
-            if std::env::var("RSOLVER_DEBUG").is_ok() && self.iter.is_multiple_of(2000) {
+            if self.iter.is_multiple_of(2000) && std::env::var("RSOLVER_DEBUG").is_ok() {
                 let (pi, di) = self.sums();
                 eprintln!("dual it {} obj {:e} pinf {pi:e} dinf {di:e} pert {} big_m {} mode {}", self.iter, self.objective(), self.perturbed, self.big_m, self.pr.mode);
             }
@@ -954,9 +963,15 @@ impl<'a> Engine<'a> {
         }
     }
 
-    /// Primal simplex (phase 1 on the bound violations of the basics, then phase 2), Dantzig pricing with
-    /// fresh duals each iteration and a textbook ratio test.
+    /// Primal simplex `0478d3` (docs/m1_primal_spec.md): composite phase 1 (basic costs c ∓ M on rows below/above
+    /// their bounds, M = BigM 1e6, dual tolerance τ1·M), partial-list CHUZC (mode 0, `06dfff`), Harris ratio test in
+    /// phase 2 (`55f68`) and the phase-1 test `54eef`, bound flips of the entering column; with no candidate in phase 1
+    /// the composite costs are dropped (pure phase 1, τ1 = 1e-9) before infeasibility is declared, and optimality is
+    /// only declared on a fresh factorization.
+    /// shortcut: x_B is kept as values (the original keeps offsets from the lower bound), no devex/SE, no piecewise
+    /// phase-1 test (`56973`), no degeneracy bound shift (`b1da8`); the iteration path is not Gurobi's yet.
     pub fn primal(&mut self) -> Status {
+        const BIG_M: f64 = 1e6;
         self.in_dual = false;
         // nonbasics may not sit on an infinite bound in the primal
         for j in 0..self.n + self.m {
@@ -968,144 +983,284 @@ impl<'a> Engine<'a> {
         self.c = self.spx.c.clone();
         self.perturbed = false;
         self.compute_xb();
-        let (mut best_obj, mut stall) = (f64::INFINITY, 0usize);
-        let mut was_phase2 = false;
+        let (n, m, nm) = (self.n, self.m, self.n + self.m);
+        let mut composite = true;
+        let mut tau1 = 1e-7;
+        let mut cursor = 0usize; // P+0x54
+        let colw = m >= 500; // P+0x1c/+0x20 = n: column-length scaling of scores
+        let tol_p = 1e-9; // min(PIVOTTOL, 1e-9)
+        let delta = FEAS_TOL; // Harris tolerance (lvl ≤ 2)
+        // b1da8 bookkeeping: degenerate pivots (0x330) and the marks it₀/deg₀, refactor count, level, size PV
+        let (mut deg, mut deg0, mut it0, mut refactors, mut lvl, mut removals) = (0u64, 0u64, self.iter, 0u64, 0u32, 0u32);
+        let mut pv = 2e-4;
         loop {
             if self.iter >= self.iter_limit {
                 return Status::IterLimit;
             }
-            let mut phase1 = (0..self.m).any(|p| self.primal_infeas(p) != 0.0);
-            if phase1 && was_phase2 {
-                // shortcut: drift pushed a basic out of its bounds in phase 2; a fresh factorization and x_B usually
-                // clear it (this textbook primal stands in for 0478d3)
-                was_phase2 = false;
-                self.refactor();
-                self.compute_xb();
-                phase1 = (0..self.m).any(|p| self.primal_infeas(p) != 0.0);
-            }
-            was_phase2 |= !phase1;
-            let progress = if phase1 { self.sums().0 } else { self.objective() };
-            if progress < best_obj - 1e-9 * best_obj.abs().max(1.0) {
-                best_obj = progress;
-                stall = 0;
-            } else {
-                stall += 1;
-            }
-            let bland = stall > 50;
-            if std::env::var("RSOLVER_DEBUG").is_ok() && self.iter.is_multiple_of(1000) {
-                eprintln!("primal it {} phase1 {phase1} progress {progress:e} stall {stall}", self.iter);
-            }
-            let cb: Vec<(usize, f64)> = (0..self.m)
+            // row marks: −1 'B' below the lower bound, +1 'A' above the upper bound
+            let mark: Vec<i8> = (0..m)
                 .map(|p| {
-                    let v = if phase1 { self.primal_infeas(p).signum() } else { self.c[self.head[p]] };
-                    (p, v)
+                    let j = self.head[p];
+                    let x = self.xb[p];
+                    if x < self.spx.l[j] - FEAS_TOL {
+                        -1
+                    } else if x > self.spx.u[j] + FEAS_TOL {
+                        1
+                    } else {
+                        0
+                    }
                 })
                 .collect();
-            let mut y = vec![0.0; self.m];
+            let ninf = mark.iter().filter(|&&k| k != 0).count();
+            let phase1 = ninf > 0;
+            let cost = |e: &Self, j: usize| if !phase1 || composite { e.c[j] } else { 0.0 };
+            let cb: Vec<(usize, f64)> = (0..m)
+                .map(|p| (p, cost(self, self.head[p]) + if phase1 { mark[p] as f64 * BIG_M } else { 0.0 }))
+                .collect();
+            let mut y = vec![0.0; m];
             for (r, v) in self.lu.btran(&cb) {
                 y[r] = v;
             }
-            let cost = |j: usize| if phase1 { 0.0 } else { self.c[j] };
-            let mut q = usize::MAX;
-            let mut best = 0.0;
-            for j in 0..self.n + self.m {
+            let tol = if phase1 { tau1 * BIG_M } else { OPT_TOL };
+            if self.iter.is_multiple_of(5000) && std::env::var("RSOLVER_DEBUG").is_ok() {
+                let xs = self.x();
+                let mut res = self.spx.b.clone();
+                for j in 0..self.n + self.m {
+                    for (i, a) in self.spx.col(j) {
+                        res[i] -= a * xs[j];
+                    }
+                }
+                let rmax = res.iter().fold(0.0f64, |a, &b| a.max(b.abs()));
+                let bad = (0..self.n + self.m).filter(|&j| self.vstat[j] < 0 && (xs[j] < self.spx.l[j] - 1e-6 || xs[j] > self.spx.u[j] + 1e-6)).count();
+                eprintln!("primal it {} ninf {ninf} composite {composite} obj {:e} shift {} deg {deg} resid {rmax:e} badnb {bad}", self.iter, self.objective(), !self.rhs_shift.is_empty());
+            }
+            // CHUZC: scan from the cursor, stop after more than 10 columns with a candidate or a full cycle
+            let (mut q, mut best, mut scanned, mut found) = (usize::MAX, 0.0, 0usize, 0usize);
+            let mut dq = 0.0;
+            for t in 0..nm {
+                let j = (cursor + t) % nm;
                 let s = self.vstat[j];
-                if s >= 0 || s == -4 {
+                if !(-3..=-1).contains(&s) {
                     continue;
                 }
-                let dj = self.spx.col(j).fold(cost(j), |t, (i, a)| t - a * y[i]);
-                self.d[j] = dj;
-                let score = match s {
-                    -1 if dj < -OPT_TOL => -dj,
-                    -2 if dj > OPT_TOL => dj,
-                    -3 if dj.abs() > OPT_TOL => dj.abs(),
-                    _ => 0.0,
+                scanned += 1;
+                let dj = self.spx.col(j).fold(cost(self, j), |acc, (i, a)| acc - a * y[i]);
+                let dhat = match s {
+                    -1 => dj,
+                    -2 => -dj,
+                    _ => -dj.abs(),
                 };
-                // shortcut: Bland's rule (first improving column) once the objective stalls, against cycling in this
-                // textbook primal; the original primal (0478d3) is not ported yet
-                if score > best && !(bland && q != usize::MAX) {
-                    best = score;
+                if s == -3 && dj.abs() > tol {
                     q = j;
+                    dq = dj;
+                    cursor = j;
+                    break;
+                }
+                if dhat < -tol {
+                    found += 1;
+                    let score = if colw && j < n { dhat / (self.spx.len[j] as f64 + 0.01) } else { dhat };
+                    if score < best {
+                        best = score;
+                        q = j;
+                        dq = dj;
+                    }
+                }
+                if scanned > 10 && found > 0 {
+                    cursor = (j + 1) % nm;
+                    break;
                 }
             }
             if q == usize::MAX {
                 if phase1 {
+                    if composite {
+                        composite = false;
+                        tau1 = 1e-9;
+                        continue;
+                    }
+                    if self.lu.n_updates > 0 {
+                        self.refactor();
+                        self.compute_xb();
+                        continue;
+                    }
                     return Status::Infeasible;
+                }
+                if self.lu.n_updates > 0 {
+                    self.refactor();
+                    self.compute_xb();
+                    continue;
+                }
+                if !self.rhs_shift.is_empty() {
+                    // b3a19: with PRIMDUALSWITCH ≠ 0 the dual takes over from the shifted optimum (−1004); after the
+                    // last allowed switch the shift is dropped and the primal goes on from the true x_B
+                    if self.primal_switch {
+                        return Status::Optimal;
+                    }
+                    self.rhs_shift.clear();
+                    removals += 1;
+                    self.compute_xb();
+                    continue;
                 }
                 self.compute_duals();
                 return Status::Optimal;
             }
-            let dir = if self.d[q] < 0.0 { 1.0 } else { -1.0 }; // x_q increases when d_q < 0
+            // σ = +1 when x_q increases
+            let sigma = if self.vstat[q] == -2 || (self.vstat[q] == -3 && dq > 0.0) { -1.0 } else { 1.0 };
             let (col, spike) = self.ftran_col(q);
-            // ratio test (Harris two passes): x_B(t) = x_B − t·dir·col; phase 1 basics stop where they turn feasible
             let range = self.spx.u[q] - self.spx.l[q];
-            let mut tmax = f64::INFINITY;
-            let mut r = usize::MAX;
-            let mut leave_upper = false;
-            let mut amax = 0.0;
-            let mut tr = f64::INFINITY;
-            for pass in 0..2 {
-                for p in 0..self.m {
-                    let a = dir * col[p];
-                    if a.abs() <= PIVOT_TOL {
-                        continue;
+            let theta0 = if range < INFINITY { range } else { f64::INFINITY };
+            // ratio test: x_B − t·σ·col; pass 1 Harris bound, pass 2 largest |α| among ratios within it
+            let mut tmax = theta0;
+            let mut cand: Vec<(usize, f64, bool)> = Vec::new(); // (position, ratio, leaves at upper)
+            for p in 0..m {
+                let a = sigma * col[p];
+                if a.abs() <= tol_p {
+                    continue;
+                }
+                let j = self.head[p];
+                let (l, u, x) = (self.spx.l[j], self.spx.u[j], self.xb[p]);
+                // target bound by mark (54eef in phase 1; 55f68 marks are all feasible)
+                let (ratio, lim, upper) = if a > 0.0 {
+                    match mark[p] {
+                        -1 => continue,
+                        1 => ((x - u) / a, (x - u + delta) / a, true),
+                        _ if l <= -INFINITY => continue,
+                        _ => ((x - l) / a, (x - l + delta) / a, false),
                     }
-                    let j = self.head[p];
-                    let (l, u, x) = (self.spx.l[j], self.spx.u[j], self.xb[p]);
-                    let (bound, upper) = if a > 0.0 {
-                        if x > u + FEAS_TOL {
-                            (u, true)
-                        } else if x < l - FEAS_TOL || l <= -INFINITY {
-                            continue;
-                        } else {
-                            (l, false)
-                        }
-                    } else if x < l - FEAS_TOL {
-                        (l, false)
-                    } else if x > u + FEAS_TOL || u >= INFINITY {
-                        continue;
-                    } else {
-                        (u, true)
-                    };
-                    let dist = ((x - bound) * a.signum()).max(0.0);
-                    if pass == 0 {
-                        tmax = tmax.min((dist + FEAS_TOL) / a.abs());
-                    } else if dist / a.abs() <= tmax && (if bland { r == usize::MAX || self.head[p] < self.head[r] } else { a.abs() > amax }) {
-                        amax = a.abs();
-                        r = p;
-                        leave_upper = upper;
-                        tr = dist / a.abs();
+                } else {
+                    match mark[p] {
+                        1 => continue,
+                        -1 => ((x - l) / a, (x - l - delta) / a, false),
+                        _ if u >= INFINITY => continue,
+                        _ => ((x - u) / a, (x - u - delta) / a, true),
                     }
+                };
+                tmax = tmax.min(lim);
+                if ratio <= tmax {
+                    cand.push((p, ratio, upper));
                 }
             }
-            if r == usize::MAX && range >= INFINITY {
-                return if phase1 { Status::Numeric } else { Status::Unbounded };
-            }
-            self.iter += 1;
-            if range < INFINITY && range <= tr {
-                // the entering variable reaches its other bound first: flip it
-                for p in 0..self.m {
-                    self.xb[p] -= range * dir * col[p];
+            if theta0 < f64::INFINITY && theta0 <= tmax {
+                // the entering column reaches its other bound first: flip
+                for p in 0..m {
+                    if col[p] != 0.0 {
+                        self.xb[p] -= theta0 * sigma * col[p];
+                    }
                 }
                 self.vstat[q] = if self.vstat[q] == -1 { -2 } else { -1 };
+                self.iter += 1;
                 self.log();
                 continue;
             }
-            let j = self.head[r];
-            let t = tr;
-            for p in 0..self.m {
-                if col[p] != 0.0 {
-                    self.xb[p] -= t * dir * col[p];
+            let mut pick: Option<(usize, f64, bool)> = None;
+            let mut amax = 0.0;
+            for &(p, ratio, upper) in &cand {
+                if ratio > tmax {
+                    continue;
+                }
+                let j = self.head[p];
+                let mut sc = col[p].abs();
+                if colw && j < n && !phase1 {
+                    sc *= 1.0 + ((self.spx.len[j] - 1).min(10) as f64) / 10.0;
+                }
+                if sc > amax {
+                    amax = sc;
+                    pick = Some((p, ratio, upper));
                 }
             }
-            let xq = self.x_nonbasic(q) + t * dir;
-            let st = if self.spx.u[j] - self.spx.l[j] <= 0.0 { -4 } else if leave_upper { -2 } else { -1 };
+            let Some((r, theta, upper)) = pick else {
+                if phase1 && composite {
+                    composite = false;
+                    tau1 = 1e-9;
+                    continue;
+                }
+                if self.lu.n_updates > 0 {
+                    self.refactor();
+                    self.compute_xb();
+                    continue;
+                }
+                return if phase1 { Status::Numeric } else { Status::Unbounded };
+            };
+            let theta = if theta < 0.0 && !phase1 {
+                // b44ce L873-948: a negative phase-2 step moves the leaving basic's bound instead (shift into s)
+                let j = self.head[r];
+                let bound = if upper { self.spx.u[j] } else { self.spx.l[j] };
+                let dx = bound - self.xb[r];
+                if self.rhs_shift.is_empty() {
+                    self.rhs_shift = vec![0.0; m];
+                }
+                for (i, a) in self.spx.col(j) {
+                    self.rhs_shift[i] += dx * a;
+                }
+                self.xb[r] = bound;
+                0.0
+            } else {
+                theta.max(0.0)
+            };
+            if theta <= FEAS_TOL {
+                deg += 1;
+            }
+            for p in 0..m {
+                if col[p] != 0.0 {
+                    self.xb[p] -= theta * sigma * col[p];
+                }
+            }
+            let xq = self.x_nonbasic(q) + sigma * theta;
+            let j = self.head[r];
+            let mut st = if self.spx.u[j] - self.spx.l[j] <= 0.0 { -4 } else if upper { -2 } else { -1 };
+            if st == -2 && self.spx.u[j] >= INFINITY {
+                st = -1;
+            }
             self.col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
             self.pivot(r, q, st, &spike);
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;
+            } else {
+                // just refactored: b1da8 when 90% of the pivots since the last mark were degenerate
+                refactors += 1;
+                if removals < 3 && refactors % (lvl as u64 + 2) == 1 && 0.9 * ((self.iter + 1 - it0) as f64) < ((deg - deg0) as f64) {
+                    self.shift_bounds(pv);
+                    lvl += 2;
+                    pv = (pv * 3.0).min(1e6 * 2e-4);
+                }
+                it0 = self.iter + 1;
+                deg0 = deg;
             }
+            self.iter += 1;
             self.log();
+        }
+    }
+
+    /// `b1da8`: basics on a bound move into the interior by ((k % m) + m)·PV/m (k from the stream seeded with the
+    /// iteration count), where that stays inside the box; the move goes into the rhs shift s.
+    fn shift_bounds(&mut self, pv: f64) {
+        let m = self.m;
+        if self.rhs_shift.is_empty() {
+            self.rhs_shift = vec![0.0; m];
+        }
+        let mut rng = Rng(self.iter);
+        for p in 0..m {
+            let j = self.head[p];
+            let (l, u, x) = (self.spx.l[j], self.spx.u[j], self.xb[p]);
+            let k = rng.next_int() as usize;
+            let mag = ((k % m) + m) as f64 * pv / m as f64;
+            let at_lower = l > -INFINITY && (x - l).abs() <= FEAS_TOL;
+            let at_upper = u < INFINITY && (x - u).abs() <= FEAS_TOL;
+            let d = if u - l <= 0.0 {
+                continue;
+            } else if at_upper {
+                -mag
+            } else if at_lower {
+                mag
+            } else {
+                continue;
+            };
+            if x + d < l || x + d > u {
+                continue;
+            }
+            self.xb[p] += d;
+            for (i, a) in self.spx.col(j) {
+                self.rhs_shift[i] += d * a;
+            }
         }
     }
 
@@ -1113,35 +1268,65 @@ impl<'a> Engine<'a> {
     pub fn solve(&mut self, method: i32) -> Status {
         self.dual_start();
         self.log();
-        if method == 0 {
-            return self.primal();
-        }
-        let st = self.dual();
-        if std::env::var("RSOLVER_DEBUG").is_ok() {
-            eprintln!("dual -> {st:?} at it {} perturbed {}", self.iter, self.perturbed);
-        }
-        match st {
-            Status::Optimal => {
-                if self.perturbed {
-                    self.c = self.spx.c.clone();
-                    self.perturbed = false;
-                    self.compute_duals();
-                }
-                let dual_infeasible = (0..self.n + self.m).any(|j| match self.vstat[j] {
-                    -1 | -2 => self.d[j] < -OPT_TOL,
-                    -3 => self.d[j].abs() > OPT_TOL,
-                    _ => false,
-                });
-                let artificial = (0..self.n + self.m).any(|j| self.vstat[j] < 0 && self.x_nonbasic(j).abs() >= INFINITY);
-                if dual_infeasible || artificial {
-                    self.primal()
-                } else {
-                    Status::Optimal
-                }
+        // cda5b: primal and dual hand over to each other (status −1004) up to 20 times; a primal that ends on
+        // shifted bounds goes to the dual, a dual that ends on shifted costs or artificial bounds goes to the primal
+        let mut primal = method == 0;
+        let mut st = if primal { self.primal() } else { self.dual() };
+        for round in 0..20 {
+            if std::env::var("RSOLVER_DEBUG").is_ok() {
+                eprintln!("{} -> {st:?} at it {} perturbed {} shift {}", if primal { "primal" } else { "dual" }, self.iter, self.perturbed, !self.rhs_shift.is_empty());
             }
-            Status::Unbounded => self.primal(),
-            s => s,
+            self.primal_switch = round < 19;
+            if primal {
+                if st == Status::Optimal && !self.rhs_shift.is_empty() {
+                    self.dual_resume();
+                    primal = false;
+                    st = self.dual();
+                    continue;
+                }
+                return st;
+            }
+            match st {
+                Status::Optimal => {
+                    if self.perturbed {
+                        self.c = self.spx.c.clone();
+                        self.perturbed = false;
+                        self.compute_duals();
+                    }
+                    let dual_infeasible = (0..self.n + self.m).any(|j| match self.vstat[j] {
+                        -1 | -2 => self.d[j] < -OPT_TOL,
+                        -3 => self.d[j].abs() > OPT_TOL,
+                        _ => false,
+                    });
+                    let artificial = (0..self.n + self.m).any(|j| self.vstat[j] < 0 && self.x_nonbasic(j).abs() >= INFINITY);
+                    if !(dual_infeasible || artificial) {
+                        return Status::Optimal;
+                    }
+                }
+                Status::Unbounded => {}
+                s => return s,
+            }
+            primal = true;
+            st = self.primal();
         }
+        st
+    }
+
+    /// Dual simplex from the current basis after a primal round: true costs and bounds, fresh factorization, small
+    /// dual infeasibilities shifted away, exact DSE norms, a new row copy and candidate list.
+    fn dual_resume(&mut self) {
+        self.rhs_shift.clear();
+        self.c = self.spx.c.clone();
+        self.perturbed = false;
+        self.big_m = false;
+        self.refactor();
+        self.compute_xb();
+        self.compute_duals();
+        self.in_dual = true;
+        self.shift_costs();
+        self.exact_weights();
+        self.rc_build();
+        self.price_full();
     }
 
     /// Primal values of all n+m columns (scaled space).

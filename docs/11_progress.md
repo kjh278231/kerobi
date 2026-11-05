@@ -33,6 +33,7 @@
 | ~~M3 PDHG~~ (완료, main 병합) | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3_pdhg.md` | G4 |
 | M1 LP 드라이버 | `rsolver-presolve` / `m1-lp-driver` | 파라미터 표, 드라이버, Presolve 켠 연속 경로 | `docs/m1_driver.md` | G5 |
 | M2 MIP presolve | `rsolver-barrier` / `m2-mip-presolve` | MIP presolve `3cd406` P0 | `docs/m2_presolve.md` | G6 |
+| ↳ MIP presolve 하위 에이전트(동시 3개 이하로 제한) | `rsolver-m2-*` / `m2-skel`, `m2-spine-b/c/d`, `m2-inner`, `m2-probe`, `m2-clique` | G6 분담 | `docs/m2_presolve.md` | G6의 일부 |
 
 ## 3. 완료 기록
 
@@ -80,6 +81,10 @@
 | 2026-11-05 | M3 PDHG (G4) 에이전트 보고 완료 | Rust PDHG(Method=6)가 Netlib 64에서 Gurobi와 비트 일치, 콜백별 상태 비교 도구. **오케스트레이터 검증·병합 대기** | `60b0b84`, `1479067` (`m3-pdhg`) |
 | 2026-11-06 | **M3 PDHG (G4) 완료** | 오케스트레이터가 따로 검증(기준값 로그의 파라미터 그대로, WorkLimit 60): 상태 64/64, 목적 ≤1e-6 64/64, **PDHGIterCount 64/64**. clippy 0, cargo test·pytest 통과. main 병합 뒤 barrier 64/64도 다시 확인 | `60b0b84`, `1479067`, 병합 `1d0118c` |
 | 2026-11-06 | **M1 LP presolve·postsolve (G2) 완료** | 오케스트레이터가 따로 검증: presolved 모델을 처음 뜬 Gurobi 기준값(`bench/gurobi/*/presolved.mps.gz`)과 비교해 **64/64**, postsolve 64/64, clippy 0, cargo test·pytest 31 통과. main 병합 뒤 barrier·PDHG 64/64 다시 확인 | `a8e01e7`, `6a92185`, 병합 `df70174` |
+| 2026-11-06 | M2 presolve 1단계 | 호출 그래프와 Frida로 확인한 결과 `3cd406`은 LP를 풀지 않는다. 실행 순서대로 reduction 목록 정리, 파라미터 오프셋 표(`ac81d7` + getParamInfo), PRELIMIT 훑기 도구, MIP 상태 덤프 오라클 | `077cfa2`, `5627199`, `647088d` (`m2-mip-presolve`) |
+| 2026-11-06 | M1 primal simplex 원본 이식 | `0478d3` 명세의 primal(행 표시, 복합 phase 1, 부분 목록 CHUZC, Harris·`54eef` ratio, 진입 flip), `b1da8` 퇴화 bound shift, `cda5b` primal↔dual 넘김. Method 0: Netlib 91 중 84, Method 1: 64 중 63 | `7affabb` |
+| 2026-11-06 | M1 드라이버: 파라미터 표·헤더 로그 | Frida로 `9828a1`/`c23877`/`0c3d0d` 호출 범위 확인. 파라미터 표가 libgurobi130에서 **548/548 = gurobipy**(G5 (1)). 새 driver 크레이트의 Optimize 헤더 로그 **102/102**(G5 (2)) | `0d22211`, `320fba5` (`m1-lp-driver`) |
+| 2026-11-06 | M2 MPS 쓰기(정수) | 정수 MARKER, BV/LI bound를 `a4590c`처럼 씀(MIPLIB 원본 38/38) | `b5a93c1` (`m2-skel`) |
 
 ## 4. goal 원문
 
