@@ -36,6 +36,7 @@
 | 2026-11-05 | M1 C singleton LU·FTRAN | 반복 0 `xB` 60/60 비트 | `e0eb167` |
 | 2026-11-05 | M1 C BTRAN·`d`·DSE 가중치 | 60/60 비트 | `cb66a2b` |
 | 2026-11-05 | M1 B 시작 기저 | `vstat` 64/64 | `fff2399` |
+| 2026-11-05 | M3 ordering·symbolic | AA' NZ·순열·supernode·Factor NZ/Ops 64/64 | `8bc322b` (`m3-barrier`) |
 | 2026-11-05 | M1 presolve 0–1b | Presolve=0 64/64, PRELIMIT 1–3 64/64 | `87c95d8` (`m1-lp-presolve`) |
 
 ## 4. goal 원문

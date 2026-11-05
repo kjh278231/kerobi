@@ -42,7 +42,7 @@
 |---|---|---|
 | 0 | 호출 범위·MKL 확인, 기준값, 결정성 | 완료 |
 | 1 | 오라클(`tools/bar_oracle.py`): B 스칼라·x/y/z, F(nnz(L), ops) | 동작. 필드는 해독하면서 늘린다 |
-| 2 | ordering·symbolic(AA' NZ, Factor NZ/Ops, 순열, supernode) | 진행 중, `docs/m3_ordering.md` |
+| 2 | ordering·symbolic(AA' NZ, Factor NZ/Ops, 순열, supernode) | **완료 64/64**(AA' NZ, 최종 순열 F+0x30, supernode 블록 F+0x78, 열 길이·행 번호, Factor NZ/Ops, F+0x48). `crates/lp/src/barrier/ordering.rs` `analyze()`, 테스트 `bench_lps_match_gurobi`(기대값 `bench/oracle/bar_order/expected.tsv`). 64개 모두 최종 순열은 기준선(mode 3, AMD + 이분할)이고 ND 후보는 채택되지 않는다. 세부는 `docs/m3_ordering.md` |
 | 3 | 표준형·초기점·잔차·반복 규칙(프로토타입) | 진행 중, `docs/m3_ipm.md` |
-| 4 | 수치 분해(supernodal LDLᵀ, `31c54b` → `2d8ee5` supernode 커널, `32af6a` Bunch–Kaufman, MKL DGEMM/DTRSM) | 대기(2의 supernode 구조 필요). `2d8e22`: F+0x178 정규화 모드 = 안전 모드·SOC면 2, 자유 변수·밀집 열이면 1, 아니면 0. 분해 뒤 모드 0이고 F+0x100 < 1e-10이면 1로 올림 |
+| 4 | 수치 분해(supernodal LDLᵀ, `31c54b` → `2d8ee5` supernode 커널, `32af6a` Bunch–Kaufman, MKL DGEMM/DTRSM) | 지금은 `ldl.rs`(스칼라 up-looking LDLᵀ + 작은 피벗 규칙, 반올림 수준 일치)와 `normal.rs`(AΘAᵀ 조립). supernode 커널 비트 이식은 반복 수가 분해 반올림 때문에 갈릴 때 한다. `2d8e22`: F+0x178 정규화 모드 = 안전 모드·SOC면 2, 자유 변수·밀집 열이면 1, 아니면 0. 분해 뒤 모드 0이고 F+0x100 < 1e-10이면 1로 올림 |
 | 5 | Rust 본체, Python 경로(`Method=2`), `tools/parity.py capture rsolver` | 대기 |
