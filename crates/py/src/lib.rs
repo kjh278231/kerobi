@@ -93,6 +93,26 @@ impl PyCoreModel {
         let p = rsolver_lp::presolve::Params::from_pairs(&params);
         PyCoreModel { inner: py.allow_threads(|| rsolver_lp::presolve::run(&self.inner, &p)) }
     }
+    /// Presolve, then uncrush the presolved solution (x, dj, status as `363daa` reads them) back to this model:
+    /// (basis, x, dual). `aligns` (two parities per record, oldest first) overrides the arena simulation.
+    #[pyo3(signature = (params, x, dj, st, aligns=None))]
+    fn uncrush(&self, py: Python<'_>, params: Vec<(String, f64)>, x: Vec<f64>, dj: Vec<f64>, st: Vec<i32>,
+               aligns: Option<Vec<u8>>) -> (Vec<i32>, Vec<f64>, Vec<f64>) {
+        let p = rsolver_lp::presolve::Params::from_pairs(&params);
+        py.allow_threads(|| {
+            let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
+            let al: Option<Vec<[u8; 2]>> = aligns.map(|a| a.chunks(2).map(|c| [c[0], c[1]]).collect());
+            let r = rsolver_lp::presolve::postsolve::uncrush(
+                &post, &self.inner, &rsolver_lp::presolve::postsolve::PreSol { x: &x, dj: &dj, st: &st }, al.as_deref());
+            (r.basis, r.x, r.dual)
+        })
+    }
+    /// Record kinds (oldest first) and simulated array parities of the presolve of this model.
+    fn post_records(&self, params: Vec<(String, f64)>) -> Vec<(i32, u8, u8, i64)> {
+        let p = rsolver_lp::presolve::Params::from_pairs(&params);
+        let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
+        post.recs.iter().zip(&post.aligns).map(|(r, a)| (r.kind(), a[0], a[1], rsolver_lp::presolve::postsolve::layout(r).0)).collect()
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)

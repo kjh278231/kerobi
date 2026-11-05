@@ -4,6 +4,7 @@
 //! is what makes each reduction checkable on its own.
 mod agg;
 mod parallel;
+pub mod postsolve;
 mod reduce;
 mod sort;
 mod state;
@@ -87,6 +88,11 @@ impl Params {
 }
 
 pub fn run(md: &Model, p: &Params) -> Model {
+    run_post(md, p).0
+}
+
+/// `run` plus what uncrush needs (`postsolve.rs`).
+pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
     let mut st = State::new(md);
     if p.presolve != 0 {
         let tols = ColTols {
@@ -106,7 +112,9 @@ pub fn run(md: &Model, p: &Params) -> Model {
             st.parallel(2, &tols);
         }
     }
-    st.to_model(md)
+    let q = st.to_model(md);
+    let post = postsolve::Post::new(&st, p.infbound);
+    (q, post)
 }
 
 /// The reduction sequence; returns when a reduction reports a status or the call limit is reached.
