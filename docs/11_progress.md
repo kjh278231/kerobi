@@ -26,6 +26,7 @@
 |---|---|---|---|---|
 | M1 심플렉스 | `rsolver` / `main` | LP simplex(dual·primal), LU, crash, Quad, LP 드라이버, `crates/core` 삭제 | `docs/10_porting.md` §9 | G1 |
 | M1 LP presolve | `rsolver-presolve` / `m1-lp-presolve` | LP presolve, postsolve | `docs/m1_presolve.md` | G2 |
+| ↳ postsolve (presolve 에이전트가 띄운 하위 에이전트, Sonnet) | `rsolver-postsolve` / `m1-postsolve` | postsolve `363daa` | `docs/m1_postsolve.md` | G2의 일부 |
 | M3 barrier | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
 
 ## 3. 완료 기록
@@ -49,6 +50,9 @@
 | 2026-11-05 | M3 IPM 프로토타입 | 초기점, predictor, Mehrotra/Gondzio corrector, line search, Gurobi pivot 규칙 LDLᵀ와 refinement | `06308ed` (`m3-barrier`) |
 | 2026-11-05 | M1 dual 회귀 수정(israel) | 인공 bound 배율에서 flip 뒤 `x_B` 재계산 | `6013997` |
 | 2026-11-05 | M3 IPM 프로토타입 64개 | 상태 64/64, 목적 ≤1e-6 64/64, **BarIterCount 56/64**(±5% 57/64). Barrier statistics 로그 64/64. 불일치 8개는 해법 반올림 누적 | `e905669`, `9b4c612` (`m3-barrier`) |
+| 2026-11-05 | M1 dual CHUZR 원본 이식 | 순서 있는 후보 목록(표시·재구축 허용량), BTRAN 비용 점수, 인공 bound 단계(1e19). 반복 0 목록 63/64 | `899c192`, `e412440` |
+| 2026-11-05 | M1 presolve 3a–3b | 평행 열·행, PRESPLITROWS, 비용으로 조이는 부등식 행. PRELIMIT 1–17 64/64(기본값 최종 모델은 3/64) | `aba84fe` (`m1-lp-presolve`) |
+| 2026-11-05 | M3 Rust IPM | Method=2 경로, 상태·목적 64/64, Barrier statistics 64/64, `2d8ee5` pivot 규칙으로 **BarIterCount 59/64**(92%, G3 P1 기준 90% 넘음), PRIMINF 반복 0 64/64 | `a4ab223`, `ddc3040`, `df38e2a` (`m3-barrier`) |
 
 ## 4. goal 원문
 
