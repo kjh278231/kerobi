@@ -160,6 +160,7 @@ impl PyCoreModel {
             nnz: get(d, "nnz")?, work: get(d, "work")?, work_mult: get(d, "work_mult")?, counters: get(d, "counters")?,
             nfree: get(d, "nfree")?, npend: get(d, "npend")?, rows: get(d, "rows")?, cols: get(d, "cols")?,
             level: get(d, "level")?, active: get(d, "active")?, r: q("tr_r")?, c: q("tr_c")?,
+            nbin: d.get_item("nbin")?.map(|x| x.extract()).transpose()?.unwrap_or(-1),
         };
         let p = rsolver_mip::Params::from_pairs(&get::<Vec<(String, f64)>>(d, "params")?);
         let mut st = rsolver_mip::state::State::from_parts(&parts, &p);
