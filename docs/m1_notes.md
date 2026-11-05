@@ -87,8 +87,8 @@ M1 진행 중에 알아낸 사실과 작업 방법. 확정된 내용은 해당 �
 ### 6.3 C단계 검증 결과 (2026-11-05)
 
 - 반복 0의 기저 64개 **전부** singleton 단계만으로 완전히 삼각화된다(Markowitz 단계 불필요).
-- `tools/proto/lu_singleton.py`(singleton 피벗 순서 + 열 방향 L·U 해법 + `rhs = b − Σ a_ij·x_j`, 열 순서 0..n+m)로 계산한 `xB`가 **61개 전부 비트 일치**한다. 삼각 기저에서는 L 열 = (나중 피벗 행의 원소)/대각, U 열 = (먼저 피벗한 행의 원래 원소)이고, 비트는 피벗 순서로만 정해진다.
-- 오라클 주의: 자유 열이 있으면 dual 초기화가 자유 열 피벗 루프 안에서 SIMPLEX 콜백을 부른다(`0534f7` L715의 `9a91f3`). perold, pilot4, tuff는 반복 0의 모든 콜백이 xB 계산 전이라(값이 쓰레기 denormal) 반복 0으로는 검증할 수 없다. 오라클은 반복 수마다 **마지막** 콜백을 남기도록 바꿨다(capri는 이것으로 맞음).
+- `tools/proto/lu_singleton.py`(singleton 피벗 순서 + 열 방향 L·U 해법 + `rhs = b − Σ a_ij·x_j`, 열 순서 0..n+m)로 계산한 `xB`가 **60개 전부 비트 일치**한다. 삼각 기저에서는 L 열 = (나중 피벗 행의 원소)/대각, U 열 = (먼저 피벗한 행의 원래 원소)이고, 비트는 피벗 순서로만 정해진다.
+- 오라클 주의: 자유 열이 있으면 dual 초기화가 자유 열 피벗 루프 안에서 SIMPLEX 콜백을 부른다(`0534f7` L715의 `9a91f3`). capri, perold, pilot4, tuff(모두 자유 열 있음)는 반복 0의 모든 콜백이 xB 계산 전이라(값이 쓰레기 denormal) 반복 0으로는 검증할 수 없다. 반복 1 이후로 검증한다. 오라클은 반복 수마다 **마지막** 콜백을 남기도록 바꿨다.
 
 ## 7. 진행
 
@@ -96,5 +96,5 @@ M1 진행 중에 알아낸 사실과 작업 방법. 확정된 내용은 해당 �
 |---|---|---|
 | A | 스케일링 `07d3ce`(ScaleFlag 3 경로) | **완료**: `crates/lp/src/scaling.rs`, 열·행·목적 스케일 64/64 비트 일치(`tests/test_scaling.py`, 기준 `bench/gurobi_spx0`) |
 | B | setup `02f7e1`, dual 초기화 `0534f7`(시작 기저) | 해독 중(§5). C 이후 |
-| C | LU(`036ade`, `1da0b2`, MKL dgetrf), FTRAN/BTRAN, LU 갱신 `05b257` | singleton 단계 + 조밀 FTRAN: xB 61/61 비트 일치(프로토타입). Rust 이식, BTRAN, Markowitz, LU 갱신 남음 |
+| C | LU(`036ade`, `1da0b2`, MKL dgetrf), FTRAN/BTRAN, LU 갱신 `05b257` | singleton 단계 + 조밀 FTRAN: xB 60/60 비트 일치(`crates/lp/src/lu.rs`, `tests/test_scaling.py`). BTRAN, Markowitz, LU 갱신 남음 |
 | D | dual 반복(`028c93` 외) → 반복 0·1 궤적 일치 | 대기 |

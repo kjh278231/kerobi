@@ -76,6 +76,11 @@ impl PyCoreModel {
     fn num_nz(&self) -> usize { self.inner.num_nz() }
     fn fingerprint(&self) -> u32 { rsolver_model::fingerprint::fingerprint(&self.inner) }
     /// (column scales, row scales, objective scale) of the LP simplex setup (04 §3).
+    /// x_B of the LP simplex workspace for a given status array (04 §4); used by M1 parity tests.
+    fn basic_solution(&self, vstat: Vec<i32>) -> Vec<f64> {
+        let spx = rsolver_lp::spx::Spx::new(&self.inner);
+        rsolver_lp::lu::basic_solution(&spx, &vstat)
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)

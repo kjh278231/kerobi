@@ -17,3 +17,16 @@ def test_scale_factors_bitwise_equal():
         assert [x.hex() for x in col] == g["colscale"], f.stem
         assert [x.hex() for x in row] == g["rowscale"], f.stem
         assert obj.hex() == g["objscale"], f.stem
+
+
+def test_iteration0_basic_solution_bitwise_equal():
+    """M1 stage C: singleton LU + FTRAN give Gurobi's x_B for its iteration-0 basis."""
+    n_checked = 0
+    for f in sorted((ROOT / "bench/gurobi_spx0").glob("*.json")):
+        g = json.load(open(f))
+        if not g["xB_valid"]:
+            continue
+        xb = rsolver.read(DATA / f"{f.stem}.mps.gz")._core.basic_solution(g["vstat"])
+        assert [x.hex() for x in xb] == g["xB"], f.stem
+        n_checked += 1
+    assert n_checked == 60
