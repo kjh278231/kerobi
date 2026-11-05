@@ -119,6 +119,12 @@ impl PyCoreModel {
         let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
         post.recs.iter().map(|r| format!("{r:?}")).collect()
     }
+    /// (record count, [bounds tightened, coefficients changed, inequalities made equalities, rows removed, columns removed]).
+    fn post_counts(&self, params: Vec<(String, f64)>) -> (usize, Vec<i32>) {
+        let p = rsolver_lp::presolve::Params::from_pairs(&params);
+        let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
+        (post.recs.len(), post.counts.to_vec())
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)
