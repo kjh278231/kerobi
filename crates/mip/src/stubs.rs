@@ -8,20 +8,6 @@ use crate::Params;
 impl State {
     /// `5a9282` (before the loop and at round end; PREBOUND && DualReductions)
     pub fn r5a9282(&mut self, p: &Params) -> i32 { 0 }
-    /// `3e39a6` column pass
-    pub fn col_pass(&mut self, p: &Params) -> i32 { 0 }
-    /// `36ddf2` empty/redundant rows, tiny coefficients
-    pub fn row_clean(&mut self, p: &Params) -> i32 { 0 }
-    /// `37168e` activity bound tightening and forcing rows
-    pub fn bound_tighten(&mut self, p: &Params) -> i32 { 0 }
-    /// `36c5cf(st, env, -1, 0, &gc)` singleton rows; `gc` gets the garbage count
-    pub fn singleton_rows(&mut self, p: &Params, gc: &mut i64) -> i32 { 0 }
-    /// `56f793` coefficient strengthening (return value ignored by the caller)
-    pub fn coef_strengthen(&mut self, p: &Params) -> i32 { 0 }
-    /// `56c80e(st, env, 0, &status)` doubleton equation aggregation
-    pub fn doubleton_agg(&mut self, p: &Params, status: &mut i32) -> i32 { 0 }
-    /// `36e6b6(st, mode)` linked-list garbage collection
-    pub fn gc(&mut self, mode: i32) {}
     /// `3e5363` XOR / parity rows
     pub fn xor_rows(&mut self, p: &Params) -> i32 { 0 }
     /// `3ff744(st, env, T6, mode, flag, 0)` parallel rows / columns
@@ -46,8 +32,6 @@ impl State {
     pub fn aggregate(&mut self, p: &Params) -> i32 { 0 }
     /// `414c53(st, env, mode, T16)` column nonzero cancellation (`40d2bc` mode 1)
     pub fn cancel_cols(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// 3cd406 inline implied bounds (m2_spine_b.md §5.3; needs `3dcc78`, `3dd6f1`)
-    pub fn implied_bounds(&mut self, p: &Params) {}
     /// `418542` dual aggregation
     pub fn dual_agg(&mut self, p: &Params) -> i32 { 0 }
     /// 3cd406 inline dual binarization candidates (m2_spine_b.md §5.4; `3c2f36` never runs on the 38 models)
