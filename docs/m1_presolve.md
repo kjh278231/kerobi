@@ -3,32 +3,25 @@
 LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolve.md)로 옮긴다. 작업 방식은 [10 §9](10_porting.md)의 재구성 + 오라클 비트 검증이다.
 
 
-## 0. 현재 상태 (2026-11-05 밤 2차 세션, 하위 에이전트 둘 작업 중)
+## 0. 현재 상태 (2026-11-06, 대칭 병합 완료, 집계 작업량 병합 대기)
 
 ### G2 기준별 상태
 | 기준 | 상태 | 근거 |
 |---|---|---|
-| (1) P0 기본값 presolved 모델 64/64 | **충족** | `tools/presolve_check.py <def 오라클>` match 64/64. `9130f4f`에서도 유지 |
-| (2) postsolve 64/64 비트 일치 | **충족** | `tools/postsolve_check.py <기본값 uncrush 캡처>` match 64/64(m1_postsolve §9) |
-| (3) 47c445 포함 기본값 reduction 전부 | **reduction은 충족, 남은 것 둘(하위 에이전트)** | ① 대칭 검출 `5577ba`→`551cc0` — symmetry 에이전트. 작업량과 열 CSR 압축(아래)까지 포함하도록 추가 지시함. ② 집계 작업량 — aggwork 에이전트. 예산 정지 `3ba9de`는 포팅(`9130f4f`) |
-| (4) clippy 0, 테스트, 문서 | **충족(병합 뒤 재확인)** | `cargo clippy --release -p rsolver-lp --all-targets` 경고 0, cargo test·pytest 22개 통과 |
+| (1) P0 기본값 presolved 모델 64/64 | **충족** | `tools/presolve_check.py <def 오라클>` match 64/64(`5ccc35a`). 덤으로 MIPLIB small 38개 LP 완화 38/38, 합성 대칭 LP 7/7과 sym_paths 1/1 |
+| (2) postsolve 64/64 비트 일치 | **충족** | `tools/postsolve_check.py <기본값 uncrush 캡처>` match 64/64(5개는 항등) |
+| (3) 47c445·대칭 게이트 포함 기본값 reduction 전부 | **충족** | `47c445`(`38ea4e7`), 대칭 `5577ba`/`551cc0`(`5ccc35a` 병합, Netlib 호출 21개 local_f4·작업량 21/21) |
+| (4) clippy 0, 테스트, 문서 | **충족** | `cargo clippy --release --workspace --all-targets` 경고 0, `cargo test --release --workspace`·pytest 27개 통과. 03 §10, 이 메모, [m1_presolve_symmetry.md](m1_presolve_symmetry.md) |
 
-### 하위 에이전트 (Herdr 워크스페이스 w4, 탭 t6)
-| 이름 | pane | worktree / 브랜치 | 맡긴 일 | 상태 |
-|---|---|---|---|---|
-| symmetry | `w4:pV` | `../rsolver-symmetry` / `m1-symmetry`(시작 `85c4f28`) | `5577ba`/`551cc0` 포팅과 오라클·양성 사례. 지시서: 1차 세션 스크래치 `.../4f81891a-.../scratchpad/symmetry_brief.md`. **추가 지시 2건**(2026-11-05 2차 세션): (a) `551cc0` 작업량을 `st.work`에 더하고 `call 5577ba` 전후 +0x458로 비트 비교, 참고 누락량 `sym_missing.txt`(2차 세션 스크래치 `work/`) (b) `5577ba` 경로가 열 CSR을 압축한다: ganges에서 `5b488d` 직후 살아 있는 열 +0x48 합 3943 → `47c445` 진입 때 3897 | **작업 중**. 병합 뒤 `551cc0`의 `3ba9de`는 `st.budget_check()`로 연결 |
-| aggwork | `w4:pX` | `../rsolver-aggwork` / `m1-aggwork`(시작 `bc9f229`) | 집계 `519a52`/`37f484` 작업량(+0x458) 비트 일치. 지시서: 2차 세션 스크래치 `aggwork_brief.md`. 고칠 파일은 `agg.rs`만 | **작업 중** |
-| postsolve | `w4:pP` | `../rsolver-postsolve` / `m1-postsolve` | `363daa` uncrush | 완료·병합(`897b82d`). 다른 세션의 pane이라 손대지 않는다(조작은 자동 모드가 거부함) |
+### 작업량(P2)
+- `wsteps.py`(아래 도구) 기준으로 PRELIMIT 단계별 증분이 64개 모두 집계 단계 하나만 빼고 일치한다(`5ccc35a`). 집계는 aggwork 에이전트(`w4:pX`, `../rsolver-aggwork`, `m1-aggwork`)가 `7dbe67a`에서 집계 단계 64/64 비트 일치를 냈고 마무리 중이다. 병합하면 기본값 작업량 64/64를 `wcmp.py work/def.json`으로 확인한다.
+- 이번 세션에 맞춘 것: 생성자 `5118e6` 문제 유형 스캔과 유형 5/6 ub 풀기, `50de61` 항목과 조기 종료, `516cb4`의 두 번째 `6n`, `3ba9de` 예산 정지(`47c445` 100바퀴, `3ff744` 쌍 1만 번, `551cc0` 1e7마다. `390989` 자신의 세 호출은 예산을 1e100으로 바꿔 두어 멈추지 않는다), 대칭 병합(열 CSR 압축으로 ganges 후반 차이 해소).
+- 도구(2차 세션 스크래치 `/tmp/claude-1000/-home-sds-workspace-gurobi-sandbox-rsolver-presolve/4dd2adfa-0778-4c24-bb6b-2ced1e335a0c/scratchpad/`): `work/lim{1..160}.json`·`def.json`(`tools/work_oracle.py`), `wsteps.py`(단계별 증분 비교), `wfirst.py`, `wcmp.py`, `dep_oracle.py`(`47c445` 호출 지점 0x38f28f/0x38df02 전후), `slot_oracle.py`, `file_work.py`(MPS 파일의 PRELIMIT=1·기본값 작업량), `budget_test.py`.
+- 예산 정지는 오라클로 확인하지 못했다(Netlib·합성 모두 예산의 34% 이하).
 
-### 작업량(P2) 진행 상황
-- 도구: `tools/work_oracle.py`(3b0917 시점 +0x458 등). 2차 세션 스크래치(`/tmp/claude-1000/-home-sds-workspace-gurobi-sandbox-rsolver-presolve/4dd2adfa-0778-4c24-bb6b-2ced1e335a0c/scratchpad/`)에 `work/lim{1..160}.json`, `def.json`, 비교 스크립트 `wsteps.py`(PRELIMIT 단계별 증분 비교, 모델당 처음 어긋나는 단계와 증분), `wfirst.py`, `dep_oracle.py`(`47c445` 두 호출 지점 0x38f28f(mode 1)/0x38df02(mode 2) 전후 작업량·+0xd8·슬롯 합), `slot_oracle.py`(3b0917 시점 슬롯 합), `budget_test.py`(합성 등식계).
-- 이번 세션에 맞춘 것: 생성자 `5118e6` 문제 유형 스캔(±1 계수·열 길이 ≥ 5면 `m·μ`, PRELIMIT=1 작업량 64/64, `bc9f229`). 마무리 `50de61` 항목 전부(μ 없음)와 "조인 bound 0이면 즉시 끝" 조기 종료(마지막 단계 64/64, `d1beaf9`). `516cb4`의 두 번째 `6n`(`47c445` mode 2, `c3f9bef`). 예산 정지(`9130f4f`): 예산 = +0xd8·1000 + 1e7(Presolve 1이면 ·200, PrePasses > 1·Presolve 2면 1e100), 기준 0. `390989` 자신의 `3ba9de` 세 곳은 호출 직전 +0x1f0을 1e100으로 바꿔 두므로 정지하지 않는다. 정지는 `47c445`(100바퀴마다, 넘으면 소거를 정상 종료처럼 끝냄)와 `3ff744`(쌍 1만 번마다 묶음 끝에서), `551cc0`(symmetry 몫)에서만 걸리고, 뒤 PRELIMIT 검사가 멈춘다. Netlib·합성 4개 모두 예산의 34% 이하라 오라클로는 확인 못 했다.
-- 남은 작업량 차이(`wsteps.py` 기준, 그 밖의 단계는 64개 모두 증분 일치): ① 집계 단계 증분 전체(aggwork). ② 집계 2단계 뒤(derived 다음) 단계에 섞인 `5577ba` 작업량(열 ≥ 500·행 ≥ 100인 21개 모델, symmetry). ③ ganges 후반 패스의 작은 차이(+944/+61/+80, `505077`/`3ff744`/`50fe2b`)와 `47c445` mode 1의 +414 = `5577ba`의 열 CSR 압축이 없어서 생기는 슬롯 수 차이(symmetry).
-
-### 다음 단계(순서대로)
-1. aggwork 보고 확인 → `git merge m1-aggwork` → `wsteps.py`로 집계 단계 증분 64/64 확인, P0·pytest·clippy 재확인. pane `w4:pX` 닫고 worktree·브랜치 정리.
-2. symmetry 보고 확인 → `git merge m1-symmetry`(base가 `85c4f28`이라 `mod.rs` 충돌 가능: `limit` → `st.prelimit`, 예산 필드) → `551cc0`의 `3ba9de` 연결 → 기본값 작업량 64/64(`python wcmp.py work/def.json`) 확인 → 메모·03 §10 대칭·작업량 문구 갱신. pane `w4:pV` 닫고 정리.
-3. 끝나면 03 §10 "포팅하지 않은 것"에서 작업량·예산·대칭 문구를 지우고 이 메모를 마무리.
+### 다음 단계
+1. aggwork 보고 확인 → `git merge m1-aggwork` → 기본값 작업량 64/64, P0·postsolve·pytest·clippy 재확인 → 이 §0과 03 §10의 작업량 문구 마무리 → pane `w4:pX` 닫고 worktree·브랜치 정리.
+2. (G2 밖) postsolve worktree `../rsolver-postsolve`와 pane `w4:pP`/`w4:pQ`는 다른 세션 소유라 남겨 둔다.
 
 ### 주의점
 - 운영 규칙: 이 브랜치에만 커밋, `crates/lp`의 main 기존 파일 수정 금지(`presolve/`는 이 브랜치 소유), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`).

@@ -179,6 +179,7 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 | | `519a52`/`37f484` 집계(연결 리스트 행렬, 단계 A–D, 최대 5라운드) | `agg.rs` | Aggregate, pass 0만 | 2, 6, 11, 21 |
 | | `5b488d` 이웃이 무엇을 해도 만족되는 열과 그 행 제거(비용은 `=` 행 하나로 넘김) | `derived.rs` | PREDERIVED, DualReductions, PreCrush==0, 모든 패스 | 24 |
 | | `538f30`+`4f79a1` activity 재계산 | `state.rs` | 카운트 없음 | – |
+| | `5577ba`/`551cc0` 대칭 검출: 열 CSR을 압축하고(상태가 남는다) 해시 정제·값 검증으로 equitable 분할을 찾는다. 찾으면(local_f4 > 0) 자동 PreDepRow를 끈다 | `symmetry.rs` | pass 0, PRESYMMPASSES < 0, 남은 열 ≥ 500·행 ≥ 100, 카운트 없음 | – |
 | | `47c445` 종속 행: 희소 Markowitz 소거로 mode 1은 종속 `=` 행 삭제, mode 2는 자유 열 중 종속 열 고정 | `deprow.rs` | pass 0, PreDepRow 자동 = 2.5·n < nnz이면 3(대칭 검출 `5577ba`가 대칭을 찾으면 0), mode 2는 DualReductions | (mode 2만) 1 |
 | | 종료 판정 | `mod.rs` | 패스 시작 대비 ρ ≤ 1e-4·max(0,k−2), 패스 끝 ρ ≤ 1e-6, PrePasses 자동 100 | |
 | 마무리 | `51a144`, {`50cc90(1)`, `50d878`} 반복, `50de61` 함의 bound(0.001·(\|b\|+1) 여유), `50d878` | `mod.rs`, `reduce.rs` | PREBOUND, DualReductions | 1 |
@@ -188,4 +189,6 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 - activity는 덧셈이 부정확하면 1ulp 안전한 쪽으로 미는 가드 덧셈을 쓴다. 단 `50de61`과 `50495e`/`50108e`의 행 범위는 가드 없이 더한다.
 - 일치(Netlib 64, 기본값): presolved 모델 **64/64**, PRELIMIT 체크포인트 64개 × k = 1..100(카운트가 긴 beaconfd·ganges·scrs8은 154까지) 전부 일치. uncrush(`363daa`)는 오라클 `pre_after`를 넣은 비트 비교로 59/59(Gurobi가 uncrush를 부르지 않는 5개 제외).
 - 작업량(+0x458, μ = +0x448)과 예산: 생성자(`3a484d`/`5118e6`/`534a8b`, 문제 유형 스캔 포함)와 reduction마다 원본 순서로 더한다. 비교는 PRELIMIT 단계별 증분(`m1_presolve.md` §0의 `wsteps.py`). 예산 = +0xd8·1000 + 1e7(Presolve 1이면 ·200, PrePasses > 1이나 Presolve 2면 1e100), 기준 0. `390989` 자신의 `3ba9de` 세 곳은 호출 동안 예산을 1e100으로 바꿔 두어 정지하지 않는다. 정지는 reduction 안의 `3ba9de`(`47c445` 100바퀴마다, `3ff744` 쌍 1만 번마다, `551cc0`)가 PRELIMIT을 −1로 바꾸고 뒤 한도 검사가 멈추는 식이다. Netlib은 예산의 34% 이하라 정지가 없다.
-- 포팅하지 않은 것(지름길, 코드에 `shortcut:` 주석): 대칭 검출 `551cc0`(결과는 PreDepRow 자동값 게이트에만 쓰인다. Netlib에서는 PRELIMIT 카운트로 늘 "대칭 없음"임을 확인. 작업량과 열 CSR 압축은 상태를 바꾼다), 집계의 작업량 항목(P2), Presolve=2 전용 reduction(`51f5ab`, `51aba6`), 집계 prescan 특수 경로, `503985`(n ≥ 10000), Params에 없는 숨은 파라미터(PREPARALLEL, PRESPLITROWS, MarkowitzTol, GURO_PAR_ZERO, INTBASIS 등)는 기본값 가정.
+- 생성자 `5118e6`의 문제 유형(+0x08): 계수가 모두 +1이고 rhs가 1(유형 6), 또는 모두 −1이고 `>= 1` 행(유형 5)이며 열이 모두 0/1 열이면 행이 함의하는 ub를 푼다(유형 6은 항목 있는 비고정 열, 유형 5는 비용 > 0.001인 열). 뒤의 `50de61`이 그 bound를 1.002로 다시 잡는다. 유형 1·4는 옮기지 않았다(assert).
+- 대칭 검출 일치: Netlib 21개 호출 local_f4·작업량 21/21, MIPLIB small 38개 LP 완화 presolved 38/38, 합성 대칭 LP 7/7([m1_presolve_symmetry.md](m1_presolve_symmetry.md)). 모든 행·열이 지워지면 Gurobi는 빈 모델을 `Presolved`라는 이름으로 낸다.
+- 포팅하지 않은 것(지름길, 코드에 `shortcut:` 주석): 문제 유형 1·4, 빈 결과 모델의 목적 상수, Presolve=2 전용 reduction(`51f5ab`, `51aba6`), 집계 prescan 특수 경로, `503985`(n ≥ 10000), Params에 없는 숨은 파라미터(PREPARALLEL, PRESPLITROWS, MarkowitzTol, GURO_PAR_ZERO, INTBASIS 등)는 기본값 가정.
