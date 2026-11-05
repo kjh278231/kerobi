@@ -6,8 +6,6 @@ use crate::state::State;
 use crate::Params;
 
 impl State {
-    /// `5a9282` (before the loop and at round end; PREBOUND && DualReductions)
-    pub fn r5a9282(&mut self, p: &Params) -> i32 { 0 }
     /// `578fd2` knapsack coefficient lifting
     pub fn knapsack(&mut self, p: &Params) -> i32 { 0 }
     /// `4030c9` dominated columns
@@ -32,16 +30,8 @@ impl State {
     pub fn two_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
     /// `47c445(mode)` linear dependent rows (2: dual side)
     pub fn dep_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// `58d4ce` (Q diagonal columns; nothing without Q)
-    pub fn q_diag(&mut self, p: &Params) -> i32 { 0 }
     /// `5577ba(env, st, nodes, 1, &f4; 1.01, limit)` symmetry
     pub fn symmetry(&mut self, p: &Params, nodes: i32, limit: f64) -> i32 { 0 }
-    /// `5ab429`
-    pub fn r5ab429(&mut self, p: &Params) -> i32 { 0 }
-    /// `59c193` VUB lifting (PREVUBLIFT)
-    pub fn vub_lift(&mut self, p: &Params) -> i32 { 0 }
-    /// `55a779` aggregation pass
-    pub fn agg_pass(&mut self, p: &Params) -> i32 { 0 }
     /// `594c0c` (PRESS2MIP)
     pub fn ss2mip(&mut self, p: &Params) -> i32 { 0 }
     /// `423e35(st, env, T10, probe mode)` (PREPROBE0)

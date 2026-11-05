@@ -6,6 +6,7 @@
 // Ported comparisons keep the original's form (`!(a < b)` differs from `a >= b` on NaN), and loops index several
 // parallel arrays at once; `x = t + x` keeps the original operand order.
 #![allow(clippy::neg_cmp_op_on_partial_ord, clippy::needless_range_loop, clippy::assign_op_pattern)]
+mod aggpass;
 pub mod clique;
 mod cliquerows;
 pub mod conflict;
@@ -23,10 +24,12 @@ pub mod post;
 pub mod probe;
 mod probe_apply;
 pub mod probe_engine;
+mod roundend;
 mod setpack;
 pub mod state;
 mod subst;
 mod stubs;
+mod vublift;
 pub mod tracker;
 mod transred;
 mod xorrows;
