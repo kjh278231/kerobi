@@ -100,6 +100,9 @@
 | 2026-11-06 | M1 FT 갱신 세부 규칙 | `5b257` prefix·빈 열 캐시, U 행이 비면 row eta 생략, 순열 교환 | `4fa5ef6` |
 | 2026-11-06 | M1 드라이버: 기저 없는 uncrush·상태 규칙 | `36578f`/`365159` 기저 없는 uncrush(Method 2·6, 오라클과 64/64 비트), 원본 상태 규칙, big-uncrush-violation 검사 | `fcd853e` (`m1-lp-driver`) |
 | 2026-11-06 | M2 probing B·clique 그룹 | probing 결과 반영(대입·bound·고정·lifting)과 호출 13개 상태 일치, clique 덮개 강화(`45885d`)·set packing 쌍 그래프(`52be10`)·clique 행 정규화(`46a62d`) | `0789b47`, `a91287e`, `2ba8870`, `955a8be` (`m2-mip-presolve`) |
+| 2026-11-06 | M1 Markowitz 커널·CHUZR 모드 1 | 비트 일치 프로토타입에서 `036ade` Markowitz 커널 이식, `1bae9c`/`2896a3` CHUZR 모드 1 임계값, 시작 단계 섭동 카운터(tuff가 Gurobi처럼 반복 27에서 섭동) | `f513cd2`, `5b21c30`, `6aa3b46` |
+| 2026-11-06 | M1 드라이버: 엔진 로그 | barrier·PDHG·simplex 반복 로그 행, 증명 상태 로그, `tools/log_check.py`, 전체 로그 테스트 | `73491b9` (`m1-lp-driver`) |
+| 2026-11-06 | M2 바깥 reduction A·B | 함의 그래프 추이 축소(`5431ee`), dual bound(`374521`), 부등식→등식(`3e40d1`), 노드 아레나 압축(`36ee92`), dual 집계(`418542`). 덤프 호출 78/78 | `f280d7c`, `0ea348a`, `8624df7`, `d1d083d`, `2ebdf67` (`m2-outer-a`, `m2-outer-b`) |
 
 ## 4. goal 원문
 
