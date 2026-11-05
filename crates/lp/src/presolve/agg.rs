@@ -893,7 +893,8 @@ impl State {
             let mut k = 0;
             while p != NIL {
                 let q = mat.nd[p as usize];
-                if q.col >= 0 && 2 < self.row_cnt[q.row as usize] {
+                // original tests col_cnt of the node's column (x, already 3): the first live node is r3
+                if q.col >= 0 && 2 < self.col_cnt[q.col as usize] {
                     break;
                 }
                 p = q.nc;
@@ -940,7 +941,8 @@ impl State {
         if self.agg_scan == 0 {
             // shortcut: the tiny-coefficient pattern switches stage D to a special path (37f484 L2325-2470)
             // that is not ported; no Netlib model has it. Port it when a model trips this.
-            assert!(!self.agg_prescan(mat, &rlist), "37f484 prescan pattern found: special stage D path not ported");
+            let found = self.agg_prescan(mat, &rlist); // adds work: keep out of the assert
+            assert!(!found, "37f484 prescan pattern found: special stage D path not ported");
             self.agg_scan = -1;
         }
         let (tol_a, tol_i) = if self.agg_scan > 0 { (1e-8, 1e-8) } else { (pmin, t.feastol) };
