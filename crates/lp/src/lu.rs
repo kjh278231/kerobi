@@ -35,6 +35,8 @@ pub struct Lu {
     /// U has off-diagonals (Markowitz part or updates): BTRAN leaves the iteration-0 emulation.
     general: bool,
     pub n_updates: usize,
+    /// Steps taken by the singleton phases (the rest is the Markowitz kernel).
+    pub n_singleton: usize,
 }
 
 /// Markowitz threshold (MarkowitzTol default 2⁻⁷, spx+0x390).
@@ -78,6 +80,33 @@ impl Lu {
     /// Entries of all Forrest–Tomlin row etas (LU+0x184).
     pub fn eta_nnz(&self) -> usize {
         self.retas.iter().map(|e| e.1.len()).sum()
+    }
+
+    /// Basis positions after a factorization (0534f7/5b257): structural singleton steps in step order, then the
+    /// singleton slacks by row, then the Markowitz kernel in step order. Returns the old position of each new one.
+    pub fn renumbered(&self, n: usize) -> Vec<usize> {
+        let ns = self.n_singleton;
+        let mut order: Vec<usize> =
+            self.steps[..ns].iter().map(|s| s.1).filter(|&p| self.head[p] < n).collect();
+        let mut slacks: Vec<usize> = self.steps[..ns].iter().map(|s| s.1).filter(|&p| self.head[p] >= n).collect();
+        slacks.sort_by_key(|&p| self.head[p]);
+        order.extend(slacks);
+        order.extend(self.steps[ns..].iter().map(|s| s.1));
+        order
+    }
+
+    /// Relabel basis positions: `old_of_new[p]` is the old position of new position p.
+    pub fn relabel(&mut self, old_of_new: &[usize]) {
+        let m = self.head.len();
+        let mut new_of_old = vec![0; m];
+        for (np, &op) in old_of_new.iter().enumerate() {
+            new_of_old[op] = np;
+        }
+        self.head = old_of_new.iter().map(|&op| self.head[op]).collect();
+        self.kpos = old_of_new.iter().map(|&op| self.kpos[op]).collect();
+        for st in &mut self.steps {
+            st.1 = new_of_old[st.1];
+        }
     }
 
     pub fn complete(&self) -> bool {
@@ -126,6 +155,7 @@ impl Lu {
             level: None,
             general: false,
             n_updates: 0,
+            n_singleton: 0,
         };
         let mut ppos = vec![-1i64; m];
         let pivot = |lu: &mut Lu, ppos: &mut Vec<i64>, r: usize, pos: usize, d: f64| {
@@ -178,6 +208,7 @@ impl Lu {
             }
         }
         let ns = lu.steps.len();
+        lu.n_singleton = ns;
         lu.lcol = vec![Vec::new(); m];
         lu.ucol = vec![Vec::new(); m];
         if ns < m && !lu.markowitz(spx, &mut ppos, tol) {
