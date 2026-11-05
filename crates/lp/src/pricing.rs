@@ -135,7 +135,7 @@ impl Pricing {
     pub fn full_init(&mut self, viol: &[Option<f64>], score: &[f64], div: f64) {
         let mx = viol.iter().zip(score).filter(|(v, _)| v.is_some()).map(|(_, &s)| s).fold(0.0, |a, s| if s > a { s } else { a });
         let t = mx / div;
-        self.thr = if self.thr == 0.0 || mx <= self.thr { t } else if t > self.thr { t } else { self.thr };
+        self.thr = if self.thr != 0.0 && mx > self.thr && t <= self.thr { self.thr } else { t };
         self.list.clear();
         for (p, v) in viol.iter().enumerate() {
             if v.is_some() {

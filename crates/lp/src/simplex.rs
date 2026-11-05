@@ -557,7 +557,7 @@ impl<'a> Engine<'a> {
         } else {
             tol < l - x || tol < x - u
         };
-        hit.then(|| if l <= x { x - u } else { l - x })
+        hit.then_some(if l <= x { x - u } else { l - x })
     }
 
     fn price_rebuild(&mut self) {
