@@ -8,6 +8,7 @@
 |---|---|---|---|---|---|
 | `3e40d1(st, env)` | 2,622 | DualReductions | 쌍대 논리로 `<` 행을 `=`로 | 78(바꾼 것 5) | 78/78 |
 | `418542(st, env)` | 2,645 | Aggregate && DualReductions | 쌍대 집계: 행의 이진 열과 다른 열 묶기(`3bb6fe`) | 78(`3bb6fe` 0회: 작업량만) | 78/78 |
+| `414c03`/`414c53` → `40d2bc(st, env, mode, M, T, W)` | 19 + 22 + 17,951 | PRECANCEL / PRECANCELCOL && T15/T16 < 0.8 | 비영 소거: `=` 행(mode 0)·암시 자유 열(mode 1)의 배수를 더해 겹치는 항을 지움 | 78 + 78(바꾼 것 행 15, 열 1) | 78/78, 78/78 |
 | `36ee92(env, st)` | 357 | 없음(카운트 없음) | 노드 배열 압축(`510953` CSR 복사 → `514031` 다시 깔기) | 78(압축 1: neos-860300 첫 호출) | 78/78 |
 
 ## 2. `3e40d1` 부등식 → 등식 (`004c3920`)
@@ -165,3 +166,153 @@ F = cap − total; 칸 total..cap−1을 순서대로 free 리스트(열 −1)�
 
 ### 4.3 오라클 확인
 덤프에 +0x158(`node_cap`)과 +0x1a8(`chunk`)을 더했다(`mip_state_dump.js`, 없으면 포트는 배열 크기·10000을 쓴다). 38개 78호출 중 압축은 neos-860300 첫 호출 하나(nnz 201,792 < F 220,969, ch·2 < F). 그 호출에서 작업량 +3,453,024(μ = 1.2588인데 μ를 곱하지 않음)가 비트 단위로 맞는다. 행 리스트는 이미 열 순서였다. `mip_dump_check.py 36ee92`: **78/78**. 청크가 붙은 경로(realloc)는 지나지 않았다.
+
+## 5. `40d2bc` 비영 소거 (`004da220`, 래퍼 `414c03` mode 0 / `414c53` mode 1)
+
+### 5.1 서명·가드·반환
+`int 40d2bc(st, env, mode, M, T, W)`. `414c03(st, env, M, T)`/`414c53`는 mode 0/1과 `W = *(st+0x458)`을 붙여 꼬리 호출한다. M은 3cd406이 `PRECANCEL == −1 ? 2 + (local_a8 > 0) : PRECANCEL − 1`로 준다(기본 2). T = T15/T16(한도 0.5B). 반환 0, 할당 실패 0x2711, `3ba5ac`/`3ba9de`의 값.
+
+이름: mode 0에서 피벗과 소거 대상은 행(major), 그 항목은 열(minor). mode 1은 바꿔서 major = 열, minor = 행이다.
+
+| | mode 0 | mode 1 |
+|---|---|---|
+| major 리스트·개수 | 행 리스트(+0x10), row_cnt | 열 리스트(+0x18), col_cnt |
+| minor 리스트·개수 | 열 리스트, col_cnt | 행 리스트, row_cnt |
+| 대상 목록 | `53a487`(레벨 1 행) | `53af0f`(레벨 1 열) |
+| 피벗 조건 | sense `=` | colflag 0, col_cnt ≤ 500, `379173` && `3790d9`(위·아래 bound가 행으로 암시됨) |
+| rhs' | rhs | obj |
+
+### 5.2 알고리즘
+```
+F = NumericFocus 0/1/2/≥3 → 0.1/10/100/1000; tol = F·FeasibilityTol; poison = −NMIN − 1
+CNT[NMAJ], MISS[NMAJ] = 0 (calloc), STAMP[NMIN] = 0, PC[NMIN](피벗 계수), CP/CN[NMAJ], MULT(st+0x3a0)/MN[NMAJ],
+SGN[m] = 0 (행 부호 캐시), RMARK(st+0x3a8)/RLIST(st+0x3b8) 비어 있음, ncancel = 0, W0 = Wchk = W
+L = 53a487 / 53af0f
+for idx in 0..|L|: p = L[idx]
+  if maj_cnt[p] < 2 || !피벗 조건: continue                     // 379173·3790d9는 W += (μ·8)·(멈출 때까지 걸은 노드)
+  two = M ≠ 0 && maj_cnt[p] ≥ 3; maxc = 0; marked = false
+  if adf2be(T, W): break                                          // 타이머 소진
+  if W − Wchk > 1e7: 3ba5ac, 3ba9de(env, st, &flag) (≠0이면 그 값으로 바로 반환), PRELIMIT < 0이면 0으로 바로 반환
+                      (아래 끝처리 없음), flag면 break, Wchk = W, W − W0 > budget/5면 break
+  // 피벗의 minor 모으기
+  for node in maj p 리스트: 살아 있으면 q = minor; PC[q] = val; LST += q; KEY += −min_cnt[q]; tot += min_cnt[q]
+  W += (μ·6)·걸은 노드
+  aabbe3(k, KEY, LST)                                             // KEY 내림차순 = minor 길이 오름차순
+  if 200 < −KEY[0]: continue
+  s = (−KEY[1] ≤ 200 && two) ? 1 : 0; need = k − s               // seed = LST[0..=s]; 많아야 s개 빠져도 됨
+  sum = 0; for t in 0..=s: LST[t]의 minor 리스트에서 살아 있는 노드마다 sum += maj_cnt[major];
+           W = 걸은·μ + W; (t == s면) W = W + μ·(2(s+1))
+  local230 = 0
+  if tot/4 < sum:                                                 // A: minor 순서대로 세기 (i64 나눗셈)
+    full = need − 1
+    for t = 0, 1, …:
+      for node in LST[t] minor 리스트(살아 있는 것), i = major:
+        c = CNT[i]
+        if t ≤ s:
+          if !(maj_cnt[i] ≥ need && i ≠ p): 다음
+          if t == 1 && c == 0: (M < 2 && k < maj_cnt[i])면 다음; MISS[i] = LST[0] + 1
+        else:
+          if !(t − s ≤ c): 다음
+          if c == t − 1 && MISS[i] == 0: (M < 2 && k < maj_cnt[i])면 CNT[i] = 0, 다음; MISS[i] = LST[t−1] + 1
+        CNT[i] = c + 1; maxc = max(maxc, CNT[i]); CNT[i] == full이면 local230 += maj_cnt[i]
+      W = (t ≤ s ? (μ·5)·걸은 : (μ·4)·걸은) + W; t == s면 + (2(s+1))·μ
+      if t ≥ s && (k ≤ t+1 || maxc < t+1−s): W += (μ·2)·(t−s); break
+  else:                                                           // B: 피벗 minor 표시 후 major마다 겹침 세기
+    STAMP[LST[*]] = 1; W = (k + k)·μ + W; marked = true; stamp = 1
+    for t in 0..=s:
+      for node in LST[t] minor 리스트(살아 있는 것), i = major:
+        if i == p || maj_cnt[i] < need || (mode 1 && maj_cnt[i] > 500) || CNT[i] ≠ 0: 다음
+        if t == 1: (M < 2 && k < maj_cnt[i])면 다음; MISS[i] = LST[0] + 1
+        stamp++; maj i 리스트의 살아 있는 노드마다 STAMP[q] ≠ 0이면 STAMP[q] = stamp, CNT[i]++; W = (걸은 + 걸은)·μ + W
+        if s ≠ 0 && t == 0 && CNT[i] == k − 1:
+          (M < 2 && k < maj_cnt[i])면 CNT[i] = 0, 다음
+          u = 1..k에서 STAMP[LST[u]] ≠ stamp인 첫 u: MISS[i] = LST[u] + 1; W = u·μ + W (못 찾으면 u = k)
+        maxc = max(maxc, CNT[i]); local230 += maj_cnt[i]
+      W = μ·4·걸은 + W; t == s면 + μ·(2(s+1))
+  if need ≤ maxc:
+    if tot < local230:                                            // C1: minor 순서대로 투표
+      for t = 0, 1, …, k−1:
+        for node in LST[t] minor 리스트(살아 있는 것), i = major, r = −val / PC[LST[t]]:
+          c = CNT[i]
+          if c < need: c < 0이면 VOTE(i, r); 아니면 (t ≤ s일 때만) CNT[i] = MISS[i] = 0
+          elif t ≤ s:                                             // 후보 시작
+            r ≤ 0 ? (MULT[i] = 1e100, CP[i] = 0, MN[i] = r) : (MN[i] = 1e100, CN[i] = 0, MULT[i] = r)
+            c == k면 MISS[i] = −1, 아니고 MISS[i] == 0이면 ((M < 2 && k < maj_cnt[i])면 CNT[i] = 0, 다음) MISS[i] = LST[k−1] + 1
+            CNT[i] = −1; (r ≤ 0 ? CN : CP)[i] = −1
+        W = μ·5·걸은 + W; t == s면 + (2(s+1))·μ; t ≥ s && k ≤ t+1면 W += (μ·2)·(t−s), 끝
+    else:                                                         // C2: 후보마다 자기 리스트로 투표
+      marked가 아니면 STAMP 표시, W = (k+k)·μ + W, marked = true
+      for t in 0..=s: for node in LST[t] minor 리스트(살아 있는 것), i = major, c = CNT[i]:
+        c < 0: 다음; c < need: CNT[i] = MISS[i] = 0, 다음
+        MISS 규칙(C1과 같음); CNT[i] = −1; CP = CN = 0; MULT = MN = 1e100
+        maj i 리스트의 살아 있는 노드 중 STAMP[q] ≠ 0이면 VOTE(i, −val / PC[q]) (r > 0이면 MULT/CP 쪽); W = μ·5·걸은 + W
+        (seed마다) W = μ·5·걸은 + W; t == s면 + μ·(2(s+1))
+    // 고르기
+    nsel = 0; score = 0
+    for t in 0..=s: for node in LST[t] minor 리스트(살아 있는 것), i = major, c = CNT[i]:
+      c ≥ 1: 다음 (이미 뽑힘)
+      c == 0 || !PICK(i): MISS[i] = CNT[i] = 0
+      else: CNT[i] = −CNT[i]; SEL += i; score += CNT[i] − (MISS[i] > 0)
+      W = μ·4·걸은 + W; t == s면 + μ·(2(s+1))
+    if nsel > 0:
+      mode 0: 537da8(tr, st, p) / mode 1: score < 5면 SEL의 CNT·MISS = 0, W = μ·3·nsel + W, 적용 없이 끝; 아니면 53802c(tr, st, p)
+      APPLY; ncancel += nsel
+  else: for t in 0..=s: LST[t] minor 리스트의 살아 있는 노드의 major마다 CNT = MISS = 0; W = μ·4·걸은 + W; t == s면 + μ·(2(s+1))
+  if marked: STAMP[LST[*]] = 0; W = (k + k)·μ + W
+W = W + (3·idx)·μ                                                 // 정상 끝은 idx = |L|, break면 그때 idx
++0x3fc += ncancel; RMARK 지우기; W = (|RLIST| + |RLIST|)·μ + W; 370047(st, env, |RLIST|, RLIST)
+
+VOTE(i, r) (`40c0b2` 4가지 사본 = F별 상수, C2는 인라인):
+  (slot, cnt) = r ≤ 0 ? (MN[i], CN[i]) : (MULT[i], CP[i])      // C2 인라인은 0 < r ? MULT : MN (같음)
+  d = |r − slot|
+  d ≤ 1e-13: cnt −= 1 / tol < d: |r| < |slot|이면 cnt = −1, slot = r / 그 밖(가까운데 다름): cnt = poison, |r| < |slot|이면 slot = r
+PICK(i):
+  MN == 1e100 || CN ≤ poison → 양(CNT = CP); 아니면 MULT == 1e100 || CP ≤ poison → 음(CNT = CN, MULT = MN);
+  아니면 PRECANCELSELECT(env+0x25a4, 기본 −1):
+    −1: −MN < 10·MULT면 (MULT < −10·MN면 개수 비교, 아니면 음), 아니면 양
+    ≠0: 개수 비교 / 0: −MN < MULT면 음 아니면 양
+    개수 비교: CP < CN → 양, CN < CP → 음, 같으면 −MN < MULT ? 음 : 양
+  c = CNT[i]; !(c < 0 && −NMIN ≤ c) → 거절
+  MISS[i] > 0 (채움 하나): M == 1: maj_cnt[i] + c > 1 → 거절; M == 2: c + maj_cnt[i] > 1이고 (k < 21 || k + c > 1) → 거절;
+                          c == −1 → 거절
+  x = MULT[i]; !(|x| ≤ 1000 && 0.001 ≤ |x|) → 거절
+  q = MISS[i] − 1
+  mode 0: row_cnt[i] + c + (q ≥ 0) > 2 && row_cnt[p] + c > 1 && q ≥ 0이면: vtype[q] == 'B'이고 SIGN(i) 규칙(아래 mode 0형)일 때만 받음
+  mode 1 (tp = vtype[p]):
+    tp ≠ 'C': i가 'C'이거나 x − floor(x + 1e-10) > 1e-10면 거절; M < 3 → 짧은 채움 규칙; q < 0 → 받음; tp ≠ 'B' → SIGN(q); 아니면 이진 규칙
+    tp == 'C': M < 3 → 짧은 채움 규칙; q ≥ 0 → SIGN(q); 아니면 받음
+    짧은 채움 규칙: q < 0 → 받음; row_cnt[q] < 3 → 거절; tp == 'B' → 이진 규칙; 아니면 SIGN(q)
+    이진 규칙: |PC[q]| + act_min[q] < −1e-10 → SIGN(q), 아니면 거절
+    받으면 tp ≠ 'C'일 때 MULT[i] = floor(MULT[i] + 0.5)
+  SIGN(r): SGN[r] == 0이면 행 r의 살아 있는 계수가 모두 > 0이면 +2, 모두 < 0이면 +4, 1을 더해 저장; W += (μ·4)·걸은
+    y = PC[q]·x; mode 0: g&2 ? 0 < y : g&4 ? y < 0 : 받음 / mode 1: g&2 ? !(y ≤ 0) : !(g&4 && 0 ≤ y)
+APPLY:
+  sumlen = 0
+  for i in SEL: x = MULT[i]; sumlen += maj_cnt[i]; rhs'[i] = rhs'[p]·x + rhs'[i]
+    mode 0: RMARK/RLIST에 i, 53763f(tr, i)
+    mode 1: tp == 'B'면 5b91ad(env, st, st+0x3f0, p)(충돌 그래프 +0x40 플래그 길이를 n으로 맞추고 [p] = 1)
+            (l, u) = bounds of p; x > 0: nl = l − ub[i]·x, nu = u − lb[i]·x / x ≤ 0: nl = l − lb[i]·x, nu = u − ub[i]·x
+            (±1e30 넘는 bound가 끼면 ∓1e30); lb[p] = nl, ub[p] = nu
+            col p 리스트의 살아 있는 노드마다 bound가 바뀌었으면 행 activity에서 옛 bound 기여 빼고 새 bound 기여 더함(gup/gdn),
+            그 행을 RMARK/RLIST에; W = μ·6·걸은 + W
+            tp ≠ 'C'면 vtype[p] = (lb, ub) == (0, 1) ? 'B' : 'I'
+            3a07b5(1.0, x, 0.0, env, st, p, i): type 10 레코드 {i32 p, i32 i, f64 1, f64 x, f64 0}(x_p = y + x·x_i); 5379f1(tr, i)
+  W = μ·5·nsel + W
+  if sumlen·6 ≤ k·3 + tot·6:                                      // major 쪽으로 갱신
+    marked가 아니면 STAMP 표시, W = (k+k)·μ + W, marked = true
+    for i in SEL: maj i 리스트의 살아 있는 노드 중 STAMP[q] ≠ 0이면 40c618(MULT[i]·PC[q], node); W = μ·6·걸은 + W
+                  CNT[i] = 0; MISS[i] > 0이면 40cc92(MULT[i]·PC[q], i, q = MISS−1); MISS[i] = 0
+    W = μ·3·nsel + W
+  else:                                                           // minor 쪽으로 갱신
+    for q in LST: minor q 리스트의 살아 있는 노드 중 CNT[major] ≠ 0이면 40c618(MULT[major]·PC[q], node); W = μ·6·걸은 + W
+    W = W + k·(μ·3); SEL마다 CNT = 0, 채움(위와 같음), MISS = 0; W = W + (μ·3)·nsel
+40c618(d, node): v = d + val; mode 1이면 행 activity에서 옛 값 기여 빼고 새 값 기여 더함; val = v; |v| < 1e-10이면 노드 죽이고 row_cnt·col_cnt −1
+40cc92(v, i, q): mode 1이면 행 q activity에 열 i bound로 v 기여를 더한 뒤, 3bea24로 새 노드(행·열 맨 앞, 개수·nnz +1). |v| ≤ 1e-13이어도 만든다
+```
+- 끝의 `370047`이 RLIST 행의 activity를 다시 계산하므로 mode 0은 activity를 따로 고치지 않는다. mode 1은 따로 고친 뒤 다시 계산한다(결과는 다시 계산한 값).
+- `379173(st, env, j, W)`: ub가 무한이면 참. 아니면 열 노드 중 |a| ≥ ft인 것: a ≤ 0이고 `=` 행이며 inf_max == [lb 무한]이면 v = act_max/−a, a > 0이고 inf_min == [lb 무한]이면 v = act_min/−a; `−ub − ft ≤ d − v`(d = lb 유한이면 −lb, 아니면 0)면 참. `3790d9`는 대칭(lb 쪽, a ≥ 0이면 `=`·act_max, a < 0이면 act_min, `lb − ft ≤ d − v/a`, d = ub 유한이면 ub). 둘 다 W += (μ·8)·(찾은 노드 앞까지 또는 전부).
+- 레코드 type 10(`3a07b5`, 0x38 B, data 0x20 B): {i32 j, i32 k, f64 d1, f64 d2, f64 d3}, 패딩 없음.
+
+### 5.3 오라클 확인
+`mip_dump_check.py 414c03` **78/78**, `414c53` **78/78**. 바꾼 호출: mode 0은 assign1-5-8, csched007(2), csched008, gmu-35-40, gmu-35-50(2), mad, neos-3627168-kasai, neos-4954672-berkel, neos-860300(2), neos859080, ran14x18-disj-8(경로 A·B, C1·C2, 채움, 양·음 선택). mode 1은 neos-860300 첫 호출(136 열, obj·bound·vtype 'B'→'I', type 10 레코드 136개 바이트 일치). sweep에서 `cancel_rows` 첫 불일치 5개가 모두 사라졌다(default 9 → 11/38).
+- 지나지 않은 경로: 타이머·1e7 예산 멈춤, 3ba9de flag, PRECANCELSELECT ≠ −1, NumericFocus ≠ 0, M ≠ 2, mode 1의 정수 피벗 규칙 일부.
