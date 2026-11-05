@@ -65,10 +65,12 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 |---|---|---|
 | Presolve=0 | 64/64 | 상태 생성의 `>` → `−1·<` 변환만 |
 | PRELIMIT 1–14 | 64/64 | 내부 루프 전부(`4fe113`, `4ffe11`, `4ff158`, `50cc90(0)`, 진척도 반복)와 바깥 `50cc90(1)`, `50d878` |
-| PRELIMIT 15 | 60/64 | afiro·blend·capri는 내부 루프가 호출 11에서 끝나 15번째가 `50495e`다. fit1d는 호출 7에서 끝난다. 다음 미포팅 reduction에서 멈춘다 |
-| 기본값 | 2/64 | 진행 중 |
+| PRELIMIT 15–100 | 불일치는 모두 rsolver가 멈춘 뒤 | 15: 63/64(fit1d는 15번째가 `3ff744(1)`), 16: 62/64, 20: 54/64, 30: 25/64, 100: 3/64. 바깥 `38e49a`, `50495e`(18개 모델에서 동작), `505077`(23개), 바깥 `4ffe11`·`4ff158`까지는 닿는 모든 체크포인트가 맞는다 |
+| 기본값 | 3/64 | 진행 중 |
 
 `mod.rs`의 `reduce()`는 아직 포팅하지 않은 reduction에 닿으면 거기서 멈춘다(PRELIMIT에 닿은 것과 같은 효과). 그래서 PRELIMIT 비교는 멈춘 지점까지 유효하다.
+
+**도달 범위 검사**(2026-11-05): 모델마다 rsolver가 실제로 센 호출 수 c를 알면, k ≤ c인 체크포인트의 불일치만 진짜 버그다. 임시로 `calls += 1;` 뒤에 `RS_TRACE` 환경 변수일 때 `eprintln!("TRACE call {calls} line {}")`을 넣고 빌드해, 모델별 최대 호출 번호와 PRELIMIT k 불일치 목록을 겹쳐 본다(커밋 전에 지운다). 같은 추적에 `rows_removed`·`cols_removed`·`ineq_to_eq`를 찍으면 어느 reduction이 실제로 동작했는지도 보인다. 오라클은 k = 1..100을 떠 두었다(체크포인트 하나에 1초 안팎).
 
 ## 7. 다음 단계 (순서대로)
 
@@ -87,7 +89,27 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 
 **마무리**(`LAB_0048dff3` → `e07f` → `e0de`): 레벨 0으로 reset, PREBOUND면 `51a144`. 그다음 {`50cc90(1)`, DualReductions면 `50d878`}을 `50d878`이 열을 더 지우지 않을 때까지 반복. PREBOUND면 `50de61`, 그 뒤 행이 줄었고 DualReductions면 `50d878`을 한 번 더 한다. 끝으로 `3b0917`.
 
-**다음 작업**: `38e49a`(698줄)는 열마다 비용이 선호하는 bound(c>0 → lb, c<0 → ub, c=0이면 0 또는 범위 안의 값, 무한이면 표시)를 `+0x3b8` 계열 배열에 잡는다. 부등식 행이 그 값에서 모두 만족되면 전부 `4fa83a`로 고정하는 것으로 보인다(반복·표시 배열 `+0x3a8` 사용, 미해독). 그다음 `50495e`, `505077`(9.5KB, Method·Crossover에 따라 다름), `3ff744`+콜백 `50b4e5`/`50c736`(해시 순서), `50fe2b`, `519a52`(MIP 집계기 `37f484` 재사용), `5b488d`, `47c445`, `50de61`, `51a144` 재호출. 작업량 예산(부록 A, `3ba9de`)과 timer 0.8 판정은 3ff744 전에 필요할 수 있다.
+**포팅 완료(2026-11-05, stage 2a–2c)**:
+- `38e49a`(`cost_point_fix`): 열마다 비용이 고르는 값 x(c>0 → lb, c<0 → ub, c=0이면 lb·ub 중 0인 쪽, 0이 범위 밖이면 가까운 bound). 특수 열, 무한한 x, 범위 안에 0을 품은 비용 0 열이 하나라도 있으면 그만둔다. x에서 모든 `=` 행이 |Σ−rhs| ≤ 1e-10이어야 한다. 그 행들의 열을 x로 옮긴 max activity로 부등식 행을 보고(가드 덧셈), 넘칠 수 있는 행에서 그 열들이 min activity 쪽 bound에 있으면 표시. 모든 `<` 행이 x에서 만족되면 열 전부, 아니면(표시가 참일 때) `=` 행 열만 `4fa83a`로 고정하고 `50cc90(0)`. 작업량은 마지막 열 번호의 2배를 더하는 버릇까지 옮겼다. Netlib 64개에서는 동작하지 않는다.
+- `50495e`(`implied_redundant_rows`)와 `50108e`(`propagate_bounds`): 레벨 1 행 목록으로 bound 사본(+0x398/+0x3a0)을 한 번 전파한다(min activity로, `=` 행은 max activity로도. 변화 100·feastol 미만이나 |값| ≥ 1e8은 무시). 사본은 bound에 쓰지 않는다(SolutionTarget==2일 때만 복사, 범위가 −1..1이라 안 일어남). 그 사본으로 행 activity를 다시 더해(가드 없음) 빈 행, 넘칠 수 없는 `<` 행(−2), 만족할 수 없는 행(3)을 가린다. 허용치는 feastol·min(max(max−min, 1), 1e4). `(m+1)·0.3 < nnz·|목록|`이면 전체 복사(작업량 없음), 아니면 목록 행의 열만 복사.
+- `505077`(`dual_bound_rows`)와 `4f84ef`(`dual_propagate`): 열 상태 비트(lb 자유 1, ub 자유 2)를 무한 bound로 시작해, `state+0x100==0 && (Method≠2 || Crossover==0 || SolutionTarget>0)`이면(기본값에서는 NumericFocus ≤ 0) 열 개수 오름차순(안정 계수 정렬)으로 행이 bound를 함의하는지 본다(ub 패스, 그다음 lb 패스, 허용치 1e-9, 함의되면 그 행의 무한 개수 사본을 늘림). 상태 → 쌍대 부호 `'='`(3), `'>'`(1), `'<'`(2), `'F'`. 행 쌍대 y는 `<` 행 [−∞, 0], `=` 행 [−∞, ∞]. 열마다 −c+Σa·y의 범위(가드 덧셈)를 잡고 `4f84ef`가 원형 큐로 y 상자를 좁힌다(head==tail이면 멈추므로 마지막에 넣은 열은 처리하지 않는 버릇, 11바퀴 제한). 그 뒤 최대 < −opttol−|c|·1e-13이면 lb, 최소 > opttol+|c|·1e-13이면 ub로 `4fa83a`. y < −feastol인 `<` 행은 `=`(+0x400, 행 표시). Presolve=2 분기('F' 열 고정)도 옮겼지만 오라클은 없다.
+- 바깥 패스는 이제 `50495e`, (조건부) `505077`, Presolve=2면 `4fe113`, `4ffe11`, `4ff158`까지 간다.
+
+**새로 확인한 사실**:
+- asm 확인: `505077`은 `4f84ef(xmm0=INFBOUND, xmm1=FeasibilityTol, …)`로 부른다. `50108e`의 `--auVar30 / a` 꼴(`=` 행, 무한 1개)은 부호를 두 번 뒤집은 것이라 maxact/(−a)다.
+- env+0x2438 = Method, env+0x2ba0 = Crossover, env+0x2b9c = SolutionTarget.
+- 숨은 파라미터 기본값(gurobipy `getParamInfo`): PREPARALLEL 1, PREDERIVED 1, PREBOUND 1, PRESYMMPASSES −1, PRETWOROWS −1, PREDUALREDUNDANT 1, Aggregate 1, AggFill −1(`390989`이 env+0x2428을 10, 모델에 +0xf0가 있으면 20으로 바꾼다), PreDepRow −1, Symmetry −1. 그래서 기본값에서 첫 패스는 `3ff744`×2, `50fe2b`, `519a52`, `5b488d`, `47c445`(nnz > 2.5n일 때)를 모두 부른다.
+- timer `local_700`은 `ade552`가 0으로 채워 예산(timer[2])이 0이다. `adf236`이 0을 돌려주므로 "0.8 미만" 판정은 늘 참이다. `3ff744`의 `param_3`(timer)는 쓰이지 않는다.
+- `LAB_0048db6b`의 +1은 `50fe2b`를 부르지 않아도(DualReductions=0) 센다.
+- `5577ba`(대칭, k==0 && PRESYMMPASSES<0, 남은 열 ≥ 500 && 남은 행 ≥ 100일 때)는 PRELIMIT 카운트가 없다.
+
+**다음 작업: `3ff744`**(멈춘 지점. fit1d는 PRELIMIT 15, degen2는 16에서 처음 드러난다). LP 경로만 정리하면:
+- state+0xe0 = 1(`3a484d` L382: LP presolve는 param_3==0이고 model+0x18==0). 그래서 CSR 콜백 묶음을 쓴다. mode 1(열): 해시 `508461`, 척도 `508879`, 비교 `508f07`, 쌍 처리 `509fd0`. mode 0(행): `50866d`, `508bcd`, `509742`, `50b4e5`. PREPWLRED/PREOBJPWLRED 분기(`3fa2f6`, `3bbf87`, `3bde19`, `3bea24`, `370047`)는 CSR이 아닐 때만이라 LP에서는 돌지 않는다.
+- 후보: mode 1은 `53af0f`(추적기 +0x108 캐시를 쓰는 별도 열 목록 getter, 3.8KB, `5399fc`와 다름)에서 열 개수 > 0. mode 0은 `53a487`(행 판)에서 행 개수 > 1이고 `36dce1`(inf_max==0 && act_max < feastol && (`<` 또는 inf_min==0 && act_min > −feastol), 즉 이미 중복인 행)이 아닌 행. mode 0 시작에 +0x42c = 0.
+- `508461`: 살아 있는 행 i마다 1/(i+1.0)의 합. 2개 이상이면 SIMD 두 줄(짝수·홀수 위치)로 따로 더한 뒤 합치고 남은 하나를 더한다(덧셈 순서 주의). 작업량 len·2.
+- `508879`: Σ|a|/(i+1.0)를 max|a|로 나눈 값을 돌려주고, +0x398[j]에 (행 번호가 가장 작은 항의 부호)·max|a|를 쓴다. 작업량 len·3.
+- 흐름: 해시로 간접 정렬(`ab9789`, key[idx]로 비교하는 별도 quicksort, `aaedd9`와 다르다) → 해시 차 ≤ 1e-13 묶음마다 척도 해시 → 다시 정렬, 1e-10 이내로 소그룹 → 소그룹 크기 2면 비교 함수 한 번, 3 이상이면 비교 함수로 Shell 정렬(간격 n/2, ÷2.2) 뒤 다시 묶음 → 묶음 크기 2는 쌍 처리 한 번, 3–6은 모든 쌍, 7 이상은 앞에서 한 번·뒤에서 한 번 훑기(행이면 'P'/'T'/'<'/'=' 순위와 |척도| 1e13으로 대표를 바꾼다). 작업량 검사(`3ba5ac`, 1만 회마다)는 미포팅 예산과 묶여 있다.
+- 그 뒤 순서: `50fe2b`(1.7KB, 부등식 → 등식), `519a52`(4.5KB, 내부에서 MIP 집계기 `37f484` 35KB), `5b488d`(10.5KB), activity 재계산, `47c445`(34KB, LU), 마무리 단계(`51a144`, {`50cc90(1)`, `50d878`} 반복, `50de61` 7.9KB). 마무리는 첫 패스가 끝나야 닿으므로 `3ff744`가 먼저다.
 
 나머지 항목:
 - `3b0917`의 PRESPLITROWS(기본 −1): 평행 행 처리(`50b4e5`)가 반대 방향 행 쌍을 남기면(`+0x42c`) LP에서도 열이 추가된다. 평행 행을 옮길 때 같이 한다.
