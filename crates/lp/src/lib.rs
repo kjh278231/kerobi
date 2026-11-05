@@ -5,3 +5,4 @@ pub mod lu;
 pub mod scaling;
 pub mod spx;
 pub mod start;
+pub mod barrier;
