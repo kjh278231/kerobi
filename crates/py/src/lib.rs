@@ -90,6 +90,12 @@ impl PyCoreModel {
     fn start_basis(&self) -> Vec<i32> {
         rsolver_lp::start::start_basis(&rsolver_lp::spx::Spx::new(&self.inner))
     }
+    /// Barrier ordering and symbolic analysis (05 §2.3): (perm = final position of each row, AA' NZ both triangles,
+    /// Factor NZ, Factor Ops); M3 parity tests.
+    fn barrier_symbolic(&self) -> (Vec<i32>, i64, i64, f64) {
+        let s = rsolver_lp::barrier::ordering::analyze(&self.inner);
+        (s.perm, s.aat_nnz, s.nnz_l, s.ops)
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)
