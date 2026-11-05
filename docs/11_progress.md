@@ -47,6 +47,8 @@
 | 2026-11-05 | M1 presolve 2a–2c | 비용 선호점 고정, 함의 중복 행, dual bound 전파. PRELIMIT 1–14 64/64. PreDepRow는 Netlib에서 degen2·degen3만 바꿈 | `eb471f7` (`m1-lp-presolve`) |
 | 2026-11-05 | M3 ordering·symbolic | AAᵀ NZ, 순열(AMD + bisection), supernode, Factor NZ/Ops 64/64 | `f1d0841`, `8bc322b` (`m3-barrier`) |
 | 2026-11-05 | M3 IPM 프로토타입 | 초기점, predictor, Mehrotra/Gondzio corrector, line search, Gurobi pivot 규칙 LDLᵀ와 refinement | `06308ed` (`m3-barrier`) |
+| 2026-11-05 | M1 dual 회귀 수정(israel) | 인공 bound 배율에서 flip 뒤 `x_B` 재계산 | `6013997` |
+| 2026-11-05 | M3 IPM 프로토타입 64개 | 상태 64/64, 목적 ≤1e-6 64/64, **BarIterCount 56/64**(±5% 57/64). Barrier statistics 로그 64/64. 불일치 8개는 해법 반올림 누적 | `e905669`, `9b4c612` (`m3-barrier`) |
 
 ## 4. goal 원문
 
