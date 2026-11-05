@@ -1,5 +1,5 @@
 """gurobipy-shaped Python layer over the Rust core (re/notes/01: Python -> extension -> engine)."""
-from ._core import INF, build_model, read_model
+from ._core import INF, build_model, param_def, read_model
 
 
 class GRB:
@@ -211,6 +211,18 @@ class Model:
 
     def setObjective(self, expr, sense=GRB.MINIMIZE):
         self._obj, self.ModelSense = _lin(expr), sense
+
+    def getParamInfo(self, paramname):
+        """(name, type, current, min, max, default) as gurobipy reports it; None for an unknown name."""
+        d = param_def(paramname)
+        if d is None:
+            return None
+        name, kind, lo, hi, df, sdf = d
+        if kind == 3:
+            return (name, str, self._param(name, sdf), "", "", sdf)
+        t = int if kind == 1 else float
+        v = lambda x: t(x) if abs(x) < 1e100 else (INF if x > 0 else -INF)  # GRB_INFINITY (1e100) reads as inf
+        return (name, t, self._param(name, v(df)), v(lo), v(hi), v(df))
 
     def _param(self, name, default):
         for k, v in self.Params.items():

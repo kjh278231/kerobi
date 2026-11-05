@@ -265,6 +265,16 @@ fn sort_desc(mut key: Vec<f64>, mut idx: Vec<i32>) -> (Vec<f64>, Vec<i32>) {
     (key, idx)
 }
 
+/// (name, type 1 int / 2 double / 3 string, min, max, default, string default) of a parameter, ignoring case.
+#[pyfunction]
+fn param_def(name: &str) -> Option<(&'static str, i32, f64, f64, f64, &'static str)> {
+    use rsolver_model::params::{default_str, find, Kind};
+    find(name).map(|d| {
+        let k = match d.kind { Kind::Int => 1, Kind::Dbl => 2, Kind::Str => 3 };
+        (d.name, k, d.min, d.max, d.default, default_str(d))
+    })
+}
+
 #[pyfunction]
 fn read_model(py: Python<'_>, path: String) -> PyResult<PyCoreModel> {
     let m = py.allow_threads(|| rsolver_model::mps::read_file(&path));
@@ -276,6 +286,7 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(build_model, m)?)?;
     m.add_function(wrap_pyfunction!(read_model, m)?)?;
     m.add_function(wrap_pyfunction!(sort_desc, m)?)?;
+    m.add_function(wrap_pyfunction!(param_def, m)?)?;
     m.add_class::<PyCoreModel>()?;
     m.add("INF", f64::INFINITY)
 }
