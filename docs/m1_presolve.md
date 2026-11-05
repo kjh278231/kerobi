@@ -151,7 +151,9 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 ## 8. 함께 알릴 것 (main 합칠 때)
 
 - `crates/model/src/mps.rs`: 모델 이름을 NAME 줄의 첫 토큰으로 바꿨다(gurobipy `ModelName`과 같게).
-- `crates/model/src/mps_write.rs`(새 파일), `crates/py/src/lib.rs`(`to_mps`, `presolve`), `python/rsolver/__init__.py`(`Model.presolve`, `Model.write`).
+- `crates/model/src/mps_write.rs`(새 파일), `crates/py/src/lib.rs`(`to_mps`, `presolve`, uncrush 진입점), `python/rsolver/__init__.py`(`Model.presolve`, `Model.write`).
+- 도구: `tools/presolve_oracle.py`, `presolve_check.py`, `uncrush_oracle.py`, `postsolve_check.py`, `build_local.sh`, `gurun.sh`. 테스트 `tests/test_presolve.py`와 고정 파일 `bench/gurobi_presolve/`.
+- presolve는 아직 드라이버(`optimize()`)에 연결하지 않았다. 연결과 uncrush 뒤 원래 모델 simplex("Extra simplex iterations after uncrush")는 드라이버(main) 몫이다.
 
 ## 부록 A. 생성자 작업량 항목 (W += …, μ = +0x448, 아직 미포팅)
 
