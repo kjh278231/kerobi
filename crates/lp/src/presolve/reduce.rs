@@ -1119,3 +1119,218 @@ fn point_term(v: f64, a: f64, sum: &mut f64) -> Option<f64> {
     *sum += a * v;
     None
 }
+
+impl State {
+    /// `50495e`: with bounds tightened by one propagation pass over the rows at this level (`50108e`, kept
+    /// aside; the column bounds do not change), drop empty rows and `<` rows that cannot be violated, and
+    /// detect rows that cannot be satisfied. Returns 0 or 3.
+    pub fn implied_redundant_rows(&mut self, feastol: f64, inf: f64, prebound: i32) -> i32 {
+        let rows = self.rows_list();
+        let (lo, hi) = match self.propagate_bounds(&rows, feastol, inf, prebound) {
+            Ok(b) => b,
+            Err(rc) => return rc,
+        };
+        // SolutionTarget (env+0x2b9c) == 2 would copy lo/hi into the bounds here; the parameter stops at 1.
+        let mut removed = 0;
+        for &rr in &rows {
+            let r = rr as usize;
+            let c = self.row_cnt[r];
+            if c == 0 {
+                let rhs = self.rhs[r];
+                if rhs < -feastol || (feastol < rhs && self.sense[r] == b'=') {
+                    self.bad_row = rr;
+                    return INFEASIBLE;
+                }
+                self.row_cnt[r] = -1;
+                removed += 1;
+                continue;
+            }
+            if c < 0 {
+                continue;
+            }
+            let (maxact, nmax, minact, nmin) = self.row_range(r, &lo, &hi, inf);
+            let b = self.row_beg[r] as usize;
+            let len = self.row_len[r] as usize;
+            self.work += len as f64 * 5.0;
+            let mut d = maxact - minact;
+            if d <= 1.0 {
+                d = 1.0;
+            }
+            let d = if d <= 10000.0 { d } else { 10000.0 };
+            if self.sense[r] == b'=' {
+                if (nmin == 0 && feastol * d < minact) || (nmax == 0 && maxact < -(d * feastol)) {
+                    self.bad_row = rr;
+                    return INFEASIBLE;
+                }
+            } else if nmax != 0 || -(feastol * d) <= maxact {
+                if nmin == 0 && d * feastol < minact {
+                    self.bad_row = rr;
+                    return INFEASIBLE;
+                }
+            } else {
+                for k in b..b + len {
+                    let j = self.row_ind[k];
+                    if j >= 0 && self.col_cnt[j as usize] >= 0 {
+                        self.tracker.mark_col(j);
+                        self.col_cnt[j as usize] -= 1;
+                        self.row_ind[k] = -1;
+                    }
+                }
+                self.row_cnt[r] = -2;
+                self.work += len as f64 * 4.0;
+                removed += 1;
+            }
+        }
+        self.rows_removed += removed;
+        self.work += rows.len() as f64 * 5.0;
+        0
+    }
+
+    /// Max and min activity minus rhs of row `r` under bounds `lo`/`hi`, plain sums without rounding guard:
+    /// (finite max part, infinite max count, finite min part, infinite min count). As inlined in `50495e`/`50108e`.
+    fn row_range(&self, r: usize, lo: &[f64], hi: &[f64], inf: f64) -> (f64, i32, f64, i32) {
+        let (mut maxact, mut minact) = (-self.rhs[r], -self.rhs[r]);
+        let (mut nmax, mut nmin) = (0, 0);
+        let b = self.row_beg[r] as usize;
+        for k in b..b + self.row_len[r] as usize {
+            let j = self.row_ind[k];
+            if j < 0 || self.col_cnt[j as usize] < 0 {
+                continue;
+            }
+            let (j, a) = (j as usize, self.row_val[k]);
+            if a <= 0.0 {
+                if -inf < lo[j] {
+                    maxact += lo[j] * a;
+                } else {
+                    nmax += 1;
+                }
+                if inf <= hi[j] {
+                    nmin += 1;
+                } else {
+                    minact += hi[j] * a;
+                }
+            } else {
+                if hi[j] < inf {
+                    maxact += hi[j] * a;
+                } else {
+                    nmax += 1;
+                }
+                if -inf < lo[j] {
+                    minact += a * lo[j];
+                } else {
+                    nmin += 1;
+                }
+            }
+        }
+        (maxact, nmax, minact, nmin)
+    }
+
+    /// `50108e`: copies of the column bounds (state+0x398 / +0x3a0) tightened by one pass over `rows`: each row's
+    /// min activity (and, for `=` rows, max activity) bounds every column in it. Changes under 100 feastol and
+    /// bounds beyond 1e8 are ignored; crossing bounds give 3 with `bad_col`. Without PREBOUND only the copy.
+    fn propagate_bounds(&mut self, rows: &[i32], feastol: f64, inf: f64, prebound: i32) -> Result<(Vec<f64>, Vec<f64>), i32> {
+        let mut lo = self.lb.clone();
+        let mut hi = self.ub.clone();
+        // The original copies all bounds when (m+1)*0.3 < nnz*|rows| (QC aside), else only those of the rows'
+        // columns, which are the only ones read; only the second way counts work.
+        if !(((self.m + 1) as f64) * 0.3 < (self.nnz * rows.len() as i64) as f64) {
+            for &r in rows {
+                if 0 < self.row_cnt[r as usize] {
+                    self.work += self.row_len[r as usize] as f64 * 6.0;
+                }
+            }
+        }
+        if prebound == 0 {
+            return Ok((lo, hi));
+        }
+        for &rr in rows {
+            let r = rr as usize;
+            if self.row_cnt[r] <= 0 {
+                continue;
+            }
+            let (maxact, nmax, minact, nmin) = self.row_range(r, &lo, &hi, inf);
+            let b = self.row_beg[r] as usize;
+            let len = self.row_len[r] as usize;
+            self.work += len as f64 * 5.0;
+            let mut d = maxact - minact;
+            if d <= 1.0 {
+                d = 1.0;
+            }
+            if !(d <= 1e13) {
+                continue;
+            }
+            let dcap = if d <= 1e6 { d } else { 1e6 };
+            let mn = if 0.0 <= minact { 0.0 } else { minact };
+            let mx = if 0.0 <= -maxact { 0.0 } else { -maxact };
+            let eq = self.sense[r] == b'=';
+            for k in b..b + len {
+                let jj = self.row_ind[k];
+                if jj < 0 || self.col_cnt[jj as usize] < 0 {
+                    continue;
+                }
+                let j = jj as usize;
+                let a = self.row_val[k];
+                if !(dcap * 1e-10 <= a.abs()) {
+                    continue;
+                }
+                let (u, mut l) = (hi[j], lo[j]);
+                let (mut nl, mut nu) = (l, u);
+                if a <= 1e-8 {
+                    if a < -1e-8 {
+                        if nmin == 0 {
+                            nl = u - mn / a;
+                        } else if nmin == 1 && inf <= u {
+                            nl = -minact / a;
+                        }
+                    }
+                } else if nmin == 0 {
+                    nu = l - mn / a;
+                } else if nmin == 1 && l <= -inf {
+                    nu = -minact / a;
+                }
+                let (mut f8, mut f0) = (nl, nu);
+                if eq {
+                    f8 = self.lb[j];
+                    f0 = self.ub[j];
+                    let a2 = -a;
+                    if a2 <= 1e-8 {
+                        if a2 < -1e-8 {
+                            if nmax == 0 {
+                                f8 = u - mx / a2;
+                            } else if nmax == 1 && inf <= u {
+                                f8 = maxact / a2;
+                            }
+                        }
+                    } else if nmax == 0 {
+                        f0 = l - mx / a2;
+                    } else if nmax == 1 && l <= -inf {
+                        f0 = maxact / a2;
+                    }
+                    if f8 <= nl {
+                        f8 = nl;
+                    }
+                    if nu <= f0 {
+                        f0 = nu;
+                    }
+                }
+                if -1e8 < f8 && feastol * 100.0 + l < f8 {
+                    if u + feastol < f8 {
+                        self.bad_col = jj;
+                        return Err(INFEASIBLE);
+                    }
+                    lo[j] = f8;
+                    l = f8;
+                }
+                if f0 < 1e8 && f0 < hi[j] - feastol * 100.0 {
+                    if f0 < l - feastol {
+                        self.bad_col = jj;
+                        return Err(INFEASIBLE);
+                    }
+                    hi[j] = f0;
+                }
+            }
+            self.work += len as f64 * 12.0;
+        }
+        Ok((lo, hi))
+    }
+}

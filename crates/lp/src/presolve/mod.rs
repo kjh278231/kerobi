@@ -191,8 +191,16 @@ fn reduce(st: &mut State, p: &Params) {
                 return;
             }
         }
-        // shortcut: the rest of the outer pass (50495e, 505077, 3ff744, 50fe2b, 519a52, 5b488d, 47c445) and the
-        // finish stage are not ported yet; stop here like a reached PRELIMIT.
+        // state+0x27c (quadratic constraints) is 0 for LP: 50495e, not 451195
+        if st.implied_redundant_rows(p.feastol, p.infbound, p.prebound) != 0 {
+            return;
+        }
+        calls += 1;
+        if limit <= calls {
+            return;
+        }
+        // shortcut: the rest of the outer pass (505077, 3ff744, 50fe2b, 519a52, 5b488d, 47c445) and the finish
+        // stage are not ported yet; stop here like a reached PRELIMIT.
         let _ = &snap;
         return;
     }
