@@ -812,3 +812,58 @@ impl State {
         0
     }
 }
+
+impl State {
+    /// `50d878`: every empty column goes to the bound its cost prefers (unbounded if that bound is infinite
+    /// and the cost is significant), then columns with `u < l + 1e-10` are fixed (`4f6740`). Returns 0, 3, 5.
+    pub fn empty_cols(&mut self, opttol: f64, feastol: f64, inf: f64) -> i32 {
+        let n = self.n;
+        for j in 0..n {
+            if self.col_cnt[j] != 0 || self.col_flag[j] != 0 {
+                continue;
+            }
+            let c = self.obj[j];
+            let (l, u) = (self.lb[j], self.ub[j]);
+            let v = if c <= opttol {
+                if -opttol <= c {
+                    if c < 0.0 {
+                        if u < inf { u } else if -inf < l { l } else { 0.0 }
+                    } else if -inf < l {
+                        l
+                    } else if u < inf {
+                        u
+                    } else {
+                        0.0
+                    }
+                } else {
+                    if inf <= u {
+                        self.bad_col = j as i32;
+                        return UNBOUNDED;
+                    }
+                    u
+                }
+            } else {
+                if l <= -inf {
+                    self.bad_col = j as i32;
+                    return UNBOUNDED;
+                }
+                l
+            };
+            self.push_fix(j, v);
+            self.col_cnt[j] = -1;
+            self.objcon += v * c;
+            self.obj[j] = 0.0;
+        }
+        self.work += n as f64 * 8.0;
+        for j in 0..n {
+            if 0 < self.col_cnt[j] && self.ub[j] < self.lb[j] + 1e-10 {
+                let rc = self.fix_near(j, feastol);
+                if rc != 0 {
+                    return rc;
+                }
+            }
+        }
+        self.work += n as f64 * 4.0;
+        0
+    }
+}

@@ -115,10 +115,12 @@ fn reduce(st: &mut State, p: &Params) {
         precrush: p.precrush,
     };
     let passes = if p.prepasses < 0 { if p.presolve == 1 { 5 } else { 100 } } else { p.prepasses };
-    for _pass in 0..passes {
+    let mut pass_snap = st.snapshot();
+    for k in 0..passes {
         let mut i = 0;
+        let mut snap;
         loop {
-            let snap = st.snapshot();
+            snap = st.snapshot();
             st.tracker.level = 2;
             // shortcut: 3ba9de's work-budget stop (budget = nnz*1000 + 1e7) is not checked; Netlib never hits
             // it. Port it with the constructor's work terms (P2).
@@ -158,7 +160,33 @@ fn reduce(st: &mut State, p: &Params) {
             }
         }
         st.tracker.level = 1;
-        // shortcut: outer reductions (50cc90(1), 50d878, 38e49a, ...) not ported yet.
+        if st.n == 0 || st.m == 0 {
+            break;
+        }
+        if 0 < k && st.progress(&pass_snap) <= ((k - 2).max(0) as f64) * 0.0001 {
+            break;
+        }
+        pass_snap = st.snapshot();
+        st.reset_tracker();
+        if st.redundant_rows(1, p.feastol, p.opttol, p.infbound) != 0 {
+            return;
+        }
+        calls += 1;
+        if limit <= calls {
+            return;
+        }
+        if p.dual_reductions {
+            if st.empty_cols(p.opttol, p.feastol, p.infbound) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        // shortcut: the rest of the outer pass (38e49a, 50495e, 505077, 3ff744, 50fe2b, 519a52,
+        // 5b488d, 47c445) and the finish stage are not ported yet; stop here like a reached PRELIMIT.
+        let _ = &snap;
         return;
     }
 }

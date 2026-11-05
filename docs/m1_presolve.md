@@ -64,16 +64,35 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 | 설정 | 일치 | 비고 |
 |---|---|---|
 | Presolve=0 | 64/64 | 상태 생성의 `>` → `−1·<` 변환만 |
-| PRELIMIT 1–6 | 64/64 | `5034e9`, `503985`(Netlib에서는 돌지 않음), `51a144`, `4fe113`, `4ffe11`, `4ff158` |
+| PRELIMIT 1–14 | 64/64 | 내부 루프 전부(`4fe113`, `4ffe11`, `4ff158`, `50cc90(0)`, 진척도 반복)와 바깥 `50cc90(1)`, `50d878` |
+| PRELIMIT 15 | 60/64 | afiro·blend·capri는 내부 루프가 호출 11에서 끝나 15번째가 `50495e`다. fit1d는 호출 7에서 끝난다. 다음 미포팅 reduction에서 멈춘다 |
 | 기본값 | 2/64 | 진행 중 |
+
+`mod.rs`의 `reduce()`는 아직 포팅하지 않은 reduction에 닿으면 거기서 멈춘다(PRELIMIT에 닿은 것과 같은 효과). 그래서 PRELIMIT 비교는 멈춘 지점까지 유효하다.
 
 ## 7. 다음 단계 (순서대로)
 
-1. `50cc90(mode)`(중복 행·작은 계수, `53763f`·`537da8` 사용) → PRELIMIT 7. 그다음 내부 루프 반복과 진척도 `3c5595`(이미 `State::progress`) → PRELIMIT 8–24(오라클 lim4..lim24는 스크래치에 있으니 다시 뜬다).
-2. 바깥 reduction: `50d878`, `38e49a`, `50495e`, `505077`, `51f5ab`(조건부), `3ff744`(평행 행/열, 해시 순서 주의), inline 쌍대 고정(`390989` 627–878줄), `50fe2b`, 집계 `519a52`/`517fa8`, `5b488d`(PREDERIVED), `47c445`(PreDepRow, LU), 마무리 `51a144`·`50cc90(1)`·`50d878`·`50de61`. 각 단계에서 PRELIMIT 오라클로 확인한다.
-3. 작업량: 생성자의 작업량 항목(서브에이전트 보고, `3a484d`/`5118e6`/`534a8b`)과 `3ba9de` 예산 정지를 옮긴다. 바깥 reduction의 "timer 사용률 < 0.8" 판정이 work에 달려 있다.
-4. `3b0917`의 PRESPLITROWS(기본 −1): 평행 행 처리(`50b4e5`)가 반대 방향 행 쌍을 남기면(`+0x42c`) LP에서도 열이 추가된다. 평행 행을 옮길 때 같이 한다.
-5. postsolve `363164`/`365159`와 비트 오라클(해·기저).
+**바깥 패스 순서**(기본 파라미터, `390989` 440–1080줄, 패스 k, 각 호출이 PRELIMIT 카운트 1):
+1. 내부 루프가 끝나면 레벨 1. n==0이나 m==0이면 마무리. k>0이고 패스 시작 대비 ρ ≤ 1e-4·max(0,k−2)이면 마무리. 패스 스냅숏을 뜨고 추적기를 reset한다.
+2. `50cc90(1)`(포팅), DualReductions면 `50d878`(포팅)와 `38e49a`.
+3. `!local_38 && DualReductions && PreCrush<2 && (k<5 || Presolve==2)`이면 `50495e`(QC 없을 때), `505077`, (QC나 Presolve==2이면 `4fe113`), `4ffe11`, `4ff158`(state+0x278==0). 조건이 거짓이면(k≥5) `50495e`만 하고, Presolve==2이면 `4fe113`도 한다.
+4. `3ba5ac`/`3ba9de`. DualReductions && Presolve≠2 && PREPARALLEL이면, timer(local_700) 사용률이 0.8 미만일 때 `3ff744(mode 1, 열)`, 그다음 `3ff744(mode 0, 행)`. Presolve==2면 먼저 `51f5ab`.
+5. PWL 열(+0x330)이 있으면 인라인 쌍대 고정. LP는 건너뛴다. DualReductions면 `50fe2b`(카운트는 다음 줄에서 +1).
+6. Aggregate≠0이고 (k==0 또는 Aggregate>1)이면: state+0x278≠0 && env+0x2728==0 && AggFill>0일 때 `517fa8`, 그다음 `519a52`.
+7. PREDERIVED && DualReductions && PreCrush==0이면 `5b488d`.
+8. `538f30` 행 목록으로 `4f79a1` activity 재계산(카운트 없음).
+9. PRETWOROWS(−1)는 Presolve==2일 때만 `51aba6`. k==0 && PRESYMMPASSES<0이면 대칭 블록(Symmetry>1일 때 `5577ba`, 세부 미확인).
+10. k==0이고 PreDepRow&1이면 `47c445(mode 1)`, &2이고 DualReductions면 `47c445(mode 2)`. PreDepRow 자동값: `2.5·n < nnz`이면 3, 아니면 0(Method −1, INTBASIS −1 기준).
+11. `3ba5ac`/`3ba9de`. ρ(마지막 내부 반복 스냅숏 대비) ≤ 1e-6이면 마무리. k+1 ≥ 패스 수여도 마무리. 아니면 다음 패스.
+
+**마무리**(`LAB_0048dff3` → `e07f` → `e0de`): 레벨 0으로 reset, PREBOUND면 `51a144`. 그다음 {`50cc90(1)`, DualReductions면 `50d878`}을 `50d878`이 열을 더 지우지 않을 때까지 반복. PREBOUND면 `50de61`, 그 뒤 행이 줄었고 DualReductions면 `50d878`을 한 번 더 한다. 끝으로 `3b0917`.
+
+**다음 작업**: `38e49a`(698줄)는 열마다 비용이 선호하는 bound(c>0 → lb, c<0 → ub, c=0이면 0 또는 범위 안의 값, 무한이면 표시)를 `+0x3b8` 계열 배열에 잡는다. 부등식 행이 그 값에서 모두 만족되면 전부 `4fa83a`로 고정하는 것으로 보인다(반복·표시 배열 `+0x3a8` 사용, 미해독). 그다음 `50495e`, `505077`(9.5KB, Method·Crossover에 따라 다름), `3ff744`+콜백 `50b4e5`/`50c736`(해시 순서), `50fe2b`, `519a52`(MIP 집계기 `37f484` 재사용), `5b488d`, `47c445`, `50de61`, `51a144` 재호출. 작업량 예산(부록 A, `3ba9de`)과 timer 0.8 판정은 3ff744 전에 필요할 수 있다.
+
+나머지 항목:
+- `3b0917`의 PRESPLITROWS(기본 −1): 평행 행 처리(`50b4e5`)가 반대 방향 행 쌍을 남기면(`+0x42c`) LP에서도 열이 추가된다. 평행 행을 옮길 때 같이 한다.
+- postsolve `363164`/`365159`와 비트 오라클(해·기저). 레코드는 `state.rs`의 `PostRec`에 쌓고 있다(type 1, 2, 3, 7, 8).
+- 마무리 전에 clippy 경고(`sort.rs` 부정 비교, `state.rs` 범위 루프, 쓰지 않는 레코드 필드)를 정리한다.
 
 ## 8. 함께 알릴 것 (main 합칠 때)
 
