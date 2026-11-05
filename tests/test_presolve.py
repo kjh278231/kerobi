@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT.parent / "re/bench/data"
 
 
-@pytest.mark.parametrize("name", ["afiro", "sc50a", "beaconfd", "vtpbase", "kb2"])
+# degen2: 47c445 (PreDepRow) drops the dependent `=` rows CR2007A and CR2027B
+@pytest.mark.parametrize("name", ["afiro", "sc50a", "beaconfd", "vtpbase", "kb2", "degen2"])
 def test_presolved_model_matches_gurobi(name):
     got = rsolver.read(DATA / "netlib" / f"{name}.mps.gz")._core.presolve([]).to_mps()
     assert got == (ROOT / "bench/gurobi_presolve" / f"{name}.mps").read_text()

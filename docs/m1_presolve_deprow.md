@@ -100,8 +100,9 @@ loop {
 | 설정 | 결과 |
 |---|---|
 | 기본값 | 64/64 (전에는 62/64). degen2는 CR2007A, CR2027B, degen3은 CR2084A, CR2084B를 지운다 |
-| PRELIMIT = 각 모델의 mode 1·mode 2 호출 번호(60개 모델, 20–93) | 114/120. 남은 6개(finnis 40/41, forplan 28/29, ganges 80/81)는 바로 앞 `5b488d` 체크포인트(39, 27, 79)부터 같은 줄에서 다르다(`5b488d` 미포팅). 이 셋은 Gurobi와 포트 모두 `47c445` 전후 모델이 같다 |
-| PreDepRow = 0 / 1, DualReductions = 0 | 64/64 / 64/64 / 64/64. PreDepRow 범위는 −1..1이라 2, 3은 Gurobi가 받지 않는다 |
+| PRELIMIT = 각 모델의 mode 1·mode 2 호출 번호(60개 모델, 20–93) | 120/120 (`5b488d` 병합 뒤. 병합 전에는 finnis 40/41, forplan 28/29, ganges 80/81이 바로 앞 `5b488d` 체크포인트부터 달랐다) |
+| PreDepRow = 0 / 1, DualReductions = 0 | 64/64 / 64/64 / 64/64 (병합 전). PreDepRow 범위는 −1..1이라 2, 3은 Gurobi가 받지 않는다 |
+| uncrush (`tools/postsolve_check.py`, 기본값 오라클) | 59/59 (uncrush 없는 5개 제외). degen2, degen3도 통과한다(모델 크기가 맞아졌다) |
 
 Netlib에서 mode 2가 고정하는 열은 없다. 3001 이상 분기, 포기 조건, 작은 줄 분기는 Netlib에서 확인하지 못했다(정적 해독만).
 
