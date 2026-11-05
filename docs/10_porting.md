@@ -126,7 +126,7 @@ python tools/parity.py compare <ref_dir> <test_dir> [--csv bench/parity.csv]
 
 decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소는 비공개로 두고 배포·공개하지 않는다(내부 연구용). 공개가 필요해지면 해당 코드는 이 문서의 규칙이 아니라 클린룸 방식으로 다시 써야 한다([09 §4](09_roadmap.md)).
 
-## 9. 인수인계 메모 (2026-11-05, 다음 세션용)
+## 9. 인수인계 메모 (2026-11-05 갱신, 다음 세션용)
 
 작업 방식은 **재구성 + 오라클 비트 검증**이다. 의사코드와 objdump로 함수의 규칙을 읽고, Python 프로토타입(`tools/proto/`)을 Gurobi 오라클과 비트 단위로 맞춘 뒤 Rust로 옮긴다. 의사코드를 줄 단위로 옮겨 쓰는 방식은 호출 인자 손실과 SIMD 조각 때문에 쓰지 않는다. 세부 해독 기록은 [m1_notes.md](m1_notes.md)에 있다.
 
@@ -143,24 +143,61 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 - **오라클 주의**: 자유 열이 있으면 dual 초기화가 자유 열 피벗 루프 안에서 SIMPLEX 콜백을 부른다. 그래서 capri, perold, pilot4, tuff는 반복 0 스냅숏이 xB 계산 전이다. 반복 1 이후로 검증한다.
 - **Gurobi 실행**: `gurobi_guard.pth` 때문에 Gurobi는 한 프로세스만 돈다. 다른 세션이 쓰는 중이면 "Gurobi is already running" 오류가 사라질 때까지 기다렸다가 다시 시도한다(5초 간격 재시도 래퍼를 쓰면 편하다).
 
-### 9.2 현재 일치율 (Method=1, Presolve=0, Threads=1)
+- **dual 기본 경로(반복 단위)**: Presolve=0·Threads=1의 기본 Method는 64개 모두 dual과 반복 수가 같다(기본 = dual). 기본 ratio test는 SIMPLEXPWRATIO(spx+0x468) = 1이라 **BFRT `1c35c5`**다(Harris `1c137f`는 0일 때). 상수: PIVOTTOL 3e-8, BIGTOL 3e-6, MarkowitzTol 2⁻⁷, PerturbValue 0.0002, 재분해 주기 max(20, ⌊m^0.7⌋). 세부는 [m1_notes §8](m1_notes.md).
+- **CHUZR은 점수 최대가 아니다**: 시작 모드(P+0x40 = 0)는 `15d2d`가 만든 순서 목록(P+0x10, 길이 P+0x3c)을 커서(spx+0x2c4)부터 걸으며 표시(spx+0x280)가 0인 첫 위치를 고른다. 목록이 소진되면 다시 만든다. 위반²/w 최대로 고르면 2/60만 맞는다.
+- **인공 bound와 BFRT**: dual은 ±1e30을 실제 bound로 쓴다. sc50a 반복 0에서 Gurobi는 비율 0인 열 15를 인공 상한 1e30으로 flip하고(기울기 2.1e30 − 1e30 > 0) 열 3을 넣는다. 1e30 규모의 보폭 뒤에는 x_B를 새로 계산해야 반올림 잔여(1e14–1e16)가 남지 않는다.
+- **가중치 폭주**: DSE 가중치가 inf/NaN이 되면 CHUZR가 위반 행을 놓쳐 실행불가능한 x를 OPTIMAL로 낸다(grow22, fit2p에서 실제로 발생). 1e30 초과·NaN이면 1로 되돌린다(Gurobi도 같은 규칙).
+- **Netlib 개수**: `re/bench/data/netlib`의 104개 항목 중 MPS는 **91개**(라이선스 안 64 + 밖 27)이고 13개는 빌드 파일이다. 09 로드맵과 goal의 "104개/40개"는 이 항목 수를 센 것이다. 점검은 91개로 한다. 빠진 Netlib 문제(qap8·12·15, stocfor3, truss, pilot.ja, pilot.we 등)는 저장소에 없다.
 
-| 대상 | 일치 | 검증 위치 |
+### 9.2 지금 상태 (2026-11-05)
+
+코드:
+- `crates/lp`: `scaling.rs`(64/64 비트), `spx.rs`, `start.rs`(crash, `vstat` 64/64), `lu.rs`(singleton 단계 원본대로 + Markowitz(단순 탐색, shortcut) + Forrest–Tomlin 갱신, 원본 BTRAN 경로 에뮬레이션), `simplex.rs`(엔진: dual·primal·드라이버 `solve_model`).
+- dual은 원본 구조(crash → 자유 열 피벗 → 첫 분해 → 정확한 DSE 노름 → 반복)를 따르지만 반복 내부는 아직 교과서식이다: CHUZR는 위반²/w 최대, ratio test는 Harris 묶음 단위 BFRT + 비용 이동, 섭동은 퇴화 50회 연속이면 1회(난수는 LCG). 원본 규칙이 아니라 반복 경로가 다르다.
+- primal은 phase 1(위반 합)·phase 2, Dantzig 가격, Harris 비율 검사의 교과서식이다(`0478d3` 계열 미이식). Method=0과 dual 뒤 정리에 쓴다.
+- Python: 읽은 LP와 API로 만든 LP 모두 `optimize()`가 새 엔진을 쓴다. MIP는 M2까지 오류(배낭 테스트 xfail). `crates/core` 삭제 완료. SIMPLEX 콜백은 풀이 뒤 반복 기록으로 재생한다. `Work`는 아직 0이다.
+- cargo clippy 경고 0(`crates/lp`는 `needless_range_loop`만 허용), cargo test 5개·pytest 8개 통과(1 xfail).
+
+| 기준 | 현재 | 비고 |
 |---|---|---|
-| 지문(M0 관문) | 102/102 | `tests/test_read.py`, `tools/parity.py` |
-| 스케일 인자(열·행·목적) | 64/64 비트 | `crates/lp/src/scaling.rs`, `tests/test_scaling.py` |
-| 작업 배열 변환 규약 | 64/64 비트 | 프로토타입 검사 |
-| 반복 0의 `xB` | 60/60 비트 | `crates/lp/src/lu.rs`, `tests/test_scaling.py` |
-| 반복 0의 `d` | 60/60 비트 | `crates/lp/src/lu.rs`(`dual_start`), `tests/test_scaling.py` |
-| 반복 0의 DSE 가중치 | 60/60 비트 | `crates/lp/src/lu.rs`(`btran`, `sum_squares`), `tests/test_scaling.py` |
-| 반복 0의 시작 기저 `vstat` | 64/64 | `crates/lp/src/start.rs`, `tests/test_scaling.py` |
-| 반복 수 일치(P1) | 0 | — |
+| (1) 정확성 Method 1 | 91개 중 85개(BFRT 전 전체 점검). 이후 grow22·fit2p·maros-r7은 고쳤다 | **BFRT 도입 뒤 회귀**: israel이 flip만 한 반복 직후 INFEASIBLE 오판, perold NUMERIC. pilot·pilot87은 10만 반복에도 수렴 못 함. dfl001은 디버그 빌드로 시간 초과였다(release 재점검 필요) |
+| (1) 정확성 Method 0 / 기본 | 미점검 | `tools/lp_check.py --methods 0,-1` |
+| (2) P1 반복 수 | 2/64(BFRT 전) | 경로 비교: afiro·sc50a·sc50b·adlittle·kb2·sc105·recipe는 첫 1–6 피벗이 맞고, blend·share2b·boeing2·israel은 첫 피벗부터 다르다 |
+| (3) P2 work | 미구현 | 작업량 계수 spx+0x148(1.3, m > 10000이면 보정), 커널마다 연산 수 누적 |
+| (4) P3 시간 | 미측정 | release에서 25fv47 0.5–0.7초 대 Gurobi 0.09초. 반복마다 O(n+m) 루프와 조밀 FTRAN/BTRAN이 원인 |
+| (5) 구조 | LU(Markowitz·FT), crash, dual·primal, 드라이버 일부 | Quad(F80) 미착수, `0c3d0d` 분기(웜스타트·network·sifting·비스케일 재풀이) 미이식, common(난수 `a7b4d6`/`a7b54f`) 미이식 |
 
 ### 9.3 다음 단계 (순서대로)
 
-1. ~~DSE 가중치 비트 일치~~ 완료(2026-11-05, m1_notes §6.6). Gurobi 내부 함수를 콜백에서 ctypes로 직접 부르는 오라클(`tools/proto/btran_oracle.py`)이 정적 해독보다 빨랐다. 다음 단계의 FTRAN·ratio test 확인에도 같은 방법을 쓸 수 있다.
-2. ~~BTRAN·`d`·가중치 Rust 이식~~ 완료(2026-11-05). `Lu::btran`은 Gurobi의 경로 선택(희소/조밀 Uᵀ·Lᵀ, 힙/레벨)을 따른다. `d`의 y는 조밀 BTRAN(c_B 전체 입력, Lᵀ는 단계 내림차순 흩뿌리기)으로 60/60이다. 기준값 `bench/gurobi_spx0`의 `d`, `w`.
-3. ~~시작 기저(B단계)~~ 완료(2026-11-05). 이전 메모의 "`0534f7` L901–1300이 고정 slack을 교체"는 틀렸고, 교체는 `1e7531` crash였다. 자유 열 피벗 루프(`0534f7` L700–1300)는 FTRAN·LU 갱신이 필요해 4번으로 넘긴다. 자유 열 4개 모델의 반복 0 스냅숏은 첫 자유 열 피벗 전이라 반복 1로 검증해야 한다.
-4. **반복 1–2**: **CHUZR 진행 중**: 시작 모드는 `15d2d`가 만든 순서 목록을 차례로 걷는 방식이다(m1_notes §8). 목록 생성 규칙부터 해독한다. 이어서 CHUZR `2896a3@0xccbc0`, 행 계산 `0a4109`, ratio test(`1c35c5` BFRT 또는 `1c137f` Harris, SIMPLEXPWRATIO로 선택), FTRAN `08b473`/`09d112`, 갱신 `1c8477`, LU 갱신 `05b257`, 섭동 `048d5f`. 오라클을 `--iters 0,1,2`로 떠서 반복마다 비교한다. 자유 열 피벗 루프(`0534f7` L700–1300: FTRAN 뒤 자유 열이 아닌 기저 위치 중 최대 |α|, 3e-8 이상이면 피벗, 실패한 자유 열은 d를 8레인 내적으로 다시 보고 2차 시도)도 같은 FTRAN·LU 갱신 위에서 한다.
-5. **Markowitz 단계**(`036ade`): 갱신과 재분해가 쌓이면 삼각이 아닌 기저가 나온다. singleton 뒤 활성 부분행렬의 피벗 순서와 동점 규칙을 맞춘다. 조밀 전환(MKL dgetrf)은 작은 Netlib에서는 드물다.
-6. 반복 단위로 맞기 시작하면 `tools/parity.py capture rsolver`로 `bench/gurobi_dual_nopre`와 반복 수(P1)를 비교한다.
+1. **회귀 수정**: israel(flip만 한 반복 뒤 다음 행에 후보가 없어 INFEASIBLE로 판정; 인공 bound로 flip된 열을 판정에서 다뤄야 함)과 perold NUMERIC. 그다음 `python tools/lp_check.py --methods 1,0,-1 --timeout 600`(release 빌드)으로 91×3 정확성을 다시 재고 실패를 고친다(pilot·pilot87 수렴, dfl001).
+2. **P1, dual 반복을 원본대로**(경로 오라클로 첫 분기점을 하나씩 없앤다):
+   - CHUZR 목록 `15d2d@0xbdc10`(489줄): 어떤 위치를 넣고 어떤 순서로 정렬하는지. 기준: afiro 반복 0 목록 `[3, 5, 7, 23, 21, 22, 15, 9]`(`tools/spx_oracle.py`의 `price` 필드). 점수·표시 갱신은 `1c8477`.
+   - BFRT `1c35c5` L960 이후(최종 진입 선택, flip 목록 반환, flip만 한 반복의 처리와 반복 수 계산), 비용 이동 난수 `a7b54f`·`a7b4d6`(common).
+   - 섭동 `048d5f`(시작 조건, 크기 3배씩, 난수), x_B 갱신 `1c8477`, DSE 갱신 위치, 재분해 때 기저 위치 재번호 여부, 자유 열 피벗 루프(`0534f7` L700–1300).
+   - 반복 0 상태는 비트 단위로 같으니, 갈라지는 반복에서 그 시점의 후보 목록을 오라클 값으로 다시 계산해 규칙을 찾는다(예: `/tmp`에서 쓰던 `ratio0.py` 방식, 아래 9.4).
+3. **primal 이식**(`0478d3`, `0af361`, `229999` crash, `06dfff` partial pricing, `0736dd`, `055f68/054eef/056973` ratio test)으로 Method 0 P1.
+4. **P2 work**: 커널별 작업량 누적을 원본 식대로 넣는다(BTRAN `spx+0x200`·`0x1f8`, 1bae9c `param_3`, ratio test `param_6` 등 이미 본 식이 m1_notes에 있다).
+5. **P3 속도**: 희소 FTRAN/BTRAN(원본 경로 선택 그대로), 비기저 열 행 방향 사본(spx+0x1d0) 유지, 반복마다 O(n+m) 루프 제거, Markowitz를 `036ade` 규칙으로 이식. 기계가 한가할 때 `re/bench/bench.py`로 잰다.
+6. **Quad**(F80, `1fb30b` 등)와 드라이버 나머지 분기, 비스케일 위반 재풀이 `2e9ae`.
+
+### 9.4 기준값·오라클 위치
+
+| 경로 | 내용 | 만드는 법 |
+|---|---|---|
+| `bench/gurobi_dual_nopre/`, `gurobi_primal_nopre/`, `gurobi_default_nopre/` | Gurobi Presolve=0, Method 1/0/기본, 64개 summary·trace | `tools/parity.py capture gurobipy … --lp-only --param Presolve=0 [--param Method=…]` |
+| `bench/gurobi_spx0/` | 반복 0의 스케일·`vstat`·`xB`·`d`·`w`(테스트 기준값) | `tools/spx_oracle.py` |
+| `bench/oracle/iter0/`, `iter0-3/` | 반복 0(64개, 행렬 포함), 반복 0–3(작은 LP 12개) 전체 스냅숏 | `tools/spx_oracle.py --iters …` (이제 `price` 필드 포함) |
+| `bench/oracle/btran0/` | Gurobi 내부 BTRAN(`9e288`)을 ctypes로 불러 뜬 e_p 출력 | `tools/proto/btran_oracle.py` |
+| `bench/oracle/path1/` | 작은 LP 12개의 반복별 진입·이탈·flip 수(dual) | `tools/path_oracle.py <dir> --method 1 name…` |
+| `bench/lp_check.csv`(만들 예정) | 91개 × Method 정확성·반복 수·시간 | `tools/lp_check.py` |
+| `docs/m1_notes.md` §5–8 | crash, LU, BTRAN·DSE, CHUZR 목록, BFRT 해독 기록 | |
+
+프로토타입 `tools/proto/{lu_singleton,btran_dual,dse_weights}.py`는 `bench/oracle/iter0`을 직접 읽는다(인자 없음).
+
+### 9.5 주의점
+
+- **빌드는 `maturin develop --release`**: 기본 `maturin develop`은 디버그 빌드라 10배 이상 느리다(디버그로 돌린 점검의 dfl001 시간 초과가 이것 때문). `.venv`의 `maturin develop`은 main 트리만 한다(`docs/11_progress.md` §1).
+- **Gurobi는 한 프로세스만**: 캡처는 차례로, "already running"이면 재시도(5초 간격 래퍼). 오라클·기준선 캡처 중에는 다른 Gurobi 실행을 띄우지 않는다.
+- **디버그 출력**: `RSOLVER_DEBUG=1`이면 `simplex.rs`가 dual 종료 상태와 해의 bound 위반을 stderr로 낸다(풀이 끝에서만, 반복마다 아님).
+- 경로 비교: rsolver의 `Model._path`(반복, 진입, 이탈)와 `bench/oracle/path1`을 맞춰 본다. 스냅숏의 `r`/`q` 필드는 직전 반복 값이다.
+- 오래 걸리는 점검은 Herdr pane에서 돌린다(`AGENTS.md`).
