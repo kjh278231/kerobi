@@ -152,7 +152,7 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 ### 9.2 지금 상태 (2026-11-05)
 
 코드:
-- `crates/lp`: `scaling.rs`(64/64 비트), `spx.rs`, `start.rs`(crash, `vstat` 64/64), `lu.rs`(singleton 단계 원본대로 + Markowitz(단순 탐색, shortcut) + Forrest–Tomlin 갱신, 원본 BTRAN 경로 에뮬레이션), `simplex.rs`(엔진: dual·primal·드라이버 `solve_model`).
+- `crates/lp`: `scaling.rs`(64/64 비트), `spx.rs`, `common.rs`(`aabbe3` 정렬), `pricing.rs`(CHUZR 모드 0·표시·비용 가중, 모드 1은 근사), `start.rs`(crash, `vstat` 64/64), `lu.rs`(singleton 단계 원본대로 + Markowitz(단순 탐색, shortcut) + Forrest–Tomlin 갱신, 원본 BTRAN 경로 에뮬레이션), `simplex.rs`(엔진: dual·primal·드라이버 `solve_model`).
 - dual은 원본 구조(crash → 자유 열 피벗 → 첫 분해 → 정확한 DSE 노름 → 반복)를 따르지만 반복 내부는 아직 교과서식이다: CHUZR는 위반²/w 최대, ratio test는 Harris 묶음 단위 BFRT + 비용 이동, 섭동은 퇴화 50회 연속이면 1회(난수는 LCG). 원본 규칙이 아니라 반복 경로가 다르다.
 - primal은 phase 1(위반 합)·phase 2, Dantzig 가격, Harris 비율 검사의 교과서식이다(`0478d3` 계열 미이식). Method=0과 dual 뒤 정리에 쓴다.
 - Python: 읽은 LP와 API로 만든 LP 모두 `optimize()`가 새 엔진을 쓴다. MIP는 M2까지 오류(배낭 테스트 xfail). `crates/core` 삭제 완료. SIMPLEX 콜백은 풀이 뒤 반복 기록으로 재생한다. `Work`는 아직 0이다.
@@ -160,9 +160,9 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 
 | 기준 | 현재 | 비고 |
 |---|---|---|
-| (1) 정확성 Method 1 | 91개 중 85개(BFRT 전 전체 점검). 이후 grow22·fit2p·maros-r7은 고쳤다 | **BFRT 도입 뒤 회귀**: israel이 flip만 한 반복 직후 INFEASIBLE 오판, perold NUMERIC. pilot·pilot87은 10만 반복에도 수렴 못 함. dfl001은 디버그 빌드로 시간 초과였다(release 재점검 필요) |
-| (1) 정확성 Method 0 / 기본 | 미점검 | `tools/lp_check.py --methods 0,-1` |
-| (2) P1 반복 수 | 2/64(BFRT 전) | 경로 비교: afiro·sc50a·sc50b·adlittle·kb2·sc105·recipe는 첫 1–6 피벗이 맞고, blend·share2b·boeing2·israel은 첫 피벗부터 다르다 |
+| (1) 정확성 Method 1 | Netlib 64개 64/64(2026-11-05, 원본 CHUZR 적용 뒤). 91개 전체는 dfl001이 release 300초 초과 | israel(flip 잔여)·perold 해결. pilot·pilot87·dfl001은 속도 문제로 미확인 |
+| (1) 정확성 Method 0 / 기본 | 미점검 | 기본 = dual 경로라 Method 1과 같다. Method 0(교과서식 primal)은 25fv47에서 300초 초과 |
+| (2) P1 반복 수 | 4/64 | CHUZR(모드 0 목록, 인공 bound 단계) 적용 뒤 작은 LP 12개는 나가는 변수가 대부분 맞고 첫 분기가 **들어오는 변수**(BFRT)로 옮겨졌다: afiro 피벗 1, kb2 1, blend 1, adlittle 2, boeing2 2, recipe 3, stocfor1 5, sc105 7, sc50a 8, sc50b 15. share2b·israel은 피벗 0 |
 | (3) P2 work | 미구현 | 작업량 계수 spx+0x148(1.3, m > 10000이면 보정), 커널마다 연산 수 누적 |
 | (4) P3 시간 | 미측정 | release에서 25fv47 0.5–0.7초 대 Gurobi 0.09초. 반복마다 O(n+m) 루프와 조밀 FTRAN/BTRAN이 원인 |
 | (5) 구조 | LU(Markowitz·FT), crash, dual·primal, 드라이버 일부 | Quad(F80) 미착수, `0c3d0d` 분기(웜스타트·network·sifting·비스케일 재풀이) 미이식, common(난수 `a7b4d6`/`a7b54f`) 미이식 |

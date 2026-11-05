@@ -4,6 +4,7 @@
 pub mod common;
 pub mod fp;
 pub mod lu;
+pub mod pricing;
 pub mod scaling;
 pub mod simplex;
 pub mod spx;

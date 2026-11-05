@@ -7,6 +7,7 @@
 //! shortcut: pricing (DSE max over all rows, not the `15d2d` candidate list), Harris 2-pass instead of BFRT, the
 //! perturbation trigger and the refactor schedule are textbook stand-ins; iteration paths differ from Gurobi's.
 use crate::lu::{sum_squares, Lu, ZERO};
+use crate::pricing::{Pricing, BIG_M_TOL};
 use crate::spx::Spx;
 use crate::start::start_basis;
 use rsolver_model::INFINITY;
@@ -50,6 +51,9 @@ pub struct Engine<'a> {
     /// Columns refused as entering after a pivot mismatch on a fresh factorization; cleared after a pivot.
     rejected: Vec<bool>,
     pub trace: Vec<TraceRow>,
+    /// Dual pricing state (P = spx+0x478) and the artificial-bound phase flag spx+0x2cc.
+    pub pr: Pricing,
+    pub big_m: bool,
     /// Pivot path: (iteration, entering column, leaving column); bound flips of the entering column leave −1.
     pub path: Vec<(u64, i64, i64)>,
 }
@@ -84,6 +88,8 @@ impl<'a> Engine<'a> {
             in_dual: false,
             rejected: vec![false; n + m],
             trace: Vec::new(),
+            pr: Pricing::new(m, n, &spx.len),
+            big_m: false,
             path: Vec::new(),
         }
     }
@@ -135,6 +141,9 @@ impl<'a> Engine<'a> {
         self.compute_duals();
         if self.in_dual && self.make_dual_feasible() {
             self.compute_xb();
+        }
+        if self.in_dual {
+            self.price_full();
         }
     }
 
@@ -285,6 +294,129 @@ impl<'a> Engine<'a> {
         self.trace.push((self.iter, z, p, d, self.perturbed));
     }
 
+    /// CHUZR violation of position p: a finite bound missed by more than the tolerance (1e19 in the
+    /// artificial-bound phase).
+    fn viol(&self, p: usize) -> Option<f64> {
+        let j = self.head[p];
+        let tol = if self.big_m { BIG_M_TOL } else { FEAS_TOL };
+        let (l, u, x) = (self.spx.l[j], self.spx.u[j], self.xb[p]);
+        if l - x > tol && l > -INFINITY {
+            Some(l - x)
+        } else if x - u > tol && u < INFINITY {
+            Some(x - u)
+        } else {
+            None
+        }
+    }
+
+    fn price_rebuild(&mut self) {
+        let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol(p)).collect();
+        let score: Vec<f64> =
+            (0..self.m).map(|p| viol[p].map_or(0.0, |v| self.pr.score(p, self.head[p], v, self.w[p]))).collect();
+        self.pr.allow = self.lu_interval as i64;
+        self.pr.rebuild(&viol, &score);
+    }
+
+    /// Full path of `1bae9c` after a factorization: BTRAN-cost weights from the new LU (`9e60b`), the switch to
+    /// Full pricing (m < 15·P+0x48 or m < iterations) and a fresh candidate list.
+    fn price_full(&mut self) {
+        if self.pr.cost_mode >= 1 {
+            let (c, ok) = self.lu.row_cost_estimate();
+            for (k, &(_, pos, _)) in self.lu.steps.iter().enumerate() {
+                self.pr.row_cost[pos] = c[k];
+            }
+            if !ok {
+                self.pr.cost_mode = 2;
+            }
+        }
+        if self.pr.mode == 0 && self.iter > 0 && ((self.m as f64) < 15.0 * self.pr.avg || (self.m as u64) < self.iter) {
+            self.pr.mode = 1;
+        }
+        if self.pr.mode == 0 {
+            self.price_rebuild();
+        }
+    }
+
+    /// CHUZR (`2896a3`): mode 0 walks the ordered list and rebuilds it when used up (P+0x38 rebuilds, then a
+    /// refactor); mode 1 takes the best score. None: no violated row.
+    fn chuzr(&mut self) -> Option<usize> {
+        if self.pr.mode == 1 {
+            let mut best: Option<(usize, f64)> = None;
+            for p in 0..self.m {
+                if let Some(v) = self.viol(p) {
+                    let s = self.pr.score(p, self.head[p], v, self.w[p]);
+                    if best.is_none_or(|(_, b)| s > b) {
+                        best = Some((p, s));
+                    }
+                }
+            }
+            return best.map(|b| b.0);
+        }
+        if let Some(p) = self.pr.next_listed() {
+            return Some(p);
+        }
+        self.pr.budget -= 1;
+        if self.pr.budget < 0 {
+            // reason 3: refactor; 1bae9c adds m to P+0x48, which makes the full path switch to mode 1
+            self.pr.avg += self.m as f64;
+            self.reinvert();
+            return self.chuzr();
+        }
+        self.price_rebuild();
+        if self.pr.list.is_empty() {
+            return None;
+        }
+        self.pr.cursor = 1;
+        Some(self.pr.list[0])
+    }
+
+    /// Mark positions whose x_B changed (mode 0) and rebuild the list once the allowance runs out.
+    fn price_touch(&mut self, changed: &[usize]) {
+        if self.pr.mode != 0 {
+            return;
+        }
+        for &p in changed {
+            let inf = self.viol(p).is_some();
+            self.pr.touch(p, inf);
+        }
+        if self.pr.allow < 0 {
+            self.pr.cursor = 0;
+            self.pr.budget -= 1;
+            if self.pr.budget < 0 {
+                self.pr.avg += self.m as f64;
+                self.reinvert();
+            } else {
+                self.price_rebuild();
+            }
+        }
+    }
+
+    /// `118725` at the end of the artificial-bound phase: a nonbasic on an artificial bound with a strictly
+    /// favourable reduced cost means unbounded; otherwise all of them move to their finite bound.
+    fn end_big_m(&mut self) -> Option<Status> {
+        for j in 0..self.n + self.m {
+            let dg = if self.vstat[j] == -2 { -self.d[j] } else { self.d[j] };
+            let art_up = self.vstat[j] == -2 && self.spx.u[j] >= INFINITY;
+            let art_lo = j < self.n && self.vstat[j] == -1 && self.spx.l[j] <= -INFINITY;
+            if (art_up || art_lo) && dg > OPT_TOL {
+                return Some(Status::Unbounded);
+            }
+        }
+        for j in 0..self.n + self.m {
+            if self.vstat[j] == -2 && self.spx.u[j] >= INFINITY {
+                self.vstat[j] = -1;
+            }
+        }
+        for j in 0..self.n {
+            if self.vstat[j] == -1 && self.spx.l[j] <= -INFINITY {
+                self.vstat[j] = -2;
+            }
+        }
+        self.big_m = false;
+        self.reinvert();
+        None
+    }
+
     /// Dual start: crash basis, free columns pivoted in, first factorization, x_B, d, exact DSE norms.
     pub fn dual_start(&mut self) {
         self.set_basis(start_basis(self.spx));
@@ -309,6 +441,9 @@ impl<'a> Engine<'a> {
         self.make_dual_feasible();
         self.compute_xb();
         self.exact_weights();
+        self.big_m = (0..self.n + self.m).any(|j| self.vstat[j] < 0 && self.x_nonbasic(j).abs() >= INFINITY);
+        self.in_dual = true;
+        self.price_full();
     }
 
     /// Put each boxed nonbasic on the bound its reduced cost asks for (048d5f L2025-2048).
@@ -370,23 +505,19 @@ impl<'a> Engine<'a> {
             if self.w.iter().any(|w| w.is_nan() || w.abs() > 1e30) {
                 self.w.iter_mut().for_each(|w| *w = 1.0);
             }
-            // CHUZR: largest infeasibility² / weight
-            let mut r = usize::MAX;
-            let mut best = 0.0;
-            for p in 0..self.m {
-                let v = self.primal_infeas(p);
-                if v != 0.0 {
-                    let s = v * v / self.w[p];
-                    if s > best {
-                        best = s;
-                        r = p;
+            let r = match self.chuzr() {
+                Some(r) => r,
+                None if self.big_m => {
+                    if let Some(st) = self.end_big_m() {
+                        return st;
                     }
+                    continue;
                 }
-            }
+                None => usize::MAX,
+            };
             if r == usize::MAX {
                 if self.lu.n_updates > 0 {
-                    self.refactor();
-                    self.compute_xb();
+                    self.reinvert();
                     if (0..self.m).any(|p| self.primal_infeas(p) != 0.0) {
                         continue;
                     }
@@ -459,15 +590,18 @@ impl<'a> Engine<'a> {
                         dx[i] += a * step;
                     }
                 }
-                if huge {
+                let changed: Vec<usize> = if huge {
                     // same as the pivot step below: artificial-bound-scale moves leave residue, recompute
                     self.compute_xb();
+                    (0..self.m).collect()
                 } else {
                     let dxb = self.lu.ftran_dense(dx);
                     for p in 0..self.m {
                         self.xb[p] -= dxb[p];
                     }
-                }
+                    (0..self.m).filter(|&p| dxb[p] != 0.0).collect()
+                };
+                self.price_touch(&changed);
                 if q == usize::MAX {
                     self.iter += 1;
                     self.log();
@@ -542,6 +676,8 @@ impl<'a> Engine<'a> {
             let xq = self.x_nonbasic(q) + theta_p;
             let leave = if delta < 0.0 { -1 } else { -2 };
             let leave = if self.spx.u[out] - self.spx.l[out] <= 0.0 { -4 } else { leave };
+            let col_nnz = col.iter().filter(|&&a| a != 0.0).count();
+            let updates_before = self.lu.n_updates;
             self.pivot(r, q, leave, &spike);
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;
@@ -551,6 +687,13 @@ impl<'a> Engine<'a> {
                 self.compute_xb();
             }
             self.iter += 1;
+            // P+0x48 = (2·nnz(α_q) + (k − 2)·P+0x48)/k with k the iteration count
+            let k = self.iter as f64;
+            self.pr.avg = (2.0 * col_nnz as f64 + (k - 2.0) * self.pr.avg) / k;
+            if self.lu.n_updates > updates_before {
+                let changed: Vec<usize> = (0..self.m).filter(|&p| p == r || col[p] != 0.0).collect();
+                self.price_touch(&changed);
+            }
             if !self.perturbed && degenerate > 50 {
                 self.perturb();
             }
