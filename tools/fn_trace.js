@@ -4,7 +4,7 @@
 // spec: {"model": "afiro", "params": {"Method": 1}, "max": 200000,
 //        "fns": [{"name": "chuzr", "off": "0xccbc0", "enter": ["i:0x2f8"], "leave": ["i:0x2f8", "Pi:0x40"]}]}
 // field codes, relative to args[0] (spx) saved at entry: i:/d:/l: int/double/long at spx+off;
-// Pi:/Pd: at P+off with P = *(spx+0x478); dv:/Pdv:off:k = k-th double of the array *(base+off), iw:/Piw: int; ai:N / al:N raw integer argument N; SV:off sparse vector {count, idx, val} at *(spx+off); AX/AXI:off array gathered at the alpha indices; XR leaving row; OUT:i:j output list; aD:i:N / aI:i:N arrays at args[i] (N = n0: args[0]); ret = return value (rax).
+// Pi:/Pd: at P+off with P = *(spx+0x478); Li:/Ld:/Ll: at L+off with L = *(spx+0x470) (LU); dv:/Pdv:off:k = k-th double of the array *(base+off), iw:/Piw: int; ai:N / al:N raw integer argument N; SV:off sparse vector {count, idx, val} at *(spx+off); AX/AXI:off array gathered at the alpha indices; XR leaving row; OUT:i:j output list; aD:i:N / aI:i:N arrays at args[i] (N = n0: args[0]); ret = return value (rax).
 // Gurobi may run in one process only (gurobi_guard.pth): retry later on "already running".
 const FRIDA = process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida';
 const frida = require(FRIDA);
@@ -47,6 +47,7 @@ function rd(spx, code, args, ret) {
   if (k === 'al') return args[+v].toString();
   let p = spx;
   if (k[0] === 'P') p = spx.add(0x478).readPointer();
+  if (k[0] === 'L') p = spx.add(0x470).readPointer();
   let a = p.add(parseInt(v));
   if (k === 'AX' || k === 'AXI') {  // AX:off values of array *(spx+off) gathered at the alpha indices (spx+0x208)
     const sv = spx.add(0x208).readPointer(), cnt = sv.readS32(), ii = sv.add(8).readPointer();
