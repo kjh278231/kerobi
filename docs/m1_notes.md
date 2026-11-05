@@ -59,6 +59,7 @@ M1 진행 중에 알아낸 사실과 작업 방법. 확정된 내용은 해당 �
 - 큰 피벗 문턱 `local_120`: 아직 반복이 없고(spx+0x2a0 + spx+0x20 == 0) WARMBASIS(spx+0x160) ∈ {1, 2}이면 INFBOUND, 아니면 1e99.
 - 채움 예산: `avg = nnzB/m`. m < 500이면 `avg²`, m < 3000이면 `avg·sqrt(…)`, m < 10000이면 `avg·sqrt(sqrt(…))`(인자는 asm 확인), 그 이상은 avg 그대로. `budget = max(cap/5, 2·m·min(그 값, m/2 + 2))`.
 - 순열 배열 두 개(param_12[3], [2])를 −1로 채운 뒤 singleton 단계 `1da0b2`를 부른다. 그다음 Markowitz(앞의 노트 13 §3.6)와 조밀 전환(채움 > 0.36·n², n > 50 → MKL dgetrf).
+- 확인(2026-11-05): 오라클 기저로 `xB = B⁻¹(b − N·x_N)`(slack 계수 +1, 비기저는 상태대로 l/u)를 numpy로 풀면 상대 오차 ≤ 3e-15로 맞지만 마지막 비트는 몇 개 다르다(afiro 27/27, sc50a 47/50, adlittle 50/56 비트 일치). 비트 일치에는 LU·FTRAN의 정확한 포팅이 필요하다.
 - 검증 계획: 오라클의 반복 0 `vstat`로 같은 기저를 만들고, 내 LU로 계산한 `xB`가 오라클 `xB`와 비트 단위로 같은지 본다(시작 기저 crash와 떼어 LU·FTRAN만 시험).
 
 ## 7. 진행
