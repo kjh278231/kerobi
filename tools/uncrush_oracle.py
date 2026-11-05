@@ -55,7 +55,9 @@ def records(post):
     out, r = [], L(post + 0x80)
     while r:
         t, d = I(r), L(r + 8)
-        e = {"type": t, "data": d & 0xF}
+        # rec = list node (type, data ptr, next ptr, ?); raw = first 0x90 bytes of the data block (layouts, array pointers)
+        e = {"type": t, "data": d & 0xF, "rec": r, "ptr": d, "raw": bytes((ctypes.c_ubyte * 0x90).from_address(d)).hex(),
+             "hdr": bytes((ctypes.c_ubyte * 0x20).from_address(r)).hex()}
         if t == 1:  # j, v, obj, status @+0x18, n @+0x1c, ind @+0x20, val @+0x28
             e.update(j=I(d), v=D(d + 8).hex(), obj=D(d + 16).hex(), status=I(d + 0x18), n=I(d + 0x1c), val_al=L(d + 0x28) & 0xF)
         elif t == 2:  # j, r, c0, a, obj, n @+0x20, ind @+0x28, val @+0x30, mode/ncol @+0x38

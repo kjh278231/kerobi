@@ -551,7 +551,7 @@ impl State {
             self.work += self.row_len[iu] as f64 * 6.0;
         }
         self.work += len as f64 * 7.0;
-        self.post.push(PostRec::DualFix { j: j as i32, dir, rows, terms });
+        self.post.push(PostRec::DualFix { j: j as i32, dir, bound: if dir == 1 { self.lb[j] } else { self.ub[j] }, rows, terms });
     }
 }
 

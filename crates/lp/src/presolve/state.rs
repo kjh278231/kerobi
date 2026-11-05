@@ -14,8 +14,8 @@ pub enum PostRec {
     /// column, 1/2 implied upper/lower bound (row kept as inequality); `col` the column's other entries.
     Subst { j: i32, r: i32, c0: f64, a: f64, obj: f64, mode: i32, row: Vec<(i32, f64)>, col: Vec<(i32, f64)> },
     /// type 3 (`4f39e3`): column `j` with its rows dropped; it moves toward `dir` (1 up, 0 down) as far as the
-    /// rows allow. `rows[t]` = (row, rhs/a), `terms[t]` = the row's other (column, -a_k/a).
-    DualFix { j: i32, dir: i32, rows: Vec<(i32, f64)>, terms: Vec<Vec<(i32, f64)>> },
+    /// rows allow, starting from `bound` (lb for `dir` 1, ub for 0). `rows[t]` = (row, rhs/a), `terms[t]` = the row's other (column, -a_k/a).
+    DualFix { j: i32, dir: i32, bound: f64, rows: Vec<(i32, f64)>, terms: Vec<Vec<(i32, f64)>> },
     /// type 7 (`4ffe11`): singleton row `r` became bound(s) of column `j` (`code` 1 lower, 2 upper, 3 both)
     /// at `x`; its dual is recovered from `j`'s reduced cost and `a`.
     SingletonRow { j: i32, r: i32, code: i32, a: f64, x: f64 },
