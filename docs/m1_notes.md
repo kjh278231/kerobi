@@ -269,4 +269,4 @@ L = `re/decomp/c/000e45c0_PRIVATE0000000000048d5f.c` 줄. OT는 진입 때 복�
 | A | 스케일링 `07d3ce`(ScaleFlag 3 경로) | **완료**: `crates/lp/src/scaling.rs`, 열·행·목적 스케일 64/64 비트 일치(`tests/test_scaling.py`, 기준 `bench/gurobi_spx0`) |
 | B | setup `02f7e1`, dual 초기화 `0534f7`(시작 기저) | crash + 재번호 `vstat` 64/64(`crates/lp/src/start.rs`, §5.1). 자유 열 피벗 루프 남음 |
 | C | LU(`036ade`, `1da0b2`, MKL dgetrf), FTRAN/BTRAN, LU 갱신 `05b257` | singleton 단계 + 조밀 FTRAN: xB 60/60 비트 일치(`crates/lp/src/lu.rs`, `tests/test_scaling.py`). BTRAN·d 60/60 비트 일치(프로토타입). BTRAN·d·DSE 가중치 60/60 비트 일치(`Lu::btran`, `dual_start`, §6.6). Markowitz, LU 갱신 남음 |
-| D | dual 반복(`028c93` 외) → 반복 0·1 궤적 일치 | 대기 |
+| D | dual 반복(`028c93` 외) → 반복 0·1 궤적 일치 | 진행 중: CHUZR·BFRT·DSE·d 갱신·재분해 시점·자유 열 루프·행 사본/α 순서·SHIFT·GLOBAL 섭동 식·RNG. Netlib 64 반복 수 일치 11, ±5% 39, 정확 63/64(§8.8–8.9). 다음: LU 갱신 뒤 BTRAN 순서(FT 저장 원본화), 섭동 발동 조건, primal 이식 |
