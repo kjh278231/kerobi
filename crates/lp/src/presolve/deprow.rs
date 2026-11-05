@@ -6,11 +6,13 @@ use super::reduce::ColTols;
 use super::state::State;
 
 const NIL: u32 = u32::MAX;
-/// GURO_PAR_ZERO (env+0x2498): fill-in and cancellation threshold.
+/// GURO_PAR_ZERO (env+0x2498): fill-in and cancellation threshold. shortcut: not in Params, default assumed;
+/// add it before running with GURO_PAR_ZERO set.
 const ZERO: f64 = 1e-13;
 /// pivots and lines below this are "tiny" (local_1c0)
 const TINY: f64 = 1e-6;
-/// max(MarkowitzTol, 0.01); MarkowitzTol (env+0x2478, default 0.0078125) is not in Params.
+/// max(MarkowitzTol, 0.01). shortcut: MarkowitzTol (env+0x2478, default 0.0078125) is not in Params; add it
+/// before running with MarkowitzTol > 0.01.
 const MARKOWITZ: f64 = 0.01;
 
 /// A matrix entry (32-byte node of the original): `row`/`col` are sub-matrix indices, `col` -1 = dead.

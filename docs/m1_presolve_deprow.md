@@ -101,10 +101,13 @@ loop {
 |---|---|
 | 기본값 | 64/64 (전에는 62/64). degen2는 CR2007A, CR2027B, degen3은 CR2084A, CR2084B를 지운다 |
 | PRELIMIT = 각 모델의 mode 1·mode 2 호출 번호(60개 모델, 20–93) | 120/120 (`5b488d` 병합 뒤. 병합 전에는 finnis 40/41, forplan 28/29, ganges 80/81이 바로 앞 `5b488d` 체크포인트부터 달랐다) |
-| PreDepRow = 0 / 1, DualReductions = 0 | 64/64 / 64/64 / 64/64 (병합 전). PreDepRow 범위는 −1..1이라 2, 3은 Gurobi가 받지 않는다 |
+| PreDepRow = 0 / 1, DualReductions = 0 | 64/64 / 64/64 / 64/64. PreDepRow 범위는 −1..1이라 2, 3은 Gurobi가 받지 않는다 |
 | uncrush (`tools/postsolve_check.py`, 기본값 오라클) | 59/59 (uncrush 없는 5개 제외). degen2, degen3도 통과한다(모델 크기가 맞아졌다) |
 
-Netlib에서 mode 2가 고정하는 열은 없다. 3001 이상 분기, 포기 조건, 작은 줄 분기는 Netlib에서 확인하지 못했다(정적 해독만).
+기본값에서 실제로 돈 경로(임시 추적, 커밋 안 함):
+- 탐색·피벗: 13개 모델(25fv47, adlittle, bnl1, bore3d, brandy, degen2, degen3, ganges, maros, scfxm1–3, share1b), 모두 mode 1. 피벗 252번(열 방향 178, 행 방향 74), 열 버킷 회전 172번. degen2는 Markowitz 피벗 41번(싱글턴 포함 161번), degen3은 154번(622번) 뒤 빈 행 2개씩이 남는다.
+- mode 2는 brandy, perold, pilot4에서 싱글턴만으로 끝난다. 고정하는 열은 없다.
+- 한 번도 돌지 않은 것(정적 해독만): 행 버킷 회전, 작은 줄(TINY) 분기, 노드 부족 시 전체 압축과 청크 추가, 두 포기 조건, 3001 이상 분기, mode 2 탐색, 상태 코드 3/5.
 
 ## 7. 남은 것
 
