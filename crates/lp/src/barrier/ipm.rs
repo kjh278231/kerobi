@@ -7,6 +7,7 @@
 //! choice (`2c4689`); the last iterate is returned. None of them fires on the 64 bench LPs (docs/m3_ipm.md §8).
 #![allow(clippy::needless_range_loop)] // index loops over parallel arrays, as in the original
 use super::normal::Factor;
+use super::ordering::Symbolic;
 use super::setup::{dot, Lp};
 use super::{BarResult, IterInfo, Params};
 
@@ -282,6 +283,12 @@ impl<'a> Ipm<'a> {
         }
         let st = &mut self.st;
         st.x = self.fac.solve(&rx, &lp.b).0;
+        if let Ok(path) = std::env::var("BARDUMP") {
+            use std::io::Write;
+            let hx = |v: &[f64]| v.iter().map(|x| format!("\"{:016x}\"", x.to_bits())).collect::<Vec<_>>().join(",");
+            let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap();
+            writeln!(f, "{{\"iter\":-1,\"x\":[{}]}}", hx(&st.x)).unwrap();
+        }
         st.w = (0..n).map(|j| if lp.up[j] { lp.ub[j] - st.x[j] } else { 0.0 }).collect();
         // candidate 1: y = 0, c split between z (lower) and s (upper) by column type
         st.y = vec![0.0; m];
@@ -603,7 +610,7 @@ fn terminate(lp: &Lp, r: &Res, it: usize, hmu: &[f64], hcompl: &[f64], p: &Param
 }
 
 /// Whole barrier loop. `f160` = 2 nnz(L), `f168` = factor work estimate (`2e7f38`).
-pub fn run(lp: &Lp, f160: f64, f168: f64, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> BarResult {
+pub fn run(lp: &Lp, sym: &Symbolic, f160: f64, f168: f64, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> BarResult {
     let (m, n) = (lp.m as f64, lp.n as f64);
     let fin: Vec<usize> = (0..lp.n).filter(|&j| lp.ub[j] < 1e30).collect();
     let nub = fin.last().map_or(0.0, |&l| (l + 1 - fin[0]) as f64); // B+0x634 − B+0x630
@@ -620,7 +627,7 @@ pub fn run(lp: &Lp, f160: f64, f168: f64, p: &Params, cb: &mut dyn FnMut(&IterIn
     let r0 = if lp.m == 0 { 1.0 } else { (2.0 * nnz2 + f160) / f168 };
     let mut ipm = Ipm {
         lp,
-        fac: Factor::new(lp),
+        fac: Factor::new(lp, sym),
         st: State { x: vec![], z: vec![], y: vec![], w: vec![], s: vec![], tau: 1.0, kappa: 0.0 },
         mode1: false,
         dtrue: vec![],
@@ -644,6 +651,16 @@ pub fn run(lp: &Lp, f160: f64, f168: f64, p: &Params, cb: &mut dyn FnMut(&IterIn
         // μ stalled (never NaN here: terminate returned 13 on it)
         if it >= 11 && hmu[it - 1] > hmu[it - 2] * 0.99 {
             recenter(lp, &mut ipm.st, &mut r.rd, r.compl);
+        }
+        if let Ok(path) = std::env::var("BARDUMP") {
+            // debug: iterate at the callback, doubles as bit patterns (tools/proto/bar_cmp.py)
+            use std::io::Write;
+            let st = &ipm.st;
+            let hx = |v: &[f64]| v.iter().map(|x| format!("\"{:016x}\"", x.to_bits())).collect::<Vec<_>>().join(",");
+            let sc = [r.compl, r.mu, r.rp2, r.rd2, r.ru2, r.pobj, r.dobj, r.rp_rel, r.rd_rel, r.ctx];
+            let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap();
+            writeln!(f, "{{\"iter\":{it},\"x\":[{}],\"y\":[{}],\"z\":[{}],\"w\":[{}],\"s\":[{}],\"sc\":[{}],\"rd\":[{}],\"rp\":[{}]}}",
+                hx(&st.x), hx(&st.y), hx(&st.z), hx(&st.w), hx(&st.s), hx(&sc), hx(&r.rd), hx(&r.rp)).unwrap();
         }
         cb(&IterInfo {
             iter: it,

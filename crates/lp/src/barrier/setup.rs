@@ -21,6 +21,8 @@ pub struct Lp {
     rbeg: Vec<usize>,
     rind: Vec<usize>,
     rval: Vec<f64>,
+    /// position of each row-wise entry in the column arrays (B+0x120)
+    rpos: Vec<usize>,
     /// b after the lb shift, c (minimisation: sense · obj), lb (shift), ub (u = ub − lb for boxed columns).
     pub b: Vec<f64>,
     pub c: Vec<f64>,
@@ -80,11 +82,13 @@ pub fn lp_from_model(md: &Model, perm: &[i32], tol: f64) -> Lp {
         rbeg[i + 1] = rbeg[i] + cnt[i];
     }
     let (mut rind, mut rval, mut at) = (vec![0; ind.len()], vec![0.0; ind.len()], rbeg[..m].to_vec());
+    let mut rpos = vec![0; ind.len()];
     for j in 0..n {
         for k in beg[j]..beg[j + 1] {
             let i = ind[k];
             rind[at[i]] = j;
             rval[at[i]] = val[k];
+            rpos[at[i]] = k;
             at[i] += 1;
         }
     }
@@ -109,6 +113,7 @@ pub fn lp_from_model(md: &Model, perm: &[i32], tol: f64) -> Lp {
         rbeg,
         rind,
         rval,
+        rpos,
         b: vec![],
         c,
         lb: lbd.clone(),
@@ -182,6 +187,16 @@ impl Lp {
                 if self.eq[i] { r } else { r + x[self.n + i] }
             })
             .collect()
+    }
+
+    /// Row i of A as (column, position in the column arrays), columns ascending.
+    pub(crate) fn row_entries(&self, i: usize) -> impl Iterator<Item = (usize, usize)> + '_ {
+        (self.rbeg[i]..self.rbeg[i + 1]).map(|k| (self.rind[k], self.rpos[k]))
+    }
+
+    /// Offset of row i's first entry in the row-wise arrays (its 16-byte phase decides the `2d3b3e` peel).
+    pub(crate) fn row_start(&self, i: usize) -> usize {
+        self.rbeg[i]
     }
 
     /// `2d3d91`: [Aᵀy; y_i on non-'=' rows, 0 on '=' rows].

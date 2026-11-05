@@ -14,7 +14,7 @@ pub struct Factor<'a> {
 }
 
 impl<'a> Factor<'a> {
-    pub fn new(lp: &'a Lp) -> Factor<'a> {
+    pub fn new(lp: &'a Lp, _sym: &super::ordering::Symbolic) -> Factor<'a> {
         let nm = Normal::new(lp.m, &lp.beg, &lp.ind);
         let ldl = Ldl::symbolic(lp.m, &nm.ap, &nm.ai);
         Factor { lp, nm, ldl, th: vec![] }

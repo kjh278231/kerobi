@@ -6,6 +6,7 @@
 pub mod chol;
 pub mod ipm;
 pub mod ldl;
+pub mod mkl;
 pub mod normal;
 pub mod ordering;
 pub mod setup;
@@ -57,7 +58,7 @@ pub fn solve(m: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> BarResult 
     let sym = ordering::analyze(m);
     let lp = setup::lp_from_model(m, &sym.perm, p.bar_conv_tol);
     let (f160, f168) = work_estimates(&sym, m.num_constrs(), cpu_divisor());
-    ipm::run(&lp, f160, f168, p, cb)
+    ipm::run(&lp, &sym, f160, f168, p, cb)
 }
 
 /// `2e7f38`: (F+0x160 = 2 nnz(L), F+0x168 = factor work estimate) from the symbolic statistics.
