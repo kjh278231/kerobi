@@ -1,0 +1,5 @@
+{"model": "sc50a", "params": {"Method": 1},
+ "fns": [
+  {"name": "lu5b257", "off": "0xf15c0", "enter": ["i:0x294", "Li:0x18c", "Li:0x188", "Ll:0x1e0", "Ll:0x1e8", "Ll:0x190", "Li:0x184", "i:0x46c", "d:0x158"]},
+  {"name": "df51", "off": "0xcd250"}
+ ]}

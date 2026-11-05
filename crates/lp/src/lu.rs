@@ -35,17 +35,90 @@ pub struct Lu {
     /// U has off-diagonals (Markowitz part or updates): BTRAN leaves the iteration-0 emulation.
     general: bool,
     pub n_updates: usize,
+    /// Steps taken by the singleton phases (the rest is the Markowitz kernel).
+    pub n_singleton: usize,
 }
 
 /// Markowitz threshold (MarkowitzTol default 2⁻⁷, spx+0x390).
 pub const MARKOWITZ_TOL: f64 = 0.0078125;
 
 impl Lu {
+    /// `9e60b`: estimated nonzeros of row k of B⁻¹ by factor step (P+0x68), for the BTRAN-cost pricing weights.
+    /// Each step starts at 1 and absorbs its Lᵀ row, then its U row from the last step down, as `p + q − pq/m`.
+    /// Returns the costs (`min(p + 100, 0.1m + 100)`) and false when Σp exceeds m·(0.1m + 100) (cost mode 2,
+    /// every cost at the cap).
+    pub fn row_cost_estimate(&self) -> (Vec<f64>, bool) {
+        let k = self.steps.len();
+        let mf = self.head.len() as f64;
+        let mut p = vec![1.0; k];
+        for s in 0..k {
+            for &(t, _) in &self.lrow[s] {
+                p[s] = (p[s] + p[t]) - p[t] * p[s] / mf;
+            }
+        }
+        for s in (0..k).rev() {
+            for &(t, _) in &self.urow[s] {
+                p[s] = (p[s] + p[t]) - p[t] * p[s] / mf;
+            }
+        }
+        let cap = mf * 0.1 + 100.0;
+        // shortcut: plain left-to-right sum; the original sums in 8 lanes (only matters at the threshold)
+        let total: f64 = p.iter().sum();
+        if total <= mf * cap {
+            (p.iter().map(|&x| (x + 100.0).min(cap)).collect(), true)
+        } else {
+            (vec![cap; k], false)
+        }
+    }
+
+    /// (nnz of L, nnz of U) of the factorization including the diagonals (LU+0x1e0, LU+0x1e8 after a factor).
+    pub fn factor_nnz(&self) -> (usize, usize) {
+        let m = self.head.len();
+        (m + self.lcol.iter().map(|c| c.len()).sum::<usize>(), m + self.ucol.iter().map(|c| c.len()).sum::<usize>())
+    }
+
+    /// Entries of all Forrest–Tomlin row etas (LU+0x184).
+    pub fn eta_nnz(&self) -> usize {
+        self.retas.iter().map(|e| e.1.len()).sum()
+    }
+
+    /// Basis positions after a factorization (0534f7/5b257): structural singleton steps in step order, then the
+    /// singleton slacks by row, then the Markowitz kernel in step order. Returns the old position of each new one.
+    pub fn renumbered(&self, n: usize) -> Vec<usize> {
+        let ns = self.n_singleton;
+        let mut order: Vec<usize> =
+            self.steps[..ns].iter().map(|s| s.1).filter(|&p| self.head[p] < n).collect();
+        let mut slacks: Vec<usize> = self.steps[..ns].iter().map(|s| s.1).filter(|&p| self.head[p] >= n).collect();
+        slacks.sort_by_key(|&p| self.head[p]);
+        order.extend(slacks);
+        order.extend(self.steps[ns..].iter().map(|s| s.1));
+        order
+    }
+
+    /// Relabel basis positions: `old_of_new[p]` is the old position of new position p.
+    pub fn relabel(&mut self, old_of_new: &[usize]) {
+        let m = self.head.len();
+        let mut new_of_old = vec![0; m];
+        for (np, &op) in old_of_new.iter().enumerate() {
+            new_of_old[op] = np;
+        }
+        self.head = old_of_new.iter().map(|&op| self.head[op]).collect();
+        self.kpos = old_of_new.iter().map(|&op| self.kpos[op]).collect();
+        for st in &mut self.steps {
+            st.1 = new_of_old[st.1];
+        }
+    }
+
     pub fn complete(&self) -> bool {
         self.steps.len() == self.head.len()
     }
 
     pub fn factor(spx: &Spx, head: &[usize]) -> Lu {
+        Lu::factor_tol(spx, head, MARKOWITZ_TOL)
+    }
+
+    /// Factor with Markowitz threshold `tol` (MarkowitzTol, raised by the numerics ladder).
+    pub fn factor_tol(spx: &Spx, head: &[usize], tol: f64) -> Lu {
         let (m, n) = (spx.m, spx.n);
         let mut rc = vec![0usize; m];
         for &j in head {
@@ -82,6 +155,7 @@ impl Lu {
             level: None,
             general: false,
             n_updates: 0,
+            n_singleton: 0,
         };
         let mut ppos = vec![-1i64; m];
         let pivot = |lu: &mut Lu, ppos: &mut Vec<i64>, r: usize, pos: usize, d: f64| {
@@ -134,22 +208,24 @@ impl Lu {
             }
         }
         let ns = lu.steps.len();
-        // L and U of the singleton steps come straight from the columns (no value changes yet)
+        lu.n_singleton = ns;
         lu.lcol = vec![Vec::new(); m];
         lu.ucol = vec![Vec::new(); m];
+        if ns < m && !lu.markowitz(spx, &mut ppos, tol) {
+            return lu; // singular: incomplete
+        }
+        // L and U of the singleton steps come straight from the columns (their pivot rows have no other active
+        // entries, so the Markowitz values are unaffected); taken after Markowitz so every row has its step
         for k in 0..ns {
             let (_, pos, d) = lu.steps[k];
             for (i, a) in spx.col(head[pos]) {
                 let ki = lu.prow[i];
                 if ki > k as i64 {
                     lu.lcol[k].push((i, a / d));
-                } else if ki >= 0 && ki < k as i64 {
+                } else if ki < k as i64 {
                     lu.ucol[k].push((i, a));
                 }
             }
-        }
-        if ns < m && !lu.markowitz(spx, &mut ppos) {
-            return lu; // singular: incomplete
         }
         lu.finish();
         lu
@@ -158,7 +234,7 @@ impl Lu {
     /// Markowitz threshold pivoting on the part the singleton phases leave (rows and positions not yet pivoted).
     /// shortcut: a plain lowest-cost search, not `036ade`'s candidate lists, tie rules, 2x2 blocks or dense dgetrf
     /// switch; the pivot sequence (so the bits) differs from Gurobi's on non-triangular bases.
-    fn markowitz(&mut self, spx: &Spx, ppos: &mut [i64]) -> bool {
+    fn markowitz(&mut self, spx: &Spx, ppos: &mut [i64], tol: f64) -> bool {
         let m = self.head.len();
         // active rows by position with current values; U entries of the column in rows already pivoted
         let mut arow: Vec<Vec<(usize, f64)>> = vec![Vec::new(); m];
@@ -179,26 +255,50 @@ impl Lu {
         }
         let mut upos: Vec<Vec<(usize, f64)>> = vec![Vec::new(); m]; // U row of a Markowitz step, by position
         let get = |row: &Vec<(usize, f64)>, p: usize| row.iter().find(|e| e.0 == p).map(|e| e.1);
-        loop {
-            let left: Vec<usize> = (0..m).filter(|&p| ppos[p] < 0).collect();
-            if left.is_empty() {
-                break;
-            }
+        use std::collections::BTreeSet;
+        let mut cols: BTreeSet<(usize, usize)> = (0..m).filter(|&p| ppos[p] < 0).map(|p| (acol[p].len(), p)).collect();
+        let mut rset: BTreeSet<(usize, usize)> = (0..m).filter(|&i| self.prow[i] < 0).map(|i| (arow[i].len(), i)).collect();
+        while !cols.is_empty() {
+            // lowest Markowitz cost (r−1)(c−1) by count order; stop once no smaller count can beat the best
             let mut best: Option<(usize, usize, f64, usize)> = None; // (row, pos, value, cost)
-            for &p in &left {
-                let cmax = acol[p].iter().filter_map(|&i| get(&arow[i], p)).fold(0.0f64, |a, v| a.max(v.abs()));
-                if cmax <= ZERO {
-                    continue;
+            let mut seen = 0;
+            let cmax = |p: usize, arow: &Vec<Vec<(usize, f64)>>, acol: &Vec<Vec<usize>>| {
+                acol[p].iter().filter_map(|&i| get(&arow[i], p)).fold(0.0f64, |a, v| a.max(v.abs()))
+            };
+            let maxc = cols.iter().next_back().map_or(0, |e| e.0).max(rset.iter().next_back().map_or(0, |e| e.0));
+            for k in 1..=maxc {
+                if best.is_some_and(|b| b.3 <= (k - 1) * (k - 1)) || seen >= 4 {
+                    break;
                 }
-                let cc = acol[p].len();
-                for &i in &acol[p] {
-                    let v = get(&arow[i], p).unwrap();
-                    if v.abs() < MARKOWITZ_TOL * cmax || v.abs() <= ZERO {
-                        continue;
+                for &(_, p) in cols.range((k, 0)..(k + 1, 0)) {
+                    let cm = cmax(p, &arow, &acol);
+                    for &i in &acol[p] {
+                        let v = get(&arow[i], p).unwrap();
+                        if v.abs() >= tol * cm && v.abs() > ZERO {
+                            let cost = (arow[i].len() - 1) * (k - 1);
+                            if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
+                                best = Some((i, p, v, cost));
+                            }
+                        }
                     }
-                    let cost = (arow[i].len() - 1) * (cc - 1);
-                    if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
-                        best = Some((i, p, v, cost));
+                    seen += 1;
+                    if seen >= 4 {
+                        break;
+                    }
+                }
+                for &(_, i) in rset.range((k, 0)..(k + 1, 0)) {
+                    for &(p, v) in &arow[i] {
+                        let cm = cmax(p, &arow, &acol);
+                        if v.abs() >= tol * cm && v.abs() > ZERO {
+                            let cost = (k - 1) * (acol[p].len() - 1);
+                            if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
+                                best = Some((i, p, v, cost));
+                            }
+                        }
+                    }
+                    seen += 1;
+                    if seen >= 4 {
+                        break;
                     }
                 }
             }
@@ -208,14 +308,18 @@ impl Lu {
             ppos[p] = k as i64;
             self.steps.push((r, p, v));
             self.ucol[k] = std::mem::take(&mut early[p]);
+            cols.remove(&(acol[p].len(), p));
+            rset.remove(&(arow[r].len(), r));
             let prow_r: Vec<(usize, f64)> = arow[r].iter().copied().filter(|e| e.0 != p).collect();
             for &(p2, _) in &prow_r {
+                cols.remove(&(acol[p2].len(), p2));
                 acol[p2].retain(|&i| i != r);
             }
             for &i in &acol[p].clone() {
                 if i == r {
                     continue;
                 }
+                rset.remove(&(arow[i].len(), i));
                 let l = get(&arow[i], p).unwrap() / v;
                 self.lcol[k].push((i, l));
                 arow[i].retain(|e| e.0 != p);
@@ -227,6 +331,10 @@ impl Lu {
                         acol[p2].push(i);
                     }
                 }
+                rset.insert((arow[i].len(), i));
+            }
+            for &(p2, _) in &prow_r {
+                cols.insert((acol[p2].len(), p2));
             }
             acol[p].clear();
             upos[k] = prow_r;
@@ -524,7 +632,7 @@ pub fn basic_solution(spx: &Spx, vstat: &[i32]) -> Vec<f64> {
     Lu::factor(spx, &head).ftran_dense(rhs)
 }
 
-fn basis_head(m: usize, vstat: &[i32]) -> Vec<usize> {
+pub fn basis_head(m: usize, vstat: &[i32]) -> Vec<usize> {
     let mut head = vec![usize::MAX; m];
     for (j, &s) in vstat.iter().enumerate() {
         if s >= 0 {
@@ -649,6 +757,21 @@ mod tests {
                 assert!((dot - if p == q { 1.0 } else { 0.0 }).abs() < 1e-9, "btran row {p}");
             }
         }
+    }
+
+    #[test]
+    fn mixed_singleton_and_markowitz_basis_of_sc50a() {
+        // a basis the dual simplex reaches on sc50a: 8 singleton steps, the rest by Markowitz
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../re/bench/data/netlib/sc50a.mps.gz");
+        let md = rsolver_model::mps::read_file(path).unwrap();
+        let spx = Spx::new(&md);
+        let head = vec![
+            47, 40, 39, 38, 3, 25, 18, 7, 2, 17, 6, 1, 69, 58, 13, 14, 4, 11, 48, 50, 37, 19, 22, 8, 9, 10, 15, 30, 12, 29, 35,
+            20, 21, 36, 26, 27, 28, 34, 33, 31, 32, 0, 23, 24, 41, 42, 43, 44, 45, 46,
+        ];
+        let lu = Lu::factor(&spx, &head);
+        assert!(lu.complete());
+        check(&spx, &lu);
     }
 
     #[test]

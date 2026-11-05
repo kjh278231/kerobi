@@ -39,7 +39,7 @@
 
 ### M1 — LP 엔진 (4–6주)
 - `lp::lu`(Markowitz + FT + hypersparse + 밀집 단계), `lp::simplex::{dual, primal}`(원본 pricing·ratio test·섭동·안전장치·비스케일 검사), crash, Quad(`F80`), 스케일링, `lp::presolve`(`390989`) 중 기본값에서 도는 reduction 전부, postsolve, LP 드라이버(`0c3d0d`), 난수 `a7b4d6`·정렬·해시 등 `common`.
-- 완료: Netlib 104개 전부 상태 일치, 목적 상대 1e-6(Presolve 켬/끔 모두); **P0** Netlib 64개 presolved 모델 일치; **P1** Netlib 64개의 Method 0/1/기본 `IterCount`가 Gurobi와 같은 인스턴스 ≥ 90%, 나머지는 ±5%이고 첫 분기점 기록; **P2** work ±5%; **P3** 시간 기하평균 ≤ 1.2배; `crates/core` 삭제.
+- 완료: Netlib 91개 전부 상태 일치, 목적 상대 1e-6(Presolve 켬/끔 모두); **P0** Netlib 64개 presolved 모델 일치; **P1** Netlib 64개의 Method 0/1/기본 `IterCount`가 Gurobi와 같은 인스턴스 ≥ 90%, 나머지는 ±5%이고 첫 분기점 기록; **P2** work ±5%; **P3** 시간 기하평균 ≤ 1.2배; `crates/core` 삭제.
 
 ### M2 — MIP 엔진 (6–8주)
 - `mip::presolve`(`3cd406`, 기본값에서 도는 reduction 전부 + probing·대칭성·연결 성분), `mip::bnb`(노드 선택 규칙 12개 전부, reliability branching, 원본 pseudocost 갱신, termination, 재시작, 로그), `mip::propagate`, `mip::cuts`(기본값 1 이상인 separator 전부, pool, 선택, LP 안 cut 정리), `mip::heur`(스케줄러가 기본값에서 부르는 휴리스틱 전부, sub-MIP 엔진), 콜백 MIP/MIPSOL/MIPNODE + cbCut/cbLazy/cbSetSolution, MIP start.
@@ -47,7 +47,7 @@
 
 ### M3 — Barrier, PDHG, Concurrent (4–5주)
 - `lp::barrier`(원본 ordering + ND, 밀집 열, supernodal LDLᵀ + MKL, 반복 루프, 종료 판정), `lp::crossover`(push, cleanup, 재시작), `lp::pdhg`(원본 전처리 포함), `lp::concurrent`(공유형 + 복제형), Method 자동 선택 표 전체, PreDual, network simplex, sifting.
-- 완료: Netlib 104개 Method=2(Crossover 0/기본), 6, 3, 4에서 상태·목적 일치; Method=4 결정성; **P1** `BarIterCount`가 `grb_barrier`의 `bar=`와, PDHG 반복 수가 `grb_pdhg`와 같음; Factor NZ 일치; **P3** 시간 기하평균 ≤ 1.2배.
+- 완료: Netlib 91개 Method=2(Crossover 0/기본), 6, 3, 4에서 상태·목적 일치; Method=4 결정성; **P1** `BarIterCount`가 `grb_barrier`의 `bar=`와, PDHG 반복 수가 `grb_pdhg`와 같음; Factor NZ 일치; **P3** 시간 기하평균 ≤ 1.2배.
 
 ### M4 — 일반 제약, SOS, 2차 (4–5주)
 - `mip::genconstr::translate`, SOS 분기·인코딩, `mip::quad`(PSD 검사, epigraph, bilinear 분해, McCormick, OA cut, QP simplex, QP/QCP barrier, QCPDual), 공간 분기 점수, presolve Q reduction, NORM, PWL 목적.

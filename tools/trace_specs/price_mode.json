@@ -1,0 +1,6 @@
+{"model": "afiro", "params": {"Method": 1},
+ "fns": [
+  {"name": "price", "off": "0xc0050", "enter": ["Pi:0x40", "Pd:0x48", "d:0x2a0", "Pd:0x50", "i:0x64"], "leave": ["Pi:0x40", "Pd:0x48", "d:0x2a0", "Pd:0x50"]},
+  {"name": "df51", "off": "0xcd250"},
+  {"name": "chuzr", "off": "0xccbc0", "leave": ["i:0x2f8", "Pi:0x40", "Pd:0x48", "d:0x2a0", "Pd:0x50"]}
+ ]}

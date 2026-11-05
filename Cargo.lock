@@ -178,14 +178,9 @@ name = "rsolver"
 version = "0.1.0"
 dependencies = [
  "pyo3",
- "rsolver-core",
  "rsolver-lp",
  "rsolver-model",
 ]
-
-[[package]]
-name = "rsolver-core"
-version = "0.1.0"
 
 [[package]]
 name = "rsolver-lp"
