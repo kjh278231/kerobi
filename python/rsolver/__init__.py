@@ -1,5 +1,5 @@
 """gurobipy-shaped Python layer over the Rust core (re/notes/01: Python -> extension -> engine)."""
-from ._core import INF, solve_problem
+from ._core import INF, read_model, solve_problem
 
 
 class GRB:
@@ -7,6 +7,52 @@ class GRB:
     CONTINUOUS, INTEGER, BINARY = "C", "I", "B"
     OPTIMAL, INFEASIBLE, UNBOUNDED = 2, 3, 5
     INFINITY = INF
+
+    class Status:
+        LOADED, OPTIMAL, INFEASIBLE, INF_OR_UNBD, UNBOUNDED, CUTOFF, ITERATION_LIMIT, NODE_LIMIT = 1, 2, 3, 4, 5, 6, 7, 8
+        TIME_LIMIT, SOLUTION_LIMIT, INTERRUPTED, NUMERIC, SUBOPTIMAL, INPROGRESS, USER_OBJ_LIMIT = 9, 10, 11, 12, 13, 14, 15
+        WORK_LIMIT, MEM_LIMIT, LOCALLY_OPTIMAL, LOCALLY_INFEASIBLE = 16, 17, 18, 19
+
+    class Callback:  # same codes as gurobipy
+        POLLING, PRESOLVE, SIMPLEX, MIP, MIPSOL, MIPNODE, MESSAGE, BARRIER, MULTIOBJ, IIS, PDHG = range(11)
+        PRE_COLDEL, PRE_ROWDEL, PRE_SENCHG, PRE_BNDCHG, PRE_COECHG = 1000, 1001, 1002, 1003, 1004
+        SPX_ITRCNT, SPX_OBJVAL, SPX_PRIMINF, SPX_DUALINF, SPX_ISPERT = 2000, 2001, 2002, 2003, 2004
+        MIP_OBJBST, MIP_OBJBND, MIP_NODCNT, MIP_SOLCNT, MIP_CUTCNT, MIP_NODLFT, MIP_ITRCNT = 3000, 3001, 3002, 3003, 3004, 3005, 3006
+        MIPSOL_SOL, MIPSOL_OBJ, MIPSOL_OBJBST, MIPSOL_OBJBND, MIPSOL_NODCNT, MIPSOL_SOLCNT = 4001, 4002, 4003, 4004, 4005, 4006
+        MIPNODE_STATUS, MIPNODE_REL, MIPNODE_OBJBST, MIPNODE_OBJBND, MIPNODE_NODCNT, MIPNODE_SOLCNT = 5001, 5002, 5003, 5004, 5005, 5006
+        BARRIER_ITRCNT, BARRIER_PRIMOBJ, BARRIER_DUALOBJ, BARRIER_PRIMINF, BARRIER_DUALINF, BARRIER_COMPL = 7001, 7002, 7003, 7004, 7005, 7006
+
+
+class GurobiError(Exception):
+    def __init__(self, errno, message):
+        super().__init__(message)
+        self.errno, self.message = errno, message
+
+
+class Env:
+    def __init__(self, logfilename="", empty=False, params=None):
+        self.params = dict(params or {})
+
+    def setParam(self, name, value):
+        self.params[name] = value
+
+    def start(self):
+        return self
+
+    def dispose(self):
+        pass
+
+
+def read(filename, env=None):
+    """Read an MPS file (01 §1.5) into a model; arrays live in the Rust core."""
+    m = Model()
+    try:
+        m._core = read_model(str(filename))
+    except ValueError as e:
+        raise GurobiError(10012, str(e)) from None
+    m.ModelName, m.ModelSense = m._core.name, m._core.sense
+    m.Params = dict(env.params) if env else {}
+    return m
 
 
 class LinExpr:
@@ -85,6 +131,42 @@ class Model:
         self._vars, self._rows = [], []  # rows: ([(col, coef)...], lo, hi)
         self._obj, self.ModelSense = LinExpr(), GRB.MINIMIZE
         self.Status, self._x, self._objval = None, [], None
+        self._core, self.Params = None, {}
+
+    # Attributes of a model read from a file (01 §1.4); built models keep the prototype path below.
+    @property
+    def Fingerprint(self):
+        return self._core.fingerprint()
+
+    @property
+    def NumVars(self):
+        return len(self._core.obj) if self._core else len(self._vars)
+
+    @property
+    def NumConstrs(self):
+        return len(self._core.rhs) if self._core else len(self._rows)
+
+    @property
+    def NumNZs(self):
+        return self._core.num_nz if self._core else sum(len(r[0]) for r in self._rows)
+
+    @property
+    def IsMIP(self):
+        vt = self._core.vtype if self._core else "".join(v.vtype for v in self._vars)
+        return int(any(t != "C" for t in vt))
+
+    @property
+    def ObjCon(self):
+        return self._core.objcon if self._core else self._obj.const
+
+    def setParam(self, name, value):
+        self.Params[name] = value
+
+    def presolve(self):
+        raise GurobiError(10024, "presolve is not ported yet (M1)")
+
+    def dispose(self):
+        self._core = None
 
     def addVar(self, lb=0.0, ub=INF, obj=0.0, vtype=GRB.CONTINUOUS, name=""):
         if vtype == GRB.BINARY:
@@ -112,7 +194,9 @@ class Model:
     def setObjective(self, expr, sense=GRB.MINIMIZE):
         self._obj, self.ModelSense = _lin(expr), sense
 
-    def optimize(self):
+    def optimize(self, callback=None):
+        if self._core is not None:
+            raise GurobiError(10024, "LP/MIP engines are not ported yet (M1)")
         n = len(self._vars)
         obj = [0.0] * n
         for v, c in self._obj.terms.items():

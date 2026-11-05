@@ -6,11 +6,12 @@
 
 기간: 이전 추정(합 30–40주)은 재작성 기준이라 폐기한다. 포팅 규모가 4–7배이므로 M0에서 포팅 속도(의사코드 줄/주)를 재고 다시 잡는다. 아래 괄호의 주 수는 이전 값이고 참고용이다.
 
-### M0 — 뼈대 (1–2주)
+### M0 — 뼈대 (1–2주) — 관문 통과 2026-11-05
 - `model` 크레이트: `Model`, `SparseMat`, `Params`(표에서 생성), `Attrs`, MPS/LP 읽기·쓰기, 로그 싱크, `Work`/`Limits`.
 - `driver::optimize` 골격: 분류, Method 확정, 부호 반전, 상태 확정, 요약 로그. 엔진은 현재 `crates/core`의 밀집 simplex·B&B를 임시로 연결.
 - `py` + `python/rsolver`: gurobipy 모양 API 1차 범위([01 §3]), 파라미터 set/get, 속성 `__getattr__`, 콜백 브리지(where=POLLING/MESSAGE만).
 - 로컬 git 저장소, `tools/parity.py`(차등 하네스, [10 §6](10_porting.md)), 원본 MPS 리더·지문·파라미터 등록(`ac81d7`) 포팅.
+- 상태(2026-11-05): **P0 지문 102/102 일치로 관문 통과.** `crates/model`(모델 배열, MPS 리더, 지문), PyO3 `read_model`, Python `read`/`Env`/모델 속성/콜백 상수, 하네스의 rsolver 실행이 끝났다. 파라미터 표와 드라이버 골격은 M1에서 LP 드라이버와 함께 만든다.
 - 완료: Netlib 소형 10개를 MPS로 읽어 밀집 엔진으로 OPTIMAL; `tests/test_api.py` 통과; `cargo clippy` 경고 0; **P0 지문**: Netlib 64개 + `miplib_small` 38개의 지문이 Gurobi와 같음; 파라미터 기본값 전부 일치; parity 하네스가 Gurobi 쪽 추적을 저장함.
 
 ### M1 — LP 엔진 (4–6주)

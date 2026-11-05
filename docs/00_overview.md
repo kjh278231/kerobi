@@ -63,7 +63,7 @@
 | 항목 | 규약 | 근거 |
 |---|---|---|
 | 목적 방향 | 엔진 내부는 **항상 최소화**. 드라이버가 ModelSense=-1이면 목적·Cutoff·BestObjStop·BestBdStop 부호를 뒤집고 끝에서 되돌린다 | 노트 10 §1, 11 §3.17 |
-| 무한대 | `f64::INFINITY`. 사용자 bound는 `|b| ≥ 1e30`(`GRB.INFINITY`=1e100 입력도 허용)이면 무한으로 본다 | 노트 11 §4.4 INFBOUND 1e30 |
+| 무한대 | 내부 저장값은 원본처럼 **±1e30**이다. `|b| ≥ 1e30`(`GRB.INFINITY`=1e100 입력 포함)은 ±1e30으로 저장하고, 속성 API에서만 ±inf로 보여 준다. 지문이 이 비트 값을 해시하므로 `f64::INFINITY`로 바꾸면 P0가 깨진다 | 노트 11 §4.4 INFBOUND 1e30, 2026-11-05 메모리 확인 |
 | 행 저장 | `lo ≤ aᵀx ≤ hi` ranged row 하나로 통일. sense `<,=,>`와 RHS/Range는 API 레이어에서 변환 | 노트 12 §4.1 (`>`는 −1배로 `<` 저장) |
 | 허용오차 기본값 | FeasibilityTol 1e-6, OptimalityTol 1e-6, IntFeasTol 1e-5, MIPGap 1e-4, BarConvTol 1e-8, PDHG* 1e-6 | 노트 05, 14 §4.1 |
 | 상태 코드 | gurobipy와 같은 번호: 1 LOADED … 17 MEM_LIMIT, 18/19 FIRST_ORDER_OPTIMAL/INFEASIBLE | 노트 11 머리말 |

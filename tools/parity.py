@@ -63,8 +63,11 @@ def capture_one(gp, path, d, work_limit):
 
     env = gp.Env(params={"LogToConsole": 0, "LogFile": str(d / "log.txt"), "Threads": 1, "WorkLimit": work_limit})
     m = gp.read(str(path), env)
-    m.optimize(cb)
-    summary = {}
+    summary, errors = {}, {}
+    try:
+        m.optimize(cb)
+    except Exception as e:  # a stage the backend does not have yet; later stages still run
+        errors["optimize"] = repr(e)
     for a in SUMMARY:
         try:
             summary[a] = getattr(m, a)
@@ -73,13 +76,19 @@ def capture_one(gp, path, d, work_limit):
     if summary["Fingerprint"] is not None:
         summary["Fingerprint"] &= 0xFFFFFFFF
     m.dispose()
-    summary["log"] = parse_log((d / "log.txt").read_text())  # read before presolve() appends to the same log
+    log = d / "log.txt"
+    summary["log"] = parse_log(log.read_text()) if log.exists() else {}  # read before presolve() appends to it
     p = gp.read(str(path), env)
-    q = p.presolve()
-    q.write(str(d / "presolved.mps.gz"))
-    summary["presolved"] = [q.NumConstrs, q.NumVars, q.NumNZs]
+    try:
+        q = p.presolve()
+        q.write(str(d / "presolved.mps.gz"))
+        summary["presolved"] = [q.NumConstrs, q.NumVars, q.NumNZs]
+        q.dispose()
+    except Exception as e:
+        errors["presolve"] = repr(e)
     summary["trace_rows"] = len(rows)
-    q.dispose(); p.dispose(); env.dispose()
+    summary["errors"] = errors
+    p.dispose(); env.dispose()
     with gzip.open(d / "trace.csv.gz", "wt") as f:
         csv.writer(f).writerows(rows)
     json.dump(summary, open(d / "summary.json", "w"), indent=1)
@@ -94,7 +103,8 @@ def capture(backend, out, work_limit, names):
         try:
             capture_one(gp, insts[name], d, work_limit)
             s = json.load(open(d / "summary.json"))
-            print(f"{name:24s} status={s['Status']} it={s['IterCount']} nodes={s['NodeCount']} work={s['Work']:.3f}", flush=True)
+            print(f"{name:24s} status={s['Status']} it={s['IterCount']} nodes={s['NodeCount']} work={s['Work']} "
+                  f"errors={list(s['errors'])}", flush=True)
         except Exception:
             (d / "error.txt").write_text(traceback.format_exc())
             print(f"{name:24s} ERROR {traceback.format_exc().splitlines()[-1]}", flush=True)
@@ -114,7 +124,7 @@ def first_divergence(ref, test):
 
 def compare(ref_dir, test_dir, out_csv):
     cols = ["instance", "p0_fingerprint", "p0_presolved", "status", "iters", "bar_iters", "nodes", "root", "cuts",
-            "work_ratio", "first_divergence"]
+            "work_ratio", "first_divergence", "errors"]
     out, tally = [], {"p0": 0, "p1": 0, "n": 0}
     for rd in sorted(p for p in ref_dir.iterdir() if (p / "summary.json").exists()):
         td = test_dir / rd.name
@@ -123,15 +133,16 @@ def compare(ref_dir, test_dir, out_csv):
             out.append({"instance": rd.name, "first_divergence": "missing in test"})
             continue
         t = json.load(open(td / "summary.json"))
-        load = lambda d: [row for row in csv.reader(gzip.open(d / "trace.csv.gz", "rt"))]
+        load = lambda d: list(csv.reader(gzip.open(d / "trace.csv.gz", "rt"))) if (d / "trace.csv.gz").exists() else []
         same = lambda k: "ok" if r.get(k) == t.get(k) else f"{r.get(k)} vs {t.get(k)}"
-        same_log = lambda k: "ok" if r["log"].get(k) == t.get("log", {}).get(k) else f"{r['log'].get(k)} vs {t.get('log', {}).get(k)}"
+        same_log = lambda k: "ok" if r.get("log", {}).get(k) == t.get("log", {}).get(k) else f"{r.get('log', {}).get(k)} vs {t.get('log', {}).get(k)}"
         row = {"instance": rd.name,
                "p0_fingerprint": same("Fingerprint"),
-               "p0_presolved": "ok" if presolved_digest(rd) == presolved_digest(td) else f"{r['presolved']} vs {t.get('presolved')}",
+               "p0_presolved": "ok" if presolved_digest(rd) == presolved_digest(td) else f"{r.get('presolved')} vs {t.get('presolved')}",
                "status": same("Status"), "iters": same("IterCount"), "bar_iters": same("BarIterCount"), "nodes": same("NodeCount"),
                "root": same_log("root"), "cuts": same_log("cuts"),
                "work_ratio": f"{t['Work'] / r['Work']:.4f}" if r.get("Work") and t.get("Work") is not None else "",
+               "errors": "; ".join(f"{k}: {v[:60]}" for k, v in t.get("errors", {}).items()),
                "first_divergence": first_divergence(load(rd), load(td))}
         tally["n"] += 1
         tally["p0"] += row["p0_fingerprint"] == row["p0_presolved"] == "ok"

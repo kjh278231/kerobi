@@ -30,7 +30,7 @@ pub struct Model {
 
 - **지연 갱신**(노트 02 §단계 2, 11 §3.17): `addVar/addConstr`는 `pending`에 쌓고, `update()` 또는 `optimize()` 진입에서 반영한다. gurobipy의 UpdateMode=1 동작(추가 직후 참조 가능, 속성 질의는 update 뒤)을 따른다.
 - `SparseMat`: CSC 본체(`col_start: Vec<i64>`, `row_idx: Vec<i32>`, `val: Vec<f64>`)와 필요할 때 만드는 CSR 캐시. 64비트 nnz. 값 0은 저장하지 않는다.
-- 지문(`Model fingerprint: 0x%08x`): 원본 지문 함수를 포팅해 **같은 값**을 낸다. 지문이 같으면 같은 모델을 같은 순서로 읽은 것이고, 이것이 패리티 P0의 첫 검사다. 계산 함수는 `Fingerprint` 속성을 쓰는 `9828a1`·`c23877` 주변에서 찾는다.
+- 지문(`Model fingerprint: 0x%08x`): 원본 `a8c184`를 `crates/model/src/fingerprint.rs`로 포팅했다. 해시 한 단계는 `h = h·31 + (h >> 52) + bits(x · 1.9554777523817772)`이고, 더하는 값은 배율을 곱한 double의 **비트 패턴**이다. Ghidra 의사코드는 이것을 정수 변환 `(long)`으로 잘못 보였고, 어셈블리(`add rax,[mem]` at 0x895a50)로 바로잡았다. -0.0은 0.0으로 바꿔 해시한다. 2026-11-05 기준 bench 102개 전부 Gurobi와 같은 값이다(M0 관문).
 
 ### 1.2 `Env` / `Params`
 
@@ -80,7 +80,12 @@ pub struct Result {
 ### 1.5 파일 IO
 
 - 읽기: MPS(고정·자유, `.gz`, RANGES/BOUNDS/SOS/OBJSENSE), LP 형식. 쓰기: MPS, LP, SOL, `.ilp` 는 비목표.
-- 읽기는 원본 리더를 포팅한다(port_map에서 "MPS read error" 문자열을 쓰는 `unreached` 함수들). 열·행 생성 순서, 중복 계수 합치기, 0 계수 처리가 같아야 지문과 presolve 순서가 맞는다.
+- 읽기(`crates/model/src/mps.rs`)는 원본 리더(`a2bdb9`, 의사코드 9,380줄)를 옮기지 않고, **원본이 읽은 배열과 비교해 맞춘 재작성**이다. P0가 바로 그 배열을 재므로 129개 MPS 파일(Netlib 전부, `miplib_small` 전부)에서 배열과 지문이 모두 같은 것으로 검증했다. 확인한 원본 규칙:
+  - 열은 처음 나온 순서, 열 안의 계수는 파일 순서다. 값 0인 계수는 저장하지 않는다.
+  - 첫 N 행이 목적이고, 다른 N 행과 그 계수는 버린다. 목적 행의 RHS는 목적 상수의 음수다.
+  - RANGES가 있는 행은 등식이 되고, 모든 열 뒤에 행 순서로 `MPS_Rg<행>` 열이 붙는다. 범위는 [0, |R|]이고 계수는 L 행 +1, G 행 −1이다. E 행은 아직 표본이 없다(`shortcut:` 표시).
+  - MARKER 안의 정수 열은 bound 줄이 하나도 없으면 [0, 1]이다. 어떤 bound 줄이든 있으면 이 기본값은 사라진다.
+  - 고정·자유 형식은 줄마다 필드 수로 정한다. COLUMNS는 3·5 필드에 값이 숫자면 자유 형식이고, 모르는 행 이름의 계수는 버린다. RHS·RANGES는 3·5 필드면 집합 이름이 있는 자유 형식이고, 2·4 필드는 이름이 모두 풀리면 자유 형식이다. BOUNDS는 4·6 필드(값 없는 종류는 3)면 자유 형식이고, 모르는 열은 버린다. 그 밖은 고정 열 위치(2–3, 5–12, 15–22, 25–36, 40–47, 50–61)로 읽는다. 이 규칙은 원본에 작은 MPS 파일을 읽혀 확인했다. 그래서 `forplan`처럼 이름에 공백이 있으면 원본도 일부 줄을 버리고, rsolver도 똑같이 버린다.
 - `re/bench/data/netlib`, `miplib`의 `.mps.gz`가 첫 테스트 입력이다.
 
 ## 2. PyO3 경계 (`crates/py`)
