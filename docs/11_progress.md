@@ -95,6 +95,8 @@
 | 2026-11-06 | M1 드라이버: PDHG 시드·G5 보고 | presolve 모델 난수(`3b0917`/`895c5`)로 PDHG 시드, Presolve 켠 PDHG 64/64. 에이전트가 **G5 기준 충족**을 보고함(검증 대기) | `c8f7170`, `1ea1977` (`m1-lp-driver`) |
 | 2026-11-06 | M2 clique 표 | `451bed` clique 표 이식 | `cf52001` (`m2-mip-presolve`) |
 | 2026-11-06 | M2 presolve 내부 루프 병합 | 내부 루프 reduction 병합. 기본값 presolved 모델 **9/38**. XOR 행(`3e5363`) 해독(하위 에이전트 outer-a) | `f070a16`, `f4320c9` (`m2-outer-a`) |
+| 2026-11-06 | M1 LU 갱신(Forrest–Tomlin) | `5b257` 원형 FT 갱신(제자리 열 교체 또는 row eta, 8레인 합) | `670afe9` |
+| 2026-11-06 | M2 probing A·내부 루프 도구 | probe 행렬·엔진 `4e48f7`·충돌 그래프 이식, 레코드·덤프 검사 도구. dual bound(`374521`)·함의 그래프(`5431ee`) 해독 | `ce3522e`, `4b425d6`, `1010d5a` (`m2-mip-presolve`, `m2-outer-a`) |
 
 ## 4. goal 원문
 
