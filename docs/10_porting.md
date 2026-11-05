@@ -126,7 +126,7 @@ python tools/parity.py compare <ref_dir> <test_dir> [--csv bench/parity.csv]
 
 decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소는 비공개로 두고 배포·공개하지 않는다(내부 연구용). 공개가 필요해지면 해당 코드는 이 문서의 규칙이 아니라 클린룸 방식으로 다시 써야 한다([09 §4](09_roadmap.md)).
 
-## 9. 인수인계 메모 (2026-11-05 갱신, 다음 세션용)
+## 9. 인수인계 메모 (2026-11-05 2차 갱신, 다음 세션용)
 
 작업 방식은 **재구성 + 오라클 비트 검증**이다. 의사코드와 objdump로 함수의 규칙을 읽고, Python 프로토타입(`tools/proto/`)을 Gurobi 오라클과 비트 단위로 맞춘 뒤 Rust로 옮긴다. 의사코드를 줄 단위로 옮겨 쓰는 방식은 호출 인자 손실과 SIMD 조각 때문에 쓰지 않는다. 세부 해독 기록은 [m1_notes.md](m1_notes.md)에 있다.
 
@@ -169,15 +169,15 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 
 ### 9.3 다음 단계 (순서대로)
 
-1. **회귀 수정**: israel(flip만 한 반복 뒤 다음 행에 후보가 없어 INFEASIBLE로 판정; 인공 bound로 flip된 열을 판정에서 다뤄야 함)과 perold NUMERIC. 그다음 `python tools/lp_check.py --methods 1,0,-1 --timeout 600`(release 빌드)으로 91×3 정확성을 다시 재고 실패를 고친다(pilot·pilot87 수렴, dfl001).
-2. **P1, dual 반복을 원본대로**(경로 오라클로 첫 분기점을 하나씩 없앤다):
-   - CHUZR 목록 `15d2d@0xbdc10`(489줄): 어떤 위치를 넣고 어떤 순서로 정렬하는지. 기준: afiro 반복 0 목록 `[3, 5, 7, 23, 21, 22, 15, 9]`(`tools/spx_oracle.py`의 `price` 필드). 점수·표시 갱신은 `1c8477`.
-   - BFRT `1c35c5` L960 이후(최종 진입 선택, flip 목록 반환, flip만 한 반복의 처리와 반복 수 계산), 비용 이동 난수 `a7b54f`·`a7b4d6`(common).
-   - 섭동 `048d5f`(시작 조건, 크기 3배씩, 난수), x_B 갱신 `1c8477`, DSE 갱신 위치, 재분해 때 기저 위치 재번호 여부, 자유 열 피벗 루프(`0534f7` L700–1300).
-   - 반복 0 상태는 비트 단위로 같으니, 갈라지는 반복에서 그 시점의 후보 목록을 오라클 값으로 다시 계산해 규칙을 찾는다(`tools/proto/ratio0.py <name> <이탈 변수>`로 반복 0 후보 목록, `tools/proto/pathcmp.py`로 첫 분기 피벗).
+1. **회귀 수정**: israel은 고쳤다(`6013997`, flip이 1e30 규모면 x_B 재계산). perold는 dual이 섭동 상태로 끝난 뒤 교과서식 primal phase 1이 NUMERIC으로 빠진다(원본 primal 이식 때 해결). Method 1 91개 점검은 `bench/lp_check.log`(dfl001은 release에서도 300초 초과: 속도 문제). Method 0은 교과서식 primal이 25fv47에서 300초를 넘겨 점검에서 뺐다.
+2. **P1, dual 반복을 원본 구조로 재작성**(진행 중, 세부는 [m1_notes §8.2–8.4](m1_notes.md)):
+   - 도구: `tools/fn_trace.js`(frida로 내부 함수 호출 순서·필드), `bench/oracle/iter0-5p`(64개 반복 0–5, `price` 포함), `tools/proto/list0b.py`(반복 0 목록 63/64).
+   - 이미 Rust에 있는 것: `common::sort_desc`(`aabbe3`), `Lu::row_cost_estimate`(`9e60b`). 엔진에는 아직 안 붙였다.
+   - 다음 작업: (a) `simplex.rs`의 CHUZR를 §8.3 규칙(모드 0 목록·표시·P+0x28 허용 수·P+0x38 예산·15d2d 재구성, 비용 모드, 1e19 인공 bound 단계)으로 바꾸고 `118725`의 단계 종료를 넣는다. (b) 모드 1(Full pricing) 초기화와 반복별 유지(`1bae9c` L560–726, 전체 경로 L1262 이후)를 해독한다. (c) 재분해 시점(§8.2 식, LU 원소 수 L+0x1e0/0x1e8/0x190/0x184를 원본 저장 형식대로). (d) BFRT `1c35c5` 최종 선택과 비용 이동 난수. (e) `48d5f` 섭동.
+   - 검증: `fn_trace.js`로 반복별 (r, q, 모드, 커서)를 받아 rsolver의 같은 값과 첫 분기점을 비교하는 스크립트를 만든다(`tools/proto/pathcmp.py`를 확장).
 3. **primal 이식**(`0478d3`, `0af361`, `229999` crash, `06dfff` partial pricing, `0736dd`, `055f68/054eef/056973` ratio test)으로 Method 0 P1.
-4. **P2 work**: 커널별 작업량 누적을 원본 식대로 넣는다(BTRAN `spx+0x200`·`0x1f8`, 1bae9c `param_3`, ratio test `param_6` 등 이미 본 식이 m1_notes에 있다).
-5. **P3 속도**: 희소 FTRAN/BTRAN(원본 경로 선택 그대로), 비기저 열 행 방향 사본(spx+0x1d0) 유지, 반복마다 O(n+m) 루프 제거, Markowitz를 `036ade` 규칙으로 이식. 기계가 한가할 때 `re/bench/bench.py`로 잰다.
+4. **P2 work**: 커널별 작업량 누적을 원본 식대로 넣는다(`param_3`/`param_27` 누적식이 각 함수 끝에 있다, 계수 spx+0x148).
+5. **P3 속도**: 희소 FTRAN/BTRAN, 비기저 열 행 방향 사본(spx+0x1d0) 유지, 반복마다 O(n+m) 루프 제거, Markowitz를 `036ade` 규칙으로 이식. 기계가 한가할 때 `re/bench/bench.py`로 잰다.
 6. **Quad**(F80, `1fb30b` 등)와 드라이버 나머지 분기, 비스케일 위반 재풀이 `2e9ae`.
 
 ### 9.4 기준값·오라클 위치
