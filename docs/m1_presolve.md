@@ -3,19 +3,15 @@
 LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolve.md)로 옮긴다. 작업 방식은 [10 §9](10_porting.md)의 재구성 + 오라클 비트 검증이다.
 
 
-## 0. 현재 상태 (2026-11-05 저녁)
+## 0. 현재 상태 (2026-11-05 밤, 목표 달성)
 
-- **일치**: Presolve=0 64/64, PRELIMIT 1–17 64/64, 집계 직후 체크포인트 64/64, **기본값 62/64**(degen2, degen3은 `47c445` 미포팅). postsolve(uncrush `363daa`)는 PRELIMIT 1–17 58/58, **기본값 57/59**(uncrush가 도는 59개 중. 나머지 둘이 degen2/3)([m1_postsolve.md](m1_postsolve.md)).
-- **포팅 완료**: 내부 루프 전부, 바깥 패스 전부(`50cc90(1)`, `50d878`, `38e49a`, `50495e`, `505077`, `3ff744`×2, `50fe2b`, 집계 `519a52`/`37f484`, `538f30`+`4f79a1`), 다음 패스와 종료 판정, 마무리(`51a144`, {`50cc90(1)`, `50d878`} 반복, `50de61`, 끝의 `50d878`), 모델 생성의 PRESPLITROWS. 집계 해독은 [m1_presolve_agg.md](m1_presolve_agg.md), 코드는 `agg.rs`.
-- **진행 중(병렬 에이전트, 각자 worktree와 브랜치)**:
-  - `47c445`(PreDepRow): `../rsolver-deprow`, 브랜치 `m1-deprow`, 파일 `deprow.rs`, 노트 `m1_presolve_deprow.md`(작성 중).
-  - `5b488d`(PREDERIVED): **완료·병합**(브랜치 `m1-derived`, `derived.rs`, 노트 [m1_presolve_derived.md](m1_presolve_derived.md), type 24 레코드). PRELIMIT 17–154 체크포인트에서 degen2/3 외 전부 일치.
-  - postsolve 집계 레코드(type 6, 11, 21)와 기본값 uncrush: `../rsolver-postsolve`, 브랜치 `m1-postsolve`.
-  - 결과는 이 브랜치로 병합한다. 지금 두 함수는 `deprow.rs`/`derived.rs`의 no-op 자리 표시다.
-- **알려진 지름길**(코드에 `shortcut:` 주석): 대칭 검출 `5577ba`→`551cc0`(pass 0, 남은 열 ≥ 500·행 ≥ 100)은 포팅하지 않고 "대칭 없음"으로 둔다. 이 검출은 모델을 바꾸지 않고, 대칭을 찾으면 자동 PreDepRow를 0으로 만들 뿐이다. PRELIMIT 카운트로 보면 Netlib에서 `47c445`가 늘 돈다(64개 모두 마지막 체크포인트까지 호출 수가 같다. 카운트 100 초과인 beaconfd 102, scrs8 135, ganges 154도 확인). 집계의 작업량(+0x458)은 세지 않는다. 집계 prescan 패턴(작은 계수, 단계 D 특수 경로)은 만나면 panic한다(Netlib 없음).
-- **다음 할 일**: 세 브랜치 병합 → 기본값 64/64·체크포인트 전수(k = 1..154) 확인 → 기본값 uncrush 64/64 → clippy 0, `docs/03_presolve.md` 마무리.
-- **오라클**: `tools/presolve_oracle.py <dir> [--param N=V]`(64개 약 10초). 체크포인트 전수 비교는 k마다 오라클을 떠 두고 모델별로 처음 다른 k를 찾는다(이 세션은 스크래치에 lim1..100과 일부 101–154를 떴다). 모델별 호출 번호는 `mod.rs`의 `calls += 1` 뒤에 임시 `eprintln` 추적을 넣어 얻는다(커밋하지 않는다).
-- **작업 방식**: 같은 폴더에서 에이전트 둘이 동시에 cargo 빌드를 하면 서로의 미완성 코드 때문에 빌드가 깨진다. 병렬은 worktree를 따로 쓰고 브랜치를 병합한다.
+- **일치(Netlib 64)**: Presolve=0 64/64, 기본값 presolved 모델 **64/64**, PRELIMIT 체크포인트 64개 × k = 1..100 전부(긴 beaconfd 102·scrs8 135·ganges 154도 확인), postsolve(uncrush `363daa`) 기본값 **59/59**(Gurobi가 uncrush를 부르지 않는 5개 제외, [m1_postsolve.md](m1_postsolve.md)).
+- **포팅 완료**: 기본값에서 `390989`가 부르는 reduction 전부. 시작(`5034e9`, `51a144`), 내부 루프, 바깥 패스(`50cc90(1)`, `50d878`, `38e49a`, `50495e`, `505077`, `3ff744`×2, `50fe2b`, 집계 `519a52`/`37f484`, `5b488d`, `538f30`+`4f79a1`, `47c445`×2), 종료 판정, 마무리(`51a144`, {`50cc90(1)`, `50d878`}, `50de61`, `50d878`), 모델 생성(PRESPLITROWS 포함). 해독 노트: 집계 [m1_presolve_agg.md](m1_presolve_agg.md), `5b488d` [m1_presolve_derived.md](m1_presolve_derived.md), `47c445` [m1_presolve_deprow.md](m1_presolve_deprow.md). 요약은 [03](03_presolve.md) §10.
+- **파일**: `crates/lp/src/presolve/` — `mod.rs`(순서), `state.rs`(상태·레코드), `reduce.rs`, `parallel.rs`, `agg.rs`, `derived.rs`, `deprow.rs`, `postsolve.rs`, `tracker.rs`, `sort.rs`. 테스트 `tests/test_presolve.py`(고정 파일 `bench/gurobi_presolve/`).
+- **지름길**(코드에 `shortcut:` 주석, 03 §10 끝): 대칭 검출 `551cc0`(PreDepRow 게이트로만 쓰임, Netlib은 늘 "대칭 없음"), 작업량 예산과 일부 작업량 항목(P2), Presolve=2 전용 reduction, 집계 prescan 특수 경로, `503985`(n ≥ 10000), Params에 없는 숨은 파라미터는 기본값 가정.
+- **오라클**: `tools/presolve_oracle.py <dir> [--param N=V]`(64개 약 10초), `tools/presolve_check.py`, uncrush는 `tools/uncrush_oracle.py`·`tools/postsolve_check.py`. 체크포인트 전수 비교는 k마다 오라클을 떠 두고 모델별로 처음 다른 k를 찾는다. 모델별 호출 번호는 `mod.rs`의 `calls += 1` 뒤 임시 `eprintln` 추적으로 얻는다(커밋하지 않는다).
+- **작업 방식**: 집계 이후는 세 에이전트를 worktree(`m1-postsolve`, `m1-deprow`, `m1-derived`)에서 병렬로 돌려 이 브랜치에 병합했다. 같은 폴더에서 둘이 cargo 빌드를 하면 서로 깨뜨리니 병렬은 worktree를 따로 쓴다.
+- **main에 합칠 때**: §8. 그리고 `crates/core`, `crates/py/src/lib.rs` 12줄의 clippy 경고 3개는 브랜치 이전 main 코드라 main을 병합하면 사라진다.
 
 ## 1. 호출 그래프: presolve는 LP를 풀지 않는다 (2026-11-05)
 
@@ -82,7 +78,8 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 | PRELIMIT 1–17 | 64/64 | 내부 루프 전부(`4fe113`, `4ffe11`, `4ff158`, `50cc90(0)`, 진척도 반복), 바깥 `50cc90(1)`, `50d878`, `38e49a`, `50495e`, `505077`, `3ff744(1)`, `3ff744(0)`, `50fe2b`, 그리고 모델 생성의 PRESPLITROWS |
 | PRELIMIT 18–100 | 불일치는 모두 rsolver가 멈춘 뒤 | 18: 59/64, 20: 59/64, 25: 45/64, 30: 27/64, 50: 7/64, 100: 3/64. 도달 범위 검사로 k = 14..100에서 닿는 체크포인트의 불일치가 0임을 확인했다. 동작한 모델 수: `3ff744(1)` 25개, `3ff744(0)` 10개, `50fe2b` 23개(행·열·등식 카운터 기준) |
 | 집계 직후(모델별 k) | 64/64 | 2026-11-05. ganges·scrs8은 k > 70 |
-| 기본값 | 62/64 | degen2, degen3은 `47c445` 몫 |
+| 기본값 | 64/64 | 2026-11-05 |
+| PRELIMIT 1–100(전수) | 64/64 | 긴 세 모델은 154까지 |
 
 `mod.rs`의 `reduce()`는 아직 포팅하지 않은 reduction에 닿으면 거기서 멈춘다(PRELIMIT에 닿은 것과 같은 효과). 그래서 PRELIMIT 비교는 멈춘 지점까지 유효하다.
 

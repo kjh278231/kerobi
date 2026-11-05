@@ -179,12 +179,12 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 | | `519a52`/`37f484` 집계(연결 리스트 행렬, 단계 A–D, 최대 5라운드) | `agg.rs` | Aggregate, pass 0만 | 2, 6, 11, 21 |
 | | `5b488d` 이웃이 무엇을 해도 만족되는 열과 그 행 제거(비용은 `=` 행 하나로 넘김) | `derived.rs` | PREDERIVED, DualReductions, PreCrush==0, 모든 패스 | 24 |
 | | `538f30`+`4f79a1` activity 재계산 | `state.rs` | 카운트 없음 | – |
-| | `47c445` 종속 행(mode 1, 2) | `deprow.rs` | pass 0, PreDepRow 자동 = 2.5·n < nnz이면 3. 대칭 검출 `5577ba`가 대칭을 찾으면 0 | (해독 중) |
+| | `47c445` 종속 행: 희소 Markowitz 소거로 mode 1은 종속 `=` 행 삭제, mode 2는 자유 열 중 종속 열 고정 | `deprow.rs` | pass 0, PreDepRow 자동 = 2.5·n < nnz이면 3(대칭 검출 `5577ba`가 대칭을 찾으면 0), mode 2는 DualReductions | (mode 2만) 1 |
 | | 종료 판정 | `mod.rs` | 패스 시작 대비 ρ ≤ 1e-4·max(0,k−2), 패스 끝 ρ ≤ 1e-6, PrePasses 자동 100 | |
 | 마무리 | `51a144`, {`50cc90(1)`, `50d878`} 반복, `50de61` 함의 bound(0.001·(\|b\|+1) 여유), `50d878` | `mod.rs`, `reduce.rs` | PREBOUND, DualReductions | 1 |
 | 모델 생성 | `3b0917`: 살아 있는 행·열을 원래 순서로, 열 CSR 순서로 항목을 쓴다. 마주 보는 평행 행 쌍은 PRESPLITROWS로 `=` 행 + 범위 열(type 14) | `state.rs`, `parallel.rs` | PreCrush ≤ 1 | 14 |
 
 - 저장: CSR+CSC, 지연 삭제(§1). 집계만 MIP식 연결 리스트로 바꿨다가 CSR로 되돌린다. 리스트 순서가 결과 CSR 순서가 되므로 노드 풀(free·pending)과 +0xd8 카운터까지 원본대로 흉내 낸다.
 - activity는 덧셈이 부정확하면 1ulp 안전한 쪽으로 미는 가드 덧셈을 쓴다. 단 `50de61`과 `50495e`/`50108e`의 행 범위는 가드 없이 더한다.
-- 일치(Netlib 64, 기본값): presolved 모델 62/64(degen2·degen3은 `47c445` 대기), PRELIMIT 체크포인트 k ≤ 102 전수 비교에서도 degen2/3만 다르다. uncrush(`363daa`)는 오라클 `pre_after`를 넣어 비트 비교로 57/59(uncrush가 도는 59개 중, 나머지 둘은 degen2/3).
-- 포팅하지 않은 것(지름길, 코드에 `shortcut:` 주석): 대칭 검출 `551cc0`(결과는 PreDepRow 자동값 게이트에만 쓰인다. Netlib PRELIMIT 카운트로는 늘 "대칭 없음"), 작업량 예산 `3ba9de`(Netlib에서 닿지 않음), Presolve=2 전용 reduction, 집계 prescan 특수 경로, 집계의 작업량 항목.
+- 일치(Netlib 64, 기본값): presolved 모델 **64/64**, PRELIMIT 체크포인트 64개 × k = 1..100(카운트가 긴 beaconfd·ganges·scrs8은 154까지) 전부 일치. uncrush(`363daa`)는 오라클 `pre_after`를 넣은 비트 비교로 59/59(Gurobi가 uncrush를 부르지 않는 5개 제외).
+- 포팅하지 않은 것(지름길, 코드에 `shortcut:` 주석): 대칭 검출 `551cc0`(결과는 PreDepRow 자동값 게이트에만 쓰인다. Netlib에서는 PRELIMIT 카운트로 늘 "대칭 없음"임을 확인), 작업량 예산 `3ba9de`(Netlib에서 닿지 않음)과 생성자·집계의 작업량 항목(P2), Presolve=2 전용 reduction(`51f5ab`, `51aba6`), 집계 prescan 특수 경로, `503985`(n ≥ 10000), Params에 없는 숨은 파라미터(PREPARALLEL, PRESPLITROWS, MarkowitzTol, GURO_PAR_ZERO, INTBASIS 등)는 기본값 가정.
