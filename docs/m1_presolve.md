@@ -79,3 +79,24 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 
 - `crates/model/src/mps.rs`: 모델 이름을 NAME 줄의 첫 토큰으로 바꿨다(gurobipy `ModelName`과 같게).
 - `crates/model/src/mps_write.rs`(새 파일), `crates/py/src/lib.rs`(`to_mps`, `presolve`), `python/rsolver/__init__.py`(`Model.presolve`, `Model.write`).
+
+## 부록 A. 생성자 작업량 항목 (W += …, μ = +0x448, 아직 미포팅)
+
+`3a484d`(A), `5118e6`(B, CSR 생성), `534a8b`(C, 추적기) 순서대로. 2026-11-05 서브에이전트 해독(줄 번호는 각 의사코드 파일).
+
+1. A L962: `+= n`(μ 없음)
+2. A L1397: `+= (n·1.5 + m)·μ`
+3. A L1562: `+= (n+n)·μ`
+4. A L4004: `+= (spare−1)·μ`, spare = nnz/10 > 2e9 ? 2e9 : max(10000, max(m,n), nnz/10)
+5. B L219: `+= (n·0.5)·μ`
+6. 열 시작이 연속이면 B L240: `+= (n·0.5 + nnz)·μ`. 아니면 열마다 B L208: `+= (len·4.0)·μ`, 그다음 B L210: `+= (n·3.0)·μ`
+7. B L287: `+= (nnz·3.0)·μ`
+8. B L344: `+= (m·4.0)·μ`
+9. B L391, 열마다: `+= (원래 len·6.0)·μ`
+10. B L536: `+= (n+n)·μ`, B L546: `+= (m+m)·μ`
+11. 유형 1/4/5/6 판정용 추가 스캔: B L612, 626, 725, 837, 855, 887(일반 LP 경로에서 어느 것이 도는지 확인 필요)
+12. A L4870: `+= m·μ`, A L4877: `+= (m+m)·μ`, A L4905 열마다: `+= (모델 len·μ)·2.0`, 그다음 A L4880: `+= (n·3.0)·μ`
+13. PREINFBND가 켜지면 A L4961: `+= (n+n)·μ`. PREINFOBJ가 켜지면 A L4988: `+= (n·3.0)·μ`
+14. C: 레벨 0..2마다 `+= m·(μ·3.0)`, 그다음 `+= (μ·3.0)·n`. 끝에 C L380: `+= 48.0·μ`
+
+기타: `+0x100` = SolutionTarget==1, 또는 (SolutionTarget ≤ 0 && Method ∈ {2,6} && Crossover==0)이면 1. 그렇지 않고 SolutionTarget<2 && NumericFocus>0이면 2. 나머지는 0. `+0x1e0` = PreCrush, `+0x1e8` = IntFeasTol, `+0x1e4` = (OptimalityTarget ≠ 1), `+0x470..+0x484` = −1. `+0x80/+0x88` 열 배열은 1.0이다.
