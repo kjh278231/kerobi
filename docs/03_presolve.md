@@ -12,6 +12,7 @@ model::postsolve::{uncrush_primal, uncrush_dual, crush_row}
 
 - 공통 뼈대(노트 12 §0.2): **상태 구조체 + 변경 추적 worklist + reduction 함수 목록 + 진척도 기반 패스 반복**.
 - LP와 MIP는 상태의 행렬 저장이 다르다(12 §3.10): LP는 CSR+CSC 쌍, MIP는 **행·열 연결 리스트**(삭제·추가가 잦음) + 필요 시 CSR 캐시. 둘 다 `PresolveState` trait로 같은 reduction을 공유할 수 있게 한다(activity, 고정, 행 삭제, 레코드 push).
+- LP 포팅(`crates/lp/src/presolve/`, 진행 기록 [m1_presolve.md](m1_presolve.md)): 삭제는 지연 방식이다. 행 CSR 항목은 열 번호 −1로, 열 CSR 항목은 행 번호 −1로 표시하고, 지운 행·열은 살아 있는 개수(`+0x60/+0x68`)를 음수로 둔다. presolved 모델(`3b0917`)은 열 CSR 순서 그대로 살아 있는 항목만 쓰고, 행·열은 원래 순서를 지킨다. 비교 오라클은 숨은 파라미터 `GURO_PAR_PRELIMIT`(reduction 호출 횟수 상한)로 reduction 하나씩 뜬다.
 - 결정: **LP presolve(`390989`, CSR+CSC)와 MIP presolve(`3cd406`, 연결 리스트)를 원본대로 따로 포팅한다.** 같은 reduction이어도 두 상태의 순회 순서가 달라 결과 모델이 다르다. 하나로 합치면 P0(presolved 모델 일치)를 맞출 수 없다. LP presolve는 M1, MIP presolve는 M2다.
 
 ## 2. 상태(`PresolveState`)
@@ -44,7 +45,7 @@ model::postsolve::{uncrush_primal, uncrush_dual, crush_row}
 | 7 | doubleton 등식 집계 `x_j = a x_k + b`, slack≈0 등식 집계 | Aggregate | 2 | M1 | `56c80e` |
 | 8 | GC(연결 리스트 정리) | work>1e6 | | M1 | |
 
-내부 루프 종료: 진척도 `ρ ≤ 0.001·max(0,i)` (i는 −5에서 시작).
+내부 루프 종료: MIP는 진척도 `ρ ≤ 0.001·max(0,i)` (i는 −5에서 시작), LP는 `ρ ≤ 1e-11·max(0,i−5)` (i는 0부터).
 
 ### 3.2 바깥 reduction (패스마다 한 번, timer 사용률 < 0.8일 때)
 
@@ -86,7 +87,8 @@ budget = (nnz + Qnnz + SOS·QC·genconstr 크기) × { LP: Presolve=1 200, 기�
 reduction별 timer 한도 = budget × {0.5,1,2,4}; 사용률 ≥ 0.8이면 그 reduction 건너뜀
 전체 초과 → 남은 reduction 모두 중단
 ρ = Δcols/n + (Δrows + ΔSOS + ΔQC…)/(m+…) + 0.1·Δcoef/nnz + 1e-4·(Δbound + Δtype…)/n + 0.5·Δineq_to_eq/(m+…) + 0.001·Δ기타/(m+…)
-종료: 내부 ρ ≤ 0.001·max(0,i) ; 패스 ρ ≤ 1e-4 ; 라운드 ρ ≤ 0.01(0.05) ; 라운드 ≤ 5
+종료(MIP): 내부 ρ ≤ 0.001·max(0,i) ; 패스 ρ ≤ 1e-4 ; 라운드 ρ ≤ 0.01(0.05) ; 라운드 ≤ 5
+종료(LP, 390989): 내부 ρ ≤ 1e-11·max(0,i−5) ; 패스 시작 대비 ρ ≤ 1e-4·max(0,k−2) ; 패스 끝 ρ ≤ 1e-6 ; PrePasses 자동 100(Presolve=1이면 5)
 ```
 work 측정: reduction마다 `work += 처리 원소 수 × 상수`. TimeLimit/WorkLimit/terminate는 `limits::check`로 매 reduction 뒤 확인. 콜백 where=PRESOLVE(1)를 DisplayInterval마다 호출하고 "%s removed %d rows and %d columns (presolve time = %.0fs)..." 진행 로그.
 
@@ -98,7 +100,7 @@ pub enum PostRec {
     Subst  { j, c0, terms: Vec<(usize, f64)>, dual_row: Option<..> },   // 2
     DualFix{ j, rows: Vec<(r, c_r, coef)>, is_int, kind: MinMax },  // 3  (행들이 허용하는 끝값, 정수면 floor/ceil)
     MergeParallelCols { j, k, ratio, lb, ub },                  // 4   (bound 안에서 둘로 나눔)
-    ParallelColsDual { .. },                                    // 5
+    ParallelRowsDual { r0, r1, ratio },                         // 5   (LP 50b4e5: 평행 행의 쌍대 재분배; 노트 12의 "열"은 틀림)
     AggRowCol { row, col, .. },                                 // 6
     SingletonRow { r, j, a, side },                             // 7   y[r] = −d[j]/a
     ForcingRow { r, coefs },                                    // 8
@@ -118,9 +120,17 @@ pub struct PostsolveStack { recs: Vec<PostRec> /* push 순서, 역순 순회 */,
 - **crush** `crush_row(row in 원래 공간) -> Option<row in presolved 공간>`: 열마다 그 열을 없앤 레코드를 찾아 1은 상수로, 2는 대입, 9/10은 아핀, 3/16/18/24/25는 **실패**. 사용자 cut/lazy에 쓴다. `PreCrush=1`이면 실패를 일으키는 reduction(9 outer, 17, 18, 25, derived)을 끈다.
 - 재시작 presolve는 presolved 모델을 다시 presolve하므로 스택이 **계층**으로 쌓인다(`Vec<PostsolveStack>`, 바깥부터 안쪽 순).
 
-## 6. LP uncrush와 "big uncrush violation" (노트 12 §3.9)
+## 6. LP uncrush와 "big uncrush violation" (노트 12 §3.9, 확인 결과는 [m1_postsolve.md](m1_postsolve.md))
+
+기본 LP(simplex) 경로(`0c3d0d`)는 다음 순서로 진행한다.
+1. presolved 모델을 simplex로 푼다.
+2. **`363daa`**로 uncrush한다. x·쌍대·기저를 함께 복원하며, 레코드를 LIFO로 처리한다.
+3. 원래 모델에서 warm start simplex를 다시 돈다(기저와 x는 넘기고 쌍대는 넘기지 않음). 반복이 있으면 "Extra simplex iterations after uncrush: %d"를 찍는다.
+
+`363164`·`365159`와 아래의 big uncrush violation 검사는 `36578f` 경로(SolutionTarget≥1, simplex 없는 경로)에서만 돈다. 최종 X/Pi/RC는 3단계가 다시 계산한 값이다. 그래서 postsolve의 비트 비교 대상은 `363daa`의 출력이고, 오라클은 `tools/uncrush_oracle.py`다.
 
 ```
+(36578f 경로)
 if status ∈ {3,4,5}: DualReductions·Presolve 켜져 있으면 §7(02_driver)의 규칙으로 4로 낮춤
 x = uncrush_primal
 if status == OPTIMAL:
@@ -128,7 +138,6 @@ if status == OPTIMAL:
     tol = max(1e4, 1/min_scale) × max(FeasibilityTol, presolved_viol)
     if viol > tol: "Warning: Changing status from GRB_OPTIMAL to GRB_SUBOPTIMAL due to big uncrush violation %g (presolved model = %g)."; status = 13
 uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
-LP는 uncrush 뒤 basis를 맞추려 simplex를 더 돌림 → "Extra simplex iterations after uncrush: %d"
 ```
 
 ## 7. 재시도 래퍼와 상태 보정 (노트 12 §3.6–3.8)
