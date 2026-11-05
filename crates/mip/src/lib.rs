@@ -7,6 +7,7 @@
 // parallel arrays at once; `x = t + x` keeps the original operand order.
 #![allow(clippy::neg_cmp_op_on_partial_ord, clippy::needless_range_loop, clippy::assign_op_pattern)]
 pub mod clique;
+pub mod conflict;
 pub mod driver;
 pub mod dump;
 mod helpers;
@@ -15,6 +16,8 @@ mod colpass;
 mod doubleton;
 mod lists;
 pub mod post;
+pub mod probe;
+pub mod probe_engine;
 pub mod state;
 mod stubs;
 pub mod tracker;
