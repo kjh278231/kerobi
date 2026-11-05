@@ -82,6 +82,10 @@ pub struct Engine<'a> {
     fac_nnz: (usize, usize),
     upd_cols: usize,
     col_nnz: usize,
+    /// max|b − N·x_N| of the last x_B computation (spx+0x2c8 test of `1bae9c` L1691–1743).
+    rhs_max: f64,
+    /// spx+0x2c8: CHUZR tests violations with the infinite-bound guard (artificial-bound phase or x_B past 1e20).
+    c8: bool,
     /// Pivot path: (iteration, entering column, leaving column); bound flips of the entering column leave −1.
     pub path: Vec<(u64, i64, i64)>,
 }
@@ -134,6 +138,8 @@ impl<'a> Engine<'a> {
             fac_nnz: (m, m),
             upd_cols: 0,
             col_nnz: 0,
+            rhs_max: 0.0,
+            c8: false,
             path: Vec::new(),
         }
     }
@@ -296,6 +302,7 @@ impl<'a> Engine<'a> {
                 }
             }
         }
+        self.rhs_max = rhs.iter().fold(0.0, |a: f64, v| a.max(v.abs()));
         self.xb = self.lu.ftran_dense(rhs);
     }
 
@@ -431,7 +438,7 @@ impl<'a> Engine<'a> {
         // (reason 2) or when the update file costs more than a fresh factor (reason 10)
         let k = self.lu.n_updates;
         let m = self.m as f64;
-        let c46 = m.powf(0.45) as usize; // spx+0x46c (2f7e1 L882)
+        let c46 = self.c46();
         let refactor = k >= self.lu_interval || {
             let (ln, un) = self.fac_nnz;
             let t = (ln + un) as f64 - 1.5 * m;
@@ -446,6 +453,11 @@ impl<'a> Engine<'a> {
             // LU+0x190: nonzeros of the FTRAN'd entering column (pivot included)
             self.upd_cols += self.col_nnz;
         }
+    }
+
+    /// spx+0x46c = ⌊m^0.45⌋ (2f7e1 L882).
+    fn c46(&self) -> usize {
+        (self.m as f64).powf(0.45) as usize
     }
 
     fn primal_infeas(&self, p: usize) -> f64 {
@@ -531,6 +543,23 @@ impl<'a> Engine<'a> {
         }
     }
 
+    /// Mode-1 violation tests of `1bae9c`/`1c8477` (forms VB/VC/VD of the original, which differ in rounding at the
+    /// boundary): `full` for the full-path list (VD, or VC when c8), else an updated element (VB, or VC when c8).
+    /// The violation is x − u when l ≤ x, else l − x.
+    fn viol1(&self, p: usize, full: bool) -> Option<f64> {
+        let j = self.head[p];
+        let tol = if self.big_m { BIG_M_TOL } else { FEAS_TOL };
+        let (l, u, x) = (self.spx.l[j], self.spx.u[j], self.xb[p]);
+        let hit = if self.c8 {
+            (-INFINITY < l && x < l - tol) || (u < INFINITY && u + tol < x)
+        } else if full {
+            x < l - tol || u + tol < x
+        } else {
+            tol < l - x || tol < x - u
+        };
+        hit.then(|| if l <= x { x - u } else { l - x })
+    }
+
     fn price_rebuild(&mut self) {
         let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol(p)).collect();
         let score: Vec<f64> =
@@ -551,7 +580,9 @@ impl<'a> Engine<'a> {
                 self.pr.cost_mode = 2;
             }
         }
-        if self.pr.mode == 0 && self.iter > 0 && ((self.m as f64) < 15.0 * self.pr.avg || (self.m as u64) < self.iter) {
+        let xmax = self.xb.iter().fold(0.0, |a: f64, v| a.max(v.abs()));
+        self.c8 = self.big_m || self.rhs_max + xmax > 1e20;
+        if self.pr.mode == 0 && ((self.m as f64) < 15.0 * self.pr.avg || (self.m as u64) < self.iter) {
             self.pr.mode = 1;
             self.lu_interval = self.lu_interval.min(((self.m as f64).powf(0.65) as usize).max(20));
         }
@@ -562,10 +593,12 @@ impl<'a> Engine<'a> {
             self.pr.cursor = 0;
             self.price_rebuild();
         } else {
-            let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol(p)).collect();
+            let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol1(p, true)).collect();
             let score: Vec<f64> =
                 (0..self.m).map(|p| viol[p].map_or(0.0, |v| self.pr.score(p, self.head[p], v, self.w[p]))).collect();
-            self.pr.full_init(&viol, &score);
+            // divisor 1000 when the violations are at least nnz(α_q) of the last pivot (or none yet) and not c8
+            let few = self.path.is_empty() || viol.iter().flatten().count() >= self.col_nnz.saturating_sub(1);
+            self.pr.full_init(&viol, &score, if few && !self.c8 { 1000.0 } else { 100000.0 });
         }
     }
 
@@ -580,8 +613,11 @@ impl<'a> Engine<'a> {
         }
         self.pr.budget -= 1;
         if self.pr.budget < 0 {
-            // reason 3: refactor; 1bae9c adds m to P+0x48, which makes the full path switch to mode 1
-            self.pr.avg += self.m as f64;
+            // reason 3: refactor; with fewer than spx+0x46c updates 2896a3 adds m to P+0x48, which makes the full path
+            // switch to mode 1
+            if self.lu.n_updates < self.c46() {
+                self.pr.avg += self.m as f64;
+            }
             self.reinvert();
             return self.chuzr();
         }
@@ -598,11 +634,16 @@ impl<'a> Engine<'a> {
     fn price_touch(&mut self, changed: &[usize], leaving: Option<usize>, rebuild: bool) {
         if self.pr.mode != 0 {
             for &p in changed {
-                let sc = self.viol(p).map(|v| self.pr.score(p, self.head[p], v, self.w[p]));
+                let v = if Some(p) == leaving { self.viol(p) } else { self.viol1(p, leaving.is_none()) };
+                let sc = v.map(|v| self.pr.score(p, self.head[p], v, self.w[p]));
                 if Some(p) == leaving {
-                    // the leaving position is listed: refresh its score or mark it listed-feasible (3)
+                    // 1bae9c L481–555: the leaving position (test VA) is listed again with a fresh score, or marked
+                    // listed-feasible (3)
                     match sc {
-                        Some(x) => self.pr.score[p] = x,
+                        Some(x) => {
+                            self.pr.score[p] = x;
+                            self.pr.mark[p] = 1;
+                        }
                         None => self.pr.mark[p] = 3,
                     }
                 } else {
@@ -622,7 +663,9 @@ impl<'a> Engine<'a> {
             self.pr.cursor = 0;
             self.pr.budget -= 1;
             if self.pr.budget < 0 {
-                self.pr.avg += self.m as f64;
+                if self.lu.n_updates < self.c46() {
+                    self.pr.avg += self.m as f64; // 1bae9c L787
+                }
                 self.reinvert();
             } else {
                 self.price_rebuild();
@@ -926,17 +969,16 @@ impl<'a> Engine<'a> {
                         dx[i] += a * step;
                     }
                 }
-                let changed: Vec<usize> = if huge && !self.big_m {
+                let dxb = self.lu.ftran_dense(dx);
+                let changed: Vec<usize> = (0..self.m).filter(|&p| dxb[p] != 0.0).collect();
+                if huge && !self.big_m {
                     // outside the artificial-bound phase a 1e30-scale move would leave residue: recompute
                     self.compute_xb();
-                    (0..self.m).collect()
                 } else {
-                    let dxb = self.lu.ftran_dense(dx);
                     for p in 0..self.m {
                         self.xb[p] -= dxb[p];
                     }
-                    (0..self.m).filter(|&p| dxb[p] != 0.0).collect()
-                };
+                }
                 self.price_touch(&changed, None, q == usize::MAX);
                 if q == usize::MAX {
                     self.iter += 1;
@@ -1037,8 +1079,9 @@ impl<'a> Engine<'a> {
                 let k = self.iter as f64;
                 self.pr.avg = (2.0 * col_nnz.saturating_sub(1) as f64 + (k - 2.0) * self.pr.avg) / k;
             }
-            if self.pr.mode == 1 && self.pr.list.len() as f64 > self.pr.avg.max(4.0) {
-                // shortcut: spx+0x46c read as 4 (afiro); 1bae9c raises the threshold by 10% on a long list
+            if self.lu.n_updates > updates_before && self.pr.mode == 1 && self.pr.list.len() as f64 > self.pr.avg.max(self.c46() as f64)
+            {
+                // 1bae9c L501–511 (update path only): a list longer than max(P+0x48, spx+0x46c) raises the threshold
                 self.pr.thr *= 1.1;
             }
             if self.lu.n_updates > updates_before && self.pr.cost_mode > 0 {
@@ -1443,6 +1486,9 @@ impl<'a> Engine<'a> {
     /// dual infeasibilities shifted away, exact DSE norms, a new row copy and candidate list.
     fn dual_resume(&mut self) {
         self.rhs_shift.clear();
+        // 534f7 on re-entry: threshold and average start over
+        self.pr.thr = 0.0;
+        self.pr.avg = 0.0;
         self.c = self.spx.c.clone();
         self.cost_scale = 1.0;
         self.perturbed = false;

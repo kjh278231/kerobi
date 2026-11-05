@@ -129,11 +129,13 @@ impl Pricing {
         None
     }
 
-    /// Mode-1 start after a factorization (`1bae9c` full path): threshold = 1e-5 × the largest score, list = the
-    /// violated positions at or above it in position order.
-    pub fn full_init(&mut self, viol: &[Option<f64>], score: &[f64]) {
-        let mx = viol.iter().zip(score).filter(|(v, _)| v.is_some()).map(|(_, &s)| s).fold(0.0, f64::max);
-        self.thr = if mx > 0.0 { mx * 1e-5 } else { 1e-13 };
+    /// Mode-1 start after a factorization (`1bae9c` L2266–2471): t = the largest score / `div`; the threshold is t,
+    /// or max(t, old) when the largest score passed a nonzero old threshold; list = the violated positions at or
+    /// above it in position order.
+    pub fn full_init(&mut self, viol: &[Option<f64>], score: &[f64], div: f64) {
+        let mx = viol.iter().zip(score).filter(|(v, _)| v.is_some()).map(|(_, &s)| s).fold(0.0, |a, s| if s > a { s } else { a });
+        let t = mx / div;
+        self.thr = if self.thr == 0.0 || mx <= self.thr { t } else if t > self.thr { t } else { self.thr };
         self.list.clear();
         for (p, v) in viol.iter().enumerate() {
             if v.is_some() {

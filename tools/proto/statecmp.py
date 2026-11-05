@@ -40,7 +40,12 @@ for it in sorted(set(g) & set(mine)):
     pr = a.get("price") or {}
     hv = lambda v: {s: j for j, s in enumerate(v) if s >= 0}  # position -> variable
     ga, gb = hv(va), hv(vb)
-    la, lb = [ga.get(p) for p in pr.get("list") or []], [gb.get(p) for p in b["list"]]
+    gl = pr.get("list") or []
+    if pr.get("mode") == 1:  # mode 1: the list is P+0x10[:P+0x28] (P+0x3c is the count at the last full path)
+        gl = gl[:pr.get("allow")]
+        if pr.get("thr") and b.get("thr") and pr["thr"] != b["thr"]:
+            out.append(f"thr g {F(pr['thr'])!r} mine {F(b['thr'])!r}")
+    la, lb = [ga.get(p) for p in gl], [gb.get(p) for p in b["list"]]
     if pr and (pr.get("mode") != b["mode"] or la != lb):
         out.append(f"pricing (vars) g mode {pr.get('mode')} list {la[:6]} | mine mode {b['mode']} list {lb[:6]}")
     if pr.get("score") and b.get("score") and pr.get("mode") == 1:
@@ -60,8 +65,8 @@ for it in sorted(set(g) & set(mine)):
         if k:
             out.append(f"var_cost {len(k)} diff, first {k[0]}: g {gv[k[0]]!r} mine {mv[k[0]]!r}")
     lu = a.get("lu") or {}
-    if lu and (lu.get("k"), pr.get("allow")) != (b.get("k"), b.get("allow")):
-        out.append(f"lu k/allow g {lu.get('k')}/{pr.get('allow')} mine {b.get('k')}/{b.get('allow')}")
+    if lu and (lu.get("k"), pr.get("allow")) != (b.get("k"), b.get("allow") if b.get("mode") != 1 else len(b["list"])):
+        out.append(f"lu k/allow g {lu.get('k')}/{pr.get('allow')} mine {b.get('k')}/{b.get('allow') if b.get('mode') != 1 else len(b['list'])}")
     if lu and "eta" in b and (lu.get("eta"), lu.get("cols")) != (b["eta"], b["cols"]):
         out.append(f"lu eta/cols g {lu.get('eta')}/{lu.get('cols')} mine {b['eta']}/{b['cols']}")
     print(f"iter {it}: " + ("OK" if not out else "; ".join(out)))
