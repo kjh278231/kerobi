@@ -53,7 +53,7 @@ def dump(spx, it, full):
            "w": arr(L(P + 0x08), m) if P else None,
            # CHUZR state (2896a3): mode P+0x40 (0 = ordered list), list P+0x10 of length P+0x3c, cursor spx+0x2c4,
            # per-position skip flags spx+0x280, rebuild budget P+0x38
-           "price": {"mode": I(P + 0x40), "list": arr(L(P + 0x10), I(P + 0x3c), "i"), "cursor": I(spx + 0x2c4),
+           "price": {"mode": I(P + 0x40), "list": arr(L(P + 0x10), max(I(P + 0x3c), I(P + 0x28) if I(P + 0x40) == 1 else 0), "i"), "cursor": I(spx + 0x2c4),
                      "flags": list(ctypes.string_at(L(spx + 0x280), m)), "budget": I(P + 0x38), "allow": I(P + 0x28), "score": arr(L(P + 0x18), m), "cost_mode": I(P + 0x44),
                      "row_cost": arr(L(P + 0x68), m), "var_cost": arr(L(P + 0x70), n + m),
                      "avg": D(P + 0x48), "thr": D(P + 0x30).hex()} if P else None,

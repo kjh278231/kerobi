@@ -43,14 +43,17 @@ for it in sorted(set(g) & set(mine)):
     gl = pr.get("list") or []
     if pr.get("mode") == 1:  # mode 1: the list is P+0x10[:P+0x28] (P+0x3c is the count at the last full path)
         gl = gl[:pr.get("allow")]
-        if pr.get("thr") and b.get("thr") and pr["thr"] != b["thr"]:
+        if pr.get("thr") and b.get("thr") and F(pr["thr"]) != F(b["thr"]):
             out.append(f"thr g {F(pr['thr'])!r} mine {F(b['thr'])!r}")
     la, lb = [ga.get(p) for p in gl], [gb.get(p) for p in b["list"]]
     if pr and (pr.get("mode") != b["mode"] or la != lb):
-        out.append(f"pricing (vars) g mode {pr.get('mode')} list {la[:6]} | mine mode {b['mode']} list {lb[:6]}")
+        k = next((t for t in range(min(len(la), len(lb))) if la[t] != lb[t]), min(len(la), len(lb)))
+        out.append(f"pricing (vars) g mode {pr.get('mode')} len {len(la)} | mine mode {b['mode']} len {len(lb)}; first diff at {k}: "
+                   f"g {la[k:k + 4]} mine {lb[k:k + 4]}")
     if pr.get("score") and b.get("score") and pr.get("mode") == 1:
         gs, ms = [F(v) for v in pr["score"]], [F(v) for v in b["score"]]
-        k = [j for j in range(len(va)) if va[j] >= 0 and vb[j] >= 0 and gs[va[j]] != ms[vb[j]] and (gs[va[j]] or ms[vb[j]])]
+        fl = pr.get("flags") or [0] * len(gs)  # stale scores sit at feasible positions (flag ≥ 2): skip them
+        k = [j for j in range(len(va)) if va[j] >= 0 and vb[j] >= 0 and fl[va[j]] < 2 and gs[va[j]] != ms[vb[j]]]
         if k:
             out.append(f"score {len(k)} diff, first var {k[0]}: g {gs[va[k[0]]]!r} mine {ms[vb[k[0]]]!r}")
     if pr.get("row_cost") and b.get("row_cost"):
