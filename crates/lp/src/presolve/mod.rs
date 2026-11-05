@@ -99,7 +99,7 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
         }
     }
     let q = st.to_model(md);
-    let post = postsolve::Post::new(&st);
+    let post = postsolve::Post::new(&st, p.infbound);
     (q, post)
 }
 

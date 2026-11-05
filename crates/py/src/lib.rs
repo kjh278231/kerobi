@@ -108,10 +108,10 @@ impl PyCoreModel {
         })
     }
     /// Record kinds (oldest first) and simulated array parities of the presolve of this model.
-    fn post_records(&self, params: Vec<(String, f64)>) -> Vec<(i32, u8, u8)> {
+    fn post_records(&self, params: Vec<(String, f64)>) -> Vec<(i32, u8, u8, i64)> {
         let p = rsolver_lp::presolve::Params::from_pairs(&params);
         let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
-        post.recs.iter().zip(&post.aligns).map(|(r, a)| (r.kind(), a[0], a[1])).collect()
+        post.recs.iter().zip(&post.aligns).map(|(r, a)| (r.kind(), a[0], a[1], rsolver_lp::presolve::postsolve::layout(r).0)).collect()
     }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);

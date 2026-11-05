@@ -32,6 +32,7 @@ def main():
     ap.add_argument("oracle")
     ap.add_argument("--param", action="append", default=[])
     ap.add_argument("--oracle-align", action="store_true")
+    ap.add_argument("--arena", action="store_true", help="list unexplained arena gaps instead of comparing")
     ap.add_argument("-v", action="store_true")
     ap.add_argument("names", nargs="*")
     a = ap.parse_args()
@@ -46,11 +47,19 @@ def main():
             continue
         e = cap["daa"][-1]
         core = rsolver.read(str(insts[name]))._core
-        kinds = [k for k, _, _ in core.post_records(params)]
+        pr = core.post_records(params)
+        kinds = [k for k, _, _, _ in pr]
         want_kinds = [r["type"] for r in reversed(e["records"])]
         if kinds != want_kinds:
             print(f"{name:12s} records differ: got {len(kinds)} want {len(want_kinds)}"
                   f" first diff at {next((i for i, (x, y) in enumerate(zip(kinds, want_kinds)) if x != y), min(len(kinds), len(want_kinds)))}")
+            continue
+        if a.arena:  # gaps between consecutive records that the push sizes do not explain
+            rs = list(reversed(e["records"]))
+            for i in range(len(rs) - 1):
+                g = rs[i + 1]["rec"] - rs[i]["rec"] - pr[i][3]
+                if g != 0 and 0 < rs[i + 1]["rec"] - rs[i]["rec"] < 65536:
+                    print(f"{name:12s} rec {i} type {kinds[i]} gap {g} before type {kinds[i + 1]}")
             continue
         pa = e["pre_after"]
         try:
