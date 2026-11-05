@@ -192,6 +192,7 @@ fn reduce(st: &mut State, p: &Params) {
             }
         }
         // state+0x27c (quadratic constraints) is 0 for LP: 50495e, not 451195
+        let early = p.dual_reductions && p.precrush < 2 && (k < 5 || p.presolve == 2);
         if st.implied_redundant_rows(p.feastol, p.infbound, p.prebound) != 0 {
             return;
         }
@@ -199,8 +200,40 @@ fn reduce(st: &mut State, p: &Params) {
         if limit <= calls {
             return;
         }
-        // shortcut: the rest of the outer pass (505077, 3ff744, 50fe2b, 519a52, 5b488d, 47c445) and the finish
-        // stage are not ported yet; stop here like a reached PRELIMIT.
+        if early {
+            if st.dual_bound_rows(&tols, p.presolve == 2) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        if p.presolve == 2 {
+            if st.singleton_cols(&tols) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        if early {
+            if st.singleton_rows(p.feastol, p.infbound) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+            st.forcing_rows(p.feastol, p.infbound);
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        // shortcut: the rest of the outer pass (3ff744, 50fe2b, 519a52, 5b488d, 47c445) and the finish stage
+        // are not ported yet; stop here like a reached PRELIMIT.
         let _ = &snap;
         return;
     }

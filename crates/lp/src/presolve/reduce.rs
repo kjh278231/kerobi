@@ -1334,3 +1334,380 @@ impl State {
         Ok((lo, hi))
     }
 }
+
+/// Per-column dual data of `505077`/`4f84ef`: the range of `-c_j + sum_i a_ij y_i` over the row dual box
+/// (max / min finite part and infinite counts) and the column's dual sense (`'='` both bounds free, `'>'` lower
+/// free, `'<'` upper free, `'F'` neither).
+struct DualCols {
+    sense: Vec<u8>,
+    dmax: Vec<f64>,
+    dmin: Vec<f64>,
+    imax: Vec<i32>,
+    imin: Vec<i32>,
+}
+
+impl State {
+    /// `505077`: dual bounds. Column bounds implied by the rows (in order of column count) are treated as free;
+    /// each free bound turns the column's reduced cost into a sign constraint. Row duals start at y <= 0 (`<`)
+    /// or free (`=`) and are tightened by those constraints (`4f84ef`). A column whose reduced cost then has a
+    /// strict sign goes to that bound (`4fa83a`); a `<` row whose dual is strictly negative becomes `=`.
+    /// `implied_free` is `state+0x100 == 0` (NumericFocus <= 0 at default Method/Crossover/SolutionTarget).
+    /// Returns 0, 3 or 5.
+    pub fn dual_bound_rows(&mut self, t: &ColTols, aggressive: bool) -> i32 {
+        let (n, m) = (self.n, self.m);
+        let (inf, feastol, opttol) = (t.infbound, t.feastol, t.opttol);
+        let implied_free = t.numeric_focus <= 0;
+        // the original hides special columns by shifting their counts below zero for the status steps
+        let plain = |s: &State, j: usize| 0 < s.col_cnt[j] && s.col_flag[j] == 0;
+        self.work += n as f64 + n as f64;
+        let mut imax = self.inf_max.clone();
+        let mut imin = self.inf_min.clone();
+        self.work += m as f64 * 4.0;
+        // bit 0: lower bound free, bit 1: upper bound free
+        let mut st = vec![0u8; n];
+        for j in 0..n {
+            if plain(self, j) {
+                st[j] = match (-inf < self.lb[j], self.ub[j] < inf) {
+                    (true, true) => 0,
+                    (true, false) => 2,
+                    (false, true) => 1,
+                    (false, false) => 3,
+                };
+            }
+        }
+        self.work += m as f64 + m as f64 + n as f64 * 4.0;
+        if implied_free {
+            // counting sort by column count (stable)
+            let mut order: Vec<usize> = (0..n).filter(|&j| plain(self, j)).collect();
+            order.sort_by_key(|&j| self.col_cnt[j]);
+            self.work += (m as f64 + n as f64) * 3.0;
+            for upper in [true, false] {
+                for &j in &order {
+                    let s = st[j];
+                    if (upper && 2 <= s) || (!upper && s & 0xfd == 1) {
+                        continue;
+                    }
+                    let cb = self.col_beg[j] as usize;
+                    let len = self.col_len[j] as usize;
+                    let (l, u) = (self.lb[j], self.ub[j]);
+                    let far = if upper { l <= -inf } else { inf <= u };
+                    let mut found = false;
+                    for p in cb..cb + len {
+                        let i = self.col_ind[p];
+                        if i < 0 || self.row_cnt[i as usize] < 0 {
+                            continue;
+                        }
+                        let i = i as usize;
+                        let a = self.col_val[p];
+                        let eq = self.sense[i] == b'=';
+                        let k = if far { 1 } else { 0 };
+                        found = if upper {
+                            if a <= 0.0 {
+                                eq && imax[i] == k && {
+                                    let v = if far { -self.act_max[i] / a } else { l - self.act_max[i] / a };
+                                    v < u + 1e-9
+                                }
+                            } else {
+                                imin[i] == k && {
+                                    let v = if far { -self.act_min[i] / a } else { l - self.act_min[i] / a };
+                                    v < u + 1e-9
+                                }
+                            }
+                        } else if 0.0 <= a {
+                            eq && imax[i] == k && l - 1e-9 < if far { -self.act_max[i] / a } else { u - self.act_max[i] / a }
+                        } else {
+                            imin[i] == k && l - 1e-9 < if far { -self.act_min[i] / a } else { u - self.act_min[i] / a }
+                        };
+                        if found {
+                            break;
+                        }
+                    }
+                    self.work += len as f64 * if far { 7.0 } else { 8.0 };
+                    if !found {
+                        continue;
+                    }
+                    st[j] = if s == 0 { if upper { 2 } else { 1 } } else { 3 };
+                    for p in cb..cb + self.col_len[j] as usize {
+                        let i = self.col_ind[p];
+                        if i < 0 || self.row_cnt[i as usize] < 0 {
+                            continue;
+                        }
+                        // the freed bound now counts as infinite in the activity it feeds
+                        if (self.col_val[p] <= 0.0) == upper {
+                            imin[i as usize] += 1;
+                        } else {
+                            imax[i as usize] += 1;
+                        }
+                    }
+                    self.work += self.col_len[j] as f64 * 4.0;
+                }
+            }
+        }
+        let sense: Vec<u8> = (0..n)
+            .map(|j| if !plain(self, j) { b'F' } else { [b'F', b'>', b'<', b'='][st[j] as usize] })
+            .collect();
+        self.work += n as f64 + n as f64;
+        // row duals (local_90 / local_98): y <= 0 for `<` rows, free for `=` rows
+        let mut ylo = vec![0.0f64; m];
+        let mut yhi = vec![0.0f64; m];
+        for i in 0..m {
+            if 0 < self.row_cnt[i] {
+                ylo[i] = -inf;
+                yhi[i] = if self.sense[i] == b'=' { inf } else { 0.0 };
+            }
+        }
+        self.work += m as f64 * 4.0;
+        self.work += n as f64 + n as f64;
+        let mut dc = DualCols { sense, dmax: vec![0.0; n], dmin: vec![0.0; n], imax: vec![0; n], imin: vec![0; n] };
+        for j in 0..n {
+            dc.dmax[j] = -self.obj[j];
+            dc.dmin[j] = -self.obj[j];
+            if self.col_len[j] <= 0 {
+                continue;
+            }
+            let cb = self.col_beg[j] as usize;
+            for p in cb..cb + self.col_len[j] as usize {
+                let i = self.col_ind[p];
+                if i < 0 || self.row_cnt[i as usize] < 0 {
+                    continue;
+                }
+                let i = i as usize;
+                let a = self.col_val[p];
+                let (for_max, for_min) = if a <= 0.0 { (ylo[i], yhi[i]) } else { (yhi[i], ylo[i]) };
+                let max_finite = if a <= 0.0 { -inf < for_max } else { for_max < inf };
+                if max_finite {
+                    dc.dmax[j] = guarded_add(dc.dmax[j], for_max * a, true);
+                } else {
+                    dc.imax[j] += 1;
+                }
+                let min_finite = if a <= 0.0 { for_min < inf } else { -inf < for_min };
+                if min_finite {
+                    dc.dmin[j] = guarded_add(dc.dmin[j], a * for_min, false);
+                } else {
+                    dc.imin[j] += 1;
+                }
+            }
+            self.work += self.col_len[j] as f64 * 7.0;
+        }
+        let rc = self.dual_propagate(&mut ylo, &mut yhi, &mut dc, inf, feastol);
+        if rc != 0 {
+            return rc;
+        }
+        for j in 0..n {
+            if !(0 < self.col_cnt[j] && 1e-10 < self.ub[j] - self.lb[j] && self.col_flag[j] == 0) {
+                continue;
+            }
+            let mut rc = 0;
+            if aggressive && dc.sense[j] == b'F' {
+                // Presolve=2: a column without dual constraint goes to a bound whose reduced cost is about 0
+                if dc.imax[j] == 0 && dc.dmax[j] < 1e-10 && -inf < self.lb[j] {
+                    self.fix_at(j, self.lb[j], inf, true);
+                } else if dc.imin[j] == 0 && -1e-10 < dc.dmin[j] && self.ub[j] < inf {
+                    self.fix_at(j, self.ub[j], inf, true);
+                }
+                continue;
+            }
+            if !(dc.imax[j] != 0 || -opttol - self.obj[j].abs() * 1e-13 <= dc.dmax[j]) {
+                // reduced cost > 0 for every dual in the box: lower bound
+                if -inf < self.lb[j] {
+                    self.fix_at(j, self.lb[j], inf, true);
+                } else {
+                    rc = UNBOUNDED;
+                    if dc.imin[j] != 0 {
+                        return UNBOUNDED;
+                    }
+                }
+            }
+            if dc.imin[j] != 0 {
+                if rc != 0 {
+                    return rc;
+                }
+                continue;
+            }
+            if self.obj[j].abs() * 1e-13 + opttol < dc.dmin[j] {
+                if inf <= self.ub[j] {
+                    return UNBOUNDED;
+                }
+                self.fix_at(j, self.ub[j], inf, true);
+                rc = 0;
+            }
+            if rc != 0 {
+                return rc;
+            }
+        }
+        self.work += n as f64 * 7.0;
+        for i in 0..m {
+            if 0 < self.row_cnt[i] && (feastol < ylo[i] || yhi[i] < -feastol) && self.sense[i] != b'=' {
+                self.ineq_to_eq += 1;
+                self.sense[i] = b'=';
+                self.tracker.mark_row(i as i32);
+            }
+        }
+        self.work += m as f64 * 5.0;
+        0
+    }
+
+    /// `4f84ef`: tighten the row dual box from the columns' dual senses, queue-driven over the live columns
+    /// (circular queue; it stops when the head meets the tail, so the last queued column is not visited, or
+    /// after 11 rounds). Each tightened row bound updates the dual ranges of the row's columns.
+    /// Returns 3 (`bad_col`: a dual sense cannot hold; `bad_row`: crossing row duals) or 0.
+    fn dual_propagate(&mut self, ylo: &mut [f64], yhi: &mut [f64], dc: &mut DualCols, inf: f64, feastol: f64) -> i32 {
+        let n = self.n;
+        let mut queue = vec![0usize; n];
+        let mut inq = vec![true; n];
+        let mut cnt = 0;
+        for j in 0..n {
+            if self.col_cnt[j] >= 0 {
+                queue[cnt] = j;
+                cnt += 1;
+            }
+        }
+        self.work += n as f64 * 3.0;
+        if cnt <= 1 {
+            return 0;
+        }
+        let (mut head, mut tail, mut rounds) = (0usize, cnt - 1, 0);
+        loop {
+            let j = queue[head];
+            let s = dc.sense[j];
+            if s & 0xfe == b'<' && dc.imin[j] == 0 && feastol < dc.dmin[j] {
+                self.bad_col = j as i32;
+                return INFEASIBLE;
+            }
+            if (s == b'=' || s == b'>') && dc.imax[j] == 0 && dc.dmax[j] < -feastol {
+                self.bad_col = j as i32;
+                return INFEASIBLE;
+            }
+            let cb = self.col_beg[j] as usize;
+            for p in cb..cb + self.col_len[j] as usize {
+                let ii = self.col_ind[p];
+                if ii < 0 || self.row_cnt[ii as usize] < 0 {
+                    continue;
+                }
+                let i = ii as usize;
+                let (yh, yl, a) = (yhi[i], ylo[i], self.col_val[p]);
+                let (mut nl, mut nh) = (yl, yh);
+                if s & 0xfe == b'<' {
+                    let (dm, k) = (dc.dmin[j], dc.imin[j]);
+                    let d0 = if 0.0 <= dm { 0.0 } else { dm };
+                    if a <= 1e-8 {
+                        if a < -1e-8 {
+                            if k == 0 {
+                                nl = yh - d0 / a;
+                            } else if k == 1 && inf <= yh {
+                                nl = -dm / a;
+                            }
+                        }
+                    } else if k == 0 {
+                        nh = yl - d0 / a;
+                    } else if k == 1 && yl <= -inf {
+                        nh = -dm / a;
+                    }
+                }
+                let mut th = nh;
+                if s == b'=' || s == b'>' {
+                    let (a2, dx, k) = (-a, dc.dmax[j], dc.imax[j]);
+                    let d0 = if 0.0 <= -dx { 0.0 } else { -dx };
+                    let mut tl = yl;
+                    th = yh;
+                    if a2 <= 1e-8 {
+                        if a2 < -1e-8 {
+                            if k == 0 {
+                                tl = yh - d0 / a2;
+                            } else if k == 1 && inf <= yh {
+                                tl = dx / a2;
+                            }
+                        }
+                    } else if k == 0 {
+                        th = yl - d0 / a2;
+                    } else if k == 1 && yl <= -inf {
+                        th = dx / a2;
+                    }
+                    if tl <= nl {
+                        tl = nl;
+                    }
+                    nl = tl;
+                    if nh <= th {
+                        th = nh;
+                    }
+                }
+                let mut yl_now = yl;
+                if -1e8 < nl && feastol * 100.0 + yl < nl {
+                    if !(nl <= yh + feastol) {
+                        self.bad_row = ii;
+                        return INFEASIBLE;
+                    }
+                    self.shift_row_dual(i, yl, nl, -inf < yl, false, dc, &mut inq, &mut queue, &mut tail);
+                    ylo[i] = nl;
+                    yl_now = nl;
+                }
+                if !(1e8 <= th || yhi[i] - feastol * 100.0 <= th) {
+                    if th < yl_now - feastol {
+                        self.bad_row = ii;
+                        return INFEASIBLE;
+                    }
+                    let old = yhi[i];
+                    self.shift_row_dual(i, old, th, old < inf, true, dc, &mut inq, &mut queue, &mut tail);
+                    yhi[i] = th;
+                }
+            }
+            self.work += self.col_len[j] as f64 * 20.0;
+            head += 1;
+            inq[j] = false;
+            if head == n {
+                rounds += 1;
+                head = 0;
+                if 10 < rounds {
+                    break;
+                }
+            }
+            if head == tail {
+                break;
+            }
+        }
+        0
+    }
+
+    /// One row-dual move of `4f84ef`: row `i`'s lower (`upper` false) or upper dual bound goes from `old` (finite
+    /// or not) to `new`; the dual ranges of the row's live columns follow and those columns are queued.
+    #[allow(clippy::too_many_arguments)]
+    fn shift_row_dual(&mut self, i: usize, old: f64, new: f64, finite: bool, upper: bool, dc: &mut DualCols,
+                      inq: &mut [bool], queue: &mut [usize], tail: &mut usize) {
+        let rb = self.row_beg[i] as usize;
+        for q in rb..rb + self.row_len[i] as usize {
+            let k = self.row_ind[q];
+            if k < 0 || self.col_cnt[k as usize] < 0 {
+                continue;
+            }
+            let k = k as usize;
+            let b = self.row_val[q];
+            // lower dual feeds the max for b <= 0, the min for b > 0; the upper dual the other way
+            let on_max = (b <= 0.0) != upper;
+            if finite {
+                let t = new * b;
+                if on_max {
+                    dc.dmax[k] = guarded_add(dc.dmax[k], t, true);
+                    dc.dmax[k] = guarded_add(dc.dmax[k], -b * old, true);
+                } else {
+                    dc.dmin[k] = guarded_add(dc.dmin[k], t, false);
+                    dc.dmin[k] = guarded_add(dc.dmin[k], -b * old, false);
+                }
+            } else if on_max {
+                dc.dmax[k] = guarded_add(dc.dmax[k], b * new, true);
+                dc.imax[k] -= 1;
+            } else {
+                dc.dmin[k] = guarded_add(dc.dmin[k], b * new, false);
+                dc.imin[k] -= 1;
+            }
+            if !inq[k] {
+                *tail += 1;
+                if *tail == self.n {
+                    *tail = 0;
+                }
+                inq[k] = true;
+                queue[*tail] = k;
+            }
+        }
+        self.work += self.row_len[i] as f64 * 7.0;
+    }
+}
