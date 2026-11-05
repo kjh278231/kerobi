@@ -13,6 +13,21 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만.
 
+### 진행 중인 하위 작업 (2026-11-06 시작)
+| worktree / 브랜치 | 일 | 산출물 |
+|---|---|---|
+| `../rsolver-m2-skel` / `m2-skel` | 뼈대 구현: `crates/mip` 상태(`3a484d` MIP 분기, 연결 리스트), `3cd406` 시작부·Presolve=0 경로·마무리, `3b0917` MIP 모델 생성, MPS 정수 MARKER, py 분기. 기준 Presolve=0·PRELIMIT 0–2 38/38 | 코드, `docs/m2_presolve_state.md` |
+| `../rsolver-m2-spine-b` / `m2-spine-b` | `3cd406` 패스 루프(L1696–4400) 해독 | `docs/m2_spine_b.md` |
+| `../rsolver-m2-spine-c` / `m2-spine-c` | 라운드 후 단계(L4400–6450) 해독 | `docs/m2_spine_c.md` |
+| `../rsolver-m2-spine-d` / `m2-spine-d` | FINAL 단계(L6582–9600) 해독 | `docs/m2_spine_d.md` |
+
+### 다음 단계 (순서)
+1. 위 네 브랜치를 `m2-mip-presolve`에 합친다. 구간 노트로 `3cd406` 제어 흐름 전체를 reduction stub(카운트만)으로 옮긴다. stub이 Gurobi와 같은 k에서 카운트하는지는 sweep의 "바뀐 k"와 reduction 위치가 맞는지로 확인한다.
+2. 내부 루프 reduction(`3e39a6`, `36ddf2`, `37168e`, `36c5cf`, `56f793`, `56c80e`, `36e6b6`)을 먼저 옮긴다. 모든 모델이 이 루프를 지난다. 검증은 PRELIMIT 체크포인트와 상태 오라클(`mip_state_dump.js`).
+3. 바깥 reduction을 묶음으로 하위 에이전트에 나눈다(각자 worktree·브랜치, 새 파일). 앞 reduction이 아직 없어도 상태 오라클로 진입 상태를 넣어 한 reduction씩 비트 비교할 수 있게 상태 적재 함수(`State::from_dump`)를 둔다.
+4. probing `4d3a1d`, 대칭 `5577ba`(LP 포트와 MIP 분기 차이), 연결 성분 `52cba4`, sparsify `470936`, 마무리 inline 블록.
+5. postsolve 레코드 비교(레코드 목록 오라클), 작업량, clippy·테스트·문서.
+
 ## 1. 호출 그래프와 실제 호출: MIP presolve는 LP를 풀지 않는다 (2026-11-06)
 
 ### 1.1 P0 경로
