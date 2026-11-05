@@ -179,11 +179,19 @@ version = "0.1.0"
 dependencies = [
  "pyo3",
  "rsolver-lp",
+ "rsolver-mip",
  "rsolver-model",
 ]
 
 [[package]]
 name = "rsolver-lp"
+version = "0.1.0"
+dependencies = [
+ "rsolver-model",
+]
+
+[[package]]
+name = "rsolver-mip"
 version = "0.1.0"
 dependencies = [
  "rsolver-model",

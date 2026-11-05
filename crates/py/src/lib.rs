@@ -121,10 +121,31 @@ impl PyCoreModel {
     }
     /// The model as `Model.write("*.mps")` text (01 §1.5); P0 compares it byte for byte.
     fn to_mps(&self) -> String { rsolver_model::mps_write::to_string(&self.inner) }
-    /// LP presolve (03 §1) with Gurobi parameter (name, value) pairs; returns the presolved model.
-    fn presolve(&self, py: Python<'_>, params: Vec<(String, f64)>) -> PyCoreModel {
-        let p = rsolver_lp::presolve::Params::from_pairs(&params);
-        PyCoreModel { inner: py.allow_threads(|| rsolver_lp::presolve::run(&self.inner, &p)) }
+    /// Presolve (03 §1) with Gurobi parameter (name, value) pairs: MIP presolve when any column is not continuous,
+    /// else LP presolve. Returns the presolved model.
+    fn presolve(&self, py: Python<'_>, params: Vec<(String, f64)>) -> PyResult<PyCoreModel> {
+        let md = &self.inner;
+        let inner = if md.vtype.iter().any(|&t| t != b'C') {
+            let p = rsolver_mip::Params::from_pairs(&params);
+            py.allow_threads(|| rsolver_mip::presolve(md, &p))
+                .map_err(|_| pyo3::exceptions::PyRuntimeError::new_err("Unable to create presolved model"))?
+        } else {
+            let p = rsolver_lp::presolve::Params::from_pairs(&params);
+            py.allow_threads(|| rsolver_lp::presolve::run(md, &p))
+        };
+        Ok(PyCoreModel { inner })
+    }
+    /// MIP presolve state where it stopped (`finish`: when model generation starts) as `tools/work_oracle.py --mip`
+    /// records it: (work, problem type, integer columns, binary columns, +0xf8, rows removed, columns removed,
+    /// tracker level).
+    #[allow(clippy::type_complexity)]
+    fn mip_presolve_state(&self, params: Vec<(String, f64)>, finish: bool) -> (f64, i32, i32, i32, bool, i32, i32, usize) {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let mut st = rsolver_mip::state::State::new(&self.inner, &p);
+        if rsolver_mip::prelude(&mut st, &p).is_ok() && finish {
+            rsolver_mip::finish(&mut st, &p);
+        }
+        (st.work, st.ptype, st.nint, st.nbin, st.eq_rows, st.rows_removed, st.cols_removed, st.tracker.level)
     }
     /// Presolve, then uncrush the presolved solution (x, dj, status as `363daa` reads them) back to this model:
     /// (basis, x, dual). `aligns` (two parities per record, oldest first) overrides the arena simulation.
