@@ -19,7 +19,7 @@ def btran_vec(m, n, beg, ind, val, head, steps, prow, urow, w):
         y[r] = s
     return y
 
-res = {"row_order": 0, "two_lane": 0}; tot = 0
+res = {"dense8": 0, "sparse_step8": 0}; tot = 0
 for f in sorted(glob.glob(sys.argv[1] + "/or0/*.jsonl")):
     name = os.path.basename(f)[:-6]
     o = json.loads(open(f).readline()); n, m = o["n"], o["m"]
@@ -41,13 +41,25 @@ for f in sorted(glob.glob(sys.argv[1] + "/or0/*.jsonl")):
         y = btran_vec(m, n, beg, ind, val, head, steps, prow, urow, e)
         s1 = 0.0
         for v in y: s1 += v * v
-        a0 = a1 = 0.0
-        for i in range(0, m - 1, 2): a0 += y[i] * y[i]; a1 += y[i + 1] * y[i + 1]
-        s2 = a0 + a1
-        if m % 2: s2 += y[m - 1] * y[m - 1]
-        w_row.append(s1); w_step.append(s2)
+        def sum8(v):
+            w = 0.0; k = len(v)
+            if k <= 6:
+                for t in v: w = w + t * t
+                return w
+            nb = k - (k % 8)
+            acc = [w, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+            for b in range(0, nb, 8):
+                for q in range(8): acc[q] = acc[q] + v[b + q] * v[b + q]
+            if nb:
+                w = ((acc[0] + acc[2]) + acc[4]) + acc[6]
+                w = w + (((acc[1] + acc[3]) + acc[5]) + acc[7])
+            for t in v[nb:]: w = w + t * t
+            return w
+        dense = sum8(y)
+        sparse = sum8([y[r] for r, pos, d in steps if y[r] != 0.0])
+        w_row.append(dense); w_step.append(sparse)
     tot += 1
-    res["row_order"] += w_row == g; res["two_lane"] += w_step == g
+    res["dense8"] += w_row == g; res["sparse_step8"] += w_step == g
     if w_row != g and w_step != g:
-        print(name, "row-order bits", sum(a == b for a, b in zip(w_row, g)), "two-lane", sum(a == b for a, b in zip(w_step, g)), "of", m)
+        print(name, "dense8", sum(a == b for a, b in zip(w_row, g)), "sparse8", sum(a == b for a, b in zip(w_step, g)), "of", m)
 print(res, "of", tot)
