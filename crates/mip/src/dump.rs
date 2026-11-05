@@ -258,6 +258,7 @@ impl State {
             "5a9282" => (self.r5a9282(p), 0),
             "5ab429" => (self.r5ab429(p), 0),
             "59c193" => (self.vub_lift(p), 0),
+            "55a779" => (self.agg_pass(p), 0),
             "370047" => {
                 self.activity(None);
                 (0, 0)
