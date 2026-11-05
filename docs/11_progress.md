@@ -27,6 +27,7 @@
 | M1 심플렉스 | `rsolver` / `main` | LP simplex(dual·primal), LU, crash, Quad, LP 드라이버, `crates/core` 삭제 | `docs/10_porting.md` §9 | G1 |
 | M1 LP presolve | `rsolver-presolve` / `m1-lp-presolve` | LP presolve, postsolve | `docs/m1_presolve.md` | G2 |
 | ↳ postsolve (presolve 에이전트가 띄운 하위 에이전트, Sonnet) | `rsolver-postsolve` / `m1-postsolve` | postsolve `363daa` | `docs/m1_postsolve.md` | G2의 일부 |
+| ↳ derived·PreDepRow (presolve 하위 에이전트) | 각자 worktree / `m1-derived`, `m1-deprow` | `5b488d`, `47c445` | `docs/m1_presolve.md` | G2의 일부 |
 | M3 barrier | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
 
 ## 3. 완료 기록
@@ -57,6 +58,9 @@
 | 2026-11-05 | M1 presolve 4 집계 | 연결 리스트 행렬 위의 aggregation(`519a52`/`37f484` A–D 단계). 집계 뒤 점검 지점 62/62 | `3bbdba0` (`m1-lp-presolve`) |
 | 2026-11-05 | M1 postsolve uncrush | `363daa` 레코드 1·2·3·5·7·8·14와 검사기, 57/58 | `94c4195` (`m1-postsolve`) |
 | 2026-11-05 | M3 재시작·Cholesky | `2bf1ea` 재시작 이식(perold 125회, Gurobi 130회), BarIterCount ±5% 62/64. supernodal 분해 프로토타입이 실제 MKL로 L·d 비트 일치(7개 × 반복 0–2) | `bf116b4`, `6a0057f` (`m3-barrier`) |
+| 2026-11-05 | M1 dual 재분해 일정 | `6268b` 재분해 기준(갱신 수·간격·갱신 파일 비용). Netlib 64: 정답 64/64, **반복 수 같음 7**, ±5% 34 | `23cad5d` |
+| 2026-11-05 | M1 presolve 5 마무리 단계 | 바깥 패스 나머지, 다음 패스, 마무리(`50de61` 함의 bound). **기본값 presolved 모델 62/64**(`5b488d`·`47c445`는 아직 빈 함수). postsolve 병합, 집계 뒤 uncrush 비트 일치(PRELIMIT 1–17) | `6aa22b7`, `44ef311`, `d9a4874` (`m1-lp-presolve`) |
+| 2026-11-05 | M3 Cholesky 해법 | `2ee6c5` 해법 프로토타입(8-lane 내적, right-looking forward, backward), dx·dy 비트 일치 7개 | `37e1c19` (`m3-barrier`) |
 
 ## 4. goal 원문
 
