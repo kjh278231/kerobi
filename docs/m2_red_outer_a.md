@@ -12,8 +12,8 @@
 |---|---|---|---|---|---|
 | `3e5363(env, st)` | 5,451 | PREXORRED && PreCrush==0 | XOR(패리티) 행 묶음 제거, type 25 | 0 / 78 | 78/78(§2) |
 | `5431ee(st, env)` | 3,175 | round==0 && k==0 && PRETRANSRED | 이진 함의 그래프 SCC | 1 / 42(fhnw-binpack4-4) | 42/42(§7) |
-| `578fd2(st, env)` | 1,281 | PRECOEFFICIENT | `<` 행 knapsack 계수 lifting(`6aec61`) | 11 / 78 | (§5) |
-| `57627e(st, env)` | 10,175 | PRECOEFFICIENT | implied integer, type 9 | 4 / 78 | (§4) |
+| `578fd2(st, env)` | 1,281 | PRECOEFFICIENT | `<` 행 knapsack 계수 lifting(`6aec61`) | 11 / 78 | 미확인: 호출부만 해독(§5) |
+| `57627e(st, env)` | 10,175 | PRECOEFFICIENT | implied integer, type 9 | 4 / 78 | 78/78, `575405`는 "변화 없음" 가정(§4) |
 | `374521(st, env)` | 12,783 | DualReductions && p<3 && T4 | 쌍대 bound, 부등식→등식 | 2 / 78 | 78/78(§6) |
 | `3ff744(st, env, T6, mode, flag, 0)` | 16,559 | (spine-b) | 평행 행·열 | 16 / 234 | 232/232, 열 집계 2단계 2호출 미확인(§3) |
 
@@ -345,7 +345,7 @@ LP 포트 `crates/lp/src/presolve/parallel.rs`(CSR 콜백, m1_presolve §7)와 �
 | 0 행 | `3e7ec1` | `3e8260` | `3e92c4` | `3ee2bb` |
 | 1, 3 열 | `3e7e33` | `3e80fd` | `3e8a37` | `3eaf1d` |
 | 2 행 분할 | `3e7ec1` | `3e8260` | `3e92c4` | `3f26d9` |
-- mode 0: 진입에서 `+0x42c = 0`(진입 값은 기억), flag && PreCrush(env+0x26f4)==0 && DualReductions면 `iv41 = env+0x256c`(기본 1, 2단계 행 처리). mode 1/3: 같은 조건이면 `f0 = env+0x2570`(기본 1, 열 집계 단계).
+- mode 0: 진입에서 `+0x42c = 0`(진입 값은 기억), flag && PreCrush(env+0x26f4)==0 && DualReductions면 `iv41 = GURO_PAR_PREPWLRED(env+0x256c)`(기본 1, P/T 행 2단계). mode 1/3: 같은 조건이면 `f0 = GURO_PAR_PREOBJPWLRED(env+0x2570)`(기본 1, 열 집계 단계).
 - **콜백에는 작업량이 없다**(LP CSR판은 있다). 함수 전체의 작업량은 처음 한 번 `W += ((cnt·20)·nnz/(dim+1))·μ`(nnz = st+0xd8, dim = 행이면 m, 열이면 n)와 쌍 함수·2단계 안의 것뿐이다.
 - 해시: 살아 있는 항목마다 `h = h + 1/((f64)index + 1)`(행은 열 번호, 열은 행 번호), 한 갈래로 차례로 더한다(LP는 두 갈래).
 - 값 해시: 행(`3e8260`)은 **최소** |a|(1e100에서 시작, `amin <= |a|`가 아니면 갱신), 열(`3e80fd`)은 최대 |a|(`|a| <= amax`가 아니면 갱신). 부호는 가장 작은 index 항목의 부호(a ≤ 0이면 −1). 반환 `Σ |a|/(index+1) / 척도`, 척도 = 부호·(min 또는 max).
@@ -448,3 +448,58 @@ n = 0 → 0, n = 1 → |v0|. mn = min|v|, mx = max|v|(같으면 앞 것). mx > 2
 ### 4.3 오라클 확인
 - 38개 78호출 전부 일치(`s_iint.py`). IMPLIED_INT 495번(csched007 246, csched008 238, markshare2 7, markshare_4_0 4: vtype 'I'와 type 9 레코드, d = 1이라 bound·계수는 그대로), 클래스 분석 251번 → `575405` 251번(cov2의 호출 수와 같다).
 - **`575405`는 해독하지 않았다.** 38개에서 bound를 바꾼 적이 없어(덤프에 bound 변화 없음) 모형은 "변화 없음"으로 두었다. `574764`, `3c5996`, 고정 열 접기, 계수 0, 행 나누기(g ≠ 1), 불가능 반환은 오라클을 지나지 않았다. a7bea8의 Euclid·연분수 가지는 gmu-35-40/50에서 지났다.
+
+## 5. `578fd2(st, env)` knapsack 계수 강화 (1,281 B, `005bea50`) — 호출부만 해독
+
+### 5.1 호출부 (decompile·asm으로 읽음, 오라클 미확인)
+```
+(cnt, rows) = 538f30(tr, st)                           // 레벨 1 행 목록(캐시, 작업량은 538f30 안)
+k_chg = 0
+for t in 0..cnt:
+  i = rows[t]
+  if !(row_cnt[i] > 0 && sense[i] != '='): continue
+  k = 0; 행 리스트의 살아 있는 노드마다 ind[k] = col(+0x390), val[k] = a(+0x398), k++
+  W += (μ·5)·row_cnt[i]
+  rc = 6aec61(env, &k, ind, val, &rhs[i], lb, ub, vtype, PREPOWER(env+0x2564), 2, &changed, W); rc ≠ 0이면 반환
+  if changed:
+    chg[k_chg++] = i(+0x3b8); 53763f(i)
+    p < k마다 tmp(+0x3b0)[ind[p]] = val[p]; W += (μ·3)·k
+    row_cnt[i] = k(새 개수)
+    행 리스트의 살아 있는 노드마다 nv = tmp[col], tmp[col] = 0; |a − nv| > 1e-10이면 5379f1(col); nv == 0이면 col_cnt−−, col = −1, 아니면 a = nv
+    W += (μ·4)·row_cnt[i]
+W += (cnt·6)·μ
+if k_chg: st+0x3fc += k_chg; 370047(st, env, k_chg, chg)
+return 0
+```
+`6aec61`은 rhs를 직접 고칠 수 있다(&rhs[i]). 변경은 계수(+0x3fc), rhs, 0이 된 항목 제거로 나타난다(gen-ip054, neos-2657525-crna, csched008#2, gmu-35-40/50의 11호출).
+
+### 5.2 `6aec61` (14,706 B, common 모듈, 작업량 포인터를 받는다)
+cut 모듈과 함께 쓰는 knapsack 행 강화 루틴이다. 첫머리: `a7cec0(−1, k, ind, val, lb, ub, W)`로 행의 최대 activity를 구해 rhs와 비교(여유가 −ft 이상이면 끝), 고정 열(ub−lb < 1e-10)과 기여가 작은 열(`0.01·ft > (ub−lb)·|a|·k`)을 rhs로 옮기고 목록을 줄인다, 계수 gcd(`a7bea8`), param_10(=2)에 따라 `6b33dd`(1,695 B), `6b4738`(3,858 B), `6b5e11`(16,193 B, `6b56d2`·`aaedd9` 사용), `a7c752`(1,547 B), `882313`(207 B)을 부른다. PREPOWER(0)는 끝부분 분기(`param_9 == 0`)를 고른다.
+38개 기본값 호출 수(`outer/bin/cnto.js`, 반환 주소로 구분): `6aec61` 20,661(34개 모델), 그 안의 `a7cec0` 20,661 + 12,412, `6b33dd` 154,798(24개), `a7bea8` 2,779, `a7c752` 2,379, `6b5e11` 96(5개), `6b56d2` 1,947, `6b4738` 8(3개).
+**해독하지 않았다.** 다음 작업: `6aec61` 본체와 `6b33dd`·`6b5e11`·`6b4738`·`a7c752`·`a7cec0`·`882313`의 asm 해독, 모형(`s_lift.py`)으로 78호출 확인. 총 약 42 KB.
+
+## 9. 도구와 확인 요약 (세션 스크래치 `outer/`)
+
+| 파일 | 내용 |
+|---|---|
+| `bin/dumpo.js`, `bin/runall.sh` | 여섯 함수를 한 번에 훅하는 상태 덤프(§1), `d/<모델>.jsonl`(38개 422 MB) |
+| `bin/cnto.js` | 함수별·반환 주소별 호출 수(common 모듈 함수도), `cov6ae.json` |
+| `bin/rod.py` | .rodata 상수 읽기 |
+| `bin/simo.py` | St 확장, 레코드 디코더(type 1, 2, 4, 5, 9, 25), 비교, 목록 getter(`538f30`/`5399fc`/`53af0f`/`53a487`), `ab9789` 정렬, `3dcc78` mode 1 |
+| `bin/s_xor.py`, `s_par.py`, `s_iint.py`, `s_dual.py`, `s_scc.py` | 함수별 모형 |
+| `a_<id>.txt` | objdump |
+
+| 함수 | 호출 | 일치 | 오라클을 지나지 않은 것 |
+|---|---|---|---|
+| `3e5363` | 78 | 78 | 축소 전부(레코드 25, 행 삭제, 고정) |
+| `3ff744` | 237 | 232(+ mode 2 3, 열 집계 2 제외) | 열 경우 1–4·고정·비유계, 행 `=`쌍·T/=·T/<, `3fa2f6`, 열 집계 |
+| `57627e` | 78 | 78 | `575405`(해독 안 함, 변화 없음 가정), `574764`, 고정 열 접기, g ≠ 1 |
+| `578fd2` | 78 | – | 해독 안 함(`6aec61`) |
+| `374521` | 78 | 78 | 고정, 불가능, Presolve 2 |
+| `5431ee` | 42 | 42 | SCC 원소(`3bb6fe`), PRETRANSRED 2 |
+
+## 10. 미해결
+1. `578fd2`의 `6aec61` 묶음(§5.2), `57627e`의 `575405`/`571c44`, `3ff744`의 열 집계(`3bbf87`/`3bde19`/`3bea24`)와 `3fa2f6`, `5431ee`의 `3bb6fe`.
+2. `3e5363`의 축소 경로는 합성 모델(3·4 변수 XOR, pivot이 다른 행에 한 부호로 있는 경우)로 확인할 것(`dumpo.js`는 `.lp` 경로를 받는다).
+3. `374521`의 불가능 인덱스(+0x470/+0x478가 LP 포트와 반대로 읽힘)는 asm 레지스터 추적으로 확인할 것.
+4. 공유 보조 함수(`3de18e`, `3dd6f1`, `3dcc78`, `39ab33`, `53802c`, `370047`, `3c3abf`)는 inner 노트의 정의를 썼다. 포팅 때 inner 쪽 구현을 그대로 부른다.
