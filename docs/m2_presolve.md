@@ -6,7 +6,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 | G6 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **9/38**(2026-11-06, 내부 루프 병합 `e4173c9`). `sweep_check.py` 첫 불일치는 모두 미포팅 reduction: `parallel` 8, `cancel_rows` 5, `implied_int` 4, `r5a9282`·`knapsack`·`aggregate` 2, `trans_red`·`probe`·`mod_k`·`implied_int_scale`·`dual_bounds`·`clique` 1 |
+| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **13/38**(2026-11-06, `fcee245`: 내부 루프·probing·clique·라운드 끝 A·outer-a 일부). 첫 불일치: `cancel_rows` 9, `aggregate` 6, `knapsack` 4, `implied_int_scale` 2, `two_rows`·`parallel`·`mod_k`·`dominated` 1 |
 | (2) 기본값에서 도는 MIP reduction 전부(probing·대칭성·연결 성분 포함) | 시작 전. 목록은 §2 |
 | (3) MIP postsolve 레코드 | 시작 전 |
 | (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
