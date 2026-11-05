@@ -75,6 +75,11 @@ impl PyCoreModel {
     #[getter]
     fn num_nz(&self) -> usize { self.inner.num_nz() }
     fn fingerprint(&self) -> u32 { rsolver_model::fingerprint::fingerprint(&self.inner) }
+    /// (column scales, row scales, objective scale) of the LP simplex setup (04 §3).
+    fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
+        let s = rsolver_lp::scaling::scale_flag3(&self.inner);
+        (s.col, s.row, s.obj)
+    }
 }
 
 #[pyfunction]

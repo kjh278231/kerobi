@@ -43,7 +43,7 @@ loop:
 ## 3. 설정 `new` (노트 13 §3.3)
 
 - 모델 사본: CSC에 slack 열을 붙인 `n+m` 열. 행 `lo ≤ aᵀx ≤ hi`는 slack `s` 범위 `[lo, hi]`로 저장(등식은 `[b,b]`).
-- 스케일링(`ScaleFlag`): 기하평균 반복(행·열 번갈아, 최대 20회) 후 2의 거듭제곱으로 반올림. `ObjScale` 음수면 자동(|c|의 최대로 나눔).
+- 스케일링(`ScaleFlag`, `crates/lp/src/scaling.rs`, 2026-11-05 비트 일치 64/64): 자동(−1)이면 LP·dual은 ScaleFlag 3 경로다. 열 패스(행 스케일을 곱한 열 최대값의 역수, 앞 두 패스는 bound 크기와 기하평균)와 행 패스를 번갈아 최대 10회 하고, 값은 (0.5, 2) 밖이면 2^⌊log₂⌋로 내리며 패스마다 2배 안으로 자른다(9번째는 제한 없음). 일찍 끝나면 bound 없이 마지막 열 패스를 한 번 더 한다. 끝에 [2⁻⁴⁷, 2⁴⁷]로 자른다. 목적 스케일은 스케일된 |c|의 최대·최소로 위로만 키운다(1, 2, …, 256 관찰). 적용 규약은 `a' = σ·a·r·s`, `b' = σ·b·r`, `c' = c·s·objscale`, bound는 `/s`(σ는 `>` 행 −1). 세부와 미해독 분기는 `docs/m1_notes.md` §4.
 - 허용오차: FeasibilityTol, OptimalityTol, MarkowitzTol(기본 0.0078125), pivot_tol 1e-7, big_tol, zero 1e-13, fix_tol, Cutoff.
 - 섭동: PerturbValue 기본 2e-4. 실제 크기는 dual이고 기본값이면 m ≤ 10000에서 ×10, 아니면 ×25.
 - 작업량 계수: 1.3(double), m > 10000이면 `×sqrt(log10(m/1000))`. 모든 커널이 `work += ops × 계수`.
