@@ -42,12 +42,16 @@ impl State {
         let mut t = t;
         t.start(self.work);
         let tv = TimerView { acc: t.acc(), running: t.running(), limit: t.limit };
-        let a = Args { mode, a7, a8, a9, a10 };
+        self.probe_run(p, &Args { mode, a7, a8, a9, a10 }, &tv)
+    }
+
+    /// `4d3a1d` with its (running) timer as `tv`: the passes. Returns a status.
+    pub fn probe_run(&mut self, p: &Params, a: &Args, tv: &TimerView) -> i32 {
         let (mut second, mut no_more) = (false, false);
         loop {
             // pass start: `3ba5ac` (callback, no state change), `5b9aad(G, 0, NULL)`
             self.cg.merge(self.n, self.cols_removed, &self.col_cnt, &mut self.work, self.work_mult);
-            match self.probe_pass(p, &a, !second, &tv, &mut no_more) {
+            match self.probe_pass(p, a, !second, tv, &mut no_more) {
                 Ok(true) => second = true,
                 Ok(false) => return 0,
                 Err(rc) => return rc,

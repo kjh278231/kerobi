@@ -135,6 +135,67 @@ impl PyCoreModel {
         };
         Ok(PyCoreModel { inner })
     }
+    /// Run the whole `4d3a1d` call (write-back included) on a state dumped by tools/mip_state_dump.js at its entry,
+    /// with the conflict graph and timer of tools/probe_trace.js (tools/probe_apply_check.py builds `d`). Returns the
+    /// state at the end in dump form, the new postsolve records (type, bytes, pad ranges, pointer offsets) and the
+    /// status.
+    fn mip_probe_full<'py>(&self, py: Python<'py>, d: &Bound<'py, pyo3::types::PyDict>) -> PyResult<Bound<'py, pyo3::types::PyDict>> {
+        use pyo3::types::PyDict;
+        use rsolver_mip::{conflict::ConflictGraph, dump::{Parts, QueueParts}, probe};
+        fn get<'py, T: pyo3::FromPyObject<'py>>(d: &Bound<'py, PyDict>, k: &str) -> PyResult<T> {
+            d.get_item(k)?.ok_or_else(|| pyo3::exceptions::PyKeyError::new_err(k.to_string()))?.extract()
+        }
+        let q = |k: &str| -> PyResult<QueueParts> {
+            let t: Bound<'py, PyDict> = get(d, k)?;
+            Ok(QueueParts { flag: get(&t, "flag")?, a: get(&t, "a")?, b: get(&t, "b")?, list: get(&t, "list")?,
+                            cache: get(&t, "cache")?, cache2: get(&t, "cache2")? })
+        };
+        let parts = Parts {
+            n: get(d, "n")?, m: get(d, "m")?, lb: get(d, "lb")?, ub: get(d, "ub")?, obj: get(d, "obj")?, rhs: get(d, "rhs")?,
+            sense: get(d, "sense")?, vtype: get(d, "vtype")?, row_cnt: get(d, "row_cnt")?, col_cnt: get(d, "col_cnt")?,
+            inf_max: get(d, "inf_max")?, inf_min: get(d, "inf_min")?, act_max: get(d, "act_max")?, act_min: get(d, "act_min")?,
+            mult_lo: get(d, "mult_lo")?, mult_hi: get(d, "mult_hi")?, col_flag: get(d, "col_flag")?, objcon: get(d, "objcon")?,
+            nnz: get(d, "nnz")?, work: get(d, "work")?, work_mult: get(d, "work_mult")?, counters: get(d, "counters")?,
+            nfree: get(d, "nfree")?, npend: get(d, "npend")?, rows: get(d, "rows")?, cols: get(d, "cols")?,
+            level: get(d, "level")?, active: get(d, "active")?, r: q("tr_r")?, c: q("tr_c")?,
+        };
+        let p = rsolver_mip::Params::from_pairs(&get::<Vec<(String, f64)>>(d, "params")?);
+        let mut st = rsolver_mip::state::State::from_parts(&parts, &p);
+        st.prelimit = get(d, "prelimit")?;
+        st.cg = ConflictGraph { n0: get(d, "g_n0")?, rc0: get(d, "g_rc0")?, ptr: get(d, "g_ptr")?, adj: get(d, "g_adj")?,
+                                pa: get(d, "g_pa")?, pb: get(d, "g_pb")?, flag: get(d, "g_flag")? };
+        let a: Vec<i32> = get(d, "args")?;
+        let args = probe::Args { mode: a[0], a7: a[1], a8: a[2], a9: a[3], a10: a[4] };
+        let t = probe::TimerView { acc: get(d, "t_acc")?, running: get::<i32>(d, "t_running")? != 0, limit: get(d, "t_limit")? };
+        let rc = st.probe_run(&p, &args, &t);
+        let e = st.to_parts();
+        let o = PyDict::new(py);
+        o.set_item("rc", rc)?;
+        o.set_item("bad_col", st.bad_col)?;
+        for (k, v) in [("lb", &e.lb), ("ub", &e.ub), ("obj", &e.obj), ("rhs", &e.rhs), ("act_max", &e.act_max), ("act_min", &e.act_min),
+                       ("mult_lo", &e.mult_lo), ("mult_hi", &e.mult_hi)] {
+            o.set_item(k, v.clone())?;
+        }
+        for (k, v) in [("row_cnt", &e.row_cnt), ("col_cnt", &e.col_cnt), ("inf_max", &e.inf_max), ("inf_min", &e.inf_min), ("counters", &e.counters)] {
+            o.set_item(k, v.clone())?;
+        }
+        o.set_item("sense", e.sense.clone())?;
+        o.set_item("vtype", e.vtype.clone())?;
+        o.set_item("objcon", e.objcon)?;
+        o.set_item("nnz", e.nnz)?;
+        o.set_item("work", e.work)?;
+        o.set_item("free", (e.nfree, e.npend))?;
+        o.set_item("rows", e.rows.clone())?;
+        o.set_item("cols", e.cols.clone())?;
+        let recs: Vec<(i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>)> =
+            st.post.iter().map(|r| { let l = r.layout(); (r.kind(), l.bytes, l.pads, l.ptrs) }).collect();
+        o.set_item("recs", recs)?;
+        o.set_item("g_edges", st.cg.edges())?;
+        for (k, t) in [("tr_r", &e.r), ("tr_c", &e.c)] {
+            o.set_item(k, (t.flag.clone(), t.a, t.b, t.list.clone()))?;
+        }
+        Ok(o)
+    }
     /// Replay one probing pass from a tools/probe_trace.js dump (tools/probe_check.py builds `d`): conflict-graph
     /// merge, probe matrix, engine, implication export and final merge. Returns what each stage produced.
     fn mip_probe_pass<'py>(&self, py: Python<'py>, d: &Bound<'py, pyo3::types::PyDict>) -> PyResult<Bound<'py, pyo3::types::PyDict>> {
