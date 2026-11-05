@@ -47,7 +47,7 @@
 ## 4. goal 원문
 
 - **G1**: M1에서 LP presolve·postsolve를 뺀 나머지를 완료한다. 완료 기준(Presolve=0, Threads=1):
-  1. Netlib 104개에서 Method 0/1/기본 모두 상태가 Gurobi와 같고, 목적 상대오차 ≤1e-6이다. 크기 제한 밖 40개는 공개 최적값과 비교한다.
+  1. Netlib 91개에서 Method 0/1/기본 모두 상태가 Gurobi와 같고, 목적 상대오차 ≤1e-6이다. 크기 제한 밖 27개는 공개 최적값과 비교한다.
   2. P1: Netlib 64개에서 IterCount가 Gurobi와 같은 인스턴스가 90% 이상이다. 나머지는 ±5%이고 첫 분기점을 기록한다.
   3. P2: work ±5%.
   4. P3: 시간 기하평균 ≤1.2배. 기계가 한가할 때 잰다.

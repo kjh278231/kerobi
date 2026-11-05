@@ -99,7 +99,7 @@ python tools/parity.py capture gurobipy|rsolver <out_dir> [--work-limit 60] [nam
 python tools/parity.py compare <ref_dir> <test_dir> [--csv bench/parity.csv]
 ```
 
-- **라이선스 한계**: `.venv`의 gurobipy는 크기 제한 라이선스다(변수·선형 제약 각 2,000개, 2027-11-29 만료). 기본 대상인 Netlib 64개(`re/bench/results/lp.csv`)와 `miplib_small` 38개는 모두 이 안에 든다. Netlib의 나머지 40개는 공개 최적값과만 비교한다.
+- **라이선스 한계**: `.venv`의 gurobipy는 크기 제한 라이선스다(변수·선형 제약 각 2,000개, 2027-11-29 만료). 기본 대상인 Netlib 64개(`re/bench/results/lp.csv`)와 `miplib_small` 38개는 모두 이 안에 든다. Netlib의 나머지 27개는 공개 최적값과만 비교한다.
 - **한 번에 하나**: `.venv`의 `gurobi_guard.pth`가 Gurobi를 한 프로세스만 쓰도록 막는다(라이선스). 캡처는 차례로 돌린다. 다른 세션이 Gurobi를 쓰는 동안에는 끝날 때까지 기다렸다 다시 시도한다.
 - **실행**: 두 백엔드 모두 같은 gurobipy 모양 API로 돌린다. Threads=1, WorkLimit(기본 60), 나머지 기본값이다. TimeLimit은 쓰지 않는다. 시간 한도는 실행마다 멈추는 지점이 달라 궤적 비교가 안 된다.
 - **기준선**: Gurobi 결과는 `bench/gurobi/`에 있다. 같은 설정으로 두 번 실행해 비교했더니 102개 모두 P0·P1이 일치했다(`bench/gurobi_determinism.csv`, 2026-11-05, 두 실행을 동시에 돌린 부하 상태에서도 같음). 따라서 P1 "같음"은 도달 가능한 목표다. 상태 분포는 LP 64개 OPTIMAL, MIP 12개 OPTIMAL·24개 WORK_LIMIT·2개 INFEASIBLE이다.

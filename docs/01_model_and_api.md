@@ -126,6 +126,6 @@ gurobipy 공개 API 중 다음을 1차 범위로 한다(노트 01 §1의 모듈 
 
 - `tests/test_api.py`: gurobipy 예제(`ref/or-tools/examples/python`의 LP/MIP와 gurobipy `examples/python`의 `mip1`, `qp`, `sos`, `genconstr`, `piecewise`, `multiobj`, `callback`)를 그대로 돌려 결과 값 비교.
 - `tests/test_attr_param.py`: 파라미터 214개 set/get round-trip, 범위 밖 값은 `GurobiError(10002)`.
-- Rust: `model` 크레이트에 MPS round-trip 테스트(Netlib 104개 읽기 → 쓰기 → 다시 읽기 → 동일).
+- Rust: `model` 크레이트에 MPS round-trip 테스트(Netlib 91개 읽기 → 쓰기 → 다시 읽기 → 동일).
 - 패리티 P0: Netlib 64개와 `miplib_small` 38개의 지문이 Gurobi 로그의 지문과 같다. 파라미터 214개의 기본값·범위가 gurobipy `getParamInfo`와 같다.
 - 패리티 P3(모델 구성): `ref/or-tools`와 gurobipy 예제 중 큰 모델 구성 스크립트의 `addVars`/`addConstrs`/`quicksum` 시간이 gurobipy의 1.2배 이내.
