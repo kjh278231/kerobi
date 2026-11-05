@@ -2,6 +2,24 @@
 
 LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolve.md)로 옮긴다. 작업 방식은 [10 §9](10_porting.md)의 재구성 + 오라클 비트 검증이다.
 
+
+## 0. 현재 상태 (2026-11-05, 사용량 한도로 일시 정지)
+
+- **일치**: Presolve=0 64/64, PRELIMIT 1–17 64/64, 기본값 3/64(fit1p, scsd1, scsd6).
+- **포팅 완료**: `5034e9`, `503985`(Netlib에서는 돌지 않음), `51a144`, 내부 루프(`4fe113`, `4ffe11`, `4ff158`, `50cc90`), 바깥 `50cc90(1)`, `50d878`, `38e49a`, `50495e`, `505077`, `3ff744`(열·행·PRESPLITROWS), `50fe2b`. `mod.rs::reduce()`는 `50fe2b` 다음에서 멈춘다(PRELIMIT에 닿은 것처럼).
+- **멈춘 작업**: 집계 포팅 에이전트와 postsolve 포팅 에이전트를 시작 직후 멈췄다. 코드 변경은 없다. postsolve용으로 만든 detached worktree `../rsolver-postsolve`는 지웠다.
+- **다음 할 일(순서대로)**:
+  1. 집계 `519a52`/`37f484`: 해독 노트 [m1_presolve_agg.md](m1_presolve_agg.md)가 있지만 오라클로는 아직 확인하지 않았다. 기본값 52개 모델이 이것에 달려 있다.
+  2. `5b488d`, `538f30` 행 activity 재계산, `47c445`(degen2·degen3만 바뀜, 부록 B), 패스 끝 검사와 다음 패스, 마무리 단계(§7).
+  3. postsolve `363daa`: [m1_postsolve.md](m1_postsolve.md)와 오라클 `tools/uncrush_oracle.py`를 쓴다. 기본값에서 이미 맞는 fit1p, scsd1, scsd6부터 한다.
+  4. 작업량(부록 A, `3ba9de`), clippy 경고 0, `docs/03_presolve.md` 마무리.
+- **오라클은 세션 스크래치에 있었다**: lim1..100, def, p0, noagg, nodep, nopar, noder는 다시 떠야 할 수 있다. 하나에 약 10초 걸린다.
+  ```
+  tools/gurun.sh ../.venv/bin/python tools/presolve_oracle.py <dir>/lim$k --param GURO_PAR_PRELIMIT=$k
+  ```
+  빌드는 `tools/build_local.sh`로 하고, 실행은 `PYTHONPATH=$PWD/python`으로 한다.
+- **작업 방식 메모**: 같은 폴더에서 에이전트 둘이 동시에 cargo 빌드를 하면 서로의 미완성 코드 때문에 빌드가 깨진다. 병렬로 할 때는 detached worktree를 쓰고, 결과는 diff로 이 브랜치에 옮겨 커밋한다.
+
 ## 1. 호출 그래프: presolve는 LP를 풀지 않는다 (2026-11-05)
 
 `re/decomp/callgraph.tsv`에서 `390989`가 닿는 함수는 2,976개다(04_simplex 313개, 05_barrier 223개 포함). 경로를 하나씩 확인한 결과, presolve 경로에서 simplex·barrier·LP 드라이버를 부르는 곳은 없다.
