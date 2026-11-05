@@ -113,6 +113,12 @@ impl PyCoreModel {
         let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
         post.recs.iter().zip(&post.aligns).map(|(r, a)| (r.kind(), a[0], a[1], rsolver_lp::presolve::postsolve::layout(r).0)).collect()
     }
+    /// Debug text of the presolve records, oldest first (for oracle comparisons).
+    fn post_debug(&self, params: Vec<(String, f64)>) -> Vec<String> {
+        let p = rsolver_lp::presolve::Params::from_pairs(&params);
+        let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
+        post.recs.iter().map(|r| format!("{r:?}")).collect()
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)

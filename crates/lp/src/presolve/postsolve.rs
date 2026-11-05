@@ -65,6 +65,12 @@ pub fn layout(r: &PostRec) -> (i64, [i64; 2]) {
         // aggregation records (docs/m1_presolve_agg.md §9); the value array of type 21 is at 0x90 + Q
         PostRec::AggBound { .. } => (0x50, [0, 0]),
         PostRec::SlackCol { .. } => (0x28, [0, 0]),
+        PostRec::ColRows { rows, .. } => {
+            // `3a008f`: u20 + (8K - 8) + u16 + u17 + 8c + 0x98; K entries in all, c rows
+            let c = rows.len() as i64;
+            let k: i64 = rows.iter().map(|r| r.terms.len() as i64).sum();
+            (((4 * k - 1) & !7) + 8 * k - 8 + ((4 * c + 3) & !7) + ((c - 1) & !7) + 8 * c + 0x98, [0, 0])
+        }
         PostRec::PairAgg { n1, n2, .. } => {
             let lt = (n1 + n2) as i64;
             let q = (4 * lt - 1) & !7;
@@ -88,12 +94,13 @@ impl PostRec {
             PostRec::AggBound { .. } => 6,
             PostRec::SlackCol { .. } => 11,
             PostRec::PairAgg { .. } => 21,
+            PostRec::ColRows { .. } => 24,
         }
     }
 }
 
 impl Post {
-    pub fn new(st: &State, infbound: f64) -> Post {
+    pub fn new(st: &State, infbound: f64, nnz0: i64) -> Post {
         let map = |cnt: &[i32]| {
             let mut k = 0;
             cnt.iter()
@@ -114,7 +121,7 @@ impl Post {
         // chunk has `nnz/5 + 10` bytes (3a484d), a request that does not fit starts a chunk of
         // max(next, request) bytes and next = max(first, min(64K, 2 * that)). Only the records allocate from it
         // (checked against the oracle's record addresses for the 58 Netlib models that reach uncrush).
-        let first = st.nnz / 5 + 10;
+        let first = nnz0 / 5 + 10;
         let (mut cap, mut used, mut next) = (first, 0i64, first);
         let mut aligns = Vec::with_capacity(st.post.len());
         for r in &st.post {
@@ -362,10 +369,139 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
             PostRec::ParallelCol { x: xc, y: yc, lx, ly, ux, uy, r } => {
                 parallel_col(&mut x, &mut dual, &mut bs, (*xc as usize, *yc as usize), [*lx, *ly, *ux, *uy, *r], post.infbound)
             }
-            // shortcut: aggregation records (types 6, 11, 21) are not decoded yet; uncrush stops on them. Port them
-            // (363daa / 365159 :472, :608, 35fd68) before running the uncrush at default parameters.
-            PostRec::AggBound { .. } | PostRec::SlackCol { .. } | PostRec::PairAgg { .. } => {
-                panic!("uncrush of aggregation record type {} is not ported", r.kind())
+            PostRec::AggBound { code, e, k, r: rr, ae, ak, .. } => {
+                // `363daa` case 6, basis path. shortcut: code bit 8 (col_flag 0x80, PWL) is not ported.
+                let (e, k, rr) = (*e as usize, *k as usize, *rr as usize);
+                let s = bs[k];
+                let hit = match s {
+                    -1 => code & 1 != 0,
+                    -2 => code & 2 != 0,
+                    _ => false,
+                };
+                if hit {
+                    dual[n + rr] -= dual[k] / *ak;
+                    dual[e] = (-dual[k] * *ae) / *ak;
+                    dual[k] = 0.0;
+                    bs[k] = bs[e];
+                    let prod = *ae * *ak;
+                    let to_upper = if prod <= 0.0 { s != -1 } else { s == -1 };
+                    bs[e] = if to_upper { -2 } else { -1 };
+                }
+            }
+            PostRec::SlackCol { r: rr, j, a: av } => {
+                let (rr, j) = (*rr as usize, *j as usize);
+                x[n + rr] = *av * x[j];
+                bs[n + rr] = bs[j];
+                bs[j] = 0;
+            }
+            PostRec::ColRows { j, lb, ub, y_idx, y_add, rows, .. } => {
+                // `361ab1`, basis path: x_j goes to the largest lower / smallest upper bound its rows imply
+                let j = *j as usize;
+                let (mut lo, mut hi) = (*lb, *ub);
+                let (mut lo_row, mut hi_row) = (-1i32, -1i32);
+                for rw in rows {
+                    let mut v = rw.rhs;
+                    let mut aij = f64::NAN;
+                    for &(c, val) in &rw.terms {
+                        if c as usize == j {
+                            aij = val;
+                        } else {
+                            v -= val * x[c as usize];
+                        }
+                    }
+                    v /= aij;
+                    if (aij > 0.0 || rw.sense == b'=') && v < hi {
+                        hi_row = rw.row;
+                        hi = v;
+                    }
+                    if (aij < 0.0 || rw.sense == b'=') && lo < v {
+                        lo_row = rw.row;
+                        lo = v;
+                    }
+                }
+                let xj = if (-1e30 < lo && lo < *lb + 1e-10) || ((1e30 <= hi || hi <= *ub - 1e-10) && lo.abs() < hi.abs()) {
+                    lo
+                } else {
+                    hi
+                };
+                x[j] = xj;
+                if (xj - *lb).abs() <= 1e-10 {
+                    bs[j] = -1;
+                } else if (xj - *ub).abs() <= 1e-10 {
+                    bs[j] = -2;
+                } else {
+                    let rw = if xj == lo { lo_row } else { hi_row } as usize;
+                    x[n + rw] = 0.0;
+                    bs[j] = bs[n + rw];
+                    bs[n + rw] = -1;
+                }
+                if *y_idx >= 0 {
+                    dual[n + *y_idx as usize] += *y_add;
+                }
+            }
+            PostRec::PairAgg { r: rr, e1, e2, k1, k2, n1, n2, f1, f2, a1, a2, obj1, obj2, ub1, ub2, entries } => {
+                let (rr, e1, e2, k1, k2) = (*rr as usize, *e1 as usize, *e2 as usize, *k1 as usize, *k2 as usize);
+                x[e1] = *f1 * x[k1];
+                x[e2] = *f2 * x[k2];
+                let prods: Vec<f64> = entries.iter().map(|&(i, v)| dual[n + i as usize] * v).collect();
+                let n1 = *n1 as usize;
+                let _ = n2;
+                let s1 = simd_sum(*obj1, a[0] != 0, &prods[..n1]);
+                let s2 = simd_sum(*obj2, (a[0] as usize + 8 * n1) & 8 != 0, &prods[n1..]);
+                let (x1, x2) = (x[e1], x[e2]);
+                let which: i32 = if x1 >= 1e-6 || x2 >= 1e-6 {
+                    if a2.abs() * x2 <= a1.abs() * x1 { 1 } else { -1 }
+                } else if dual[k1] >= 1e-6 {
+                    -((dual[k2] < 1e-6) as i32)
+                } else {
+                    1
+                };
+                let status = |v: f64, ub: f64| if v < 1e-6 { -1 } else if ub - 1e-6 < v { -2 } else { -3 };
+                if which == 1 {
+                    dual[n + rr] = -s1 / *a1;
+                    dual[e1] = 0.0;
+                    let d2 = s2 + *a2 * dual[n + rr];
+                    dual[e2] = d2;
+                    dual[k2] -= *f2 * d2;
+                    bs[e2] = status(x[e2], *ub2);
+                } else if which == -1 {
+                    dual[n + rr] = -s2 / *a2;
+                    dual[e2] = 0.0;
+                    let d1 = s1 + *a1 * dual[n + rr];
+                    dual[e1] = d1;
+                    dual[k1] -= *f1 * d1;
+                    bs[e1] = status(x[e1], *ub1);
+                } else {
+                    let (t1, t2) = (s1 / a1.abs(), s2 / a2.abs());
+                    let (mut pick, mut best) = if t1 <= t2 { (e1, t1) } else { (e2, t2) };
+                    let v3 = (dual[k1] - s1 * *f1) / *f1;
+                    let t3 = v3 / a1.abs();
+                    if t3 < best {
+                        pick = k1;
+                        best = t3;
+                    }
+                    let v4 = (dual[k2] - s2 * *f2) / *f2;
+                    if v4 / a2.abs() < best {
+                        pick = k2;
+                    }
+                    let y = if pick == e1 {
+                        -s1 / *a1
+                    } else if pick == e2 {
+                        -s2 / *a2
+                    } else if pick == k1 {
+                        v3 / *a1
+                    } else {
+                        v4 / *a2
+                    };
+                    dual[n + rr] = y;
+                    dual[e1] = *a1 * y + s1;
+                    dual[e2] = *a2 * y + s2;
+                    dual[k1] += (-s1 - *a1 * y) * *f1;
+                    dual[k2] += (-s2 - *a2 * y) * *f2;
+                    bs[e1] = -1;
+                    bs[e2] = -1;
+                    bs[pick] = rr as i32;
+                }
             }
         }
     }

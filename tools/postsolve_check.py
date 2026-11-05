@@ -14,7 +14,7 @@ import rsolver  # noqa: E402
 
 H = lambda v: [float.fromhex(s) for s in v]
 # byte offsets (in the record's data block) of the value-array pointers per record type
-VAL_PTRS = {1: (0x28,), 2: (0x30, 0x48), 3: (0x30,)}
+VAL_PTRS = {1: (0x28,), 2: (0x30, 0x48), 3: (0x30,), 21: (0x68,)}
 
 
 def oracle_aligns(recs):
@@ -27,11 +27,16 @@ def oracle_aligns(recs):
     return out
 
 
+def _n2(r):  # does the type-2 record have a column part?
+    return struct.unpack_from('<i', bytes.fromhex(r['raw']), 0x38)[0] != 0 and struct.unpack_from('<Q', bytes.fromhex(r['raw']), 0x48)[0] > 0x1000
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("oracle")
     ap.add_argument("--param", action="append", default=[])
     ap.add_argument("--oracle-align", action="store_true")
+    ap.add_argument("--align", action="store_true", help="first parity mismatch per model")
     ap.add_argument("--arena", action="store_true", help="list unexplained arena gaps instead of comparing")
     ap.add_argument("-v", action="store_true")
     ap.add_argument("names", nargs="*")
@@ -53,6 +58,22 @@ def main():
         if kinds != want_kinds:
             print(f"{name:12s} records differ: got {len(kinds)} want {len(want_kinds)}"
                   f" first diff at {next((i for i, (x, y) in enumerate(zip(kinds, want_kinds)) if x != y), min(len(kinds), len(want_kinds)))}")
+            continue
+        if a.align:  # first record whose simulated array parity differs from the real one (arrays used by a dot product)
+            real = oracle_aligns(e["records"])
+            for i in range(len(pr)):
+                if kinds[i] not in VAL_PTRS:
+                    continue
+                r = e["records"][len(pr) - 1 - i]
+                raw = bytes.fromhex(r["raw"])
+                bad = []
+                for q, off in enumerate(VAL_PTRS[kinds[i]]):
+                    ptr = struct.unpack_from("<Q", raw, off)[0]
+                    if ptr > 0x10000 and ptr % 8 == 0 and pr[i][1 + q] != ptr & 8:  # garbage pointers (unused array) are skipped
+                        bad.append(q)
+                if bad:
+                    print(f"{name:12s} first parity mismatch at record {i} kind {kinds[i]} arrays {bad} sim {pr[i][1:3]}; context kinds {kinds[max(0,i-3):i+2]}")
+                    break
             continue
         if a.arena:  # gaps between consecutive records that the push sizes do not explain
             rs = list(reversed(e["records"]))
