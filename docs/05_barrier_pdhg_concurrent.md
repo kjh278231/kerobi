@@ -62,12 +62,14 @@ loop:
    // corrector 수 자동 조정: ratio = t(추가 corrector)/(t(factor)+t(pred)+t(corr1)+t(update)); <0.25 → K++ (≤20); >0.25이고 avg α_pα_d > 0.1 → K--
    μ<1e-4이면 잔차가 임계를 넘지 않게 α 축소; QP면 α_p = α_d
    x += α_pΔx, (y,z) += α_dΔ…, τ,κ
-   정체: 최근 3회 α_pα_d<1e-3 && μ 감소율>0.98 → 정규화 키우고 재시작(한 번)
+   정체: 최근 3회 α_pα_d<1e-3 && μ 감소율>0.98 → 정규화 키우고 재시작(한 번)   // M3 확정: 이동 하한 max(1000, 10·B+0x38)로 2d0663 재호출. perold 반복 99, pilot4 반복 57에서 실제로 돈다
    발산: BarHomogeneous==-1 && !homog && (‖rp‖>1e15·max(1,‖b‖∞) || ‖rd‖>1e15·… || (iter≥10 && 1e8배 && 무진전)) → homogeneous로 재시작
 log "Barrier solved model in %d iterations and %.2f seconds (%.2f work units)" | "Barrier performed %d iterations in …"
 ```
 
-**M3 확정**: corrector 수 자동 조정의 "시간"은 벽시계가 아니라 타이머 11개에 쌓는 결정적 work다(`ade552(t,0)`, 구간 work 증가 + 시작 횟수). 시작값 K₀·격자 수 N₀는 `2e7f38`(F+0x160 = 2·nnz(L), F+0x168 = symbolic 통계와 CPU 상수 `a80670` 50/30/18/10)로 정한다. 그래서 반복 수가 CPU 명령어 집합에 따라 달라질 수 있다. corrector는 ω 격자 선 탐색(`2f4fe9`)으로 합치고, 갱신은 시행점 곱으로 정한 감쇠 η(`2f2e95`)를 쓴다. 정규화 크기 B+0x280은 refinement(`2f9699`) 정지 기준이다. 세부는 [m3_ipm.md](m3_ipm.md) §2–5. 실행 결정성: 같은 설정 재실행 64/64 궤적 동일.
+**M3 확정**: corrector 수 자동 조정의 "시간"은 벽시계가 아니라 타이머 11개에 쌓는 결정적 work다(`ade552(t,0)`, 구간 work 증가 + 시작 횟수). 시작값 K₀·격자 수 N₀는 `2e7f38`(F+0x160 = 2·nnz(L), F+0x168 = symbolic 통계와 CPU 상수 `a80670` 50/30/18/10)로 정한다. 그래서 반복 수가 CPU 명령어 집합에 따라 달라질 수 있다. corrector는 ω 격자 선 탐색(`2f4fe9`)으로 합치고, 갱신은 시행점 곱으로 정한 감쇠 η(`2f2e95`)를 쓴다. 정규화 크기 B+0x280은 refinement(`2f9699`) 정지 기준이다. 세부는 [m3_ipm.md](m3_ipm.md) §2–5. 실행 결정성: 같은 설정 재실행 64/64 궤적 동일. 잔차 합은 `2f9515` 8레인, compl은 x87 80비트 Kahan 합(`3439d5`, Rust `f80.rs`), μ_aff는 4레인이다. 콜백 PRIMINF = √(‖r_p‖² + ‖r_u‖²)/τ.
+
+**M3 결과(2026-11-06, Netlib 64, Presolve=0, Threads=1, Crossover=0)**: 상태 64/64, 목적 상대오차 ≤1e-6 64/64, **BarIterCount 64/64**, Barrier statistics 64/64, BARRIER 콜백 궤적 비트 동일 55/64(상대 1e-6 안 63/64). 비교표 `bench/parity_bar.csv`, 첫 분기 반복은 그 `first_divergence(_1e-6)` 열.
 
 ### 2.5 종료 판정 (노트 14 §3.1.6)
 
@@ -85,7 +87,8 @@ log "Barrier solved model in %d iterations and %.2f seconds (%.2f work units)" |
 ### 2.6 수치 분해 (`lp::barrier::cholesky`)
 
 - **supernodal LDLᵀ**, 병렬은 etree 서브트리 단위(스레드 풀). 밀집 대각 블록: Bunch–Kaufman 1×1/2×2 피벗(α=(1+√17)/8), 작은 피벗은 `±max(1e-12, min(1e-6, 1e-10·|d|))`로 대체, 2×2 0 대각은 1e-100. 갱신 블록은 밀집 GEMM/TRSM이다. 원본처럼 MKL `dgemm`/`dtrsm`을 부른다([10 §5](10_porting.md)).
-- **M3 상태**: `ldl.rs`(스칼라 up-looking LDLᵀ + 작은 피벗 규칙)로 값은 반올림 수준까지 같다. supernodal 커널과 MKL 합 순서의 비트 이식은 [m3_barrier.md](m3_barrier.md) §4 단계 6. 64개에서 BarIterCount 56/64가 같고, 나머지 8개는 반올림 누적으로 갈라진다.
+- **M3 확정(LP 경로)**: 위 Bunch–Kaufman·±clamp 대체는 F+0x110≠0(밀집 열 분리)·F+0xa0≠0 경로다. LP 정규방정식(`2d8ee5` L767–815)은 피벗을 대체하지 않는다. |d| ≤ 1e-16·|원 대각|(또는 NaN)만 d = 0·1/d = 0으로 버리고 나머지는 아무리 작아도 그대로 두며, 승수와 해법은 1/d(F+0xe8)를 곱한다(오라클 degen2 13개 반복 전부). F+0x100은 버리기 전 값의 min|d/원 대각|이다.
+- **M3 상태**: `crates/lp/src/barrier/chol.rs`가 Gurobi와 비트 같은 supernodal LDLᵀ와 해법(`2ee6c5`)이다. 조립 `32d72f`/`32e116`, 갱신 `32c49d`(자손 supernode 오름차순), 밀집 left-looking 커널의 8레인 합, A·v·Aᵀy 8레인 합(16바이트 정렬로 앞 1개 떼기), 전진 대입 4행 묶음. MKL은 DGEMM('T','N', α=β=1)과 DTRSM('L','U','T','U')만 불리며, `mkl.rs`가 AVX2 커널(dgemv/nocopy/packed, TRSM v1/packed, FMA 위치, k·n 블록)을 비트 그대로 재현한다(64개에서 나온 2660/746 모양 전부, 검증 도구 `tools/proto/mkl/`). Gurobi 바이너리를 런타임에 부르지 않는다. 세부는 [m3_chol.md](m3_chol.md).
 - 밀집 열: 정규방정식에 열을 추가 행으로 붙이는 부분 증강계(F+0x138 보정). `2ffcb4`를 포팅해 M3에 넣는다.
 - `bar_iterative`: factor+solve ops가 `(2·nnz(A)+1)·2000·20`을 넘는 반복에서 재분해를 생략하고 이전 인수로 전처리한 PCG 1회 corrector — M6.
 - 메모리·시간 추정: 밀집 GEMM 벤치로 "roughly %.0f seconds per iteration".
