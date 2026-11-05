@@ -8,6 +8,7 @@
 //! perturbation trigger and the refactor schedule are textbook stand-ins; iteration paths differ from Gurobi's.
 use crate::lu::{sum_squares, Lu, ZERO};
 use crate::bfrt::{bfrt, Cand};
+use crate::common::Rng;
 use crate::pricing::{Pricing, BIG_M_TOL};
 use crate::spx::Spx;
 use crate::start::start_basis;
@@ -51,6 +52,8 @@ pub struct Engine<'a> {
     pub iter_limit: u64,
     lu_interval: usize,
     perturbed: bool,
+    /// Perturbation size spx+0x348 (PerturbValue 2e-4 at the start).
+    pert_size: f64,
     markowitz_tol: f64,
     in_dual: bool,
     /// Columns refused as entering after a pivot mismatch on a fresh factorization; cleared after a pivot.
@@ -92,6 +95,7 @@ impl<'a> Engine<'a> {
             iter_limit: u64::MAX,
             lu_interval: interval,
             perturbed: false,
+            pert_size: 2e-4,
             markowitz_tol: crate::lu::MARKOWITZ_TOL,
             in_dual: false,
             rejected: vec![false; n + m],
@@ -679,29 +683,44 @@ impl<'a> Engine<'a> {
         flipped
     }
 
-    /// Cost perturbation (048d5f): nonbasic costs move away from zero in their feasible direction.
+    /// GLOBAL cost perturbation of `48d5f` (m1_notes §8.9): the stream is reseeded with the iteration count (Seed
+    /// offset 0) and every nonbasic draws one number; δ = ((k % 250 + 1)·(size/500))·log2(w + 1) with w the column
+    /// count (slack 1) moves the cost away from its bound; a column on an artificial upper bound with d ≤ OptTol
+    /// moves to its lower bound. The size then triples up to 0.01.
+    /// shortcut: the trigger is still "50 degenerate pivots in a row" instead of the original's counters.
     fn perturb(&mut self) {
-        let mut seed: u64 = 1;
+        let mut rng = Rng(self.iter);
+        let pp = self.pert_size / 500.0;
+        let mut moved = false;
         for j in 0..self.n + self.m {
-            let s = self.vstat[j];
-            if s >= 0 || s == -4 {
+            if self.vstat[j] >= 0 {
                 continue;
             }
-            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
-            let nnz = if j < self.n { self.spx.len[j] as f64 } else { 1.0 };
-            let delta = ((seed >> 33) % 250 + 1) as f64 * (2e-4 / 500.0) * (1.0 + nnz).log2();
-            match s {
+            let k = rng.next_int();
+            let w = if j < self.n { self.spx.len[j] as f64 * (1.0 * 0.3 + 0.7) } else { 1.0 * (1.0 * 0.3 + 0.7) };
+            let delta = ((k % 250 + 1) as f64 * pp) * (w + 1.0).log2();
+            match self.vstat[j] {
                 -1 => {
                     self.c[j] += delta;
                     self.d[j] += delta;
                 }
-                -2 => {
+                -2 if self.spx.u[j] < INFINITY => {
                     self.c[j] -= delta;
                     self.d[j] += delta;
+                }
+                -2 if self.d[j] <= OPT_TOL => {
+                    moved = true;
+                    self.vstat[j] = -1;
+                    self.c[j] += delta;
+                    self.d[j] = -self.d[j] + delta;
                 }
                 _ => {}
             }
         }
+        if moved {
+            self.compute_xb();
+        }
+        self.pert_size = (3.0 * self.pert_size).min(0.01);
         self.perturbed = true;
     }
 
