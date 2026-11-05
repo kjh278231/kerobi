@@ -19,6 +19,14 @@ def test_scale_factors_bitwise_equal():
         assert obj.hex() == g["objscale"], f.stem
 
 
+def test_dual_start_basis_equal():
+    """M1 stage B: 1e7531 crash + renumbering by the first factorization give Gurobi's iteration-0 vstat. The 4 models
+    with free columns are snapshotted before their first free-column pivot (free nonbasics marked -3)."""
+    for f in sorted((ROOT / "bench/gurobi_spx0").glob("*.json")):
+        g = json.load(open(f))
+        assert rsolver.read(DATA / f"{f.stem}.mps.gz")._core.start_basis() == g["vstat"], f.stem
+
+
 def test_iteration0_basic_solution_bitwise_equal():
     """M1 stage C: singleton LU + FTRAN give Gurobi's x_B for its iteration-0 basis."""
     n_checked = 0

@@ -86,6 +86,10 @@ impl PyCoreModel {
         let spx = rsolver_lp::spx::Spx::new(&self.inner);
         rsolver_lp::lu::dual_start(&spx, &vstat)
     }
+    /// Status array of the dual start basis (crash + first factorization); M1 parity tests.
+    fn start_basis(&self) -> Vec<i32> {
+        rsolver_lp::start::start_basis(&rsolver_lp::spx::Spx::new(&self.inner))
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)
