@@ -88,7 +88,7 @@ function dump(tag) {
 function install() {
   Interceptor.attach(base.add(P), { onEnter(a) { st = a[1].sub(0x3f0); } });
   Interceptor.attach(base.add(F), {
-    onEnter(a) { calls++; this.on = st && (NTH === 0 || calls === NTH); if (this.on) send({ call: calls, s: dump('enter') }); },
+    onEnter(a) { calls++; this.on = st && (NTH === 0 || calls === NTH); if (this.on) send({ call: calls, args: [0, 1, 2, 3, 4, 5].map(i => a[i].toInt32()), s: dump('enter') }); },
     onLeave(r) { if (this.on) send({ call: calls, ret: r.toInt32(), s: dump('leave') }); }
   });
 }

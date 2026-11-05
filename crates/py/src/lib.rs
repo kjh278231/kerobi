@@ -161,6 +161,7 @@ impl PyCoreModel {
             nfree: get(d, "nfree")?, npend: get(d, "npend")?, rows: get(d, "rows")?, cols: get(d, "cols")?,
             level: get(d, "level")?, active: get(d, "active")?, r: q("tr_r")?, c: q("tr_c")?,
             nbin: d.get_item("nbin")?.map(|x| x.extract()).transpose()?.unwrap_or(-1),
+            nint: d.get_item("nint")?.map(|x| x.extract()).transpose()?.unwrap_or(-1),
         };
         let p = rsolver_mip::Params::from_pairs(&get::<Vec<(String, f64)>>(d, "params")?);
         let mut st = rsolver_mip::state::State::from_parts(&parts, &p);
@@ -497,6 +498,7 @@ fn mip_dump_run<'py>(py: Python<'py>, name: &str, d: &Bound<'py, pyo3::types::Py
         nfree: g(d, "nfree")?, npend: g(d, "npend")?, rows: g(d, "rows")?, cols: g(d, "cols")?,
         level: g(d, "level")?, active: [active[0], active[1], active[2]], r: q("r")?, c: q("c")?,
         nbin: d.get_item("nbin")?.map(|x| x.extract()).transpose()?.unwrap_or(-1),
+        nint: d.get_item("nint")?.map(|x| x.extract()).transpose()?.unwrap_or(-1),
     };
     let p = rsolver_mip::Params::from_pairs(&params);
     let mut st = rsolver_mip::state::State::from_parts(&parts, &p);

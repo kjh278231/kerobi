@@ -16,8 +16,6 @@ impl State {
     pub fn implied_int(&mut self, p: &Params) -> i32 { 0 }
     /// `578fd2` knapsack coefficient lifting
     pub fn knapsack(&mut self, p: &Params) -> i32 { 0 }
-    /// `374521` dual bounds
-    pub fn dual_bounds(&mut self, p: &Params) -> i32 { 0 }
     /// `5431ee` binary implication graph SCC
     pub fn trans_red(&mut self, p: &Params) -> i32 { 0 }
     /// `4030c9` dominated columns

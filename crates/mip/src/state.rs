@@ -117,6 +117,8 @@ pub struct State {
     pub bad_row: i32,
     /// +0x490 objective cutoff: 1e100 without a MIP context or incumbent
     pub cutoff: f64,
+    /// +0x42c opposite parallel `<` rows left apart (`3ff744` mode 0 counts them; model generation splits them)
+    pub antipar: i32,
     /// +0x370 postsolve records, in push order
     pub post: Vec<PostRec>,
     /// +0x3f0 conflict graph (`5b84b1`): probing's implications
@@ -382,6 +384,7 @@ impl State {
             bad_col: -1,
             bad_row: -1,
             cutoff: 1e100,
+            antipar: 0,
             post: Vec::new(),
             cg: Default::default(),
             row_int: vec![0.0; m],

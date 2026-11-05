@@ -23,9 +23,10 @@ def to_parts(s):
     d["vtype"] = list(s["vtype"].encode())
     d["col_flag"] = s["col_flag"]
     d["nnz"] = int(s["nnz"])
-    d["counters"] = s["counters"][:13]
+    d["counters"] = s["counters"][:14]  # +0x3f8 .. +0x42c
     d["nfree"], d["npend"] = int(s["free"][0]), int(s["free"][1])
     d["nbin"] = s.get("nbin", -1)  # +0xf0 (counted at bound rounding, not kept up to date)
+    d["nint"] = s.get("nint", -1)  # +0xf4 (likewise)
     d["rows"] = [[tuple(x) for x in r] for r in s["rows"]]
     d["cols"] = [[tuple(x) for x in c] for c in s["cols"]]
     t = s["tracker"]
@@ -83,7 +84,7 @@ def compare(got, want, enter_recs, show=12):
             ck(k, a, b)
     ck("sense", bytes(got["sense"]).decode(), want["sense"])
     ck("vtype", bytes(got["vtype"]).decode(), want["vtype"])
-    ck("counters", list(got["counters"][:13]), want["counters"][:13])
+    ck("counters", list(got["counters"][:14]), want["counters"][:14])
     ck("free/pending", [got["nfree"], got["npend"]], [int(x) for x in want["free"]])
     for kind in ("rows", "cols"):
         for i, (x, y) in enumerate(zip(got[kind], want[kind])):
@@ -132,6 +133,8 @@ def main():
                     continue
                 enter, leave = leave, after[c]
             names = ["36e6b6:0", "36e6b6:1"] if a.fn == "36e6b6" else [a.fn]
+            if a.fn == "3ff744":  # mode and flag are the 4th and 5th arguments
+                names = [f"3ff744:{xs[0]['args'][3]}:{xs[0]['args'][4]}"]
             best = None
             for name in names:
                 got = _core.mip_dump_run(name, to_parts(enter), params)

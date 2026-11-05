@@ -12,6 +12,12 @@ pub enum PostRec {
     Subst { j: i32, c0: f64, ind: Vec<i32>, val: Vec<f64> },
     /// type 9 (`3a061e`): {i32 i, f64 d1, f64 d2}.
     T9 { i: i32, d1: f64, d2: f64 },
+    /// type 4 (`39a1e9`): parallel columns, `y` merged into `x` (flag 0, x = x + r·y) or two integer columns into
+    /// one integer (flag 1, `3ff744` mode 3); the bounds are those before the merge.
+    Par { x: i32, y: i32, lx: f64, ly: f64, ux: f64, uy: f64, r: f64, flag: i32 },
+    /// type 25 (`39ba81`): XOR rows removed by `3e5363`: the columns (pivot first), the rows with their live
+    /// entries (`beg` has rows + 1 entries) and rhs, the parity kind `e8` (0: rhs 2, 1: rhs −1) and the pivot code.
+    Xor { e8: i32, code: i32, cols: Vec<i32>, rows: Vec<i32>, beg: Vec<i32>, ind: Vec<i32>, val: Vec<f64>, rhs: Vec<f64> },
 }
 
 /// Data bytes of a record as Gurobi lays them out: padding bytes are 0 here (Gurobi leaves arena garbage) and
@@ -30,6 +36,8 @@ impl PostRec {
             PostRec::Fix { .. } => 1,
             PostRec::Subst { .. } => 2,
             PostRec::T9 { .. } => 9,
+            PostRec::Par { .. } => 4,
+            PostRec::Xor { .. } => 25,
         }
     }
 
@@ -50,6 +58,68 @@ impl PostRec {
                 f64b(&mut b, *v);
                 if let PostRec::T9 { d2, .. } = self {
                     f64b(&mut b, *d2);
+                }
+            }
+            PostRec::Par { x, y, lx, ly, ux, uy, r, flag } => {
+                i32b(&mut b, *x);
+                i32b(&mut b, *y);
+                for v in [lx, ly, ux, uy, r] {
+                    f64b(&mut b, *v);
+                }
+                i32b(&mut b, *flag);
+                pad(&mut b, &mut pads, 4);
+            }
+            PostRec::Xor { e8, code, cols, rows, beg, ind, val, rhs } => {
+                // `39ba81`: cols at +0x48, rows at +0x50+Pc, beg at +0x58+Pc+Pr, ind at +0x60+Pc+Pr+Pb, val at
+                // +0x68+Pc+Pr+Pb+Pi, rhs after val; P = (4k − 1) & !7, Pb = (4·rows + 3) & !7
+                let pk = |k: usize| (4 * k).saturating_sub(1) & !7;
+                let (nc, nr, nz) = (cols.len(), rows.len(), ind.len());
+                let o_rows = 0x50 + pk(nc);
+                let o_beg = o_rows + 8 + pk(nr);
+                let o_ind = o_beg + 8 + ((4 * nr + 3) & !7);
+                let o_val = o_ind + 8 + pk(nz);
+                let o_rhs = o_val + 8 * nz;
+                ptrs.push(0);
+                b.extend_from_slice(&0x48u64.to_le_bytes());
+                i32b(&mut b, nc as i32);
+                pad(&mut b, &mut pads, 4);
+                ptrs.push(b.len());
+                b.extend_from_slice(&(o_rows as u64).to_le_bytes());
+                i32b(&mut b, nr as i32);
+                i32b(&mut b, *e8);
+                i32b(&mut b, *code);
+                pad(&mut b, &mut pads, 4);
+                for o in [o_beg, o_ind, o_val, o_rhs] {
+                    ptrs.push(b.len());
+                    b.extend_from_slice(&(o as u64).to_le_bytes());
+                }
+                let fill = |b: &mut Vec<u8>, pads: &mut Vec<(usize, usize)>, to: usize| {
+                    if b.len() < to {
+                        pads.push((b.len(), to));
+                        b.resize(to, 0);
+                    }
+                };
+                for &k in cols {
+                    i32b(&mut b, k);
+                }
+                fill(&mut b, &mut pads, o_rows);
+                for &k in rows {
+                    i32b(&mut b, k);
+                }
+                fill(&mut b, &mut pads, o_beg);
+                for &k in beg {
+                    i32b(&mut b, k);
+                }
+                fill(&mut b, &mut pads, o_ind);
+                for &k in ind {
+                    i32b(&mut b, k);
+                }
+                fill(&mut b, &mut pads, o_val);
+                for &x in val {
+                    f64b(&mut b, x);
+                }
+                for &x in rhs {
+                    f64b(&mut b, x);
                 }
             }
             PostRec::Subst { j, c0, ind, val } => {
@@ -82,6 +152,17 @@ impl PostRec {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn xor_layout_offsets() {
+        // 3 columns, 4 rows of 3 entries: rows at 0x58, beg at 0x68, ind at 0x80, val at 0xb0, rhs at 0x110
+        let l = PostRec::Xor { e8: 0, code: 0, cols: vec![5, 1, 2], rows: vec![0, 1, 2, 3], beg: vec![0, 3, 6, 9, 12],
+                               ind: vec![0; 12], val: vec![1.0; 12], rhs: vec![2.0, 0.0, 0.0, 0.0] }.layout();
+        let ptr = |o: usize| u64::from_le_bytes(l.bytes[o..o + 8].try_into().unwrap());
+        assert_eq!([ptr(0), ptr(0x10), ptr(0x28), ptr(0x30), ptr(0x38), ptr(0x40)], [0x48, 0x58, 0x68, 0x80, 0xb0, 0x110]);
+        assert_eq!(l.bytes.len(), 0x110 + 32);
+        assert_eq!(PostRec::Par { x: 1, y: 2, lx: 0.0, ly: 0.0, ux: 1.0, uy: 1.0, r: 1.0, flag: 0 }.layout().bytes.len(), 0x38);
+    }
 
     #[test]
     fn subst_layout_matches_39d9e1() {
