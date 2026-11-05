@@ -8,8 +8,8 @@ G5([11 §4](11_progress.md)) 작업 중에 알아낸 사실. 확정된 내용은
 |---|---|---|
 | (1) 파라미터 표 548개 = gurobipy | **충족** | §2, `tests/test_params.py` 548/548 |
 | (2) Optimize 헤더 로그 102개 | **충족** | §3, `tests/test_header.py` 102/102 |
-| (3) 분류·Method 확정·자동 조정·상태·요약 로그 | **충족(연속 LP)**: Method 확정·자동 조정 표(단위 테스트), 상태 규칙(`390989` 끝·`0c3d0d`·`36578f`, `a7fc52`·`a80155`)이 실행 불가·무계 LP 4개 × Method 1·2·6에서 Gurobi와 상태·로그 12/12, 요약·반복 표 로그가 세 경로 모두 afiro·grow7에서 줄 단위로 같음(시간만 가림). 64개 전체: barrier 51/64, PDHG 64/64(시간 구간 중간 줄 제외), dual 60/64(simplex 반복 줄 제외). MIP 분류·요약은 범위 밖 | §4, §8–§10, `crates/driver` 테스트, `tests/test_status.py`, `tests/test_driver.py`, `tools/log_check.py` |
-| (4) Presolve 켠 연속 경로 (Method 2·6 반복 수, Method 1 상태·목적) | **충족**: Method 2·Crossover 0 상태·목적·BarIterCount **64/64**, Method 6·Crossover 0 상태·목적·PDHGIterCount **64/64**(bnl1 WORK_LIMIT는 Work까지 비트 일치), Method 1 상태·목적 **64/64**. 덤: PDHG 경로는 X·RC·Slack·Pi가 Gurobi와 비트 일치(63/63 + bnl1), barrier 경로는 50/64(barrier 본체 차이, §10) | §4–§9, `tests/test_driver.py`, `tests/test_max.py` |
+| (3) 분류·Method 확정·자동 조정·상태·요약 로그 | **충족(연속 LP)**: Method 확정·자동 조정 표(단위 테스트), 상태 규칙(`390989` 끝·`0c3d0d`·`36578f`, `a7fc52`·`a80155`)이 실행 불가·무계 LP 4개 × Method 1·2·6에서 Gurobi와 상태·로그 12/12, 요약·반복 표 로그가 세 경로 모두 afiro·grow7에서 줄 단위로 같음(시간만 가림). 64개 전체 요약 줄: PDHG 64/64, barrier 63/64, dual 62/64. 로그 전체: PDHG 64/64(시간 구간 중간 줄 제외), barrier 54/64, dual 62/64(simplex 반복 줄 제외). 남은 차이는 엔진 내부(§7) MIP 분류·요약은 범위 밖 | §4, §8–§10, `crates/driver` 테스트, `tests/test_status.py`, `tests/test_driver.py`, `tools/log_check.py` |
+| (4) Presolve 켠 연속 경로 (Method 2·6 반복 수, Method 1 상태·목적) | **충족**: Method 2·Crossover 0 상태·목적·BarIterCount **64/64**, Method 6·Crossover 0 상태·목적·PDHGIterCount **64/64**(bnl1 WORK_LIMIT는 Work까지 비트 일치), Method 1 상태·목적 **64/64**. 덤: PDHG 경로는 X·RC·Slack·Pi가 Gurobi와 비트 일치(63/63 + bnl1), barrier 경로는 53/64(§7) | §4–§9, `tests/test_driver.py`, `tests/test_max.py` |
 | (5) clippy 0, 테스트, 문서 | **충족**: clippy 경고 0, cargo test 전부, pytest 통과(1 xfail은 기존 MIP 배낭), barrier·PDHG Presolve=0 64/64 유지 | |
 
 ## 1. 호출 범위 (2026-11-06)
@@ -146,7 +146,7 @@ presolved perold에는 하한 −∞·상한 유한 열이 1개 있고 Netlib �
 
 ### 6.2 presolved 모델의 RNG (`3b0917` → `895c5`)
 
-Frida로 `a7b4d6`/`a7b54f`의 상태 포인터를 따라가면 presolve 경로의 PDHG는 presolved 모델의 RNG(model+0xb0)에서 power iteration 시작 벡터를 뽑는데, 그 상태가 0이 아니다(afiro 757). `3b0917`이 `895c5(presolved, 13·n + 7·m + 23·nnz)`로 정하고 `895c5`가 Seed(env+0x2cd0)를 더한다(n, m, nnz는 presolved 모델). 포트: `Model::rng` 필드(모델 데이터, 새 모델은 0), `presolve::run_post`가 설정, `pdhg::solve`가 `md.rng`에서 시작(전에는 0 고정). Gurobi도 presolved MPS를 Presolve=0으로 풀면 상태 0이라 우리 이전 값과 같았다(afiro 828, seba 310, vtpbase 1257). 이 수정으로 PDHGIterCount 9/64 → 63/64.
+Frida로 `a7b4d6`/`a7b54f`의 상태 포인터를 따라가면 presolve 경로의 PDHG는 presolved 모델의 RNG(model+0xb0)에서 power iteration 시작 벡터를 뽑는데, 그 상태가 0이 아니다(afiro 757). `3b0917`이 `895c5(presolved, 13·n + 7·m + 23·nnz)`로 정하고 `895c5`가 Seed(env+0x2cd0)를 더한다(n, m, nnz는 presolved 모델). 포트: `Model::rng` 필드(모델 데이터, 새 모델은 0), `presolve::run_post`가 설정, `pdhg::solve`가 `md.rng`에서 시작(전에는 0 고정). Gurobi도 presolved MPS를 Presolve=0으로 풀면 상태 0이라 우리 이전 값과 같았다(afiro 828, seba 310, vtpbase 1257). 이 수정으로 PDHGIterCount 9/64 → 63/64. barrier ordering의 이분할(`30b0f2`, 600행 넘는 성분)도 같은 모델 RNG에서 뽑으므로 `ordering::analyze`가 `md.rng`에서 시작한다(전에는 0): presolved 모델의 Factor NZ·Ops가 60/64 → **64/64**(25fv47·degen3·scfxm3·sctap2가 고쳐짐).
 
 ### 6.3 작업량 타이머
 
@@ -155,8 +155,9 @@ Frida로 `a7b4d6`/`a7b54f`의 상태 포인터를 따라가면 presolve 경로�
 ## 7. 안 한 것·남은 위험
 
 - 범위 밖: MIP 경로·분류(Python이 `IsMIP`이면 기존 오류), 다목적, concurrent(스레드 1개 dual로 대신), crossover(Crossover ≠ 0인 Method 2·6도 crossover 없이 끝냄), PreDual 쌍대화, network·sifting, 웜스타트, InfUnbdInfo.
-- simplex 경로: uncrush 뒤 재풀이를 원본의 dual 대신 primal로 한다(§4.2). simplex 내부 로그("handle free variables" 등)와 DisplayInterval 중간 줄은 엔진에 시각 기록이 없어 없다. 그래서 dual 경로 로그는 64개 중 60개만 같다(brandy·perold·pilot4의 자유 열 줄, etamacro의 목적 마지막 자리).
-- barrier 본체(G3)는 presolved 모델에서 원본과 완전히 같지 않다: ordering 결과(Factor NZ·Ops)가 4/64(25fv47·degen3·scfxm3·sctap2)에서 다르고, 반복값이 마지막 자리에서 갈리는 모델이 있어 해(X 등)는 50/64만 비트 일치, 로그는 51/64. BarIterCount·목적은 64/64. 원본 Netlib에서는 검증된 부분이라 presolved 모델에만 나오는 경우(예: bisection 경계)로 보인다. barrier 흐름의 후속 과제다.
+- simplex 경로(simplex 내부, G1·금지 파일): uncrush 뒤 재풀이를 원본의 dual 대신 primal로 한다(§4.2). 엔진의 `dual()`을 공개 API로 바로 부르는 실험은 쌍대 실행 가능성을 보지 않고 0회로 끝나 원본(1–2회)과 더 멀어졌다. 원본 같은 dual 웜스타트는 `simplex.rs`의 비공개 시작 처리(가중치·가격 목록·행 사본)를 여는 입구가 필요하다. 자유 열 루프의 "handle free variables" 줄은 crash 결과(`start::start_basis`)로 조건을 맞춰 찍는다. DisplayInterval 중간 줄은 엔진에 시각 기록이 없어 없다. etamacro·pilot4는 presolved 모델의 simplex 해가 상대 1e-10 수준으로 달라 "Optimal objective" 마지막 자리가 다르다(dual 로그 62/64).
+- barrier 본체(G3): ordering을 고친 뒤에도 presolved 모델 11/64(agg, degen3, finnis, fit1p, forplan, ganges, maros, modszk1, pilot4, scorpion, ship04s)에서 반복값이 마지막 비트부터 갈린다(콜백 궤적이 다름). 원본 모델로는 64/64 비트 일치였으므로 presolved 모델에만 있는 조건이다. 유력한 원인은 벡터화 루프의 16바이트 위상(barrier가 D 배열의 시작 위상에 따라 첫 원소를 따로 더함): presolve가 만든 모델의 배열 위치는 MPS로 읽은 모델과 다르다. 확인하려면 `tools/bar_oracle.py`가 presolved 모델(model+0x1d8)의 D를 읽게 고쳐 첫 분기점을 찾아야 한다. BarIterCount·상태·목적은 64/64이고, 해는 53/64 비트 일치, 로그는 54/64, 요약 줄은 63/64(degen3 목적 마지막 자리).
+- 상태 13(big uncrush violation)은 Netlib 64개에서 기본값과 느슨한 허용치(BarConvTol 1e-2·1e-4, PDHG 허용치 1e-2·1e-4) 모두 Gurobi에서 나오지 않아 Gurobi 대조 사례가 없다. 문턱 식과 위반 계산은 단위 테스트로 확인했다(`crates/driver` `status_rules`).
 - `365159`의 x·쌍대 입력을 엔진에서 받으므로 쌍대(Pi·RC)의 정확도는 엔진에 달렸다. PDHG는 비트 일치, barrier는 위와 같다.
 - barrier 통계의 메모리 문구는 연산 1e8 이하의 추정식만 옮겼다(그 위는 원본이 시간 측정 커널을 돌린다). `F+0x40`(행 색인 수) 대신 `row_idx` 길이를 쓴다(64개 통계 줄은 ordering 차이 4개 말고 같음).
 - `a91184`의 LP 위반 계산은 합산 순서를 읽지 않았다(상태 13 문턱에만 쓰임). presolved 모델 위반(result+0x58)은 presolved 모델과 x로 다시 계산한다.
@@ -182,4 +183,5 @@ Frida로 `a7b4d6`/`a7b54f`의 상태 포인터를 따라가면 presolve 경로�
 - PDHG(`34c004`/`355831`, `pdhg::solve_logged`): "Start PDHG using 1 threads", 표 머리, 평가마다 상태 판정 뒤 상태가 끝이면 반드시, 진행 중이면 DisplayInterval 구간이 바뀔 때 `"%9lld  %15.8e %15.8e  %.2e %.2e %9.2e %4.0fs"`. P+0x50이 −0.0으로 남던 것(컴파일된 `maxsd` 쌍)을 +0.0으로 맞췄다.
 - simplex(`0d07d1`): 표 머리와 첫·마지막 줄 `" %7.0f   %14.7e  %13.6e  %13.6e %6.0fs"`.
 - 요약: simplex `"Solved in %d iterations …"` + `c9457`(`"Optimal objective %16.9e"` 등), barrier·PDHG `"… solved model in …"`/`"… performed …"` + `"Optimal objective %.8e"` 또는 상태 문구, 엔진 블록 뒤 빈 줄, optimize 끝 빈 줄.
-- 검증(`tools/log_check.py`, 초·작업량·시간 열을 가림): PDHG 64/64(시간 구간 중간 줄은 실행마다 달라 처음·마지막 줄만 비교), barrier 51/64(§7), dual 60/64(`--no-iters`, §7). 고정 테스트는 afiro·grow7 세 경로 로그 전체(`tests/test_driver.py`).
+- barrier·PDHG의 "Optimal objective"는 엔진 목적값(presolved 모델, uncrush 전: `2bf1ea` B+0x158·B+0x130, `34c004` result+0x40)이고, simplex는 원래 모델 재풀이 엔진의 목적값(`a6a8da`)이다.
+- 검증(`tools/log_check.py`, 초·작업량·시간 열을 가림): 로그 전체 PDHG 64/64(시간 구간 중간 줄은 실행마다 달라 처음·마지막 줄만 비교), barrier 54/64, dual 62/64(`--no-iters`). 요약 줄만(`--summary`): PDHG 64/64, barrier 63/64, dual 62/64. 차이는 모두 §7의 엔진 내부. 고정 테스트는 afiro·grow7 세 경로 로그 전체(`tests/test_driver.py`).

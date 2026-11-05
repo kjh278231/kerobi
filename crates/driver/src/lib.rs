@@ -238,6 +238,12 @@ fn max_violation(md: &Model, x: &[f64]) -> f64 {
     v
 }
 
+/// `36578f`: the uncrushed solution's violation is "big" past max(1e4, 1/min scale) · max(FeasibilityTol, violation in
+/// the presolved model).
+fn big_uncrush_violation(viol: f64, pre_viol: f64, min_scale: f64, feastol: f64) -> bool {
+    1e4f64.max(1.0 / min_scale) * feastol.max(pre_viol) < viol
+}
+
 /// The log and outcome when presolve itself decided the status (`390989` *param_3, see `presolve::proved_status`):
 /// no presolved model, no solution, "… solved model in 0 iterations" (`0c3d0d`, `2bb770`, `34f033`).
 fn proved(st: i32, name: &str, h: &mut Hooks, t0: Instant, work: f64) -> Outcome {
@@ -347,11 +353,14 @@ fn code(st: Status) -> i32 {
     }
 }
 
+/// (status, iterations, x and dj as spx arrays, the engine's objective)
+type Reopt = (Status, u64, Vec<f64>, Vec<f64>, f64);
+
 /// `cda5b` on the original model started from the uncrushed basis (`0c3d0d` L444–476, "Extra simplex iterations
-/// after uncrush"): (status, iterations, x). None when the basis does not give a complete factorization.
+/// after uncrush"). None when the basis does not give a complete factorization.
 /// shortcut: the engine's dual needs its own start (`dual_start` crashes a new basis), so the primal runs from the
 /// basis; 0c3d0d passes the method's algorithm (dual for Method 1). Both stop at once on an optimal basis.
-fn reoptimize(md: &Model, basis: &[i32], lim: u64) -> Option<(Status, u64, Vec<f64>, Vec<f64>)> {
+fn reoptimize(md: &Model, basis: &[i32], lim: u64) -> Option<Reopt> {
     use rsolver_lp::lu::Lu;
     use rsolver_model::INFINITY;
     let mut spx = Spx::new(md);
@@ -389,7 +398,9 @@ fn reoptimize(md: &Model, basis: &[i32], lim: u64) -> Option<(Status, u64, Vec<f
     let st = e.primal();
     e.compute_duals();
     let (x, dj) = spx_arrays(&e, &spx);
-    Some((st, e.iter, x, dj))
+    // the reported objective is the engine's own (scaled costs over the internal x), as `a6a8da` copies it
+    let obj = e.objective() / (spx.scaling.obj * md.sense as f64) + md.objcon;
+    Some((st, e.iter, x, dj, obj))
 }
 
 /// `0c3d0d` without warm starts, PreDual, network, sifting or concurrent: presolve → simplex → `363daa` → simplex
@@ -411,17 +422,26 @@ fn simplex_driver(md: &Model, p: &Params, method: i32, h: &mut Hooks, t0: Instan
         let row = |r: &TraceRow, t: f64| {
             format!(" {:7}   {:>14}  {:>13}  {:>13} {:6.0}s\n", r.0, c_exp(r.1, 7), c_exp(r.2, 6), c_exp(r.3, 6), t)
         };
-        (h.log)(&row(a, 0.0));
+        // the dual start's free-column loop logs its first row in mode 1 (`0d07d1` L121): free nonbasic columns
+        // after the crash (`1e7531`) mean that loop runs
+        let free = method == 1 && rsolver_lp::start::start_basis(&Spx::new(q)).contains(&-3);
+        if free {
+            (h.log)(&format!(" {:7.0}      handle free variables                     {:6.0}s\n", 0.0, 0.0));
+        } else {
+            (h.log)(&row(a, 0.0));
+        }
         if trace.len() > 1 {
             (h.log)(&row(b, t0.elapsed().as_secs_f64().floor()));
         }
     }
     let none = (vec![], vec![], vec![], vec![]);
+    let mut engine_obj = None;
     let (status, (x, slack, pi, rc)) = match &pre {
         Some((_, post)) if code(st) == 2 && !post.is_identity() => {
             let u = postsolve::uncrush(post, md, &postsolve::PreSol { x: &x, dj: &dj, st: &vs }, None);
             match reoptimize(md, &u.basis, lim.saturating_sub(iter)) {
-                Some((st2, extra, x2, d2)) => {
+                Some((st2, extra, x2, d2, o2)) => {
+                    engine_obj = Some(o2);
                     if extra > 0 {
                         (h.log)(&format!("\nExtra simplex iterations after uncrush: {extra}\n"));
                     }
@@ -439,7 +459,7 @@ fn simplex_driver(md: &Model, p: &Params, method: i32, h: &mut Hooks, t0: Instan
             (simplex_status(md, p, code(st), false), attrs(md, &xo, &d))
         }
     };
-    let obj = if x.is_empty() { 0.0 } else { objective(md, &x) };
+    let obj = engine_obj.unwrap_or(if x.is_empty() { 0.0 } else { objective(md, &x) });
     let work = work * 1e-9;
     (h.log)(&format!("\nSolved in {iter} iterations and {:.2} seconds ({work:.2} work units)\n", t0.elapsed().as_secs_f64()));
     (h.log)(&status_line(status, obj));
@@ -486,7 +506,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
     let flipped = flip_upper_only(q);
     let qe = flipped.as_ref().map_or(q, |(f, _)| f);
     let mut out = Outcome::default();
-    let (engine_status, (mut xq, slq, mut dq, yq)) = match alg {
+    let (engine_status, engine_obj, (mut xq, slq, mut dq, yq)) = match alg {
         Alg::Barrier => {
             let bp = barrier::Params {
                 bar_conv_tol: p.get("BarConvTol"),
@@ -496,7 +516,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
             let r = barrier::solve_logged(qe, &bp, &mut *h.barrier, &mut *h.log, t0);
             out.bar_iter_count = r.bar_iters;
             out.work = pre.as_ref().map_or(0.0, |(_, post)| post.work) * 1e-9 + r.work;
-            (r.status, (r.x, r.slack, r.d, r.y))
+            (r.status, r.obj, (r.x, r.slack, r.d, r.y))
         }
         Alg::Pdhg => {
             (h.log)("\nStart PDHG using 1 threads\n");
@@ -511,7 +531,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
             let r = pdhg::solve_logged(qe, &pp, &mut *h.pdhg, &mut *h.log, t0, p.get("DisplayInterval"));
             out.pdhg_iter_count = r.iters;
             out.work = r.work / 1e9;
-            (r.status, (r.x, r.slack, r.d, r.y))
+            (r.status, r.obj, (r.x, r.slack, r.d, r.y))
         }
     };
     for &j in flipped.as_ref().map_or(&[][..], |(_, c)| c) {
@@ -539,7 +559,8 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
     let secs = t0.elapsed().as_secs_f64();
     if engine_status == 2 {
         (h.log)(&format!("\n{name} solved model in {it:.0} iterations and {secs:.2} seconds ({:.2} work units)\n", out.work));
-        (h.log)(&format!("Optimal objective {}\n", c_exp(obj, 8)));
+        // `2bf1ea` / `34c004` print the engine's objective (presolved model, before uncrush)
+        (h.log)(&format!("Optimal objective {}\n", c_exp(engine_obj, 8)));
     } else {
         (h.log)(&format!("\n{name} performed {it:.0} iterations in {secs:.2} seconds ({:.2} work units)\n", out.work));
         (h.log)(&status_line(status, obj));
@@ -565,7 +586,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
             (smin, max_violation(q, &xq))
         };
         let viol = max_violation(md, &x);
-        if 1e4f64.max(1.0 / smin) * p.get("FeasibilityTol").max(pre_viol) < viol {
+        if big_uncrush_violation(viol, pre_viol, smin, p.get("FeasibilityTol")) {
             (h.log)(&format!(
                 "Warning: Changing status from GRB_OPTIMAL to GRB_SUBOPTIMALdue to big uncrush violation {} (presolved model = {}).\n",
                 c_g(viol, 6),
@@ -623,6 +644,36 @@ mod tests {
         assert_eq!(resolve(&small, &[("Method", 6.0)]).1.int("LPWarmStart"), 2);
         assert_eq!(resolve(&small, &[("Method", 1.0)]).1.int("LPWarmStart"), 1);
         assert_eq!(resolve(&small, &[]).1.int("LPWarmStart"), 1);
+    }
+
+    #[test]
+    fn status_rules() {
+        // big uncrush violation: 1e4 · max(1e-6, pre) unless 1/min scale is larger
+        assert!(!big_uncrush_violation(0.01, 0.0, 1.0, 1e-6));
+        assert!(big_uncrush_violation(0.0101, 0.0, 1.0, 1e-6));
+        assert!(!big_uncrush_violation(0.5, 1e-4, 1.0, 1e-6)); // threshold 1e4 · 1e-4 = 1
+        assert!(big_uncrush_violation(0.5, 1e-5, 1.0, 1e-6)); // threshold 0.1
+        assert!(!big_uncrush_violation(0.05, 0.0, 1.0 / 65536.0, 1e-6));
+        assert!(big_uncrush_violation(0.07, 0.0, 1.0 / 65536.0, 1e-6));
+        // max_violation: rows by sense, then finite bounds
+        let mut md = lp(2); // x0 + x1 <= 2, 0 <= x <= 1
+        assert_eq!(max_violation(&md, &[1.0, 1.0]), 0.0);
+        assert_eq!(max_violation(&md, &[1.5, 1.0]), 0.5);
+        md.row_sense[0] = b'>';
+        assert_eq!(max_violation(&md, &[0.25, 0.5]), 1.25);
+        md.row_sense[0] = b'=';
+        assert_eq!(max_violation(&md, &[1.0, 0.5]), 0.5);
+        // a7fc52 / a80155 through the path rules
+        let p = Params::default();
+        assert_eq!(interior_status(&md, &p, 3), 3); // bounded objective: infeasible stays
+        assert_eq!(interior_status(&md, &p, 5), 4); // rows present: unbounded becomes INF_OR_UNBD
+        let mut free = md.clone();
+        free.lb[0] = -1e30;
+        assert_eq!(interior_status(&free, &p, 3), 4);
+        assert_eq!(simplex_status(&md, &p, 5, true), 3); // 5 -> 4 -> bounded -> 3
+        assert_eq!(simplex_status(&free, &p, 3, true), 4);
+        let off = Params::from_pairs(&[("DualReductions".into(), 0.0)]);
+        assert_eq!(interior_status(&free, &off, 3), 3);
     }
 
     #[test]

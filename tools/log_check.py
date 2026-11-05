@@ -1,6 +1,7 @@
 """Compare the optimize log of rsolver with Gurobi's log.txt of a tools/parity.py capture, line by line, from
 "Optimize a model" to the end of the solve, with the run-dependent fields masked (seconds, work units, the time
-column of iteration rows). --no-iters also masks simplex iteration rows and counts (simplex internals are G1's).
+column of iteration rows). --no-iters also masks simplex iteration rows and counts (simplex internals are G1's);
+--summary keeps only the presolve result and summary lines (status, objective, "… solved model …", warnings).
 usage: PYTHONPATH=$PWD/python python tools/log_check.py <capture_dir> --param Name=Value ... [--no-iters] [name ...]
 """
 import argparse, re, sys, tempfile
@@ -45,6 +46,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("ref")
 ap.add_argument("--param", action="append", default=[])
 ap.add_argument("--no-iters", action="store_true")
+ap.add_argument("--summary", action="store_true", help="only the presolve result and summary lines")
 ap.add_argument("names", nargs="*")
 a = ap.parse_args()
 names = a.names or sorted(p.name for p in Path(a.ref).iterdir() if (p / "log.txt").exists())
@@ -59,6 +61,10 @@ for n in names:
         m.setParam(k, float(v))
     m.optimize()
     got, want = body(Path(f).read_text(), a.no_iters), body((Path(a.ref) / n / "log.txt").read_text(), a.no_iters)
+    if a.summary:
+        summ = re.compile(r"^(Presolve|Presolved|Solved in|Barrier solved|Barrier performed|PDHG solved|PDHG performed|"
+                          r"Optimal objective|Extra simplex|Warning|Infeasible|Unbounded|Model |Work limit|Iteration limit)")
+        got, want = [l for l in got if summ.match(l)], [l for l in want if summ.match(l)]
     if got == want:
         ok += 1
     else:
