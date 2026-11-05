@@ -13,6 +13,7 @@ pub mod postsolve;
 mod reduce;
 mod sort;
 mod state;
+mod symmetry;
 mod tracker;
 
 use reduce::ColTols;
@@ -54,13 +55,17 @@ pub struct Params {
     pub pre_pair_agg: i32,
     /// env+0x2534 PreDepRow (-1 auto)
     pub pre_dep_row: i32,
+    /// env+0x2864 Symmetry (-1 auto)
+    pub symmetry: i32,
+    /// env+0x2c28 GURO_PAR_PRESYMMPASSES (-1)
+    pub presym_passes: i32,
 }
 
 impl Default for Params {
     fn default() -> Self {
         Params { presolve: -1, feastol: 1e-6, infbound: 1e30, fixtol: -1.0, prelimit: 2_000_000_000, dual_reductions: true, prebound: 1,
                  opttol: 1e-6, numeric_focus: 0, agg_mult_limit: 1e14, precrush: 0, prepasses: -1, aggregate: 1, agg_fill: -1,
-                 pre_pair_agg: 3, pre_dep_row: -1 }
+                 pre_pair_agg: 3, pre_dep_row: -1, symmetry: -1, presym_passes: -1 }
     }
 }
 
@@ -85,6 +90,8 @@ impl Params {
                 "aggfill" => p.agg_fill = *v as i32,
                 "guro_par_prepairagg" => p.pre_pair_agg = *v as i32,
                 "predeprow" => p.pre_dep_row = *v as i32,
+                "symmetry" => p.symmetry = *v as i32,
+                "guro_par_presymmpasses" => p.presym_passes = *v as i32,
                 _ => {}
             }
         }
@@ -127,6 +134,13 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
 fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
     let limit = p.prelimit;
     let mut calls = 0;
+    // state+0x1f0, the presolve work budget (`390989` L212-244): nnz * 1000 (200 with Presolve 1), unbounded with
+    // Presolve 2 or PrePasses > 1, plus 1e7
+    let budget = if 1 < p.prepasses || p.presolve == 2 {
+        1e100
+    } else {
+        st.nnz as f64 * if p.presolve == 1 { 200.0 } else { 1000.0 }
+    } + 1e7;
     if st.empty_and_free_rows(p.feastol) != 0 {
         return;
     }
@@ -151,7 +165,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
     }
     // PreDepRow -1 (`390989` L251): 3 when nnz > 2.5 n (Presolve 1 gives 0; Method, INTBASIS, PRESYMMPASSES at
     // their defaults)
-    let dep_rows = if p.pre_dep_row != -1 {
+    let mut dep_rows = if p.pre_dep_row != -1 {
         p.pre_dep_row
     } else if p.presolve == 2 || (p.presolve != 1 && (st.n as f64) * 2.5 < st.nnz as f64) {
         3
@@ -336,8 +350,14 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
         if p.presolve == 2 {
             return;
         }
-        // shortcut: symmetry detection (`5577ba` -> `551cc0`, pass 0 with >= 500 columns and >= 100 rows left)
-        // is not ported; it only turns automatic PreDepRow off when it finds symmetry. Assumed to find none.
+        // `5577ba` (symmetry): pass 0 with >= 500 columns and >= 100 rows left (state+0x330, +0x258, +0x27c are 0
+        // for LP, local_38 is off). Not a counted call. A verified symmetry turns automatic PreDepRow off.
+        if k == 0 && p.presym_passes < 0 && 500 <= st.n as i32 - st.cols_removed && 100 <= st.m as i32 - st.rows_removed {
+            let (nodes, work) = if 1 < p.symmetry { (5000, (budget / 5.0 + 1e7) * 10.0) } else { (5, budget / 5.0 + 1e7) };
+            if 0 < st.symmetry_count(nodes, work, p.prelimit) && p.pre_dep_row == -1 {
+                dep_rows = 0;
+            }
+        }
         if k == 0 && dep_rows & 1 != 0 {
             if st.dependent_rows(1, tols, p.pre_dep_row == -1) != 0 {
                 return;

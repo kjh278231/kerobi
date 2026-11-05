@@ -1,12 +1,13 @@
 //! `aaedd9`: sort `keys` ascending, permuting `idx` alongside. Ties keep whatever order this exact algorithm
 //! leaves, which decides reduction order downstream (10 §4), so it is ported as is: median-of-3 three-way
 //! quicksort for parts of 100 or more (depth limit 50), then Shell sort with gaps n/2, /2.2, ..., 2 -> 1.
+//! `ab848c` (unsigned 64-bit keys, symmetry hashes) is the same algorithm.
 
-pub fn sort_by_key(keys: &mut [f64], idx: &mut [i32]) {
+pub fn sort_by_key<T: PartialOrd + Copy>(keys: &mut [T], idx: &mut [i32]) {
     quick(0, keys.len(), 0, keys, idx);
 }
 
-fn quick(mut lo: usize, mut hi: usize, mut depth: i32, a: &mut [f64], ix: &mut [i32]) {
+fn quick<T: PartialOrd + Copy>(mut lo: usize, mut hi: usize, mut depth: i32, a: &mut [T], ix: &mut [i32]) {
     while depth < 50 {
         let len = hi - lo;
         if len < 100 {
@@ -96,7 +97,7 @@ fn quick(mut lo: usize, mut hi: usize, mut depth: i32, a: &mut [f64], ix: &mut [
     shell(lo, hi, a, ix);
 }
 
-fn shell(lo: usize, hi: usize, a: &mut [f64], ix: &mut [i32]) {
+fn shell<T: PartialOrd + Copy>(lo: usize, hi: usize, a: &mut [T], ix: &mut [i32]) {
     let mut g = (hi - lo) / 2;
     while g > 0 {
         loop {
