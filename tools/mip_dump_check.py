@@ -25,6 +25,7 @@ def to_parts(s):
     d["nnz"] = int(s["nnz"])
     d["counters"] = s["counters"][:13]
     d["nfree"], d["npend"] = int(s["free"][0]), int(s["free"][1])
+    d["nbin"] = s.get("nbin", -1)  # +0xf0 (counted at bound rounding, not kept up to date)
     d["rows"] = [[tuple(x) for x in r] for r in s["rows"]]
     d["cols"] = [[tuple(x) for x in c] for c in s["cols"]]
     t = s["tracker"]

@@ -13,7 +13,7 @@ Gurobi 13.0.3 MIP presolve(`3cd406`) 바깥 패스의 clique 묶음. 포팅 전 
 | `52be10` | 이진 ±1 집합 포장 행의 리터럴 쌍 그래프. 다른 행에 덮이는 2-행 삭제, 삼각형 클리크로 2-행 확장(`=`이면 고정) | gmu-35-40(호출 1, 행 17개 삭제). 나머지는 훑기 작업량만 |
 | `46a62d` | 같은 크기 계수의 이진 행을 ±1로 정규화하고 행 리스트를 다시 엮은 뒤(B 노드 \|a\| 내림차순), 다른 clique 행에 든 행 삭제, 충돌 리터럴로 clique 행 확장 | 행 삭제·확장은 gmu-35-40, gmu-35-50. 정규화·행 재배열·열 압축(+0xd8)은 13개 모델 더(리스트 순서가 바뀐다) |
 
-포트(2026-11-06): `451bed` = `crates/mip/src/clique.rs`의 `State::clique_table(p, list, bin_only) -> Result<Cliques, i32>`(probing도 이것을 쓴다). 첫 훑기의 `3de18e` 고정은 inner 포트 병합 뒤 잇는다(지금은 `unimplemented!`, neos-860300만 닿음). 시험 `crates/mip/tests/clique.rs`(fixture `bench/gurobi_presolve_mip/clique/`).
+포트(2026-11-06, `crates/mip/src/`): `451bed` = `clique.rs`의 `State::clique_table(p, list, bin_only) -> Result<Cliques, i32>`(probing도 이것을 쓴다), `45885d` = `State::clique`(clique.rs), `52be10` = `State::set_packing`(setpack.rs, `5279b5`·`528f31`·`469c12`·`a9dcac` 정렬 포함), `46a62d` = `State::clique_rows(p, mode)`(cliquerows.rs, `4694fe` 포함). 열 고정·활동 재계산·GC는 공용 helper(`fix_col`, `fix_near`, `activity`, `gc`)를 쓴다. shortcut: reduction timer를 받지 않아 `adf2be` 정지와 46a62d 예산 B를 보지 않는다(38개 모델에서 걸리지 않음), 노드 풀 증설 `3b85ea`는 assert. 확인: `tools/mip_dump_check.py` 45885d·52be10·46a62d 각 78/78, `crates/mip/tests/clique.rs`(451bed 5개 fixture), sweep_check의 첫 불일치가 셋 중 어디에도 없다. 덤프는 이제 +0xf0(`nbin`, 경계 반올림 때 센 값으로 그 뒤 고치지 않는다)을 담고 `State::from_parts`가 쓴다(mas74 등에서 'B' 개수와 다르다).
 
 검증: 네 함수 모두 Python 참조 모델을 진입 상태에 돌려 복귀 상태(리스트 순서·값, lb/ub, rhs, 개수, activity, 카운터, 레코드)와 작업량을 비트 단위로 비교했다. `45885d`(+`451bed`) 78회, `46a62d` 78회는 38개 모델 전부, `52be10`은 동작하는 gmu-35-40과 훑기만 하는 모델, 합성 모델에서 같다(§7).
 
