@@ -19,18 +19,31 @@ os.unlink(snap)
 for it in sorted(set(g) & set(mine)):
     a, b = g[it], mine[it]
     out = []
-    if a["vstat"] != b["vstat"]:
-        k = [j for j in range(len(a["vstat"])) if a["vstat"][j] != b["vstat"][j]]
+    va, vb = a["vstat"], b["vstat"]
+    k = [j for j in range(len(va)) if va[j] != vb[j] and (va[j] < 0 or vb[j] < 0)]
+    if k:
         out.append(f"vstat {len(k)} diff, first {k[:5]}")
+    elif va != vb:
+        out.append("positions differ")
     for key in ("xB", "d", "w"):
         if a.get(key) is None:
             continue
         x, y = [F(v) for v in a[key]], [F(v) for v in b[key]]
-        k = [j for j in range(min(len(x), len(y))) if x[j] != y[j]]
+        if key == "d":
+            k = [j for j in range(min(len(x), len(y))) if x[j] != y[j]]
+        else:  # by basic variable, so renumbered positions still compare
+            k = [j for j in range(len(va)) if va[j] >= 0 and vb[j] >= 0 and x[va[j]] != y[vb[j]]]
+            x, y = {j: x[va[j]] for j in k}, {j: y[vb[j]] for j in k}
         if k:
             j = k[0]
-            out.append(f"{key} {len(k)} diff, first {j}: g {x[j]!r} mine {y[j]!r}")
+            out.append(f"{key} {len(k)} diff, first {'var ' if key != 'd' else ''}{j}: g {x[j]!r} mine {y[j]!r}")
     pr = a.get("price") or {}
-    if pr and (pr.get("mode") != b["mode"] or (pr.get("list") or []) != b["list"]):
-        out.append(f"pricing g mode {pr.get('mode')} list {(pr.get('list') or [])[:6]} | mine mode {b['mode']} list {b['list'][:6]}")
+    hv = lambda v: {s: j for j, s in enumerate(v) if s >= 0}  # position -> variable
+    ga, gb = hv(va), hv(vb)
+    la, lb = [ga.get(p) for p in pr.get("list") or []], [gb.get(p) for p in b["list"]]
+    if pr and (pr.get("mode") != b["mode"] or la != lb):
+        out.append(f"pricing (vars) g mode {pr.get('mode')} list {la[:6]} | mine mode {b['mode']} list {lb[:6]}")
+    lu = a.get("lu") or {}
+    if lu and (lu.get("k"), pr.get("allow")) != (b.get("k"), b.get("allow")):
+        out.append(f"lu k/allow g {lu.get('k')}/{pr.get('allow')} mine {b.get('k')}/{b.get('allow')}")
     print(f"iter {it}: " + ("OK" if not out else "; ".join(out)))

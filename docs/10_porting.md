@@ -126,7 +126,7 @@ python tools/parity.py compare <ref_dir> <test_dir> [--csv bench/parity.csv]
 
 decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소는 비공개로 두고 배포·공개하지 않는다(내부 연구용). 공개가 필요해지면 해당 코드는 이 문서의 규칙이 아니라 클린룸 방식으로 다시 써야 한다([09 §4](09_roadmap.md)).
 
-## 9. 인수인계 메모 (2026-11-05 3차 갱신, 다음 세션용)
+## 9. 인수인계 메모 (2026-11-05 4차 갱신, 다음 세션용)
 
 작업 방식은 **재구성 + 오라클 비트 검증**이다. 의사코드와 objdump로 함수의 규칙을 읽고, Python 프로토타입(`tools/proto/`)을 Gurobi 오라클과 비트 단위로 맞춘 뒤 Rust로 옮긴다. 의사코드를 줄 단위로 옮겨 쓰는 방식은 호출 인자 손실과 SIMD 조각 때문에 쓰지 않는다. 세부 해독 기록은 [m1_notes.md](m1_notes.md)에 있다.
 
@@ -160,22 +160,21 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 
 | 기준 | 현재 | 비고 |
 |---|---|---|
-| (1) 정확성 Method 1 | Netlib 64개 64/64(커밋 `23cad5d` 기준) | 91개 전체는 미점검(dfl001은 release 300초 초과, pilot·pilot87 미확인) |
+| (1) 정확성 Method 1 | Netlib 64개 62/64(bandm·pilot4 시간 초과: dual 경로가 갈린 뒤 교과서식 primal 정리가 정체) | 91개 전체는 미점검(dfl001은 release 300초 초과, pilot·pilot87 미확인) |
 | (1) 정확성 Method 0 / 기본 | 미점검 | 기본 = dual 경로. Method 0(교과서식 primal)은 25fv47에서 300초 초과 |
-| (2) P1 반복 수 | 7/64 일치, ±5% 안 34/64, 비율 기하평균 1.027 | `tools/proto/itstat.py`. sc50a는 33/33 일치하고 반복 0–6이 x_B·d·w·vstat 비트 일치(`statecmp.py`) |
+| (2) P1 반복 수 | 11/64 일치, ±5% 안 37/64, 비율 기하평균 1.025. 피벗 경로 전체 일치 2/64, 첫 분기 위치 중앙값 7% | `sh tools/m1check.sh`(→ `bench/lp_check.csv`, `bench/pathcmp.txt`). 반복 수가 같아도 경로는 대부분 일찍 갈린다 |
 | (3) P2 work | 미구현 | 작업량 계수 spx+0x148(1.3, m > 10000이면 보정), 커널마다 연산 수 누적 |
 | (4) P3 시간 | 미측정 | release에서 25fv47 0.5–0.7초 대 Gurobi 0.09초. 반복마다 O(n+m) 루프와 조밀 FTRAN/BTRAN이 원인 |
 | (5) 구조 | LU(Markowitz·FT), crash, dual·primal, 드라이버 일부 | Quad(F80) 미착수, `0c3d0d` 분기(웜스타트·network·sifting·비스케일 재풀이) 미이식, common(난수 `a7b4d6`/`a7b54f`) 미이식 |
 
 ### 9.3 다음 단계 (순서대로)
 
-완료(이번 세션): israel 수정, frida 추적기 `tools/fn_trace.js`, CHUZR 원본 이식(모드 0 목록·표시·예산, 모드 1 문턱 목록, 비용 가중 점수, 인공 bound 단계 1e19와 `118725` 종료), BFRT 원본 이식(`bfrt.rs`, 코퍼스 `bench/oracle/bfrt_io` 99.4% 재현), 정확한 DSE 갱신·d 갱신·d 저장 규약(상한에서 부호 반전), 재분해 시점(`6268b` 기준, spx+0x46c = ⌊m^0.45⌋). 세부는 [m1_notes §8.2–8.7](m1_notes.md).
+완료(4차 세션, [m1_notes §8.8](m1_notes.md)): 64개 피벗 경로 오라클(`bench/oracle/path1/`, `tools/proto/pathcmp.py all`), 자유 열 루프 원본화(첫 최대 위치, 피벗마다 반복 수, 남은 열 2차 패스, 루프 뒤 재분해: perold 4819 → 1271회, Gurobi 1273), 재분해 주기 m^0.7(Full pricing 때 m^0.65), 재분해마다 위치 재번호(옛 WIP 패치), 행 사본(`a075e`·`a104a`·`a114f`)과 α 벡터 순서(`0a4109`: 1.8 규칙, 처음 닿은 순/열 순, slack은 ρ 순). `48d5f` 전체 명세는 [m1_notes §8.9](m1_notes.md)(미검증).
 
-1. **재분해 뒤 위치 재번호**: 규칙은 "singleton 단계의 구조 열(단계 순) → singleton slack(행 순) → Markowitz 커널(단계 순)"(sc50a 반복 7에서 singleton 부분 일치). `Lu::renumbered`·`relabel`은 커밋했고 엔진 쪽 연결은 `tools/wip/renumber_bland.patch`에 있다. 이 패치를 넣으면 반복 일치 7 → 8이지만 perold가 시간 초과(교과서식 primal 정리 단계가 정체)로 회귀해 되돌렸다. 패치에는 primal의 Bland 대체와 `make_dual_feasible`을 유한 폭 열로 제한하는 수정도 들어 있으나 perold는 여전히 실패했다. 원인 조사부터 한다.
-2. **Markowitz LU 이식**(`036ade`): 커널 피벗 순서가 달라 재분해 뒤 위치·BTRAN 비트가 갈린다(sc50a 반복 7의 d[51] 2ulp). goal (5)의 필수 항목.
-3. **Gurobi FT 갱신 회계**: 재분해 기준의 L+0x184(행 eta 원소 수)가 우리 FT와 다르다(sc50a 갱신 4–6: Gurobi 0,2,3 / 우리 1,1,2). L+0x190은 Σ nnz(α_q)로 맞췄다. 원본 FT 저장(`5b257` L860–975)을 읽어 맞춘다.
-4. BFRT 나머지: 코퍼스 불일치 18건(fit1d 등, 교차가 순차 합보다 빠름), 앞 구간 α 순서(`0a4109`·행 사본 spx+0x1d0 유지), 후보가 없을 때의 비용 이동 경로와 난수 `a7b54f`·`a7b4d6`.
-5. 섭동 `48d5f`(지금은 교과서식 퇴화 50회 규칙), 자유 열 피벗 루프, primal 원본 이식(`0478d3` 계열, Method 0과 dual 뒤 정리), P2 work, P3 속도(희소 FTRAN/BTRAN), Quad.
+1. **LU 갱신 뒤 BTRAN 출력 순서**: `tools/proto/alphacmp.py <name>`로 보면 grow7·scsd1·e226·lotfi 모두 BFRT 첫 호출의 α는 순서·비트가 같고, LU 갱신 1회 뒤 호출부터 ρ 순서가 다르다(Gurobi는 희소 출력에 나가는 행이 먼저, 우리 `btran_general`은 조밀 뒤 행 순서). Forrest–Tomlin 갱신 저장(`5b257` L860–975)과 `221173`의 갱신 경로(Uᵀ 희소 → 행 eta → Lᵀ)를 원본대로 옮긴다. 옛 2·3번(Markowitz `036ade`, FT 회계 L+0x184)이 여기에 묶인다. 재분해 시점도 이 회계에 달려 있다.
+2. **`48d5f` 이식**(§8.9): 보통의 재분해 뒤에는 flip이 아니라 비용 이동(SHIFT), 첫 분해 뒤 RANDSMALL, 이유 4 등에서 FLIP, 섭동 GLOBAL과 그 발동 조건(0x2c0 % K, 퇴화 비율), RNG(`a7b4d6`·`a7b54f`·`895c5`, common에 둔다). 지금 엔진은 박스 열만 flip하고 나머지 쌍대 위반을 남겨 maros 같은 경로가 흔들렸다. 오라클의 `pert`·`pert_level` 필드로 검증한다.
+3. **primal 원본 이식**(`0478d3` 계열): bandm(인공 bound 단계 뒤 상태 5 상황, 지금은 shortcut으로 dual을 이어 감)과 pilot4(섭동 제거 뒤 정리)가 교과서식 primal에서 정체한다. Method 0 정확성에도 필요하다.
+4. BFRT 나머지(코퍼스 불일치 18건, 후보 없음 경로), 행 사본의 같은 |a| 분할(`9edd1`), CHUZR 모드 1 열 원소 처리, P2 work, P3 속도(희소 FTRAN/BTRAN), Quad.
 
 ### 9.4 기준값·오라클 위치
 
@@ -197,6 +196,6 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 - **Gurobi는 한 프로세스만**. 오라클·추적(`fn_trace.js`, `spx_oracle.py`, `tools/bfrt_corpus.sh`)도 Gurobi를 띄우므로 차례로 돌린다.
 - **추적기**: `node tools/fn_trace.js <spec.json> <out.jsonl>`. ptrace_scope=1이라 frida.spawn 방식이다. 필드 코드는 파일 머리 주석 참고(`i:`·`P*`·`L*`·`SV`·`AX`·`XR`·`OUT`·`A`/`PA`).
 - **반복 비교**: `RSOLVER_SNAP=<file>`로 엔진 스냅숏, `python tools/proto/statecmp.py <name> <spx_oracle.py 출력>`. d는 Gurobi 규약(상한 부호 반전, 기저 변수 잔여 유지)으로 저장된다.
-- **점검**: `python tools/lp_check.py --methods 1 --timeout 120 $(ls bench/gurobi_dual_nopre)`(Herdr pane), 지표는 `python3 tools/proto/itstat.py`.
+- **점검**: `sh tools/m1check.sh`(Herdr pane, 5분 안팎): lp_check(Method 1) → itstat → pathcmp all. 오라클 비교 `tools/spx_oracle.py`는 이제 LU 갱신 수·CHUZR 허용량(`lu`, `price.allow`)도 남기고, `statecmp.py`는 위치 대신 **변수 기준**으로 x_B·w·목록을 비교한다.
 - `git checkout <file>`로 실험을 되돌릴 때 커밋 안 한 다른 변경까지 날아간다(이번 세션에 한 번 겪음). 실험 전 커밋하거나 패치로 저장한다.
 - 디버그 출력: `RSOLVER_DEBUG=1`이면 dual 종료 상태와 해의 bound 위반을 stderr로 낸다.

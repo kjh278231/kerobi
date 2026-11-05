@@ -42,7 +42,11 @@ pub struct Engine<'a> {
     pub xb: Vec<f64>,
     pub d: Vec<f64>,
     pub w: Vec<f64>,
-    rows: Vec<Vec<(usize, f64)>>,
+    y: Vec<f64>,
+    /// Row copy (see `rc_build`): per row (column, value, nonzero index), and each nonzero's slot in its row.
+    rc: Vec<Vec<(usize, f64, usize)>>,
+    rc_pos: Vec<usize>,
+    rc_on: bool,
     pub iter: u64,
     pub iter_limit: u64,
     lu_interval: usize,
@@ -67,13 +71,8 @@ pub struct Engine<'a> {
 impl<'a> Engine<'a> {
     pub fn new(spx: &'a Spx) -> Engine<'a> {
         let (m, n) = (spx.m, spx.n);
-        let mut rows: Vec<Vec<(usize, f64)>> = vec![Vec::new(); m];
-        for j in 0..n {
-            for (i, a) in spx.col(j) {
-                rows[i].push((j, a));
-            }
-        }
-        let interval = ((m as f64).powf(0.7) as usize).max(20).min(((m as f64).powf(0.65) as usize).max(20));
+        // spx+0x3c8 = max(20, ⌊m^0.7⌋); the switch to Full pricing lowers it to max(20, ⌊m^0.65⌋)
+        let interval = ((m as f64).powf(0.7) as usize).max(20);
         Engine {
             spx,
             m,
@@ -85,7 +84,10 @@ impl<'a> Engine<'a> {
             xb: vec![0.0; m],
             d: vec![0.0; n + m],
             w: vec![1.0; m],
-            rows,
+            y: vec![0.0; m],
+            rc: Vec::new(),
+            rc_pos: Vec::new(),
+            rc_on: false,
             iter: 0,
             iter_limit: u64::MAX,
             lu_interval: interval,
@@ -128,6 +130,25 @@ impl<'a> Engine<'a> {
             self.lu = Lu::factor_tol(self.spx, &self.head, self.markowitz_tol);
             self.fac_nnz = self.lu.factor_nnz();
             if self.lu.complete() {
+                {
+                    // renumber positions as the original does after every factorization; position-indexed
+                    // state (DSE weights, pricing) moves along
+                    let old_of_new = self.lu.renumbered(self.n);
+                    self.lu.relabel(&old_of_new);
+                    self.head = self.lu.head.clone();
+                    for (p, &j) in self.head.iter().enumerate() {
+                        self.vstat[j] = p as i32;
+                    }
+                    let perm = |v: &[f64]| old_of_new.iter().map(|&op| v[op]).collect::<Vec<f64>>();
+                    self.w = perm(&self.w);
+                    self.pr.score = perm(&self.pr.score);
+                    self.pr.mark = old_of_new.iter().map(|&op| self.pr.mark[op]).collect();
+                    let mut new_of_old = vec![0; self.m];
+                    for (np, &op) in old_of_new.iter().enumerate() {
+                        new_of_old[op] = np;
+                    }
+                    self.pr.list = self.pr.list.iter().map(|&op| new_of_old[op]).collect();
+                }
                 break;
             }
             let mut pivoted_pos = vec![false; self.m];
@@ -139,6 +160,9 @@ impl<'a> Engine<'a> {
             for (&p, &i) in free_pos.iter().zip(&free_rows) {
                 let out = self.head[p];
                 self.vstat[out] = self.bound_status(out, self.xb.get(p).copied().unwrap_or(0.0));
+                if self.rc_on && out < self.n && self.vstat[out] != -4 {
+                    self.rc_add(out);
+                }
                 self.head[p] = self.n + i;
                 self.vstat[self.n + i] = p as i32;
             }
@@ -189,11 +213,8 @@ impl<'a> Engine<'a> {
 
     /// y = c_Bᵀ B⁻¹ (dense BTRAN, as for the iteration-0 d) and d = c − Aᵀy.
     pub fn compute_duals(&mut self) {
-        let cb: Vec<(usize, f64)> = (0..self.m).map(|p| (p, self.c[self.head[p]])).collect();
-        let mut y = vec![0.0; self.m];
-        for (r, v) in self.lu.btran(&cb) {
-            y[r] = v;
-        }
+        self.compute_duals_only();
+        let y = &self.y;
         for j in 0..self.n + self.m {
             self.d[j] = if self.vstat[j] >= 0 {
                 0.0
@@ -210,24 +231,77 @@ impl<'a> Engine<'a> {
         self.w = (0..self.m).map(|p| sum_squares(&self.lu.btran(&[(p, 1.0)]).iter().map(|e| e.1).collect::<Vec<_>>())).collect();
     }
 
-    /// α_j = ρᵀa_j scattered over the row-wise copy in BTRAN output order (`0a4109` sparse path); basic entries 0
-    /// except the leaving position's own column is not needed here.
-    fn pivot_row_ordered(&self, rho: &[(usize, f64)]) -> Vec<f64> {
+    /// Row-wise copy of the nonbasic structural columns (spx+0x1d0, built by `a075e` once at the end of the dual
+    /// start in column order). A column leaving the basis is appended to its rows (`a104a`); an entering column is
+    /// removed by moving each row's last entry into its slot (`a114f`). The entry order is the α-vector order.
+    /// shortcut: the equal-magnitude row partition of `9edd1` (rows with ≥ 128 entries of one |a|) is not kept.
+    fn rc_build(&mut self) {
+        self.rc = vec![Vec::new(); self.m];
+        self.rc_pos = vec![0; self.spx.ind.len()];
+        for j in 0..self.n {
+            if matches!(self.vstat[j], -3..=-1) {
+                self.rc_add(j);
+            }
+        }
+        self.rc_on = true;
+    }
+
+    fn rc_add(&mut self, j: usize) {
+        let b = self.spx.beg[j] as usize;
+        for k in b..b + self.spx.len[j] as usize {
+            let i = self.spx.ind[k] as usize;
+            self.rc_pos[k] = self.rc[i].len();
+            self.rc[i].push((j, self.spx.val[k], k));
+        }
+    }
+
+    fn rc_remove(&mut self, j: usize) {
+        let b = self.spx.beg[j] as usize;
+        for k in b..b + self.spx.len[j] as usize {
+            let i = self.spx.ind[k] as usize;
+            let p = self.rc_pos[k];
+            let last = self.rc[i].pop().expect("row copy entry");
+            if p < self.rc[i].len() {
+                self.rc[i][p] = last;
+                self.rc_pos[last.2] = p;
+            }
+        }
+    }
+
+    /// Pivot row α = ρᵀA_N laid out as `0a4109` does: the structural part scattered over the row copy with ρ's rows
+    /// in BTRAN output order, kept where |α| > ZERO, in ascending columns when n < 1.8·Σ row counts (dense
+    /// scatter) and in first-touch order otherwise (one ρ row: row order); then the slacks of ρ's rows in ρ order.
+    /// Returns the dense α (0 off the vector) and the vector order.
+    fn pivot_row(&self, rho: &[(usize, f64)]) -> (Vec<f64>, Vec<usize>) {
         let mut alpha = vec![0.0; self.n + self.m];
+        let mut touched = vec![false; self.n];
+        let mut order = Vec::new();
+        let mut work = 0usize;
         for &(i, r) in rho {
-            if r.abs() > ZERO {
-                for &(j, a) in &self.rows[i] {
-                    alpha[j] += r * a;
+            work += self.rc[i].len();
+            for &(j, a, _) in &self.rc[i] {
+                if !touched[j] {
+                    touched[j] = true;
+                    order.push(j);
                 }
-                alpha[self.n + i] = r;
+                alpha[j] += r * a;
             }
         }
-        for (j, a) in alpha.iter_mut().enumerate() {
-            if self.vstat[j] >= 0 {
-                *a = 0.0;
-            }
+        if rho.len() > 1 && (self.n as f64) < work as f64 * 1.8 {
+            order.sort_unstable();
         }
-        alpha
+        order.retain(|&j| {
+            let keep = alpha[j].abs() > ZERO;
+            if !keep {
+                alpha[j] = 0.0;
+            }
+            keep
+        });
+        for &(i, r) in rho {
+            alpha[self.n + i] = r;
+            order.push(self.n + i);
+        }
+        (alpha, order)
     }
 
     /// FTRAN of column j: (B⁻¹a_j by position, spike by row).
@@ -256,6 +330,15 @@ impl<'a> Engine<'a> {
         }
         self.vstat[q] = r as i32;
         self.head[r] = q;
+        // 28c93 L845-880: the leaving structural joins the row copy unless fixed, then the entering one leaves it
+        if self.rc_on {
+            if out < self.n && leave_status != -4 {
+                self.rc_add(out);
+            }
+            if q < self.n {
+                self.rc_remove(q);
+            }
+        }
         // 6268b LAB_001f6eb5: decided before this pivot's update with k updates done; refactor at the interval
         // (reason 2) or when the update file costs more than a fresh factor (reason 10)
         let k = self.lu.n_updates;
@@ -329,8 +412,9 @@ impl<'a> Engine<'a> {
             .map(|j| self.d[j])
             .collect();
         let line = format!(
-            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\"}}\n",
-            self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr)
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{}}}\n",
+            self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr),
+            self.pr.allow, self.lu.n_updates, self.pr.avg
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
             let _ = f.write_all(line.as_bytes());
@@ -380,6 +464,7 @@ impl<'a> Engine<'a> {
         }
         if self.pr.mode == 0 && self.iter > 0 && ((self.m as f64) < 15.0 * self.pr.avg || (self.m as u64) < self.iter) {
             self.pr.mode = 1;
+            self.lu_interval = self.lu_interval.min(((self.m as f64).powf(0.65) as usize).max(20));
         }
         if self.pr.mode == 0 {
             self.price_rebuild();
@@ -451,25 +536,29 @@ impl<'a> Engine<'a> {
     /// `118725` at the end of the artificial-bound phase: a nonbasic on an artificial bound with a strictly
     /// favourable reduced cost means unbounded; otherwise all of them move to their finite bound.
     fn end_big_m(&mut self) -> Option<Status> {
+        let favourable = |e: &Self, j: usize| {
+            let art_up = e.vstat[j] == -2 && e.spx.u[j] >= INFINITY;
+            let art_lo = j < e.n && e.vstat[j] == -1 && e.spx.l[j] <= -INFINITY;
+            (art_up || art_lo) && e.d[j] > OPT_TOL
+        };
+        let keep: Vec<bool> = (0..self.n + self.m).map(|j| favourable(self, j)).collect();
+        // shortcut: the original stops with status 5 here; rows the 1e19 tolerance let through can make that a false
+        // alarm on paths that already left Gurobi's, so columns with a favourable d stay on their artificial bound and
+        // the dual goes on at the normal tolerance (the driver's primal check settles a real unboundedness)
         for j in 0..self.n + self.m {
-            let dg = self.d[j];
-            let art_up = self.vstat[j] == -2 && self.spx.u[j] >= INFINITY;
-            let art_lo = j < self.n && self.vstat[j] == -1 && self.spx.l[j] <= -INFINITY;
-            if (art_up || art_lo) && dg > OPT_TOL {
-                return Some(Status::Unbounded);
+            if keep[j] {
+                continue;
             }
-        }
-        for j in 0..self.n + self.m {
             if self.vstat[j] == -2 && self.spx.u[j] >= INFINITY {
                 self.vstat[j] = -1;
                 self.d[j] = -self.d[j];
-            }
-        }
-        for j in 0..self.n {
-            if self.vstat[j] == -1 && self.spx.l[j] <= -INFINITY {
+            } else if j < self.n && self.vstat[j] == -1 && self.spx.l[j] <= -INFINITY {
                 self.vstat[j] = -2;
                 self.d[j] = -self.d[j];
             }
+        }
+        if std::env::var("RSOLVER_DEBUG").is_ok() && keep.iter().any(|&k| k) {
+            eprintln!("end_big_m: {} favourable columns stay on artificial bounds at it {}", keep.iter().filter(|&&k| k).count(), self.iter);
         }
         self.big_m = false;
         self.reinvert();
@@ -480,21 +569,31 @@ impl<'a> Engine<'a> {
     pub fn dual_start(&mut self) {
         self.set_basis(start_basis(self.spx));
         self.refactor();
-        // free-column loop (0534f7 L700-900): each free nonbasic enters at the non-free basic with the largest |α|
-        for q in 0..self.n {
-            if self.vstat[q] != -3 {
-                continue;
+        // free-column loop (0534f7 L700-1300): in column order each free nonbasic enters at the first position of
+        // largest |α| whose basic has a finite lower bound; every pivot is an iteration. Columns left out (max |α| <
+        // PIVOTTOL) get a second pass after a refactor: those with |d| > OptTol enter with PIVOTTOL/100, one at a time
+        // with fresh duals.
+        let free: Vec<usize> = (0..self.n).filter(|&q| self.vstat[q] == -3).collect();
+        let pivots = self.iter;
+        let mut left = Vec::new();
+        for q in free {
+            if !self.free_pivot(q, 3e-8) {
+                left.push(q);
             }
-            let (col, spike) = self.ftran_col(q);
-            let best = (0..self.m)
-                .filter(|&p| self.spx.l[self.head[p]] > -INFINITY)
-                .max_by(|&a, &b| col[a].abs().total_cmp(&col[b].abs()));
-            if let Some(p) = best.filter(|&p| col[p].abs() >= 3e-8) {
-                let out = self.head[p];
-                let st = if self.spx.u[out] - self.spx.l[out] <= 0.0 { -4 } else { -1 };
-                self.col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
-                self.pivot(p, q, st, &spike);
+        }
+        if !left.is_empty() {
+            self.refactor();
+            for q in left {
+                self.compute_duals_only();
+                let t = self.spx.col(q).fold(self.c[q], |t, (i, a)| t - a * self.y[i]);
+                // shortcut: a column that cannot enter is left free here; the original stops with status 5
+                if t.abs() > OPT_TOL {
+                    self.free_pivot(q, 3e-10);
+                }
             }
+        }
+        if self.iter > pivots {
+            self.refactor(); // spx+0x294 = 1: the dual starts from a fresh factorization
         }
         self.compute_xb();
         self.compute_duals();
@@ -502,8 +601,40 @@ impl<'a> Engine<'a> {
         self.compute_xb();
         self.exact_weights();
         self.big_m = (0..self.n + self.m).any(|j| self.vstat[j] < 0 && self.x_nonbasic(j).abs() >= INFINITY);
+        self.rc_build();
         self.in_dual = true;
         self.price_full();
+    }
+
+    /// One free-column pivot of the dual start; false when no position has |α| ≥ tol.
+    fn free_pivot(&mut self, q: usize, tol: f64) -> bool {
+        let (col, spike) = self.ftran_col(q);
+        let mut best = (usize::MAX, -1.0);
+        for p in 0..self.m {
+            if self.spx.l[self.head[p]] > -INFINITY && col[p].abs() > best.1 {
+                best = (p, col[p].abs());
+            }
+        }
+        if best.1 < tol {
+            return false;
+        }
+        let p = best.0;
+        let out = self.head[p];
+        let st = if self.spx.u[out] - self.spx.l[out] <= 0.0 { -4 } else { -1 };
+        self.col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
+        self.pivot(p, q, st, &spike);
+        self.iter += 1;
+        self.log();
+        true
+    }
+
+    /// y = c_Bᵀ B⁻¹ (dense BTRAN) into `self.y`.
+    fn compute_duals_only(&mut self) {
+        let cb: Vec<(usize, f64)> = (0..self.m).map(|p| (p, self.c[self.head[p]])).collect();
+        self.y = vec![0.0; self.m];
+        for (r, v) in self.lu.btran(&cb) {
+            self.y[r] = v;
+        }
     }
 
     /// Put each boxed nonbasic on the bound its reduced cost asks for (048d5f L2025-2048).
@@ -511,7 +642,7 @@ impl<'a> Engine<'a> {
         let mut flipped = false;
         for j in 0..self.n + self.m {
             match self.vstat[j] {
-                -1 | -2 if self.d[j] < -OPT_TOL => {
+                -1 | -2 if self.d[j] < -OPT_TOL && self.spx.u[j] - self.spx.l[j] < INFINITY => {
                     self.vstat[j] = -3 - self.vstat[j];
                     self.d[j] = -self.d[j];
                     flipped = true;
@@ -563,6 +694,10 @@ impl<'a> Engine<'a> {
                 self.w.iter_mut().for_each(|w| *w = 1.0);
             }
             self.snap();
+            if std::env::var("RSOLVER_DEBUG").is_ok() && self.iter.is_multiple_of(2000) {
+                let (pi, di) = self.sums();
+                eprintln!("dual it {} obj {:e} pinf {pi:e} dinf {di:e} pert {} big_m {} mode {}", self.iter, self.objective(), self.perturbed, self.big_m, self.pr.mode);
+            }
             let r = match self.chuzr() {
                 Some(r) => r,
                 None if self.big_m => {
@@ -589,14 +724,23 @@ impl<'a> Engine<'a> {
             for &(i, v) in &rho_sp {
                 rho[i] = v;
             }
-            let alpha = self.pivot_row_ordered(&rho_sp);
+            let rho_sp: Vec<(usize, f64)> = rho_sp.into_iter().filter(|e| e.1.abs() > ZERO).collect();
+            let (alpha, order) = self.pivot_row(&rho_sp);
+            if let Ok(path) = std::env::var("RSOLVER_BFRT") {
+                // α-vector dump for tools/proto/alphacmp.py: order and raw values as hex
+                use std::io::Write;
+                let vals: Vec<String> = order.iter().map(|&j| format!("\"{}\"", hexf(alpha[j]))).collect();
+                if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                    let _ = writeln!(f, "{{\"iter\":{},\"leave\":{},\"idx\":{:?},\"val\":[{}]}}", self.iter, self.head[r], order, vals.join(","));
+                }
+            }
             // bound flipping ratio test (1c35c5): walk the breakpoints d̃_j/|α_j| in Harris groups; boxed columns
             // whose flip keeps the slope |δ| − Σ|α|(u−l) positive flip instead of entering (m1_notes §8.1)
             let sgn = if delta < 0.0 { -1.0 } else { 1.0 };
             // 1c35c5 in the original sign convention (candidates α < 0, normalized d ≥ 0), structural columns
             // first, then slacks
             let mut cands: Vec<Cand> = Vec::new();
-            for j in 0..self.n + self.m {
+            for &j in &order {
                 let a = alpha[j];
                 if a == 0.0 || self.rejected[j] {
                     continue;
@@ -779,11 +923,33 @@ impl<'a> Engine<'a> {
         self.c = self.spx.c.clone();
         self.perturbed = false;
         self.compute_xb();
+        let (mut best_obj, mut stall) = (f64::INFINITY, 0usize);
+        let mut was_phase2 = false;
         loop {
             if self.iter >= self.iter_limit {
                 return Status::IterLimit;
             }
-            let phase1 = (0..self.m).any(|p| self.primal_infeas(p) != 0.0);
+            let mut phase1 = (0..self.m).any(|p| self.primal_infeas(p) != 0.0);
+            if phase1 && was_phase2 {
+                // shortcut: drift pushed a basic out of its bounds in phase 2; a fresh factorization and x_B usually
+                // clear it (this textbook primal stands in for 0478d3)
+                was_phase2 = false;
+                self.refactor();
+                self.compute_xb();
+                phase1 = (0..self.m).any(|p| self.primal_infeas(p) != 0.0);
+            }
+            was_phase2 |= !phase1;
+            let progress = if phase1 { self.sums().0 } else { self.objective() };
+            if progress < best_obj - 1e-9 * best_obj.abs().max(1.0) {
+                best_obj = progress;
+                stall = 0;
+            } else {
+                stall += 1;
+            }
+            let bland = stall > 50;
+            if std::env::var("RSOLVER_DEBUG").is_ok() && self.iter.is_multiple_of(1000) {
+                eprintln!("primal it {} phase1 {phase1} progress {progress:e} stall {stall}", self.iter);
+            }
             let cb: Vec<(usize, f64)> = (0..self.m)
                 .map(|p| {
                     let v = if phase1 { self.primal_infeas(p).signum() } else { self.c[self.head[p]] };
@@ -810,7 +976,9 @@ impl<'a> Engine<'a> {
                     -3 if dj.abs() > OPT_TOL => dj.abs(),
                     _ => 0.0,
                 };
-                if score > best {
+                // shortcut: Bland's rule (first improving column) once the objective stalls, against cycling in this
+                // textbook primal; the original primal (0478d3) is not ported yet
+                if score > best && !(bland && q != usize::MAX) {
                     best = score;
                     q = j;
                 }
@@ -857,7 +1025,7 @@ impl<'a> Engine<'a> {
                     let dist = ((x - bound) * a.signum()).max(0.0);
                     if pass == 0 {
                         tmax = tmax.min((dist + FEAS_TOL) / a.abs());
-                    } else if dist / a.abs() <= tmax && a.abs() > amax {
+                    } else if dist / a.abs() <= tmax && (if bland { r == usize::MAX || self.head[p] < self.head[r] } else { a.abs() > amax }) {
                         amax = a.abs();
                         r = p;
                         leave_upper = upper;
