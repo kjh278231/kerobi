@@ -53,6 +53,8 @@ pub struct Parts {
     pub active: [bool; 3],
     pub r: QueueParts,
     pub c: QueueParts,
+    /// +0xf0 when dumped (-1: count the 'B' columns; Gurobi keeps the count from bound rounding)
+    pub nbin: i32,
 }
 
 fn queue(q: &QueueParts) -> Queue {
@@ -134,7 +136,7 @@ impl State {
             sense: d.sense.clone(),
             objcon: d.objcon,
             nnz: d.nnz,
-            nbin: cnt(b'B'),
+            nbin: if d.nbin >= 0 { d.nbin } else { cnt(b'B') },
             nint: cnt(b'B') + cnt(b'I'),
             eq_rows: false,
             vtype: d.vtype.clone(),
@@ -186,6 +188,7 @@ impl State {
         let mut counters = vec![self.bounds_tightened, self.coefs_changed, self.ineq_to_eq, self.rows_removed, self.cols_removed];
         counters.extend_from_slice(&self.ctr);
         Parts {
+            nbin: self.nbin,
             n: self.n,
             m: self.m,
             lb: self.lb.clone(),
@@ -248,6 +251,9 @@ impl State {
                 self.implied_bounds(p);
                 (0, 0)
             }
+            "45885d" => (self.clique(p), 0),
+            "52be10" => (self.set_packing(p), 0),
+            "46a62d" => (self.clique_rows(p, if p.presolve > 1 || p.preclique > 1 { 2 } else { 1 }), 0),
             "370047" => {
                 self.activity(None);
                 (0, 0)

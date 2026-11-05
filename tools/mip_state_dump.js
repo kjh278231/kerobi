@@ -40,7 +40,7 @@ function walk(heads, k, nextOff) {  // list k: [[row, col, value], ...] in list 
 }
 function dump(tag) {
   const n = I(st, 0xc), m = I(st, 0x10), s = {tag, n, m};
-  s.ptype = I(st, 0x08); s.fc = I(st, 0xe0); s.mip = I(st, 0xfc);
+  s.ptype = I(st, 0x08); s.nbin = I(st, 0xf0); s.nint = I(st, 0xf4); s.fc = I(st, 0xe0); s.mip = I(st, 0xfc);
   s.lb = arrD(Pt(st, 0xa0), n); s.ub = arrD(Pt(st, 0xa8), n); s.obj = arrD(Pt(st, 0xb0), n);
   s.vtype = arrC(Pt(st, 0x150), n); s.rhs = arrD(Pt(st, 0xb8), m); s.sense = arrC(Pt(st, 0xc0), m);
   s.row_cnt = arrI(Pt(st, 0x60), m); s.col_cnt = arrI(Pt(st, 0x68), n);
