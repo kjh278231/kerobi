@@ -1,7 +1,7 @@
 // MIP presolve state oracle (docs/m2_presolve.md §2a): run Gurobi Model.presolve() on one model under Frida and dump
 // the 3cd406 presolve state (linked-list matrix, bounds, types, rows, activities, counters, work) at entry and return
 // and the postsolve record list (type + raw data bytes, push order) of the n-th call of a chosen function, so one reduction can be checked in isolation (load "before", run, compare "after").
-// usage: node tools/mip_state_dump.js <model> <fn short id> <call no. (1-based) | all> <out.json> [Param=Value ...]
+// usage: node tools/mip_state_dump.js <model name | .mps/.lp path> <fn short id> <call no. (1-based) | all> <out.json> [Param=Value ...]
 // The state pointer comes from 5b84b1(env, state+0x3f0), which 3cd406 calls right after building the state.
 // Gurobi: one process at a time (wrap in tools/gurun.sh).
 const FRIDA = process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida';
@@ -15,7 +15,7 @@ const root = path.resolve(__dirname, '..', '..');
 const shortOf = n => { const m = /^PRIVATE0*([0-9a-f]+)$/.exec(n); return m ? m[1].slice(-6).replace(/^0+/, '') : n; };
 const idx = fs.readFileSync(path.join(root, 're/decomp/index.tsv'), 'utf8').trim().split('\n').slice(1).map(l => l.split('\t'));
 const off = s => { const r = idx.find(r => shortOf(r[1]) === s); if (!r) throw new Error('no fn ' + s); return parseInt(r[0], 16); };
-const mps = execFileSync(path.join(root, '.venv/bin/python'), ['-I', '-c',
+const mps = model.endsWith('.mps') || model.endsWith('.lp') ? model : execFileSync(path.join(root, '.venv/bin/python'), ['-I', '-c',
   `import sys; sys.path.insert(0, ${JSON.stringify(__dirname)}); from parity import instances; print(instances()[${JSON.stringify(model)}])`]).toString().trim();
 const params = { LogToConsole: 0, Threads: 1, WorkLimit: 60 };
 for (const p of kv) { const [k, v] = p.split('='); params[k] = Number(v); }
@@ -45,6 +45,8 @@ function dump(tag) {
   s.vtype = arrC(Pt(st, 0x150), n); s.rhs = arrD(Pt(st, 0xb8), m); s.sense = arrC(Pt(st, 0xc0), m);
   s.row_cnt = arrI(Pt(st, 0x60), m); s.col_cnt = arrI(Pt(st, 0x68), n);
   s.inf_max = arrI(Pt(st, 0x70), m); s.inf_min = arrI(Pt(st, 0x78), m); s.act_max = arrD(Pt(st, 0x90), m); s.act_min = arrD(Pt(st, 0x98), m);
+  s.mult_lo = arrD(Pt(st, 0x80), n); s.mult_hi = arrD(Pt(st, 0x88), n);
+  s.col_flag = (() => { const p = Pt(st, 0x170); if (p.isNull()) return null; const o = []; for (let j = 0; j < n; j++) o.push(p.add(4 * j).readU32()); return o; })();
   s.objcon = D(st, 0xc8); s.nnz = st.add(0xd8).readS64().toString();
   s.counters = arrI(st.add(0x3f8), 14);  // +0x3f8 tightened, +0x3fc coefs, +0x400 ineq->eq, +0x404 rows, +0x408 cols, ...
   const w = Pt(st, 0x458); s.work = w.isNull() ? null : w.readDouble(); s.work_mult = D(st, 0x448);
@@ -65,6 +67,22 @@ function dump(tag) {
     const b = new Uint8Array(d.readByteArray(len));
     return [t, Array.from(b, x => x.toString(16).padStart(2, "0")).join(""), q.toString(), d.toString()];
   });
+  // change tracker (state+0x3d8): level, flag bytes, per level a/b lengths and lists, the list getters' caches
+  // (538f30 rows +0x94/+0xa0, 5399fc cols +0xb8/+0xc8, 53a487 rows +0xe0/+0xf0, 53af0f cols +0x108/+0x118; -1 none)
+  const tr = Pt(st, 0x3d8);
+  if (!tr.isNull()) {
+    const T = { level: I(tr, 0x10), active: [0, 1, 2].map(L => I(tr, 0x88 + 4 * L)) };
+    const lst = (c, p) => (c < 0 || p.isNull()) ? null : arrI(p, c);
+    for (const [k, fl, a, b, l, c1, l1, c2, l2, dim] of [['r', 0x18, 0x28, 0x34, 0x40, 0x94, 0xa0, 0xe0, 0xf0, m],
+                                                         ['c', 0x20, 0x58, 0x64, 0x70, 0xb8, 0xc8, 0x108, 0x118, n]]) {
+      const fp = Pt(tr, fl); const f = []; if (!fp.isNull()) for (let i = 0; i < dim; i++) f.push(fp.add(i).readU8());
+      T[k] = { flag: f, a: [0, 1, 2].map(L => I(tr, a + 4 * L)), b: [0, 1, 2].map(L => I(tr, b + 4 * L)),
+               list: [0, 1, 2].map(L => lst(I(tr, b + 4 * L), Pt(tr, l + 8 * L))),
+               cache: [0, 1, 2].map(L => lst(I(tr, c1 + 4 * L), Pt(tr, l1 + 8 * L))),
+               cache2: [0, 1, 2].map(L => lst(I(tr, c2 + 4 * L), Pt(tr, l2 + 8 * L))) };
+    }
+    s.tracker = T;
+  }
   return s;
 }
 function install() {
