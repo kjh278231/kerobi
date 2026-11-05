@@ -23,7 +23,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | ~~`m2-probe`~~ (완료, 병합 `54125bd`) | probing `4d3a1d` 전체 포팅(`probe*.rs`, `conflict.rs`, `subst.rs`). 엔진 62/62 패스 비트 일치(`tools/probe_check.py`), 쓰기 13호출 일치(`tools/probe_apply_check.py`). sweep에서 `probe` 첫 불일치 0 | [m2_red_probe.md](m2_red_probe.md) |
 | `../rsolver-m2-outer-b` / `m2-outer-b` | 바깥 패스 중간: `4030c9` 지배 열, `414c03`/`414c53`→`40d2bc` 비영 소거, `36ee92`, `3e40d1`, `37f484` MIP 분기, `418542` | `docs/m2_red_outer_b.md` |
 | ~~`m2-clique`~~ (완료, 병합 `3ece196`) | `451bed`, `45885d`, `52be10`, `46a62d` 포팅. 덤프 비교 각 78/78, 레코드 38/38. 덤프에 +0xf0/+0xf4(prelude에서 센 이진·정수 수)를 더함 | [m2_red_clique.md](m2_red_clique.md) |
-| `../rsolver-m2-roundend` / `m2-roundend` | 라운드 끝 앞쪽: `58d4ce`, `5577ba` MIP 분기, `5a9282`, `5ab429`, `59c193`, `55a779`, `594c0c` | `docs/m2_red_roundend.md` |
+| `../rsolver-m2-roundend` / `m2-roundend` | 병합(`f2e0c80`): `58d4ce`, `5a9282`, `5ab429`(+`574764` `mod_subst`, `a7c550`, `3c5996`), `59c193`, `55a779` 1부. 덤프 80/42/42/38 전부 일치. 지금 `5577ba` 대칭 MIP 분기(작업량만 바뀜, `551cc0` 정수 경로·`5507cb`). 다음 `594c0c`(ran14x18, outer-a의 `3bbf87`/`3bde19` 뒤) | [m2_red_roundend.md](m2_red_roundend.md) |
 | `../rsolver-m2-outer-a` / `m2-outer-a` | 바깥 패스 앞쪽 해독 → 포팅: `3e5363`, `3ff744` MIP 분기, `57627e`, `578fd2`, `374521`, `5431ee` | `docs/m2_red_outer_a.md` |
 | ~~`m2-inner`~~ (완료, 병합 `a4dcbf1`) | 내부 루프 7개 + inline 함의 bound 포팅. 덤프 비교 147–225/호출 전부 일치(`tools/mip_dump_check.py`), 레코드 38/38 바이트 일치(`tools/mip_rec_check.py`, `CoreModel.mip_post_records`). 공용 보조 API는 `helpers.rs`(m2_red_inner.md §11) | [m2_red_inner.md](m2_red_inner.md) |
 
