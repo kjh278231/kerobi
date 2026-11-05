@@ -14,6 +14,7 @@ mod helpers;
 mod inner;
 mod colpass;
 mod doubleton;
+mod dualeq;
 mod lists;
 pub mod post;
 pub mod probe;

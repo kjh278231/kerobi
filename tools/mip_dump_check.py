@@ -2,7 +2,8 @@
 compare the result with Gurobi's state at its return: bounds, rows, activities, counts, counters, work, list orders,
 free/pending counts, tracker and new postsolve records (docs/m2_red_inner.md §9). Needs no Gurobi.
 usage: PYTHONPATH=python python tools/mip_dump_check.py <fn> <dump.json ...> [--after DUMP] [--param K=V ...]
-  <fn>: 3e39a6 36ddf2 37168e 36c5cf 56f793 56c80e 36e6b6 (mode 0 or 1, whichever matches) 370047 implied_bounds.
+  <fn>: 3e39a6 36ddf2 37168e 36c5cf 56f793 56c80e 36e6b6 (mode 0 or 1, whichever matches) 370047 implied_bounds
+  3e40d1.
   --after: the "after" state is the entry state of the same call number in DUMP (for an inline block: dump the
   function before it and the one after it).
 Doubles compare with == (the JSON dump loses the sign of -0.0); records compare byte for byte except padding.
@@ -14,6 +15,8 @@ from rsolver import _core
 
 FIELDS = ["lb", "ub", "obj", "rhs", "row_cnt", "col_cnt", "inf_max", "inf_min", "act_max", "act_min", "mult_lo",
           "mult_hi", "objcon", "nnz", "work"]
+# void functions (the dumped return value is a stale register)
+NO_RET = {"56f793", "3e40d1"}
 
 
 def to_parts(s):
@@ -135,7 +138,7 @@ def main():
             for name in names:
                 got = _core.mip_dump_run(name, to_parts(enter), params)
                 diffs, nd = compare(got, leave, enter["recs"] if not a.after else enter["recs"])
-                if not a.after and a.fn != "36e6b6" and got["ret"] != xs[1]["ret"] and a.fn != "56f793":
+                if not a.after and a.fn != "36e6b6" and got["ret"] != xs[1]["ret"] and a.fn not in NO_RET:
                     diffs.append(f"ret port {got['ret']} gurobi {xs[1]['ret']}")
                     nd += 1
                 if best is None or nd < best[1]:

@@ -249,6 +249,7 @@ impl State {
                 self.implied_bounds(p);
                 (0, 0)
             }
+            "3e40d1" => (self.dual_ineq_to_eq(p), 0),
             "370047" => {
                 self.activity(None);
                 (0, 0)
