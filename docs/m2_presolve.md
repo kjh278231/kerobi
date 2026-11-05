@@ -23,7 +23,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | `../rsolver-m2-probe` / `m2-probe` | probing 해독 완료(병합, [m2_red_probe.md](m2_red_probe.md), 8개 모델 11호출이 모델을 바꿈, Python 재현 비트 일치). 지금 상태 쓰기와 무관한 부분(probing 행렬, `4e48f7` 엔진, conflict graph) 포팅. 후처리(고정·집계·lifting·레코드)는 inner의 보조 함수 병합 뒤 | |
 | `../rsolver-m2-clique` / `m2-clique` | clique 해독 완료(병합, [m2_red_clique.md](m2_red_clique.md)). `451bed` 포팅·병합(`df6d510`, 픽스처 5개 비트 일치, `3de18e` 경로는 미구현). inner 보조 함수 병합 뒤 `45885d`/`52be10`/`46a62d` | |
 | `../rsolver-m2-outer-a` / `m2-outer-a` | 바깥 패스 앞쪽 해독 → 포팅: `3e5363`, `3ff744` MIP 분기, `57627e`, `578fd2`, `374521`, `5431ee` | `docs/m2_red_outer_a.md` |
-| `../rsolver-m2-inner` / `m2-inner` | 내부 루프 reduction 7개와 보조 함수 해독(뼈대 병합 뒤 같은 에이전트가 포팅) | `docs/m2_red_inner.md` |
+| ~~`m2-inner`~~ (완료, 병합 `a4dcbf1`) | 내부 루프 7개 + inline 함의 bound 포팅. 덤프 비교 147–225/호출 전부 일치(`tools/mip_dump_check.py`), 레코드 38/38 바이트 일치(`tools/mip_rec_check.py`, `CoreModel.mip_post_records`). 공용 보조 API는 `helpers.rs`(m2_red_inner.md §11) | [m2_red_inner.md](m2_red_inner.md) |
 
 ### 제어 흐름 (2026-11-06, `crates/mip/src/driver.rs`)
 spine 노트 b·c·d대로 `3cd406`의 단계(≤2) × 라운드(≤5) × 패스 × 내부 반복, 라운드 끝, FINAL을 옮겼다. 카운트 62곳(reduction 없이 세는 I→B·PREPARTOBJ·함의 bound·쌍대 이진화·패스 끝·FINAL 쌍대 고정 포함), timer 28개(시작마다 +1, 한도 B·0.5B·2B·4B·3B), 스냅숏 셋과 진척도 판정 셋, inline I→B·PREPARTOBJ·열 타입 통계·두 번째 probing 판정. 아직 없는 reduction은 `stubs.rs`의 stub(아무것도 안 바꾸고 0)이다. **포팅 = stub을 지우고 같은 이름의 `impl State` 메서드를 새 파일에 둔다.** 확인: 아무것도 안 바뀌는 5개 모델의 총 카운트가 Gurobi 호출 기록과 같다(neos5 62, 두 번째 probing이 없는 모델 61).
