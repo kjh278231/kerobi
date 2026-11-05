@@ -1,0 +1,99 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:10 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/25fv47/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/25fv47.mps.gz
+Reading time = 0.00 seconds
+25FV47: 821 rows, 1571 columns, 10400 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 821 rows, 1571 columns and 10400 nonzeros (Min)
+Model fingerprint: 0x3cd8c75f
+Model has 727 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-04, 2e+02]
+  Objective range  [1e-03, 1e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [2e-01, 2e+03]
+
+Presolve removed 149 rows and 131 columns
+Presolve time: 0.00s
+Presolved: 672 rows, 1442 columns, 9938 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 1.082e+04
+ Factor NZ  : 3.292e+04 (roughly 1 MB of memory)
+ Factor Ops : 2.269e+06 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   3.47065118e+05 -2.92775273e+04  5.69e+04 9.64e+00  3.63e+04     0s
+   1   1.59307602e+05 -8.00504677e+05  2.10e+04 1.62e+01  1.36e+04     0s
+   2   4.06612434e+04 -9.75157379e+05  3.44e+03 1.46e+00  2.56e+03     0s
+   3   1.75130204e+04 -6.79625732e+05  6.23e+02 4.46e-01  7.16e+02     0s
+   4   1.35397632e+04 -2.86764344e+05  1.05e+02 7.10e-02  2.08e+02     0s
+   5   1.12410748e+04 -3.74023766e+04  3.68e-01 1.12e-03  2.79e+01     0s
+   6   8.98180429e+03 -8.17256732e+03  7.50e-02 9.95e-13  9.81e+00     0s
+   7   8.24141433e+03 -1.35249117e+03  5.14e-02 8.12e-04  5.48e+00     0s
+   8   7.30420254e+03  2.55881627e+03  2.69e-02 2.42e-13  2.71e+00     0s
+   9   6.68530719e+03  4.03450203e+03  1.66e-02 1.14e-13  1.51e+00     0s
+  10   6.24410081e+03  4.80268697e+03  9.33e-03 4.26e-14  8.22e-01     0s
+  11   5.85548751e+03  5.08355842e+03  3.43e-03 2.49e-14  4.40e-01     0s
+  12   5.70757095e+03  5.29382589e+03  1.93e-03 1.07e-14  2.36e-01     0s
+  13   5.59686675e+03  5.43356937e+03  7.99e-04 3.55e-15  9.30e-02     0s
+  14   5.52924864e+03  5.47957284e+03  1.90e-04 1.48e-14  2.83e-02     0s
+  15   5.51500919e+03  5.49700927e+03  8.24e-05 7.11e-15  1.02e-02     0s
+  16   5.50888675e+03  5.49874290e+03  4.30e-05 1.42e-14  5.77e-03     0s
+  17   5.50394388e+03  5.50113446e+03  1.17e-05 2.22e-15  1.60e-03     0s
+  18   5.50220845e+03  5.50171559e+03  1.90e-06 1.42e-14  2.80e-04     0s
+  19   5.50189111e+03  5.50182701e+03  2.13e-07 3.55e-15  3.65e-05     0s
+  20   5.50184656e+03  5.50184547e+03  1.24e-09 1.42e-14  6.21e-07     0s
+  21   5.50184589e+03  5.50184589e+03  1.50e-09 7.11e-15  6.22e-10     0s
+
+Barrier solved model in 21 iterations and 0.02 seconds (0.03 work units)
+Optimal objective 5.50184589e+03
+
+
+User-callback calls 141, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/25fv47.mps.gz
+Reading time = 0.00 seconds
+25FV47: 821 rows, 1571 columns, 10400 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 821 rows, 1571 columns and 10400 nonzeros (Min)
+Model fingerprint: 0x3cd8c75f
+Model has 727 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-04, 2e+02]
+  Objective range  [1e-03, 1e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [2e-01, 2e+03]
+Presolve removed 149 rows and 131 columns

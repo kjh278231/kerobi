@@ -1,0 +1,67 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:40 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 1
+Set parameter LogFile to value "bench/gurobi_dual_pre/boeing2/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/boeing2.mps.gz
+Reading time = 0.00 seconds
+BOEING2: 166 rows, 162 columns, 1215 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  1
+LogToConsole  0
+Threads  1
+
+Optimize a model with 166 rows, 162 columns and 1215 nonzeros (Min)
+Model fingerprint: 0xbf250ec0
+Model has 143 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-02, 3e+03]
+  Objective range  [1e-02, 7e+00]
+  Bounds range     [2e+00, 5e+02]
+  RHS range        [1e+00, 1e+05]
+
+Presolve removed 44 rows and 2 columns
+Presolve time: 0.00s
+Presolved: 122 rows, 160 columns, 811 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -4.4429700e+02   4.516125e+03   0.000000e+00      0s
+     122   -3.1501873e+02   0.000000e+00   0.000000e+00      0s
+
+Solved in 122 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -3.150187280e+02
+
+User-callback calls 189, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/boeing2.mps.gz
+Reading time = 0.00 seconds
+BOEING2: 166 rows, 162 columns, 1215 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  1
+LogToConsole  0
+Threads  1
+
+Presolve a model with 166 rows, 162 columns and 1215 nonzeros (Min)
+Model fingerprint: 0xbf250ec0
+Model has 143 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-02, 3e+03]
+  Objective range  [1e-02, 7e+00]
+  Bounds range     [2e+00, 5e+02]
+  RHS range        [1e+00, 1e+05]
+Presolve removed 44 rows and 2 columns

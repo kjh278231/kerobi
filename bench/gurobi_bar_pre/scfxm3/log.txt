@@ -1,0 +1,94 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/scfxm3/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/scfxm3.mps.gz
+Reading time = 0.00 seconds
+SCFXM3: 990 rows, 1371 columns, 7777 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 990 rows, 1371 columns and 7777 nonzeros (Min)
+Model fingerprint: 0x0b8460dd
+Model has 69 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [5e-04, 1e+02]
+  Objective range  [1e+00, 1e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [8e-01, 2e+03]
+
+Presolve removed 324 rows and 253 columns
+Presolve time: 0.00s
+Presolved: 666 rows, 1118 columns, 6486 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 6.860e+03
+ Factor NZ  : 1.349e+04 (roughly 1 MB of memory)
+ Factor Ops : 3.219e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   4.34390169e+05 -8.53844344e+04  2.22e+04 6.07e+00  1.71e+04     0s
+   1   1.87392952e+05 -3.60606053e+05  4.83e+03 4.01e+00  4.10e+03     0s
+   2   1.10114116e+05 -2.88426856e+05  1.13e+03 3.90e-01  1.01e+03     0s
+   3   7.43177672e+04 -1.05371046e+05  2.71e+02 2.60e-02  2.67e+02     0s
+   4   6.26781905e+04  2.51466455e+03  4.32e+01 1.61e-03  5.77e+01     0s
+   5   5.89479925e+04  4.21249012e+04  8.05e+00 4.26e-14  1.34e+01     0s
+   6   5.70482794e+04  5.10286825e+04  3.66e+00 9.72e-06  4.66e+00     0s
+   7   5.64264130e+04  5.30890368e+04  2.29e+00 2.56e-13  2.55e+00     0s
+   8   5.61988123e+04  5.40168568e+04  1.86e+00 1.12e-14  1.70e+00     0s
+   9   5.53893111e+04  5.44486270e+04  6.18e-01 1.42e-14  7.04e-01     0s
+  10   5.50548570e+04  5.46858113e+04  1.82e-01 4.97e-14  2.68e-01     0s
+  11   5.49405044e+04  5.48623133e+04  3.48e-02 8.85e-15  5.63e-02     0s
+  12   5.49079814e+04  5.48969315e+04  4.42e-03 3.55e-14  7.89e-03     0s
+  13   5.49017439e+04  5.49007620e+04  2.47e-04 1.42e-14  6.84e-04     0s
+  14   5.49012833e+04  5.49011957e+04  1.06e-05 7.11e-15  5.96e-05     0s
+  15   5.49012546e+04  5.49012545e+04  3.70e-09 1.00e-14  8.98e-08     0s
+  16   5.49012545e+04  5.49012545e+04  1.09e-10 1.42e-14  8.98e-11     0s
+
+Barrier solved model in 16 iterations and 0.01 seconds (0.02 work units)
+Optimal objective 5.49012545e+04
+
+
+User-callback calls 124, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/scfxm3.mps.gz
+Reading time = 0.00 seconds
+SCFXM3: 990 rows, 1371 columns, 7777 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 990 rows, 1371 columns and 7777 nonzeros (Min)
+Model fingerprint: 0x0b8460dd
+Model has 69 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [5e-04, 1e+02]
+  Objective range  [1e+00, 1e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [8e-01, 2e+03]
+Presolve removed 324 rows and 253 columns

@@ -231,6 +231,8 @@ class Model:
         return default
 
     def optimize(self, callback=None):
+        if self._core is not None and self._param("Presolve", -1) != 0 and not self.IsMIP:
+            return self._driver(callback)
         if self._core is not None and self.Params.get("Method") == 2:
             return self._barrier(callback)
         if self._core is not None and self.Params.get("Method") == 6:
@@ -269,6 +271,41 @@ class Model:
     @property
     def ObjBound(self):
         return self.ObjVal
+
+    def _driver(self, callback):
+        """Continuous model with presolve: the Rust driver (docs/m1_driver.md) runs presolve, the engine Method
+        resolves to, uncrush and the status rules, and returns the log text."""
+        import time
+
+        C = GRB.Callback
+
+        def relay(where, keys):
+            def f(*vals):
+                if callback:
+                    self._cbrow, self._cbdata = None, dict(zip(keys, vals))
+                    callback(self, where)
+            return f
+
+        bar = relay(C.BARRIER, (C.BARRIER_ITRCNT, C.BARRIER_PRIMOBJ, C.BARRIER_DUALOBJ, C.BARRIER_PRIMINF,
+                                C.BARRIER_DUALINF, C.BARRIER_COMPL))
+        pdhg = relay(C.PDHG, (C.PDHG_ITRCNT, C.PDHG_PRIMOBJ, C.PDHG_DUALOBJ, C.PDHG_PRIMINF, C.PDHG_DUALINF,
+                              C.PDHG_COMPL))
+        pairs = [(k, float(v)) for k, v in self.Params.items() if isinstance(v, (int, float))]
+        t0 = time.perf_counter()
+        (self.Status, self._objval, self._x, self.IterCount, self.BarIterCount, self.PDHGIterCount, self.Work, trace,
+         log) = self._core.optimize(pairs, bar, pdhg)
+        self.Runtime, self.NodeCount = time.perf_counter() - t0, 0.0
+        self.SolCount = int(self.Status == GRB.OPTIMAL or self.PDHGIterCount > 0)  # a PDHG iterate is a solution
+        if self._param("LogFile", ""):
+            with open(self._param("LogFile", ""), "a") as f:
+                f.write(log)
+        if self._param("OutputFlag", 1) and self._param("LogToConsole", 1):
+            print(log, end="")
+        if callback is not None:  # SIMPLEX callbacks replayed in iteration order after the solve
+            for row in trace:
+                self._cbrow = row
+                callback(self, C.SIMPLEX)
+            self._cbrow = None
 
     def _barrier(self, callback):
         """M3 barrier (Presolve=0, Crossover=0 assumed): BARRIER callback (where = 7) once per iteration."""

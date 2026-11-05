@@ -1,0 +1,88 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/vtpbase/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/vtpbase.mps.gz
+Reading time = 0.00 seconds
+VTP.BASE: 198 rows, 203 columns, 908 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 198 rows, 203 columns and 908 nonzeros (Min)
+Model fingerprint: 0x50481ee8
+Model has 6 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-01, 4e+03]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+03]
+  RHS range        [1e+00, 4e+03]
+
+Presolve removed 172 rows and 166 columns
+Presolve time: 0.00s
+Presolved: 26 rows, 37 columns, 119 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 1.390e+02
+ Factor NZ  : 2.310e+02
+ Factor Ops : 2.481e+03 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0  -2.46915107e+06 -1.08353212e+06  6.40e+02 1.29e+02  5.16e+05     0s
+   1   1.39929741e+05 -1.07803820e+06  2.29e+01 1.14e+02  3.60e+04     0s
+   2   1.69472193e+05 -2.53253387e+04  1.56e-01 4.53e+00  3.03e+03     0s
+   3   1.38497205e+05  1.19342697e+05  2.55e-03 3.04e-12  2.81e+02     0s
+   4   1.32036440e+05  1.27219061e+05  5.25e-04 3.41e-13  6.95e+01     0s
+   5   1.30206602e+05  1.29370742e+05  4.51e-05 2.27e-13  1.20e+01     0s
+   6   1.29852680e+05  1.29788174e+05  3.56e-06 1.03e-04  9.26e-01     0s
+   7   1.29831774e+05  1.29831059e+05  2.52e-12 4.55e-13  1.03e-02     0s
+   8   1.29831463e+05  1.29831462e+05  5.33e-13 2.27e-13  1.03e-05     0s
+   9   1.29831462e+05  1.29831462e+05  2.19e-12 2.27e-13  1.03e-08     0s
+  10   1.29831462e+05  1.29831462e+05  7.39e-13 4.55e-13  1.03e-11     0s
+
+Barrier solved model in 10 iterations and 0.00 seconds (0.00 work units)
+Optimal objective 1.29831462e+05
+
+
+User-callback calls 100, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/vtpbase.mps.gz
+Reading time = 0.00 seconds
+VTP.BASE: 198 rows, 203 columns, 908 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 198 rows, 203 columns and 908 nonzeros (Min)
+Model fingerprint: 0x50481ee8
+Model has 6 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-01, 4e+03]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+03]
+  RHS range        [1e+00, 4e+03]
+Presolve removed 172 rows and 166 columns

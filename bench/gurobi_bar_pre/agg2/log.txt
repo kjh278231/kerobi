@@ -1,0 +1,96 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:10 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/agg2/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/agg2.mps.gz
+Reading time = 0.00 seconds
+AGG2: 516 rows, 302 columns, 4284 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 516 rows, 302 columns and 4284 nonzeros (Min)
+Model fingerprint: 0xbc012b3c
+Model has 231 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-05, 4e+02]
+  Objective range  [3e+00, 1e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [8e+01, 1e+06]
+
+Presolve removed 236 rows and 52 columns
+Presolve time: 0.00s
+Presolved: 280 rows, 250 columns, 2267 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 4.901e+03
+ Factor NZ  : 8.561e+03
+ Factor Ops : 3.331e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   9.13882808e+10 -4.56068263e+08  1.21e+07 3.31e+02  3.34e+09     0s
+   1   4.05511883e+10 -2.50270706e+10  4.15e+06 6.16e+02  1.07e+09     0s
+   2   3.65308096e+09 -2.62383111e+10  1.24e+05 3.33e+00  8.54e+07     0s
+   3   1.59326593e+09 -5.78533614e+09  3.73e+04 1.72e-01  1.81e+07     0s
+   4   3.86744950e+08 -1.22005500e+09  2.42e+03 3.64e-12  3.37e+06     0s
+   5   1.11701289e+08 -4.63266790e+08  6.24e+02 1.82e-12  1.18e+06     0s
+   6   2.64095577e+07 -2.29767851e+08  1.53e+02 2.56e-13  5.22e+05     0s
+   7  -1.19268300e+06 -1.29633060e+08  5.93e+01 1.82e-12  2.61e+05     0s
+   8  -1.41241265e+07 -4.57438494e+07  1.36e+01 1.82e-12  6.42e+04     0s
+   9  -1.90024552e+07 -2.44533916e+07  3.01e-01 6.39e-14  1.11e+04     0s
+  10  -1.99161284e+07 -2.08601385e+07  6.49e-02 2.84e-14  1.92e+03     0s
+  11  -2.01451716e+07 -2.03928121e+07  3.77e-03 1.78e-15  5.03e+02     0s
+  12  -2.02194217e+07 -2.02765505e+07  4.20e-04 1.42e-13  1.16e+02     0s
+  13  -2.02371305e+07 -2.02445862e+07  3.63e-05 9.09e-13  1.51e+01     0s
+  14  -2.02391117e+07 -2.02401621e+07  1.16e-06 1.14e-13  2.13e+00     0s
+  15  -2.02392509e+07 -2.02392844e+07  2.08e-08 5.68e-14  6.80e-02     0s
+  16  -2.02392523e+07 -2.02392524e+07  1.67e-08 2.27e-13  1.85e-04     0s
+  17  -2.02392524e+07 -2.02392524e+07  6.69e-10 2.27e-13  1.85e-07     0s
+  18  -2.02392524e+07 -2.02392524e+07  2.33e-10 4.55e-13  1.85e-10     0s
+
+Barrier solved model in 18 iterations and 0.00 seconds (0.01 work units)
+Optimal objective -2.02392524e+07
+
+
+User-callback calls 113, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/agg2.mps.gz
+Reading time = 0.00 seconds
+AGG2: 516 rows, 302 columns, 4284 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 516 rows, 302 columns and 4284 nonzeros (Min)
+Model fingerprint: 0xbc012b3c
+Model has 231 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-05, 4e+02]
+  Objective range  [3e+00, 1e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [8e+01, 1e+06]
+Presolve removed 236 rows and 52 columns

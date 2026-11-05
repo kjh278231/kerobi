@@ -1,0 +1,98 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/etamacro/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/etamacro.mps.gz
+Reading time = 0.00 seconds
+ETAMACRO: 400 rows, 688 columns, 2409 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 400 rows, 688 columns and 2409 nonzeros (Min)
+Model fingerprint: 0xfa2bb26a
+Model has 80 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-02, 2e+03]
+  Objective range  [8e-03, 8e+02]
+  Bounds range     [3e-02, 1e+02]
+  RHS range        [1e+00, 1e+04]
+
+Presolve removed 131 rows and 223 columns
+Presolve time: 0.00s
+Presolved: 269 rows, 465 columns, 1881 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 2.676e+03
+ Factor NZ  : 1.163e+04
+ Factor Ops : 6.656e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   1.23277645e+04 -3.91650025e+04  3.87e+02 2.35e+00  1.68e+03     0s
+   1   2.68262966e+03 -5.50930327e+04  9.01e+01 2.36e+00  4.05e+02     0s
+   2   1.57696690e+02 -2.44533126e+04  1.36e+01 4.25e-13  7.28e+01     0s
+   3  -4.18326544e+02 -7.18659422e+03  1.94e+00 1.21e-13  1.32e+01     0s
+   4  -6.54514691e+02 -2.23402815e+03  1.61e-01 4.26e-14  2.41e+00     0s
+   5  -7.13016816e+02 -1.09964789e+03  3.43e-02 3.55e-14  5.60e-01     0s
+   6  -7.27199540e+02 -9.13237186e+02  1.51e-02 2.84e-14  2.67e-01     0s
+   7  -7.35703030e+02 -8.23539111e+02  7.57e-03 2.84e-14  1.26e-01     0s
+   8  -7.41969308e+02 -7.85849321e+02  4.30e-03 2.84e-14  6.27e-02     0s
+   9  -7.45295263e+02 -7.66708777e+02  3.03e-03 2.84e-14  3.05e-02     0s
+  10  -7.50993711e+02 -7.61207033e+02  1.33e-03 3.55e-15  1.46e-02     0s
+  11  -7.54296998e+02 -7.58134022e+02  2.04e-04 7.11e-15  5.48e-03     0s
+  12  -7.55306566e+02 -7.56510631e+02  4.17e-05 2.84e-14  1.72e-03     0s
+  13  -7.55571329e+02 -7.56045429e+02  1.13e-05 2.84e-14  6.77e-04     0s
+  14  -7.55687531e+02 -7.55826600e+02  1.62e-06 1.78e-15  1.99e-04     0s
+  15  -7.55711691e+02 -7.55720460e+02  8.37e-08 2.84e-14  1.25e-05     0s
+  16  -7.55715144e+02 -7.55715846e+02  1.78e-11 2.84e-14  1.00e-06     0s
+  17  -7.55715205e+02 -7.55715327e+02  4.96e-10 2.84e-14  1.73e-07     0s
+  18  -7.55715227e+02 -7.55715245e+02  6.00e-10 2.84e-14  2.62e-08     0s
+  19  -7.55715231e+02 -7.55715236e+02  2.25e-09 3.55e-15  7.53e-09     0s
+  20  -7.55715233e+02 -7.55715234e+02  1.19e-09 2.84e-14  1.45e-09     0s
+
+Barrier solved model in 20 iterations and 0.01 seconds (0.01 work units)
+Optimal objective -7.55715233e+02
+
+
+User-callback calls 140, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/etamacro.mps.gz
+Reading time = 0.00 seconds
+ETAMACRO: 400 rows, 688 columns, 2409 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 400 rows, 688 columns and 2409 nonzeros (Min)
+Model fingerprint: 0xfa2bb26a
+Model has 80 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-02, 2e+03]
+  Objective range  [8e-03, 8e+02]
+  Bounds range     [3e-02, 1e+02]
+  RHS range        [1e+00, 1e+04]
+Presolve removed 131 rows and 223 columns

@@ -1,0 +1,74 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:22 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 6
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_pdhg_pre/degen3/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/degen3.mps.gz
+Reading time = 0.00 seconds
+DEGEN3: 1503 rows, 1818 columns, 24646 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  6
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 1503 rows, 1818 columns and 24646 nonzeros (Min)
+Model fingerprint: 0x08c03156
+Model has 1584 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e-02, 2e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 5e+01]
+
+Presolve removed 98 rows and 96 columns
+Presolve time: 0.00s
+Presolved: 1405 rows, 1722 columns, 24143 nonzeros
+
+Start PDHG using 1 threads
+
+                       Objective                Residual
+     Iter       Primal          Dual         Primal    Dual     Compl    Time
+        0  -1.64840000e+02 -3.14350000e+02  4.10e+01 1.15e+01  5.97e-02    0s
+    10543  -9.87293496e+02 -9.87294019e+02  7.23e-05 2.56e-05  1.77e-07    0s
+
+PDHG solved model in 10543 iterations and 0.21 seconds (1.86 work units)
+Optimal objective -9.87293496e+02
+
+
+User-callback calls 311, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/degen3.mps.gz
+Reading time = 0.01 seconds
+DEGEN3: 1503 rows, 1818 columns, 24646 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  6
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 1503 rows, 1818 columns and 24646 nonzeros (Min)
+Model fingerprint: 0x08c03156
+Model has 1584 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e-02, 2e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 5e+01]
+Presolve removed 98 rows and 96 columns

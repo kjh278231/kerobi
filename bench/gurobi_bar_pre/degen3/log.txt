@@ -1,0 +1,91 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:10 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/degen3/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/degen3.mps.gz
+Reading time = 0.00 seconds
+DEGEN3: 1503 rows, 1818 columns, 24646 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 1503 rows, 1818 columns and 24646 nonzeros (Min)
+Model fingerprint: 0x08c03156
+Model has 1584 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e-02, 2e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 5e+01]
+
+Presolve removed 98 rows and 96 columns
+Presolve time: 0.00s
+Presolved: 1405 rows, 1722 columns, 24143 nonzeros
+Ordering time: 0.01s
+
+Barrier statistics:
+ AA' NZ     : 5.515e+04
+ Factor NZ  : 1.335e+05 (roughly 2 MB of memory)
+ Factor Ops : 1.827e+07 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0  -2.70161731e+04 -1.55806886e+03  1.99e+03 1.03e+00  7.86e+01     0s
+   1  -5.29980716e+03 -4.60617076e+03  3.32e+02 6.22e-15  1.28e+01     0s
+   2  -1.44212371e+03 -3.29235773e+03  3.85e+01 1.20e-14  1.96e+00     0s
+   3  -1.05271392e+03 -1.69228796e+03  8.91e+00 1.15e-14  4.68e-01     0s
+   4  -9.61757945e+02 -1.06380591e+03  1.27e+00 1.11e-14  6.69e-02     0s
+   5  -9.69758867e+02 -1.01258503e+03  1.91e-01 8.77e-15  2.07e-02     0s
+   6  -9.78408211e+02 -9.92719035e+02  6.50e-02 2.00e-14  6.95e-03     0s
+   7  -9.84099754e+02 -9.88984125e+02  1.46e-02 8.44e-15  2.23e-03     0s
+   8  -9.86371651e+02 -9.87756832e+02  3.29e-03 1.72e-14  6.18e-04     0s
+   9  -9.86984103e+02 -9.87408002e+02  9.70e-04 1.18e-14  1.89e-04     0s
+  10  -9.87232666e+02 -9.87314956e+02  1.46e-04 1.25e-14  3.57e-05     0s
+  11  -9.87278545e+02 -9.87296179e+02  3.65e-05 2.28e-14  7.81e-06     0s
+  12  -9.87293879e+02 -9.87294074e+02  2.96e-07 3.22e-14  8.31e-08     0s
+  13  -9.87294000e+02 -9.87294000e+02  2.80e-10 2.84e-14  2.08e-11     0s
+
+Barrier solved model in 13 iterations and 0.06 seconds (0.08 work units)
+Optimal objective -9.87294000e+02
+
+
+User-callback calls 121, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/degen3.mps.gz
+Reading time = 0.00 seconds
+DEGEN3: 1503 rows, 1818 columns, 24646 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 1503 rows, 1818 columns and 24646 nonzeros (Min)
+Model fingerprint: 0x08c03156
+Model has 1584 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [1e-02, 2e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 5e+01]
+Presolve removed 98 rows and 96 columns

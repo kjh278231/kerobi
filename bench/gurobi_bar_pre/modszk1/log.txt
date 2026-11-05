@@ -1,0 +1,97 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/modszk1/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/modszk1.mps.gz
+Reading time = 0.00 seconds
+MODSZK1: 687 rows, 1620 columns, 3168 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 687 rows, 1620 columns and 3168 nonzeros (Min)
+Model fingerprint: 0x2d571933
+Model has 990 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [7e-04, 1e+00]
+  Objective range  [1e-01, 4e+03]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e+04, 1e+05]
+
+Presolve removed 313 rows and 684 columns
+Presolve time: 0.00s
+Presolved: 374 rows, 936 columns, 2190 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 3.888e+03
+ Factor NZ  : 6.910e+03 (roughly 1 MB of memory)
+ Factor Ops : 1.456e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   1.35761553e+10  0.00000000e+00  1.80e+06 0.00e+00  6.52e+07     0s
+   1   3.06857852e+09 -1.23010095e+08  1.21e+05 1.80e+02  1.73e+07     0s
+   2   9.99917664e+08 -1.61339505e+07  5.55e+03 2.03e+01  2.40e+06     0s
+   3   2.45014181e+08 -4.80479281e+06  3.75e+02 5.43e+00  5.04e+05     0s
+   4   6.54586619e+07 -1.72085536e+06  4.02e+01 1.41e+00  1.12e+05     0s
+   5   2.43881409e+07 -1.17757692e+06  1.01e+01 6.89e-01  4.19e+04     0s
+   6   6.78533646e+06 -6.97875761e+05  2.03e+00 7.21e-02  8.86e+03     0s
+   7   1.11179552e+06 -5.85713185e+05  4.01e-01 4.55e-13  1.79e+03     0s
+   8   2.86183337e+05 -1.33773195e+05  5.77e-02 4.55e-13  4.42e+02     0s
+   9   3.54416920e+04 -9.78126943e+03  5.07e-03 4.55e-13  4.76e+01     0s
+  10   2.39244690e+03 -3.29907454e+02  2.68e-04 4.55e-13  2.86e+00     0s
+  11   9.00175889e+02  1.16052163e+02  7.02e-05 4.55e-13  8.25e-01     0s
+  12   5.03020979e+02  2.64857333e+02  2.26e-05 4.55e-13  2.50e-01     0s
+  13   3.94931774e+02  2.94525242e+02  8.91e-06 4.55e-13  1.06e-01     0s
+  14   3.39800328e+02  3.09022776e+02  2.07e-06 4.55e-13  3.24e-02     0s
+  15   3.24615623e+02  3.18207269e+02  3.76e-07 2.27e-13  6.74e-03     0s
+  16   3.21701697e+02  3.19791707e+02  8.67e-08 2.27e-13  2.01e-03     0s
+  17   3.20654172e+02  3.20589777e+02  1.11e-05 4.55e-13  6.77e-05     0s
+  18   3.20619788e+02  3.20619557e+02  7.94e-09 2.27e-13  2.43e-07     0s
+  19   3.20619729e+02  3.20619729e+02  2.34e-10 4.55e-13  2.43e-10     0s
+
+Barrier solved model in 19 iterations and 0.01 seconds (0.01 work units)
+Optimal objective 3.20619729e+02
+
+
+User-callback calls 130, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/modszk1.mps.gz
+Reading time = 0.00 seconds
+MODSZK1: 687 rows, 1620 columns, 3168 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 687 rows, 1620 columns and 3168 nonzeros (Min)
+Model fingerprint: 0x2d571933
+Model has 990 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [7e-04, 1e+00]
+  Objective range  [1e-01, 4e+03]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e+04, 1e+05]
+Presolve removed 313 rows and 684 columns
