@@ -177,7 +177,7 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 | | `3ff744` 평행 열(mode 1)·행(mode 0) | `parallel.rs` | PREPARALLEL, 열은 DualReductions | 4, 5 |
 | | `50fe2b` 비용이 묶는 부등식 → 등식 | `reduce.rs` | DualReductions(카운트는 늘 1) | – |
 | | `519a52`/`37f484` 집계(연결 리스트 행렬, 단계 A–D, 최대 5라운드) | `agg.rs` | Aggregate, pass 0만 | 2, 6, 11, 21 |
-| | `5b488d` 유도 bound | `derived.rs` | PREDERIVED, DualReductions, PreCrush==0 | (해독 중) |
+| | `5b488d` 이웃이 무엇을 해도 만족되는 열과 그 행 제거(비용은 `=` 행 하나로 넘김) | `derived.rs` | PREDERIVED, DualReductions, PreCrush==0, 모든 패스 | 24 |
 | | `538f30`+`4f79a1` activity 재계산 | `state.rs` | 카운트 없음 | – |
 | | `47c445` 종속 행(mode 1, 2) | `deprow.rs` | pass 0, PreDepRow 자동 = 2.5·n < nnz이면 3. 대칭 검출 `5577ba`가 대칭을 찾으면 0 | (해독 중) |
 | | 종료 판정 | `mod.rs` | 패스 시작 대비 ρ ≤ 1e-4·max(0,k−2), 패스 끝 ρ ≤ 1e-6, PrePasses 자동 100 | |
@@ -186,5 +186,5 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 
 - 저장: CSR+CSC, 지연 삭제(§1). 집계만 MIP식 연결 리스트로 바꿨다가 CSR로 되돌린다. 리스트 순서가 결과 CSR 순서가 되므로 노드 풀(free·pending)과 +0xd8 카운터까지 원본대로 흉내 낸다.
 - activity는 덧셈이 부정확하면 1ulp 안전한 쪽으로 미는 가드 덧셈을 쓴다. 단 `50de61`과 `50495e`/`50108e`의 행 범위는 가드 없이 더한다.
-- 일치(Netlib 64, 기본값): presolved 모델 62/64(degen2·degen3은 `47c445` 대기), PRELIMIT 체크포인트 k ≤ 100 전수 비교에서 다른 곳은 `5b488d` 직후 넷(forplan, finnis, beaconfd, ganges)과 degen2/3뿐이다.
+- 일치(Netlib 64, 기본값): presolved 모델 62/64(degen2·degen3은 `47c445` 대기), PRELIMIT 체크포인트 k ≤ 102 전수 비교에서도 degen2/3만 다르다. uncrush(`363daa`)는 오라클 `pre_after`를 넣어 비트 비교로 57/59(uncrush가 도는 59개 중, 나머지 둘은 degen2/3).
 - 포팅하지 않은 것(지름길, 코드에 `shortcut:` 주석): 대칭 검출 `551cc0`(결과는 PreDepRow 자동값 게이트에만 쓰인다. Netlib PRELIMIT 카운트로는 늘 "대칭 없음"), 작업량 예산 `3ba9de`(Netlib에서 닿지 않음), Presolve=2 전용 reduction, 집계 prescan 특수 경로, 집계의 작업량 항목.

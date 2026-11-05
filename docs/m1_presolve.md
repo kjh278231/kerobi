@@ -5,14 +5,14 @@ LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03
 
 ## 0. 현재 상태 (2026-11-05 저녁)
 
-- **일치**: Presolve=0 64/64, PRELIMIT 1–17 64/64, 집계 직후 체크포인트 64/64, **기본값 62/64**(degen2, degen3은 `47c445` 미포팅). postsolve(uncrush `363daa`)는 PRELIMIT 1–17에서 uncrush가 도는 58/58 비트 일치([m1_postsolve.md](m1_postsolve.md)).
+- **일치**: Presolve=0 64/64, PRELIMIT 1–17 64/64, 집계 직후 체크포인트 64/64, **기본값 62/64**(degen2, degen3은 `47c445` 미포팅). postsolve(uncrush `363daa`)는 PRELIMIT 1–17 58/58, **기본값 57/59**(uncrush가 도는 59개 중. 나머지 둘이 degen2/3)([m1_postsolve.md](m1_postsolve.md)).
 - **포팅 완료**: 내부 루프 전부, 바깥 패스 전부(`50cc90(1)`, `50d878`, `38e49a`, `50495e`, `505077`, `3ff744`×2, `50fe2b`, 집계 `519a52`/`37f484`, `538f30`+`4f79a1`), 다음 패스와 종료 판정, 마무리(`51a144`, {`50cc90(1)`, `50d878`} 반복, `50de61`, 끝의 `50d878`), 모델 생성의 PRESPLITROWS. 집계 해독은 [m1_presolve_agg.md](m1_presolve_agg.md), 코드는 `agg.rs`.
 - **진행 중(병렬 에이전트, 각자 worktree와 브랜치)**:
   - `47c445`(PreDepRow): `../rsolver-deprow`, 브랜치 `m1-deprow`, 파일 `deprow.rs`, 노트 `m1_presolve_deprow.md`(작성 중).
-  - `5b488d`(PREDERIVED): `../rsolver-derived`, 브랜치 `m1-derived`, 파일 `derived.rs`, 노트 `m1_presolve_derived.md`(작성 중). Netlib 최종 결과는 안 바뀌지만 forplan k=27, finnis k=39, beaconfd k=60·79, ganges k=79 체크포인트에서 처음 갈라진다.
+  - `5b488d`(PREDERIVED): **완료·병합**(브랜치 `m1-derived`, `derived.rs`, 노트 [m1_presolve_derived.md](m1_presolve_derived.md), type 24 레코드). PRELIMIT 17–154 체크포인트에서 degen2/3 외 전부 일치.
   - postsolve 집계 레코드(type 6, 11, 21)와 기본값 uncrush: `../rsolver-postsolve`, 브랜치 `m1-postsolve`.
   - 결과는 이 브랜치로 병합한다. 지금 두 함수는 `deprow.rs`/`derived.rs`의 no-op 자리 표시다.
-- **알려진 지름길**(코드에 `shortcut:` 주석): 대칭 검출 `5577ba`→`551cc0`(pass 0, 남은 열 ≥ 500·행 ≥ 100)은 포팅하지 않고 "대칭 없음"으로 둔다. 이 검출은 모델을 바꾸지 않고, 대칭을 찾으면 자동 PreDepRow를 0으로 만들 뿐이다. PRELIMIT 카운트로 보면 Netlib에서 `47c445`가 늘 돈다(카운트 100 이하 모델 전부와 scrs8 확인. ganges는 `5b488d` 포팅 뒤 다시 확인). 집계의 작업량(+0x458)은 세지 않는다. 집계 prescan 패턴(작은 계수, 단계 D 특수 경로)은 만나면 panic한다(Netlib 없음).
+- **알려진 지름길**(코드에 `shortcut:` 주석): 대칭 검출 `5577ba`→`551cc0`(pass 0, 남은 열 ≥ 500·행 ≥ 100)은 포팅하지 않고 "대칭 없음"으로 둔다. 이 검출은 모델을 바꾸지 않고, 대칭을 찾으면 자동 PreDepRow를 0으로 만들 뿐이다. PRELIMIT 카운트로 보면 Netlib에서 `47c445`가 늘 돈다(64개 모두 마지막 체크포인트까지 호출 수가 같다. 카운트 100 초과인 beaconfd 102, scrs8 135, ganges 154도 확인). 집계의 작업량(+0x458)은 세지 않는다. 집계 prescan 패턴(작은 계수, 단계 D 특수 경로)은 만나면 panic한다(Netlib 없음).
 - **다음 할 일**: 세 브랜치 병합 → 기본값 64/64·체크포인트 전수(k = 1..154) 확인 → 기본값 uncrush 64/64 → clippy 0, `docs/03_presolve.md` 마무리.
 - **오라클**: `tools/presolve_oracle.py <dir> [--param N=V]`(64개 약 10초). 체크포인트 전수 비교는 k마다 오라클을 떠 두고 모델별로 처음 다른 k를 찾는다(이 세션은 스크래치에 lim1..100과 일부 101–154를 떴다). 모델별 호출 번호는 `mod.rs`의 `calls += 1` 뒤에 임시 `eprintln` 추적을 넣어 얻는다(커밋하지 않는다).
 - **작업 방식**: 같은 폴더에서 에이전트 둘이 동시에 cargo 빌드를 하면 서로의 미완성 코드 때문에 빌드가 깨진다. 병렬은 worktree를 따로 쓰고 브랜치를 병합한다.
