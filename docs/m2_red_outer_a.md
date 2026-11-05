@@ -334,3 +334,73 @@ for idx = q−1 down to 0:
 ### 7.6 오라클 확인
 - 38개 42호출 전부 일치(`s_scc.py`). 그래프가 있는 호출 12(모두 DAG), 함의 행 2,321, CHAIN 3,411, 지운 행 1(fhnw-binpack4-4).
 - 오라클을 지나지 않은 것: SCC 원소 처리(`3bb6fe` 집계, x ≡ ¬x), changed 뒤 재구성, 예산 멈춤, PRETRANSRED ≥ 2의 mode 2 단계, `53dce0` mode 1이 실제로 bound/타입을 바꾸는 경우.
+
+## 3. `3ff744(st, env, T6, mode, flag, 0)` 평행 행·열, MIP 연결 리스트 분기 (16,559 B, `004cded0`)
+
+LP 포트 `crates/lp/src/presolve/parallel.rs`(CSR 콜백, m1_presolve §7)와 뼈대가 같다. 아래는 MIP(+0xe0 = 0, +0xfc = 1)에서 다른 점과 MIP 전용 블록이다. 3cd406은 바깥 패스에서 mode 3 flag 0, mode 1 flag 1, mode 0 flag 1 순으로 부른다(spine-b). mode 2는 `3b0917`의 행 분할(PRESPLITROWS, 이 묶음 밖), mode 4/5는 QC.
+
+### 3.1 콜백과 플래그
+| mode | 해시 | 값 해시(척도) | 비교 | 쌍 |
+|---|---|---|---|---|
+| 0 행 | `3e7ec1` | `3e8260` | `3e92c4` | `3ee2bb` |
+| 1, 3 열 | `3e7e33` | `3e80fd` | `3e8a37` | `3eaf1d` |
+| 2 행 분할 | `3e7ec1` | `3e8260` | `3e92c4` | `3f26d9` |
+- mode 0: 진입에서 `+0x42c = 0`(진입 값은 기억), flag && PreCrush(env+0x26f4)==0 && DualReductions면 `iv41 = env+0x256c`(기본 1, 2단계 행 처리). mode 1/3: 같은 조건이면 `f0 = env+0x2570`(기본 1, 열 집계 단계).
+- **콜백에는 작업량이 없다**(LP CSR판은 있다). 함수 전체의 작업량은 처음 한 번 `W += ((cnt·20)·nnz/(dim+1))·μ`(nnz = st+0xd8, dim = 행이면 m, 열이면 n)와 쌍 함수·2단계 안의 것뿐이다.
+- 해시: 살아 있는 항목마다 `h = h + 1/((f64)index + 1)`(행은 열 번호, 열은 행 번호), 한 갈래로 차례로 더한다(LP는 두 갈래).
+- 값 해시: 행(`3e8260`)은 **최소** |a|(1e100에서 시작, `amin <= |a|`가 아니면 갱신), 열(`3e80fd`)은 최대 |a|(`|a| <= amax`가 아니면 갱신). 부호는 가장 작은 index 항목의 부호(a ≤ 0이면 −1). 반환 `Σ |a|/(index+1) / 척도`, 척도 = 부호·(min 또는 max).
+- 비교: 개수(row_cnt/col_cnt)가 다르면 작은 쪽이 −1. 척도의 |최대| > 1000이면 둘 다 1000/최대를 곱한다. x의 a/s1을 scratch(+0x3b0, 행 리스트 순서)에 쓰고 y의 a/s2와 비교해 차이 나는 가장 큰 index를 hi/lo로 모은 뒤 x에 남은 칸을 정리(LP와 같은 구조, 반환 hi<lo → 1, 같으면 0, 아니면 −1). 행 허용치는 1e-10. **열 허용치**는 `t = |s1| > |s2| ? (ub_x−lb_x) + (ub_y−lb_y)·(s2/s1) : (ub_y−lb_y) + (ub_x−lb_x)·(s1/s2)`, `tol = clamp(|t|·1e-6, 1e-13, 1e-10)`, `d = a_y/s2 − tmp; d > tol → hi, d < −tol → lo`.
+
+### 3.2 후보와 P/T 행
+```
+mode 0: 53a487(행 인접 목록)에서 row_cnt > 1이고 36dce1(이미 넘칠 수 없는 행)이 아닌 행
+mode 1: 53af0f(열 인접 목록)에서 col_cnt > 0;  mode 3: 그중 vtype != 'C'
+(SOS·PWL·QC 등 특수 구조가 있으면 colflag ≠ 0 열을 뺀다. 지금 모델은 없음)
+if len < 2: 끝(아래 3.6의 마무리만)
+mode 0 (MIP): 후보 행마다 살아 있고 col_cnt == 1인 열(행에만 있는 slack 열)을 센다:
+  그런 열에 colflag ≠ 0이 있거나, iv41 == 0인데 2개 이상이면 → 후보에서 뺀다
+  0개 → 그대로; (1개 또는 모두 연속) && (DualReductions || sense == '=')이면 그 노드들을 숨긴다:
+    node.col = −2 − col, row_cnt[i] −= 1, sense = (= → 'T', < → 'P'), 후보로 남긴다; 그 밖은 뺀다
+W += ((cnt·20)·nnz/(dim+1))·μ                       // cnt = 거른 뒤 개수
+```
+숨긴 노드는 col < −1이라 모든 콜백·쌍 함수에서 죽은 노드로 보인다. 함수 끝(3.6)에서 되살린다.
+
+### 3.3 묶기·정렬 (LP와 같음, 정렬은 `ab9789`)
+1단계 해시로 정렬하고 첫 원소와 해시 차 > 1e-13이면 새 묶음, 크기 ≥ 2인 묶음은 값 해시로 다시 정렬해 첫 원소와 차 > 1e-10이면 새 소그룹. 2단계 정확 비교(크기 2는 한 번, 3 이상은 비교 함수로 Shell 정렬 n/2, ÷2.2, 2→1 뒤 첫 원소와 다시 가름). 3단계 크기 ≥ 3 묶음:
+- 열 mode이고 묶음이 모두 정수(vtype ≠ 'C')면 키 = |척도|, 아니면 키 = cost/척도(행 rhs, 열 obj). 정렬.
+- 정수가 아닌 원소가 있으면 LP처럼 첫 키 + 1e-10 안의 블록(3개 이상)을 |척도|로, **모두 정수이고 mode ≠ 3이면** 같은 블록을 |cost|로 정렬한다. 모두 정수이고 mode 3이면 둘째 정렬은 없다. 블록 루프는 `q < e − 2`인 동안.
+
+### 3.4 쌍 처리 (LP와 같은 순서)
+크기 2는 한 번, 3–6은 모든 쌍(앞 원소가 죽으면 다음), 7 이상은 앞으로 한 번·뒤로 한 번(이끄는 원소 규칙, mode 0은 순위 'P'0 'T'1 '<'2 '='3, |척도| ≤ 1e13 …). 쌍 1만 개마다 `3ba5ac`/`3ba9de`(상태 변화 없음).
+
+#### 3.4.1 `3eaf1d(s1, s2, st, env, x, y, mode)` 열 쌍 (4,539 B + 0x3c8efc.. 떨어진 조각)
+|s| > 1e13이면 0. |척도|가 큰 쪽을 x로(|s1| < |s2|면 맞바꿈), r = s_y/s_x, q = c_y/r, unit = (||r|−1| ≤ 1e-10).
+- st+0x100 == 0이면 tx = 1e-9/max(|s_x|,1), ty = 1e-9/max(|s_y|,1), 그리고 **유한 bound가 있고 ub − lb > t인 열만** `3dcc78(INF, 0, st, j, mode 1, single 0, −1)`로 함의 bound(lo, hi)를 구한다(열 리스트 전체, `W += (μ·7)·방문`, 정수 열은 ceil/floor). 아니면 (−INF, INF).
+- 경우(정수 열은 상대도 정수이고 unit일 때만 경우를 가진다):
+  T1 x lb 함의(lb_x ≤ −INF 또는 −tx ≤ lo_x − lb_x)이고 `!(c_x <= q − 1e-10)` → 1; T2 x ub 함의(INF ≤ ub_x 또는 hi_x − ub_x ≤ tx)이고 `!(q + 1e-10 <= c_x)` → 2; T3 y lb 함의이고 `!(c_y <= c_x·r − 1e-10)` → 3; T4 y ub 함의이고 `c_y < c_x·r + 1e-10` → 4 (T4의 정수 조건: y가 'C'이거나 (x 정수 && unit)). 먼저 성립한 것. mode 3이고 경우 0이면 3.4.2(경우 5)를 먼저 본다.
+- 경우 4: (r<0 && ub_x<INF) 또는 (r>0 && lb_x>−INF)면 x를 (r<0 ? ub_x : lb_x)에 `3de18e(…, rec 1)`. 아니면 p = r·c_x; c_y > p − 1e-10이면 병합 검사, p − 100·ot > c_y이고 |s_x| > 1e-9면 비유계(+0x470 = x, +0x474 = y, 5). 경우 3/2/1도 LP와 같은 대칭(3: x를 (r>0 ? ub_x : lb_x), 2: y를 (r<0 ? ub_y : ly), 1: y를 (r>0 ? ub_y : ly); 병합 검사 조건 1e-10 + p > c_y, c_x > q − 1e-10, 1e-10 + q > c_x; 비유계 기준은 |s_x| 또는 |s_y|).
+- 병합 검사(경우 0 포함): `w = (((ub_y−lb_y)/|r|) + (ub_x−lb_x))·|c_x − q|`. w > 1e-6이거나 PreCrush ≠ 0이면 끝. |c_x − q| < 1e-10이고 (둘 다 연속 또는 둘 다 정수이고 unit)이면 병합. 아니면 PREPARALLEL(env+0x2560) == 2일 때만 다른 변형(해독 안 함).
+- 병합: type 4 레코드 `39a1e9`(0x50 B, data {i32 x, i32 y, f64 lb_x, lb_y, ub_x, ub_y, r, i32 0}, +0x408++), `5379f1(x)`, x가 'B'면 `5b91ad`(st+0x3f0 블록의 열 표시, dump 밖), x bound = LP와 같은 식(r>0: [lb_x + r·lb_y, ub_x + r·ub_y], r≤0: [lb_x + ub_y·r, ub_x + r·lb_y], 무한이면 무한), x가 정수면 lb = ceil(lb − ift), ub = floor(ub + ift), [0,1] 안이면 'B' 아니면 'I'. `3dd6f1(y: (lb_y,ub_y) → (0,0))`, `3dd6f1(x: 옛 → 새)`, obj_y = 0, col_cnt_y = −1, y 열의 살아 있는 노드마다 행 표시(`53763f`), row_cnt −1, col = −1. 작업량은 `3dd6f1` 안의 것뿐.
+
+#### 3.4.2 경우 5 (mode 3, 정수 두 열을 정수 하나로)
+PreCrush == 0, 둘 다 정수, s_x/s_y가 정수(frac ≤ 1e-10, `v − floor(v + 1e-10)`), |c_x/s_x − c_y/s_y| ≤ 1e-10, lb_x + 0.5 < ub_x, lb_y + 0.5 < ub_y, 네 bound 모두 유한. |s_y| < |s_x|이면(보통): f0 = (s_y ≥ 0 ? lb_y : −ub_y), f8 = (s_y ≥ 0 ? ub_y : −lb_y), c128 = (s_x ≥ 0 ? ub_x : −lb_x), c120 = (s_x ≥ 0 ? lb_x : −ub_x), k = floor(|s_x|/|s_y| + 1e-10). (|s_x| == |s_y|면 x·y 역할을 바꾼 식.) `|hi−lo| ≤ 1e-10 || k ≤ (1 − f0) + f8`이면 f0 = f0 + c120·k, d = f8 + k·c128, 그리고 (INF < f0 || d < INF)이면: s_y < 0이면 (f0, f8) = (−d, −f0) 아니면 f8 = d. 남기는 열 keep = y(보통), 없앨 열 elim = x. keep이 'B'면 `5b91ad`, type 4 레코드 {keep, elim, lb_keep, lb_elim, ub_keep, ub_elim, s_x/s_y, **1**}, keep 표시, lb/ub = (f0, f8), vtype = 'I', obj_elim = 0, col_cnt_elim = −1, elim 열의 살아 있는 노드마다 행 표시·row_cnt −1·col = −1. **activity는 고치지 않는다**(z = y + k·x의 기여가 두 열 기여의 합과 같다). 조건이 안 되면 병합 검사로.
+
+#### 3.4.3 `3ee2bb(s1, s2, st, env, r1, r2)` 행 쌍 (6,050 B, 작업량 없음)
+|s| > 1e13이면 0. smin = min(|s1|,|s2|), smax = max, ft = FeasibilityTol, ftc = min(ft, 1e-6): NumericFocus ≤ 0이면 smax = max(smax, 1), smin = min(smin, 0.1); 1이면 max(·,10), min(·,0.01); 2 이상이면 max(10·smax, 100), min(0.1·smin, 0.001). tol2 = ftc/smax, tol = max(1e-6, ft)/smin. a는 'T' 또는 '=' 행을 우선(r2가 'T'이고 r1이 'T'가 아니면, 또는 r2가 '='이고 r1이 'T'/'='가 아니면 맞바꿈). r = s_a/s_b. P/T 행의 숨긴 노드가 2개 이상이면 0.
+- a '<', b '<' 또는 'T'(b 'P'면 0): q_a = rhs_a/s_a, q_b = rhs_b/s_b. 같은 방향(s_a, s_b 같은 부호)이면 느슨한 쪽을 지운다(s_a>0: q_a < q_b → b, 아니면 a; s_a≤0: q_b < q_a → b, 아니면 a). 마주 보면 (s_a ≤ 0, s_b ≥ 0) q_a > tol + q_b → 불가능(+0x478 = a, +0x47c = b, 3); q_a > 10·ft + q_b → 아무것도; `q_b − tol2 < q_a`면 **=로 합침**, 아니면 `+0x42c += 1`. (s_a > 0, s_b ≤ 0은 q_a·q_b 역할을 바꾼 같은 식.) =로 합침(MIP는 type 5 레코드를 쓰지 않는다): `rhs_a' = ((s_a·rhs_b)/s_b + rhs_a)·0.5`, sense_a = '=', d = rhs_a − rhs_a'가 0이 아니면 act_max_a = gup(act_max_a, d), act_min_a = gdn(act_min_a, rhs_a − rhs_a'), 행 a 표시, b 지움.
+- 행 지움(DROP): 살아 있는 노드마다 열 표시(`5379f1`)·col_cnt −1·col = −1, row_cnt = −2, +0x404++.
+- a '=': b 'P'면 숨긴 열 x_b에 대해 v = (rhs_b·r − rhs_a)/(r·a_xb), a_xb ≤ 0이면 lb' = max(lb, v) 아니면 ub' = min(ub, v), 정수면 ceil/floor(±ift), (lb' ≤ ft + ub && lb − ft ≤ ub')이면 bound를 쓰고(바뀌면 열 표시, **`3dd6f1` 없음**) |r| ≥ 1e-6이면 b의 숨긴 노드를 되살리고 sense '<'로 바꿔 DROP, 아니면 불가능. b '='면 |q_a − q_b| ≤ ft, b '<'/'T'면 (s_b ≤ 0 || q_a − ft ≤ q_b) && (s_b ≥ 0 || q_b ≤ ft + q_a)일 때 |r| ≥ 1e-6이면 b DROP, 아니면 불가능.
+- a 'P', b 'P', |r − 1| ≤ 1e-10: 숨긴 열 x_a, x_b의 계수·타입·bound(1e-10)·rhs가 같고 obj_a·obj_b ≥ 0이면 type 2 레코드 `39df2d`(x_b = 0 + 1·x_a, 0x50 B, data {i32 j, pad, f64 c0, i32 cnt=1, ptr ind, ptr val, i32 k, f64 v}, +0x408++), obj_a += obj_b, obj_b = 0, x_a 표시, b의 숨긴 노드를 되살려 b의 모든 살아 있는 노드를 DROP처럼 지우고 col_cnt[x_b] = −3, row_cnt[b] = −2, +0x404++. (sp150x300d 60쌍.)
+- a 'T'(숨긴 열 x_a, 계수 d): b '='면 v = (rhs_a − rhs_b·r)/d가 [lb−ft, ub+ft] 안이고 (연속이거나 v − floor(ift + v) ≤ ift)이면 노드를 되살려 `3de18e(v, …, rec 1)`, row_cnt[a] += 1, sense_a '=', 행 a 표시, b DROP; 아니면 불가능. b '<'면 r·d > 0이면 lb' = max(lb, v) 아니면 ub' = min(ub, v), 정수면 ceil/floor 하고 반올림 차·|d| > ft이면 b는 남긴다(good = false); 범위가 맞으면 bound가 바뀔 때 노드를 잠시 되살려 `3dd6f1` 후 다시 숨기고 x_a 표시, good이면 b DROP; 아니면 불가능.
+- a 'T', b 'T': k = (d_b·r)/d_a, c = (rhs_a − rhs_b·r)/d_a. flag: x_a 연속이면 0, x_b 연속이면 1, 둘 다 정수면 k와 c가 정수면 0, 아니면 1/k와 c/k가 정수면 1, 아니면 2(아무것도 안 함). flag 1: x_b의 bound로 x_a bound를 좁히고(k>0: lb_a' = max(lb_b·k + c, lb_a)(maxsd), ub_a' = min(ub_b·k + c, ub_a); k≤0은 lb/ub 바꿔), 정수면 ceil/floor, lb' > ft + ub'이면 불가능; 바뀌면 `3dd6f1`(노드를 잠시 되살림), type 2 레코드 (x_b = −c/k + (1/k)·x_a), obj_a = obj_b/k + obj_a, **objcon = objcon − (c·obj_b)/k**, obj_b = 0, x_a 표시, b의 숨긴 노드를 되살려 b DROP, col_cnt[x_b] = −3. flag 0: 역할을 바꿔(k1 = 1/k, c1 = −c/k) x_b의 bound를 좁히고 type 2 (x_a = −c1/k1 + (1/k1)·x_b), obj_b = obj_a/k1 + obj_b, objcon −= (c1·obj_a)/k1, a DROP, col_cnt[x_a] = −3. (timtab1 2쌍.)
+
+### 3.5 2단계
+- 행(iv41 ≠ 0): 각 묶음(크기 ≥ 2)에서 살아 있는 행을 모아 P/T 행이 하나라도 있으면 `3fa2f6`(1,338줄, 해독 안 함)에 넘긴다. **38개에서 이런 묶음은 한 번도 없었다.**
+- 열(f0 ≠ 0): 크기 ≥ 2 묶음마다 원소를 차례로 보며 col_cnt == 1인 살아 있는 열이 나오면 그 묶음을 버리고(그 자리까지), `W += ((t − b)·μ)·3`(t = 멈춘 위치). col_cnt ≥ 2인 살아 있는 열이 2개 이상이면 집합으로 모은다. 끝에 `W += (nb·2)·μ`(nb = 묶음 수). 집합이 있으면 **새 열과 새 `=` 행으로 묶음을 하나의 변수로 집계**한다(`3bbf87` 열 추가, `3bde19` 행 추가, `3bea24` 항목 추가, `3c3abf`, `370047`; 크기 ≥ 3이고 `(len−1)·col_cnt − 1 − len > AggFill + 10`일 때). 38개에서 exp-1-500-5-5 2번째, mik-250-20-75-4 2번째 호출이 여기 온다(246개 집합). **해독 개요만 있고 모형·확인은 안 했다.**
+
+### 3.6 마무리
+`+0x42c = max(진입 값, 지금 값)`. mode 0(MIP)이면 후보 목록(정렬된 순서)의 'P'/'T' 행마다 col < −1 노드를 `col = −2 − col`로 되살리고 row_cnt += 1, sense를 'T' → '=', 'P' → '<'로.
+
+### 3.7 오라클 확인
+- 38개 241호출 중 mode 0/1/3 231호출이 모두 일치(`s_par.py`). 빠진 10호출: mode 2 3개(3b0917, 이 묶음 밖), 열 집계 2단계 2개(exp-1-500-5-5#2, mik#2), (앞 실행에서 확인한 경우 5·T 쌍은 이제 포함).
+- 지난 경로: 쌍 3,580, 열 경우 0 667·병합 5·경우 5 4, 행 '<''<' 0번 1,888·1번 763·3번 47, P-P slack 병합 60, T-T 2, 숨긴 행 P 1,742·T 465. 열 경우 1–4와 고정, 행 '=' 쌍, T/'='·T/'<', 2단계 행(`3fa2f6`)·열 집계는 오라클을 지나지 않았다.
