@@ -187,7 +187,8 @@ impl PyCoreModel {
         o.set_item("free", (e.nfree, e.npend))?;
         o.set_item("rows", e.rows.clone())?;
         o.set_item("cols", e.cols.clone())?;
-        let recs: Vec<(i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>)> =
+        type Rec = (i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>);
+        let recs: Vec<Rec> =
             st.post.iter().map(|r| { let l = r.layout(); (r.kind(), l.bytes, l.pads, l.ptrs) }).collect();
         o.set_item("recs", recs)?;
         o.set_item("g_edges", st.cg.edges())?;
