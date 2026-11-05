@@ -69,6 +69,9 @@
 | 2026-11-05 | M1 presolve 기본값 64/64 | `47c445`(PreDepRow) 이식. 기본 파라미터 presolved 모델 64/64 | `38ea4e7` (`m1-lp-presolve`) |
 | 2026-11-05 | M1 postsolve 64/64 | 행·열을 지우지 않은 경우의 항등 uncrush까지, 검사기 64/64. Gurobi 없이 도는 pytest 회귀 | `15b7b65`, `c024356` (`m1-postsolve` → `m1-lp-presolve`) |
 | 2026-11-05 | **M3 barrier 본체 (G3) 완료** | 오케스트레이터가 따로 검증: 상태 64/64, 목적 ≤1e-6 64/64, **BarIterCount 64/64**, clippy 0, cargo test·pytest 통과, 검증 중 Gurobi 미사용. main에 병합(`crates/core` 삭제 유지, SIMPLEX·BARRIER `cbGet` 통합) | `c1a5124`, `3e8a744`, `03d2ca4`, 병합 `e6760c3` |
+| 2026-11-05 | M1 dual 시작·섭동·난수 | 자유 열 루프·재분해 간격(m^0.7) 원본화, cost shifting, `common::Rng`(libgurobi 난수와 비트 일치), `48d5f` GLOBAL 섭동. Netlib 64: 정답 63/64, **반복 수 같음 11**, ±5% 39, 기하평균 1.014배 | `9c5614b`, `a8cf69e`, `04622c8` |
+| 2026-11-05 | M1 presolve 작업량(생성자) | `5118e6` 문제 유형 검사 포함, PRELIMIT=1 작업량 64/64 | `bc9f229` (`m1-lp-presolve`) |
+| 2026-11-05 | M3 PDHG 0–1 | 호출 범위·의존 확인, Method=6 기준값, 결정성 64/64, PDHG 상태 오라클 | `984af95`, `1e820a2` (`m3-pdhg`) |
 
 ## 4. goal 원문
 
