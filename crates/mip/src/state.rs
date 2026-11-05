@@ -119,6 +119,8 @@ pub struct State {
     pub cutoff: f64,
     /// +0x370 postsolve records, in push order
     pub post: Vec<PostRec>,
+    /// +0x3f0 conflict graph (`5b84b1`): probing's implications
+    pub cg: crate::conflict::ConflictGraph,
     /// +0x3b0 per-row scratch of `3e39a6`'s integrality check (0.0 = not computed; reset at the end of each call)
     pub row_int: Vec<f64>,
 }
@@ -381,6 +383,7 @@ impl State {
             bad_row: -1,
             cutoff: 1e100,
             post: Vec::new(),
+            cg: Default::default(),
             row_int: vec![0.0; m],
         }
     }

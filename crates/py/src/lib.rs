@@ -161,23 +161,21 @@ impl PyCoreModel {
         st.n = st.lb.len();
         st.m = st.rhs.len();
         st.load_rows(&get::<Vec<i64>>(d, "rbeg")?, &get::<Vec<i32>>(d, "rcol")?, &get::<Vec<f64>>(d, "rval")?);
-        let mut g = graph("g_")?;
-        let mut w: f64 = get(d, "work")?;
+        st.cg = graph("g_")?;
+        st.work = get(d, "work")?;
         let a: Vec<i32> = get(d, "args")?;
         let args = probe::Args { mode: a[0], a7: a[1], a8: a[2], a9: a[3], a10: a[4] };
         let t = probe::TimerView { acc: get(d, "t_acc")?, running: get::<i32>(d, "t_running")? != 0, limit: get(d, "t_limit")? };
         let o = PyDict::new(py);
-        let n = st.n;
-        let (n0, rc) = (n, st.cols_removed);
-        let out = g.merge(n0, rc, &st.col_cnt.clone(), &mut w, st.work_mult);
-        o.set_item("merged_out", out)?;
-        o.set_item("merged_work", w)?;
+        st.cg.merge(st.n, st.cols_removed, &st.col_cnt, &mut st.work, st.work_mult);
+        let g = &st.cg;
+        o.set_item("merged_work", st.work)?;
         o.set_item("merged_g", (g.n0, g.rc0, g.ptr.clone(), g.adj.clone()))?;
-        let (mut c, mut cand) = match st.probe_build(&p, &args, get::<i32>(d, "pass")? == 1, &t, &mut w) {
+        let (mut c, mut cand) = match st.probe_build(&p, &args, get::<i32>(d, "pass")? == 1, &t) {
             Ok(x) => x,
             Err(e) => {
                 o.set_item("build_stop", format!("{e:?}"))?;
-                o.set_item("build_work", w)?;
+                o.set_item("build_work", st.work)?;
                 return Ok(o);
             }
         };
@@ -199,8 +197,9 @@ impl PyCoreModel {
         };
         o.set_item("ctx_in", ctx(&c)?)?;
         o.set_item("cand_in", cand.clone())?;
-        o.set_item("in_work", w)?;
-        let end = st.probe_engine(&p, &g, &mut c, &mut cand, &mut w);
+        o.set_item("in_work", st.work)?;
+        let mut w = st.work;
+        let end = st.probe_engine(&p, &mut c, &mut cand, &mut w);
         o.set_item("engine_end", format!("{end:?}"))?;
         o.set_item("ctx_out", ctx(&c)?)?;
         o.set_item("cand_out", cand.clone())?;
@@ -208,20 +207,20 @@ impl PyCoreModel {
         if end != EngineEnd::Done || d.get_item("imp_work")?.is_none() {
             return Ok(o);
         }
-        // the export reads the state after the write-back (part B): take its bounds and counts from the dump
+        // the export reads the state after the write-back: take its bounds and counts from the dump
         st.lb = get(d, "imp_lb")?; st.ub = get(d, "imp_ub")?; st.col_cnt = get(d, "imp_col_cnt")?; st.nnz = get(d, "imp_nnz")?;
         st.cols_removed = get(d, "imp_cols_removed")?; st.rows_removed = get(d, "imp_rows_removed")?;
-        let mut g = graph("imp_g_")?;
-        let mut w: f64 = get(d, "imp_work")?;
-        match st.probe_export(&p, &mut g, &c, &cand, &mut w) {
+        st.cg = graph("imp_g_")?;
+        st.work = get(d, "imp_work")?;
+        match st.probe_export(&p, &c, &cand) {
             None => o.set_item("export", py.None())?,
             Some(nadd) => {
                 o.set_item("export", nadd)?;
-                o.set_item("pending", (g.pa.clone(), g.pb.clone()))?;
-                let out = g.merge(st.n, st.cols_removed, &st.col_cnt.clone(), &mut w, st.work_mult);
+                let out = st.cg.merge(st.n, st.cols_removed, &st.col_cnt, &mut st.work, st.work_mult);
+                let g = &st.cg;
                 o.set_item("end_out", out)?;
                 o.set_item("end_g", (g.n0, g.rc0, g.ptr.clone(), g.adj.clone()))?;
-                o.set_item("end_work", w)?;
+                o.set_item("end_work", st.work)?;
             }
         }
         Ok(o)

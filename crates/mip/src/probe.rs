@@ -2,7 +2,7 @@
 //! `396a2d` and the transpose `7886b`) and the implication export to the conflict graph (§2.8.5). The engine `4e48f7`
 //! is in probe_engine.rs. These read the state and only add work; writing results back (bounds, fixings,
 //! aggregation, lifting) is the caller's (part B).
-use crate::conflict::{self, ConflictGraph};
+use crate::conflict;
 use crate::state::{State, NIL};
 use crate::Params;
 
@@ -112,9 +112,6 @@ pub enum Stop {
     Done,
     /// status from 4d3a1d (3 infeasible with `bad_col`, 0x2711 memory)
     Status(i32, i32),
-    /// shortcut: a live column with ub − lb < 1e-10 needs `3de18e` (inner-loop helper) inside the candidate loop;
-    /// never seen on the 38 models. Part B calls it there.
-    NearFixed(usize),
 }
 
 /// Descending sort of `aabbe3` (`aae2ff` with two payloads): ranges of 100 or more get a three-way partition around
@@ -318,7 +315,7 @@ impl State {
     /// Returns the context and the candidates (columns j, rows n + probe row).
     /// shortcut: default paths only — all-row selection (st+0xf8 = 0 and mode 2), no GUB (PREGUBPROBE −1 with mode
     /// 2), no Q/QC/SOS blocks, one thread; the others never run on the 38 models (docs/m2_red_probe.md §2.4, §1.4).
-    pub fn probe_build(&self, p: &Params, a: &Args, first_pass: bool, t: &TimerView, w: &mut f64)
+    pub fn probe_build(&mut self, p: &Params, a: &Args, first_pass: bool, t: &TimerView)
                        -> Result<(Box<Ctx>, Vec<i32>), Stop> {
         let (n, m) = (self.n, self.m);
         let mu = self.work_mult;
@@ -335,9 +332,9 @@ impl State {
                 prow.push(i as i32);
             }
         }
-        *w += (m as f64 + m as f64) * mu;
+        self.work += (m as f64 + m as f64) * mu;
         let colcnt: Vec<i32> = self.col_cnt.iter().map(|&c| c.max(0)).collect();
-        *w += mu * (n as f64 + n as f64);
+        self.work += mu * (n as f64 + n as f64);
         // §2.3.4 column candidates
         let (mut nnz_p, mut nnz_b) = (0i64, 0i64);
         let mut cand: Vec<i32> = Vec::new();
@@ -350,7 +347,12 @@ impl State {
                 if self.ub[j] + p.feastol < self.lb[j] {
                     return Err(Stop::Status(3, j as i32));
                 }
-                return Err(Stop::NearFixed(j));
+                // `3de18e(lb, INF, env, st, j, 1)`: fixed with a record, inside the loop (its work lands here)
+                let rc = self.fix_col(j, self.lb[j], true);
+                if rc != 0 {
+                    return Err(Stop::Status(rc, -1));
+                }
+                continue;
             }
             nnz_p += c as i64;
             if self.vtype[j] == b'B' {
@@ -358,7 +360,7 @@ impl State {
                 nnz_b += c as i64;
             }
         }
-        *w += n as f64 * 4.0 * mu;
+        self.work += n as f64 * 4.0 * mu;
         if cand.is_empty() || 2e9 < nnz_p as f64 + nnz_p as f64 {
             return Err(Stop::Done);
         }
@@ -384,7 +386,7 @@ impl State {
                     v += 1;
                     q = nd.nr;
                 }
-                *w += v as f64 * 4.0 * mu;
+                self.work += v as f64 * 4.0 * mu;
                 if ok {
                     cand.push(k + n as i32);
                 }
@@ -406,7 +408,7 @@ impl State {
         };
         c.rhs = prow.iter().map(|&i| self.rhs[i as usize]).collect();
         c.sense = prow.iter().map(|&i| self.sense[i as usize]).collect();
-        *w += (m as f64 + r as f64 * 5.0) * mu;
+        self.work += (m as f64 + r as f64 * 5.0) * mu;
         c.lb = self.lb.clone();
         c.ub = self.ub.clone();
         c.vt = self.vtype.clone();
@@ -435,18 +437,18 @@ impl State {
                 v += 1;
                 q = nd.nr;
             }
-            *w += v as f64 * 5.0 * mu;
+            self.work += v as f64 * 5.0 * mu;
             c.rnb.push(nb);
         }
-        *w += r as f64 * 6.0 * mu;
+        self.work += r as f64 * 6.0 * mu;
         c.rbeg.push(pos);
         c.lb0 = c.lb.clone();
         c.ub0 = c.ub.clone();
         for k in 0..r {
             let (b, e) = (c.rbeg[k] as usize, c.rbeg[k + 1] as usize);
-            row_sort(&mut c.rcol[b..e], &mut c.rval[b..e], &c.vt, &c.lb, &c.ub, w);
+            row_sort(&mut c.rcol[b..e], &mut c.rval[b..e], &c.vt, &c.lb, &c.ub, &mut self.work);
         }
-        *w += r as f64 * mu;
+        self.work += r as f64 * mu;
         // activities over the sorted rows (§2.5)
         let big = 2.5822498780869086e120;
         for k in 0..r {
@@ -474,7 +476,7 @@ impl State {
                     }
                 }
             }
-            *w += (e - b) as f64 * 4.0 * mu;
+            self.work += (e - b) as f64 * 4.0 * mu;
             if imn > 0 {
                 mn = (-1 - imn) as f64 * big;
             }
@@ -485,18 +487,18 @@ impl State {
             c.amax.push(mx);
             c.range.push(if rng < 1e100 { rng } else { 2.5 * big });
         }
-        *w += r as f64 * 9.0 * mu;
-        let (cb, cr, cv) = transpose(n, &c.rbeg, &c.rcol, &c.rval, w);
+        self.work += r as f64 * 9.0 * mu;
+        let (cb, cr, cv) = transpose(n, &c.rbeg, &c.rcol, &c.rval, &mut self.work);
         c.cbeg = cb;
         c.crow = cr;
         c.cval = cv;
         // §1.4 one thread: few candidates, a small matrix or a small budget (else Threads decides; 1 here)
         // §2.7 limits, then the budget against the timer
-        if *w - self.work_base > self.budget || self.prelimit < 0 || t.over(*w) {
+        if self.work - self.work_base > self.budget || self.prelimit < 0 || t.over(self.work) {
             return Err(Stop::Done);
         }
         if t.limit != 0.0 {
-            let left = t.limit - t.used(*w);
+            let left = t.limit - t.used(self.work);
             if left <= c.budget {
                 c.budget = left;
             }
@@ -515,10 +517,10 @@ impl State {
     /// reached that is still a live unfixed binary, queue (¬x_j, e) for the literals e implied false by x_j = 0 and
     /// (x_j, e) for x_j = 1, while the graph has room. Returns the pairs queued (local_870); `None` when `5b86ce`
     /// finds the graph full (4d3a1d then ends the pass without merging).
-    pub fn probe_export(&self, p: &Params, g: &mut ConflictGraph, c: &Ctx, cand: &[i32], w: &mut f64) -> Option<i64> {
+    pub fn probe_export(&mut self, p: &Params, c: &Ctx, cand: &[i32]) -> Option<i64> {
         let lim = conflict::limit(self.nnz, self.n as i32 - self.cols_removed, self.m as i32 - self.rows_removed,
                                   p.preclique, p.presolve);
-        if !c.imp || lim < g.edges() + g.pa.len() as i64 {
+        if !c.imp || lim < self.cg.edges() + self.cg.pa.len() as i64 {
             return None;
         }
         let mu = self.work_mult;
@@ -538,21 +540,21 @@ impl State {
                         while q < e {
                             let x = c.imps[q as usize];
                             if free(conflict::var(x)) {
-                                if g.push(lit, x, false, lim, w, mu) {
-                                    *w += (q - s) as f64 * 3.0 * mu;
+                                if self.cg.push(lit, x, false, lim, &mut self.work, mu) {
+                                    self.work += (q - s) as f64 * 3.0 * mu;
                                     break 'all;
                                 }
                                 nadd += 1;
                             }
                             q += 1;
                         }
-                        *w += (e - s) as f64 * 3.0 * mu;
+                        self.work += (e - s) as f64 * 3.0 * mu;
                     }
                 }
             }
             t += 1;
         }
-        *w += t as f64 * 4.0 * mu;
+        self.work += t as f64 * 4.0 * mu;
         Some(nadd)
     }
 }
@@ -588,7 +590,6 @@ impl State {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::conflict::ConflictGraph;
     use crate::probe_engine::EngineEnd;
     use rsolver_model::Model;
 
@@ -629,11 +630,10 @@ mod tests {
         st.activity(None);
         let args = Args { mode: 2, a7: 0, a8: 0, a9: 0, a10: 0 };
         let t = TimerView { acc: 0.0, running: true, limit: 0.0 };
+        let (mut c, mut cand) = st.probe_build(&p, &args, true, &t).unwrap();
         let mut w = st.work;
-        let (mut c, mut cand) = st.probe_build(&p, &args, true, &t, &mut w).unwrap();
         assert_eq!(cand.len(), 2 + 2); // both columns and both rows (r0 is stored as −x0 + x1 ≤ 0)
-        let g = ConflictGraph::default();
-        assert_eq!(st.probe_engine(&p, &g, &mut c, &mut cand, &mut w), EngineEnd::Done);
+        assert_eq!(st.probe_engine(&p, &mut c, &mut cand, &mut w), EngineEnd::Done);
         assert_eq!((c.lb[1], c.ub[1]), (0.0, 0.0));
         assert!(c.nchg >= 1);
     }
