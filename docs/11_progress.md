@@ -62,6 +62,8 @@
 | 2026-11-05 | M1 presolve 5 마무리 단계 | 바깥 패스 나머지, 다음 패스, 마무리(`50de61` 함의 bound). **기본값 presolved 모델 62/64**(`5b488d`·`47c445`는 아직 빈 함수). postsolve 병합, 집계 뒤 uncrush 비트 일치(PRELIMIT 1–17) | `6aa22b7`, `44ef311`, `d9a4874` (`m1-lp-presolve`) |
 | 2026-11-05 | M3 Cholesky 해법 | `2ee6c5` 해법 프로토타입(8-lane 내적, right-looking forward, backward), dx·dy 비트 일치 7개 | `37e1c19` (`m3-barrier`) |
 | 2026-11-05 | M1 dual 반복 원본화 | CHUZR(모드 0/1)·BFRT(코퍼스 99.4%)·DSE·d 갱신·재분해 시점 이식. Netlib 64: 64/64 정확, 반복 일치 7, ±5% 34, sc50a 반복 0–6 비트 일치 | `899c192`, `1979049`, `33b944b`, `93e51af`, `23cad5d` |
+| 2026-11-05 | M1 presolve PREDERIVED·postsolve | `5b488d`(PREDERIVED) 비트 일치 이식, type 24 레코드. 집계 레코드 6/11/21 uncrush, 기본값 postsolve 53/59. rsolver-lp clippy 경고 0 | `25a1494`, `b53fd32`, `15260ee`, `d537b7e` (`m1-lp-presolve`) |
+| 2026-11-05 | M3 비트 일치 분해·해법 | Rust supernodal 분해·해법(`chol.rs`)과 MKL DGEMM/DTRSM 흉내(`mkl.rs`)가 Gurobi와 비트 일치. IPM을 이 위에 올려 **BarIterCount 63/64** | `5557d2b`, `506a26e` (`m3-barrier`) |
 
 ## 4. goal 원문
 
