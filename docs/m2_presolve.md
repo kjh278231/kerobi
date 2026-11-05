@@ -6,7 +6,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 | G6 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개 기본값 presolved 모델 38/38 | 시작 전 |
+| (1) miplib_small 38개 기본값 presolved 모델 38/38 | 5/38(reduction 없이도 같은 모델). PRELIMIT ≤ 2 38/38 |
 | (2) 기본값에서 도는 MIP reduction 전부(probing·대칭성·연결 성분 포함) | 시작 전. 목록은 §2 |
 | (3) MIP postsolve 레코드 | 시작 전 |
 | (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
@@ -16,7 +16,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 ### 진행 중인 하위 작업 (2026-11-06 시작)
 | worktree / 브랜치 | 일 | 산출물 |
 |---|---|---|
-| `../rsolver-m2-skel` / `m2-skel` | 뼈대 구현: `crates/mip` 상태(`3a484d` MIP 분기, 연결 리스트), `3cd406` 시작부·Presolve=0 경로·마무리, `3b0917` MIP 모델 생성, MPS 정수 MARKER, py 분기. 기준 Presolve=0·PRELIMIT 0–2 38/38 | 코드, `docs/m2_presolve_state.md` |
+| ~~`m2-skel`~~ (완료, 병합 `ef28a7e`) | 뼈대: `crates/mip`(상태·생성자 MIP 분기·시작부·마무리·`3b0917`), MPS 정수 MARKER, py 분기. 다시 확인: Presolve=0·PRELIMIT 0/1/2 38/38, 3은 36/38(`5a9282` 미포팅). 카운트: k=1 정수 bound 반올림, k=2 `36d89a`, k=3 `5a9282`, k=4 첫 `3e39a6` | [m2_presolve_state.md](m2_presolve_state.md) |
 | ~~`m2-spine-b`~~ (완료, 병합) | 패스 루프 해독. phase(0..1) > round(0..4) > 패스 p(전역) > 내부 i(−5부터). 카운터는 ebx. 내부 반복 7카운트, 바깥 패스 22 + [p<3] + [round==0 && k==0] + [k==0]. 인라인 I→B·PREPARTOBJ·함의 bound·쌍대 이진화 후보 | [m2_spine_b.md](m2_spine_b.md) |
 | ~~`m2-spine-c`~~ (완료, 병합 `e492342`) | 라운드 후 단계 해독. 라운드 0–4 × 바깥 반복 2, PRELIMIT 카운트 round 0은 19, 이후 16. 호출 없이 세는 곳 목록 | [m2_spine_c.md](m2_spine_c.md) |
 | ~~`m2-spine-d`~~ (완료, 병합) | FINAL 단계 해독. 두 번째 probing 뒤 ρ > 1e-4면 라운드 루프 재시작(최대 1회), 마무리 사슬 `52cba4`→`521497`→`470936`→`57999f`→{`36ddf2`+inline 쌍대 고정}→inline implied int. 카운트 C1–C23 | [m2_spine_d.md](m2_spine_d.md) |
