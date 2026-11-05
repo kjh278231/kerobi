@@ -86,7 +86,7 @@ dy = (LDLᵀ)⁻¹(rhs_y + A(θ∘rhs_x)), dx = (Aᵀdy − rhs_x)·θ(slack은 
 
 ## 6. 남은 차이와 `shortcut:`
 
-- 궤적이 비트로 갈리는 9개(반복 수는 같음): 25fv47(행 22), bnl1(48), degen3(1), finnis(20), forplan(17), ganges(14), maros(18), modszk1(12), pilot4(79). degen3은 첫 해법 x가 15/3321 원소 다르다(12개 작업, 분해 쪽으로 추정, 미조사). 나머지는 어느 단계인지 아직 보지 않았다.
+- 궤적이 비트로 갈리는 9개(반복 수는 같음): 25fv47(행 22), bnl1(48), degen3(1), finnis(20), forplan(17), ganges(14), maros(18), modszk1(12), pilot4(79). degen3은 첫 해법 x가 15/3321 원소 다르다(12개 작업, 분해 쪽으로 추정, 미조사). modszk1은 반복 0–11 상태가 전 원소 같고 K = 3, N = 4, θ도 같은데 반복 11 스텝의 최종 방향과 마지막 corrector 방향이 갈린다(이 반복의 두 번째 corrector에서 ω_p = 0이 처음 나온다; `2f4fe9`의 ω = 0 분기부터 볼 것). 나머지는 어느 단계인지 아직 보지 않았다.
 - `shortcut:` 정렬 가정: 블록 저장·D 값 배열·B 벡터의 시작이 16바이트 정렬이라고 둔다(관찰값). 다른 할당자에서는 peel이 바뀐다.
 - `shortcut:` Bunch–Kaufman(`32af6a`, F+0xa0), 명시 행렬 경로(F+0x1e0 = 1/2), 단정밀도(`3279a1`), 밀집 열(F+0x138, B+0x648/0x7f0), SOC·QP 항(x87 `343b08`, `2f28c2` 원뿔 부분)은 옮기지 않았다(64개에서 안 탄다).
 - `shortcut:` f80은 inf/NaN·subnormal double 결과를 다루지 않는다.
