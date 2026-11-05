@@ -26,8 +26,9 @@
 |---|---|---|---|---|
 | M1 심플렉스 | `rsolver` / `main` | LP simplex(dual·primal), LU, crash, Quad, LP 드라이버, `crates/core` 삭제 | `docs/10_porting.md` §9 | G1 |
 | M1 LP presolve | `rsolver-presolve` / `m1-lp-presolve` | LP presolve, postsolve | `docs/m1_presolve.md` | G2 |
-| ↳ postsolve (presolve 에이전트가 띄운 하위 에이전트, Sonnet) | `rsolver-postsolve` / `m1-postsolve` | postsolve `363daa` | `docs/m1_postsolve.md` | G2의 일부 |
-| ↳ derived·PreDepRow (presolve 하위 에이전트) | 각자 worktree / `m1-derived`, `m1-deprow` | `5b488d`, `47c445` | `docs/m1_presolve.md` | G2의 일부 |
+| ↳ ~~postsolve~~ (완료, `m1-lp-presolve`에 병합. pane `w4:pP`는 유휴) | `rsolver-postsolve` / `m1-postsolve` | postsolve `363daa` | `docs/m1_postsolve.md` | G2의 일부 |
+| ↳ ~~derived·PreDepRow~~ (완료, 병합, 브랜치 삭제) | — / `m1-derived`, `m1-deprow` | `5b488d`, `47c445` | `docs/m1_presolve.md` | G2의 일부 |
+| ↳ symmetry (presolve 하위 에이전트, pane `w4:pV`) | `rsolver-symmetry` / `m1-symmetry` | 대칭 검출 `5577ba`→`551cc0` | `docs/m1_presolve.md` | G2의 일부 |
 | ~~M3 barrier~~ (완료, main 병합) | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
 | M3 PDHG | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3_pdhg.md` | G4 |
 
@@ -82,7 +83,7 @@
 - **G2**: LP presolve(`390989`)와 postsolve를 완료한다. 완료 기준:
   1. P0: Netlib 64개에서 기본 파라미터의 presolved 모델(`presolved.mps.gz` SHA-256)이 Gurobi와 64/64 같다.
   2. presolved 모델의 해·기저를 postsolve로 원래 공간에 되돌린 결과가 Gurobi와 비트 단위로 같다. 64/64, 오라클로 검증한다.
-  3. 미뤄 둔 `47c445`(PreDepRow)를 포함해 기본값에서 도는 reduction을 모두 옮긴다.
+  3. 미뤄 둔 `47c445`(PreDepRow)와 대칭 검출 게이트(`5577ba`→`551cc0`)를 포함해 기본값에서 도는 reduction을 모두 옮긴다.
   4. cargo clippy 경고 0, 테스트 통과. `docs/03_presolve.md`와 `docs/m1_presolve.md`를 갱신한다.
 
   범위 밖은 simplex·드라이버(main)와 barrier다.

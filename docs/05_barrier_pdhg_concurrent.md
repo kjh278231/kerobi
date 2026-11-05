@@ -186,7 +186,7 @@ QCP/SOCP를 LP + OA cut 반복으로 푸는 대안 경로. "Pass    Dual Objecti
 - 패리티 P1(합격 기준): Netlib 64개에서 `BarIterCount`가 `re/bench/results/lp.csv`의 `grb_barrier`의 `bar=` 값과 같고, PDHG 반복 수가 `grb_pdhg`와 같다. Method=3/4의 승자 알고리즘(`ConcurrentWinMethod`)이 같다.
 - 패리티 P3: barrier의 "Factor NZ", "Factor Ops"가 Gurobi 로그와 같고, 시간 기하평균이 1.2배 이내.
 
-- barrier: Netlib 104개 Crossover=0에서 상대 gap < 1e-8, 잔차 < 1e-6; Crossover 켜면 simplex와 같은 목적값·basis 상태 일관성.
+- barrier: Netlib 91개 Crossover=0에서 상대 gap < 1e-8, 잔차 < 1e-6; Crossover 켜면 simplex와 같은 목적값·basis 상태 일관성.
 - Cholesky: 무작위 SPD·반정치 행렬에서 `L D Lᵀ` 잔차, 정규화 피벗 수 기록.
 - PDHG: Netlib 소형 20개에서 1e-6 수렴, crossover 뒤 OPTIMAL.
 - concurrent: Method=4 결과가 실행마다 같음(승자·반복 수 동일), Method=3은 목적값만 같음.
