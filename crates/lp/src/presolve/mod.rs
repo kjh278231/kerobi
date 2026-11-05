@@ -335,7 +335,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
         // shortcut: symmetry detection (`5577ba` -> `551cc0`, pass 0 with >= 500 columns and >= 100 rows left)
         // is not ported; it only turns automatic PreDepRow off when it finds symmetry. Assumed to find none.
         if k == 0 && dep_rows & 1 != 0 {
-            if st.dependent_rows(1, tols) != 0 {
+            if st.dependent_rows(1, tols, p.pre_dep_row == -1) != 0 {
                 return;
             }
             calls += 1;
@@ -344,7 +344,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
             }
         }
         if k == 0 && dep_rows & 2 != 0 && p.dual_reductions {
-            if st.dependent_rows(2, tols) != 0 {
+            if st.dependent_rows(2, tols, p.pre_dep_row == -1) != 0 {
                 return;
             }
             calls += 1;
