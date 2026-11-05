@@ -188,9 +188,14 @@ impl State {
 
         // pairs: classes of 2 once, up to 6 every pair, larger ones a forward and a backward sweep with a leader
         // (mode 2: classes of 2 only)
-        // shortcut: 3ba9de's work-budget check every 10000 pairs is not ported (see mod.rs).
+        // `3ba9de` after a class once 10000 more pairs were tried since the last check
         let alive = |st: &State, x: usize| st.par_alive(cols, x);
+        let (mut pairs, mut checked) = (0i64, 0i64);
         for g in 1..bounds.len() {
+            if 9999 < pairs - checked {
+                checked = pairs;
+                self.budget_check();
+            }
             let (b, e) = (bounds[g - 1], bounds[g]);
             let len = e - b;
             if len < 2 {
@@ -198,6 +203,7 @@ impl State {
             }
             if len == 2 {
                 let (x, y) = (list[b] as usize, list[b + 1] as usize);
+                pairs += 1;
                 let rc = self.par_pair(mode, scale[x], scale[y], x, y, t);
                 if rc != 0 {
                     return rc;
@@ -215,6 +221,7 @@ impl State {
                         if !alive(self, y) {
                             continue;
                         }
+                        pairs += 1;
                         let rc = self.par_pair(mode, scale[x], scale[y], x, y, t);
                         if rc != 0 {
                             return rc;
@@ -227,6 +234,7 @@ impl State {
             } else {
                 let mut lead = list[b] as usize;
                 for &y in &list[b + 1..e] {
+                    pairs += alive(self, y as usize) as i64;
                     match self.par_lead_step(mode, lead, y as usize, &scale, t) {
                         Ok(next) => lead = next,
                         Err(rc) => return rc,
@@ -241,12 +249,16 @@ impl State {
                 }
                 let mut lead = list[q] as usize;
                 for &y in list[b + 1..q].iter().rev() {
+                    pairs += alive(self, y as usize) as i64;
                     match self.par_lead_step(mode, lead, y as usize, &scale, t) {
                         Ok(next) => lead = next,
                         Err(rc) => return rc,
                     }
                 }
             }
+        }
+        if 9999 < pairs - checked {
+            self.budget_check();
         }
         0
     }

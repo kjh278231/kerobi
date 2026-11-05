@@ -101,6 +101,10 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
     let mut st = State::new(md);
     let nnz0 = st.nnz; // aggregation changes `st.nnz`; the arena's first chunk size uses the constructor's value
     let mut work = st.work;
+    // `390989` L211-244: work budget from the constructor's nnz (+0xd8); the base (+0x450) is 0 here
+    st.prelimit = p.prelimit;
+    let size = if 1 < p.prepasses || p.presolve == 2 { 1e100 } else if p.presolve == 1 { st.nnz as f64 * 200.0 } else { st.nnz as f64 * 1000.0 };
+    st.budget = size + 1e7;
     if p.presolve != 0 {
         let tols = ColTols {
             infbound: p.infbound,
@@ -127,27 +131,26 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
 
 /// The reduction sequence; returns when a reduction reports a status or the call limit is reached.
 fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
-    let limit = p.prelimit;
     let mut calls = 0;
     if st.empty_and_free_rows(p.feastol) != 0 {
         return;
     }
     calls += 1;
-    if limit <= calls {
+    if st.prelimit <= calls {
         return;
     }
     // `503985` fixes columns with 1e-10 < u - l <= FIXTOL; with FIXTOL < 0 (default) only for n >= 10000.
     // shortcut: not ported; no Netlib model reaches it. Port it before running models with >= 10000 columns.
     assert!(p.fixtol < 0.0 && st.n < 10000, "503985 (near-fixed columns) is not ported");
     calls += 1;
-    if limit <= calls {
+    if st.prelimit <= calls {
         return;
     }
     st.activity(None, p.infbound);
     if p.prebound != 0 {
         st.dual_singleton_fix(p.dual_reductions, p.infbound);
         calls += 1;
-        if limit <= calls {
+        if st.prelimit <= calls {
             return;
         }
     }
@@ -168,34 +171,33 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
         loop {
             snap = st.snapshot();
             st.tracker.level = 2;
-            // shortcut: 3ba9de's work-budget stop (budget = nnz*1000 + 1e7) is not checked; Netlib never hits
-            // it. Port it with the constructor's work terms (P2).
+            // `3ba9de` here runs with a 1e100 budget (390989 swaps +0x1f0 around the call): no work stop
             st.reset_tracker();
             if st.singleton_cols(tols) != 0 {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
             if st.singleton_rows(p.feastol, p.infbound) != 0 {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
             // state+0x278 (set by aggregation 517fa8, unported) would skip 4ff158
             st.forcing_rows(p.feastol, p.infbound);
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
             if st.redundant_rows(0, p.feastol, p.opttol, p.infbound) != 0 {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
             let rho = st.progress(&snap);
@@ -218,7 +220,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
             return;
         }
         calls += 1;
-        if limit <= calls {
+        if st.prelimit <= calls {
             return;
         }
         if p.dual_reductions {
@@ -226,14 +228,14 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
             if st.cost_point_fix(p.feastol, p.opttol, p.infbound) != 0 {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -243,7 +245,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
             return;
         }
         calls += 1;
-        if limit <= calls {
+        if st.prelimit <= calls {
             return;
         }
         if early {
@@ -251,7 +253,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -260,7 +262,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -269,12 +271,12 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
             st.forcing_rows(p.feastol, p.infbound);
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -290,7 +292,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -298,7 +300,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
             return;
         }
         calls += 1;
-        if limit <= calls {
+        if st.prelimit <= calls {
             return;
         }
         // no PWL columns in LP; `50fe2b` needs DualReductions but the call counts either way
@@ -306,7 +308,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
             st.cost_tight_rows(p.infbound);
         }
         calls += 1;
-        if limit <= calls {
+        if st.prelimit <= calls {
             return;
         }
         // aggregation; state+8 is not 4 for a general LP, so the reduced-mode guard (local_38) is off
@@ -317,7 +319,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -327,7 +329,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -345,7 +347,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -354,7 +356,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -368,14 +370,13 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
 /// The finish stage (`390989` LAB_0048dff3): level 0, `51a144`, {`50cc90(1)`, `50d878`} until `50d878` removes no
 /// more columns, then `50de61` (and `50d878` once more if it removed rows).
 fn finish(st: &mut State, p: &Params, tols: &ColTols, mut calls: i32) {
-    let limit = p.prelimit;
     st.tracker.level = 0;
     st.reset_tracker();
     if p.prebound != 0 {
         st.dual_singleton_fix(p.dual_reductions, p.infbound);
         calls += 1; // counted without a limit check
     }
-    if limit <= calls {
+    if st.prelimit <= calls {
         return;
     }
     // PreSparsify (-1) would run `470936` only at 2; no QP/QC parts for LP
@@ -384,7 +385,7 @@ fn finish(st: &mut State, p: &Params, tols: &ColTols, mut calls: i32) {
             return;
         }
         calls += 1;
-        if limit <= calls {
+        if st.prelimit <= calls {
             return;
         }
         let before = st.cols_removed;
@@ -393,7 +394,7 @@ fn finish(st: &mut State, p: &Params, tols: &ColTols, mut calls: i32) {
                 return;
             }
             calls += 1;
-            if limit <= calls {
+            if st.prelimit <= calls {
                 return;
             }
         }
@@ -407,7 +408,7 @@ fn finish(st: &mut State, p: &Params, tols: &ColTols, mut calls: i32) {
             return;
         }
         calls += 1;
-        if limit <= calls {
+        if st.prelimit <= calls {
             return;
         }
         if before < st.rows_removed && p.dual_reductions {

@@ -113,6 +113,9 @@ pub struct State {
     /// *(+0x458): deterministic work; +0x448 multiplier
     pub work: f64,
     pub work_mult: f64,
+    /// +0x1dc GURO_PAR_PRELIMIT (`3ba9de` sets -1 once the work passes the budget) and +0x1f0 the budget
+    pub prelimit: i32,
+    pub budget: f64,
     /// +0x3d8
     pub tracker: Tracker,
     /// +0x370 record list
@@ -231,6 +234,13 @@ fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, cont
 }
 
 impl State {
+    /// `3ba9de`'s work test: past the budget, PRELIMIT becomes -1 and presolve stops at the next limit check.
+    pub fn budget_check(&mut self) {
+        if self.budget < self.work {
+            self.prelimit = -1;
+        }
+    }
+
     pub fn new(md: &Model) -> State {
         let (n, m) = (md.num_vars(), md.num_constrs());
         let neg: Vec<bool> = md.row_sense.iter().map(|&s| s == b'>').collect();
@@ -320,6 +330,8 @@ impl State {
             bad_row: -1,
             work: constructor_work(md, n, m, raw_nnz, spare, contiguous),
             work_mult: if raw_nnz <= 100_000 { 1.0 } else { (raw_nnz as f64 / 1e4).log10().sqrt() },
+            prelimit: i32::MAX,
+            budget: 1e100,
             tracker: Tracker::new(m, n),
             post: Vec::new(),
             mark: vec![false; n.max(m)],

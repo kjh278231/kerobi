@@ -151,6 +151,9 @@ struct Elim {
     scat: Vec<u32>,
     work: f64,
     mu: f64,
+    /// state+0x1f0, and whether the work passed it (`3ba9de` then sets PRELIMIT -1)
+    budget: f64,
+    over: bool,
 }
 
 impl Elim {
@@ -178,7 +181,7 @@ impl Elim {
         Elim {
             mode, nr, nc, nodes, rhead, chead, rcnt, ccnt, rflag: vec![false; nr], cflag: vec![false; nc], rb, cb, b,
             empty_r, empty_c, pivots: 0, nnz, free_main: chunk, free2: 0, alloc: chunk, chunk,
-            scat: vec![NIL; nr.max(nc)], work, mu,
+            scat: vec![NIL; nr.max(nc)], work, mu, budget: 1e100, over: false,
         }
     }
 
@@ -765,9 +768,12 @@ impl Elim {
     /// The elimination loop (LAB_0051e164); ends when nothing is left, the rest is too dense, or a memory limit.
     fn run(&mut self, auto: bool, keep: f64, lim_fill: i64, lim_alloc: i64) -> End {
         let mut first = true;
-        loop {
-            // shortcut: every 100 rounds the original calls 3ba5ac (log) and 3ba9de, whose work-budget stop
-            // (state+0x1dc < 0) ends the elimination; the budget is not modeled (see mod.rs). Port with P2.
+        for round in 0u64.. {
+            // every 100 rounds `3ba9de`: past the work budget the elimination ends as if finished
+            if round % 100 == 0 && self.budget < self.work {
+                self.over = true;
+                return End::Finish;
+            }
             self.singletons(keep);
             let (rows, cols) = self.remaining();
             let mut u = rows.min(cols);
@@ -794,6 +800,7 @@ impl Elim {
                 return e;
             }
         }
+        unreachable!()
     }
 }
 
@@ -811,8 +818,12 @@ impl State {
         if idx.is_empty() {
             return 0;
         }
+        e.budget = self.budget;
         let end = e.run(auto, ft10 * 100.0, lim_fill, lim_alloc);
         self.work = e.work;
+        if e.over {
+            self.prelimit = -1;
+        }
         if let End::Abort = end {
             return 0;
         }
