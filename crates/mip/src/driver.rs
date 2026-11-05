@@ -274,7 +274,8 @@ impl Driver<'_> {
                 self.budget();
             }
             if dual && p.predominate != 0 && self.ok(17) {
-                rc(self.timed(17, |s, p| s.dominated(p)))?;
+                let t = self.t[17];
+                rc(self.timed(17, |s, p| s.dominated(p, t)))?;
                 self.count("dominated")?;
                 self.budget();
             }

@@ -59,7 +59,8 @@ pub struct Parts {
 }
 
 fn queue(q: &QueueParts) -> Queue {
-    Queue { flag: q.flag.clone(), a: q.a, b: q.b, list: q.list.clone(), cache: q.cache.clone(), cache2: q.cache2.clone() }
+    Queue { flag: q.flag.clone(), a: q.a, b: q.b, list: q.list.clone(), cache: q.cache.clone(), cache2: q.cache2.clone(),
+            cache3: Default::default() }
 }
 
 fn queue_parts(q: &Queue) -> QueueParts {
@@ -258,6 +259,7 @@ impl State {
             "36ee92" => (self.compress(p), 0),
             "418542" => (self.dual_agg(p), 0),
             "37f484" => (self.aggregate(p), 0),
+            "4030c9" => (self.dominated(p, Default::default()), 0),
             // the reduction timer is not dumped: a zero limit never stops the call
             "414c03" => (self.cancel_rows(p, 2, Default::default()), 0),
             "414c53" => (self.cancel_cols(p, 2, Default::default()), 0),

@@ -16,6 +16,7 @@ mod cancel;
 mod aggregate;
 mod colpass;
 mod compress;
+mod dominate;
 mod doubleton;
 mod dualagg;
 mod dualeq;
