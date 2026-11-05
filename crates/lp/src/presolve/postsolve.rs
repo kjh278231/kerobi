@@ -22,6 +22,9 @@ pub struct Post {
     pub m_pre: usize,
     /// post+0x128: INFBOUND at presolve time
     pub infbound: f64,
+    /// state counters at the end of presolve: bounds tightened, coefficients changed, `<` made `=`, rows removed,
+    /// columns removed (+0x3f8..+0x408)
+    pub counts: [i32; 5],
 }
 
 fn r8(x: i64) -> i64 {
@@ -102,6 +105,15 @@ impl PostRec {
 }
 
 impl Post {
+    /// Presolve removed no row and no column: Gurobi drops the presolved model and solves the original, so
+    /// `363daa` never runs (the 5 Netlib cases grow7/15/22, scsd1, scsd6 have no records either; bound
+    /// tightening alone does not count). shortcut: inferred from those 5 models and the 59 that do run it, the
+    /// condition in the decompile (0c3d0d / 390989 / 3cd406) was not found; check models whose presolve only
+    /// splits rows or turns `<` into `=` before relying on it.
+    pub fn is_identity(&self) -> bool {
+        self.recs.is_empty() && self.counts[3] == 0 && self.counts[4] == 0
+    }
+
     pub fn new(st: &State, infbound: f64, nnz0: i64) -> Post {
         let map = |cnt: &[i32]| {
             let mut k = 0;
@@ -136,7 +148,8 @@ impl Post {
             aligns.push([((used + off[0]) & 8) as u8, ((used + off[1]) & 8) as u8]);
             used += size;
         }
-        Post { recs: st.post.clone(), aligns, col_map, row_map, n_base, n_pre: n_base + st.splits.len(), m_pre, infbound }
+        Post { recs: st.post.clone(), aligns, col_map, row_map, n_base, n_pre: n_base + st.splits.len(), m_pre, infbound,
+               counts: [st.bounds_tightened, st.coefs_changed, st.ineq_to_eq, st.rows_removed, st.cols_removed] }
     }
 }
 
@@ -187,6 +200,10 @@ pub struct Uncrushed {
 /// `363daa` on the LP simplex path. `orig` is the model presolve ran on (for the final slack and the `>` sign
 /// of y). `aligns` overrides `post.aligns` when given.
 pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]]>) -> Uncrushed {
+    if post.is_identity() {
+        // no presolved model: the solution already lives in the original space
+        return Uncrushed { basis: pre.st.to_vec(), x: pre.x.to_vec(), dual: pre.dj.to_vec() };
+    }
     let (n, m) = (orig.num_vars(), orig.num_constrs());
     let al = aligns.unwrap_or(&post.aligns);
     let (n_pre, n_base) = (post.n_pre, post.n_base);

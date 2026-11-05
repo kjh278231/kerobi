@@ -2,7 +2,7 @@
 
 usage: PYTHONPATH=python python tools/postsolve_check.py <oracle_dir> [--param Name=Value ...] [--oracle-align] [-v] [name ...]
 The input of the uncrush is the oracle's `pre_after` (what 363daa reads), so simplex plays no part. Models for which
-the oracle never reached 363daa (nothing presolved) are skipped. --oracle-align takes the value-array parities from
+the oracle never reached 363daa (nothing presolved) must give an identity postsolve. --oracle-align takes the value-array parities from
 the oracle's real record addresses instead of the arena simulation. Needs no Gurobi.
 """
 import argparse, json, struct, sys
@@ -44,11 +44,25 @@ def main():
     params = [(k, float(v)) for k, v in (p.split("=", 1) for p in a.param)]
     insts = instances()
     names = a.names or sorted(p.stem for p in Path(a.oracle).glob("*.json"))
-    ok = skipped = 0
+    ok = skipped = identity = 0
     for name in names:
         cap = json.load(open(Path(a.oracle) / f"{name}.json"))
         if not cap["daa"]:
-            skipped += 1
+            # Gurobi never calls 363daa: presolve removed nothing, the original model is solved. rsolver must say the
+            # same and hand a solution (here the oracle's final attributes) back unchanged.
+            core = rsolver.read(str(insts[name]))._core
+            nrec, cnt = core.post_counts(params)
+            f = cap["final"]
+            x_in, d_in = H(f["X"]) + H(f["Slack"]), H(f["RC"]) + H(f["Pi"])
+            st_in = f["VBasis"] + f["CBasis"]
+            b, x, d = core.uncrush(params, x_in, d_in, st_in)
+            same = (nrec == 0 and cnt[3] == 0 and cnt[4] == 0 and b == st_in
+                    and [v.hex() for v in x] == [v.hex() for v in x_in] and [v.hex() for v in d] == [v.hex() for v in d_in])
+            if same:
+                ok += 1
+                identity += 1
+            else:
+                print(f"{name:12s} expected an identity postsolve: records {nrec} counts {cnt}")
             continue
         e = cap["daa"][-1]
         core = rsolver.read(str(insts[name]))._core
@@ -101,7 +115,7 @@ def main():
             print(f"{name:12s} " + " ".join(bad))
         else:
             ok += 1
-    print(f"match {ok}/{len(names) - skipped}" + (f" ({skipped} without uncrush)" if skipped else ""))
+    print(f"match {ok}/{len(names)}" + (f" ({identity} without uncrush: identity)" if identity else ""))
 
 
 if __name__ == "__main__":
