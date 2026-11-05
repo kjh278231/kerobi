@@ -13,6 +13,8 @@ Gurobi 13.0.3 MIP presolve(`3cd406`) 바깥 패스의 clique 묶음. 포팅 전 
 | `52be10` | 이진 ±1 집합 포장 행의 리터럴 쌍 그래프. 다른 행에 덮이는 2-행 삭제, 삼각형 클리크로 2-행 확장(`=`이면 고정) | gmu-35-40(호출 1, 행 17개 삭제). 나머지는 훑기 작업량만 |
 | `46a62d` | 같은 크기 계수의 이진 행을 ±1로 정규화하고 행 리스트를 다시 엮은 뒤(B 노드 \|a\| 내림차순), 다른 clique 행에 든 행 삭제, 충돌 리터럴로 clique 행 확장 | 행 삭제·확장은 gmu-35-40, gmu-35-50. 정규화·행 재배열·열 압축(+0xd8)은 13개 모델 더(리스트 순서가 바뀐다) |
 
+포트(2026-11-06): `451bed` = `crates/mip/src/clique.rs`의 `State::clique_table(p, list, bin_only) -> Result<Cliques, i32>`(probing도 이것을 쓴다). 첫 훑기의 `3de18e` 고정은 inner 포트 병합 뒤 잇는다(지금은 `unimplemented!`, neos-860300만 닿음). 시험 `crates/mip/tests/clique.rs`(fixture `bench/gurobi_presolve_mip/clique/`).
+
 검증: 네 함수 모두 Python 참조 모델을 진입 상태에 돌려 복귀 상태(리스트 순서·값, lb/ub, rhs, 개수, activity, 카운터, 레코드)와 작업량을 비트 단위로 비교했다. `45885d`(+`451bed`) 78회, `46a62d` 78회는 38개 모델 전부, `52be10`은 동작하는 gmu-35-40과 훑기만 하는 모델, 합성 모델에서 같다(§7).
 
 ## 1. 호출 지점 (`3cd406` L3610–3700)
@@ -103,7 +105,7 @@ W += 8.0·nlist·μ
 
 ### 2.3 이진 열을 거친 2-clique (bin_only == 0이고 1 ≤ state+0xf0 ≤ n−2일 때)
 
-state+0xf0 = 정수 열 수(glass4 302 = 이진 302). SOS(+0x1f8 > 0)가 있으면 먼저 `a85f71`로 열→SOS 표를 만들고 SOS1·2변수 `=` 행 짝을 쓰는 분기가 있는데 기본값 38개에는 SOS가 없어 해독하지 않았다(§8).
+state+0xf0 = 이진 열 수(`State::nbin`, `3cd406` 경계 반올림이 센다). SOS(+0x1f8 > 0)가 있으면 먼저 `a85f71`로 열→SOS 표를 만들고 SOS1·2변수 `=` 행 짝을 쓰는 분기가 있는데 기본값 38개에는 SOS가 없어 해독하지 않았다(§8).
 ```
 visited = calloc(m); inl = calloc(n)              // visited는 호출 내내 지우지 않는다
 for b in 0..n { if vt[b] != 'B' { continue }

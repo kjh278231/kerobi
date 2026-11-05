@@ -6,6 +6,7 @@
 // Ported comparisons keep the original's form (`!(a < b)` differs from `a >= b` on NaN), and loops index several
 // parallel arrays at once.
 #![allow(clippy::neg_cmp_op_on_partial_ord, clippy::needless_range_loop)]
+pub mod clique;
 pub mod driver;
 mod lists;
 pub mod state;
