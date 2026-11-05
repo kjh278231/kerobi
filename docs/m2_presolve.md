@@ -20,7 +20,8 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | ~~`m2-spine-b`~~ (완료, 병합) | 패스 루프 해독. phase(0..1) > round(0..4) > 패스 p(전역) > 내부 i(−5부터). 카운터는 ebx. 내부 반복 7카운트, 바깥 패스 22 + [p<3] + [round==0 && k==0] + [k==0]. 인라인 I→B·PREPARTOBJ·함의 bound·쌍대 이진화 후보 | [m2_spine_b.md](m2_spine_b.md) |
 | ~~`m2-spine-c`~~ (완료, 병합 `e492342`) | 라운드 후 단계 해독. 라운드 0–4 × 바깥 반복 2, PRELIMIT 카운트 round 0은 19, 이후 16. 호출 없이 세는 곳 목록 | [m2_spine_c.md](m2_spine_c.md) |
 | ~~`m2-spine-d`~~ (완료, 병합) | FINAL 단계 해독. 두 번째 probing 뒤 ρ > 1e-4면 라운드 루프 재시작(최대 1회), 마무리 사슬 `52cba4`→`521497`→`470936`→`57999f`→{`36ddf2`+inline 쌍대 고정}→inline implied int. 카운트 C1–C23 | [m2_spine_d.md](m2_spine_d.md) |
-| `../rsolver-m2-probe` / `m2-probe` | probing 해독 완료(병합, [m2_red_probe.md](m2_red_probe.md), 8개 모델 11호출이 모델을 바꿈, Python 재현 비트 일치). 지금 상태 쓰기와 무관한 부분(probing 행렬, `4e48f7` 엔진, conflict graph) 포팅. 후처리(고정·집계·lifting·레코드)는 inner의 보조 함수 병합 뒤 | |
+| ~~`m2-probe`~~ (완료, 병합 `54125bd`) | probing `4d3a1d` 전체 포팅(`probe*.rs`, `conflict.rs`, `subst.rs`). 엔진 62/62 패스 비트 일치(`tools/probe_check.py`), 쓰기 13호출 일치(`tools/probe_apply_check.py`). sweep에서 `probe` 첫 불일치 0 | [m2_red_probe.md](m2_red_probe.md) |
+| `../rsolver-m2-outer-b` / `m2-outer-b` | 바깥 패스 중간: `4030c9` 지배 열, `414c03`/`414c53`→`40d2bc` 비영 소거, `36ee92`, `3e40d1`, `37f484` MIP 분기, `418542` | `docs/m2_red_outer_b.md` |
 | `../rsolver-m2-clique` / `m2-clique` | clique 해독 완료(병합, [m2_red_clique.md](m2_red_clique.md)). `451bed` 포팅·병합(`df6d510`, 픽스처 5개 비트 일치, `3de18e` 경로는 미구현). inner 보조 함수 병합 뒤 `45885d`/`52be10`/`46a62d` | |
 | `../rsolver-m2-outer-a` / `m2-outer-a` | 바깥 패스 앞쪽 해독 → 포팅: `3e5363`, `3ff744` MIP 분기, `57627e`, `578fd2`, `374521`, `5431ee` | `docs/m2_red_outer_a.md` |
 | ~~`m2-inner`~~ (완료, 병합 `a4dcbf1`) | 내부 루프 7개 + inline 함의 bound 포팅. 덤프 비교 147–225/호출 전부 일치(`tools/mip_dump_check.py`), 레코드 38/38 바이트 일치(`tools/mip_rec_check.py`, `CoreModel.mip_post_records`). 공용 보조 API는 `helpers.rs`(m2_red_inner.md §11) | [m2_red_inner.md](m2_red_inner.md) |
@@ -29,7 +30,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 spine 노트 b·c·d대로 `3cd406`의 단계(≤2) × 라운드(≤5) × 패스 × 내부 반복, 라운드 끝, FINAL을 옮겼다. 카운트 62곳(reduction 없이 세는 I→B·PREPARTOBJ·함의 bound·쌍대 이진화·패스 끝·FINAL 쌍대 고정 포함), timer 28개(시작마다 +1, 한도 B·0.5B·2B·4B·3B), 스냅숏 셋과 진척도 판정 셋, inline I→B·PREPARTOBJ·열 타입 통계·두 번째 probing 판정. 아직 없는 reduction은 `stubs.rs`의 stub(아무것도 안 바꾸고 0)이다. **포팅 = stub을 지우고 같은 이름의 `impl State` 메서드를 새 파일에 둔다.** 확인: 아무것도 안 바뀌는 5개 모델의 총 카운트가 Gurobi 호출 기록과 같다(neos5 62, 두 번째 probing이 없는 모델 61).
 
 ### 남은 묶음 (아직 담당 없음, 동시 3개 한도 안에서 차례로)
-- outer-b: `4030c9` 지배 열, `414c03`/`414c53` → `40d2bc` 비영 소거, `36ee92`, `3e40d1`, `37f484` MIP 분기(LP 포트 있음), `418542`, `5466a7`, `45feaa`, `47c445` MIP 분기, inline 쌍대 이진화(작업량만).
+- outer-c: `5466a7`, `45feaa`, `47c445` MIP 분기, inline 쌍대 이진화(작업량만).
 - round-end: `58d4ce`, `5577ba` MIP 분기(LP 포트 있음), `5a9282`, `5ab429`, `59c193`, `55a779`, `594c0c`, `423e35`, `419ffc`, `5a1293`, `5a4d8b`/`5a5eff`, `5aaaf7`, `838543` mod-k, `579e67`, `5a04fc`.
 - final: `52cba4`, `521497`, `470936` sparsify(LP 포트 호출 지점만), `57999f`, inline 쌍대 고정, inline implied int 척도.
 
