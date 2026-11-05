@@ -204,7 +204,8 @@ def main():
         if want is None or it in want:
             c = mdl._callback._cbdata
             B = L(api.PyCapsule_GetPointer(c, api.PyCapsule_GetName(c)) + 0x68)
-            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L(mp + 0xe8), chol=a.chol or a.solve, solve=a.solve,
+            # with presolve the barrier runs on the presolved model (model+0x1d8)
+            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L((L(mp + 0x1D8) or mp) + 0xe8), chol=a.chol or a.solve, solve=a.solve,
                              Mp=mp)
 
     model.optimize(cb)
