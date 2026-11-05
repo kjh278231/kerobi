@@ -113,6 +113,9 @@ pub struct State {
     /// *(+0x458): deterministic work; +0x448 multiplier
     pub work: f64,
     pub work_mult: f64,
+    /// +0x08 problem type from the constructor (`5118e6`): 1 PreDepRow auto on and `50de61` takes all rows,
+    /// 4 network (390989's reduced mode `local_38`)
+    pub ptype: i32,
     /// +0x1dc GURO_PAR_PRELIMIT (`3ba9de` sets -1 once the work passes the budget) and +0x1f0 the budget
     pub prelimit: i32,
     pub budget: f64,
@@ -157,8 +160,9 @@ pub(super) fn guarded_add(old: f64, t: f64, up: bool) -> f64 {
 
 /// `5118e6` LAB_0057d177, problem types 5 (all -1 entries, `>= 1` rows) and 6 (all +1, rhs 1): when every column
 /// is a 0/1 column (fixed at 0 or 1, or lb 0 and ub >= 1) and one has a finite ub, the rows imply the ubs, which are
-/// freed: type 5 on columns with cost > 0.001, type 6 on unfixed columns with entries. Returns the work.
-fn relax_zero_one(md: &Model, mu: f64, ub: &mut [f64], ty: i32) -> f64 {
+/// freed: type 5 on columns with cost > 0.001, type 6 on unfixed columns with entries. Returns the work and
+/// whether any ub was freed (else the type falls back to 0).
+fn relax_zero_one(md: &Model, mu: f64, ub: &mut [f64], ty: i32) -> (f64, bool) {
     const INF: f64 = rsolver_model::INFINITY; // env+0x2458 (GURO_PAR_INFBOUND) at its default
     let n = md.num_vars();
     let mut finite = 0;
@@ -166,7 +170,7 @@ fn relax_zero_one(md: &Model, mu: f64, ub: &mut [f64], ty: i32) -> f64 {
         let (l, u) = (md.lb[j], md.ub[j]);
         let ok = if u - l < 1e-10 { !(1e-10 <= l.abs() && 1e-10 <= (l - 1.0).abs()) } else { !(1e-10 < l.abs() || u < 0.9999999999) };
         if !ok {
-            return (j as f64 + j as f64) * mu;
+            return ((j as f64 + j as f64) * mu, false);
         }
         if !(u - l < 1e-10) && u < INF {
             finite += 1;
@@ -174,20 +178,23 @@ fn relax_zero_one(md: &Model, mu: f64, ub: &mut [f64], ty: i32) -> f64 {
     }
     let nf = n as f64;
     if finite == 0 {
-        return (nf + nf) * mu;
+        return ((nf + nf) * mu, false);
     }
+    let mut freed = false;
     for j in 0..n {
         let free = if ty == 5 { ub[j] < INF && 0.001 < md.obj[j] * md.sense as f64 } else { 1e-10 <= ub[j] - md.lb[j] && md.col_len[j] != 0 };
         if free {
             ub[j] = INF;
+            freed = true;
         }
     }
-    (nf + nf) * mu + (nf + nf) * mu
+    ((nf + nf) * mu + (nf + nf) * mu, freed)
 }
 
 /// Work the constructor counts (`3a484d` with `5118e6` CSR build and `534a8b` tracker; docs/m1_presolve.md
 /// appendix A), in the original order. Checked against `tools/work_oracle.py` at PRELIMIT=1.
-fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, contiguous: bool, ub: &mut [f64]) -> f64 {
+#[allow(clippy::too_many_arguments)]
+fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, contiguous: bool, ub: &mut [f64], ptype: &mut i32) -> f64 {
     let mu = if nnz <= 100_000 { 1.0 } else { (nnz as f64 / 1e4).log10().sqrt() };
     let (nf, mf, zf) = (n as f64, m as f64, nnz as f64);
     let mut w = nf;
@@ -210,9 +217,9 @@ fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, cont
     }
     w += (nf + nf) * mu;
     w += (mf + mf) * mu;
-    // `5118e6` problem-type scans (appendix A 11) on the model's coefficients (the `>` flip comes later). LP
-    // presolve reads the type (+0x08) only as 1 (PreDepRow auto, `50de61`) or 4 (aggregation ratio, `local_38`),
-    // not ported; types 5 and 6 only free implied ubs.
+    // `5118e6` problem-type scans (appendix A 11) on the model's coefficients (the `>` flip comes later): 1 (+-1,
+    // mostly `=`), 4 (network: columns of at most two entries, +1 and -1 alike, all `=`), 5 and 6 (0/1 covering
+    // and packing, which free implied ubs). LP presolve reads only 1 and 4 (`State::ptype`).
     let (mut p1, mut m1, mut oth) = (0, 0, 0);
     for j in 0..n {
         let b = md.col_beg[j] as usize;
@@ -234,26 +241,38 @@ fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, cont
     if maxcol >= 5 && p1 > 0 && m1 > 0 && oth == 0 {
         w += mf * mu;
         let eq = md.row_sense.iter().filter(|&&s| s == b'=').count();
-        assert!(2 * eq <= m, "5118e6 problem type 1 is not ported");
+        if m < 2 * eq {
+            *ptype = 1;
+        }
     } else if maxcol > 2 || oth != 0 || p1 != m1 {
         // env+0x26e0 < 1 and no PWL/QC/SOS hold for an LP; Method != 2 is assumed (Params has no Method)
         if oth == 0 && m1 == 0 {
             let c = lead(&|i| (md.rhs[i] - 1.0).abs() <= 1e-10);
             w += c as f64 * mu;
             if m <= c {
-                w += relax_zero_one(md, mu, ub, 6);
+                let (dw, freed) = relax_zero_one(md, mu, ub, 6);
+                w += dw;
+                if freed {
+                    *ptype = 6;
+                }
             }
         } else if oth == 0 && p1 == 0 {
             let c = lead(&|i| md.row_sense[i] != b'=' && (md.rhs[i] + 1.0).abs() <= 1e-10);
             w += (c as f64 + c as f64) * mu;
             if m <= c {
-                w += relax_zero_one(md, mu, ub, 5);
+                let (dw, freed) = relax_zero_one(md, mu, ub, 5);
+                w += dw;
+                if freed {
+                    *ptype = 5;
+                }
             }
         }
     } else {
         let c = lead(&|i| md.row_sense[i] == b'=');
         w += c as f64 * mu;
-        assert!(c < m || m == 0, "5118e6 problem type 4 is not ported");
+        if m <= c {
+            *ptype = 4;
+        }
     }
     w += mf * mu;
     w += (mf + mf) * mu;
@@ -328,7 +347,8 @@ impl State {
         let rhs = md.rhs.iter().zip(&neg).map(|(&r, &g)| if g { -r } else { r }).collect();
         let sense = md.row_sense.iter().map(|&c| if c == b'>' { b'<' } else { c }).collect();
         let mut ub = md.ub.clone();
-        let work = constructor_work(md, n, m, raw_nnz, spare, contiguous, &mut ub);
+        let mut ptype = 0;
+        let work = constructor_work(md, n, m, raw_nnz, spare, contiguous, &mut ub, &mut ptype);
         State {
             n,
             m,
@@ -368,6 +388,7 @@ impl State {
             bad_row: -1,
             work,
             work_mult: if raw_nnz <= 100_000 { 1.0 } else { (raw_nnz as f64 / 1e4).log10().sqrt() },
+            ptype,
             prelimit: i32::MAX,
             budget: 1e100,
             tracker: Tracker::new(m, n),

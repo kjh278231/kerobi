@@ -1853,8 +1853,7 @@ impl State {
         }
         let mut kept: Vec<i32> = Vec::new();
         let mut tightened = 0;
-        // state+8 (problem type) == 1 would also take this way
-        if live * 1000 <= live_nnz {
+        if self.ptype == 1 || live * 1000 <= live_nnz {
             kept = (0..m as i32).filter(|&i| 0 < self.row_cnt[i as usize]).collect();
             self.work += mf + mf;
         } else {

@@ -138,39 +138,45 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
 
 /// The reduction sequence; returns when a reduction reports a status or the call limit is reached.
 fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
+    // PreDepRow -1 (`390989` L251, before any reduction): off with PRESYMMPASSES > 0, 3 with Presolve 2, else (not
+    // Presolve 1) 3 for problem type 1 or nnz > 2.5 n (Method, state+0x100, INTBASIS, env+0x26e0 at defaults)
+    let mut dep_rows = if p.pre_dep_row != -1 {
+        p.pre_dep_row
+    } else if 0 < p.presym_passes {
+        0
+    } else if p.presolve == 2 || (p.presolve != 1 && (st.ptype == 1 || (st.n as f64) * 2.5 < st.nnz as f64)) {
+        3
+    } else {
+        0
+    };
+    // problem type 4 (network) with Presolve < 2: 390989's reduced mode `local_38`
+    let reduced = st.ptype == 4 && p.presolve < 2;
     let mut calls = 0;
-    if st.empty_and_free_rows(p.feastol) != 0 {
-        return;
-    }
-    calls += 1;
-    if st.prelimit <= calls {
-        return;
-    }
-    // `503985` fixes columns with 1e-10 < u - l <= FIXTOL; with FIXTOL < 0 (default) only for n >= 10000.
-    // shortcut: not ported; no Netlib model reaches it. Port it before running models with >= 10000 columns.
-    assert!(p.fixtol < 0.0 && st.n < 10000, "503985 (near-fixed columns) is not ported");
-    calls += 1;
-    if st.prelimit <= calls {
-        return;
+    if !reduced {
+        if st.empty_and_free_rows(p.feastol) != 0 {
+            return;
+        }
+        calls += 1;
+        if st.prelimit <= calls {
+            return;
+        }
+        // `503985` fixes columns with 1e-10 < u - l <= FIXTOL; with FIXTOL < 0 (default) only for n >= 10000.
+        // shortcut: not ported; no Netlib model reaches it. Port it before running models with >= 10000 columns.
+        assert!(p.fixtol < 0.0 && st.n < 10000, "503985 (near-fixed columns) is not ported");
+        calls += 1;
+        if st.prelimit <= calls {
+            return;
+        }
     }
     st.activity(None, p.infbound);
-    if p.prebound != 0 {
+    if !reduced && p.prebound != 0 {
         st.dual_singleton_fix(p.dual_reductions, p.infbound);
         calls += 1;
         if st.prelimit <= calls {
             return;
         }
     }
-    // PreDepRow -1 (`390989` L251): 3 when nnz > 2.5 n (Presolve 1 gives 0; Method, INTBASIS, PRESYMMPASSES at
-    // their defaults)
-    let mut dep_rows = if p.pre_dep_row != -1 {
-        p.pre_dep_row
-    } else if p.presolve == 2 || (p.presolve != 1 && (st.n as f64) * 2.5 < st.nnz as f64) {
-        3
-    } else {
-        0
-    };
-    let passes = if p.prepasses < 0 { if p.presolve == 1 { 5 } else { 100 } } else { p.prepasses };
+    let passes = if p.prepasses < 0 { if p.presolve == 1 { 5 } else if reduced { 10 } else { 100 } } else { p.prepasses };
     let mut pass_snap = st.snapshot();
     for k in 0..passes {
         let mut i = 0;
@@ -210,7 +216,8 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
             let rho = st.progress(&snap);
             let slack = (i - 5).max(0);
             i += 1;
-            if !((slack as f64) * 1e-11 < rho) {
+            // reduced mode: one round
+            if !((slack as f64) * 1e-11 < rho) || reduced {
                 break;
             }
         }
@@ -247,7 +254,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
             }
         }
         // state+0x27c (quadratic constraints) is 0 for LP: 50495e, not 451195
-        let early = p.dual_reductions && p.precrush < 2 && (k < 5 || p.presolve == 2);
+        let early = !reduced && p.dual_reductions && p.precrush < 2 && (k < 5 || p.presolve == 2);
         if st.implied_redundant_rows(p.feastol, p.infbound, p.prebound) != 0 {
             return;
         }
@@ -287,28 +294,30 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
                 return;
             }
         }
-        // parallel columns and rows (the 0.8 timer test is always true). shortcut: PREPARALLEL is not in Params
-        // and assumed at its default (1, on); add it before running with GURO_PAR_PREPARALLEL=0.
-        if p.dual_reductions {
-            // shortcut: Presolve=2 runs 51f5ab here, not ported; stop like a reached PRELIMIT. Port it with
-            // the other Presolve=2 reductions.
-            if p.presolve == 2 {
-                return;
+        // parallel columns and rows (the 0.8 timer test is always true), not in reduced mode. shortcut: PREPARALLEL
+        // is not in Params and assumed at its default (1, on); add it before running with GURO_PAR_PREPARALLEL=0.
+        if !reduced {
+            if p.dual_reductions {
+                // shortcut: Presolve=2 runs 51f5ab here, not ported; stop like a reached PRELIMIT. Port it with
+                // the other Presolve=2 reductions.
+                if p.presolve == 2 {
+                    return;
+                }
+                if st.parallel(1, tols) != 0 {
+                    return;
+                }
+                calls += 1;
+                if st.prelimit <= calls {
+                    return;
+                }
             }
-            if st.parallel(1, tols) != 0 {
+            if st.parallel(0, tols) != 0 {
                 return;
             }
             calls += 1;
             if st.prelimit <= calls {
                 return;
             }
-        }
-        if st.parallel(0, tols) != 0 {
-            return;
-        }
-        calls += 1;
-        if st.prelimit <= calls {
-            return;
         }
         // no PWL columns in LP; `50fe2b` needs DualReductions but the call counts either way
         if p.dual_reductions {
@@ -318,10 +327,10 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
         if st.prelimit <= calls {
             return;
         }
-        // aggregation; state+8 is not 4 for a general LP, so the reduced-mode guard (local_38) is off
-        if p.aggregate != 0 && (k == 0 || p.aggregate > 1) {
+        // aggregation; in reduced mode only with n < 20 m
+        if p.aggregate != 0 && (k == 0 || p.aggregate > 1) && (!reduced || st.n < st.m * 20) {
             // `390989` resolves AggFill -1 to 10 (20 when model+0xf0 is set, which Model.presolve() does not do)
-            let ap = agg::AggPar { fill: if p.agg_fill == -1 { 10 } else { p.agg_fill }, pair_agg: p.pre_pair_agg, prebound: p.prebound };
+            let ap = agg::AggPar { fill: if p.agg_fill == -1 { 10 } else { p.agg_fill }, pair_agg: p.pre_pair_agg, prebound: p.prebound, presolve: p.presolve };
             if st.aggregate(tols, &ap) != 0 {
                 return;
             }
@@ -349,7 +358,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
         }
         // `5577ba` (symmetry): pass 0 with >= 500 columns and >= 100 rows left (state+0x330, +0x258, +0x27c are 0
         // for LP, local_38 is off). Not a counted call. A verified symmetry turns automatic PreDepRow off.
-        if k == 0 && p.presym_passes < 0 && 500 <= st.n as i32 - st.cols_removed && 100 <= st.m as i32 - st.rows_removed {
+        if k == 0 && !reduced && p.presym_passes < 0 && 500 <= st.n as i32 - st.cols_removed && 100 <= st.m as i32 - st.rows_removed {
             let (nodes, work) = if 1 < p.symmetry { (5000, (st.budget / 5.0 + 1e7) * 10.0) } else { (5, st.budget / 5.0 + 1e7) };
             if 0 < st.symmetry_count(nodes, work) && p.pre_dep_row == -1 {
                 dep_rows = 0;
@@ -385,7 +394,8 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
 fn finish(st: &mut State, p: &Params, tols: &ColTols, mut calls: i32) {
     st.tracker.level = 0;
     st.reset_tracker();
-    if p.prebound != 0 {
+    // not in reduced mode (problem type 4)
+    if !(st.ptype == 4 && p.presolve < 2) && p.prebound != 0 {
         st.dual_singleton_fix(p.dual_reductions, p.infbound);
         calls += 1; // counted without a limit check
     }

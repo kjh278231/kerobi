@@ -20,6 +20,8 @@ pub struct AggPar {
     pub pair_agg: i32,
     /// GURO_PAR_PREBOUND (env+0x2544)
     pub prebound: i32,
+    /// Presolve (env+0x2424)
+    pub presolve: i32,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -73,8 +75,7 @@ impl State {
     pub fn aggregate(&mut self, t: &ColTols, ap: &AggPar) -> i32 {
         let mut mat = self.agg_lists();
         self.agg_bits(0x20, true); // 53c507
-        // state+8 (problem type) is 0 for a general LP; type 4 would use 0.1 with Presolve < 2
-        let ratio = 0.01;
+        let ratio = if ap.presolve < 2 && self.ptype == 4 { 0.1 } else { 0.01 };
         let mut cls = vec![0u8; self.n];
         let mut base = self.rows_removed;
         let mut it = 0;
@@ -950,7 +951,8 @@ impl State {
 
         // candidate columns and their class (0 both bounds needed, 1 upper only, 2 lower only, 3 implied free)
         let mu = self.work_mult;
-        let cand: Vec<i32> = if ccnt == n && first {
+        // type 4 (network) skips the bound propagation and takes the 53c9ee list even on the first call
+        let cand: Vec<i32> = if ccnt == n && first && self.ptype != 4 {
             let mut lc = self.lb.clone();
             let mut uc = self.ub.clone();
             let all: Vec<i32> = (0..m as i32).collect();
@@ -982,7 +984,7 @@ impl State {
             (0..n as i32).collect()
         } else {
             // 53c9ee: columns flagged 0x20, then the columns of rows flagged 0x20
-            assert!(!first, "37f484 entered with a partial column list (53af0f path) is not ported");
+            assert!(!first || self.ptype == 4, "37f484 entered with a partial column list (53af0f path) is not ported");
             let mu3 = mu * 3.0;
             self.work += ccnt as f64 * mu3;
             let mut l = Vec::new();
