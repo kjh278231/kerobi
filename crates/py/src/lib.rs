@@ -6,6 +6,8 @@ use pyo3::prelude::*;
 /// [0, hi − lo] appended after the variables, as the MPS reader does for RANGES.
 /// Rows of a built model: (sparse coefficients, lower, upper).
 type Rows = Vec<(Vec<(usize, f64)>, f64, f64)>;
+/// MIP postsolve records: (type, data bytes, padding ranges, pointer offsets).
+type Recs = Vec<(i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>)>;
 
 #[pyfunction]
 fn build_model(
@@ -155,8 +157,7 @@ impl PyCoreModel {
     }
     /// MIP presolve postsolve records in push order as (type, data bytes in Gurobi's layout, padding byte ranges,
     /// pointer field offsets); pointers hold their target's offset from the data start (tools/mip_rec_check.py).
-    #[allow(clippy::type_complexity)]
-    fn mip_post_records(&self, params: Vec<(String, f64)>) -> Vec<(i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>)> {
+    fn mip_post_records(&self, params: Vec<(String, f64)>) -> Recs {
         let p = rsolver_mip::Params::from_pairs(&params);
         let mut st = rsolver_mip::state::State::new(&self.inner, &p);
         if rsolver_mip::reduce(&mut st, &p).is_ok() {
@@ -363,7 +364,7 @@ fn mip_dump_run<'py>(py: Python<'py>, name: &str, d: &Bound<'py, pyo3::types::Py
     r.set_item("extra", extra)?;
     r.set_item("bad_row", st.bad_row)?;
     r.set_item("bad_col", st.bad_col)?;
-    let recs: Vec<(i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>)> = st.post.iter().map(|x| {
+    let recs: Recs = st.post.iter().map(|x| {
         let l = x.layout();
         (x.kind(), l.bytes, l.pads, l.ptrs)
     }).collect();
