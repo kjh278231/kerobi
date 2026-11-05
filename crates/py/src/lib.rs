@@ -153,6 +153,20 @@ impl PyCoreModel {
         }
         (st.work, st.ptype, st.nint, st.nbin, st.eq_rows, st.rows_removed, st.cols_removed, st.tracker.level)
     }
+    /// MIP presolve postsolve records in push order as (type, data bytes in Gurobi's layout, padding byte ranges,
+    /// pointer field offsets); pointers hold their target's offset from the data start (tools/mip_rec_check.py).
+    #[allow(clippy::type_complexity)]
+    fn mip_post_records(&self, params: Vec<(String, f64)>) -> Vec<(i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>)> {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let mut st = rsolver_mip::state::State::new(&self.inner, &p);
+        if rsolver_mip::reduce(&mut st, &p).is_ok() {
+            rsolver_mip::finish(&mut st, &p);
+        }
+        st.post.iter().map(|r| {
+            let l = r.layout();
+            (r.kind(), l.bytes, l.pads, l.ptrs)
+        }).collect()
+    }
     /// Presolve, then uncrush the presolved solution (x, dj, status as `363daa` reads them) back to this model:
     /// (basis, x, dual). `aligns` (two parities per record, oldest first) overrides the arena simulation.
     #[pyo3(signature = (params, x, dj, st, aligns=None))]
@@ -298,11 +312,71 @@ fn read_model(py: Python<'_>, path: String) -> PyResult<PyCoreModel> {
     m.map(|inner| PyCoreModel { inner }).map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
 }
 
+/// Run one MIP presolve reduction (`State::run_named`) on a state given as a dict in `tools/mip_state_dump.js`'s
+/// field names (tracker flattened by tools/mip_dump_check.py); returns the resulting state as such a dict plus
+/// `ret`, `extra`, `bad_row`, `bad_col` and `recs` (new records as in `mip_post_records`).
+#[pyfunction]
+fn mip_dump_run<'py>(py: Python<'py>, name: &str, d: &Bound<'py, pyo3::types::PyDict>, params: Vec<(String, f64)>)
+                     -> PyResult<Bound<'py, pyo3::types::PyDict>> {
+    use rsolver_mip::dump::{Parts, QueueParts};
+    fn g<'py, T: FromPyObject<'py>>(d: &Bound<'py, pyo3::types::PyDict>, k: &str) -> PyResult<T> {
+        d.get_item(k)?.ok_or_else(|| pyo3::exceptions::PyKeyError::new_err(k.to_string()))?.extract()
+    }
+    let q = |k: &str| -> PyResult<QueueParts> {
+        let lists: Vec<Vec<i32>> = g(d, &format!("{k}_list"))?;
+        let cache: Vec<Option<Vec<i32>>> = g(d, &format!("{k}_cache"))?;
+        let cache2: Vec<Option<Vec<i32>>> = g(d, &format!("{k}_cache2"))?;
+        let a: Vec<usize> = g(d, &format!("{k}_a"))?;
+        let b: Vec<usize> = g(d, &format!("{k}_b"))?;
+        Ok(QueueParts { flag: g(d, &format!("{k}_flag"))?, a: [a[0], a[1], a[2]], b: [b[0], b[1], b[2]],
+                        list: [lists[0].clone(), lists[1].clone(), lists[2].clone()],
+                        cache: [cache[0].clone(), cache[1].clone(), cache[2].clone()],
+                        cache2: [cache2[0].clone(), cache2[1].clone(), cache2[2].clone()] })
+    };
+    let active: Vec<bool> = g(d, "active")?;
+    let parts = Parts {
+        n: g(d, "n")?, m: g(d, "m")?, lb: g(d, "lb")?, ub: g(d, "ub")?, obj: g(d, "obj")?, rhs: g(d, "rhs")?,
+        sense: g(d, "sense")?, vtype: g(d, "vtype")?, row_cnt: g(d, "row_cnt")?, col_cnt: g(d, "col_cnt")?,
+        inf_max: g(d, "inf_max")?, inf_min: g(d, "inf_min")?, act_max: g(d, "act_max")?, act_min: g(d, "act_min")?,
+        mult_lo: g(d, "mult_lo")?, mult_hi: g(d, "mult_hi")?, col_flag: g(d, "col_flag")?, objcon: g(d, "objcon")?,
+        nnz: g(d, "nnz")?, work: g(d, "work")?, work_mult: g(d, "work_mult")?, counters: g(d, "counters")?,
+        nfree: g(d, "nfree")?, npend: g(d, "npend")?, rows: g(d, "rows")?, cols: g(d, "cols")?,
+        level: g(d, "level")?, active: [active[0], active[1], active[2]], r: q("r")?, c: q("c")?,
+    };
+    let p = rsolver_mip::Params::from_pairs(&params);
+    let mut st = rsolver_mip::state::State::from_parts(&parts, &p);
+    let (ret, extra) = st.run_named(name, &p)
+        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err(format!("unknown reduction {name}")))?;
+    let o = st.to_parts();
+    let r = pyo3::types::PyDict::new(py);
+    macro_rules! put { ($($k:ident),*) => { $( r.set_item(stringify!($k), o.$k.clone())?; )* } }
+    put!(n, m, lb, ub, obj, rhs, sense, vtype, row_cnt, col_cnt, inf_max, inf_min, act_max, act_min, mult_lo, mult_hi,
+         col_flag, objcon, nnz, work, work_mult, counters, nfree, npend, rows, cols, level);
+    r.set_item("active", o.active.to_vec())?;
+    for (k, qp) in [("r", &o.r), ("c", &o.c)] {
+        r.set_item(format!("{k}_flag"), qp.flag.clone())?;
+        r.set_item(format!("{k}_a"), qp.a.to_vec())?;
+        r.set_item(format!("{k}_b"), qp.b.to_vec())?;
+        r.set_item(format!("{k}_list"), qp.list.to_vec())?;
+    }
+    r.set_item("ret", ret)?;
+    r.set_item("extra", extra)?;
+    r.set_item("bad_row", st.bad_row)?;
+    r.set_item("bad_col", st.bad_col)?;
+    let recs: Vec<(i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>)> = st.post.iter().map(|x| {
+        let l = x.layout();
+        (x.kind(), l.bytes, l.pads, l.ptrs)
+    }).collect();
+    r.set_item("recs", recs)?;
+    Ok(r)
+}
+
 #[pymodule]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(build_model, m)?)?;
     m.add_function(wrap_pyfunction!(read_model, m)?)?;
     m.add_function(wrap_pyfunction!(sort_desc, m)?)?;
+    m.add_function(wrap_pyfunction!(mip_dump_run, m)?)?;
     m.add_class::<PyCoreModel>()?;
     m.add("INF", f64::INFINITY)
 }
