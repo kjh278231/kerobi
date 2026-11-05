@@ -220,3 +220,14 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 - 하위 에이전트 "CHUZR 모드 1 명세"(general-purpose)는 사용 한도로 중간에 멈췄다. 새 세션에서는 다시 띄운다(같은 요청: `1bae9c` L420–800 모드 1 분기, `2896a3`·`1c8477` 모드 1, `full_init`, 문턱 ×1.1의 비교 대상, P+0x28의 의미; 현재 Rust `pricing.rs`의 `full_init`/`full_pick`/`full_touch`와의 차이). 다른 하위 에이전트(48d5f·FT/BTRAN·primal 명세, Hager 표)는 끝났고 결과는 문서에 옮겼다.
 - Herdr 점검 pane `w4:pD`(이 탭의 형제 pane)는 비어 있다. 마지막 실행은 `sh tools/m1check.sh`(Method 1 64개, 결과 커밋됨). 새 세션에서도 이 pane을 다시 쓴다.
 - 스크래치(`/tmp/claude-1000/…/scratchpad`)의 `one.py`·`lim.py`·`sortsim.py`·`viol.py`와 오라클 스냅숏은 세션 전용이다. 필요하면 다시 만든다(`one.py`: 한 모델 풀고 기준값과 비교, `lim.py`: IterationLimit로 진행 확인).
+
+### 9.7 warm-start dual 입구 (LP 드라이버·crossover용, 2026-11-06)
+
+- `rsolver_lp::simplex::solve_model_warm(md: &Model, vbasis: &[i32], cbasis: &[i32], iter_limit: u64, want_trace: bool) -> LpResult`
+  - `vbasis`: 구조 열 n개, `cbasis`: 행 m개. Gurobi VBasis/CBasis 코드(0 기저, −1 하한, −2 상한, −3 superbasic·자유).
+  - 스케일된 작업 공간에서 dual로 시작하고(`6268b`에 기저를 넘긴 경로, `534f7` param_2 ≠ 0), 끝에 `solve_model`과 같은 비스케일 재확인(`2e9ae`)을 한다.
+  - 엔진 단의 같은 입구: `Engine::solve_warm(&mut self, vbasis, cbasis) -> Status`.
+- 시작 처리: Full pricing(P+0x40 = 1), 재분해 주기 min(⌊m^0.7⌋, max(20, ⌊m^0.65⌋)), 원래 비용, 작은 쌍대 위반은 SHIFT, 정확한 DSE 노름, 그 뒤 primal↔dual 교대(`drive`). 특이 기저는 보통 재분해처럼 slack으로 메운다.
+- `LpResult::basis`(새 필드): 최종 기저를 같은 코드로 n + m개 돌려준다(내부 −4 고정은 −1).
+- shortcut: superbasic·자유 비기저는 0에 둔다(bound 밖 비기저 값 없음), 기저 수가 m이 아니면 crash 시작으로 돌아간다, 첫 분해의 `48d5f` RANDSMALL 대신 재풀이의 SHIFT를 쓴다.
+- 시험: `cargo test -p rsolver-lp warm`(최적 기저에서 반복 0, 반복 5에서 멈춘 기저에서 같은 최적).

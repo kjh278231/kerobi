@@ -46,7 +46,7 @@ def dump(spx, it, full):
                   "f110": I(spx + 0x110), "rec": D(spx + 0x140), "x3e0": D(spx + 0x3e0), "sw": I(spx + 0x35c),
                   "x2a8": D(spx + 0x2a8)}, "q": I(spx + 0x2fc), "refactor_reason": I(spx + 0x294),
            # last pivot: FTRAN column α_q (spx+0x210) and τ = B⁻¹ρ (spx+0x218) as {cnt, idx*, val*}, α_r, β = ‖ρ‖²
-           "aq": sparse(L(spx + 0x210)), "tau": sparse(L(spx + 0x218)), "ar": D(spx + 0x300).hex(),
+           "aq": sparse(L(spx + 0x210)), "tau": sparse(L(spx + 0x218)), "ar": D(spx + 0x300).hex(), "aq308": D(spx + 0x308).hex(),
            "beta": D(spx + 0x310).hex(),
            "vstat": arr(L(spx + 0x168), n + m, "i"), "d": arr(L(spx + 0x1e0), n + m), "xB": arr(L(spx + 0x1e8), m),
            "c": arr(L(spx + 0x98), n + m), "l": arr(L(spx + 0xa8), n + m), "u": arr(L(spx + 0xb0), n + m),

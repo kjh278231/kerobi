@@ -88,6 +88,7 @@ pub struct Engine<'a> {
     rhs_max: f64,
     /// Last dual pivot for snapshots: τ = B⁻¹ρ by position, α_r, β = ‖ρ‖².
     last_dse: (Vec<f64>, f64, f64),
+    last_aq_row: f64,
     /// `RSOLVER_SNAP` / `RSOLVER_BFRT` dump files, read once.
     snap_path: Option<String>,
     bfrt_path: Option<String>,
@@ -148,6 +149,7 @@ impl<'a> Engine<'a> {
             col_nnz: 0,
             rhs_max: 0.0,
             last_dse: (Vec::new(), 0.0, 0.0),
+            last_aq_row: 0.0,
             snap_path: std::env::var("RSOLVER_SNAP").ok(),
             bfrt_path: std::env::var("RSOLVER_BFRT").ok(),
             c8: false,
@@ -525,11 +527,11 @@ impl<'a> Engine<'a> {
             .map(|j| self.d[j])
             .collect();
         let line = format!(
-            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",\"aqrow\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
             self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr),
             self.pr.allow, self.lu.n_updates, self.pr.avg, hex(&self.pr.score), self.pr.cost_mode, hex(&self.pr.row_cost),
             hex(&self.pr.var_cost), self.lu.n_singleton, self.lu.eta_nnz(), self.upd_cols,
-            hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), self.pt_rc, self.pt_deg, self.pt_deg0,
+            hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), hexf(self.last_aq_row), self.pt_rc, self.pt_deg, self.pt_deg0,
             self.pt_it0
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
@@ -1079,6 +1081,7 @@ impl<'a> Engine<'a> {
             let ar = if arq.abs() >= 1e-8 { arq } else if arq < 0.0 { -1e-8 } else { 1e-8 };
             if self.snap_path.is_some() {
                 self.last_dse = (taup.clone(), arq, beta);
+                self.last_aq_row = alpha[q];
             }
             self.w[r] = if beta == 0.0 { 1e-8 } else { (beta / ar) / ar };
             let supp: Vec<usize> = (0..self.m).filter(|&p| col[p] != 0.0).collect(); // α_q support, position order
@@ -1458,6 +1461,44 @@ impl<'a> Engine<'a> {
     /// `2e9ae` on the unscaled workspace: with the basis of a scaled optimum, recompute x_B and d; if a basic
     /// violates its bounds by more than FeasTol or a nonbasic d its sign by more than OptTol, go on with the dual from
     /// that basis. Returns None when the basis is already optimal here.
+    /// Warm-start dual (`6268b` entered with a basis, `534f7` param_2 ≠ 0): the basis is taken from `vbasis` (n
+    /// structurals) and `cbasis` (m rows) in Gurobi's VBasis/CBasis codes (0 basic, −1 at lower, −2 at upper, −3
+    /// superbasic or free), the dual starts in Full pricing with the refactor interval max(20, ⌊m^0.65⌋), true costs
+    /// with small dual infeasibilities shifted away, exact DSE norms, and runs the usual primal/dual hand-over.
+    /// A singular basis gets slacks like any refactor.
+    /// shortcut: superbasic and free nonbasics sit at 0 (no nonbasic values off their bounds), a basis without exactly
+    /// m basics falls back to the crash start, and the first-factor handling of `48d5f` (RANDSMALL) is the SHIFT of
+    /// a re-solve.
+    pub fn solve_warm(&mut self, vbasis: &[i32], cbasis: &[i32]) -> Status {
+        let (n, m) = (self.n, self.m);
+        let mut vstat = vec![0i32; n + m];
+        let mut pos = 0usize;
+        for j in 0..n + m {
+            let s = if j < n { vbasis[j] } else { cbasis[j - n] };
+            let (l, u) = (self.spx.l[j], self.spx.u[j]);
+            vstat[j] = if s == 0 {
+                pos += 1;
+                pos as i32 - 1
+            } else if u - l <= 0.0 {
+                -4 // FIXTOL = 0
+            } else if s == -2 && u < INFINITY || s != -3 && l <= -INFINITY && u < INFINITY {
+                -2
+            } else if s == -3 || l <= -INFINITY {
+                -3
+            } else {
+                -1
+            };
+        }
+        if pos != m {
+            return self.solve(1);
+        }
+        self.set_basis(vstat);
+        self.pr.mode = 1;
+        self.lu_interval = self.lu_interval.min(((m as f64).powf(0.65) as usize).max(20));
+        self.dual_resume();
+        self.drive(false)
+    }
+
     pub fn resolve_unscaled(&mut self, vstat: Vec<i32>) -> Option<Status> {
         self.set_basis(vstat);
         self.refactor();
@@ -1584,6 +1625,14 @@ pub struct LpResult {
     pub x: Vec<f64>,
     pub iter: u64,
     pub trace: Vec<TraceRow>,
+    /// Final basis in Gurobi's VBasis/CBasis codes: n structurals then m rows (0 basic, −1 lower or fixed, −2 upper,
+    /// −3 superbasic/free).
+    pub basis: Vec<i32>,
+}
+
+/// Gurobi basis codes of an engine status array (internal −4 fixed reads as −1, positions as 0).
+fn gurobi_basis(vstat: &[i32]) -> Vec<i32> {
+    vstat.iter().map(|&s| if s >= 0 { 0 } else if s == -4 { -1 } else { s }).collect()
 }
 
 /// LP driver (`0c3d0d` without presolve): scaled workspace, simplex, unscaled solution and objective.
@@ -1593,8 +1642,31 @@ pub fn solve_model(md: &rsolver_model::Model, method: i32, iter_limit: u64) -> L
     solve_model_opts(md, method, iter_limit, true)
 }
 
+/// LP solve by the dual simplex from a given basis (`Engine::solve_warm`): `vbasis` n structurals, `cbasis` m rows
+/// in Gurobi's VBasis/CBasis codes, on the scaled workspace of `md`, with the unscaled re-check of `solve_model`.
+/// For the postsolve re-solve of the LP driver and for crossover.
+pub fn solve_model_warm(
+    md: &rsolver_model::Model,
+    vbasis: &[i32],
+    cbasis: &[i32],
+    iter_limit: u64,
+    want_trace: bool,
+) -> LpResult {
+    solve_model_run(md, -1, iter_limit, want_trace, Some((vbasis, cbasis)))
+}
+
 /// `solve_model` with the per-iteration trace optional (`want_trace` false: `LpResult::trace` stays empty).
 pub fn solve_model_opts(md: &rsolver_model::Model, method: i32, iter_limit: u64, want_trace: bool) -> LpResult {
+    solve_model_run(md, method, iter_limit, want_trace, None)
+}
+
+fn solve_model_run(
+    md: &rsolver_model::Model,
+    method: i32,
+    iter_limit: u64,
+    want_trace: bool,
+    warm: Option<(&[i32], &[i32])>,
+) -> LpResult {
     let mut spx = Spx::new(md);
     if md.sense < 0 {
         for c in &mut spx.c {
@@ -1604,7 +1676,10 @@ pub fn solve_model_opts(md: &rsolver_model::Model, method: i32, iter_limit: u64,
     let mut e = Engine::new(&spx);
     e.iter_limit = iter_limit;
     e.trace_on = want_trace;
-    let status = e.solve(method);
+    let status = match warm {
+        Some((vb, cb)) => e.solve_warm(vb, cb),
+        None => e.solve(method),
+    };
     if std::env::var("RSOLVER_DEBUG").is_ok() {
         let xs = e.x();
         for j in 0..spx.n + spx.m {
@@ -1636,11 +1711,47 @@ pub fn solve_model_opts(md: &rsolver_model::Model, method: i32, iter_limit: u64,
             let s2 = md.sense as f64;
             trace.extend(e2.trace.iter().map(|&(k, z, p, d, pt)| (k, z / s2 + md.objcon, p, d, pt)));
             path.extend(e2.path.iter().copied());
-            return LpResult { status: st, obj, x, iter: e2.iter, trace, path };
+            return LpResult { status: st, obj, x, iter: e2.iter, trace, path, basis: gurobi_basis(&e2.vstat) };
         }
     }
     let xs = e.x();
     let x: Vec<f64> = (0..spx.n).map(|j| xs[j] * spx.scaling.col[j]).collect();
     let obj = md.obj.iter().zip(&x).map(|(c, x)| c * x).sum::<f64>() + md.objcon;
-    LpResult { status, obj, x, iter: e.iter, trace, path }
+    LpResult { status, obj, x, iter: e.iter, trace, path, basis: gurobi_basis(&e.vstat) }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn warm_start_from_the_optimal_basis_takes_no_pivots() {
+        for name in ["afiro", "sc50a", "adlittle"] {
+            let path = format!("{}/../../../re/bench/data/netlib/{name}.mps.gz", env!("CARGO_MANIFEST_DIR"));
+            let md = rsolver_model::mps::read_file(&path).unwrap();
+            let cold = solve_model_opts(&md, 1, u64::MAX, false);
+            assert_eq!(cold.status, Status::Optimal);
+            let n = md.obj.len();
+            let warm = solve_model_warm(&md, &cold.basis[..n], &cold.basis[n..], u64::MAX, false);
+            assert_eq!(warm.status, Status::Optimal, "{name}");
+            assert_eq!(warm.iter, 0, "{name}");
+            assert!((warm.obj - cold.obj).abs() <= 1e-9 * cold.obj.abs().max(1.0), "{name} {} {}", warm.obj, cold.obj);
+        }
+    }
+
+    #[test]
+    fn warm_start_from_an_intermediate_basis_reaches_the_optimum() {
+        for name in ["afiro", "sc50a", "adlittle", "kb2"] {
+            let path = format!("{}/../../../re/bench/data/netlib/{name}.mps.gz", env!("CARGO_MANIFEST_DIR"));
+            let md = rsolver_model::mps::read_file(&path).unwrap();
+            let cold = solve_model_opts(&md, 1, u64::MAX, false);
+            let part = solve_model_opts(&md, 1, 5, false);
+            assert_eq!(part.status, Status::IterLimit, "{name}");
+            let n = md.obj.len();
+            let warm = solve_model_warm(&md, &part.basis[..n], &part.basis[n..], u64::MAX, false);
+            assert_eq!(warm.status, Status::Optimal, "{name}");
+            assert!(warm.iter > 0, "{name}");
+            assert!((warm.obj - cold.obj).abs() <= 1e-6 * cold.obj.abs().max(1.0), "{name} {} {}", warm.obj, cold.obj);
+        }
+    }
 }
