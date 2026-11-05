@@ -167,7 +167,10 @@ class Model:
         if self._core is None:
             raise GurobiError(10024, "presolve of a model built in Python is not ported yet (M1)")
         q = Model()
-        q._core = self._core.presolve([(k, float(v)) for k, v in self.Params.items() if isinstance(v, (int, float))])
+        try:
+            q._core = self._core.presolve([(k, float(v)) for k, v in self.Params.items() if isinstance(v, (int, float))])
+        except RuntimeError as e:  # presolve proved the MIP infeasible: gurobipy raises with errno -1
+            raise GurobiError(-1, str(e)) from None
         q.ModelName, q.ModelSense, q.Params = q._core.name, q._core.sense, dict(self.Params)
         return q
 

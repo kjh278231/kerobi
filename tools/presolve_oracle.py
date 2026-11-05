@@ -20,14 +20,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
     ap.add_argument("--param", action="append", default=[])
+    ap.add_argument("--src", help="read the models from DIR/<name>.mps instead of the instance list")
     ap.add_argument("names", nargs="*")
     a = ap.parse_args()
     import gurobipy as gp
     params = {k: float(v) if "." in v or "e" in v else int(v) for k, v in (p.split("=", 1) for p in a.param)}
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    insts = instances()
-    names = a.names or [n for n, p in insts.items() if p.parent.name == "netlib"]
+    insts = {p.stem: p for p in Path(a.src).glob("*.mps")} if a.src else instances()
+    names = a.names or [n for n, p in insts.items() if a.src or p.parent.name == "netlib"]
     with tempfile.TemporaryDirectory() as tmp, open(out / "stats.tsv", "w") as st:
         st.write("instance\t" + "\t".join(["removed", "ineq2eq", "tightened", "presolved"]) + "\n")
         for name in names:
