@@ -26,15 +26,23 @@
 |---|---|---|
 | `bench/gurobi_bar_nopre/` | Method=2, Presolve=0, Crossover=0, Threads=1, WorkLimit 60 (LP 64개) | `tools/parity.py capture`. 64/64 OPTIMAL. BarIterCount 7(afiro 등)–130(perold). `summary.json`의 `log.barstats`에 "Barrier statistics"(Free vars, AA' NZ, Factor NZ, Factor Ops) |
 
+- **결정성**: 같은 설정으로 다시 캡처해 비교하면 64/64가 상태·BarIterCount·Barrier statistics·BARRIER 콜백 궤적(repr) 모두 같다(`bench/gurobi_bar_determinism.csv`, 2026-11-05, 다른 에이전트가 Gurobi 오라클을 돌리는 부하 중). 따라서 corrector 수 자동 조정 등은 벽시계에 기대지 않는다고 본다(코드 확인은 docs/m3_ipm.md).
 - 64개 모두 Dense cols가 0이다(밀집 열 검출은 m ≥ 1000에서만 돈다). Free vars가 있는 것은 4개(49, 72, 1, 2).
 - BARRIER 콜백 값(`trace.csv.gz`의 `barrier` 행)의 PRIMINF는 로그의 Primal 잔차와 다른 노름이다(afiro 반복 0: 4471 대 2.27e3).
 
 ## 3. 오라클
 
 - BARRIER 콜백의 cbdata(`model._callback._cbdata` 캡슐) **+0x68이 B**다(B+0x18 = B+0x1c = m, B+0x20 = n, `2ca086` L80–83).
+- F(인수 구조체, `2cd7cb`)는 B에 저장되지 않는다. `2bf1ea` 프레임의 local_98 = B+0x5c8, local_90 = B+0x5b8, local_88 = F가 붙어 있어서 주 스레드 스택에서 그 세 값을 찾는다(`tools/bar_oracle.py` `find_F`). afiro: F+0x38 = 218 = Factor NZ, F+0x60 = 2146 = Factor Ops.
+- **barrier 중의 모델 데이터 D**(사용자 model +0xe8)는 제자리에서 바뀌어 있다. (1) **스케일**: D+0x3e0 = 스케일 배열(열 n개, 행 m개, 원래 행 순서), D+0x3e8 = 목적 스케일. 값은 M1 `scale_flag3`과 같다(25fv47, perold 열·행·목적 모두 비트 일치). 즉 `2ca086` → `07d3ce`(ScaleFlag=-1)는 simplex와 같은 ScaleFlag 3 경로다. (2) **행 순열**: 행이 ordering 순열로 재배치되고 각 열의 원소도 새 행 번호 순으로 다시 정렬된다(afiro 옛 행 1→11, 2→13, 23→14, 0→17). B의 행 인덱스 배열(y 등)은 이 순서다.
 
 ## 4. 진행
 
 | 단계 | 대상 | 상태 |
 |---|---|---|
-| 0 | 호출 범위·MKL 확인, 기준값 | 완료 |
+| 0 | 호출 범위·MKL 확인, 기준값, 결정성 | 완료 |
+| 1 | 오라클(`tools/bar_oracle.py`): B 스칼라·x/y/z, F(nnz(L), ops) | 동작. 필드는 해독하면서 늘린다 |
+| 2 | ordering·symbolic(AA' NZ, Factor NZ/Ops, 순열, supernode) | 진행 중, `docs/m3_ordering.md` |
+| 3 | 표준형·초기점·잔차·반복 규칙(프로토타입) | 진행 중, `docs/m3_ipm.md` |
+| 4 | 수치 분해(supernodal LDLᵀ, `31c54b` → `2d8ee5` supernode 커널, `32af6a` Bunch–Kaufman, MKL DGEMM/DTRSM) | 대기(2의 supernode 구조 필요). `2d8e22`: F+0x178 정규화 모드 = 안전 모드·SOC면 2, 자유 변수·밀집 열이면 1, 아니면 0. 분해 뒤 모드 0이고 F+0x100 < 1e-10이면 1로 올림 |
+| 5 | Rust 본체, Python 경로(`Method=2`), `tools/parity.py capture rsolver` | 대기 |
