@@ -77,6 +77,22 @@ def cycles_lp(name, k, length):
     return "\n".join(out) + "\n"
 
 
+def paths_lp(name, k, length):
+    """Not in EXTRA: k copies of a path of `length` columns (rows x_i + x_{i+1} <= 1, cost -1, bounds [0, 1]). With
+    k=13, length=41 Gurobi reaches 5577ba (507 columns, 494 rows left) but the port's presolve already differs before
+    it, with symmetry off too (first presolved difference: ROWS line 4, port `L R0_10`, Gurobi `E R0_2`): the path
+    ends are reduced differently. Kept as a repro for that presolve gap."""
+    out = [f"NAME {name}", "ROWS", " N  OBJ"]
+    out += [f" L  R{c}_{i}" for c in range(k) for i in range(length - 1)] + ["COLUMNS"]
+    for c in range(k):
+        for i in range(length):
+            out.append(f"    X{c}_{i}  OBJ  -1")
+            out += [f"    X{c}_{i}  R{c}_{r}  1" for r in (i - 1, i) if 0 <= r < length - 1]
+    out += ["RHS"] + [f"    RHS  R{c}_{i}  1" for c in range(k) for i in range(length - 1)]
+    out += ["BOUNDS"] + [f" UP BND  X{c}_{i}  1" for c in range(k) for i in range(length)] + ["ENDATA"]
+    return "\n".join(out) + "\n"
+
+
 EXTRA = {"sym_cube8": lambda: cube_lp("sym_cube8", 8, 6e-10), "sym_cycles": lambda: cycles_lp("sym_cycles", 13, 41)}
 
 
