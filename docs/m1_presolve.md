@@ -3,15 +3,45 @@
 LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolve.md)로 옮긴다. 작업 방식은 [10 §9](10_porting.md)의 재구성 + 오라클 비트 검증이다.
 
 
-## 0. 현재 상태 (2026-11-05 밤, 목표 달성)
+## 0. 현재 상태 (2026-11-05 밤, 컨텍스트 70%로 일시 정지)
 
-- **일치(Netlib 64)**: Presolve=0 64/64, 기본값 presolved 모델 **64/64**, PRELIMIT 체크포인트 64개 × k = 1..100 전부(긴 beaconfd 102·scrs8 135·ganges 154도 확인), postsolve(uncrush `363daa`) 기본값 **59/59**(Gurobi가 uncrush를 부르지 않는 5개 제외, [m1_postsolve.md](m1_postsolve.md)).
-- **포팅 완료**: 기본값에서 `390989`가 부르는 reduction 전부. 시작(`5034e9`, `51a144`), 내부 루프, 바깥 패스(`50cc90(1)`, `50d878`, `38e49a`, `50495e`, `505077`, `3ff744`×2, `50fe2b`, 집계 `519a52`/`37f484`, `5b488d`, `538f30`+`4f79a1`, `47c445`×2), 종료 판정, 마무리(`51a144`, {`50cc90(1)`, `50d878`}, `50de61`, `50d878`), 모델 생성(PRESPLITROWS 포함). 해독 노트: 집계 [m1_presolve_agg.md](m1_presolve_agg.md), `5b488d` [m1_presolve_derived.md](m1_presolve_derived.md), `47c445` [m1_presolve_deprow.md](m1_presolve_deprow.md). 요약은 [03](03_presolve.md) §10.
-- **파일**: `crates/lp/src/presolve/` — `mod.rs`(순서), `state.rs`(상태·레코드), `reduce.rs`, `parallel.rs`, `agg.rs`, `derived.rs`, `deprow.rs`, `postsolve.rs`, `tracker.rs`, `sort.rs`. 테스트 `tests/test_presolve.py`(고정 파일 `bench/gurobi_presolve/`).
-- **지름길**(코드에 `shortcut:` 주석, 03 §10 끝): 대칭 검출 `551cc0`(PreDepRow 게이트로만 쓰임, Netlib은 늘 "대칭 없음"), 작업량 예산과 일부 작업량 항목(P2), Presolve=2 전용 reduction, 집계 prescan 특수 경로, `503985`(n ≥ 10000), Params에 없는 숨은 파라미터는 기본값 가정.
-- **오라클**: `tools/presolve_oracle.py <dir> [--param N=V]`(64개 약 10초), `tools/presolve_check.py`, uncrush는 `tools/uncrush_oracle.py`·`tools/postsolve_check.py`. 체크포인트 전수 비교는 k마다 오라클을 떠 두고 모델별로 처음 다른 k를 찾는다. 모델별 호출 번호는 `mod.rs`의 `calls += 1` 뒤 임시 `eprintln` 추적으로 얻는다(커밋하지 않는다).
-- **작업 방식**: 집계 이후는 세 에이전트를 worktree(`m1-postsolve`, `m1-deprow`, `m1-derived`)에서 병렬로 돌려 이 브랜치에 병합했다. 같은 폴더에서 둘이 cargo 빌드를 하면 서로 깨뜨리니 병렬은 worktree를 따로 쓴다.
-- **main에 합칠 때**: §8. 그리고 `crates/core`, `crates/py/src/lib.rs` 12줄의 clippy 경고 3개는 브랜치 이전 main 코드라 main을 병합하면 사라진다.
+### G2 기준별 상태
+| 기준 | 상태 | 근거 |
+|---|---|---|
+| (1) P0 기본값 presolved 모델 64/64 | **충족** | `tools/presolve_check.py <def 오라클>` match 64/64. PRELIMIT 체크포인트 64개 × k = 1..100 전부 일치(긴 beaconfd·scrs8·ganges는 154까지). 커밋 `897b82d` 이후 유지 |
+| (2) postsolve 64/64 비트 일치 | **충족** | `tools/postsolve_check.py <기본값 uncrush 캡처>` match 64/64: `363daa`가 도는 59개는 오라클 `pre_after` 입력으로 basis·x·dual 비트 일치, 나머지 5개(grow7/15/22, scsd1, scsd6)는 Gurobi도 uncrush를 안 부르고 우리도 항등. 항등 조건(아무것도 안 지움)은 64개 일치로 얻은 추정(m1_postsolve §9) |
+| (3) 47c445 포함 기본값 reduction 전부 | **reduction은 충족, 남은 것 둘** | 모든 reduction 포팅·병합(03 §10 표). 남은 것: ① 대칭 검출 `5577ba`→`551cc0`(reduction은 아니고 PreDepRow 자동값 게이트. 지금 "대칭 없음" 지름길) — 하위 에이전트 symmetry가 포팅 중. ② 작업량(+0x458)과 예산 정지 `3ba9de` — reduction은 아니지만 기본값 경로. Netlib 64개 작업량은 예산의 최대 34%(degen3)라 정지는 안 일어남(오라클로 확인). 정확한 작업량 일치는 진행 중(아래) |
+| (4) clippy 0, 테스트, 문서 | **충족** | `cargo clippy --release --workspace --all-targets` 경고 0(`85c4f28`에서 core/py의 옛 경고 3개 정리). `cargo test --release --workspace` 통과, pytest 22개 통과. 03 §10, 이 메모, 해독 노트 4개 |
+
+### 하위 에이전트 (Herdr 워크스페이스 w4, 탭 t6)
+| 이름 | pane | worktree / 브랜치 | 맡긴 일 | 상태 |
+|---|---|---|---|---|
+| symmetry | `w4:pV` | `../rsolver-symmetry` / `m1-symmetry`(시작 `85c4f28`) | `5577ba`/`551cc0`(29.6KB)+`5507cb` 등 포팅, `tools/symmetry_oracle.py`(390989의 `call 5577ba` 패치로 반환값·local_f4 기록), Netlib(전부 0 추정)과 대칭 있는 합성 LP 양성 사례로 검증, `docs/m1_presolve_symmetry.md`. 지시서: 세션 스크래치 `symmetry_brief.md`(내용은 이 표와 같다) | **작업 중**(정지 시점 커밋 없음). 끝나면 보고를 읽고 `m1-symmetry`를 이 브랜치에 병합, 회귀 확인 |
+| postsolve | `w4:pP` | `../rsolver-postsolve` / `m1-postsolve`(오케스트레이터가 브랜치를 붙임) | `363daa` uncrush 전부, 레코드 6/11/21/24, 항등 경로, `tests/test_postsolve.py` | **완료·병합**(`897b82d`). pane은 유휴. 같은 탭의 `w4:pQ`는 그 에이전트가 만든 셸 |
+| deprow, derived | (닫음) | (worktree·브랜치 삭제) | `47c445`, `5b488d` | 완료·병합(`bfc05df`, `25a1494`) |
+
+### 작업량(P2) 진행 상황
+- 오라클 `tools/work_oracle.py <out.json> [--param ...] [names]`: `390989`의 `call 3b0917`(파일 오프셋 0x38ed1d)을 패치해 그 시점의 `*(state+0x458)`, +0x450(기준), +0x1f0(예산 = 1000·원래 nnz + 1e7), +0x448(μ)을 기록. 포트 값은 `core.presolve_work(params)`(모델 생성 직전, PRESPLITROWS 전).
+- 생성자 항목(부록 A)을 넣었다(`state.rs` `constructor_work`). 추적기 항목은 레벨마다 `3μ·m`와 `3μ·n`을 **둘 다** 더한다(부록 A 14번 정정). PRELIMIT=1·3에서 62/64. degen2·degen3만 정확히 m만큼 모자라다(부록 A 11번 "유형 판정용 추가 스캔"일 가능성).
+- 기본값 전체 작업량은 0/64(대략 60–80%). 소수부는 같고 차이는 정수다. 빠진 것은 집계(`agg.rs` 작업량 항목 전부 생략, `m1_presolve_agg.md` §1–§10에 식이 있다)와 일부 reduction일 것. k = 3, 4에서 `51a144`·`4fe113` 증분은 이미 일치한다.
+- 그다음 `3ba9de` 검사(작업량 − 기준 > 예산이면 PRELIMIT을 −1로 → 마무리로)와 `3ba5ac`·`a83b2f` 호출 지점을 원본대로 넣는다.
+
+### 다음 단계(순서대로)
+1. symmetry 에이전트 결과 확인 → `git merge m1-symmetry` → 기본값 64/64·postsolve 64/64·pytest·clippy 0 재확인 → 메모·03 §10의 대칭 지름길 문구 갱신. 끝나면 pane `w4:pV` 닫고 worktree 정리(`git worktree remove`, 병합된 브랜치는 `git branch -d`).
+2. 작업량: degen2/3 생성자 차이(m) 찾기 → PRELIMIT k마다 작업량 오라클(`work_lim{k}.json`)로 증분을 비교해 빠진 항목을 채운다(집계 먼저) → 기본값 64/64 → `3ba9de` 검사.
+3. 작업량까지 맞으면 03 §10 "포팅하지 않은 것"에서 작업량·예산 문구를 지우고 이 메모를 마무리.
+
+### 주의점
+- 운영 규칙: 이 브랜치에만 커밋, `crates/lp`의 main 기존 파일 수정 금지(`presolve/`는 이 브랜치 소유), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`).
+- 오라클·추적 파일은 세션 스크래치에 있어 새 세션에서는 다시 떠야 한다: 기본값 `tools/presolve_oracle.py <dir>/def`, 체크포인트 `--param GURO_PAR_PRELIMIT=k`(64개 약 10초), uncrush 캡처는 postsolve 에이전트 스크래치(`/tmp/claude-1000/-home-sds-workspace-gurobi-sandbox-rsolver-postsolve/d95408ba-cd48-4d17-a9d4-d68b0caaad89/scratchpad/ordef`, 지워졌으면 `tools/uncrush_oracle.py`로 다시), 작업량 `tools/work_oracle.py`.
+- 모델별 PRELIMIT 호출 번호는 `mod.rs`의 `calls += 1` 뒤에 임시 `eprintln` 추적을 넣어 얻는다. 커밋하지 않는다.
+- 병렬 에이전트는 반드시 worktree를 따로 쓴다. 같은 폴더에서 동시에 cargo 빌드하면 서로 깨진다. 에이전트 pane 입력란에 오케스트레이터가 적어 둔 글이 남아 있을 수 있으니 prompt 전 확인.
+- `crates/core`·`crates/py`의 clippy 정리(`85c4f28`)는 main이 이미 바꾼 곳이라 main 병합 때 충돌할 수 있다(main 쪽을 택하면 된다).
+
+### 코드·문서 위치
+- 코드 `crates/lp/src/presolve/`: `mod.rs`(순서), `state.rs`(상태·레코드·생성자 작업량), `reduce.rs`, `parallel.rs`, `agg.rs`, `derived.rs`, `deprow.rs`, `postsolve.rs`, `tracker.rs`, `sort.rs`.
+- 해독 노트: 집계 [m1_presolve_agg.md](m1_presolve_agg.md), `5b488d` [m1_presolve_derived.md](m1_presolve_derived.md), `47c445` [m1_presolve_deprow.md](m1_presolve_deprow.md), postsolve [m1_postsolve.md](m1_postsolve.md). 요약 [03](03_presolve.md) §10.
+- 테스트: `tests/test_presolve.py`(`bench/gurobi_presolve/`), `tests/test_postsolve.py`(`bench/gurobi_uncrush/`).
 
 ## 1. 호출 그래프: presolve는 LP를 풀지 않는다 (2026-11-05)
 
@@ -172,7 +202,7 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 11. 유형 1/4/5/6 판정용 추가 스캔: B L612, 626, 725, 837, 855, 887(일반 LP 경로에서 어느 것이 도는지 확인 필요)
 12. A L4870: `+= m·μ`, A L4877: `+= (m+m)·μ`, A L4905 열마다: `+= (모델 len·μ)·2.0`, 그다음 A L4880: `+= (n·3.0)·μ`
 13. PREINFBND가 켜지면 A L4961: `+= (n+n)·μ`. PREINFOBJ가 켜지면 A L4988: `+= (n·3.0)·μ`
-14. C: 레벨 0..2마다 `+= m·(μ·3.0)`, 그다음 `+= (μ·3.0)·n`. 끝에 C L380: `+= 48.0·μ`
+14. C: 레벨 0..2마다 `+= m·(μ·3.0)`와 `+= (μ·3.0)·n`(작업량 오라클로 확인, 레벨마다 둘 다). 끝에 C L380: `+= 48.0·μ`
 
 기타: `+0x100` = SolutionTarget==1, 또는 (SolutionTarget ≤ 0 && Method ∈ {2,6} && Crossover==0)이면 1. 그렇지 않고 SolutionTarget<2 && NumericFocus>0이면 2. 나머지는 0. `+0x1e0` = PreCrush, `+0x1e8` = IntFeasTol, `+0x1e4` = (OptimalityTarget ≠ 1), `+0x470..+0x484` = −1. `+0x80/+0x88` 열 배열은 1.0이다.
 
