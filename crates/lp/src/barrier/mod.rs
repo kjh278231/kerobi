@@ -33,7 +33,7 @@ pub struct IterInfo {
     pub iter: usize,
     pub pobj: f64,
     pub dobj: f64,
-    /// B+0x198 = ‖r_p‖₂/τ (BARRIER_PRIMINF)
+    /// √(B+0x198² + B+0x1b8²) = √(‖r_p‖₂² + ‖r_u‖₂²)/τ (BARRIER_PRIMINF; 64/64 bitwise on the iteration-0 oracle)
     pub priminf: f64,
     /// B+0x1a8 = ‖r_d‖₂/τ (BARRIER_DUALINF)
     pub dualinf: f64,

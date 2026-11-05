@@ -615,7 +615,7 @@ pub fn run(lp: &Lp, f160: f64, f168: f64, p: &Params, cb: &mut dyn FnMut(&IterIn
             iter: it,
             pobj: lp.sense * r.pobj,
             dobj: lp.sense * r.dobj,
-            priminf: r.rp2,
+            priminf: (r.rp2 * r.rp2 + r.ru2 * r.ru2).sqrt(),
             dualinf: r.rd2,
             compl: r.compl,
         });

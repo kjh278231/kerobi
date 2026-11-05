@@ -125,9 +125,19 @@ def first_divergence(ref, test):
     return "" if len(ref) == len(test) else f"row {min(len(ref), len(test))}: length {len(ref)} vs {len(test)}"
 
 
+def first_divergence_rel(ref, test, tol=1e-6):
+    """First trace row whose numeric fields differ by more than tol relative (max(|a|, |b|, 1) scale): where two
+    trajectories part beyond rounding, e.g. barrier iterates computed with a different summation order."""
+    for i, (a, b) in enumerate(zip(ref, test)):
+        if a[0] != b[0] or any(abs(float(x) - float(y)) > tol * max(abs(float(x)), abs(float(y)), 1.0)
+                               for x, y in zip(a[1:], b[1:])):
+            return f"row {i} {a[0]}: {','.join(a[1:3])} vs {','.join(b[1:3])}"
+    return "" if len(ref) == len(test) else f"row {min(len(ref), len(test))}: length {len(ref)} vs {len(test)}"
+
+
 def compare(ref_dir, test_dir, out_csv):
     cols = ["instance", "p0_fingerprint", "p0_presolved", "status", "iters", "bar_iters", "bar_stats", "nodes", "root", "cuts",
-            "work_ratio", "first_divergence", "errors"]
+            "work_ratio", "first_divergence", "first_divergence_1e-6", "errors"]
     out, tally = [], {"p0": 0, "p1": 0, "n": 0}
     for rd in sorted(p for p in ref_dir.iterdir() if (p / "summary.json").exists()):
         td = test_dir / rd.name
@@ -146,7 +156,8 @@ def compare(ref_dir, test_dir, out_csv):
                "root": same_log("root"), "cuts": same_log("cuts"), "bar_stats": same_log("barstats"),
                "work_ratio": f"{t['Work'] / r['Work']:.4f}" if r.get("Work") and t.get("Work") is not None else "",
                "errors": "; ".join(f"{k}: {v[:60]}" for k, v in t.get("errors", {}).items()),
-               "first_divergence": first_divergence(load(rd), load(td))}
+               "first_divergence": first_divergence(load(rd), load(td)),
+               "first_divergence_1e-6": first_divergence_rel(load(rd), load(td))}
         tally["n"] += 1
         tally["p0"] += row["p0_fingerprint"] == row["p0_presolved"] == "ok"
         tally["p1"] += all(row[k] == "ok" for k in ("status", "iters", "bar_iters", "bar_stats", "nodes", "root", "cuts")) and not row["first_divergence"]
