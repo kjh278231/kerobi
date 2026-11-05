@@ -27,6 +27,7 @@ mod subst;
 mod stubs;
 pub mod tracker;
 mod transred;
+mod xorrows;
 
 use rsolver_model::Model;
 use state::State;

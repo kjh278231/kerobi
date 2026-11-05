@@ -262,6 +262,7 @@ impl State {
             "46a62d" => (self.clique_rows(p, if p.presolve > 1 || p.preclique > 1 { 2 } else { 1 }), 0),
             "374521" => (self.dual_bounds(p), 0),
             "5431ee" => (self.trans_red(p), 0),
+            "3e5363" => (self.xor_rows(p), 0),
             "370047" => {
                 self.activity(None);
                 (0, 0)

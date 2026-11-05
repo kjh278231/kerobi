@@ -8,8 +8,6 @@ use crate::Params;
 impl State {
     /// `5a9282` (before the loop and at round end; PREBOUND && DualReductions)
     pub fn r5a9282(&mut self, p: &Params) -> i32 { 0 }
-    /// `3e5363` XOR / parity rows
-    pub fn xor_rows(&mut self, p: &Params) -> i32 { 0 }
     /// `3ff744(st, env, T6, mode, flag, 0)` parallel rows / columns
     pub fn parallel(&mut self, p: &Params, mode: i32, flag: i32) -> i32 { 0 }
     /// `57627e` implied integers, integer equations
