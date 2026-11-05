@@ -108,6 +108,8 @@ impl PyCoreModel {
     #[getter]
     fn num_nz(&self) -> usize { self.inner.num_nz() }
     fn fingerprint(&self) -> u32 { rsolver_model::fingerprint::fingerprint(&self.inner) }
+    /// The optimize header log ("Optimize a model with …" through the coefficient statistics and warnings).
+    fn header(&self, numeric_focus: i32) -> String { rsolver_driver::header::header(&self.inner, numeric_focus) }
     /// (column scales, row scales, objective scale) of the LP simplex setup (04 §3).
     /// x_B of the LP simplex workspace for a given status array (04 §4); used by M1 parity tests.
     fn basic_solution(&self, vstat: Vec<i32>) -> Vec<f64> {

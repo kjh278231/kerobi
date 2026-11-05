@@ -18,7 +18,7 @@ pub fn fmt_num(x: f64) -> String {
 }
 
 /// C `%.{prec}e`: Rust prints the same correctly rounded digits but a bare exponent ("e-1" for "e-01").
-fn c_exp(x: f64, prec: usize) -> String {
+pub fn c_exp(x: f64, prec: usize) -> String {
     let s = format!("{:.*e}", prec, x);
     let (mant, exp) = s.split_once('e').unwrap();
     let e: i32 = exp.parse().unwrap();

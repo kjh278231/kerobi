@@ -1,0 +1,8 @@
+[package]
+name = "rsolver-driver"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rsolver-model = { path = "../model" }
+rsolver-lp = { path = "../lp" }

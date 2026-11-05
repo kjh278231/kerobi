@@ -11,4 +11,5 @@ path = "src/lib.rs"
 [dependencies]
 rsolver-model = { path = "../model" }
 rsolver-lp = { path = "../lp" }
+rsolver-driver = { path = "../driver" }
 pyo3 = { version = "0.24", features = ["extension-module"] }

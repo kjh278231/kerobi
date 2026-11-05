@@ -7,7 +7,7 @@ G5([11 §4](11_progress.md)) 작업 중에 알아낸 사실. 확정된 내용은
 | G5 기준 | 상태 | 근거 |
 |---|---|---|
 | (1) 파라미터 표 548개 = gurobipy | **충족** | §2, `tests/test_params.py` 548/548 |
-| (2) Optimize 헤더 로그 102개 | 미착수 | |
+| (2) Optimize 헤더 로그 102개 | **충족** | §3, `tests/test_header.py` 102/102 |
 | (3) 분류·Method 확정·자동 조정·상태·요약 로그 | 미착수 | |
 | (4) Presolve 켠 연속 경로 (Method 2·6 반복 수, Method 1 상태·목적) | 미착수 | |
 | (5) clippy 0, 테스트, 문서 | 진행 중 | |
@@ -75,6 +75,19 @@ d10b1  a7aa8f  c9457 (상태 메시지 "Optimal objective …")  d10b1 ×2  10f5
 - 포팅: `tools/param_table.py <libgurobi130.so>`가 이 표를 그대로 `crates/model/src/param_table.rs`(548개, 원래 순서)로 생성한다. `params.rs`는 `Def`, 대소문자 무시 `find`, 문자열 기본값 `default_str`만 둔다. 값 저장(env 오프셋 대응)은 드라이버가 쓸 때 붙인다.
 - 기준값: `tools/param_oracle.py`가 gurobipy `getParamInfo`를 548개 이름(숨은 것 포함, 모두 받아 줌)에 대해 떠서 `bench/gurobi_params.tsv`에 둔다. Python `Model.getParamInfo`와 비교해 이름·타입·최소·최대·기본값 548/548 같다.
 - gurobipy 규약: double의 ±1e100(GRB_INFINITY)은 ±inf로 보고한다(예: Cutoff -inf..inf, 기본 inf; GURO_PAR_INFBOUND 최대 inf). 문자열의 min/max는 `''`.
+- 교차 확인: M2 브랜치의 `docs/m2_param_offsets.tsv`(`5627199`, `ac81d7` 등록 순서의 env 오프셋 416개)와 이름·최소·최대·기본값 416/416 같다. 오프셋이 필요하면 그 파일을 본다.
 - 표 밖 기본값은 `NodefileDir = "."` 하나다(표에는 빈 문자열). 이 값을 넣는 코드는 찾지 않았다.
 - 노트 11 §5.1의 "562개 항목"은 이 표(550 레코드, 표식 2개 포함)와 다르다. 다시 센 값은 548개다.
 - 생략: docs/01 §1.2의 정적 필드 구조체(빌드 스크립트 생성)와 `setParam` 범위 검사·오류 10007/10008. 드라이버는 이름으로 값을 읽는다.
+
+## 3. Optimize 헤더 (`c23877` C 단계)
+
+`crates/driver/src/header.rs`. 최상위 첫 호출에서 차례로 찍는다(노트 11 §3.3).
+
+- `"Optimize a model with %d rows, %d columns and %lu nonzeros (%s)"`: D+8, D+0xc, D+0x10, ModelSense가 -1이면 `Max` 아니면 `Min`.
+- `"Model fingerprint: 0x%08x"`(`a8c184`, M0에서 포팅). GURO_PAR_FINGERPRINT=-1이면 sub-solve·로그 꺼짐·연속 모델의 LP 웜스타트일 때 생략한다(웜스타트는 아직 없음).
+- `a8aa6a`: `|c_j| > 1e-13`인 열 수. `|objcon| > 1e-13`이면 `" and an objective constant of %s"`, 수는 `a8030d`(정수면 `%d`, 아니면 `%.15g`, 되읽어 다르면 `%.16e`) = 기존 `mps_write::fmt_num`. Q·2차 제약·SOS·PWL·일반 제약 줄은 LP 범위 밖이라 옮기지 않았다.
+- `a8a3b4`(MIP일 때만): vtype 바이트로 `C`/`I`/`B`/`S`/`N`을 센다. "integer"는 I+B. S+N > 0이면 "Semi-Variable types" 줄.
+- `a9a78e(model, 1)` → `a71757`: **model+0x2d8 통계 배열을 채우는 함수가 이것이다**(docs/02 §10의 미확인 항목). 배열 [0,1] 목적 max/min, [2,3] Q 목적, [4,5] bound, [6,7] RHS, [8,9] 행렬("MaxCoeff"/"MinCoeff"), [10..15] Q·QL·QRHS. 각 항목은 0이 아닌 |값|의 max·min이고 시작값이 (0, 1e100)이라 값이 없으면 끝에서 `min = min(min, max)`로 (0, 0)이 된다. bound는 lb·ub 모두, `|v| < 1e30`만. 출력은 `"  %-16s [%.0e, %.0e]"` 꼴로 min, max 순.
+- 경고(`a9a78e`): `log10(max+1e-10) − log10(min+1e-10) ≥ 12`이면 "large matrix coefficient range", 아니면 행렬 max > 1e8이면 "large matrix coefficients". 목적·RHS·bound max > 1e9면 각각 "large objective coefficients"/"large rhs"/"large bounds". 경고가 하나라도 있고 NumericFocus(env+0x2718) == 0이면 "Consider reformulating …" 두 줄.
+- 검증: `tests/test_header.py`가 `bench/gurobi/*/log.txt` 102개(Netlib 64 + miplib_small 38)의 "Optimize a model" 줄부터 첫 빈 줄 전까지와 글자 단위로 비교한다. 102/102(objcon 있는 e226, 경고 있는 mas74·mas76 포함).
