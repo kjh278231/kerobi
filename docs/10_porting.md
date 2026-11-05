@@ -160,8 +160,8 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 
 | 기준 | 현재 | 비고 |
 |---|---|---|
-| (1) 정확성 Method 1 | Netlib 64개 63/64(bandm 시간 초과: dual 경로가 갈린 뒤 교과서식 primal phase 1이 정체) | 91개 전체는 미점검(dfl001은 release 300초 초과, pilot·pilot87 미확인) |
-| (1) 정확성 Method 0 / 기본 | 미점검 | 기본 = dual 경로. Method 0(교과서식 primal)은 25fv47에서 300초 초과 |
+| (1) 정확성 Method 1(= 기본) | 91개 중 86: 64개 63/64(bandm), 밖 27개 23/27(`bench/lp_check_ext.csv`, 300초) | 실패: bandm·stocfor2(dual 뒤 교과서식 primal phase 1 정체), d2q06c·pilot87(300초 초과), pilot(dual 목적값이 흔들리다 실행불가능 오판). dfl001은 이제 27초 |
+| (1) 정확성 Method 0 | 미점검(교과서식 primal이 adlittle·israel에서 순환, 25fv47 300초 초과) | 원본 primal 이식 뒤 점검. 기본 Method는 엔진에서 dual과 같은 경로 |
 | (2) P1 반복 수 | 11/64 일치, ±5% 안 39/64, 비율 기하평균 1.014. 피벗 경로 전체 일치 2/64, 첫 분기 위치 중앙값 7% | `sh tools/m1check.sh`(→ `bench/lp_check.csv`, `bench/pathcmp.txt`). 반복 수가 같아도 경로는 대부분 일찍 갈린다 |
 | (3) P2 work | 미구현 | 작업량 계수 spx+0x148(1.3, m > 10000이면 보정), 커널마다 연산 수 누적 |
 | (4) P3 시간 | 미측정 | release에서 25fv47 0.5–0.7초 대 Gurobi 0.09초. 반복마다 O(n+m) 루프와 조밀 FTRAN/BTRAN이 원인 |
