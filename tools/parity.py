@@ -4,7 +4,7 @@ capture: solve each instance with gurobipy or rsolver (same gurobipy-shaped API)
          (Threads=1, WorkLimit, no TimeLimit) and store summary.json, trace.csv.gz, log.txt, presolved.mps.gz.
 compare: P0 (fingerprint, presolved model) and P1 (status, iterations, nodes, first trace divergence) and P2 (work)
          between a reference and a test capture; writes one row per instance to a CSV.
-usage: python tools/parity.py capture gurobipy|rsolver <out_dir> [--work-limit 60] [name ...]
+usage: python tools/parity.py capture gurobipy|rsolver <out_dir> [--work-limit 60] [--param Name=Value ...] [--lp-only] [name ...]
        python tools/parity.py compare <ref_dir> <test_dir> [--csv bench/parity.csv]
 Default instances: the 64 Netlib LPs of re/bench/results/lp.csv and the 38 MIPs of re/bench/data/miplib_small.csv.
 """
@@ -36,7 +36,7 @@ def parse_log(text):
     return out
 
 
-def capture_one(gp, path, d, work_limit):
+def capture_one(gp, path, d, work_limit, params=()):
     C = gp.GRB.Callback
     # Only callbacks fired by solver events are recorded; PRESOLVE and MIP polling fire on a timer and would make
     # traces differ run to run. Presolve is covered by presolved.mps.gz (P0).
@@ -61,7 +61,8 @@ def capture_one(gp, path, d, work_limit):
             return  # root LP only; node LPs would be millions of rows
         rows.append([tag, *(repr(model.cbGet(w)) for w in what)])
 
-    env = gp.Env(params={"LogToConsole": 0, "LogFile": str(d / "log.txt"), "Threads": 1, "WorkLimit": work_limit})
+    env = gp.Env(params={"LogToConsole": 0, "LogFile": str(d / "log.txt"), "Threads": 1, "WorkLimit": work_limit,
+                         **dict(params)})
     m = gp.read(str(path), env)
     summary, errors = {}, {}
     try:
@@ -94,14 +95,14 @@ def capture_one(gp, path, d, work_limit):
     json.dump(summary, open(d / "summary.json", "w"), indent=1)
 
 
-def capture(backend, out, work_limit, names):
+def capture(backend, out, work_limit, names, params=(), lp_only=False):
     gp = importlib.import_module(backend)
     insts = instances()
-    for name in names or insts:
+    for name in names or [n for n, p in insts.items() if not lp_only or p.parent.name == "netlib"]:
         d = out / name
         d.mkdir(parents=True, exist_ok=True)
         try:
-            capture_one(gp, insts[name], d, work_limit)
+            capture_one(gp, insts[name], d, work_limit, params)
             s = json.load(open(d / "summary.json"))
             print(f"{name:24s} status={s['Status']} it={s['IterCount']} nodes={s['NodeCount']} work={s['Work']} "
                   f"errors={list(s['errors'])}", flush=True)
@@ -163,6 +164,8 @@ if __name__ == "__main__":
     c.add_argument("backend", choices=["gurobipy", "rsolver"])
     c.add_argument("out", type=Path)
     c.add_argument("--work-limit", type=float, default=60.0)
+    c.add_argument("--param", action="append", default=[], help="Name=Value, e.g. Method=1")
+    c.add_argument("--lp-only", action="store_true")
     c.add_argument("names", nargs="*")
     k = sub.add_parser("compare")
     k.add_argument("ref", type=Path)
@@ -170,7 +173,8 @@ if __name__ == "__main__":
     k.add_argument("--csv", type=Path, default=Path(__file__).resolve().parents[1] / "bench/parity.csv")
     a = ap.parse_args()
     if a.cmd == "capture":
-        capture(a.backend, a.out, a.work_limit, a.names)
+        params = [(k, int(v) if v.lstrip("-").isdigit() else float(v)) for k, v in (p.split("=", 1) for p in a.param)]
+        capture(a.backend, a.out, a.work_limit, a.names, params, a.lp_only)
     else:
         compare(a.ref, a.test, a.csv)
     sys.exit(0)
