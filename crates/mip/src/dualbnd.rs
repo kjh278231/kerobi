@@ -99,7 +99,7 @@ impl State {
             }
         }
         let sense: Vec<u8> =
-            (0..n).map(|j| if cnt[j] < 1 { b'F' } else { [b'F', b'>', b'<', b'='][st[j] as usize] }).collect();
+            (0..n).map(|j| if cnt[j] < 1 { b'F' } else { b"F><="[st[j] as usize] }).collect();
         self.work += (n as f64 + n as f64) * mu;
         let mut ylo = vec![0.0f64; m];
         let mut yhi = vec![0.0f64; m];
