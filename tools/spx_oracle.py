@@ -2,7 +2,8 @@
 inside SIMPLEX callbacks and dump it per iteration, so a port can be compared array by array at the first divergence.
 
 usage: python tools/spx_oracle.py <model.mps.gz> <out.jsonl> [--iters 0,1,2,10] [--param Name=Value ...]
-Default params: Threads=1, Method=1, Presolve=0. One JSON object per recorded iteration (first callback of that count).
+Default params: Threads=1, Method=1, Presolve=0. One JSON object per recorded iteration, taken at the LAST callback with
+that count: dual initialization fires SIMPLEX callbacks mid-way (free-column pivots), before x_B exists.
 """
 import argparse, ctypes, json
 
@@ -59,19 +60,20 @@ def main():
     env = gp.Env(params=params)
     model = gp.read(a.model, env)
     ptr = api.PyCapsule_GetPointer(model._cmodel, api.PyCapsule_GetName(model._cmodel))
-    done, f = set(), open(a.out, "w")
+    snaps = {}
 
     def cb(mdl, where):
         if where != gp.GRB.Callback.SIMPLEX:
             return
         it = int(mdl.cbGet(gp.GRB.Callback.SPX_ITRCNT))
-        if it in want and it not in done and L(ptr + 0xe0):
-            done.add(it)
-            f.write(json.dumps(dump(L(ptr + 0xe0), it, full=not (done - {it}))) + "\n")
+        if it in want and L(ptr + 0xe0):
+            snaps[it] = dump(L(ptr + 0xe0), it, full=it == min(want))  # overwrite: keep the last callback per count
 
     model.optimize(cb)
-    f.close()
-    print(f"recorded iterations {sorted(done)}; IterCount {model.IterCount:.0f}, status {model.Status}")
+    with open(a.out, "w") as f:
+        for it in sorted(snaps):
+            f.write(json.dumps(snaps[it]) + "\n")
+    print(f"recorded iterations {sorted(snaps)}; IterCount {model.IterCount:.0f}, status {model.Status}")
 
 
 if __name__ == "__main__":
