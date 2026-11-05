@@ -110,8 +110,8 @@ impl Ldl {
                 x[self.li[p]] -= self.lx[p] * x[j];
             }
         }
-        for j in 0..self.n {
-            x[j] /= self.d[j];
+        for (xj, dj) in x.iter_mut().zip(&self.d) {
+            *xj /= dj;
         }
         for j in (0..self.n).rev() {
             for p in self.lp[j]..self.lp[j + 1] {
@@ -122,6 +122,7 @@ impl Ldl {
 }
 
 #[cfg(test)]
+#[allow(clippy::needless_range_loop)] // dense test matrices read clearer with indices
 mod tests {
     use super::*;
 
