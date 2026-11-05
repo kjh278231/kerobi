@@ -126,7 +126,7 @@ python tools/parity.py compare <ref_dir> <test_dir> [--csv bench/parity.csv]
 
 decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소는 비공개로 두고 배포·공개하지 않는다(내부 연구용). 공개가 필요해지면 해당 코드는 이 문서의 규칙이 아니라 클린룸 방식으로 다시 써야 한다([09 §4](09_roadmap.md)).
 
-## 9. 인수인계 메모 (2026-11-05 4차 갱신, 다음 세션용)
+## 9. 인수인계 메모 (2026-11-06 5차 갱신, 다음 세션용)
 
 작업 방식은 **재구성 + 오라클 비트 검증**이다. 의사코드와 objdump로 함수의 규칙을 읽고, Python 프로토타입(`tools/proto/`)을 Gurobi 오라클과 비트 단위로 맞춘 뒤 Rust로 옮긴다. 의사코드를 줄 단위로 옮겨 쓰는 방식은 호출 인자 손실과 SIMD 조각 때문에 쓰지 않는다. 세부 해독 기록은 [m1_notes.md](m1_notes.md)에 있다.
 
@@ -149,32 +149,37 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 - **가중치 폭주**: DSE 가중치가 inf/NaN이 되면 CHUZR가 위반 행을 놓쳐 실행불가능한 x를 OPTIMAL로 낸다(grow22, fit2p에서 실제로 발생). 1e30 초과·NaN이면 1로 되돌린다(Gurobi도 같은 규칙).
 - **Netlib 개수**: `re/bench/data/netlib`의 104개 항목 중 MPS는 **91개**(라이선스 안 64 + 밖 27)이고 13개는 빌드 파일이다. 09 로드맵과 goal의 "104개/40개"는 이 항목 수를 센 것이다. 점검은 91개로 한다. 빠진 Netlib 문제(qap8·12·15, stocfor3, truss, pilot.ja, pilot.we 등)는 저장소에 없다.
 
-### 9.2 지금 상태 (2026-11-05)
+### 9.2 지금 상태 (2026-11-06)
 
-코드:
-- `crates/lp`: `scaling.rs`(64/64 비트), `spx.rs`, `common.rs`(`aabbe3` 정렬), `pricing.rs`(CHUZR 모드 0·표시·비용 가중, 모드 1은 근사), `start.rs`(crash, `vstat` 64/64), `lu.rs`(singleton 단계 원본대로 + Markowitz(단순 탐색, shortcut) + Forrest–Tomlin 갱신, 원본 BTRAN 경로 에뮬레이션), `simplex.rs`(엔진: dual·primal·드라이버 `solve_model`).
-- dual은 원본 구조(crash → 자유 열 피벗 → 첫 분해 → 정확한 DSE 노름 → 반복)를 따르지만 반복 내부는 아직 교과서식이다: CHUZR는 위반²/w 최대, ratio test는 Harris 묶음 단위 BFRT + 비용 이동, 섭동은 퇴화 50회 연속이면 1회(난수는 LCG). 원본 규칙이 아니라 반복 경로가 다르다.
-- primal은 phase 1(위반 합)·phase 2, Dantzig 가격, Harris 비율 검사의 교과서식이다(`0478d3` 계열 미이식). Method=0과 dual 뒤 정리에 쓴다.
-- Python: 읽은 LP와 API로 만든 LP 모두 `optimize()`가 새 엔진을 쓴다. MIP는 M2까지 오류(배낭 테스트 xfail). `crates/core` 삭제 완료. SIMPLEX 콜백은 풀이 뒤 반복 기록으로 재생한다. `Work`는 아직 0이다.
-- cargo clippy 경고 0(`crates/lp`는 `needless_range_loop`만 허용), cargo test 5개·pytest 8개 통과(1 xfail).
+범위(goal 갱신): simplex 엔진(dual·primal, Markowitz·FT LU, crash, Quad, 필요한 common). LP 드라이버(`0c3d0d`)·파라미터 표·Presolve=1 경로는 'M1 LP 드라이버' 탭(`rsolver-presolve` worktree, 브랜치 `m1-lp-driver`)이 맡는다.
+
+코드(`crates/lp`):
+- `simplex.rs` 엔진: dual(crash → 자유 열 루프 → 재분해 → 정확한 DSE → 반복), 원본식 CHUZR(모드 0 목록, 모드 1은 근사)·BFRT·DSE 갱신·d 갱신·재분해 시점, 행 사본과 α 순서, SHIFT/FLIP, 섭동(발동 조건·COSTSCALE·GLOBAL·RNG). primal(`0478d3` 명세 일부: composite phase 1, partial 목록 CHUZC, Harris/`54eef`, `b1da8` bound 이동, 음수 스텝 이동). 드라이버 `solve()`의 primal↔dual 교대(최대 20회, `dual_resume`), `solve_model`의 비스케일 재확인·재풀이(`2e9ae`, `Spx::unscaled`, `resolve_unscaled`).
+- `lu.rs`: singleton 단계 원본, Markowitz(단순 탐색 대용품, shortcut), FT 갱신 원본 형태(η = e_rᵀU⁻¹, `dot8`), BTRAN은 갱신·커널이 있으면 `btran_updated`(Uᵀ → η → 희소 Lᵀ 힙/레벨).
+- `pricing.rs`(CHUZR 상태), `bfrt.rs`, `common.rs`(`aabbe3` 정렬, `Rng`), `start.rs`, `scaling.rs`, `spx.rs`.
+- cargo clippy 경고 0, cargo test 31개, pytest 31개 통과(1 xfail, 2026-11-06 기준).
 
 | 기준 | 현재 | 비고 |
 |---|---|---|
-| (1) 정확성 Method 1(= 기본) | 91개 중 90: 64개 64/64, 밖 27개 26/27(`bench/lp_check_ext.csv`, 300초) | 남은 실패 pilot: −557.488643 대 정확한 값 −557.489729284(상대 1.9e-6). 원래 공간에서 위반 ≤ 1e-6이라 허용오차 안의 차이로 보인다(`2e9ae` 재풀이도 걸리지만 값이 거의 안 변함). 밖 27개 기준값에 Hager 표의 정확한 값(10⁻¹² 재계산, CPLEX 보정)을 추가했다(`tools/lp_check.py` ACCURATE): pilot87 readme 값은 부정확했다 |
-| (1) 정확성 Method 0 | 91개 중 87(`bench/lp_check_m0.csv`, 120초) | 실패: dfl001·maros-r7(시간 초과), pilot·pilot87(오답). 반복 수 비율 기하평균 1.85(경로는 아직 Gurobi와 다름) |
-| (2) P1 반복 수 | 16/64 일치, ±5% 안 44/64, 비율 기하평균 1.008. 피벗 경로 전체 일치 10/64, 첫 분기 위치 중앙값 17.7% | `sh tools/m1check.sh`(→ `bench/lp_check.csv`, `bench/pathcmp.txt`). 최근 두 수정: CHUZR 행 비용 P+0x68을 LU 갱신마다 `9eb18`로 갱신, BFRT flip 단계는 표시만(목록 재구성은 피벗 뒤 `1bae9c`) |
-| (3) P2 work | 미구현 | 작업량 계수 spx+0x148(1.3, m > 10000이면 보정), 커널마다 연산 수 누적 |
-| (4) P3 시간 | 미측정 | release에서 25fv47 0.5–0.7초 대 Gurobi 0.09초. 반복마다 O(n+m) 루프와 조밀 FTRAN/BTRAN이 원인 |
-| (5) 구조 | LU(Markowitz·FT), crash, dual·primal, 드라이버 일부, 행 사본, RNG | Quad(F80) 미착수, `0c3d0d` 분기(웜스타트·network·sifting·비스케일 재풀이) 미이식 |
+| (1) 정확성 Method 1(= 기본) | 91개 중 90: 64개 64/64(`bench/lp_check.csv`), 밖 27개 26/27(`bench/lp_check_ext.csv`, 300초) | 남은 실패 pilot: −557.488643 대 정확한 값 −557.489729284(상대 1.9e-6), 원래 공간 위반 ≤ 1e-6이라 허용오차 안의 차이로 보임. 밖 27개 기준값에 Hager 표의 정확한 값을 추가했다(`tools/lp_check.py` ACCURATE, pilot87 readme 값은 부정확). 기본 Method는 엔진에서 dual과 같은 경로 |
+| (1) 정확성 Method 0 | 91개 중 87(`bench/lp_check_m0.csv`, 120초, FT 원본화 전 측정) | 실패: dfl001·maros-r7(시간 초과), pilot·pilot87. 반복 수 비율 기하평균 1.85 |
+| (2) P1 반복 수(Method 1) | 16/64 일치, ±5% 안 44/64, 기하평균 1.008, 피벗 경로 전체 일치 10/64, 첫 분기 위치 중앙값 17.7% | `bench/pathcmp.txt`에 64개 첫 분기점 기록. 세션 시작 때는 7/64, 경로 일치 1/64 |
+| (3) P2 work | 미구현 | 작업량 계수 spx+0x148(1.3), 커널마다 연산 수 누적. 명세들에 work 증분이 일부 적혀 있다(§8.8 α 계산, §8.9 끝) |
+| (4) P3 시간 | 정식 측정 전, 비공식 기하평균 약 2.7배 | 반복마다 O(n+m) 루프(로그용 `sums()`·`objective()`, 조밀 α·FTRAN, 후보 전수 훑기) |
+| (5) 구조 | 위 코드 목록 | Markowitz는 대용품(`036ade` 미이식), Quad(F80) 미착수, primal은 명세 일부만 |
 
 ### 9.3 다음 단계 (순서대로)
 
-완료(4차 세션, [m1_notes §8.8](m1_notes.md)): 64개 피벗 경로 오라클(`bench/oracle/path1/`, `tools/proto/pathcmp.py all`), 자유 열 루프 원본화(첫 최대 위치, 피벗마다 반복 수, 남은 열 2차 패스, 루프 뒤 재분해: perold 4819 → 1271회, Gurobi 1273), 재분해 주기 m^0.7(Full pricing 때 m^0.65), 재분해마다 위치 재번호(옛 WIP 패치), 행 사본(`a075e`·`a104a`·`a114f`)과 α 벡터 순서(`0a4109`: 1.8 규칙, 처음 닿은 순/열 순, slack은 ρ 순). `48d5f` 전체 명세는 [m1_notes §8.9](m1_notes.md)(미검증).
+이번 세션(4–5차)에 한 것: 64개 피벗 경로 오라클과 첫 분기 비교, 자유 열 루프, 재분해 주기·위치 재번호, 행 사본·α 순서, SHIFT/FLIP, RNG·GLOBAL 섭동·발동 조건·COSTSCALE, BTRAN 갱신 경로 순서, FT 갱신 원본 형태, CHUZR 행 비용 갱신(`9eb18`)·flip 단계 표시만·재분해 뒤 목록 새로 만들기·P+0x48, 나가는 변수 상태(선택 방향), Markowitz 특이 오판 수정(정상 기저에 slack을 끼우던 결함), 원본식 primal과 primal↔dual 교대, 비스케일 재풀이. 세부는 [m1_notes §8.8–8.11](m1_notes.md), 명세는 §8.9(`48d5f`)·§8.10(FT·BTRAN/FTRAN)·[m1_primal_spec.md](m1_primal_spec.md).
 
-1. **LU 갱신 뒤 BTRAN**(명세 [m1_notes §8.10](m1_notes.md)): 출력 순서는 맞췄다(`Lu::btran_updated`: Uᵀ → eta → 희소 Lᵀ, Markowitz 커널이 있는 분해에도 같은 경로, grow7·scsd1·e226 BFRT 6호출까지 α 순서·값 일치). 경로 전체 일치 2 → 4, 첫 분기가 늦어졌지만 이미 갈린 경로의 degen3(10배)·perold(primal 결함)가 나빠졌다. FT 갱신도 원본 형태로 바꿨다(`Lu::update`: l = p면 열만 교체·U 행 유지, 아니면 η = e_rᵀU⁻¹(r 먼저, U 순서), 새 대각 η·S(8레인 `dot8`), r 행 제거, r을 위치 l로 순환 이동; FTRAN x_r = η·x, BTRAN w_i += η_i·v). kb2 반복 0–11 비트 일치. 남은 것: 순열 루프(L1101–1218)의 조기 종료, 접두 t 관리, FT 회계(L+0x184 = η 길이 합, L+0x190 = nnz(α_q)+1)로 재분해 시점 맞추기, 두 RHS FTRAN(`09d112`, α_q와 τ)의 순서·비트(kb2 반복 12부터 w 마지막 비트), Markowitz(재분해 직후 x_B 비트: adlittle 반복 18, kb2 반복 15). `tools/proto/alphacmp.py <name>`로 보면 grow7·scsd1·e226·lotfi 모두 BFRT 첫 호출의 α는 순서·비트가 같고, LU 갱신 1회 뒤 호출부터 ρ 순서가 다르다(Gurobi는 희소 출력에 나가는 행이 먼저, 우리 `btran_general`은 조밀 뒤 행 순서). Forrest–Tomlin 갱신 저장(`5b257` L860–975)과 `221173`의 갱신 경로(Uᵀ 희소 → 행 eta → Lᵀ)를 원본대로 옮긴다. 옛 2·3번(Markowitz `036ade`, FT 회계 L+0x184)이 여기에 묶인다. 재분해 시점도 이 회계에 달려 있다.
-2. **`48d5f` 이식**(§8.9): 보통의 재분해 뒤 비용 이동(SHIFT)은 넣었다(`reinvert`, 이유 4·인공 bound 종료는 FLIP; 기하평균 1.025 → 1.014). RNG(`common::Rng`, libgurobi 자체 함수와 비트 일치, `tools/proto/rng_oracle.py`)와 GLOBAL 섭동 식도 넣었다(pilot4 해결). 섭동 발동 조건(재분해 수 % K, 퇴화 수 > 0.9·반복, 목적 기록)과 COSTSCALE(×128/64)도 넣었다(kb2 섭동 d 일치). 반복 수는 피벗 전에 올린다(시드·표식이 그 값을 씀). 남은 것: 0x110 플래그, 인공 bound 수 조건, 첫 분해 뒤 RANDSMALL, 이유 4 등에서 FLIP, 섭동 GLOBAL과 그 발동 조건(0x2c0 % K, 퇴화 비율), RNG(`a7b4d6`·`a7b54f`·`895c5`, common에 둔다). 지금 엔진은 박스 열만 flip하고 나머지 쌍대 위반을 남겨 maros 같은 경로가 흔들렸다. 오라클의 `pert`·`pert_level` 필드로 검증한다.
-3. **primal 원본 이식**(명세 [m1_primal_spec.md](m1_primal_spec.md)): (a) 넣었다 — 행 표식과 composite phase 1(M = 1e6, τ1), partial 목록 CHUZC(창 10), phase 2 Harris·phase 1 `54eef` 규칙, 진입 열 flip, 순수 phase 1 전환, 최적은 새 분해에서만. (c) 일부 — `b1da8` 퇴화 bound 이동(재분해 때 90% 퇴화면, RNG), phase 2 음수 스텝의 bound 이동, 이동이 남은 최적이면 dual로 넘김(드라이버 `solve()`의 primal↔dual 교대 최대 20회, `dual_resume`). Method 0 정확 87/91(bandm·perold 정리 단계 문제는 LU 특이 오판이 원인이었고 고쳤다). 다음: (b) `56973`, (d) 오프셋 x_B·`06ff79` 가중치·bucket, 그리고 Gurobi Method 0 경로 대조(`bench/gurobi_primal_nopre`, `tools/path_oracle.py --method 0`).
-4. BFRT 나머지(코퍼스 불일치 18건, 후보 없음 경로), 행 사본의 같은 |a| 분할(`9edd1`), CHUZR 모드 1 열 원소 처리, P2 work, P3 속도(희소 FTRAN/BTRAN), Quad.
+방법: `bench/pathcmp.txt`에서 첫 분기가 이른 모델을 골라 `tools/proto/alphacmp.py <name>`(BFRT 입력 α 순서·값)와 `tools/spx_oracle.py … --iters`+`tools/proto/statecmp.py`(x_B·d·w·CHUZR 목록·행/열 비용·LU 갱신 수·섭동 카운터를 변수 기준 비트 비교)로 원인을 좁힌다. 목록 순서 차이는 정렬 집합부터 의심한다(Gurobi 집합을 넣으면 셸 정렬이 그대로 재현됨).
+
+1. **CHUZR 모드 1(Full pricing) 유지 규칙**: kb2·adlittle에서 모드 1 동안 P+0x28(목록 수)·P+0x18(점수)이 다르다(우리 17 대 Gurobi 9–14). `1bae9c` 갱신 경로 모드 1 분기(L560–726), `2896a3` 모드 1, `1c8477` 모드 1 표시, 재분해 뒤 `full_init`, 문턱 ×1.1 규칙(지금 shortcut으로 spx+0x46c = 4)을 읽는다. 하위 에이전트가 이 명세를 쓰다가 사용 한도로 멈췄다(§9.6).
+2. **Markowitz LU 이식(`036ade`)**: 재분해 직후 x_B 비트가 갈린다(adlittle 반복 18, kb2 반복 15, sc50b·capri·israel의 ρ 순서 = 커널 단계 순서). 커널 피벗 순서·L/U 값·LU+0x100/0xdc/0xd8/0xe4(접두·띠) 설정. 재번호 규칙(`Lu::renumbered`)의 커널 부분도 함께 확인.
+3. **FT 갱신 나머지**: 순열 루프(`5b257` L1101–1218)의 조기 종료, 접두 t 관리, FT 회계(L+0x184 = η 길이 합, L+0x190 += nnz(α_q)+1)로 재분해 시점 맞추기, 두 RHS FTRAN `09d112`(α_q와 τ를 한 번에; kb2 반복 12부터 DSE w 마지막 비트), FTRAN 출력 순서(α_q 순서 = U 단계 순서).
+4. **`48d5f` 나머지**(§8.9): 0x110 플래그, 인공 bound 수 조건, 첫 분해 뒤 RANDSMALL, RESID, UNPERTURB(섭동 단계 하향)·dual 끝 −1004.
+5. **primal**(명세): (b) piecewise phase 1 `56973`(기본값), (d) x_B 하한 오프셋 저장·devex/SE(`06ff79`)·bucket CHUZC·`0b2fc2` 전환, b3a19 최적 검사. Method 0 실패 4개(dfl001·maros-r7 시간, pilot·pilot87), Gurobi Method 0 경로 대조(`tools/path_oracle.py <dir> --method 0`, 기준 `bench/gurobi_primal_nopre`).
+6. BFRT 나머지(코퍼스 불일치 18건 fit1d 등, 후보 없음 경로), 행 사본의 같은 |a| 분할(`9edd1`), P2 work 누적, P3 속도(희소 FTRAN/BTRAN, 반복마다의 O(n+m) 제거, 콜백 없을 때 로그 생략), Quad(F80).
 
 ### 9.4 기준값·오라클 위치
 
@@ -187,6 +192,11 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 | `bench/oracle/path1/` | 작은 LP 12개의 반복별 진입·이탈·flip 수(dual) | `tools/path_oracle.py <dir> --method 1 name…` |
 | `bench/lp_check.csv`(만들 예정) | 91개 × Method 정확성·반복 수·시간 | `tools/lp_check.py` |
 | `docs/m1_notes.md` §5–8 | crash, LU, BTRAN·DSE, CHUZR 목록, BFRT 해독 기록 | |
+| `bench/oracle/path1/` | **64개 전부**의 dual 피벗 경로(반복별 진입·이탈) | `tools/path_oracle.py bench/oracle/path1 --method 1 $(ls bench/gurobi_dual_nopre)` |
+| `bench/pathcmp.txt` | 64개 첫 분기점(우리 대 Gurobi) | `tools/proto/pathcmp.py all`(m1check.sh가 만든다) |
+| `bench/lp_check_ext.csv`, `bench/lp_check_m0.csv` | 밖 27개 Method 1, 91개 Method 0 정확성 | `tools/lp_check.py --methods 1|0 --csv …` |
+| `tools/spx_oracle.py` 필드 | 이제 `lu`(갱신 수·주기·η 길이·열 nnz), `price.allow/avg/score/cost_mode/row_cost/var_cost`, `pt`(섭동 카운터 0x2c0·0x330·0x334·0x2b0·0x110·0x140·0x3e0·0x35c) | 엔진 스냅숏(`RSOLVER_SNAP`)도 같은 이름을 남긴다 |
+| `tools/proto/alphacmp.py`, `tools/proto/rng_oracle.py` | BFRT 입력 α 순서·값 대조, libgurobi RNG 직접 호출 | |
 
 프로토타입 `tools/proto/{lu_singleton,btran_dual,dse_weights}.py`는 `bench/oracle/iter0`을 직접 읽는다(인자 없음).
 
@@ -198,4 +208,15 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 - **반복 비교**: `RSOLVER_SNAP=<file>`로 엔진 스냅숏, `python tools/proto/statecmp.py <name> <spx_oracle.py 출력>`. d는 Gurobi 규약(상한 부호 반전, 기저 변수 잔여 유지)으로 저장된다.
 - **점검**: `sh tools/m1check.sh`(Herdr pane, 5분 안팎): lp_check(Method 1) → itstat → pathcmp all. 오라클 비교 `tools/spx_oracle.py`는 이제 LU 갱신 수·CHUZR 허용량(`lu`, `price.allow`)도 남기고, `statecmp.py`는 위치 대신 **변수 기준**으로 x_B·w·목록을 비교한다.
 - `git checkout <file>`로 실험을 되돌릴 때 커밋 안 한 다른 변경까지 날아간다(이번 세션에 한 번 겪음). 실험 전 커밋하거나 패치로 저장한다.
-- 디버그 출력: `RSOLVER_DEBUG=1`이면 dual 종료 상태와 해의 bound 위반을 stderr로 낸다.
+- 디버그 출력: `RSOLVER_DEBUG=1`이면 dual/primal 단계 결과, 2000/5000반복마다 진행, 해의 bound 위반을 stderr로 낸다.
+- **Gurobi 잠금 재시도**: `until python … | tail -1; do …` 꼴은 파이프 때문에 실패해도 바로 끝난다. `for t in $(seq 1 100); do python … && break; sleep 5; done`처럼 쓴다.
+- **반복 수는 피벗 전에 올린다**(dual·자유 열·primal 모두): 재분해 안에서 쓰는 섭동 시드와 표식이 원본처럼 그 값을 본다.
+- 모드 0에서 오라클 `price.score`(P+0x18)는 쓰레기 값이라 비교하지 않는다(statecmp는 모드 1에서만 비교).
+- 공유 `.venv`의 `.so`는 Herdr 점검이 도는 동안 바꾸지 않는다. 그동안 새 빌드는 스크래치에 `python/rsolver` 사본을 두고 `target/release/lib_core.so`를 `_core.cpython-313-x86_64-linux-gnu.so`로 복사해 `PYTHONPATH`로 시험한다.
+- 오케스트레이터가 main에 다른 스트림(presolve·postsolve·barrier·PDHG)을 병합한다. `crates/py/src/lib.rs`, `python/rsolver/__init__.py`, `crates/lp/src/lib.rs`를 고칠 때는 최신 내용을 다시 읽고, 빌드 뒤 `maturin develop --release`로 공유 `.so`를 갱신한다.
+
+### 9.6 하위 에이전트·점검 pane 상태 (2026-11-06 멈출 때)
+
+- 하위 에이전트 "CHUZR 모드 1 명세"(general-purpose)는 사용 한도로 중간에 멈췄다. 새 세션에서는 다시 띄운다(같은 요청: `1bae9c` L420–800 모드 1 분기, `2896a3`·`1c8477` 모드 1, `full_init`, 문턱 ×1.1의 비교 대상, P+0x28의 의미; 현재 Rust `pricing.rs`의 `full_init`/`full_pick`/`full_touch`와의 차이). 다른 하위 에이전트(48d5f·FT/BTRAN·primal 명세, Hager 표)는 끝났고 결과는 문서에 옮겼다.
+- Herdr 점검 pane `w4:pD`(이 탭의 형제 pane)는 비어 있다. 마지막 실행은 `sh tools/m1check.sh`(Method 1 64개, 결과 커밋됨). 새 세션에서도 이 pane을 다시 쓴다.
+- 스크래치(`/tmp/claude-1000/…/scratchpad`)의 `one.py`·`lim.py`·`sortsim.py`·`viol.py`와 오라클 스냅숏은 세션 전용이다. 필요하면 다시 만든다(`one.py`: 한 모델 풀고 기준값과 비교, `lim.py`: IterationLimit로 진행 확인).
