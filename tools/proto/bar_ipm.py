@@ -75,6 +75,134 @@ def lp_from_oracle(rec):
               cshift=float.fromhex(rec["B"][0x618 // 8]), nnz=Dd["nnz"])
 
 
+def _propagate(rows, lb, ub, rhs, eq):
+    """30f5b9 free-column branch: two Gauss-Seidel passes of row activity bounds (a7d29c) on copies of the bounds.
+    '=' rows also run with s = -1. rows = per row (cols, vals) in ascending column order."""
+    lb, ub = lb.copy(), ub.copy()
+    for _ in range(2):
+        for i, (cj, av) in enumerate(rows):
+            for sgn in ((-1.0, 1.0) if eq[i] else (1.0,)):
+                a = av * sgn
+                ninf, act = 0, 0.0
+                for k in range(len(cj)):  # a7d29c: min activity of s a x, count infinite terms
+                    j = cj[k]
+                    if a[k] <= 0.0:
+                        if ub[j] >= BIG:
+                            ninf += 1
+                        else:
+                            act += a[k] * ub[j]
+                    elif lb[j] <= -BIG:
+                        ninf += 1
+                    else:
+                        act += lb[j] * a[k]
+                slack = sgn * rhs[i] - act
+                if slack < -1e-6:
+                    continue
+                if ninf == 0:
+                    for k in range(len(cj)):
+                        j, ak = cj[k], a[k]
+                        if ak > 1e-6:
+                            ub[j] = min(ub[j], slack / ak + lb[j])
+                        elif ak < -1e-6:
+                            lb[j] = max(lb[j], slack / ak + ub[j])
+                elif ninf == 1:
+                    for k in range(len(cj)):
+                        j, ak = cj[k], a[k]
+                        if (ak > 0 and lb[j] <= -BIG) or (ak < 0 and ub[j] >= BIG):
+                            break
+                    if ak > 1e-6:
+                        ub[j] = slack / ak
+                    elif ak < -1e-6:
+                        lb[j] = slack / ak
+    return lb, ub
+
+
+def _loosen(rows, lb, ub, rhs, eq):
+    """30f5b9 BARLOOSE (env+0x2bdc, default 1): drop (ub = 1e100) the upper bound of a boxed column when the row
+    already implies it; a row drops at most one bound per side."""
+    for i, (cj, av) in enumerate(rows):
+        neg = pos = 0
+        mx = mn = 0.0
+        for k in range(len(cj)):
+            j, a = cj[k], av[k]
+            lv, uv = lb[j] * a, ub[j] * a
+            if a <= 0.0:
+                neg += 1
+                mx += lv
+                mn += uv
+            else:
+                pos += 1
+                mx += uv
+                mn += lv
+        hi = mx - rhs[i] if eq[i] else 1e100
+        lo = rhs[i] - mn
+        for k in range(len(cj)):
+            j, a = cj[k], av[k]
+            if lb[j] > -BIG and ub[j] < BIG:
+                rng = ub[j] - lb[j]
+                if a <= 1e-4:
+                    if a < -1e-4 and (hi < a * 0.9999 * rng or (pos == 0 and hi - 1e-10 < a * rng)):
+                        ub[j] = 1e100
+                        lo = 1e100
+                elif lo < a * 0.9999 * rng or (neg == 0 and lo - 1e-10 < a * rng):
+                    ub[j] = 1e100
+                    hi = 1e100
+
+
+def lp_from_model(path, perm=None):
+    """Internal LP from the MPS file alone (docs/m3_ipm.md §1): scale_flag3 scaling, ordering row permutation,
+    '>' rows negated, 30f5b9 (free-column bounds, BARLOOSE, types, boxed u = ub - lb), 312a1e (shift by lb)."""
+    sys.path.insert(0, __import__("os").path.join(__import__("os").path.dirname(__file__), "..", "..", "python"))
+    import rsolver
+    mod = rsolver.read_model(path)
+    cs, rs, objscale = mod.scaling()
+    if perm is None:
+        perm = mod.barrier_symbolic()[0]
+    m, n = len(mod.rhs), len(mod.cols)
+    sense0 = mod.row_sense
+    sg = np.array([-1.0 if ch == ">" else 1.0 for ch in sense0])
+    A = np.zeros((m, n))
+    for j, col in enumerate(mod.cols):
+        for i, a in col:
+            A[perm[i], j] = sg[i] * a * rs[i] * cs[j]
+    b0 = np.zeros(m)
+    eq = np.zeros(m, bool)
+    for i in range(m):
+        b0[perm[i]] = sg[i] * mod.rhs[i] * rs[i]
+        eq[perm[i]] = sense0[i] == "="
+    c = np.array([cj * sj * objscale for cj, sj in zip(mod.obj, cs)])
+    lbD = np.array([v if v <= -BIG else v / sj for v, sj in zip(mod.lb, cs)])
+    ubD = np.array([v if v >= BIG else v / sj for v, sj in zip(mod.ub, cs)])
+    ncomp = int((lbD > -BIG).sum() + (ubD < BIG).sum() + (~eq).sum())
+    b = np.where(~eq, np.minimum(b0, BIG), b0)  # 2ca086: '<' rows rhs capped at 1e30
+    rows = []
+    for i in range(m):
+        cj = np.flatnonzero(A[i])
+        rows.append((cj, A[i, cj]))
+    lb, ub = lbD.copy(), ubD.copy()
+    free = (lbD <= -BIG) & (ubD >= BIG)
+    if free.any():
+        plb, pub = _propagate(rows, lbD, ubD, b0, eq)
+        for j in np.flatnonzero(free):
+            if min(abs(plb[j]), abs(pub[j])) < 1e6:
+                if abs(pub[j]) <= abs(plb[j]):
+                    ub[j] = pub[j] + 0.01
+                else:
+                    lb[j] = plb[j] - 0.01
+    _loosen(rows, lb, ub, b0, eq)
+    T = np.where(lb > -BIG, 1, 0) + np.where(ub < BIG, 2, 0)
+    T = np.concatenate([T, np.where(eq, 0, 1)]).astype(np.int8)
+    ub = np.where(T[:n] == 3, ub - lb, ub)
+    cshift = 0.0
+    for j in range(n):  # 312a1e: b -= A_j lb_j and c.lb in column order
+        if lb[j] > -BIG and lb[j] != 0.0:
+            nz = np.flatnonzero(A[:, j])
+            b[nz] = b[nz] - A[nz, j] * lb[j]
+            cshift = c[j] * lb[j] + cshift
+    return LP(A, b, c, lb, ub, T, eq, objscale, mod.objcon, b0=b0, ncomp=ncomp, cshift=cshift,
+              nnz=sum(len(col) for col in mod.cols))
+
+
 class State:
     def __init__(self, lp):
         m, n = lp.m, lp.n
@@ -224,6 +352,7 @@ class Normal:
             return ry - lp.Ax(dx), rx - lp.ATy(dy) + D * dx
         r_y, r_x = res(dx, dy)
         nrm = r_y @ r_y + r_x @ r_x
+        self.resn = (np.sqrt(r_y @ r_y), np.sqrt(r_x @ r_x))  # -> B+0x770+8k, B+0x780+8k
         kept = 0
         steps = 0
         while nrm >= reg * reg:
@@ -235,6 +364,7 @@ class Normal:
             if nrm * 0.99 <= new:
                 break
             dx, dy, r_y, r_x, nrm = ndx, ndy, n_y, n_x, new
+            self.resn = (np.sqrt(n_y @ n_y), np.sqrt(n_x @ n_x))
             kept += 1
             if kept > 4:
                 break
@@ -351,15 +481,17 @@ def direction(lp, st, fac, rhs_x, rhs_y, ru, rxz, rws):
     dz = (rxz - z dx)/x (T&1)."""
     n, up = lp.n, lp.up[:lp.n]
     dx, dy = fac.solve(rhs_x, rhs_y)
+    res = (0.0, 0.0)  # 2f59f1 zeroes B+0x770/0x780; only the refinement writes them
     if fac.mode1:
         dx, dy, steps = fac.refine(fac.Dtrue, rhs_x, rhs_y, dx, dy, fac.reg)
         fac.reflog.append(steps)
+        res = fac.resn
     dw = np.where(up, ru - dx[:n], 0.0)
     ds = np.zeros(n)
     ds[up] = (rws[up] - st.s[up] * dw[up]) / st.w[up]
     dz = np.zeros(lp.m + n)
     dz[lp.lo] = (rxz[lp.lo] - st.z[lp.lo] * dx[lp.lo]) / st.x[lp.lo]
-    return {"dx": dx, "dy": dy, "dz": dz, "dw": dw, "ds": ds}
+    return {"dx": dx, "dy": dy, "dz": dz, "dw": dw, "ds": ds, "res": res}
 
 
 def ratio(v, d, a):
@@ -458,6 +590,7 @@ def line_search(lp, st, D0, D1, k, N, alpha_p, alpha_d):
         D0[key] = D0[key] + wp * D1[key]
     for key in ("dz", "ds", "dy"):
         D0[key] = D0[key] + wd * D1[key]
+    D0["res"] = (max(D0["res"][0], wp * D1["res"][0]), max(D0["res"][1], wd * D1["res"][1]))
     return bp, bd, (wp == 0 and wd == 0)
 
 
@@ -507,7 +640,7 @@ def iteration(lp, st, R, ctx):
     if ctx.get("barcorrectors", -1) >= 0:
         ctx["K"] = K
     ncorr = 0
-    Daff = {k: v.copy() for k, v in D0.items()}
+    Daff = {k: (v.copy() if hasattr(v, "copy") else v) for k, v in D0.items()}
     for k in range(1, K + 1):
         cxz, cws, crhs = corrector_rhs(lp, st, Daff if k == 1 else D0, mu_t, k, ap, ad)
         D1 = direction(lp, st, fac, crhs, np.zeros(lp.m), np.zeros(lp.n), cxz, cws)
@@ -516,11 +649,20 @@ def iteration(lp, st, R, ctx):
         stop = none or (nap >= 1.001 and nad >= 1.001) or (k > 1 and nad * nap < 1e-100)
         if k > max(1, ctx["K"] // 10) and nap * 0.99 * nad < ap * ad:
             stop = True
+        if D0["res"][0] > 1e30 or D0["res"][1] > 1e30:
+            stop = True
         ap, ad = nap, nad
         if stop:
             break
     ctx["ncorr_done"] = ncorr
     ctx["reflog"] = fac.reflog if fac.mode1 else []
+    if R["mu"] < 1e-4:  # 2bf1ea L836-880: keep the solve error of the direction below the current residual
+        lim = max(R["rp2"] * 1.2, lp.ptol)
+        if D0["res"][0] > lim:
+            ap = min(lim / D0["res"][0], ap)
+        lim = max(R["rd2"] * 1.2, lp.dtol)
+        if D0["res"][1] > lim:
+            ad = min(lim / D0["res"][1], ad)
     ab = ctx["ab"]
     ctx["ab"] = [ap * ad, ab[0], ab[1]]
     fap, fad, eta = update(lp, st, D0, ap, ad, it, ctx)

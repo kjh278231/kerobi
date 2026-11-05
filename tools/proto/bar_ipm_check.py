@@ -2,7 +2,7 @@
 
 For each instance: LP data and the factor work estimates (F+0x160/0x168) from the iteration-0 oracle record
 bench/oracle/bar/it0/<name>.jsonl.gz, reference trajectory and result from bench/gurobi_bar_nopre/<name>/.
-Prints one row per instance (status, BarIterCount, objective error, first iteration whose pobj/dobj/compl leaves the
+LP from the MPS file (lp_from_model, needs PYTHONPATH=python for rsolver). Prints one row per instance (status, BarIterCount, objective error, first iteration whose pobj/dobj/compl leaves the
 reference trajectory) and the match counts. usage: python tools/proto/bar_ipm_check.py [name ...] [--json out]
 """
 import os
@@ -17,6 +17,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(__file__))
 import bar_ipm as P  # noqa: E402
+import numpy as np  # noqa: E402
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
 REF = os.path.join(ROOT, "bench", "gurobi_bar_nopre")
@@ -26,7 +27,11 @@ def check(nm):
     rec = P.load_oracle(os.path.join(ROOT, "bench", "oracle", "bar", "it0", nm + ".jsonl.gz"))[0]
     F = b"".join(struct.pack("<d", float.fromhex(t)) for t in rec["F"])
     F160, F168 = struct.unpack_from("<d", F, 0x160)[0], struct.unpack_from("<d", F, 0x168)[0]
-    lp = P.lp_from_oracle(rec)
+    lp = P.lp_from_model(os.path.join(ROOT, "..", "re", "bench", "data", "netlib", nm + ".mps.gz"))
+    st0 = P.initial_point(lp)
+    h = P.hexf
+    e0 = max(float(np.max(np.abs(a - h(rec[k])) / (1 + np.abs(h(rec[k])))))
+             for a, k in ((st0.x, "x"), (st0.z, "z"), (st0.w, "a670"), (st0.s, "a678")) if len(a))
     ref = [ln.rstrip().split(",") for ln in gzip.open(os.path.join(REF, nm, "trace.csv.gz"), "rt") if ln.startswith("barrier")]
     summ = json.load(open(os.path.join(REF, nm, "summary.json")))
     t0 = time.time()
@@ -44,7 +49,7 @@ def check(nm):
             break
     obj = tr[-1][1]
     objerr = abs(obj - summ["ObjVal"]) / max(1.0, abs(summ["ObjVal"]))
-    return dict(name=nm, m=lp.m, n=lp.n, status=status, grb_status=summ["Status"], iters=iters,
+    return dict(name=nm, m=lp.m, n=lp.n, init_err=e0, status=status, grb_status=summ["Status"], iters=iters,
                 grb_iters=summ["BarIterCount"], objerr=objerr, diverge=div, secs=round(time.time() - t0, 1))
 
 
@@ -55,8 +60,8 @@ def main():
         args.remove(out)
     names = args or sorted(os.listdir(REF))
     rows = []
-    print("| name | m | n | status | iters (Gurobi) | obj rel err | first divergence | s |")
-    print("|---|---|---|---|---|---|---|---|")
+    print("| name | m | n | iter-0 x,z,w,s err | status | iters (Gurobi) | obj rel err | first divergence | s |")
+    print("|---|---|---|---|---|---|---|---|---|")
     for nm in names:
         try:
             r = check(nm)
@@ -67,14 +72,15 @@ def main():
             continue
         rows.append(r)
         mark = "" if r["iters"] == r["grb_iters"] else " **"
-        print(f"| {nm} | {r['m']} | {r['n']} | {r['status']} | {r['iters']} ({r['grb_iters']}){mark} | {r['objerr']:.1e} | "
+        print(f"| {nm} | {r['m']} | {r['n']} | {r['init_err']:.0e} | {r['status']} | {r['iters']} ({r['grb_iters']}){mark} | {r['objerr']:.1e} | "
               f"{'-' if r['diverge'] is None else r['diverge']} | {r['secs']} |", flush=True)
     ok = [r for r in rows if "error" not in r]
     same = sum(r["iters"] == r["grb_iters"] for r in ok)
     st = sum(r["status"] == r["grb_status"] for r in ok)
     obj = sum(r["objerr"] <= 1e-6 for r in ok)
     near = sum(abs(r["iters"] - r["grb_iters"]) <= 0.05 * r["grb_iters"] for r in ok)
-    print(f"\nBarIterCount equal {same}/{len(rows)}, within 5% {near}/{len(rows)}, status equal {st}/{len(rows)}, "
+    init = sum(r["init_err"] <= 1e-10 for r in ok)
+    print(f"\niteration-0 point within 1e-10 {init}/{len(rows)}, BarIterCount equal {same}/{len(rows)}, within 5% {near}/{len(rows)}, status equal {st}/{len(rows)}, "
           f"objective rel err <= 1e-6 {obj}/{len(rows)}")
     if out:
         json.dump(rows, open(out, "w"), indent=1)
