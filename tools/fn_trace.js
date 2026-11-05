@@ -4,7 +4,7 @@
 // spec: {"model": "afiro", "params": {"Method": 1}, "max": 200000,
 //        "fns": [{"name": "chuzr", "off": "0xccbc0", "enter": ["i:0x2f8"], "leave": ["i:0x2f8", "Pi:0x40"]}]}
 // field codes, relative to args[0] (spx) saved at entry: i:/d:/l: int/double/long at spx+off;
-// Pi:/Pd: at P+off with P = *(spx+0x478); dv:/Pdv:off:k = k-th double of the array *(base+off), iw:/Piw: int; ai:N / al:N raw integer argument N; SV:off sparse vector {count, idx, val} at *(spx+off); aD:i:N / aI:i:N arrays at args[i] (N = n0: args[0]); ret = return value (rax).
+// Pi:/Pd: at P+off with P = *(spx+0x478); dv:/Pdv:off:k = k-th double of the array *(base+off), iw:/Piw: int; ai:N / al:N raw integer argument N; SV:off sparse vector {count, idx, val} at *(spx+off); AX/AXI:off array gathered at the alpha indices; XR leaving row; OUT:i:j output list; aD:i:N / aI:i:N arrays at args[i] (N = n0: args[0]); ret = return value (rax).
 // Gurobi may run in one process only (gurobi_guard.pth): retry later on "already running".
 const FRIDA = process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida';
 const frida = require(FRIDA);
@@ -48,6 +48,21 @@ function rd(spx, code, args, ret) {
   let p = spx;
   if (k[0] === 'P') p = spx.add(0x478).readPointer();
   let a = p.add(parseInt(v));
+  if (k === 'AX' || k === 'AXI') {  // AX:off values of array *(spx+off) gathered at the alpha indices (spx+0x208)
+    const sv = spx.add(0x208).readPointer(), cnt = sv.readS32(), ii = sv.add(8).readPointer();
+    const b = spx.add(parseInt(v)).readPointer(), out = [];
+    for (let t = 0; t < Math.max(cnt, 0); t++) { const j = ii.add(4 * t).readS32(); out.push(k === 'AX' ? b.add(8 * j).readDouble() : b.add(4 * j).readS32()); }
+    return out;
+  }
+  if (k === 'XR') {  // leaving row: [r, var, x_B[r], l, u]
+    const r = spx.add(0x2f8).readS32(), j = spx.add(0x470).readPointer().add(0x18).readPointer().add(4 * r).readS32();
+    return [r, j, spx.add(0x1e8).readPointer().add(8 * r).readDouble(), spx.add(0xa8).readPointer().add(8 * j).readDouble(), spx.add(0xb0).readPointer().add(8 * j).readDouble()];
+  }
+  if (k === 'OUT') {  // OUT:i:j count *(args[i]) and that many ints of args[j]
+    const [a, b] = code.split(':').slice(1).map(Number), cnt = args[a].readS32(), out = [];
+    for (let t = 0; t < Math.max(cnt, 0); t++) out.push(args[b].add(4 * t).readS32());
+    return [cnt, out];
+  }
   if (k === 'SV') {  // SV:off sparse vector struct at *(spx+off): [count, indices, values]
     const sv = spx.add(parseInt(v)).readPointer(), cnt = sv.readS32(), ii = sv.add(8).readPointer(), vv = sv.add(16).readPointer();
     const I = [], V = [];
