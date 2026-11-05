@@ -1356,6 +1356,8 @@ impl State {
     pub fn dual_bound_rows(&mut self, t: &ColTols, aggressive: bool) -> i32 {
         let (n, m) = (self.n, self.m);
         let (inf, feastol, opttol) = (t.infbound, t.feastol, t.opttol);
+        // shortcut: Method, Crossover and SolutionTarget are not in Params and assumed at their defaults (-1), so
+        // state+0x100 reduces to NumericFocus > 0; add them before running with Method=2 or SolutionTarget set.
         let implied_free = t.numeric_focus <= 0;
         // the original hides special columns by shifting their counts below zero for the status steps
         let plain = |s: &State, j: usize| 0 < s.col_cnt[j] && s.col_flag[j] == 0;
