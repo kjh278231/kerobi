@@ -267,7 +267,8 @@ impl Lu {
             };
             let maxc = cols.iter().next_back().map_or(0, |e| e.0).max(rset.iter().next_back().map_or(0, |e| e.0));
             for k in 1..=maxc {
-                if best.is_some_and(|b| b.3 <= (k - 1) * (k - 1)) || seen >= 4 {
+                // stop at a pivot no smaller count can beat, or after 4 searched lines once a pivot is found
+                if best.is_some_and(|b| b.3 <= (k - 1) * (k - 1)) || (best.is_some() && seen >= 4) {
                     break;
                 }
                 for &(_, p) in cols.range((k, 0)..(k + 1, 0)) {
@@ -282,7 +283,7 @@ impl Lu {
                         }
                     }
                     seen += 1;
-                    if seen >= 4 {
+                    if seen >= 4 && best.is_some() {
                         break;
                     }
                 }
@@ -297,7 +298,7 @@ impl Lu {
                         }
                     }
                     seen += 1;
-                    if seen >= 4 {
+                    if seen >= 4 && best.is_some() {
                         break;
                     }
                 }
