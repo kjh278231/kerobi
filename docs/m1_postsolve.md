@@ -108,7 +108,7 @@ tools/gurun.sh ../.venv/bin/python tools/uncrush_oracle.py <model.mps.gz> <out.j
 |---|---|---|
 | PRELIMIT=17 | **58/58** (uncrush가 도는 모델. 나머지 6개는 reduction이 없어 `363daa`가 안 돈다: degen3, grow7, grow15, grow22, scsd1, scsd6) | 입력은 오라클 `pre_after`. basis·x·dual 비트 일치 |
 | PRELIMIT=1..16 | 전부 일치 | 같은 방법 |
-| 기본값 | fit1p 1/1 (scsd1, scsd6은 presolve가 아무것도 안 해 uncrush가 안 돈다) | 집계 레코드(type 2 리스트판, 6, 11, 21)는 아직 |
+| 기본값 | §8 참고 (2단계: 53/59) | |
 
 코드: `crates/lp/src/presolve/postsolve.rs`(`Post`, `uncrush`, `simd_sum`, 타입 4 `parallel_col`). 비교: `tools/postsolve_check.py`.
 
@@ -148,4 +148,45 @@ python tools/postsolve_check.py ... --arena          # 레코드 크기로 설�
 - type 8의 끝은 4개씩 묶은 루프에서 `val*(t*dir)`, 꼬리에서 `(val*t)*dir`이다. dir=±1이라 값은 같다.
 - **마무리 slack(`a8ff5e`)**: 열 순서로 `x_j*a + s`를 누적하고 `rhs − s`를 한다. 원본은 `>` 행을 부호 뒤집어 들고 있다가 마지막에 되돌려 놓는다. 그래서 `>` 행은 `−((−rhs) − s')`(s' = s가 0이면 +0, 아니면 −s)로 써야 0의 부호까지 맞는다(rhs=0이면 +0, 합이 rhs와 같으면 −0).
 - 타입 4 (`35d235`): LP 열(정수 표시 0)만 포팅했다. 정수 표시 1, 2 분기는 안 했다. 기저 인자는 디컴파일 호출에서 빠져 있어 넘겨진다고 가정했다(fit1d 일치로 확인).
-- 아직 안 한 것: type 6, 11, 12, 0x15, 0x16, 0x18, 0xd(`3a141c`), 0x10(`3a484d`)의 포팅. 기저 없는 경로(`param_7 == 0`), spx 없는 경로, 스케일된 원본 모델(`+0x3e0`) 분기.
+- 아직 안 한 것: type 12, 0x16, 0xd(`3a141c`), 0x10(`3a484d`)의 포팅(Netlib 기본값 오라클에는 없다). 기저 없는 경로(`param_7 == 0`), spx 없는 경로, 스케일된 원본 모델(`+0x3e0`) 분기.
+
+## 8. 기본값과 집계 레코드 (2단계, 2026-11-05)
+
+오라클을 파라미터 없이 64개 떴다. `363daa`가 도는 모델은 59개, 레코드 종류 수는 type 2: 7498, 1: 5715, 7: 1848, 6: 458, 11: 353, 8: 236, 21: 109, 4: 105, 3: 21, 14: 18, **24: 14**이다.
+
+**결과: 53/59 일치**(5개는 uncrush 없음). 틀린 6개 중 degen2·degen3은 `47c445` 미포팅 때문이고(레코드가 모자라 인덱스 초과), 나머지 4개(beaconfd, finnis, forplan, ganges)는 아래 type 24 때문이다. 일치하지 않는 모델 중 정렬이 원인인 것은 없다(`--oracle-align`과 시뮬레이션 결과가 같다).
+
+### type 6 (`AggBound`, 집계 단계 D) — `363daa` case 6, 기저 경로
+데이터: code@0, e@4, k@8, r@0xc, b@0x10, a_e@0x18, a_k@0x20 (code bit 8 = col_flag 0x80은 PWL이라 안 했다).
+- k의 상태가 −1이면 code&1, −2이면 code&2가 있을 때만 동작한다.
+- 동작: `y[r] −= d[k]/a_k`, `d[e] = ((−d[k])·a_e)/a_k`, `d[k] = 0`, `bs[k] = bs[e]`.
+- `bs[e]`는 a_e·a_k ≤ 0이면 (k의 옛 상태 ≠ −1 ? −2 : −1), > 0이면 (옛 상태 == −1 ? −2 : −1)이다.
+
+### type 11 (`SlackCol`) — `x[slack r] = a·x[j]`, `bs[행 r] = bs[j]`, `bs[j] = 0`
+
+### type 21 (`PairAgg`, `35fd68`)
+데이터: r@0, n1@4, n2@8, e1@0xc, e2@0x10, k1@0x14, k2@0x18, f1@0x20, f2@0x28, a1@0x30, a2@0x38, obj1@0x40, obj2@0x48, ub1@0x50, ub2@0x58, ind@0x60, val@0x68.
+- `x[e1] = f1·x[k1]`, `x[e2] = f2·x[k2]`.
+- `s1 = obj1 + Σ_{첫 n1항} y·a`, `s2 = obj2 + Σ_{나머지} y·a`. 둘 다 정렬 의존 내적이고 두 번째 val 포인터는 `val + 8·n1`이다.
+- 경우 가르기: x[e1] ≥ 1e−6 또는 x[e2] ≥ 1e−6이면 (|a2|·x2 ≤ |a1|·x1 ? 경우 1 : 경우 −1). 아니면 d[k1] ≥ 1e−6일 때 (d[k2] < 1e−6 ? −1 : 0), 아니면 1.
+- 경우 1: `y[r] = −s1/a1`, `d[e1] = 0`, `d[e2] = s2 + a2·y[r]`, `d[k2] −= f2·d[e2]`, `bs[e2]` = x2 < 1e−6 ? −1 : (ub2−1e−6 < x2 ? −2 : −3). 경우 −1은 e1, e2를 바꾼 것이다.
+- 경우 0: 후보 e1, e2, k1, k2 중 비율(s/|a|)이 가장 작은 것이 기저에 들어가고(`bs = r`), 나머지 둘 중 e1, e2는 −1이 된다. y[r], d 네 개를 식대로 고친다.
+
+### type 2 (집계판)
+`4f4d0a`판과 배치가 같다. mode = Lc ≥ 0이면 기존 처리(`y[r] = −(obj + Σ y·a)/a`)로 맞다. 단계 B의 pivot 열 자신이 row에 들어 있는 경우도 그대로 맞았다.
+
+### 아레나
+- 첫 청크 크기는 **생성자 시점의 nnz**/5 + 10이다. 집계가 `st.nnz`(+0xd8)를 바꾸므로 `run_post`가 `State::new` 직후의 값을 저장해 `Post::new`에 넘긴다.
+- 청크 전환 위치는 59개 모델 모두 시뮬레이션과 일치했다.
+
+### type 24 (`361ab1`, `3a008f`가 만든다) — presolve가 아직 안 쌓는다
+`3a008f`의 호출자는 `5a4d8b`, `5a5eff`(둘 다 `3cd406`에서 부른다)뿐이다. 기본값 오라클의 4개 모델에 14개가 있다.
+- 데이터: j@0, lb@8, ub@0x10, vtype(바이트)@0x18, y_idx@0x1c, y_add@0x20, 행 수@0x28, start@0x30, rowid@0x38, sense@0x40, rhs@0x48, ind@0x50, val@0x58. 크기 `u20+(8K−8)+u16+u17+8c+0x98`(K 총 항 수, c 행 수, u20=(4K−1)&~7, u16=(4c+3)&~7, u17=(c−1)&~7).
+- `y_idx`는 행, `y_add`는 −obj_j로 보이다(forplan 하나로 확인).
+- uncrush: 각 행에서 `v = (rhs − Σ_{k≠j} a·x_k)/a_ij`. 상한 후보(a_ij > 0 또는 `=`)는 최솟값, 하한 후보(a_ij < 0 또는 `=`)는 최댓값을 잡는다(초기값은 ub, lb). 하한이 그대로 lb이면서 유한하거나, (상한이 무한이거나 ub−1e−10 이하이고 |L| < |U|)이면 L, 아니면 U를 x_j로 둔다. 상태: lb와 같으면 −1, ub와 같으면 −2, 아니면 그 한계를 낸 행의 기저를 받고 그 행은 −1이다. 마지막에 `y[y_idx] += y_add`.
+- `PostRec::ColRows`, `layout`, `kind`, 위 uncrush를 넣었다. **쌓는 쪽이 없어 단위로는 검증하지 못했다.** 임시로 forplan의 Subst(빈 행, 빈 열)를 ColRows로 바꿔 보니 x, d, y가 모두 맞고 기저만 한 곳 달랐다(행 159: Gurobi는 −1/−2 상태, 곧 자기 번호 기저로 남는데 rsolver의 `row_cnt`는 −3이라 −1이 된다).
+- 원인은 presolve 쪽이다. Gurobi는 이 "열 하나가 든 행"(열은 lb=0, ub=∞ 또는 유한, 행의 다른 열은 없음)을 `5a5eff`/`5a4d8b`로 먼저(집계보다 앞에, 한꺼번에) 지우고, rsolver는 집계 단계 A에서 type 2로 지운다. presolved 모델은 같지만 레코드 종류와 순서, `row_cnt`(−1/−2 대 −3)가 다르다.
+  - forplan: Subst(j 72, r 159, row [], col [], c0 0) ↔ type 24(j 72, lb 0, ub ∞, 행 1개).
+  - finnis: Subst(j 55, r 19, mode −1) ↔ type 24(j 155, lb −0.001, ub ∞).
+  - beaconfd: Subst(빈 행) 6개가 Gurobi는 24 5개로, 위치도 앞쪽에 몰려 있다.
+  - ganges: 24가 7개이고(열 1039, 1050 등은 행이 4–6개) type 1 몇 개가 사라진다.

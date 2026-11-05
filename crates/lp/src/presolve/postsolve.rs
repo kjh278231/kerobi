@@ -65,6 +65,12 @@ pub fn layout(r: &PostRec) -> (i64, [i64; 2]) {
         // aggregation records (docs/m1_presolve_agg.md §9); the value array of type 21 is at 0x90 + Q
         PostRec::AggBound { .. } => (0x50, [0, 0]),
         PostRec::SlackCol { .. } => (0x28, [0, 0]),
+        PostRec::ColRows { rows, .. } => {
+            // `3a008f`: u20 + (8K - 8) + u16 + u17 + 8c + 0x98; K entries in all, c rows
+            let c = rows.len() as i64;
+            let k: i64 = rows.iter().map(|r| r.terms.len() as i64).sum();
+            (((4 * k - 1) & !7) + 8 * k - 8 + ((4 * c + 3) & !7) + ((c - 1) & !7) + 8 * c + 0x98, [0, 0])
+        }
         PostRec::PairAgg { n1, n2, .. } => {
             let lt = (n1 + n2) as i64;
             let q = (4 * lt - 1) & !7;
@@ -88,6 +94,7 @@ impl PostRec {
             PostRec::AggBound { .. } => 6,
             PostRec::SlackCol { .. } => 11,
             PostRec::PairAgg { .. } => 21,
+            PostRec::ColRows { .. } => 24,
         }
     }
 }
@@ -386,6 +393,51 @@ pub fn uncrush(post: &Post, orig: &Model, pre: &PreSol, aligns: Option<&[[u8; 2]
                 x[n + rr] = *av * x[j];
                 bs[n + rr] = bs[j];
                 bs[j] = 0;
+            }
+            PostRec::ColRows { j, lb, ub, y_idx, y_add, rows, .. } => {
+                // `361ab1`, basis path: x_j goes to the largest lower / smallest upper bound its rows imply
+                let j = *j as usize;
+                let (mut lo, mut hi) = (*lb, *ub);
+                let (mut lo_row, mut hi_row) = (-1i32, -1i32);
+                for rw in rows {
+                    let mut v = rw.rhs;
+                    let mut aij = f64::NAN;
+                    for &(c, val) in &rw.terms {
+                        if c as usize == j {
+                            aij = val;
+                        } else {
+                            v -= val * x[c as usize];
+                        }
+                    }
+                    v /= aij;
+                    if (aij > 0.0 || rw.sense == b'=') && v < hi {
+                        hi_row = rw.row;
+                        hi = v;
+                    }
+                    if (aij < 0.0 || rw.sense == b'=') && lo < v {
+                        lo_row = rw.row;
+                        lo = v;
+                    }
+                }
+                let xj = if (-1e30 < lo && lo < *lb + 1e-10) || ((1e30 <= hi || hi <= *ub - 1e-10) && lo.abs() < hi.abs()) {
+                    lo
+                } else {
+                    hi
+                };
+                x[j] = xj;
+                if (xj - *lb).abs() <= 1e-10 {
+                    bs[j] = -1;
+                } else if (xj - *ub).abs() <= 1e-10 {
+                    bs[j] = -2;
+                } else {
+                    let rw = if xj == lo { lo_row } else { hi_row } as usize;
+                    x[n + rw] = 0.0;
+                    bs[j] = bs[n + rw];
+                    bs[n + rw] = -1;
+                }
+                if *y_idx >= 0 {
+                    dual[n + *y_idx as usize] += *y_add;
+                }
             }
             PostRec::PairAgg { r: rr, e1, e2, k1, k2, n1, n2, f1, f2, a1, a2, obj1, obj2, ub1, ub2, entries } => {
                 let (rr, e1, e2, k1, k2) = (*rr as usize, *e1 as usize, *e2 as usize, *k1 as usize, *k2 as usize);
