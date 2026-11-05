@@ -177,7 +177,7 @@ fn relax_zero_one(md: &Model, mu: f64, ub: &mut [f64], ty: i32) -> f64 {
         return (nf + nf) * mu;
     }
     for j in 0..n {
-        let free = if ty == 5 { ub[j] < INF && 0.001 < md.obj[j] } else { 1e-10 <= ub[j] - md.lb[j] && md.col_len[j] != 0 };
+        let free = if ty == 5 { ub[j] < INF && 0.001 < md.obj[j] * md.sense as f64 } else { 1e-10 <= ub[j] - md.lb[j] && md.col_len[j] != 0 };
         if free {
             ub[j] = INF;
         }
@@ -348,10 +348,11 @@ impl State {
             act_min: vec![0.0; m],
             lb: md.lb.clone(),
             ub,
-            obj: md.obj.clone(),
+            // presolve works on the minimization form; `to_model` turns it back
+            obj: md.obj.iter().map(|&c| c * md.sense as f64).collect(),
             rhs,
             sense,
-            objcon: md.objcon,
+            objcon: md.objcon * md.sense as f64,
             nnz: raw_nnz as i64,
             mult_lo: vec![1.0; n],
             mult_hi: vec![1.0; n],
@@ -490,7 +491,8 @@ impl State {
     /// entries keep column-CSR order, skipping removed rows.
     pub fn to_model(&self, md: &Model) -> Model {
         let mut row_map = vec![-1i32; self.m];
-        let mut q = Model { name: format!("{}_pre", md.name), sense: md.sense, objcon: self.objcon, ..Model::default() };
+        let s = md.sense as f64;
+        let mut q = Model { name: format!("{}_pre", md.name), sense: md.sense, objcon: self.objcon * s, ..Model::default() };
         for i in 0..self.m {
             if self.row_cnt[i] >= 0 {
                 row_map[i] = q.rhs.len() as i32;
@@ -515,7 +517,7 @@ impl State {
             // `3b0917` takes the length from the live count; a mismatch means the state is inconsistent.
             debug_assert_eq!(q.col_ind.len() as i64 - q.col_beg.last().unwrap(), self.col_cnt[j] as i64, "col {j}");
             q.col_len.push(self.col_cnt[j]);
-            q.obj.push(self.obj[j]);
+            q.obj.push(self.obj[j] * s);
             q.lb.push(self.lb[j]);
             q.ub.push(self.ub[j]);
             q.vtype.push(md.vtype[j]);
@@ -533,11 +535,12 @@ impl State {
             q.ub.push(self.rhs[i as usize] - lo);
             q.vtype.push(b'C');
         }
-        // nothing left: presolve solved the model (status != 0), `3cd406` drops it and `999702` makes an empty
-        // model named "Presolved". shortcut: that model's objective constant (+0x60, copied from the uncrush data)
-        // is kept as ours; check it on a fully removed model with a nonzero constant before relying on it.
+        // nothing left: presolve solved the model (status != 0), `3cd406` drops it and `999702` makes a new empty
+        // model "Presolved": minimize, with the minimization-form constant (+0x60 from the uncrush data)
         if q.rhs.is_empty() && q.obj.is_empty() {
             q.name = "Presolved".into();
+            q.sense = 1;
+            q.objcon = self.objcon;
         }
         q
     }

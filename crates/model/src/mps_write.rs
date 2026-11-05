@@ -59,10 +59,10 @@ fn names(m: &Model) -> (Vec<String>, Vec<String>) {
 
 pub fn to_string(m: &Model) -> String {
     let mut o = String::new();
-    let sense = m.sense as f64;
     let (row_names, col_names) = names(m);
     let _ = writeln!(o, "NAME {}", m.name);
-    if sense < 0.0 {
+    // `obj` and `objcon` are as read (the MPS reader does not flip them for MAX)
+    if m.sense < 0 {
         o.push_str("OBJSENSE MAX\n");
     }
     o.push_str("ROWS\n N  OBJ\n");
@@ -72,7 +72,7 @@ pub fn to_string(m: &Model) -> String {
     }
     o.push_str("COLUMNS\n");
     for (j, name) in col_names.iter().enumerate() {
-        let c = m.obj[j] * sense;
+        let c = m.obj[j];
         if c != 0.0 || m.col_len[j] == 0 {
             let _ = writeln!(o, "    {name:<8}  OBJ       {}", fmt_num(c));
         }
@@ -83,7 +83,7 @@ pub fn to_string(m: &Model) -> String {
     }
     o.push_str("RHS\n");
     if m.objcon != 0.0 {
-        let _ = writeln!(o, "    RHS1      OBJ       {}", fmt_num(-(m.objcon * sense)));
+        let _ = writeln!(o, "    RHS1      OBJ       {}", fmt_num(-m.objcon));
     }
     for (i, &r) in m.rhs.iter().enumerate() {
         if r != 0.0 {
