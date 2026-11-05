@@ -162,7 +162,7 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 |---|---|---|
 | (1) 정확성 Method 1 | Netlib 64개 62/64(bandm·pilot4 시간 초과: dual 경로가 갈린 뒤 교과서식 primal 정리가 정체) | 91개 전체는 미점검(dfl001은 release 300초 초과, pilot·pilot87 미확인) |
 | (1) 정확성 Method 0 / 기본 | 미점검 | 기본 = dual 경로. Method 0(교과서식 primal)은 25fv47에서 300초 초과 |
-| (2) P1 반복 수 | 11/64 일치, ±5% 안 37/64, 비율 기하평균 1.025. 피벗 경로 전체 일치 2/64, 첫 분기 위치 중앙값 7% | `sh tools/m1check.sh`(→ `bench/lp_check.csv`, `bench/pathcmp.txt`). 반복 수가 같아도 경로는 대부분 일찍 갈린다 |
+| (2) P1 반복 수 | 11/64 일치, ±5% 안 37/64, 비율 기하평균 1.014. 피벗 경로 전체 일치 2/64, 첫 분기 위치 중앙값 7% | `sh tools/m1check.sh`(→ `bench/lp_check.csv`, `bench/pathcmp.txt`). 반복 수가 같아도 경로는 대부분 일찍 갈린다 |
 | (3) P2 work | 미구현 | 작업량 계수 spx+0x148(1.3, m > 10000이면 보정), 커널마다 연산 수 누적 |
 | (4) P3 시간 | 미측정 | release에서 25fv47 0.5–0.7초 대 Gurobi 0.09초. 반복마다 O(n+m) 루프와 조밀 FTRAN/BTRAN이 원인 |
 | (5) 구조 | LU(Markowitz·FT), crash, dual·primal, 드라이버 일부 | Quad(F80) 미착수, `0c3d0d` 분기(웜스타트·network·sifting·비스케일 재풀이) 미이식, common(난수 `a7b4d6`/`a7b54f`) 미이식 |
@@ -172,7 +172,7 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 완료(4차 세션, [m1_notes §8.8](m1_notes.md)): 64개 피벗 경로 오라클(`bench/oracle/path1/`, `tools/proto/pathcmp.py all`), 자유 열 루프 원본화(첫 최대 위치, 피벗마다 반복 수, 남은 열 2차 패스, 루프 뒤 재분해: perold 4819 → 1271회, Gurobi 1273), 재분해 주기 m^0.7(Full pricing 때 m^0.65), 재분해마다 위치 재번호(옛 WIP 패치), 행 사본(`a075e`·`a104a`·`a114f`)과 α 벡터 순서(`0a4109`: 1.8 규칙, 처음 닿은 순/열 순, slack은 ρ 순). `48d5f` 전체 명세는 [m1_notes §8.9](m1_notes.md)(미검증).
 
 1. **LU 갱신 뒤 BTRAN 출력 순서**: `tools/proto/alphacmp.py <name>`로 보면 grow7·scsd1·e226·lotfi 모두 BFRT 첫 호출의 α는 순서·비트가 같고, LU 갱신 1회 뒤 호출부터 ρ 순서가 다르다(Gurobi는 희소 출력에 나가는 행이 먼저, 우리 `btran_general`은 조밀 뒤 행 순서). Forrest–Tomlin 갱신 저장(`5b257` L860–975)과 `221173`의 갱신 경로(Uᵀ 희소 → 행 eta → Lᵀ)를 원본대로 옮긴다. 옛 2·3번(Markowitz `036ade`, FT 회계 L+0x184)이 여기에 묶인다. 재분해 시점도 이 회계에 달려 있다.
-2. **`48d5f` 이식**(§8.9): 보통의 재분해 뒤에는 flip이 아니라 비용 이동(SHIFT), 첫 분해 뒤 RANDSMALL, 이유 4 등에서 FLIP, 섭동 GLOBAL과 그 발동 조건(0x2c0 % K, 퇴화 비율), RNG(`a7b4d6`·`a7b54f`·`895c5`, common에 둔다). 지금 엔진은 박스 열만 flip하고 나머지 쌍대 위반을 남겨 maros 같은 경로가 흔들렸다. 오라클의 `pert`·`pert_level` 필드로 검증한다.
+2. **`48d5f` 이식**(§8.9): 보통의 재분해 뒤 비용 이동(SHIFT)은 넣었다(`reinvert`, 이유 4·인공 bound 종료는 FLIP; 기하평균 1.025 → 1.014). 남은 것: 첫 분해 뒤 RANDSMALL, 이유 4 등에서 FLIP, 섭동 GLOBAL과 그 발동 조건(0x2c0 % K, 퇴화 비율), RNG(`a7b4d6`·`a7b54f`·`895c5`, common에 둔다). 지금 엔진은 박스 열만 flip하고 나머지 쌍대 위반을 남겨 maros 같은 경로가 흔들렸다. 오라클의 `pert`·`pert_level` 필드로 검증한다.
 3. **primal 원본 이식**(`0478d3` 계열): bandm(인공 bound 단계 뒤 상태 5 상황, 지금은 shortcut으로 dual을 이어 감)과 pilot4(섭동 제거 뒤 정리)가 교과서식 primal에서 정체한다. Method 0 정확성에도 필요하다.
 4. BFRT 나머지(코퍼스 불일치 18건, 후보 없음 경로), 행 사본의 같은 |a| 분할(`9edd1`), CHUZR 모드 1 열 원소 처리, P2 work, P3 속도(희소 FTRAN/BTRAN), Quad.
 

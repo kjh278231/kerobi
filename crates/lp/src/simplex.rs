@@ -171,14 +171,40 @@ impl<'a> Engine<'a> {
 
     /// Refactor and recompute x_B and d; in the dual, boxed nonbasics that turned dual infeasible flip (048d5f).
     fn reinvert(&mut self) {
+        self.reinvert_with(false);
+    }
+
+    /// Refactor, then recompute x_B and d. In the dual, `48d5f` absorbs dual infeasibilities by shifting costs after
+    /// an ordinary refactor (SHIFT) and by moving boxed columns to the other bound after reason 4 (FLIP, `flip`).
+    fn reinvert_with(&mut self, flip: bool) {
         self.refactor();
         self.compute_xb();
         self.compute_duals();
-        if self.in_dual && self.make_dual_feasible() {
-            self.compute_xb();
-        }
         if self.in_dual {
+            if flip {
+                if self.make_dual_feasible() {
+                    self.compute_xb();
+                }
+            } else {
+                self.shift_costs();
+            }
             self.price_full();
+        }
+    }
+
+    /// SHIFT of `48d5f` (m1_notes §8.9): a dual-infeasible nonbasic gets its working cost moved so that d = 0.
+    fn shift_costs(&mut self) {
+        for j in 0..self.n + self.m {
+            let d = self.d[j];
+            let shift = match self.vstat[j] {
+                -1 if d < -OPT_TOL => d,
+                -2 if d < -OPT_TOL => -d,
+                -3 if d.abs() > OPT_TOL => d,
+                _ => continue,
+            };
+            self.c[j] -= shift; // raw reduced cost −shift·(sign) becomes 0
+            self.d[j] = 0.0;
+            self.perturbed = true;
         }
     }
 
@@ -561,7 +587,7 @@ impl<'a> Engine<'a> {
             eprintln!("end_big_m: {} favourable columns stay on artificial bounds at it {}", keep.iter().filter(|&&k| k).count(), self.iter);
         }
         self.big_m = false;
-        self.reinvert();
+        self.reinvert_with(true);
         None
     }
 
@@ -710,7 +736,7 @@ impl<'a> Engine<'a> {
             };
             if r == usize::MAX {
                 if self.lu.n_updates > 0 {
-                    self.reinvert();
+                    self.reinvert_with(true); // reason 4
                     if (0..self.m).any(|p| self.primal_infeas(p) != 0.0) {
                         continue;
                     }
