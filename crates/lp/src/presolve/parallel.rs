@@ -480,8 +480,7 @@ impl State {
         let r = sy / sx;
         let (mut tx, mut ty) = (1e-9, 1e-9);
         let (mut lox, mut hix, mut loy, mut hiy) = (-inf, inf, -inf, inf);
-        // state+0x100 == 0 (see dual_bound_rows)
-        if t.numeric_focus <= 0 {
+        if t.sol_mode == 0 {
             tx = 1e-9 / if 1.0 < sx.abs() { sx.abs() } else { 1.0 };
             ty = 1e-9 / if 1.0 < sy.abs() { sy.abs() } else { 1.0 };
             if -inf < lx || ux < inf {
@@ -726,8 +725,9 @@ mod tests {
             ..Model::default()
         };
         let t = ColTols { infbound: 1e30, feastol: 1e-6, opttol: 1e-6, numeric_focus: 0, agg_mult_limit: 1e14,
+                          sol_mode: 0, method: -1, crossover: -1, solution_target: -1,
                           dual_reductions: true, precrush: 0 };
-        let mut st = State::new(&md);
+        let mut st = State::new(&md, -1);
         st.activity(None, 1e30);
         assert_eq!(st.parallel(0, &t), 0);
         assert_eq!((st.antipar, st.rows_removed), (1, 0));

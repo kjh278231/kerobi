@@ -194,7 +194,9 @@ fn relax_zero_one(md: &Model, mu: f64, ub: &mut [f64], ty: i32) -> (f64, bool) {
 /// Work the constructor counts (`3a484d` with `5118e6` CSR build and `534a8b` tracker; docs/m1_presolve.md
 /// appendix A), in the original order. Checked against `tools/work_oracle.py` at PRELIMIT=1.
 #[allow(clippy::too_many_arguments)]
-fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, contiguous: bool, ub: &mut [f64], ptype: &mut i32) -> f64 {
+#[allow(clippy::too_many_arguments)]
+fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, contiguous: bool, ub: &mut [f64], ptype: &mut i32,
+                    method: i32) -> f64 {
     let mu = if nnz <= 100_000 { 1.0 } else { (nnz as f64 / 1e4).log10().sqrt() };
     let (nf, mf, zf) = (n as f64, m as f64, nnz as f64);
     let mut w = nf;
@@ -245,8 +247,8 @@ fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, cont
             *ptype = 1;
         }
     } else if maxcol > 2 || oth != 0 || p1 != m1 {
-        // env+0x26e0 < 1 and no PWL/QC/SOS hold for an LP; Method != 2 is assumed (Params has no Method)
-        if oth == 0 && m1 == 0 {
+        // env+0x26e0 < 1 and no PWL/QC/SOS hold for an LP
+        if oth == 0 && m1 == 0 && method != 2 {
             let c = lead(&|i| (md.rhs[i] - 1.0).abs() <= 1e-10);
             w += c as f64 * mu;
             if m <= c {
@@ -295,7 +297,8 @@ impl State {
         }
     }
 
-    pub fn new(md: &Model) -> State {
+    /// `method` is env+0x2438 (Method 2 skips the 0/1 relaxation of the problem-type scan).
+    pub fn new(md: &Model, method: i32) -> State {
         let (n, m) = (md.num_vars(), md.num_constrs());
         let neg: Vec<bool> = md.row_sense.iter().map(|&s| s == b'>').collect();
         // `5118e6`: column segments keep the model's starts; entries with |a| <= 1e-13 (or NaN) are squeezed out,
@@ -348,7 +351,7 @@ impl State {
         let sense = md.row_sense.iter().map(|&c| if c == b'>' { b'<' } else { c }).collect();
         let mut ub = md.ub.clone();
         let mut ptype = 0;
-        let work = constructor_work(md, n, m, raw_nnz, spare, contiguous, &mut ub, &mut ptype);
+        let work = constructor_work(md, n, m, raw_nnz, spare, contiguous, &mut ub, &mut ptype, method);
         State {
             n,
             m,

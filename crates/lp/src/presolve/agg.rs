@@ -952,7 +952,8 @@ impl State {
         // candidate columns and their class (0 both bounds needed, 1 upper only, 2 lower only, 3 implied free)
         let mu = self.work_mult;
         // type 4 (network) skips the bound propagation and takes the 53c9ee list even on the first call
-        let cand: Vec<i32> = if ccnt == n && first && self.ptype != 4 {
+        // state+0x100 != 0 takes the 53c9ee list on the first call too (37f484 L512-516)
+        let cand: Vec<i32> = if ccnt == n && first && self.ptype != 4 && t.sol_mode == 0 {
             let mut lc = self.lb.clone();
             let mut uc = self.ub.clone();
             let all: Vec<i32> = (0..m as i32).collect();
@@ -984,7 +985,7 @@ impl State {
             (0..n as i32).collect()
         } else {
             // 53c9ee: columns flagged 0x20, then the columns of rows flagged 0x20
-            assert!(!first || self.ptype == 4, "37f484 entered with a partial column list (53af0f path) is not ported");
+            assert!(!first || self.ptype == 4 || t.sol_mode != 0, "37f484 entered with a partial column list (53af0f path) is not ported");
             let mu3 = mu * 3.0;
             self.work += ccnt as f64 * mu3;
             let mut l = Vec::new();
@@ -1896,9 +1897,9 @@ impl State {
         if !(grow_ok(k1, e1, f1, self) && grow_ok(k2, e2, f2, self)) {
             return;
         }
-        // state+0xfc, +0x278, +0x100 are 0 for LP: nudge the costs so the merged columns stay bounded
+        // with state+0x100 == 0 (+0xfc, +0x278 are 0 for LP): nudge the costs so the merged columns stay bounded
         let s = ((self.obj[k1] + self.obj[e1]) + self.obj[e2]) + self.obj[k2];
-        if s < t.opttol + t.opttol {
+        if t.sol_mode == 0 && s < t.opttol + t.opttol {
             let d = t.opttol - s * 0.5;
             self.obj[k2] += d;
             self.obj[k1] += d;

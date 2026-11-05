@@ -273,10 +273,33 @@ enum Alg {
     Pdhg,
 }
 
+/// `07d3ce` on the model data: columns with only an upper bound (the D+0x408 marks) become x' = −x — cost and
+/// column negated, bounds (−ub, +inf). Returns the flipped model and the flipped columns (None if there are none).
+/// The engines' own setup never sees such a column then; the solution is flipped back by the caller.
+fn flip_upper_only(q: &Model) -> Option<(Model, Vec<usize>)> {
+    use rsolver_model::INFINITY;
+    let cols: Vec<usize> = (0..q.num_vars()).filter(|&j| q.lb[j] <= -INFINITY && q.ub[j] < INFINITY).collect();
+    if cols.is_empty() {
+        return None;
+    }
+    let mut f = q.clone();
+    for &j in &cols {
+        f.obj[j] = -f.obj[j];
+        (f.lb[j], f.ub[j]) = (-q.ub[j], INFINITY);
+        let b = f.col_beg[j] as usize;
+        for v in &mut f.col_val[b..b + f.col_len[j] as usize] {
+            *v = -*v;
+        }
+    }
+    Some((f, cols))
+}
+
 /// `2bb770` / `34f033` without crossover: presolve → barrier or PDHG → uncrush → status.
 fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Outcome {
     let pre = presolve_logged(md, p, &mut *h.log);
     let q = pre.as_ref().map_or(md, |(q, _)| q);
+    let flipped = flip_upper_only(q);
+    let qe = flipped.as_ref().map_or(q, |(f, _)| f);
     let mut out = Outcome::default();
     let (status, xq) = match alg {
         Alg::Barrier => {
@@ -285,7 +308,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
                 bar_iter_limit: p.get("BarIterLimit") as i64,
                 bar_correctors: p.int("BarCorrectors"),
             };
-            let r = barrier::solve(q, &bp, &mut *h.barrier);
+            let r = barrier::solve(qe, &bp, &mut *h.barrier);
             out.bar_iter_count = r.bar_iters;
             out.work = r.work;
             (r.status, r.x)
@@ -299,12 +322,16 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
                 conv_tol: p.get("PDHGConvTol"),
                 work_limit: p.get("WorkLimit"),
             };
-            let r = pdhg::solve(q, &pp, &mut *h.pdhg);
+            let r = pdhg::solve(qe, &pp, &mut *h.pdhg);
             out.pdhg_iter_count = r.iters;
             out.work = r.work / 1e9;
             (r.status, r.x)
         }
     };
+    let mut xq = xq;
+    for &j in flipped.as_ref().map_or(&[][..], |(_, c)| c) {
+        xq[j] = -xq[j];
+    }
     // shortcut: `36578f` (primal 363164, dual 365159, big-uncrush-violation check) is not ported; x goes through
     // `363daa` with slacks and a dummy all-basic status, which recovers the primal values; duals are not reported.
     let x = match &pre {

@@ -59,13 +59,20 @@ pub struct Params {
     pub symmetry: i32,
     /// env+0x2c28 GURO_PAR_PRESYMMPASSES (-1)
     pub presym_passes: i32,
+    /// env+0x2438 Method as the caller left it (the driver writes the resolved method before `0c3d0d`)
+    pub method: i32,
+    /// env+0x2ba0 Crossover
+    pub crossover: i32,
+    /// env+0x2b9c SolutionTarget
+    pub solution_target: i32,
 }
 
 impl Default for Params {
     fn default() -> Self {
         Params { presolve: -1, feastol: 1e-6, infbound: 1e30, fixtol: -1.0, prelimit: 2_000_000_000, dual_reductions: true, prebound: 1,
                  opttol: 1e-6, numeric_focus: 0, agg_mult_limit: 1e14, precrush: 0, prepasses: -1, aggregate: 1, agg_fill: -1,
-                 pre_pair_agg: 3, pre_dep_row: -1, symmetry: -1, presym_passes: -1 }
+                 pre_pair_agg: 3, pre_dep_row: -1, symmetry: -1, presym_passes: -1, method: -1, crossover: -1,
+                 solution_target: -1 }
     }
 }
 
@@ -92,10 +99,25 @@ impl Params {
                 "predeprow" => p.pre_dep_row = *v as i32,
                 "symmetry" => p.symmetry = *v as i32,
                 "guro_par_presymmpasses" => p.presym_passes = *v as i32,
+                "method" => p.method = *v as i32,
+                "crossover" => p.crossover = *v as i32,
+                "solutiontarget" => p.solution_target = *v as i32,
                 _ => {}
             }
         }
         p
+    }
+
+    /// state+0x100 (`3a484d` for an LP): 1 when the solve wants no basis (SolutionTarget 1, or barrier/PDHG
+    /// without crossover), 2 when NumericFocus > 0, else 0.
+    pub fn sol_mode(&self) -> i32 {
+        if self.solution_target == 1 || (self.solution_target <= 0 && matches!(self.method, 2 | 6) && self.crossover == 0) {
+            1
+        } else if self.solution_target < 2 && self.numeric_focus > 0 {
+            2
+        } else {
+            0
+        }
     }
 }
 
@@ -105,7 +127,7 @@ pub fn run(md: &Model, p: &Params) -> Model {
 
 /// `run` plus what uncrush needs (`postsolve.rs`).
 pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
-    let mut st = State::new(md);
+    let mut st = State::new(md, p.method);
     let nnz0 = st.nnz; // aggregation changes `st.nnz`; the arena's first chunk size uses the constructor's value
     let mut work = st.work;
     // `390989` L211-244: work budget from the constructor's nnz (+0xd8); the base (+0x450) is 0 here
@@ -121,6 +143,10 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
             agg_mult_limit: p.agg_mult_limit,
             dual_reductions: p.dual_reductions,
             precrush: p.precrush,
+            sol_mode: p.sol_mode(),
+            method: p.method,
+            crossover: p.crossover,
+            solution_target: p.solution_target,
         };
         reduce(&mut st, p, &tols);
         work = st.work;
@@ -138,13 +164,16 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
 
 /// The reduction sequence; returns when a reduction reports a status or the call limit is reached.
 fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
-    // PreDepRow -1 (`390989` L251, before any reduction): off with PRESYMMPASSES > 0, 3 with Presolve 2, else (not
-    // Presolve 1) 3 for problem type 1 or nnz > 2.5 n (Method, state+0x100, INTBASIS, env+0x26e0 at defaults)
+    // PreDepRow -1 (`390989` L251, before any reduction): off with PRESYMMPASSES > 0, 3 with Presolve 2, off with
+    // Presolve 1, 3 for Method 2 or state+0x100 != 0, else (not Method 6) 3 for problem type 1 or nnz > 2.5 n
+    // (INTBASIS < 1 at its default)
     let mut dep_rows = if p.pre_dep_row != -1 {
         p.pre_dep_row
-    } else if 0 < p.presym_passes {
+    } else if 0 < p.presym_passes || p.presolve == 1 {
         0
-    } else if p.presolve == 2 || (p.presolve != 1 && (st.ptype == 1 || (st.n as f64) * 2.5 < st.nnz as f64)) {
+    } else if p.presolve == 2 || p.method == 2 || p.sol_mode() != 0 {
+        3
+    } else if p.method != 6 && (st.ptype == 1 || (st.n as f64) * 2.5 < st.nnz as f64) {
         3
     } else {
         0
@@ -170,7 +199,7 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
     }
     st.activity(None, p.infbound);
     if !reduced && p.prebound != 0 {
-        st.dual_singleton_fix(p.dual_reductions, p.infbound);
+        st.dual_singleton_fix(p.dual_reductions && p.sol_mode() == 0, p.infbound);
         calls += 1;
         if st.prelimit <= calls {
             return;
@@ -396,7 +425,7 @@ fn finish(st: &mut State, p: &Params, tols: &ColTols, mut calls: i32) {
     st.reset_tracker();
     // not in reduced mode (problem type 4)
     if !(st.ptype == 4 && p.presolve < 2) && p.prebound != 0 {
-        st.dual_singleton_fix(p.dual_reductions, p.infbound);
+        st.dual_singleton_fix(p.dual_reductions && p.sol_mode() == 0, p.infbound);
         calls += 1; // counted without a limit check
     }
     if st.prelimit <= calls {
