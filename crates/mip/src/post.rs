@@ -115,4 +115,18 @@ mod tests {
         assert_eq!(&l.bytes[0x20..0x28], &0x38u64.to_le_bytes());
         assert_eq!(l.bytes.len(), 0x38 + 24);
     }
+
+    #[test]
+    fn t10_t11_layouts() {
+        // 3a07b5: {p, i, 1.0, mult, 0.0}, no padding (neos-860300 414c53 record bytes)
+        let l = PostRec::T10 { j: 3, k: 2, d1: 1.0, d2: -1.0, d3: 0.0 }.layout();
+        assert_eq!(l.bytes, hex("0300000002000000000000000000f03f000000000000f0bf0000000000000000"));
+        // 3a0e1b: {r, j, |a|} (graphdraw-domain 37f484 record bytes)
+        let l = PostRec::T11 { r: 0x2d, j: 0x14, a: 1.0 }.layout();
+        assert_eq!(l.bytes, hex("2d00000014000000000000000000f03f"));
+    }
+
+    fn hex(s: &str) -> Vec<u8> {
+        (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap()).collect()
+    }
 }
