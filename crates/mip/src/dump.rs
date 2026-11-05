@@ -257,6 +257,9 @@ impl State {
             "3e40d1" => (self.dual_ineq_to_eq(p), 0),
             "36ee92" => (self.compress(p), 0),
             "418542" => (self.dual_agg(p), 0),
+            // the reduction timer is not dumped: a zero limit never stops the call
+            "414c03" => (self.cancel_rows(p, 2, Default::default()), 0),
+            "414c53" => (self.cancel_cols(p, 2, Default::default()), 0),
             "370047" => {
                 self.activity(None);
                 (0, 0)

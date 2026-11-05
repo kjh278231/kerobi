@@ -45,7 +45,7 @@ impl State {
 
     /// One bound's contribution `a·b` to row `r`'s activity: added (`add`) or removed, guarded, or an infinite-count
     /// change when the bound is infinite. `upper`: b is the column's upper bound.
-    fn contrib(&mut self, r: usize, a: f64, b: f64, upper: bool, add: bool) {
+    pub(crate) fn contrib(&mut self, r: usize, a: f64, b: f64, upper: bool, add: bool) {
         let finite = if upper { b < INF } else { -INF < b };
         let max_side = if a <= 0.0 { !upper } else { upper };
         let d = if add { 1 } else { -1 };
@@ -143,6 +143,11 @@ impl State {
     /// `3a061e(d1, d2, env, st, i)`: type 9 record (no counters, no work).
     pub fn push_t9(&mut self, i: i32, d1: f64, d2: f64) {
         self.post.push(PostRec::T9 { i, d1, d2 });
+    }
+
+    /// `3a07b5(d1, d2, d3, env, st, j, k)`: type 10 record (no counters, no work).
+    pub fn push_t10(&mut self, j: i32, k: i32, d1: f64, d2: f64, d3: f64) {
+        self.post.push(PostRec::T10 { j, k, d1, d2, d3 });
     }
 
     /// `3de18e(v, INF, env, st, j, rec)`: fix column `j` at `v`. With `rec` (and no column flags other than 0x08/0x80)

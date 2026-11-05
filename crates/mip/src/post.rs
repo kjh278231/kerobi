@@ -12,6 +12,8 @@ pub enum PostRec {
     Subst { j: i32, c0: f64, ind: Vec<i32>, val: Vec<f64> },
     /// type 9 (`3a061e`): {i32 i, f64 d1, f64 d2}.
     T9 { i: i32, d1: f64, d2: f64 },
+    /// type 10 (`3a07b5`): x_j = d1·x_j' + d2·x_k + d3 (`40d2bc` mode 1: column k cancelled with pivot j).
+    T10 { j: i32, k: i32, d1: f64, d2: f64, d3: f64 },
 }
 
 /// Data bytes of a record as Gurobi lays them out: padding bytes are 0 here (Gurobi leaves arena garbage) and
@@ -30,6 +32,7 @@ impl PostRec {
             PostRec::Fix { .. } => 1,
             PostRec::Subst { .. } => 2,
             PostRec::T9 { .. } => 9,
+            PostRec::T10 { .. } => 10,
         }
     }
 
@@ -50,6 +53,13 @@ impl PostRec {
                 f64b(&mut b, *v);
                 if let PostRec::T9 { d2, .. } = self {
                     f64b(&mut b, *d2);
+                }
+            }
+            PostRec::T10 { j, k, d1, d2, d3 } => {
+                i32b(&mut b, *j);
+                i32b(&mut b, *k);
+                for x in [d1, d2, d3] {
+                    f64b(&mut b, *x);
                 }
             }
             PostRec::Subst { j, c0, ind, val } => {

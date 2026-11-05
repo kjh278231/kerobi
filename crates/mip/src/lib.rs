@@ -12,6 +12,7 @@ pub mod driver;
 pub mod dump;
 mod helpers;
 mod inner;
+mod cancel;
 mod colpass;
 mod compress;
 mod doubleton;
@@ -105,6 +106,8 @@ params! {
     predominate: i32 = 1, "guro_par_predominate";
     precancel: i32 = -1, "guro_par_precancel";
     precancelcol: i32 = -1, "guro_par_precancelcol";
+    /// env+0x25a4 GURO_PAR_PRECANCELSELECT: how `40d2bc` picks between a candidate's two multipliers
+    precancelselect: i32 = -1, "guro_par_precancelselect";
     presubsume: i32 = 0, "guro_par_presubsume";
     precliqsub: i32 = 0, "guro_par_precliqsub";
     /// env+0x26c8 / 0x254c / 0x253c / 0x2538 AGEQ / PRECLIQUE / PREMERGEVUBS / PRETWOROWS
