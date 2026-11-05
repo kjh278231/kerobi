@@ -449,17 +449,24 @@ impl<'a> Engine<'a> {
             if !flips.is_empty() {
                 // move the flipped columns to their other bound; x_B absorbs the change with one FTRAN (1c8477)
                 let mut dx = vec![0.0; self.m];
+                let mut huge = false;
                 for &j in &flips {
                     let old = self.x_nonbasic(j);
                     self.vstat[j] = if self.vstat[j] == -1 { -2 } else { -1 };
                     let step = self.x_nonbasic(j) - old;
+                    huge |= step.abs() >= 1e20;
                     for (i, a) in self.spx.col(j) {
                         dx[i] += a * step;
                     }
                 }
-                let dxb = self.lu.ftran_dense(dx);
-                for p in 0..self.m {
-                    self.xb[p] -= dxb[p];
+                if huge {
+                    // same as the pivot step below: artificial-bound-scale moves leave residue, recompute
+                    self.compute_xb();
+                } else {
+                    let dxb = self.lu.ftran_dense(dx);
+                    for p in 0..self.m {
+                        self.xb[p] -= dxb[p];
+                    }
                 }
                 if q == usize::MAX {
                     self.iter += 1;
