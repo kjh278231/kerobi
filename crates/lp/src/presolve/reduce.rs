@@ -723,3 +723,92 @@ impl State {
         0
     }
 }
+
+impl State {
+    /// `50cc90`: empty rows (infeasible if violated), rows whose max activity cannot exceed the rhs (and, for
+    /// `=`, min activity cannot fall below it) are dropped. With `mode != 0`, coefficients too small to matter
+    /// (`cnt*|a|*(u-l) < 0.01 feastol`, `|a| < 0.1 opttol`) move to the rhs at the column's lower bound, and
+    /// the changed rows get their activities recomputed. Returns 0 or 3.
+    pub fn redundant_rows(&mut self, mode: i32, feastol: f64, opttol: f64, inf: f64) -> i32 {
+        let coef_tol = opttol * 0.1;
+        let rows = self.rows_list();
+        let mut removed = 0;
+        let mut changed = Vec::new(); // state+0x3b8
+        for &rr in &rows {
+            let r = rr as usize;
+            let c = self.row_cnt[r];
+            if c == 0 {
+                let rhs = self.rhs[r];
+                if rhs < -feastol || (feastol < rhs && self.sense[r] == b'=') {
+                    self.bad_row = rr;
+                    self.rows_removed += removed;
+                    return INFEASIBLE;
+                }
+                self.row_cnt[r] = -1;
+                removed += 1;
+                continue;
+            }
+            if c < 0 {
+                continue;
+            }
+            let b = self.row_beg[r] as usize;
+            let len = self.row_len[r] as usize;
+            let needed = self.inf_max[r] != 0
+                || feastol <= self.act_max[r]
+                || (self.sense[r] == b'=' && (self.inf_min[r] != 0 || self.act_min[r] <= -feastol));
+            if !needed {
+                removed += 1;
+                self.mark_cols_of_row(r);
+                for k in b..b + len {
+                    let j = self.row_ind[k];
+                    if j >= 0 && self.col_cnt[j as usize] >= 0 {
+                        self.col_cnt[j as usize] -= 1;
+                        self.row_ind[k] = -1;
+                    }
+                }
+                self.work += len as f64 * 4.0;
+                self.row_cnt[r] = -2;
+                continue;
+            }
+            if mode == 0 {
+                continue;
+            }
+            let mut cnt = 0;
+            for k in b..b + len {
+                let j = self.row_ind[k];
+                if j < 0 || self.col_cnt[j as usize] < 0 {
+                    continue;
+                }
+                let ju = j as usize;
+                let a = self.row_val[k];
+                if !(self.row_cnt[r] as f64 * a.abs() * (self.ub[ju] - self.lb[ju]) < feastol * 0.01 && a.abs() < coef_tol) {
+                    continue;
+                }
+                self.tracker.mark_col(j);
+                self.row_cnt[r] -= 1;
+                self.col_cnt[ju] -= 1;
+                self.row_ind[k] = -1;
+                self.rhs[r] -= a * self.lb[ju];
+                let cb = self.col_beg[ju] as usize;
+                for p in cb..cb + self.col_len[ju].max(0) as usize {
+                    if self.col_ind[p] == rr {
+                        self.col_ind[p] = -1;
+                        break;
+                    }
+                }
+                cnt += 1;
+            }
+            self.work += len as f64 * 9.0;
+            if cnt != 0 {
+                self.tracker.mark_row(rr);
+                changed.push(rr);
+                self.coefs_changed += cnt;
+            }
+        }
+        self.rows_removed += removed;
+        if !changed.is_empty() {
+            self.activity(Some(&changed), inf);
+        }
+        0
+    }
+}

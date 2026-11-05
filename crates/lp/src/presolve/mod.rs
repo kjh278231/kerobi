@@ -143,9 +143,22 @@ fn reduce(st: &mut State, p: &Params) {
             if limit <= calls {
                 return;
             }
-            // shortcut: 50cc90 not ported yet (PRELIMIT 7+).
-            let _ = (&snap, &mut i);
-            return;
+            if st.redundant_rows(0, p.feastol, p.opttol, p.infbound) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+            let rho = st.progress(&snap);
+            let slack = (i - 5).max(0);
+            i += 1;
+            if !((slack as f64) * 1e-11 < rho) {
+                break;
+            }
         }
+        st.tracker.level = 1;
+        // shortcut: outer reductions (50cc90(1), 50d878, 38e49a, ...) not ported yet.
+        return;
     }
 }
