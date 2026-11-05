@@ -1,0 +1,92 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/fit1d/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/fit1d.mps.gz
+Reading time = 0.00 seconds
+FIT1D: 24 rows, 1026 columns, 13404 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 24 rows, 1026 columns and 13404 nonzeros (Min)
+Model fingerprint: 0x042aa7d6
+Model has 1026 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-02, 2e+03]
+  Objective range  [1e+01, 1e+03]
+  Bounds range     [1e+00, 3e+00]
+  RHS range        [0e+00, 0e+00]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 2.670e+02
+ Factor NZ  : 3.000e+02
+ Factor Ops : 4.900e+03 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   4.04195778e+05 -2.83062056e+06  6.02e+03 3.91e+00  8.28e+03     0s
+   1   1.00044460e+05 -1.85589753e+06  1.28e+03 1.34e+01  2.10e+03     0s
+   2   2.97040323e+04 -7.09952211e+05  1.35e+02 3.78e-01  4.27e+02     0s
+   3   1.50214692e+04 -8.91886123e+04  1.42e-12 7.11e-14  5.02e+01     0s
+   4  -1.94052058e+03 -1.62880362e+04  9.22e-13 3.62e-14  6.91e+00     0s
+   5  -7.63700730e+03 -1.17402718e+04  1.13e-12 1.43e-14  1.98e+00     0s
+   6  -8.37309489e+03 -1.02086941e+04  1.31e-12 1.42e-14  8.85e-01     0s
+   7  -8.67625013e+03 -9.67080726e+03  1.37e-12 1.42e-14  4.79e-01     0s
+   8  -8.89024557e+03 -9.36928879e+03  1.73e-12 1.42e-14  2.31e-01     0s
+   9  -9.02558304e+03 -9.22232452e+03  8.01e-13 7.11e-15  9.48e-02     0s
+  10  -9.13386188e+03 -9.16225867e+03  7.11e-13 5.68e-14  1.37e-02     0s
+  11  -9.14552053e+03 -9.14907551e+03  1.44e-12 1.42e-14  1.71e-03     0s
+  12  -9.14634268e+03 -9.14650012e+03  1.98e-12 2.84e-14  7.59e-05     0s
+  13  -9.14637634e+03 -9.14638043e+03  1.37e-11 1.42e-14  1.97e-06     0s
+  14  -9.14637804e+03 -9.14637813e+03  1.82e-11 2.84e-14  4.17e-08     0s
+  15  -9.14637809e+03 -9.14637809e+03  1.12e-08 1.42e-14  3.62e-10     0s
+
+Barrier solved model in 15 iterations and 0.00 seconds (0.01 work units)
+Optimal objective -9.14637809e+03
+
+
+User-callback calls 69, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/fit1d.mps.gz
+Reading time = 0.00 seconds
+FIT1D: 24 rows, 1026 columns, 13404 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 24 rows, 1026 columns and 13404 nonzeros (Min)
+Model fingerprint: 0x042aa7d6
+Model has 1026 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-02, 2e+03]
+  Objective range  [1e+01, 1e+03]
+  Bounds range     [1e+00, 3e+00]
+  RHS range        [0e+00, 0e+00]

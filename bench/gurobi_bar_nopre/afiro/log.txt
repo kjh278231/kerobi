@@ -1,0 +1,84 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:10 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/afiro/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/afiro.mps.gz
+Reading time = 0.00 seconds
+AFIRO: 27 rows, 32 columns, 83 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 27 rows, 32 columns and 83 nonzeros (Min)
+Model fingerprint: 0x092217cc
+Model has 5 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-01, 2e+00]
+  Objective range  [3e-01, 1e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [4e+01, 5e+02]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 6.300e+01
+ Factor NZ  : 2.180e+02
+ Factor Ops : 2.146e+03 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   2.86027229e+03  0.00000000e+00  2.27e+03 6.00e-01  1.69e+03     0s
+   1   2.22177230e+02 -5.01850919e+03  4.73e+02 0.00e+00  3.74e+02     0s
+   2  -1.57024392e+02 -1.98082817e+03  3.98e-13 0.00e+00  3.58e+01     0s
+   3  -3.31787797e+02 -5.70073642e+02  6.59e-11 1.78e-15  4.67e+00     0s
+   4  -4.62303375e+02 -4.75614915e+02  1.08e-12 0.00e+00  2.61e-01     0s
+   5  -4.64705894e+02 -4.64819356e+02  3.60e-12 0.00e+00  2.22e-03     0s
+   6  -4.64753096e+02 -4.64753209e+02  7.30e-11 4.44e-16  2.22e-06     0s
+   7  -4.64753143e+02 -4.64753143e+02  5.83e-11 4.44e-16  2.22e-09     0s
+
+Barrier solved model in 7 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -4.64753143e+02
+
+
+User-callback calls 53, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/afiro.mps.gz
+Reading time = 0.00 seconds
+AFIRO: 27 rows, 32 columns, 83 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 27 rows, 32 columns and 83 nonzeros (Min)
+Model fingerprint: 0x092217cc
+Model has 5 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-01, 2e+00]
+  Objective range  [3e-01, 1e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [4e+01, 5e+02]

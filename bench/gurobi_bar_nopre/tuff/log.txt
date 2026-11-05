@@ -1,0 +1,88 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/tuff/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/tuff.mps.gz
+Reading time = 0.00 seconds
+TUFF: 333 rows, 587 columns, 4520 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 333 rows, 587 columns and 4520 nonzeros (Min)
+Model fingerprint: 0xdc9ed51f
+Model has 3 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-05, 1e+04]
+  Objective range  [5e-03, 5e-03]
+  Bounds range     [1e+00, 1e+03]
+  RHS range        [0e+00, 0e+00]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ Free vars  : 1
+ AA' NZ     : 5.077e+03
+ Factor NZ  : 9.414e+03
+ Factor Ops : 3.770e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   1.08848307e-01 -2.15673828e-01  1.28e+04 0.00e+00  1.19e+01     0s
+   1   7.78591237e-02 -1.44922730e-01  3.77e+03 2.43e-02  3.50e+00     0s
+   2   1.45171144e-01 -5.90824340e-02  9.32e+02 1.18e-02  1.06e+00     0s
+   3   3.15156921e-01  1.35328701e-01  2.53e+02 3.25e-03  3.72e-01     0s
+   4   3.16298706e-01  2.15791926e-01  6.46e+01 1.83e-04  8.13e-02     0s
+   5   3.08199938e-01  2.67815972e-01  2.60e+01 4.12e-05  3.00e-02     0s
+   6   2.96528994e-01  2.86705461e-01  3.89e+00 4.08e-06  5.73e-03     0s
+   7   2.93425106e-01  2.91014335e-01  1.06e+00 7.21e-07  1.46e-03     0s
+   8   2.92280366e-01  2.91853985e-01  9.80e-02 1.59e-07  2.18e-04     0s
+   9   2.92147965e-01  2.92146563e-01  8.80e-05 6.32e-10  6.12e-07     0s
+  10   2.92147765e-01  2.92147763e-01  6.85e-09 2.68e-15  8.24e-10     0s
+
+Barrier solved model in 10 iterations and 0.00 seconds (0.00 work units)
+Optimal objective 2.92147765e-01
+
+
+User-callback calls 60, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/tuff.mps.gz
+Reading time = 0.00 seconds
+TUFF: 333 rows, 587 columns, 4520 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 333 rows, 587 columns and 4520 nonzeros (Min)
+Model fingerprint: 0xdc9ed51f
+Model has 3 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-05, 1e+04]
+  Objective range  [5e-03, 5e-03]
+  Bounds range     [1e+00, 1e+03]
+  RHS range        [0e+00, 0e+00]

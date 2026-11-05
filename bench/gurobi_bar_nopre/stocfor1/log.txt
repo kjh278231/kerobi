@@ -1,0 +1,86 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/stocfor1/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/stocfor1.mps.gz
+Reading time = 0.00 seconds
+STOCFOR1: 117 rows, 111 columns, 447 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 117 rows, 111 columns and 447 nonzeros (Min)
+Model fingerprint: 0x3f8dcfa2
+Model has 27 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [6e-02, 3e+02]
+  Objective range  [5e-01, 3e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-01, 6e+01]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 5.040e+02
+ Factor NZ  : 1.751e+03
+ Factor Ops : 2.955e+04 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   5.39792163e+04 -2.14836942e+04  1.22e+02 1.03e+02  1.74e+04     0s
+   1  -3.23766684e+03 -1.21523491e+05  1.58e+01 1.28e+02  3.82e+03     0s
+   2  -2.27949117e+04 -6.84110496e+04  4.26e+00 2.64e+01  9.40e+02     0s
+   3  -3.06563815e+04 -3.88453948e+04  8.75e-03 4.24e+00  1.29e+02     0s
+   4  -3.83681492e+04 -4.24325163e+04  1.65e-03 1.05e+00  6.02e+01     0s
+   5  -4.07643451e+04 -4.15289813e+04  7.84e-05 4.39e-02  6.45e+00     0s
+   6  -4.10291311e+04 -4.12339538e+04  1.45e-05 4.01e-03  1.43e+00     0s
+   7  -4.11238022e+04 -4.11528600e+04  1.39e-07 6.96e-04  2.10e-01     0s
+   8  -4.11319026e+04 -4.11321133e+04  2.59e-10 0.00e+00  1.31e-03     0s
+   9  -4.11319762e+04 -4.11319762e+04  3.63e-12 0.00e+00  1.44e-09     0s
+
+Barrier solved model in 9 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -4.11319762e+04
+
+
+User-callback calls 57, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/stocfor1.mps.gz
+Reading time = 0.00 seconds
+STOCFOR1: 117 rows, 111 columns, 447 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 117 rows, 111 columns and 447 nonzeros (Min)
+Model fingerprint: 0x3f8dcfa2
+Model has 27 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [6e-02, 3e+02]
+  Objective range  [5e-01, 3e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-01, 6e+01]

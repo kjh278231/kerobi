@@ -1,0 +1,93 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:10 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/bore3d/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/bore3d.mps.gz
+Reading time = 0.00 seconds
+BORE3D: 233 rows, 315 columns, 1429 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 233 rows, 315 columns and 1429 nonzeros (Min)
+Model fingerprint: 0x1d797cc9
+Model has 96 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+03]
+  Objective range  [3e-04, 3e+02]
+  Bounds range     [1e+01, 1e+02]
+  RHS range        [0e+00, 0e+00]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 2.192e+03
+ Factor NZ  : 4.297e+03
+ Factor Ops : 1.172e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   5.01561572e+04 -1.31094336e+04  1.18e+03 1.17e+01  3.68e+03     0s
+   1   1.86005401e+04 -8.37299438e+03  4.00e+02 2.36e+01  1.21e+03     0s
+   2   1.12264852e+04  2.49594621e+04  2.30e+02 1.18e+01  7.00e+02     0s
+   3   8.41458210e+03  6.74860247e+04  1.65e+02 8.88e+00  5.15e+02     0s
+   4   4.03164401e+03  1.78188316e+04  5.46e+01 2.73e+00  2.09e+02     0s
+   5   2.89969670e+03  5.30733395e+03  2.09e+01 6.24e-01  6.95e+01     0s
+   6   2.84165888e+03  4.12904258e+03  4.96e+00 3.48e-01  3.20e+01     0s
+   7   2.50596126e+03  3.49647513e+03  1.99e+00 1.98e-01  1.67e+01     0s
+   8   1.71673401e+03  3.16157938e+03  9.70e-01 9.91e-02  7.18e+00     0s
+   9   1.68231789e+03  1.68473017e+03  1.38e-01 1.96e-02  2.08e+00     0s
+  10   1.44521156e+03  1.42634465e+03  2.93e-02 3.96e-03  4.94e-01     0s
+  11   1.38931692e+03  1.40767496e+03  8.25e-04 2.16e-03  1.59e-01     0s
+  12   1.37588579e+03  1.34808514e+03  5.12e-04 1.92e-05  8.53e-02     0s
+  13   1.37322605e+03  1.37288372e+03  5.52e-06 1.14e-13  1.02e-03     0s
+  14   1.37309303e+03  1.37304185e+03  2.02e-07 5.33e-14  1.50e-04     0s
+  15   1.37308056e+03  1.37308033e+03  2.34e-09 4.33e-13  6.71e-07     0s
+  16   1.37308039e+03  1.37308039e+03  2.13e-12 4.55e-13  2.82e-10     0s
+
+Barrier solved model in 16 iterations and 0.00 seconds (0.00 work units)
+Optimal objective 1.37308039e+03
+
+
+User-callback calls 71, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/bore3d.mps.gz
+Reading time = 0.00 seconds
+BORE3D: 233 rows, 315 columns, 1429 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 233 rows, 315 columns and 1429 nonzeros (Min)
+Model fingerprint: 0x1d797cc9
+Model has 96 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-04, 1e+03]
+  Objective range  [3e-04, 3e+02]
+  Bounds range     [1e+01, 1e+02]
+  RHS range        [0e+00, 0e+00]

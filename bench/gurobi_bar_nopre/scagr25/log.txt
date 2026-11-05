@@ -1,0 +1,92 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/scagr25/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/scagr25.mps.gz
+Reading time = 0.00 seconds
+SCAGR25: 471 rows, 500 columns, 1554 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 471 rows, 500 columns and 1554 nonzeros (Min)
+Model fingerprint: 0xf1c77351
+Model has 475 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-01, 9e+00]
+  Objective range  [4e-01, 7e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [9e+01, 7e+03]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 1.922e+03
+ Factor NZ  : 6.286e+03
+ Factor Ops : 8.996e+04 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0  -6.89998950e+07 -3.81717138e+06  1.81e+04 2.61e+02  2.39e+06     0s
+   1  -2.27303636e+07 -1.02401959e+08  2.76e+03 1.56e+02  5.30e+05     0s
+   2  -1.54541635e+07 -5.78440118e+07  7.64e+02 5.63e+00  1.06e+05     0s
+   3  -1.40347447e+07 -2.79758874e+07  2.93e+02 8.06e-01  3.07e+04     0s
+   4  -1.38767664e+07 -1.90774970e+07  9.44e+01 7.90e-02  1.03e+04     0s
+   5  -1.43299611e+07 -1.63947033e+07  2.43e+01 0.00e+00  3.74e+03     0s
+   6  -1.45788898e+07 -1.50947638e+07  7.36e+00 0.00e+00  9.51e+02     0s
+   7  -1.46956059e+07 -1.48508554e+07  1.87e+00 0.00e+00  2.78e+02     0s
+   8  -1.47381423e+07 -1.48035081e+07  2.98e-01 0.00e+00  1.07e+02     0s
+   9  -1.47492835e+07 -1.47685589e+07  6.83e-02 0.00e+00  3.10e+01     0s
+  10  -1.47522365e+07 -1.47562269e+07  1.70e-02 0.00e+00  6.43e+00     0s
+  11  -1.47532927e+07 -1.47539800e+07  1.14e-03 0.00e+00  1.07e+00     0s
+  12  -1.47534270e+07 -1.47534476e+07  2.28e-05 0.00e+00  3.16e-02     0s
+  13  -1.47534330e+07 -1.47534331e+07  2.29e-08 9.09e-13  1.14e-04     0s
+  14  -1.47534331e+07 -1.47534331e+07  6.81e-09 9.45e-13  1.14e-07     0s
+  15  -1.47534331e+07 -1.47534331e+07  5.37e-11 9.09e-13  1.14e-10     0s
+
+Barrier solved model in 15 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -1.47534331e+07
+
+
+User-callback calls 69, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/scagr25.mps.gz
+Reading time = 0.00 seconds
+SCAGR25: 471 rows, 500 columns, 1554 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 471 rows, 500 columns and 1554 nonzeros (Min)
+Model fingerprint: 0xf1c77351
+Model has 475 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-01, 9e+00]
+  Objective range  [4e-01, 7e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [9e+01, 7e+03]

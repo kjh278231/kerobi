@@ -33,6 +33,8 @@ def parse_log(text):
         out["root"] = [m[1], int(m[2])]
     if m := re.search(r"Cutting planes:\n((?:  .+\n)+)", text):
         out["cuts"] = {k.strip(): int(v) for k, v in re.findall(r"(.+): (\d+)", m[1])}
+    if m := re.search(r"Barrier statistics:\n((?: .+\n)+)", text):  # Dense cols, Free vars, AA' NZ, Factor NZ, Factor Ops
+        out["barstats"] = {k.strip(): v for k, v in re.findall(r" (.+?)\s*: (\S+)", m[1]) if k.strip() != "Threads"}
     return out
 
 
@@ -124,7 +126,7 @@ def first_divergence(ref, test):
 
 
 def compare(ref_dir, test_dir, out_csv):
-    cols = ["instance", "p0_fingerprint", "p0_presolved", "status", "iters", "bar_iters", "nodes", "root", "cuts",
+    cols = ["instance", "p0_fingerprint", "p0_presolved", "status", "iters", "bar_iters", "bar_stats", "nodes", "root", "cuts",
             "work_ratio", "first_divergence", "errors"]
     out, tally = [], {"p0": 0, "p1": 0, "n": 0}
     for rd in sorted(p for p in ref_dir.iterdir() if (p / "summary.json").exists()):
@@ -141,13 +143,13 @@ def compare(ref_dir, test_dir, out_csv):
                "p0_fingerprint": same("Fingerprint"),
                "p0_presolved": "ok" if presolved_digest(rd) == presolved_digest(td) else f"{r.get('presolved')} vs {t.get('presolved')}",
                "status": same("Status"), "iters": same("IterCount"), "bar_iters": same("BarIterCount"), "nodes": same("NodeCount"),
-               "root": same_log("root"), "cuts": same_log("cuts"),
+               "root": same_log("root"), "cuts": same_log("cuts"), "bar_stats": same_log("barstats"),
                "work_ratio": f"{t['Work'] / r['Work']:.4f}" if r.get("Work") and t.get("Work") is not None else "",
                "errors": "; ".join(f"{k}: {v[:60]}" for k, v in t.get("errors", {}).items()),
                "first_divergence": first_divergence(load(rd), load(td))}
         tally["n"] += 1
         tally["p0"] += row["p0_fingerprint"] == row["p0_presolved"] == "ok"
-        tally["p1"] += all(row[k] == "ok" for k in ("status", "iters", "bar_iters", "nodes", "root", "cuts")) and not row["first_divergence"]
+        tally["p1"] += all(row[k] == "ok" for k in ("status", "iters", "bar_iters", "bar_stats", "nodes", "root", "cuts")) and not row["first_divergence"]
         out.append(row)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
     with open(out_csv, "w", newline="") as f:

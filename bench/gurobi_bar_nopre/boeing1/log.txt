@@ -1,0 +1,95 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:14:10 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_nopre/boeing1/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/boeing1.mps.gz
+Reading time = 0.00 seconds
+BOEING1: 351 rows, 473 columns, 3574 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 351 rows, 473 columns and 3574 nonzeros (Min)
+Model fingerprint: 0xf47f1e7c
+Model has 380 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-02, 3e+03]
+  Objective range  [1e-02, 4e+01]
+  Bounds range     [1e+00, 3e+02]
+  RHS range        [1e+00, 3e+03]
+
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 5.077e+03
+ Factor NZ  : 9.357e+03
+ Factor Ops : 2.791e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   2.43455948e+04 -2.72143369e+04  6.27e+04 3.34e-01  1.31e+03     0s
+   1   1.02800099e+04 -2.72082575e+04  2.17e+04 1.14e+00  5.03e+02     0s
+   2   4.87149418e+03 -2.80429533e+04  7.02e+03 6.50e-01  2.07e+02     0s
+   3   2.69773418e+03 -2.31962013e+04  2.07e+03 2.54e-03  5.39e+01     0s
+   4   1.49570212e+03 -1.02743474e+04  9.02e+02 2.98e-04  2.15e+01     0s
+   5   2.06575889e+02 -2.76768792e+03  7.50e+01 3.44e-15  3.57e+00     0s
+   6  -5.06627373e+01 -1.31088198e+03  5.86e+00 9.99e-16  1.32e+00     0s
+   7  -1.96469126e+02 -8.74649572e+02  2.20e+00 8.88e-16  7.05e-01     0s
+   8  -2.52623464e+02 -4.91824919e+02  1.14e+00 2.00e-15  2.49e-01     0s
+   9  -3.05166417e+02 -3.88762776e+02  2.75e-01 3.33e-16  8.67e-02     0s
+  10  -3.22516741e+02 -3.58935376e+02  7.88e-02 2.22e-16  3.77e-02     0s
+  11  -3.29842426e+02 -3.45069767e+02  2.82e-02 4.44e-16  1.58e-02     0s
+  12  -3.33586328e+02 -3.38592119e+02  5.32e-03 2.11e-15  5.17e-03     0s
+  13  -3.34922871e+02 -3.36039989e+02  3.74e-04 4.44e-16  1.15e-03     0s
+  14  -3.35124392e+02 -3.35296708e+02  9.12e-05 2.66e-15  1.78e-04     0s
+  15  -3.35196460e+02 -3.35246001e+02  1.67e-05 4.44e-16  5.11e-05     0s
+  16  -3.35211642e+02 -3.35216222e+02  1.52e-06 1.22e-15  4.73e-06     0s
+  17  -3.35213556e+02 -3.35213599e+02  3.15e-09 7.33e-15  4.50e-08     0s
+  18  -3.35213567e+02 -3.35213568e+02  5.73e-11 1.83e-14  5.61e-11     0s
+
+Barrier solved model in 18 iterations and 0.01 seconds (0.01 work units)
+Optimal objective -3.35213567e+02
+
+
+User-callback calls 75, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/boeing1.mps.gz
+Reading time = 0.00 seconds
+BOEING1: 351 rows, 473 columns, 3574 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 351 rows, 473 columns and 3574 nonzeros (Min)
+Model fingerprint: 0xf47f1e7c
+Model has 380 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-02, 3e+03]
+  Objective range  [1e-02, 4e+01]
+  Bounds range     [1e+00, 3e+02]
+  RHS range        [1e+00, 3e+03]

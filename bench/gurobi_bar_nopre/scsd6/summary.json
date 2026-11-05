@@ -1,0 +1,30 @@
+{
+ "Fingerprint": 4041156412,
+ "Status": 2,
+ "IterCount": 0.0,
+ "BarIterCount": 9,
+ "NodeCount": 0.0,
+ "Work": 0.002567892,
+ "Runtime": 0.0017330646514892578,
+ "ObjVal": 50.50000013742167,
+ "ObjBound": 50.50000007551629,
+ "SolCount": 1,
+ "IsMIP": 0,
+ "NumVars": 1350,
+ "NumConstrs": 147,
+ "NumNZs": 4316,
+ "log": {
+  "barstats": {
+   "AA' NZ": "1.952e+03",
+   "Factor NZ": "2.838e+03",
+   "Factor Ops": "6.135e+04"
+  }
+ },
+ "presolved": [
+  147,
+  1350,
+  4316
+ ],
+ "trace_rows": 10,
+ "errors": {}
+}
