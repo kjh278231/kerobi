@@ -131,3 +131,100 @@ W += (cnt·3)·μ
 ### 2.4 오라클 확인
 - 38개 모델 78호출 전부 일치(`s_xor.py`). 씨앗 행 480개가 모두 pivot 열 단계에서 멈췄다(짝이 아닌 행에서 pivot 부호가 엇갈리거나 `=` 행). 씨앗 훑기 중단 22. 그래서 **기본값 38개에서 `3e5363`은 작업량만 바꾼다.**
 - 레코드·삭제·고정 경로(`39ba81`, DELROWS, `3de18e`, 부호 경로)는 오라클을 지나지 않았다 → 합성 모델로 확인할 것(§9).
+
+## 6. `374521(st, env)` 쌍대 bound (12,783 B, `00479450`)
+
+LP `505077`+`4f84ef`(`crates/lp/src/presolve/reduce.rs` `dual_bound_rows`/`dual_propagate`)를 한 함수에 인라인한 MIP판이다. 흐름은 같고 아래가 다르다: 연결 리스트·μ 작업량, **연속이 아닌 열도 특수 열로 친다**, 열 쌍대 범위를 0에서 더한 뒤 −c를 마지막에 더한다, 행 쌍대를 옮길 때 차이를 한 번에 더한다, 문턱 1000·ft, 고정 판정에 |c|·1e-13 항과 비유계(5)가 없다.
+
+### 6.1 서명·반환
+반환 0, 3(불가능), 0x2711(할당), 또는 마지막 `3ba5ac`/`3ba9de` 값. 가드는 3cd406 쪽(DualReductions && p<3 && T4 0.8 판정). INF = env+0x2458, ft = env+0x2460, ot = env+0x2470(OptimalityTol). scratch: +0x168(열 상태 바이트), +0x1c0(정렬 순서), +0x1d0(계수 정렬 버킷, m+2), +0x398/+0x3a0(행 쌍대 ylo/yhi).
+
+### 6.2 알고리즘
+
+```
+// 0. 특수 열 (st+0xfc != 0, MIP)
+special(j) = vtype[j] != 'C' || colflag[j] != 0
+j0 = 첫 !special 열(없으면 n); W += (j0+j0)·μ
+if j0 == n: return 0                                    // 연속 보통 열이 없으면 끝 (38개 중 11호출)
+cnt[j] = col_cnt[j] − (m+1) (special이면) — 원본은 col_cnt를 직접 깎았다가 0.4에서 되돌린다
+W += (μ·3)·n
+imax = inf_max 복사, imin = inf_min 복사(m개, 작업량 없음)
+for j: if 0 < cnt[j]: st[j] = lb>−INF ? (ub<INF ? 0 : 2) : (ub<INF ? 1 : 3)   // bit0 lb 자유, bit1 ub 자유. 아니면 scratch 그대로
+W += (n·4)·μ
+// 1. 함의된 bound를 자유로 (st+0x100 == 0일 때. 기본값 참)
+if st+0x100 == 0:
+  안정 계수 정렬: 0 < cnt[j]인 열을 cnt 오름차순(같으면 번호순). W += (n+n)·μ, W += m·μ, W += (μ·3)·n
+  for upper in [true, false]:                           // ub 패스 먼저, 그다음 lb 패스
+    for j in 정렬 순서:
+      if upper && st[j] > 1 || !upper && st[j] & 0xfd == 1: continue      // 작업량 없음
+      far = upper ? lb[j] <= −INF : !(ub[j] < INF);  k = far ? 1 : 0
+      v = 0; 열 리스트에서 살아 있는 노드 (a, i)마다 (찾으면 그 노드는 v에 안 셈):
+        upper: a <= 0 → sense[i]=='=' && imax[i]==k && (far ? −act_max[i]/a : lb − act_max[i]/a) < ub + 1e-9
+               a > 0  → imin[i]==k && (far ? −act_min[i]/a : lb − act_min[i]/a) < ub + 1e-9
+        lower: 0 <= a → sense[i]=='=' && imax[i]==k && lb − 1e-9 < (far ? −act_max[i]/a : ub − act_max[i]/a)
+               a < 0  → imin[i]==k && lb − 1e-9 < (far ? −act_min[i]/a : ub − act_min[i]/a)
+      W += (μ·8)·v
+      찾으면: st[j] = (st[j]==0 ? (upper ? 2 : 1) : 3)
+              열 리스트의 살아 있는 노드마다 ((a <= 0) == upper ? imin : imax)[i] += 1; W += (μ·5)·방문
+    W += (μ·4)·len(정렬)                               // 패스마다
+  3ba5ac(env, st, 0, 0, −1), 3ba9de(env, st, 0)        // 패스마다 끝에(반환값 ≠ 0이면 그 값으로 끝)
+// 2. 열의 쌍대 부호
+sense_c[j] = cnt[j] < 1 ? 'F' : {3:'=', 1:'>', 2:'<'}[st[j]] (그 밖 'F');  W += (n+n)·μ
+// 3. 행 쌍대 상자
+for i: row_cnt[i] < 1 ? (ylo, yhi) = (0, 0) : (−INF, sense[i]=='=' ? INF : 0);  W += (m·4)·μ
+special 열 개수를 되돌림; W += (μ·3)·n
+// 4. 열마다 −c + Σ a·y의 범위 (dmax/dmin 유한 부분, cmax/cmin 무한 개수)
+for j in 0..n (모든 열):
+  dmax = dmin = 0; cmax = cmin = 0; 열 리스트의 살아 있는 노드 (a, i):
+    a <= 0: ylo>−INF ? dmax = gup(dmax, ylo·a) : cmax++;  yhi<INF ? dmin = gdn(dmin, a·yhi) : cmin++
+    a > 0:  yhi<INF ? dmax = gup(dmax, yhi·a) : cmax++;   ylo>−INF ? dmin = gdn(dmin, a·ylo) : cmin++
+  dmax = gup(dmax, −c[j]); dmin = gdn(dmin, −c[j])     // LP는 −c에서 시작
+  W += (μ·8)·방문
+W += (n·6)·μ
+// 5. 원형 큐 전파 (LP 4f84ef 구조)
+queue = col_cnt >= 0인 열(번호순), inq 전부 1; W += (n·3)·μ
+if len(queue) == 0: 끝(아래 6으로)
+if len(queue) >= 2:
+  head = 0; tail = len−1; rounds = 0; pops = 0
+  loop:
+    j = queue[head]; s = sense_c[j]
+    if s ∈ {'<','='} && cmin[j]==0 && ft < dmin[j]:  st+0x478 = j, return 3
+    if s ∈ {'=','>'} && cmax[j]==0 && dmax[j] < −ft:   st+0x478 = j, return 3     // (디컴파일 읽기, 오라클 미경유)
+    열 리스트의 살아 있는 노드 (a, i)마다:            // LP와 같은 nl/nh/tl/th 계산(±1e-8, k 0/1, d0 = min(d, 0))
+      (nl, th)를 LP와 같은 식으로 구한다
+      if −1e8 < nl && ft·1000 + ylo[i] < nl:
+        if !(nl <= yhi[i] + ft): st+0x470 = i, return 3
+        if −INF < ylo[i]:  행 i의 살아 있는 노드 (b, k)마다 t = (nl − ylo[i])·b; b<=0 ? dmax[k] = gup(dmax[k], t) : dmin[k] = gdn(dmin[k], t); PUSH(k);  W += (방문·5)·μ
+        else:              b<=0 ? (cmax[k]−−, dmax[k] = b·nl + dmax[k]) : (cmin[k]−−, dmin[k] = b·nl + dmin[k]) (가드 없음); PUSH(k);  W += (방문·6)·μ
+        ylo[i] = nl
+      if th < 1e8 && th < yhi[i] − ft·1000:
+        if th < ylo[i] − ft: st+0x470 = i, return 3     // ylo는 위에서 바뀐 값
+        if yhi[i] < INF:   t = (yhi[i] − th)·b; b<=0 ? dmin[k] = gdn(dmin[k], −t) : dmax[k] = gup(dmax[k], −t); PUSH(k);  W += (방문·5)·μ
+        else:              b<=0 ? (cmin[k]−−, dmin[k] = b·th + dmin[k]) : (cmax[k]−−, dmax[k] = b·th + dmax[k]); PUSH(k);  W += (방문·6)·μ
+        yhi[i] = th
+    W += (방문·10)·μ
+    head += 1; inq[j] = 0
+    if head == n: rounds += 1; head = 0; if rounds > 10: break
+    pops += 1
+    if head == tail: break
+W += (pops·7)·μ                                         // 큐가 1개면 0
+PUSH(k): inq[k]==0이면 tail = (tail+1 == n ? 0 : tail+1), inq[k] = 1, queue[tail] = k
+// 6. 고정 (Presolve != 2)
+3ba5ac, 3ba9de
+for j in 0..n: if col_cnt[j] > 0 && 1e-10 < ub − lb && colflag[j] == 0:     // 정수 열도 된다
+  if cmax[j] != 0 || −ot <= dmax[j] || lb <= −INF:
+    if cmin[j] == 0 && ot < dmin[j] && ub < INF: 3de18e(ub, INF, env, st, j, 1)
+  else: 3de18e(lb, INF, env, st, j, 1)
+  (반환값 ≠ 0이면 그 값으로 끝)
+W += (n·7)·μ
+for i: if row_cnt[i] > 0 && (ft < ylo[i] || yhi[i] < −ft) && sense[i] != '=': st+0x400 += 1; sense[i] = '='; 53763f(i)
+W += (m·3)·μ
+return 3ba5ac(env, st, 0, 0, −1)
+```
+- nl/th 식(LP와 같음, s = sense_c[j]): nl = ylo, nh = yhi에서 시작. s ∈ {'<','='}이면 (dm, k) = (dmin, cmin): a < −1e-8이면 k==0: nl = yhi − min(dm,0)/a, k==1 && INF <= yhi: nl = −dm/a. a > 1e-8이면 k==0: nh = ylo − min(dm,0)/a, k==1 && ylo <= −INF: nh = −dm/a. th = nh. s ∈ {'=','>'}이면 a2 = −a, dx = dmax, (tl, th) = (ylo, yhi)에서 같은 식(min(−dx, 0), k = cmax, k==1이면 dx/a2), 그다음 tl = max(tl, nl) → nl, th = min(th, nh).
+- Presolve == 2 분기(디컴파일만): 'F' 열은 cmax==0 && dmax < 1e-10 && lb > −INF면 lb, 아니면 cmin==0 && dmin > −1e-10 && ub < INF면 ub. 다른 열은 위와 같다. 끝 작업량 (μ·8)·n.
+- 불가능 인덱스: 디컴파일상 열은 +0x478, 행은 +0x470에 쓴다(LP 포트와 반대). 오라클로 확인하지 않았다.
+
+### 6.3 오라클 확인
+- 38개 78호출 전부 일치(`s_dual.py`): 연속 열이 없어 바로 끝난 호출 11, 1단계 67. 자유로 푼 bound ub 5,955·lb 187, ylo 올림 551(유한에서 100, 무한에서 451), yhi 내림 106(71/35), `=`로 바꾼 행 71(neos-4338804-snowy 21, csched007 50).
+- 고정(`3de18e`) 경로, 불가능 반환, 10바퀴 제한, Presolve 2 분기는 오라클을 지나지 않았다.
