@@ -554,10 +554,10 @@ impl<'a> Eng<'a> {
                 if d {
                     dfr.push(item);
                 }
+                if st {
+                    return st;
+                }
                 if self.a.cnt() > 0 || self.b.cnt() > 0 {
-                    if st {
-                        return st;
-                    }
                     continue;
                 }
                 break;

@@ -157,6 +157,9 @@ impl PyCoreModel {
         st.cutoff = get(d, "cutoff")?; st.work_mult = get(d, "mu")?; st.work_base = get(d, "work_base")?; st.budget = get(d, "budget")?;
         st.prelimit = get(d, "prelimit")?; st.eq_rows = get::<i32>(d, "eq_rows")? != 0;
         st.cols_removed = get(d, "cols_removed")?; st.rows_removed = get(d, "rows_removed")?;
+        // Gurobi's state can have more columns than the file (e.g. a range slack): sizes come from the dump
+        st.n = st.lb.len();
+        st.m = st.rhs.len();
         st.load_rows(&get::<Vec<i64>>(d, "rbeg")?, &get::<Vec<i32>>(d, "rcol")?, &get::<Vec<f64>>(d, "rval")?);
         let mut g = graph("g_")?;
         let mut w: f64 = get(d, "work")?;
