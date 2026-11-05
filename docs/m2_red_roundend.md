@@ -11,6 +11,7 @@
 |---|---|---|---|---|---|
 | `58d4ce(env, st, W)` | 361 | Aggregate·DualReductions·+0x1e4 | Q 대각이 0인 열 → `3c2f36`. Q가 없으면 바로 0 | 없음 | §1 |
 | `5a9282(st, env)` | 2,465 | PREBOUND·DualReductions | 행의 singleton 열 지배: 비용 비율이 좋은 singleton을 activity가 작은 쪽 bound에 고정 | gmu-35-40, gmu-35-50(프렐류드 호출, 72열) | 80/80(§2) |
+| `5ab429(st, env)` | 1,113 | 같음 | 정수 행의 비용 singleton(|a| = 1)을 계수 gcd g로 x = r + g·y 대입(`574764`) | 없음(작업량도 0) | 42/42 + 합성 9(§3) |
 
 ## 1. `58d4ce` Q 대각 열 (`005c9200`)
 
@@ -83,3 +84,63 @@ W += (μ·5)·len(rows)
 
 ### 2.4 미해결
 - `st+0x100`의 뜻은 모른다(기본 38개에서 가드를 통과하므로 0).
+
+## 3. `5ab429` 비용 singleton의 법 g 대입 (`005d8b80`)
+
+### 3.1 서명·가드·반환
+`5ab429(st, env) -> i32`. 라운드 끝에서 `5a9282` 바로 뒤(같은 가드). 자체 가드 없음. 자체 작업량 없음(작업량은 `574764` 안에서만). 반환은 마지막 `574764`의 값(0) 또는 그 오류값.
+
+### 3.2 알고리즘
+```
+for r in 0..m {                                   // 지운 행도 돈다(row_cnt 검사 없음)
+  slot = [-1, -1]; res = rhs[r]; g = 1e100
+  for node in row r where node.col >= 0 {
+    (c, a) = (obj[j], node.val)
+    if |c| > 1e-10 && col_cnt[j] == 1 && ||a| − 1| < 1e-10 && colflag[j] == 0 && slot[0 < c·a] == -1 {
+      res = res − (c > 0 ? lb[j] : ub[j])·a; slot[0 < c·a] = j        // 비용이 원하는 bound
+    } else if vtype[j] == 'C' { 다음 행 }                               // 연속 열이 있으면 행을 버린다
+    else { g = a7c550(g, |a|) }
+  }
+  if |res| > 1e-10 { g = a7c550(g, |res|) }
+  if !(1.5 > g) && !(g > 1e6) && g − floor(g + 1e-10) <= 1e-10 {
+    for t in 0..2 { j = slot[t]; if j >= 0 && vtype[j] != 'C' {
+      gi = (int)floor(g + 0.5)
+      rem = (int)((i64)(obj[j] > 0 ? lb[j] : ub[j]) % gi)              // cvttsd2si 64비트, idiv
+      rc = 574764(st, env, j, 1, gi, rem, &done); if rc != 0 { return rc } } }
+  }
+}
+```
+- `a7c550(a, b)`(264 B): 실수 gcd. |a|, |b| 중 하나라도 1e-10 미만이면 0. |a| ≥ 1e100이면 |b|, |b| ≥ 1e100이면 |a|. hi = max, lo = min으로 `lo > 1e-10`인 동안 `lo > hi`면 0, `t = hi − floor((1e-10 + hi)/lo)·lo; hi = lo; lo = max(t, 0)`. 끝에 hi < 1e-9면 0, 아니면 hi.
+
+### 3.3 `574764(st, env, j, a, g, rem, &done)` 정수 열의 법 대입 (1,312 B)
+`57627e`(implied int, outer-a 담당)도 부른다. 포트는 `State::mod_subst`(roundend.rs).
+```
+rem = rem % g; done = 0
+r = 0
+if rem != 0 { inv = 3c5996(|a|, g); r = ((i64)inv · (rem < 0 ? rem + g : rem)) % g; if a < 0 { r = −r } }
+if lb[j] > −INF && INF > ub[j] {
+  lim = NumericFocus 1: 1e4, 2: 100, ≥3: 0, 그 밖: 1e6
+  t = ceil((lb[j] − r)/g − 1e-10)·g; if lim > t { r = (i64)(r + t) }   // r을 lb 쪽으로 옮긴다
+}
+3a061e(r, g, env, st, j)          // type 9 {j, r, g}; 실패하면 0x2711
+53802c(tr, st, j); 5379f1(tr, j)
+if lb[j] > −INF { nl = ceil((lb − r)/g − 1e-10); 3dd6f1(lb, ub, g·nl, ub, INF, st, j); lb[j] = nl }
+if INF > ub[j]  { nu = floor((ub − r)/g + 1e-10); 3dd6f1(lb, ub, lb, g·nu, INF, st, j); ub[j] = nu }
+if r != 0 {
+  for node in col j (살아 있는 것만) { t = r·a_node; a_node = a_node·g; act_max[i] = act_max[i] + t; act_min[i] = act_min[i] + t; rhs[i] = rhs[i] − t }
+  objcon = r·obj[j] + objcon; W = ((col_cnt[j]·6)·μ) + W
+} else {
+  for node in col j (죽은 노드 포함) { a_node = g·a_node }; W = ((col_cnt[j]·2)·μ) + W
+}
+obj[j] = g·obj[j]
+if lb[j] > FeasibilityTol + ub[j] { +0x470 = j; return 3 }
+done = 1; if lb[j] == ub[j] { return 3de18e(lb[j], INF, env, st, j, 1) }
+return 0
+```
+- `3dd6f1`에 새 bound를 g·nl, g·nu로 넘긴다(노드 계수는 아직 옛 a). 그 뒤 r·a를 activity와 rhs 양쪽에 더하므로 `act − rhs`는 결국 y 기준 값이 된다(가드 없는 덧셈).
+- `3c5996(a, m)`(131 B): 확장 Euclid 역원. m ≠ 0이면 (u, v) = (a, m), 계수 (s0, s1) = (1, 0)에서 `x = s1; g = v; q = u / v; s1 = s0 − q·x; s0 = x; (u, v) = (v, u % v)`를 v == 0까지. g == 0이면 0, 아니면 `(x + m) % m`.
+
+### 3.4 오라클 확인
+- 기본값 38개 42호출: 모두 아무것도 바꾸지 않는다(작업량도 그대로). 포트 42/42 일치.
+- `574764` 경로는 합성 모델(세션 스크래치 `re/syn/m1–m4.lp`, 정수 행 `2 z1 + 4 z2 + x ≥ b`, x만 비용 singleton)로 확인: r ≠ 0(m1, x = 1 + 2y), r = 0(m3), lb 쪽으로 옮긴 r = 5(m4, objcon 15). 9호출 모두 일치(레코드 type 9 바이트 포함).
+- NumericFocus ≥ 1의 lim, a < 0, 불가능 반환, y가 고정되는 `3de18e` 경로는 확인하지 않았다(해독만).
