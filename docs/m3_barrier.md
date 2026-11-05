@@ -48,7 +48,13 @@
 | 5 | Rust 본체, Python 경로(`Method=2`), `tools/parity.py capture rsolver` | **완료**(`docs/m3_rust.md`): `barrier::solve`, `CoreModel.barrier`, `Model.optimize` Method=2 분기, BARRIER 콜백·`cbGet`, LogFile에 "Barrier statistics". `bench/parity_bar.csv`: 상태 64/64, 목적 ≤1e-6 64/64, Barrier statistics 64/64, **BarIterCount 56/64**(불일치 agg, agg3, degen2, degen3, fffff800, maros, perold, pilot4). F+0x160/0x168(work)는 오라클과 64/64 비트 같음(CPU 상수는 CPUID, 이 머신 AVX2 → 30). 64개 약 2초 |
 | 6 | 비트 일치(분해·해법·합 순서)로 불일치 8개 줄이기 | **중단**(2026-11-05 사용량 한도). 미완 WIP 커밋만 있음, `docs/m3_chol.md`는 아직 없음. §5 참조 |
 
-## 5. 일시 정지 메모 (2026-11-05, 사용량 한도)
+## 5. 재개 기록 (2026-11-06)
+
+- **피벗 규칙 확정**: `bar_oracle.py --chol`로 degen2 반복 0–12의 Gurobi 분해를 떴다. 작은 피벗을 대체하지 않는다. |d| ≤ 1e-16·|원 대각|(또는 NaN)만 d = 0·역수 0으로 버리고, 나머지는 d = −3.6e-15(원 대각 12) 같은 값도 그대로 두고 F+0xe8 = 1/d를 곱한다(13개 반복 전부, e = 1/d 예외 0). F+0x100은 버리기 전 값의 min |d/원 대각|이다. ±clamp(1e-10|diag|, 1e-12, 1e-6) 규칙(노트 14 §3.1.7)은 F+0x110≠0·Bunch–Kaufman 경로라 LP에서는 안 탄다. `ldl.rs`를 이 규칙으로 바꿔 **BarIterCount 56 → 59/64**(`ddc3040`).
+- **콜백 PRIMINF** = √(B+0x198² + B+0x1b8²) = √(‖r_p‖² + ‖r_u‖²)/τ(반복 0 오라클 64/64 비트, hypot 아님). 고친 뒤 상대 1e-6 안에서 궤적 전체가 같은 인스턴스 51/64(`df38e2a`). `tools/parity.py compare`에 `first_divergence_1e-6` 열을 더했다.
+- **남은 불일치**(Rust(Gurobi), 첫 분기 = `bench/parity_bar.csv`의 `first_divergence_1e-6`): degen2 11(12) 끝 반복(Gurobi 값으로는 반복 11의 gap_rel 6.8e-8 > tol이라 계속, 끝에서 gap ~1e-4라 1e-6 상대 일치로는 판정이 뒤집힘), fffff800 79(76) 반복 28, modszk1 21(20) 반복 11, perold 161(130) 반복 19, pilot4 127(85) 반복 13. ±5% 밖: degen2(8%), perold(24%), pilot4(49%). 셋 다 규칙 차이 흔적은 없고(종속 행·자유 열로 조건이 나쁜 계), 분해·해법 비트 일치가 필요하다.
+
+## 6. 일시 정지 메모 (2026-11-05, 사용량 한도)
 
 **완료 기준 현황**(Presolve=0, Threads=1, Crossover=0, Netlib 64)
 
