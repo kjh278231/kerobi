@@ -16,7 +16,7 @@
 공통 규칙(모든 에이전트):
 - Gurobi는 한 프로세스만 돌린다(`gurobi_guard.pth`). "already running"이면 기다렸다 다시 시도한다.
 - 공유 `.venv`에 `maturin develop`이나 `pip install`은 main 트리만 한다. worktree는 cargo로 빌드한 `.so`를 자기 `python/rsolver`에 두고 `PYTHONPATH=$PWD/python`으로 쓴다.
-- worktree는 `crates/lp`의 기존 파일을 고치지 않는다(`lib.rs` 모듈 등록은 허용). 커밋은 자기 브랜치에만, 단계마다 한다.
+- worktree는 `crates/lp`의 기존 파일을 고치지 않는다(`lib.rs` 모듈 등록은 허용). 예외: G2가 끝난 뒤 `crates/lp/src/presolve/`는 M1 LP 드라이버 흐름(G5)이 고쳐도 된다(2026-11-06, simplex 흐름은 이 폴더를 쓰지 않는다). 커밋은 자기 브랜치에만, 단계마다 한다.
 - `docs/11_progress.md`는 오케스트레이터가 main에서만 고친다. worktree 에이전트는 자기 인수인계 메모에만 적는다.
 - 답변은 한국어로 한다.
 
@@ -85,6 +85,9 @@
 | 2026-11-06 | M1 primal simplex 원본 이식 | `0478d3` 명세의 primal(행 표시, 복합 phase 1, 부분 목록 CHUZC, Harris·`54eef` ratio, 진입 flip), `b1da8` 퇴화 bound shift, `cda5b` primal↔dual 넘김. Method 0: Netlib 91 중 84, Method 1: 64 중 63 | `7affabb` |
 | 2026-11-06 | M1 드라이버: 파라미터 표·헤더 로그 | Frida로 `9828a1`/`c23877`/`0c3d0d` 호출 범위 확인. 파라미터 표가 libgurobi130에서 **548/548 = gurobipy**(G5 (1)). 새 driver 크레이트의 Optimize 헤더 로그 **102/102**(G5 (2)) | `0d22211`, `320fba5` (`m1-lp-driver`) |
 | 2026-11-06 | M2 MPS 쓰기(정수) | 정수 MARKER, BV/LI bound를 `a4590c`처럼 씀(MIPLIB 원본 38/38) | `b5a93c1` (`m2-skel`) |
+| 2026-11-06 | M1 LU Markowitz 수정 | 허용 가능한 피벗 없이 4줄을 지나도 기저를 singular로 판정하지 않음(정상 기저에 slack 29–62개가 들어가던 문제). Method 1: Netlib 91 중 89 | `736c3b5` |
+| 2026-11-06 | M1 드라이버: 연속 모델 `optimize()` | Method 확정, 자동 조정, presolve → simplex·barrier·PDHG → uncrush, 상태·요약 로그, Presolve≠0이면 Python `_driver` 분기, `tools/driver_check.py`. Method 2·6 + Presolve 켬: 상태·목적 64/64, presolved 모델 8/64, BarIterCount 20/64. presolve의 Method 분기가 남음 | `9f5a723` (`m1-lp-driver`) |
+| 2026-11-06 | M2 presolve 골격·패스 해독 | `crates/mip` 상태(연결 리스트), `3cd406` 앞부분·마무리·모델 생성, 패스 루프·라운드 끝·마지막 단계 해독(하위 에이전트 skel, spine-b/c/d 병합) | `54f3923`, `e69eb66`, `4d5b7b0`, `1b1e9b3` (`m2-mip-presolve`) |
 
 ## 4. goal 원문
 
