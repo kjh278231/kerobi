@@ -44,17 +44,35 @@
 | 1 | 오라클(`tools/bar_oracle.py`): B 스칼라·x/y/z, F(nnz(L), ops) | 동작. 필드는 해독하면서 늘린다 |
 | 2 | ordering·symbolic(AA' NZ, Factor NZ/Ops, 순열, supernode) | **완료 64/64**(AA' NZ, 최종 순열 F+0x30, supernode 블록 F+0x78, 열 길이·행 번호, Factor NZ/Ops, F+0x48). `crates/lp/src/barrier/ordering.rs` `analyze()`, 테스트 `bench_lps_match_gurobi`(기대값 `bench/oracle/bar_order/expected.tsv`). 64개 모두 최종 순열은 기준선(mode 3, AMD + 이분할)이고 ND 후보는 채택되지 않는다. 세부는 `docs/m3_ordering.md` |
 | 3 | 표준형·초기점·잔차·반복 규칙(프로토타입) | **프로토타입 완료**(`tools/proto/bar_ipm.py`, `docs/m3_ipm.md`): 내부 LP 64/64 비트, 반복 0 점 ≤4e-12, 한 반복 1e-16~1e-9, corrector 수 K·work 타이머 정확히 같음(벽시계 아님). 전체: 상태 64/64, 목적 ≤1e-6 64/64, **BarIterCount 56/64**(±5% 안 57/64). 불일치 8개(agg, agg3, maros, degen2, bnl1, fffff800, perold, pilot4)는 해법 반올림이 쌓여 갈라짐 |
-| 4 | 수치 분해(supernodal LDLᵀ, `31c54b` → `2d8ee5` supernode 커널, `32af6a` Bunch–Kaufman, MKL DGEMM/DTRSM) | 지금은 `ldl.rs`(스칼라 up-looking LDLᵀ + 작은 피벗 규칙, 반올림 수준 일치)와 `normal.rs`(AΘAᵀ 조립). supernode 커널 비트 이식은 반복 수가 분해 반올림 때문에 갈릴 때 한다. `2d8e22`: F+0x178 정규화 모드 = 안전 모드·SOC면 2, 자유 변수·밀집 열이면 1, 아니면 0. 분해 뒤 모드 0이고 F+0x100 < 1e-10이면 1로 올림 |
-| 5 | Rust 본체, Python 경로(`Method=2`), `tools/parity.py capture rsolver` | **완료**(`docs/m3_rust.md`): `barrier::solve`, `CoreModel.barrier`, `Model.optimize` Method=2 분기, BARRIER 콜백·`cbGet`, LogFile에 "Barrier statistics". `bench/parity_bar.csv`: 상태 64/64, 목적 ≤1e-6 64/64, Barrier statistics 64/64, **BarIterCount 56/64**(불일치 agg, agg3, degen2, degen3, fffff800, maros, perold, pilot4). F+0x160/0x168(work)는 오라클과 64/64 비트 같음(CPU 상수는 CPUID, 이 머신 AVX2 → 30). 64개 약 2초 |
-| 6 | 비트 일치(분해·해법·합 순서)로 불일치 8개 줄이기 | **중단**(2026-11-05 사용량 한도). 미완 WIP 커밋만 있음, `docs/m3_chol.md`는 아직 없음. §5 참조 |
+| 4 | 수치 분해(supernodal LDLᵀ, MKL DGEMM/DTRSM) | **완료**(`chol.rs`, `mkl.rs`, `docs/m3_chol.md`): L, d, 1/d, F+0xf0, F+0x100이 Gurobi와 비트 같음(7개 인스턴스 × 반복 0–2, 원소 전부). MKL AVX2 커널을 재현해 64개에서 나온 DGEMM 2660, DTRSM 746 모양 전부 비트 일치(`tools/proto/mkl/test_all.py`로 재검증). LP 피벗 규칙은 §5 |
+| 5 | Rust 본체, Python 경로(`Method=2`), `tools/parity.py capture rsolver` | **완료**(`docs/m3_rust.md`): `barrier::solve`, `CoreModel.barrier`, `Model.optimize` Method=2 분기, BARRIER 콜백·`cbGet`, LogFile에 "Barrier statistics". F+0x160/0x168(work)는 오라클과 64/64 비트 같음(CPU 상수는 CPUID, 이 머신 AVX2 → 30). 64개 약 2초 |
+| 6 | 비트 일치(분해·해법·IPM 합 순서), 재시작 | **완료**(`docs/m3_chol.md`): 해법 `2ee6c5` dx·dy 비트, compl x87 Kahan(`f80.rs`), 잔차 8레인, μ_aff 4레인, rd 결합 순서, 재시작(`2bf1ea` L956–994, perold 반복 99·pilot4 반복 57). **BarIterCount 64/64**, 콜백 궤적 비트 동일 55/64 |
 
-## 5. 재개 기록 (2026-11-06)
+## 5. 결과 (2026-11-06)
+
+| G3 기준 | 상태 | 근거 |
+|---|---|---|
+| (1) 상태·목적 ≤1e-6 | 64/64, 64/64 | `tests/test_barrier.py`, `bench/parity_bar.csv` |
+| (2) BarIterCount 같음 ≥90%, 나머지 ±5% | **64/64** (나머지 없음) | 같은 곳(`same == 64` 단언) |
+| (3) ordering·Factor NZ | 64/64(AA' NZ, Factor NZ/Ops, Free vars, 순열·supernode) | `test_barrier_statistics_equal_gurobi_log`, Rust `bench_lps_match_gurobi`, parity `bar_stats` |
+| (4) 반복별 오라클 비교 도구 | `tools/bar_oracle.py`(`--iters`, `--vec`, `--chol`, `--solve`), `tools/parity.py compare`의 `first_divergence`(비트)·`first_divergence_1e-6` | — |
+| (5) clippy·테스트·문서 | 이 브랜치: barrier 파일 경고 0(남은 4개는 M1 파일 `crates/core`, `lu.rs`, `py/lib.rs` `solve_problem`). **main과 시험 병합한 트리에서는 clippy 경고 0**, `cargo test --workspace`·pytest 통과(main 쪽 xfail 1) | 아래 병합 메모 |
+
+**궤적 첫 분기**(반복 수는 같고 콜백 값의 비트가 갈리는 9개, `first_divergence` 반복): 25fv47 22, bnl1 48, degen3 1(분해 3321개 중 15개가 다름), finnis 20, forplan 17, ganges 14, maros 18, modszk1 12(상대 1e-6로는 16. 반복 11까지 상태·K·N·θ가 같고 반복 11의 step이 다름. `2f4fe9`의 ω = 0 분기부터 볼 것), pilot4 79. 나머지 55개는 마지막 반복까지 비트 동일.
+
+**피벗 규칙**: `bar_oracle.py --chol`로 degen2 반복 0–12의 Gurobi 분해를 떴다. 작은 피벗을 대체하지 않는다: |d| ≤ 1e-16·|원 대각|(또는 NaN)만 d = 0·역수 0, 나머지(예: d = −3.6e-15, 원 대각 12)는 그대로 두고 F+0xe8 = 1/d를 곱한다(e = 1/d 예외 0). F+0x100은 버리기 전 min|d/원 대각|. 이것만으로 56 → 59/64(`ddc3040`), 재시작과 비트 일치로 64/64.
+
+**main 병합 메모**(오케스트레이터용, 2026-11-06 main `abeeaf7`과 시험 병합): 충돌은 두 파일뿐이다. (1) `crates/py/src/lib.rs`: main의 `solve`와 이 브랜치의 `barrier_symbolic`·`barrier`를 둘 다 둔다. (2) `python/rsolver/__init__.py`: main의 `optimize` 맨 앞에 `if self._core is not None and self._param("Method", -1) == 2: return self._barrier(callback)`, main의 `cbGet` 맨 앞에 `if what in (getattr(self, "_cbdata", None) or {}): return self._cbdata[what]`를 넣고 이 브랜치의 `_barrier`를 그대로 둔다. 이렇게 푼 트리에서 clippy 0, cargo test, pytest가 통과했다.
+
+**남은 위험·안 한 것**: homogeneous 전환·상태 13·`2c4689` 최선 해·밀집 열(m ≥ 1000)·Bunch–Kaufman·단정밀도·SOC/QP 경로는 64개에서 안 타서 옮기지 않았거나 확인하지 않았다. MKL 재현은 AVX2 전용(AVX-512 머신은 커널이 다름), dtrsv는 m ≤ 32까지만 비트 보장, 블록·벡터 16바이트 정렬은 관찰에 기댄다. K₀가 CPU 상수(`a80670`)를 타므로 다른 CPU에서는 반복 수가 달라질 수 있다. Method=2이면 Presolve·Crossover 값을 보지 않는다.
+
+## 6. 재개 기록 (2026-11-06, 중간)
 
 - **피벗 규칙 확정**: `bar_oracle.py --chol`로 degen2 반복 0–12의 Gurobi 분해를 떴다. 작은 피벗을 대체하지 않는다. |d| ≤ 1e-16·|원 대각|(또는 NaN)만 d = 0·역수 0으로 버리고, 나머지는 d = −3.6e-15(원 대각 12) 같은 값도 그대로 두고 F+0xe8 = 1/d를 곱한다(13개 반복 전부, e = 1/d 예외 0). F+0x100은 버리기 전 값의 min |d/원 대각|이다. ±clamp(1e-10|diag|, 1e-12, 1e-6) 규칙(노트 14 §3.1.7)은 F+0x110≠0·Bunch–Kaufman 경로라 LP에서는 안 탄다. `ldl.rs`를 이 규칙으로 바꿔 **BarIterCount 56 → 59/64**(`ddc3040`).
 - **콜백 PRIMINF** = √(B+0x198² + B+0x1b8²) = √(‖r_p‖² + ‖r_u‖²)/τ(반복 0 오라클 64/64 비트, hypot 아님). 고친 뒤 상대 1e-6 안에서 궤적 전체가 같은 인스턴스 51/64(`df38e2a`). `tools/parity.py compare`에 `first_divergence_1e-6` 열을 더했다.
 - **남은 불일치**(Rust(Gurobi), 첫 분기 = `bench/parity_bar.csv`의 `first_divergence_1e-6`): degen2 11(12) 끝 반복(Gurobi 값으로는 반복 11의 gap_rel 6.8e-8 > tol이라 계속, 끝에서 gap ~1e-4라 1e-6 상대 일치로는 판정이 뒤집힘), fffff800 79(76) 반복 28, modszk1 21(20) 반복 11, perold 161(130) 반복 19, pilot4 127(85) 반복 13. ±5% 밖: degen2(8%), perold(24%), pilot4(49%). 셋 다 규칙 차이 흔적은 없고(종속 행·자유 열로 조건이 나쁜 계), 분해·해법 비트 일치가 필요하다.
 
-## 6. 일시 정지 메모 (2026-11-05, 사용량 한도)
+## 7. 일시 정지 메모 (2026-11-05, 사용량 한도, 해결됨)
 
 **완료 기준 현황**(Presolve=0, Threads=1, Crossover=0, Netlib 64)
 
