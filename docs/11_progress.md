@@ -97,6 +97,9 @@
 | 2026-11-06 | M2 presolve 내부 루프 병합 | 내부 루프 reduction 병합. 기본값 presolved 모델 **9/38**. XOR 행(`3e5363`) 해독(하위 에이전트 outer-a) | `f070a16`, `f4320c9` (`m2-outer-a`) |
 | 2026-11-06 | M1 LU 갱신(Forrest–Tomlin) | `5b257` 원형 FT 갱신(제자리 열 교체 또는 row eta, 8레인 합) | `670afe9` |
 | 2026-11-06 | M2 probing A·내부 루프 도구 | probe 행렬·엔진 `4e48f7`·충돌 그래프 이식, 레코드·덤프 검사 도구. dual bound(`374521`)·함의 그래프(`5431ee`) 해독 | `ce3522e`, `4b425d6`, `1010d5a` (`m2-mip-presolve`, `m2-outer-a`) |
+| 2026-11-06 | M1 FT 갱신 세부 규칙 | `5b257` prefix·빈 열 캐시, U 행이 비면 row eta 생략, 순열 교환 | `4fa5ef6` |
+| 2026-11-06 | M1 드라이버: 기저 없는 uncrush·상태 규칙 | `36578f`/`365159` 기저 없는 uncrush(Method 2·6, 오라클과 64/64 비트), 원본 상태 규칙, big-uncrush-violation 검사 | `fcd853e` (`m1-lp-driver`) |
+| 2026-11-06 | M2 probing B·clique 그룹 | probing 결과 반영(대입·bound·고정·lifting)과 호출 13개 상태 일치, clique 덮개 강화(`45885d`)·set packing 쌍 그래프(`52be10`)·clique 행 정규화(`46a62d`) | `0789b47`, `a91287e`, `2ba8870`, `955a8be` (`m2-mip-presolve`) |
 
 ## 4. goal 원문
 
