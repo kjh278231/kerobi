@@ -152,6 +152,44 @@ pub(super) fn guarded_add(old: f64, t: f64, up: bool) -> f64 {
     s * if grow { 1.0000000000000002 } else { 0.9999999999999998 }
 }
 
+/// Work the constructor counts (`3a484d` with `5118e6` CSR build and `534a8b` tracker; docs/m1_presolve.md
+/// appendix A), in the original order. Checked against `tools/work_oracle.py` at PRELIMIT=1.
+fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, contiguous: bool) -> f64 {
+    let mu = if nnz <= 100_000 { 1.0 } else { (nnz as f64 / 1e4).log10().sqrt() };
+    let (nf, mf, zf) = (n as f64, m as f64, nnz as f64);
+    let mut w = nf;
+    w += (nf * 1.5 + mf) * mu;
+    w += (nf + nf) * mu;
+    w += (spare - 1) as f64 * mu;
+    w += (nf * 0.5) * mu;
+    if contiguous {
+        w += (nf * 0.5 + zf) * mu;
+    } else {
+        for &l in &md.col_len {
+            w += (l as f64 * 4.0) * mu;
+        }
+        w += (nf * 3.0) * mu;
+    }
+    w += (zf * 3.0) * mu;
+    w += (mf * 4.0) * mu;
+    for &l in &md.col_len {
+        w += (l as f64 * 6.0) * mu;
+    }
+    w += (nf + nf) * mu;
+    w += (mf + mf) * mu;
+    w += mf * mu;
+    w += (mf + mf) * mu;
+    for &l in &md.col_len {
+        w += (l as f64 * mu) * 2.0;
+    }
+    w += (nf * 3.0) * mu;
+    for _ in 0..3 {
+        w += mf * (mu * 3.0);
+        w += (mu * 3.0) * nf;
+    }
+    w + 48.0 * mu
+}
+
 impl State {
     pub fn new(md: &Model) -> State {
         let (n, m) = (md.num_vars(), md.num_constrs());
@@ -240,8 +278,7 @@ impl State {
             splits: Vec::new(),
             bad_col: -1,
             bad_row: -1,
-            // shortcut: the constructor's own work terms (3a484d/5118e6/534a8b) are not added yet; add them for P2.
-            work: 0.0,
+            work: constructor_work(md, n, m, raw_nnz, spare, contiguous),
             work_mult: if raw_nnz <= 100_000 { 1.0 } else { (raw_nnz as f64 / 1e4).log10().sqrt() },
             tracker: Tracker::new(m, n),
             post: Vec::new(),

@@ -100,6 +100,7 @@ pub fn run(md: &Model, p: &Params) -> Model {
 pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
     let mut st = State::new(md);
     let nnz0 = st.nnz; // aggregation changes `st.nnz`; the arena's first chunk size uses the constructor's value
+    let mut work = st.work;
     if p.presolve != 0 {
         let tols = ColTols {
             infbound: p.infbound,
@@ -111,6 +112,7 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
             precrush: p.precrush,
         };
         reduce(&mut st, p, &tols);
+        work = st.work;
         // `3b0917`: opposite parallel rows 3ff744 left (state+0x42c) become `=` rows with a range column, unless
         // PreCrush > 1. shortcut: PRESPLITROWS is not in Params and assumed at its default (-1, on); add it
         // before running with GURO_PAR_PRESPLITROWS=0.
@@ -119,7 +121,7 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
         }
     }
     let q = st.to_model(md);
-    let post = postsolve::Post::new(&st, p.infbound, nnz0);
+    let post = postsolve::Post::new(&st, p.infbound, nnz0, work);
     (q, post)
 }
 

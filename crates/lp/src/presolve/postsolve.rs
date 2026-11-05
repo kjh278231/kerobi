@@ -25,6 +25,8 @@ pub struct Post {
     /// state counters at the end of presolve: bounds tightened, coefficients changed, `<` made `=`, rows removed,
     /// columns removed (+0x3f8..+0x408)
     pub counts: [i32; 5],
+    /// deterministic presolve work (*state+0x458) when model generation starts (`tools/work_oracle.py`)
+    pub work: f64,
 }
 
 fn r8(x: i64) -> i64 {
@@ -114,7 +116,7 @@ impl Post {
         self.recs.is_empty() && self.counts[3] == 0 && self.counts[4] == 0
     }
 
-    pub fn new(st: &State, infbound: f64, nnz0: i64) -> Post {
+    pub fn new(st: &State, infbound: f64, nnz0: i64, work: f64) -> Post {
         let map = |cnt: &[i32]| {
             let mut k = 0;
             cnt.iter()
@@ -149,7 +151,7 @@ impl Post {
             used += size;
         }
         Post { recs: st.post.clone(), aligns, col_map, row_map, n_base, n_pre: n_base + st.splits.len(), m_pre, infbound,
-               counts: [st.bounds_tightened, st.coefs_changed, st.ineq_to_eq, st.rows_removed, st.cols_removed] }
+               counts: [st.bounds_tightened, st.coefs_changed, st.ineq_to_eq, st.rows_removed, st.cols_removed], work }
     }
 }
 

@@ -125,6 +125,11 @@ impl PyCoreModel {
         let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
         (post.recs.len(), post.counts.to_vec())
     }
+    /// Presolve work when model generation starts (compare with tools/work_oracle.py).
+    fn presolve_work(&self, params: Vec<(String, f64)>) -> f64 {
+        let p = rsolver_lp::presolve::Params::from_pairs(&params);
+        rsolver_lp::presolve::run_post(&self.inner, &p).1.work
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)
