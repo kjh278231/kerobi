@@ -1031,9 +1031,12 @@ impl<'a> Engine<'a> {
                 // outside the artificial-bound phase a 1e30-scale step would leave residue in x_B: recompute
                 self.compute_xb();
             }
-            // P+0x48 = (2·nnz(α_q) + (k − 2)·P+0x48)/k with k the iteration count
-            let k = self.iter as f64;
-            self.pr.avg = (2.0 * col_nnz as f64 + (k - 2.0) * self.pr.avg) / k;
+            // P+0x48 = (2·nnz(α_q) + (k − 2)·P+0x48)/k with k the iteration count; α_q without its pivot (8b473
+            // strips it), and only on the update path of 1bae9c (not after a refactor)
+            if self.lu.n_updates > updates_before {
+                let k = self.iter as f64;
+                self.pr.avg = (2.0 * col_nnz.saturating_sub(1) as f64 + (k - 2.0) * self.pr.avg) / k;
+            }
             if self.pr.mode == 1 && self.pr.list.len() as f64 > self.pr.avg.max(4.0) {
                 // shortcut: spx+0x46c read as 4 (afiro); 1bae9c raises the threshold by 10% on a long list
                 self.pr.thr *= 1.1;
