@@ -1,7 +1,7 @@
 //! 04 §5 Dual pricing state (P = spx+0x478) and CHUZR: the ordered candidate list of mode 0 (`2896a3`, rebuilt by
 //! `15d2d`), the infeasibility marks spx+0x280 and the BTRAN-cost score weights (docs/m1_notes.md §8.2–8.4).
-//! shortcut: mode 1 (Full pricing, threshold list P+0x30) picks the best score over all positions; its list and
-//! threshold rules (`1bae9c` L560–726) are not decoded yet.
+//! Mode 1 (Full pricing) keeps an unordered list of positions whose stored score P+0x18 is at least the threshold
+//! P+0x30; marks then mean bit 0 = listed, bit 1 = feasible.
 use crate::common::sort_desc;
 
 /// Feasibility tolerance of CHUZR during the artificial-bound phase (spx+0x2cc): FeasTol·1e30·1e-5.
@@ -25,6 +25,9 @@ pub struct Pricing {
     pub var_cost: Vec<f64>,
     /// P+0x48: running average of 2·nnz(α_q).
     pub avg: f64,
+    /// Mode 1: stored scores by position (P+0x18, refreshed only when x_B changes) and the threshold P+0x30.
+    pub score: Vec<f64>,
+    pub thr: f64,
 }
 
 impl Pricing {
@@ -46,6 +49,8 @@ impl Pricing {
             row_cost: vec![1.0; m],
             var_cost,
             avg: 0.0,
+            score: vec![0.0; m],
+            thr: 0.0,
         }
     }
 
@@ -122,6 +127,99 @@ impl Pricing {
             }
         }
         None
+    }
+
+    /// Mode-1 start after a factorization (`1bae9c` full path): threshold = 1e-5 × the largest score, list = the
+    /// violated positions at or above it in position order.
+    pub fn full_init(&mut self, viol: &[Option<f64>], score: &[f64]) {
+        let mx = viol.iter().zip(score).filter(|(v, _)| v.is_some()).map(|(_, &s)| s).fold(0.0, f64::max);
+        self.thr = if mx > 0.0 { mx * 1e-5 } else { 1e-13 };
+        self.list.clear();
+        for (p, v) in viol.iter().enumerate() {
+            if v.is_some() {
+                self.score[p] = score[p];
+                if score[p] >= self.thr {
+                    self.list.push(p);
+                    self.mark[p] = 1;
+                } else {
+                    self.mark[p] = 0;
+                }
+            } else {
+                self.mark[p] = 2;
+            }
+        }
+    }
+
+    /// Mode-1 CHUZR (`2896a3` P+0x40 ≠ 0): drop listed positions that turned feasible or fell under the threshold,
+    /// take the best stored score; if none, lower the threshold tenfold and scan the unlisted violated positions.
+    pub fn full_pick(&mut self) -> Option<usize> {
+        let mut best = self.thr * 0.5;
+        let mut r = None;
+        let mut kept = Vec::with_capacity(self.list.len());
+        for &p in &self.list {
+            if self.mark[p] < 2 {
+                if self.score[p] >= self.thr {
+                    kept.push(p);
+                    if best < self.score[p] {
+                        best = self.score[p];
+                        r = Some(p);
+                    }
+                } else {
+                    self.mark[p] = 0;
+                }
+            } else if self.mark[p] < 5 {
+                self.mark[p] = 2;
+            }
+        }
+        self.list = kept;
+        if r.is_some() {
+            return r;
+        }
+        let lower = self.thr / 10.0;
+        let mut mx = 0.0;
+        for p in 0..self.mark.len() {
+            if self.mark[p] == 0 {
+                if mx < self.score[p] {
+                    mx = self.score[p];
+                    r = Some(p);
+                }
+                if lower <= self.score[p] {
+                    self.list.push(p);
+                    self.mark[p] = 1;
+                }
+            }
+        }
+        if !self.list.is_empty() {
+            self.thr = lower;
+        } else if let Some(p) = r {
+            self.list.push(p);
+            self.mark[p] = 1;
+            self.thr = mx;
+        } else {
+            self.thr = 1e-13;
+        }
+        r
+    }
+
+    /// Mode-1 update of a position whose x_B changed (`1bae9c` L556–726, `1c8477`): a violated position gets a fresh
+    /// score and joins the list when at or above the threshold; a feasible one gets bit 1.
+    pub fn full_touch(&mut self, p: usize, score: Option<f64>) {
+        match score {
+            Some(sc) => {
+                self.score[p] = sc;
+                if self.mark[p] == 3 {
+                    self.mark[p] = 1;
+                } else if self.mark[p] % 2 == 0 {
+                    if sc < self.thr {
+                        self.mark[p] = 0;
+                    } else {
+                        self.list.push(p);
+                        self.mark[p] = 1;
+                    }
+                }
+            }
+            None => self.mark[p] |= 2,
+        }
     }
 
     /// Mark a position whose x_B changed (1c8477 / 1bae9c mode 0): infeasible 1 and one allowance used, else 2.

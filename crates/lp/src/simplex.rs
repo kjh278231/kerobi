@@ -289,6 +289,28 @@ impl<'a> Engine<'a> {
         (pinf, dinf)
     }
 
+    /// `RSOLVER_SNAP=<file>`: one JSON line per iteration at the SIMPLEX-callback point (vstat, x_B, normalized d,
+    /// DSE weights as hex bits, pricing state), for bit comparison with tools/spx_oracle.py.
+    fn snap(&self) {
+        let Ok(path) = std::env::var("RSOLVER_SNAP") else { return };
+        use std::io::Write;
+        let hex = |v: &[f64]| v.iter().map(|x| format!("\"{}\"", hexf(*x))).collect::<Vec<_>>().join(",");
+        let dn: Vec<f64> = (0..self.n + self.m)
+            .map(|j| match self.vstat[j] {
+                s if s >= 0 => 0.0,
+                -2 => -self.d[j],
+                _ => self.d[j],
+            })
+            .collect();
+        let line = format!(
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\"}}\n",
+            self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr)
+        );
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = f.write_all(line.as_bytes());
+        }
+    }
+
     fn log(&mut self) {
         let (p, d) = self.sums();
         let z = self.objective();
@@ -335,6 +357,11 @@ impl<'a> Engine<'a> {
         }
         if self.pr.mode == 0 {
             self.price_rebuild();
+        } else {
+            let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol(p)).collect();
+            let score: Vec<f64> =
+                (0..self.m).map(|p| viol[p].map_or(0.0, |v| self.pr.score(p, self.head[p], v, self.w[p]))).collect();
+            self.pr.full_init(&viol, &score);
         }
     }
 
@@ -342,16 +369,7 @@ impl<'a> Engine<'a> {
     /// refactor); mode 1 takes the best score. None: no violated row.
     fn chuzr(&mut self) -> Option<usize> {
         if self.pr.mode == 1 {
-            let mut best: Option<(usize, f64)> = None;
-            for p in 0..self.m {
-                if let Some(v) = self.viol(p) {
-                    let s = self.pr.score(p, self.head[p], v, self.w[p]);
-                    if best.is_none_or(|(_, b)| s > b) {
-                        best = Some((p, s));
-                    }
-                }
-            }
-            return best.map(|b| b.0);
+            return self.pr.full_pick();
         }
         if let Some(p) = self.pr.next_listed() {
             return Some(p);
@@ -372,8 +390,20 @@ impl<'a> Engine<'a> {
     }
 
     /// Mark positions whose x_B changed (mode 0) and rebuild the list once the allowance runs out.
-    fn price_touch(&mut self, changed: &[usize]) {
+    fn price_touch(&mut self, changed: &[usize], leaving: Option<usize>) {
         if self.pr.mode != 0 {
+            for &p in changed {
+                let sc = self.viol(p).map(|v| self.pr.score(p, self.head[p], v, self.w[p]));
+                if Some(p) == leaving {
+                    // the leaving position is listed: refresh its score or mark it listed-feasible (3)
+                    match sc {
+                        Some(x) => self.pr.score[p] = x,
+                        None => self.pr.mark[p] = 3,
+                    }
+                } else {
+                    self.pr.full_touch(p, sc);
+                }
+            }
             return;
         }
         for &p in changed {
@@ -506,6 +536,7 @@ impl<'a> Engine<'a> {
             if self.w.iter().any(|w| w.is_nan() || w.abs() > 1e30) {
                 self.w.iter_mut().for_each(|w| *w = 1.0);
             }
+            self.snap();
             let r = match self.chuzr() {
                 Some(r) => r,
                 None if self.big_m => {
@@ -578,8 +609,8 @@ impl<'a> Engine<'a> {
                         dx[i] += a * step;
                     }
                 }
-                let changed: Vec<usize> = if huge {
-                    // same as the pivot step below: artificial-bound-scale moves leave residue, recompute
+                let changed: Vec<usize> = if huge && !self.big_m {
+                    // outside the artificial-bound phase a 1e30-scale move would leave residue: recompute
                     self.compute_xb();
                     (0..self.m).collect()
                 } else {
@@ -589,7 +620,7 @@ impl<'a> Engine<'a> {
                     }
                     (0..self.m).filter(|&p| dxb[p] != 0.0).collect()
                 };
-                self.price_touch(&changed);
+                self.price_touch(&changed, None);
                 if q == usize::MAX {
                     self.iter += 1;
                     self.log();
@@ -646,14 +677,17 @@ impl<'a> Engine<'a> {
             for &(rr, pos, _) in &self.lu.steps {
                 taup[pos] = tau[rr];
             }
-            let wr = self.w[r];
+            // 1bae9c L420-470: β = ‖ρ_r‖² (summed in BTRAN output order), w_r = (β/α_r)/α_r, then
+            // w_i = max(1e-8, (β·t·t − (t+t)·τ_i) + w_i) with t = α_i/α_r
+            let beta = sum_squares(&self.lu.btran(&[(r, 1.0)]).iter().map(|e| e.1).collect::<Vec<_>>());
+            let ar = if arq.abs() >= 1e-8 { arq } else if arq < 0.0 { -1e-8 } else { 1e-8 };
+            self.w[r] = if beta == 0.0 { 1e-8 } else { (beta / ar) / ar };
             for p in 0..self.m {
                 if p != r && col[p] != 0.0 {
-                    let ratio = col[p] / arq;
-                    self.w[p] = (self.w[p] - 2.0 * ratio * taup[p] + ratio * ratio * wr).max(1e-4);
+                    let t = col[p] / ar;
+                    self.w[p] = ((beta * t * t - (t + t) * taup[p]) + self.w[p]).max(1e-8);
                 }
             }
-            self.w[r] = (wr / (arq * arq)).max(1e-4);
             // primal step
             let theta_p = delta / arq;
             for p in 0..self.m {
@@ -670,17 +704,21 @@ impl<'a> Engine<'a> {
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;
             }
-            if theta_p.abs() >= 1e20 || delta.abs() >= 1e20 {
-                // a step at artificial-bound scale leaves rounding residue of that scale in x_B: recompute
+            if !self.big_m && (theta_p.abs() >= 1e20 || delta.abs() >= 1e20) {
+                // outside the artificial-bound phase a 1e30-scale step would leave residue in x_B: recompute
                 self.compute_xb();
             }
             self.iter += 1;
             // P+0x48 = (2·nnz(α_q) + (k − 2)·P+0x48)/k with k the iteration count
             let k = self.iter as f64;
             self.pr.avg = (2.0 * col_nnz as f64 + (k - 2.0) * self.pr.avg) / k;
+            if self.pr.mode == 1 && self.pr.list.len() as f64 > self.pr.avg.max(4.0) {
+                // shortcut: spx+0x46c read as 4 (afiro); 1bae9c raises the threshold by 10% on a long list
+                self.pr.thr *= 1.1;
+            }
             if self.lu.n_updates > updates_before {
                 let changed: Vec<usize> = (0..self.m).filter(|&p| p == r || col[p] != 0.0).collect();
-                self.price_touch(&changed);
+                self.price_touch(&changed, Some(r));
             }
             if !self.perturbed && degenerate > 50 {
                 self.perturb();
@@ -859,6 +897,31 @@ impl<'a> Engine<'a> {
     pub fn x(&self) -> Vec<f64> {
         (0..self.n + self.m).map(|j| if self.vstat[j] >= 0 { self.xb[self.vstat[j] as usize] } else { self.x_nonbasic(j) }).collect()
     }
+}
+
+/// Python `float.hex()` form of a double, for bit-exact snapshots.
+fn hexf(x: f64) -> String {
+    if x == 0.0 {
+        return if x.is_sign_negative() { "-0x0.0p+0".into() } else { "0x0.0p+0".into() };
+    }
+    if !x.is_finite() {
+        return format!("{x}");
+    }
+    let b = x.to_bits();
+    let sign = if b >> 63 == 1 { "-" } else { "" };
+    let e = ((b >> 52) & 0x7ff) as i64;
+    let mut m = b & ((1u64 << 52) - 1);
+    let (lead, exp) = if e == 0 { (0, -1022) } else { (1, e - 1023) };
+    let mut digits = format!("{m:013x}");
+    while digits.len() > 1 && digits.ends_with('0') {
+        digits.pop();
+    }
+    if m == 0 {
+        digits = "0".into();
+    }
+    m = 0;
+    let _ = m;
+    format!("{sign}0x{lead}.{digits}p{}{}", if exp >= 0 { "+" } else { "-" }, exp.abs())
 }
 
 /// Result of an LP solve in the original space.
