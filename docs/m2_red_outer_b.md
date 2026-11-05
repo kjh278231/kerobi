@@ -9,6 +9,7 @@
 | `3e40d1(st, env)` | 2,622 | DualReductions | 쌍대 논리로 `<` 행을 `=`로 | 78(바꾼 것 5) | 78/78 |
 | `418542(st, env)` | 2,645 | Aggregate && DualReductions | 쌍대 집계: 행의 이진 열과 다른 열 묶기(`3bb6fe`) | 78(`3bb6fe` 0회: 작업량만) | 78/78 |
 | `414c03`/`414c53` → `40d2bc(st, env, mode, M, T, W)` | 19 + 22 + 17,951 | PRECANCEL / PRECANCELCOL && T15/T16 < 0.8 | 비영 소거: `=` 행(mode 0)·암시 자유 열(mode 1)의 배수를 더해 겹치는 항을 지움 | 78 + 78(바꾼 것 행 15, 열 1) | 78/78, 78/78 |
+| `37f484(st, env)` MIP 분기 | 34,685 | Aggregate && T1 < 0.8 (앞에 PREBOUND면 `37168e`) | 집계: 단계 A(`=` 행으로 열 대입), B(`<` 행 → 슬랙), C(쌍, 검사만) | 78(바꾼 것 16) | 78/78 |
 | `36ee92(env, st)` | 357 | 없음(카운트 없음) | 노드 배열 압축(`510953` CSR 복사 → `514031` 다시 깔기) | 78(압축 1: neos-860300 첫 호출) | 78/78 |
 
 ## 2. `3e40d1` 부등식 → 등식 (`004c3920`)
@@ -316,3 +317,39 @@ APPLY:
 ### 5.3 오라클 확인
 `mip_dump_check.py 414c03` **78/78**, `414c53` **78/78**. 바꾼 호출: mode 0은 assign1-5-8, csched007(2), csched008, gmu-35-40, gmu-35-50(2), mad, neos-3627168-kasai, neos-4954672-berkel, neos-860300(2), neos859080, ran14x18-disj-8(경로 A·B, C1·C2, 채움, 양·음 선택). mode 1은 neos-860300 첫 호출(136 열, obj·bound·vtype 'B'→'I', type 10 레코드 136개 바이트 일치). sweep에서 `cancel_rows` 첫 불일치 5개가 모두 사라졌다(default 9 → 11/38).
 - 지나지 않은 경로: 타이머·1e7 예산 멈춤, 3ba9de flag, PRECANCELSELECT ≠ −1, NumericFocus ≠ 0, M ≠ 2, mode 1의 정수 피벗 규칙 일부.
+
+## 6. `37f484` 집계, MIP 분기 (`00381f20`)
+
+LP 포트(`crates/lp/src/presolve/agg.rs`, [m1_presolve_agg.md](m1_presolve_agg.md))가 CSR을 연결 리스트로 바꿔 부르는 것과 같은 함수다. MIP는 상태 리스트에서 바로 부른다(+0xfc = 1, +0xe0 = 0). 포트는 LP 코드를 `crates/mip/src/aggregate.rs`로 복사해 아래 차이만 더했다(LP 하위 모듈은 private이고 `crates/lp`는 고치지 않는다). 리스트·free/pending은 호출 동안 상태에서 꺼내 LP의 `Mat`으로 쓰고 끝에 되돌린다.
+
+### 6.1 LP와 다른 점 (MIP, 기본값)
+| | LP (`519a52` 안) | MIP (`3cd406` 바깥 패스) |
+|---|---|---|
+| prescan(m1 §3.1) | 첫 호출 | 안 함. +0x488 = −1, tolA = 1e-6, tolI = FeasibilityTol |
+| F(AggFill) | 10/20 | `3db19d`가 −1을 0으로 둔다 → 0 |
+| 후보 목록 | 전체(`3707ac` 전파로 분류) 또는 `53c9ee` | 늘 `53af0f`(레벨 1 열, 캐시) → 유한성으로만 분류(lb 유한: ub 유한 0 / 무한 2, lb 무한: ub 유한 1 / 3). W = (|목록|·6)·μ + W |
+| 행 캐시 | `local_170`, `local_168` NULL | `local_170`(정수 기준값) 있음, `local_168` NULL |
+| 단계 A | | 아래 6.2 |
+| 단계 B | cls 0 건너뜀 | 연속 열만, cls 0은 `378c30__0` && `__1`, 아래 6.3 |
+| 단계 C | PREPAIRAGG 1, 3 | PREPAIRAGG 2, 3(기본 3). 비용 흔들기(bC) 없음, 정수 검사(6.4) |
+| 단계 D | 함 | 안 함(+0xfc == 0 조건) |
+| 레코드 | type 2 LP 꼴, 11, 21, 6 | type 2는 `39b9e0` MIP 분기(`helpers::push_subst_row`와 같음, 리스트를 걷고 W += (5·μ)·걸은), type 11 = {i32 r, i32 j, f64 |a|}(16 B) |
+| 끝 | `519a52`가 activity 다시 계산 | +0x408/+0x404가 늘었으면 `53d3d9`. activity는 3cd406이 바로 뒤 `370047`로 다시 계산 |
+
+### 6.2 단계 A의 정수 열
+- `3773aa`(행 캐시)는 `local_170[r]`도 채운다: 살아 있는 열 중 'C'가 있으면 −1, 아니면 min|a|; 그다음 rhs/min|a|와 모든 a/min|a|가 정수(`x − floor(x + 1e-10) ≤ 1e-10`)가 아니면 −1. 둘째 걷기는 W += (μ·3)·걸은. 배율 한도로 멈추면 −1.
+- `377cb6(…, isInt)`: 정수 열이면 `local_170[r]`(0이면 `3773aa` 다시)과 |a|가 1e-10 넘게 다르면 0. 단 row_cnt[r] == 2, |rhs| < 1e-10이면 다른 열을 찾으며 W += (2·건너뛴)·μ, 그 열에 플래그(+0x170)가 있고 |a_o/a| ≈ 1이면 2(`37f484` L1172–1249의 정수 쌍 경로). 플래그가 늘 0이라 2는 안 나온다(`shortcut:`).
+- 추정 루프: `=` 행이 아니거나 row_cnt ≥ best인 노드에서 **이진 VUB 패턴**: nbin(+0xf0) ∈ [1, n), best ≥ 3, a < 0, vtype[j] == 'B', `<` 행, row_cnt 2, |rhs| ≤ 1e-10, inf_min = inf_max = 0, act_min − a ≥ −1e-10, act_max + a ≤ 1e-10이면 lim = best = 3(그래서 그 행만으로는 추정이 안 생긴다). a == −1이면 그 행의 다른 첫 열이 'B'일 때는 건너뛰고(W += (2·건너뛴)·μ) 아니면 3으로.
+- 추정값: 정수 열은 `best·(c−2) + 1`, 연속은 `(c−2)·(best−1) + 1`.
+- 피벗 고르기 조건: `(thr ≤ |a| && !int) || ρ·rmax ≤ |a| || (rmax·ρ2 ≤ |a| && cnt < 3 && !int)`.
+- `3791fd`는 `local_170`도 무효화한다(행 r과 열 j의 행들).
+
+### 6.3 단계 B
+- 열 걷기: row_cnt == 2인 행에서 그 행의 다른 첫 살아 있는 열이 'B'(또는 플래그 1)면 지금까지 모은 후보를 버리고 그 행만 남긴다(|a| > 1e6이면 포기). 그 행 다음 노드에서 멈춘다. `=` 행을 만나면 포기.
+- 슬랙: 피벗 행의 옛 inf_min이 0이면 ub[j] = −(옛 act_min)/|a|(LP는 INF). 열 j의 새 기여는 이 bound로 더한다.
+
+### 6.4 단계 C
+쌍 비율 검사 뒤 네 열 중 정수가 있고 |ρc − 1| > 1e-10이면 그 행을 그만둔다(실패 표시 없음). 통과한 쌍의 집계(MIP `39d14c` 레코드, 정수 타입 합치기·bound floor)는 옮기지 않았다(`shortcut:`, 38개에서 이 단계까지 오는 행이 없다).
+
+### 6.5 오라클 확인
+`mip_dump_check.py 37f484`: **78/78**. 바꾼 16호출: 단계 A 대입(csched007 71열, csched008, gmu-35-40/50, ic97_potential, neos-2657525-crna, neos-4338804-snowy, neos-4954672-berkel ×2, neos859080 40열, sp150x300d, timtab1, tr12-30 ×2), 단계 B 슬랙(graphdraw-domain 20열, type 11 레코드). 단계 B MIP 분기를 빼면 32호출이 작업량만 틀렸다(cls 0 `378c30` 작업량, 이진 2항 규칙). sweep의 `aggregate` 첫 불일치 2개가 사라졌다(graphdraw-domain 기본값 일치, default 12/38).
