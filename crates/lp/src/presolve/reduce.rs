@@ -1831,12 +1831,6 @@ impl State {
 }
 
 impl State {
-    /// `5b488d` (PREDERIVED): derived bounds. shortcut: not ported yet; no-op (Netlib results do not change with
-    /// GURO_PAR_PREDERIVED=0). Port before claiming the default reduction set.
-    pub fn derived_bounds(&mut self, _t: &ColTols) -> i32 {
-        0
-    }
-
     /// `50de61` (PREBOUND, finish stage): bounds implied by the rows, with 0.001 (|b| + 1) of room, go onto the
     /// columns, and `<` rows that cannot be violated are dropped. Activities end up recomputed from the new
     /// bounds (plain sums). Returns 0 or 3 (`bad_row`/`bad_col`).
@@ -2095,10 +2089,5 @@ impl State {
             }
         }
         self.row_cnt[i] = -2;
-    }
-
-    /// `47c445` (PreDepRow): dependent rows. shortcut: not ported yet; no-op.
-    pub fn dependent_rows(&mut self, _mode: i32, _t: &ColTols) -> i32 {
-        0
     }
 }

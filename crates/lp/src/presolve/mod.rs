@@ -3,6 +3,8 @@
 //! Every reduction call counts toward GURO_PAR_PRELIMIT; reaching it jumps straight to model generation, which
 //! is what makes each reduction checkable on its own.
 mod agg;
+mod deprow;
+mod derived;
 mod parallel;
 pub mod postsolve;
 mod reduce;
