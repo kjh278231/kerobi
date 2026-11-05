@@ -4,7 +4,8 @@ F+0x30, nnz(L) F+0x38, ops F+0x60, and the original A (model data D = model+0xe8
 Then call Gurobi's ordering kernel 309dd0 directly for the baseline (mode 3) and the ND trials (mode 1, seeds 11..15)
 so each candidate can be compared. At the first BARRIER callback dump F again (after symbolic 2e4f14) and stop.
 
-usage: python tools/proto/bar_order_oracle.py <model.mps.gz> <out.json.gz> [--no-calls]
+usage: python tools/proto/bar_order_oracle.py <model.mps.gz> <out.json.gz> [--no-calls] [--bisect]
+--bisect also runs 30b0f2 directly on each component 309dd0 mode 3 would split (bench/oracle/bar_order/bisect/).
 Gurobi runs one process at a time; wrap with a retry loop on 'already running'.
 """
 import ctypes, gzip, json, os, sys
@@ -19,6 +20,53 @@ base = next(int(l.split("-")[0], 16) for l in open("/proc/self/maps") if "libgur
 ORDER = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_double, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int,
                          ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int,
                          ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(base + 0x324330)
+
+
+# 30b0f2 @ file 0x325850: (env, n, colptr long*, rowind int*, part int*, round, seed*, work*) — multilevel bisection
+BISECT = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                          ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p)(base + 0x325850)
+
+
+def call_bisect(env, xa, ad, round_, seed):
+    """Run Gurobi's bisection on one component subgraph; seed is a one-element list updated in place."""
+    n = len(xa) - 1
+    cx, ca, part = (ctypes.c_long * len(xa))(*xa), (ctypes.c_int * max(len(ad), 1))(*ad), (ctypes.c_int * n)()
+    sd, work = ctypes.c_long(seed[0]), (ctypes.c_double * 4)()
+    rc = BISECT(env, n, ctypes.addressof(cx), ctypes.addressof(ca), ctypes.addressof(part), round_, ctypes.addressof(sd),
+                ctypes.addressof(work))
+    seed[0] = sd.value
+    return rc, list(part)
+
+
+def bisect_calls(env, n, cp, ri, lab):
+    """309dd0 mode 3 by hand: components of stage-1 nodes larger than max(600, n/100), bisected with seed 0 onwards."""
+    comp = [-1 if lab[i] == -1 else 2000000000 for i in range(n)]
+    nc = 0
+    for s in range(n):
+        if comp[s] != -1:
+            continue
+        comp[s], stack = nc, [s]
+        while stack:
+            v = stack.pop()
+            for u in ri[cp[v]:cp[v + 1]]:
+                if comp[u] == -1:
+                    comp[u] = nc
+                    stack.append(u)
+        nc += 1
+    seed, out = [0], []
+    for c in range(nc):
+        nodes = [i for i in range(n) if comp[i] == c]
+        if len(nodes) <= max(600, n // 100):
+            continue
+        loc = {i: k for k, i in enumerate(nodes)}
+        xa, ad = [0], []
+        for i in nodes:
+            ad += [loc[j] for j in ri[cp[i]:cp[i + 1]] if j in loc]
+            xa.append(len(ad))
+        s0 = seed[0]
+        rc, part = call_bisect(env, xa, ad, -1, seed)
+        out.append(dict(nodes=nodes, seed=s0, seed_after=seed[0], rc=rc, part=part))
+    return out
 
 
 def find_BF(m):
@@ -85,6 +133,10 @@ def main():
                      colptr=ints(L(B + 0x110), n + 1, ctypes.c_long), rowind=ints(L(B + 0x118), nz),
                      perm=ints(L(F + 0x30), n), nnzL=L(F + 0x38), ops=D(F + 0x60).hex(), ops2=D(F + 0x48).hex(),
                      F18=I(F + 0x18), seed_b0=L(mp + 0xb0), F=arr(F, 0x200 // 8))
+            if "--bisect" in sys.argv:
+                t = max(100, int(min(float(int(nz * 50.0 / n)), n ** 0.5 * 10.0)))
+                lab = [-2 if o["colptr"][i + 1] - o["colptr"][i] > t else -1 for i in range(n)]
+                o["bisect"] = bisect_calls(L(mp + 0x100), n, o["colptr"], o["rowind"], lab)
             if calls:
                 o["calls"] = [call_order(mp, B, F, 3, res["seed_b0_pre"], n)]
                 o["calls"] += [call_order(mp, B, F, 1, 11 + k, n) for k in range(5)]
