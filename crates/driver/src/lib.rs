@@ -50,13 +50,15 @@ pub fn optimize(md: &Model, user: &Params, h: &mut Hooks) -> Outcome {
     let target = p.int("SolutionTarget");
     // step I (11 §3.10). shortcut: crossover is not ported, so Method 2/6 with Crossover != 0 (0c3d0d → 2bb770/34f033
     // → crossover) run without it; concurrent (3, 4) runs the dual simplex, which is what 0c3d0d does with one thread.
-    match method {
+    let out = match method {
         2 if crossover == 0 && target != 1 => interior(md, &p, Alg::Barrier, h, t0),
         6 if crossover == 0 && target != 1 => interior(md, &p, Alg::Pdhg, h, t0),
         2 => interior(md, &p, Alg::Barrier, h, t0),
         6 => interior(md, &p, Alg::Pdhg, h, t0),
         m => simplex_driver(md, &p, if m == 0 { 0 } else { 1 }, h, t0),
-    }
+    };
+    (h.log)("\n");
+    out
 }
 
 /// `c23877` step F for a pure LP (11 §3.6; no warm starts, PWL objective or concurrent envs exist yet). Writes the
@@ -402,6 +404,18 @@ fn simplex_driver(md: &Model, p: &Params, method: i32, h: &mut Hooks, t0: Instan
     let lim = p.get("IterationLimit");
     let lim = if lim >= 1e18 { u64::MAX } else { lim as u64 };
     let (st, mut iter, trace, x, dj, vs) = simplex(q, method, lim);
+    // `0d07d1` table: the first and the last row. shortcut: the engine keeps no time per iteration, so the rows
+    // DisplayInterval would add in between are not printed and the first row's time is 0.
+    if let (Some(a), Some(b)) = (trace.first(), trace.last()) {
+        (h.log)("\nIteration    Objective       Primal Inf.    Dual Inf.      Time\n");
+        let row = |r: &TraceRow, t: f64| {
+            format!(" {:7}   {:>14}  {:>13}  {:>13} {:6.0}s\n", r.0, c_exp(r.1, 7), c_exp(r.2, 6), c_exp(r.3, 6), t)
+        };
+        (h.log)(&row(a, 0.0));
+        if trace.len() > 1 {
+            (h.log)(&row(b, t0.elapsed().as_secs_f64().floor()));
+        }
+    }
     let none = (vec![], vec![], vec![], vec![]);
     let (status, (x, slack, pi, rc)) = match &pre {
         Some((_, post)) if code(st) == 2 && !post.is_identity() => {
@@ -479,13 +493,13 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
                 bar_iter_limit: p.get("BarIterLimit") as i64,
                 bar_correctors: p.int("BarCorrectors"),
             };
-            let r = barrier::solve(qe, &bp, &mut *h.barrier);
+            let r = barrier::solve_logged(qe, &bp, &mut *h.barrier, &mut *h.log, t0);
             out.bar_iter_count = r.bar_iters;
             out.work = pre.as_ref().map_or(0.0, |(_, post)| post.work) * 1e-9 + r.work;
             (r.status, (r.x, r.slack, r.d, r.y))
         }
         Alg::Pdhg => {
-            (h.log)("\nStart PDHG using 1 threads\n\n");
+            (h.log)("\nStart PDHG using 1 threads\n");
             let pp = pdhg::Params {
                 iter_limit: p.get("PDHGIterLimit"),
                 rel_tol: p.get("PDHGRelTol"),
@@ -494,7 +508,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
                 work_limit: p.get("WorkLimit"),
                 work0: pre.as_ref().map_or(0.0, |(_, post)| post.work),
             };
-            let r = pdhg::solve(qe, &pp, &mut *h.pdhg);
+            let r = pdhg::solve_logged(qe, &pp, &mut *h.pdhg, &mut *h.log, t0, p.get("DisplayInterval"));
             out.pdhg_iter_count = r.iters;
             out.work = r.work / 1e9;
             (r.status, (r.x, r.slack, r.d, r.y))
@@ -530,6 +544,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
         (h.log)(&format!("\n{name} performed {it:.0} iterations in {secs:.2} seconds ({:.2} work units)\n", out.work));
         (h.log)(&status_line(status, obj));
     }
+    (h.log)("\n"); // `2bf1ea` / `34c004` close their block with a blank line
     // `36578f` big uncrush violation: an OPTIMAL solution whose violation in the original model exceeds
     // max(1e4, 1/min scale) · max(FeasibilityTol, violation in the presolved model) is SUBOPTIMAL.
     // shortcut: the presolved violation (result+0x58) is recomputed here from the presolved model and x.

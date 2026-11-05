@@ -39,19 +39,26 @@ def test_driver_matches_gurobi(cap, params, iters):
     assert not bad
 
 
-def anchors(text):
-    """Log lines from "Optimize a model" to the end of the solve, numbers that vary run to run masked."""
-    body = re.split(r"\nUser-callback calls|\nPresolve a model", text[text.index("Optimize a model"):])[0]
-    keep = re.compile(r"^(Optimize|Model|Coefficient|  \w+ range|Presolve|Presolved|Start PDHG|Solved in|"
-                      r"Barrier solved|PDHG solved|PDHG performed|Optimal objective|Work limit)")
-    # simplex iteration counts are G1's (Method 1 checks status and objective only)
-    mask = lambda s: re.sub(r"^Solved in \d+", "Solved in N",
-                            re.sub(r"[0-9.]+ seconds \([0-9.]+ work units\)", "T", re.sub(r"time: [0-9.]+s", "time: T", s)))
-    return [mask(s) for s in body.splitlines() if keep.match(s)]
+def body(text, simplex):
+    """The log from "Optimize a model" to the end of the solve, run-dependent fields masked (seconds, work units, the
+    time column); for the simplex path its iteration rows and counts too (simplex internals are G1's)."""
+    t = re.split(r"\nUser-callback calls|\nPresolve a model", text[text.index("Optimize a model"):])[0].rstrip("\n")
+    out = []
+    for line in t.splitlines():
+        line = re.sub(r"[0-9.]+ seconds \([0-9.]+ work units\)", "T", re.sub(r"time: [0-9.]+s", "time: T", line))
+        line = re.sub(r" +\d+s$", " Ts", line)
+        if simplex:
+            if re.match(r"^ +\d+ +[-+0-9.e]+ +[-+0-9.e]+ +[-+0-9.e]+ +Ts$", line):
+                continue
+            line = re.sub(r"^Solved in \d+", "Solved in N", line)
+        out.append(line)
+    return out
 
 
 @pytest.mark.parametrize("cap,params,iters", PATHS, ids=[p[0] for p in PATHS])
-def test_driver_log_anchors(cap, params, iters, tmp_path):
+def test_driver_log(cap, params, iters, tmp_path):
+    """Whole log (header, presolve, barrier statistics, iteration tables, summary) line for line."""
     for name in ("afiro", "grow7"):  # grow7: presolve removes nothing (no "Presolve removed" line)
         solve(name, params, tmp_path / f"{name}.log")
-        assert anchors((tmp_path / f"{name}.log").read_text()) == anchors((ROOT / "bench" / cap / name / "log.txt").read_text())
+        got = body((tmp_path / f"{name}.log").read_text(), iters is None)
+        assert got == body((ROOT / "bench" / cap / name / "log.txt").read_text(), iters is None)

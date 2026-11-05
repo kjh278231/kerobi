@@ -735,6 +735,9 @@ pub fn run(lp: &Lp, sym: &Symbolic, f160: f64, f168: f64, p: &Params, cb: &mut d
             priminf: (r.rp2 * r.rp2 + r.ru2 * r.ru2).sqrt(),
             dualinf: r.rd2,
             compl: r.compl,
+            log_pinf: r.rp_rel,
+            log_dinf: r.rd_rel,
+            mu: r.mu,
         });
         hmu.push(r.mu);
         hcompl.push(r.compl);

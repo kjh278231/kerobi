@@ -2,7 +2,7 @@
 
 포팅 원본: [port_map.tsv](port_map.tsv)의 `02_driver`(169개). `GRBoptimize → 9828a1 → c23877`을 `driver` 크레이트 하나로 옮긴다. 근거: 노트 10, 11 전체.
 
-**포팅 상태(2026-11-06, G5)**: 연속 LP 몫이 `crates/driver`에 있다(헤더 `header.rs`, `optimize`·`resolve_method`·`adjust`·세 LP 경로 `lib.rs`). 파라미터 표는 `crates/model/src/params.rs`(548개, gurobipy와 같음). Netlib 64개에서 Presolve 기본값의 Method 2·6(Crossover 0)은 상태·목적·BarIterCount/PDHGIterCount 64/64, Method 1은 상태·목적 64/64. 세부·지름길은 [m1_driver.md](m1_driver.md).
+**포팅 상태(2026-11-06, G5)**: 연속 LP 몫이 `crates/driver`에 있다(헤더 `header.rs`, `optimize`·`resolve_method`·`adjust`·세 LP 경로 `lib.rs`). 파라미터 표는 `crates/model/src/params.rs`(548개, gurobipy와 같음). Netlib 64개에서 Presolve 기본값의 Method 2·6(Crossover 0)은 상태·목적·BarIterCount/PDHGIterCount 64/64, Method 1은 상태·목적 64/64. 연속 LP의 상태 규칙(§7), uncrush(`363daa`, `365159`), 요약·반복 표 로그(§8)를 원본대로 옮겼다. 세부·지름길은 [m1_driver.md](m1_driver.md).
 
 ## 1. 진입 순서
 
@@ -104,6 +104,8 @@ match method {
 
 ## 7. 상태 확정과 uncrush (노트 11 §3.12)
 
+연속 LP는 LP 드라이버가 직접 정한다(포팅됨, [m1_driver §4.2, §8, §9](m1_driver.md)): presolve가 증명한 상태는 `390989` 끝 규칙, simplex 경로는 `0c3d0d`(3·5 → 4, 끝에서 `a7fc52`면 3), barrier·PDHG 경로는 `36578f`(3은 `a7fc52(INFBOUND)` 거짓이면 4, 5는 `a80155` 아니면 4, OPTIMAL의 큰 uncrush 위반은 13). uncrush는 simplex 경로 `363daa` 뒤 원래 모델 simplex, barrier·PDHG 경로 `365159`. 아래는 MIP 경로(`c23877` B&B 뒤)의 규칙이다.
+
 ```
 status = engine.status
 if status == INFEASIBLE && pool.len() > 0 { status = OPTIMAL }
@@ -121,7 +123,7 @@ presolve가 모든 행·열을 지운 경우는 postsolve 기록만으로 해를
 
 ## 8. 요약 로그 (노트 11 §3.14)
 
-MIP 경로에서만(국소 NLP 포함). 순서: "Explored %.0f nodes (%.0f simplex iterations) in %.2f seconds (%.2f work units)" → "Thread count was %d (of %d available processors)" → "Solution count %d: …" → 상태 문구 표 → "Best objective %s, best bound %s, gap %s". 상태 문구는 노트 11 §3.14 표 그대로 쓴다. 연속 모델은 LP 드라이버가 "Solved in %d iterations and %.2f seconds (%.2f work units)" / "Optimal objective %.8e"를 찍는다.
+MIP 경로에서만(국소 NLP 포함, 미포팅). 순서: "Explored %.0f nodes (%.0f simplex iterations) in %.2f seconds (%.2f work units)" → "Thread count was %d (of %d available processors)" → "Solution count %d: …" → 상태 문구 표 → "Best objective %s, best bound %s, gap %s". 상태 문구는 노트 11 §3.14 표 그대로 쓴다. 연속 모델은 LP 드라이버와 엔진이 찍는다(포팅됨): simplex `"Solved in %d iterations and %.2f seconds (%.2f work units)"` + `c9457`(`"Optimal objective %16.9e"`), barrier·PDHG `"… solved model in … iterations …"`/`"… performed …"` + `"Optimal objective %.8e"`, 그 앞의 "Ordering time"·"Barrier statistics"·반복 표([m1_driver §10](m1_driver.md)).
 
 ## 9. 한도 검사 (`limits::check`)
 

@@ -41,6 +41,10 @@ pub struct IterInfo {
     pub dualinf: f64,
     /// B+0x1f0 (BARRIER_COMPL)
     pub compl: f64,
+    /// log columns: B+0x1d8 = max(‖r_p‖∞, ‖r_u‖∞)/τ, B+0x1e0 (dual residual), B+0x1f8 = μ
+    pub log_pinf: f64,
+    pub log_dinf: f64,
+    pub mu: f64,
 }
 
 #[derive(Clone, Debug)]
@@ -60,10 +64,72 @@ pub struct BarResult {
 
 /// Solve the LP `m` with the barrier; `cb` runs once per iteration (BARRIER callback, before the termination test).
 pub fn solve(m: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> BarResult {
+    solve_logged(m, p, cb, &mut |_| {}, std::time::Instant::now())
+}
+
+/// `solve` with the barrier's own log (`2bd9ab`/`2e8590`/`2bf1ea`): "Ordering time", "Barrier statistics", the
+/// iteration table (one row per iteration). `start` is the optimize's start for the time column.
+pub fn solve_logged(m: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo), log: &mut dyn FnMut(&str),
+                    start: std::time::Instant) -> BarResult {
     let sym = ordering::analyze(m);
+    log(&format!("Ordering time: {:.2}s\n", start.elapsed().as_secs_f64()));
     let lp = setup::lp_from_model(m, &sym.perm, p.bar_conv_tol);
+    log(&statistics(&sym, &lp, m));
     let (f160, f168) = work_estimates(&sym, m.num_constrs(), cpu_divisor());
-    ipm::run(&lp, &sym, f160, f168, p, cb)
+    log("\n                  Objective                Residual\n");
+    log("Iter       Primal          Dual         Primal    Dual     Compl     Time\n");
+    let mut row = |i: &IterInfo| {
+        cb(i);
+        // `2bf1ea` L437–442; the '*' rows (B+0x690 small, homogeneous) do not occur without the homogeneous mode
+        log(&format!(" {:3}  {:>15} {:>15}  {} {}  {}  {:4.0}s\n", i.iter, e(i.pobj, 8), e(i.dobj, 8), e(i.log_pinf, 2),
+                     e(i.log_dinf, 2), e(i.mu, 2), start.elapsed().as_secs_f64().floor()));
+    };
+    ipm::run(&lp, &sym, f160, f168, p, &mut row)
+}
+
+fn e(x: f64, prec: usize) -> String {
+    rsolver_model::mps_write::c_exp(x, prec)
+}
+
+/// `2e8590`: the "Barrier statistics" block. The memory note comes from `2e44ba`'s estimate for factorizations of at
+/// most 1e8 operations (no timing run): 4·(row indices of L) + 8·Factor NZ + 400·(m + n) bytes, rounded to one
+/// significant digit in MB. shortcut: larger factorizations time a test kernel there; not ported.
+fn statistics(s: &ordering::Symbolic, lp: &setup::Lp, m: &Model) -> String {
+    let free = lp.t[..lp.n].iter().filter(|&&t| t == 0).count();
+    let mut o = String::from("\nBarrier statistics:\n");
+    if free > 0 {
+        o += &format!(" Free vars  : {free}\n");
+    }
+    o += &format!(" AA' NZ     : {}\n", e(s.aat_nnz as f64 * 0.5, 3));
+    let bytes = s.row_idx.len() as f64 * 4.0 + s.nnz_l as f64 * 8.0 + (m.num_constrs() + m.num_vars()) as f64 * 400.0;
+    let mb = round1(bytes / 1e6);
+    o += &if mb >= 1000.0 {
+        format!(" Factor NZ  : {} (roughly {:.1} GB of memory)\n", e(s.nnz_l as f64, 3), mb / 1000.0)
+    } else if mb < 1.0 {
+        format!(" Factor NZ  : {}\n", e(s.nnz_l as f64, 3))
+    } else {
+        format!(" Factor NZ  : {} (roughly {mb:.0} MB of memory)\n", e(s.nnz_l as f64, 3))
+    };
+    o += &format!(" Factor Ops : {} (less than 1 second per iteration)\n", e(s.ops, 3));
+    o + " Threads    : 1\n"
+}
+
+/// `2e8590`'s rounding: v to one significant digit (the largest power of ten p with |round(v/10^p)·10^p − v| < 0.1 v,
+/// tried from the top), then to the nearest integer.
+fn round1(v: f64) -> f64 {
+    let v = if v == 0.0 { 1e-10 } else { v };
+    let mut k = (v.ln() / 10f64.ln()) as i32 + 1;
+    let mut r = v;
+    while k > 0 {
+        let t = (v / 10f64.powi(k) + 0.5).floor() * 10f64.powi(k);
+        if (t - v).abs() < v * 0.1 {
+            r = t;
+            break;
+        }
+        k -= 1;
+        r = v;
+    }
+    (r + 0.5).floor()
 }
 
 /// `2e7f38`: (F+0x160 = 2 nnz(L), F+0x168 = factor work estimate) from the symbolic statistics.

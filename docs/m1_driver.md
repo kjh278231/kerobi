@@ -8,9 +8,9 @@ G5([11 §4](11_progress.md)) 작업 중에 알아낸 사실. 확정된 내용은
 |---|---|---|
 | (1) 파라미터 표 548개 = gurobipy | **충족** | §2, `tests/test_params.py` 548/548 |
 | (2) Optimize 헤더 로그 102개 | **충족** | §3, `tests/test_header.py` 102/102 |
-| (3) 분류·Method 확정·자동 조정·상태·요약 로그 | **충족(연속 LP 몫)**: Method 확정·자동 조정 단위 테스트, 경로별 로그 앵커 3/3(afiro·grow7). MIP 분류·요약은 범위 밖 | §4, `crates/driver` 테스트, `tests/test_driver.py` |
-| (4) Presolve 켠 연속 경로 (Method 2·6 반복 수, Method 1 상태·목적) | **충족**: Method 2·Crossover 0 상태·목적·BarIterCount **64/64**, Method 6·Crossover 0 상태·목적·PDHGIterCount **64/64**(bnl1 WORK_LIMIT는 Work까지 비트 일치), Method 1 상태·목적 **64/64** | §4–§6, `tests/test_driver.py` |
-| (5) clippy 0, 테스트, 문서 | **충족**: clippy 경고 0, cargo test 전부, pytest 140 통과(1 xfail은 기존 MIP 배낭), barrier·PDHG Presolve=0 64/64 유지 | |
+| (3) 분류·Method 확정·자동 조정·상태·요약 로그 | **충족(연속 LP)**: Method 확정·자동 조정 표(단위 테스트), 상태 규칙(`390989` 끝·`0c3d0d`·`36578f`, `a7fc52`·`a80155`)이 실행 불가·무계 LP 4개 × Method 1·2·6에서 Gurobi와 상태·로그 12/12, 요약·반복 표 로그가 세 경로 모두 afiro·grow7에서 줄 단위로 같음(시간만 가림). 64개 전체: barrier 51/64, PDHG 64/64(시간 구간 중간 줄 제외), dual 60/64(simplex 반복 줄 제외). MIP 분류·요약은 범위 밖 | §4, §8–§10, `crates/driver` 테스트, `tests/test_status.py`, `tests/test_driver.py`, `tools/log_check.py` |
+| (4) Presolve 켠 연속 경로 (Method 2·6 반복 수, Method 1 상태·목적) | **충족**: Method 2·Crossover 0 상태·목적·BarIterCount **64/64**, Method 6·Crossover 0 상태·목적·PDHGIterCount **64/64**(bnl1 WORK_LIMIT는 Work까지 비트 일치), Method 1 상태·목적 **64/64**. 덤: PDHG 경로는 X·RC·Slack·Pi가 Gurobi와 비트 일치(63/63 + bnl1), barrier 경로는 50/64(barrier 본체 차이, §10) | §4–§9, `tests/test_driver.py`, `tests/test_max.py` |
+| (5) clippy 0, 테스트, 문서 | **충족**: clippy 경고 0, cargo test 전부, pytest 통과(1 xfail은 기존 MIP 배낭), barrier·PDHG Presolve=0 64/64 유지 | |
 
 ## 1. 호출 범위 (2026-11-06)
 
@@ -110,14 +110,15 @@ d10b1  a7aa8f  c9457 (상태 메시지 "Optimal objective …")  d10b1 ×2  10f5
 - dj: 상한 비기저(−2)는 엔진이 부호를 뒤집어 저장하므로 되돌린 d로, 열은 `d_j/(s_j·k)`, 행은 `d_{n+i}·σ_i·r_i/k`(k = 목적 배율). 행 항목은 쌍대값 y이고 slack 열의 d가 −y다.
 - 상태: 엔진 `vstat` 그대로(기저는 위치 ≥ 0, −1/−2/−3/−4).
 - 검증: `bench/gurobi_uncrush`의 Gurobi 입력(`pre_after`)과 비교해 afiro·forplan·fit1d는 x·dj·상태가 1e-7 안에서 같고, scfxm1·gfrd-pnc는 퇴화 LP의 다른 최적 기저라 일부만 다르다(스크래치 `cmpspx.py`, `CoreModel.presolved_spx`).
-- 지름길: uncrush 뒤 원래 모델 simplex("Extra simplex iterations after uncrush")는 엔진에 웜스타트 입구가 없어 하지 않는다. Gurobi도 Netlib 64개 중 5개만 추가 반복이 있다.
+- uncrush 뒤 원래 모델 simplex(`0c3d0d` L444–476, "Extra simplex iterations after uncrush"): `363daa` 기저로 원래 모델의 `Engine`을 만들고(`Lu::factor`, `vstat`·`head` 직접 설정, 분해가 불완전하면 건너뜀) `primal()`을 부른다. 지름길: 엔진의 dual은 자체 시작(`dual_start`가 crash로 새 기저를 만듦)만 있어서 원본(Method 1이면 dual) 대신 primal로 돈다. 최적 기저면 둘 다 0회. 결과: 추가 반복이 생기는 모델이 Gurobi와 **같은 5개**(finnis·forplan·gfrd-pnc·recipe·etamacro), 반복 수는 2/2/2/2/3 대 Gurobi 2/1/1/2/2.
+- 상태(`0c3d0d` L2696–2703, L2944–2952): presolved 결과 3·5는 DualReductions면 4, 끝에서 4이고 `a7fc52(min(INFBOUND, PREINFBND))`면 3. presolved 결과가 2가 아니면 uncrush하지 않아 해가 없다.
 
 ### 4.3 barrier·PDHG 경로
 
-- 경로: presolve → `barrier::solve`/`pdhg::solve`(presolved 모델) → uncrush → 상태. 지름길: `36578f`(원시 `363164`, 쌍대 `365159`, "big uncrush violation"으로 13 만들기)를 옮기지 않고, x는 `363daa`에 slack과 모두 기저인 가짜 상태를 넣어 되돌린다(원시값만 씀, 쌍대는 내보내지 않음). Netlib 64개 기준값은 모두 상태 2라 13 규칙이 걸린 사례가 없다.
-- presolve가 Method를 알아야 했다(§5), 상한만 있는 열을 뒤집어야 했다(§6.1), presolved 모델의 RNG와 작업량 타이머를 원본대로 넘겨야 했다(§6.2–6.3). 셋을 넣은 뒤 64/64.
+- 경로: presolve → `barrier::solve_logged`/`pdhg::solve_logged`(presolved 모델, 상한만 있는 열은 뒤집어서) → `36578f`(§8) → 상태 → 요약 로그.
+- presolve가 Method를 알아야 했고(§5), 상한만 있는 열을 뒤집어야 했고(§6.1), presolved 모델의 RNG와 작업량 타이머를 원본대로 넘겨야 했다(§6.2–6.3). 셋을 넣은 뒤 64/64.
 - 기준값: `bench/gurobi_bar_pre`(Method 2, Crossover 0), `bench/gurobi_pdhg_pre`(Method 6, Crossover 0), `bench/gurobi_dual_pre`(Method 1). 모두 Presolve 기본값, Threads 1, WorkLimit 60, `tools/parity.py capture gurobipy … --lp-only`. 상태: barrier 64×2, PDHG 63×2 + bnl1 16(WORK_LIMIT), dual 64×2.
-- 점검: `PYTHONPATH=$PWD/python python tools/driver_check.py <기준값> [--iters BarIterCount|PDHGIterCount] --param …`(Gurobi 불필요).
+- 점검: `PYTHONPATH=$PWD/python python tools/driver_check.py <기준값> [--iters BarIterCount|PDHGIterCount] --param …`, 로그 `tools/log_check.py <기준값> --param … [--no-iters]`(Gurobi 불필요).
 
 ## 5. presolve의 Method 분기 (`crates/lp/src/presolve/`, 2026-11-06 수정 허용)
 
@@ -153,8 +154,32 @@ Frida로 `a7b4d6`/`a7b54f`의 상태 포인터를 따라가면 presolve 경로�
 
 ## 7. 안 한 것·남은 위험
 
-- 범위 밖: MIP 경로·분류(Python이 `IsMIP`이면 기존 오류), 다목적, concurrent(스레드 1개 dual로 대신), crossover(Crossover ≠ 0인 Method 2·6도 crossover 없이 끝냄), PreDual 쌍대화, network·sifting, 웜스타트.
-- `36578f` 미포팅: barrier·PDHG 해는 `363daa`에 가짜 기저로 원시값만 되돌린다. 쌍대값·기저는 내보내지 않고 "big uncrush violation" → 13 규칙도 없다(64개 기준값에 사례 없음).
-- simplex 경로: uncrush 뒤 원래 모델 simplex(웜스타트)를 하지 않는다. Netlib 64개 중 Gurobi도 5개만 추가 반복이 있다. 최대화 모델의 `363daa` 입력 규약은 확인하지 않았다(Netlib은 모두 최소화).
-- 반복 로그(barrier·PDHG·simplex의 Iter 표)와 barrier의 "Ordering time"/"Barrier statistics"는 드라이버 로그에 아직 없다. 로그 앵커 테스트는 헤더·presolve·요약 줄만 본다.
-- `presolve_status`의 UNBOUNDED → INF_OR_UNBD는 `a80155`를 읽지 않은 근사다(Netlib에 사례 없음).
+- 범위 밖: MIP 경로·분류(Python이 `IsMIP`이면 기존 오류), 다목적, concurrent(스레드 1개 dual로 대신), crossover(Crossover ≠ 0인 Method 2·6도 crossover 없이 끝냄), PreDual 쌍대화, network·sifting, 웜스타트, InfUnbdInfo.
+- simplex 경로: uncrush 뒤 재풀이를 원본의 dual 대신 primal로 한다(§4.2). simplex 내부 로그("handle free variables" 등)와 DisplayInterval 중간 줄은 엔진에 시각 기록이 없어 없다. 그래서 dual 경로 로그는 64개 중 60개만 같다(brandy·perold·pilot4의 자유 열 줄, etamacro의 목적 마지막 자리).
+- barrier 본체(G3)는 presolved 모델에서 원본과 완전히 같지 않다: ordering 결과(Factor NZ·Ops)가 4/64(25fv47·degen3·scfxm3·sctap2)에서 다르고, 반복값이 마지막 자리에서 갈리는 모델이 있어 해(X 등)는 50/64만 비트 일치, 로그는 51/64. BarIterCount·목적은 64/64. 원본 Netlib에서는 검증된 부분이라 presolved 모델에만 나오는 경우(예: bisection 경계)로 보인다. barrier 흐름의 후속 과제다.
+- `365159`의 x·쌍대 입력을 엔진에서 받으므로 쌍대(Pi·RC)의 정확도는 엔진에 달렸다. PDHG는 비트 일치, barrier는 위와 같다.
+- barrier 통계의 메모리 문구는 연산 1e8 이하의 추정식만 옮겼다(그 위는 원본이 시간 측정 커널을 돌린다). `F+0x40`(행 색인 수) 대신 `row_idx` 길이를 쓴다(64개 통계 줄은 ordering 차이 4개 말고 같음).
+- `a91184`의 LP 위반 계산은 합산 순서를 읽지 않았다(상태 13 문턱에만 쓰임). presolved 모델 위반(result+0x58)은 presolved 모델과 x로 다시 계산한다.
+
+## 8. `36578f` (barrier·PDHG의 uncrush와 상태)
+
+- 상태(L25–55): 3·4·5는 DualReductions와 Presolve가 켜져 있을 때만 바꾼다. 3은 `a7fc52(INFBOUND)`가 거짓이면 4, 5는 `a80155`(행이 없고 bound가 모순 없음)가 아니면 4. 3·4·5·6·12는 uncrush하지 않아 해가 없다.
+- LP 부분(L455–620): `7a069`로 presolved 해를 펴고(x·열 배율, slack/행 배율, d/(열 배율·목적 배율), (행 배율/목적 배율)·y), 분할 행의 범위 열 블록(+0x54)을 거쳐 **`365159`**(LP는 `363164`가 아니다)를 한 번 부른다. 입력은 presolved 모델의 x·slack·d·y(D+0x408 표시 열은 뒤집힌 채, `365159`가 먼저 되돌림), 출력은 원래 모델의 x·slack·d·y이고 최종 속성은 X = x, RC = d, Slack = slack, Pi = −y다.
+- `365159` = `363daa`에서 기저 판단을 뺀 것(`postsolve::uncrush_nonbasic`): 유형 2는 행이 기저여도 건너뛰지 않고, 유형 6·7은 기저 대신 d의 ±1e-6로 하한(d > 1e-6)·상한(d < −1e-6)을 판정하고, 유형 14는 y < 0이면 y를 떨어진 행으로 옮긴다. 유형 4·24의 보조 함수(`35d235`, `361ab1`)는 기저 인자가 0이어도 값이 같다. 항등 지름길이 없다(행·열을 지우지 않아도 매핑·slack 재계산·`>` 부호 처리를 함).
+- 검증: `tools/uncrush_oracle.py`가 `36578f` 안의 `365159` 호출(0x372e6e)을 가로채 입력·출력을 뜬다(`c159`). 오라클 입력을 넣은 포트 출력이 Method 2·6 모두 **64/64 비트 일치**(`tools/postsolve_check.py <dir> --nonbasic --param …`). 고정 파일 `bench/gurobi_uncrush159`(유형 1·2·3·4·6·7·8·11·14·21·24와 항등, `tests/test_uncrush159.py`).
+- 엔진 입력: barrier·PDHG 결과에 `7a069` 형식의 slack·d·y를 더했다(`BarResult`/`PdhgResult`의 `slack`, `d`, `y`). y는 원본처럼 부호를 바꿔 저장한다. PDHG는 slack·d·y가 오라클 입력과 63/63 비트 일치.
+- 상태 13("big uncrush violation"): 상태 2이면 원래 모델 위반(`a91184`: 행 r = rhs − Ax의 sense별 위반과 유한 bound 위반의 최댓값)이 max(1e4, 1/최소 배율)·max(FeasibilityTol, presolved 위반)을 넘을 때 경고 "Warning: Changing status from GRB_OPTIMAL to GRB_SUBOPTIMALdue to big uncrush violation %g (presolved model = %g)."(원문 그대로 띄어쓰기 없음)와 함께 13. 최소 배율은 엔진의 배율 배열(barrier `scale_flag3`, PDHG `scale_flag4`)에서 잡는다(오라클로 둘 다 남아 있음을 확인). 64개 기준값에는 사례가 없다(상태 64/64 유지).
+
+## 9. presolve가 증명한 상태와 최대화
+
+- `390989` 끝(L1756–1789): presolve 자체가 상태를 내면 DualReductions일 때 3 → 4, 5는 `a80155`가 아니면 4, 4이고 `a7fc52(min(INFBOUND, PREINFBND))`면 3. presolved 모델은 버리고 "Presolved: …" 줄 없이 "Solved in 0 iterations …"/"Barrier solved model in 0 iterations …"/"PDHG solved model in 0 iterations …"와 상태 문구를 찍는다. 포트: `reduce`/`finish`가 상태를 돌려주고 `Post::status`에 담는다.
+- 검증: 손으로 만든 LP 4개(presolve가 잡는 실행 불가·무계 각 2개) × Method 1·2·6에서 Gurobi와 상태·로그가 12/12 같다(`bench/gurobi_status`, `tests/test_status.py`).
+- 최대화: 엔진은 최소화형으로 푼다. PDHG 포트가 비용 부호를 반영하지 않아 최대화 모델을 최소화로 풀던 것을 고쳤다(`scale_flag4`가 sense·c, sense·objcon, 콜백 목적은 모델 방향). 속성 Pi·RC는 모델 방향(최소화형 쌍대 × sense). Netlib 6개를 목적 반전·ModelSense −1로 만든 모델에서 barrier·PDHG 경로의 상태·반복 수·X·RC·Slack·Pi가 Gurobi와 비트 일치, simplex 경로는 상태·목적 일치(`bench/gurobi_max`, `tests/test_max.py`).
+
+## 10. 로그
+
+- barrier(`2bd9ab`/`2e8590`/`2bf1ea`, `barrier::solve_logged`): "Ordering time: %.2fs", "Barrier statistics:"(Free vars, AA' NZ, Factor NZ + 메모리 문구, Factor Ops + "(less than 1 second per iteration)", Threads), 표 머리, 반복마다 `" %3d%c %15.8e %15.8e  %.2e %.2e  %.2e  %4.0fs"`(목적 2개, 로그 잔차 B+0x1d8·B+0x1e0, μ). 메모리 = 4·색인 수 + 8·Factor NZ + 400·(m + n)바이트를 유효숫자 1자리 MB로(1 미만이면 생략).
+- PDHG(`34c004`/`355831`, `pdhg::solve_logged`): "Start PDHG using 1 threads", 표 머리, 평가마다 상태 판정 뒤 상태가 끝이면 반드시, 진행 중이면 DisplayInterval 구간이 바뀔 때 `"%9lld  %15.8e %15.8e  %.2e %.2e %9.2e %4.0fs"`. P+0x50이 −0.0으로 남던 것(컴파일된 `maxsd` 쌍)을 +0.0으로 맞췄다.
+- simplex(`0d07d1`): 표 머리와 첫·마지막 줄 `" %7.0f   %14.7e  %13.6e  %13.6e %6.0fs"`.
+- 요약: simplex `"Solved in %d iterations …"` + `c9457`(`"Optimal objective %16.9e"` 등), barrier·PDHG `"… solved model in …"`/`"… performed …"` + `"Optimal objective %.8e"` 또는 상태 문구, 엔진 블록 뒤 빈 줄, optimize 끝 빈 줄.
+- 검증(`tools/log_check.py`, 초·작업량·시간 열을 가림): PDHG 64/64(시간 구간 중간 줄은 실행마다 달라 처음·마지막 줄만 비교), barrier 51/64(§7), dual 60/64(`--no-iters`, §7). 고정 테스트는 afiro·grow7 세 경로 로그 전체(`tests/test_driver.py`).

@@ -37,6 +37,9 @@ pub struct IterInfo {
     pub priminf: f64,
     pub dualinf: f64,
     pub compl: f64,
+    /// log columns P+0x50 / P+0x58 (∞-norm residuals)
+    pub rp_inf: f64,
+    pub rd_inf: f64,
 }
 
 #[derive(Clone, Debug)]
@@ -106,6 +109,26 @@ fn dump(st: &State) {
 /// Solve the LP `m` with PDHG (`34c004`); `cb` runs at every PDHG callback (every 100 PDHG iterations and after
 /// every power-iteration chunk).
 pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResult {
+    solve_logged(md, p, cb, &mut |_| {}, std::time::Instant::now(), 5.0)
+}
+
+/// `solve` with the PDHG iteration table (`355831`): after each evaluation's status test a row when the status is
+/// final or the DisplayInterval bucket of the elapsed time changed (always at the first evaluation). `start` is the
+/// optimize's start for the time column.
+pub fn solve_logged(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo), log: &mut dyn FnMut(&str),
+                    start: std::time::Instant, display_interval: f64) -> PdhgResult {
+    log("\n                       Objective                Residual\n");
+    log("     Iter       Primal          Dual         Primal    Dual     Compl    Time\n");
+    let mut last = -1.0f64; // P[0x37]: elapsed time of the last row
+    let e = |x: f64, k: usize| rsolver_model::mps_write::c_exp(x, k);
+    let mut row = |i: &IterInfo, fin: bool| {
+        let t = start.elapsed().as_secs_f64();
+        if fin || (t / display_interval).floor() != (last / display_interval).floor() {
+            log(&format!("{:9}  {:>15} {:>15}  {} {} {:>9} {:4.0}s\n", i.iter, e(i.pobj, 8), e(i.dobj, 8), e(i.rp_inf, 2),
+                         e(i.rd_inf, 2), e(i.compl, 2), t.floor()));
+            last = t;
+        }
+    };
     let d = scale::scale_flag4(md);
     let (n, m, nnz) = (d.a.n, d.a.m, d.a.nnz());
     let sg = md.sense as f64; // callback objectives in the model's sense
@@ -116,6 +139,8 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
         priminf: st.rp2,
         dualinf: st.rd2,
         compl: st.compl,
+        rp_inf: st.rp_inf,
+        rd_inf: st.rd_inf,
     };
     let mut st = State { tol: 1e-4, ..Default::default() };
     st.wc = d.s.iter().map(|s| 1.0 / s).collect();
@@ -178,6 +203,7 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
                 dump(&st);
             }
             let s = status(&st, p, work);
+            row(&info(&st), s != 1);
             if s != 1 {
                 break s;
             }
