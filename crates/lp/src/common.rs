@@ -127,3 +127,50 @@ mod tests {
         }
     }
 }
+
+/// The original's random stream (`a7b4d6` integer, `a7b54f` double): a 64-bit LCG state whose high word goes through
+/// a Mersenne-Twister style temper. State lives at env+0xb0; `895c5` reseeds it.
+#[derive(Clone, Copy, Debug)]
+pub struct Rng(pub u64);
+
+impl Rng {
+    /// `a7b4d6`: next value in [0, 2^31).
+    pub fn next_int(&mut self) -> i32 {
+        self.0 = self.0.wrapping_mul(0x5851f42d4c957f2d).wrapping_add(0x14057b7ef767814f);
+        let mut y = (self.0 >> 32) as u32;
+        y ^= y >> 11;
+        y ^= (y << 7) & 0x9d2c5680;
+        y ^= (y << 15) & 0xefc60000;
+        y ^= y >> 18;
+        (y & 0x7fff_ffff) as i32
+    }
+
+    /// `a7b54f`: next value in [0, 1).
+    pub fn next_f64(&mut self) -> f64 {
+        self.next_int() as f64 * 4.656612873077393e-10
+    }
+
+    /// `895c5`: state = seed + offset (offset = the Seed parameter); returns the previous state minus the offset.
+    pub fn reseed(&mut self, seed: u64, offset: i64) -> u64 {
+        let old = self.0.wrapping_sub(offset as u64);
+        self.0 = seed.wrapping_add(offset as u64);
+        old
+    }
+}
+
+#[cfg(test)]
+mod rng_tests {
+    use super::Rng;
+
+    /// Values of libgurobi's own a7b4d6/a7b54f from state 12345 (tools/proto/rng_oracle.py).
+    #[test]
+    fn rng_matches_original() {
+        let mut r = Rng(12345);
+        let ints: Vec<i32> = (0..4).map(|_| r.next_int()).collect();
+        assert_eq!(ints, RNG_INTS);
+        assert_eq!(r.next_f64().to_bits(), RNG_F64_BITS);
+    }
+
+    const RNG_INTS: [i32; 4] = [1885523651, 1555173835, 2062167607, 1850098887];
+    const RNG_F64_BITS: u64 = 0x3fd9596e8a800000;
+}

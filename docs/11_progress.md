@@ -10,7 +10,7 @@
    1. `/goal clear`
    2. 하던 작은 단위를 마치고 인수인계 메모(§2 표)를 갱신해 커밋하게 한다.
    3. 같은 탭에서 `/clear`로 새 세션을 연다.
-   4. 메모를 읽고 이어 가게 하고, §4의 goal을 다시 건다. 화면에 `/goal active`가 뜨는지 확인한다. `/clear` 직후에 보낸 `/goal`은 무시될 수 있으니, 표시가 없으면 다시 보낸다.
+   4. 메모를 읽고 이어 가게 하고, §4의 goal을 다시 건다. 화면에 `/goal active`가 뜨는지 확인한다. `/clear` 직후 처음 보낸 `/goal`은 goal로 걸리지 않고 지시로만 전달된다(2회 확인). 그래서 이어 가라는 지시를 먼저 보내고, 그다음 `/goal`을 보낸다("Goal set"이 뜬다).
 4. **완료 기록**: 마일스톤 안의 단계(A, B, C…)나 관문이 끝나면 §3에 날짜·결과·커밋을 적는다.
 
 공통 규칙(모든 에이전트):
@@ -26,9 +26,11 @@
 |---|---|---|---|---|
 | M1 심플렉스 | `rsolver` / `main` | LP simplex(dual·primal), LU, crash, Quad, LP 드라이버, `crates/core` 삭제 | `docs/10_porting.md` §9 | G1 |
 | M1 LP presolve | `rsolver-presolve` / `m1-lp-presolve` | LP presolve, postsolve | `docs/m1_presolve.md` | G2 |
-| ↳ postsolve (presolve 에이전트가 띄운 하위 에이전트, Sonnet) | `rsolver-postsolve` / `m1-postsolve` | postsolve `363daa` | `docs/m1_postsolve.md` | G2의 일부 |
-| ↳ derived·PreDepRow (presolve 하위 에이전트) | 각자 worktree / `m1-derived`, `m1-deprow` | `5b488d`, `47c445` | `docs/m1_presolve.md` | G2의 일부 |
-| M3 barrier | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
+| ↳ ~~postsolve~~ (완료, `m1-lp-presolve`에 병합. pane `w4:pP`는 유휴) | `rsolver-postsolve` / `m1-postsolve` | postsolve `363daa` | `docs/m1_postsolve.md` | G2의 일부 |
+| ↳ ~~derived·PreDepRow~~ (완료, 병합, 브랜치 삭제) | — / `m1-derived`, `m1-deprow` | `5b488d`, `47c445` | `docs/m1_presolve.md` | G2의 일부 |
+| ↳ symmetry (presolve 하위 에이전트, pane `w4:pV`) | `rsolver-symmetry` / `m1-symmetry` | 대칭 검출 `5577ba`→`551cc0` | `docs/m1_presolve.md` | G2의 일부 |
+| ~~M3 barrier~~ (완료, main 병합) | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
+| M3 PDHG | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3_pdhg.md` | G4 |
 
 ## 3. 완료 기록
 
@@ -64,6 +66,16 @@
 | 2026-11-05 | M1 dual 반복 원본화 | CHUZR(모드 0/1)·BFRT(코퍼스 99.4%)·DSE·d 갱신·재분해 시점 이식. Netlib 64: 64/64 정확, 반복 일치 7, ±5% 34, sc50a 반복 0–6 비트 일치 | `899c192`, `1979049`, `33b944b`, `93e51af`, `23cad5d` |
 | 2026-11-05 | M1 presolve PREDERIVED·postsolve | `5b488d`(PREDERIVED) 비트 일치 이식, type 24 레코드. 집계 레코드 6/11/21 uncrush, 기본값 postsolve 53/59. rsolver-lp clippy 경고 0 | `25a1494`, `b53fd32`, `15260ee`, `d537b7e` (`m1-lp-presolve`) |
 | 2026-11-05 | M3 비트 일치 분해·해법 | Rust supernodal 분해·해법(`chol.rs`)과 MKL DGEMM/DTRSM 흉내(`mkl.rs`)가 Gurobi와 비트 일치. IPM을 이 위에 올려 **BarIterCount 63/64** | `5557d2b`, `506a26e` (`m3-barrier`) |
+| 2026-11-05 | M1 presolve 기본값 64/64 | `47c445`(PreDepRow) 이식. 기본 파라미터 presolved 모델 64/64 | `38ea4e7` (`m1-lp-presolve`) |
+| 2026-11-05 | M1 postsolve 64/64 | 행·열을 지우지 않은 경우의 항등 uncrush까지, 검사기 64/64. Gurobi 없이 도는 pytest 회귀 | `15b7b65`, `c024356` (`m1-postsolve` → `m1-lp-presolve`) |
+| 2026-11-05 | **M3 barrier 본체 (G3) 완료** | 오케스트레이터가 따로 검증: 상태 64/64, 목적 ≤1e-6 64/64, **BarIterCount 64/64**, clippy 0, cargo test·pytest 통과, 검증 중 Gurobi 미사용. main에 병합(`crates/core` 삭제 유지, SIMPLEX·BARRIER `cbGet` 통합) | `c1a5124`, `3e8a744`, `03d2ca4`, 병합 `e6760c3` |
+| 2026-11-05 | M1 dual 시작·섭동·난수 | 자유 열 루프·재분해 간격(m^0.7) 원본화, cost shifting, `common::Rng`(libgurobi 난수와 비트 일치), `48d5f` GLOBAL 섭동. Netlib 64: 정답 63/64, **반복 수 같음 11**, ±5% 39, 기하평균 1.014배 | `9c5614b`, `a8cf69e`, `04622c8` |
+| 2026-11-05 | M1 presolve 작업량(생성자) | `5118e6` 문제 유형 검사 포함, PRELIMIT=1 작업량 64/64 | `bc9f229` (`m1-lp-presolve`) |
+| 2026-11-05 | M3 PDHG 0–1 | 호출 범위·의존 확인, Method=6 기준값, 결정성 64/64, PDHG 상태 오라클 | `984af95`, `1e820a2` (`m3-pdhg`) |
+| 2026-11-05 | M1 Netlib 91 Method 1 점검 | 86/91 정답(라이선스 밖 27개 중 23) | `9fba738` |
+| 2026-11-05 | M1 presolve 작업량 예산 | `50de61`·`516cb4` 작업량 항, `3ba9de` 예산 정지 | `9130f4f` (`m1-lp-presolve`) |
+| 2026-11-05 | M1 대칭 검출 게이트 | `5577ba`/`551cc0` LP 경로 이식, 합성 대칭 LP 회귀 | `fcb1bb2`, `6e30a98` (`m1-symmetry`) |
+| 2026-11-05 | M3 PDHG (G4) 에이전트 보고 완료 | Rust PDHG(Method=6)가 Netlib 64에서 Gurobi와 비트 일치, 콜백별 상태 비교 도구. **오케스트레이터 검증·병합 대기** | `60b0b84`, `1479067` (`m3-pdhg`) |
 
 ## 4. goal 원문
 
@@ -78,7 +90,7 @@
 - **G2**: LP presolve(`390989`)와 postsolve를 완료한다. 완료 기준:
   1. P0: Netlib 64개에서 기본 파라미터의 presolved 모델(`presolved.mps.gz` SHA-256)이 Gurobi와 64/64 같다.
   2. presolved 모델의 해·기저를 postsolve로 원래 공간에 되돌린 결과가 Gurobi와 비트 단위로 같다. 64/64, 오라클로 검증한다.
-  3. 미뤄 둔 `47c445`(PreDepRow)를 포함해 기본값에서 도는 reduction을 모두 옮긴다.
+  3. 미뤄 둔 `47c445`(PreDepRow)와 대칭 검출 게이트(`5577ba`→`551cc0`)를 포함해 기본값에서 도는 reduction을 모두 옮긴다.
   4. cargo clippy 경고 0, 테스트 통과. `docs/03_presolve.md`와 `docs/m1_presolve.md`를 갱신한다.
 
   범위 밖은 simplex·드라이버(main)와 barrier다.
@@ -90,3 +102,10 @@
   5. cargo clippy 경고 0, 테스트 통과. `docs/05_barrier_pdhg_concurrent.md`와 `docs/m3_barrier.md`를 갱신한다.
 
   범위 밖은 crossover, PDHG, concurrent, presolve, simplex다.
+- **G4**: PDHG(Method=6) 본체를 완료한다(crossover 제외). 완료 기준(Presolve=0, Threads=1, Crossover=0):
+  1. Netlib 64개에서 상태가 Gurobi와 같고, 목적값이 Gurobi PDHG 결과와 상대 1e-6 이내다.
+  2. P1: Gurobi가 보고하는 PDHG 반복 수와 같은 인스턴스가 90% 이상이다. 나머지는 ±5%이고 첫 분기점을 기록한다.
+  3. 반복별 오라클 비교 도구를 둔다.
+  4. cargo clippy 경고 0, 테스트 통과. `docs/05_barrier_pdhg_concurrent.md`와 `docs/m3_pdhg.md`를 갱신한다.
+
+  범위 밖은 crossover, concurrent, barrier(완료), presolve, simplex다.
