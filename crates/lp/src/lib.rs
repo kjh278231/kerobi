@@ -4,3 +4,4 @@ pub mod fp;
 pub mod lu;
 pub mod scaling;
 pub mod spx;
+pub mod presolve;

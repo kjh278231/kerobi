@@ -2,6 +2,7 @@
 
 pub mod fingerprint;
 pub mod mps;
+pub mod mps_write;
 
 /// Value the original stores internally for an infinite bound (INFBOUND); the attribute API reports it as inf.
 pub const INFINITY: f64 = 1e30;

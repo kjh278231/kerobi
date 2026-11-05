@@ -163,7 +163,24 @@ class Model:
         self.Params[name] = value
 
     def presolve(self):
-        raise GurobiError(10024, "presolve is not ported yet (M1)")
+        if self._core is None:
+            raise GurobiError(10024, "presolve of a model built in Python is not ported yet (M1)")
+        q = Model()
+        q._core = self._core.presolve([(k, float(v)) for k, v in self.Params.items() if isinstance(v, (int, float))])
+        q.ModelName, q.ModelSense, q.Params = q._core.name, q._core.sense, dict(self.Params)
+        return q
+
+    def write(self, filename):
+        if self._core is None or not str(filename).endswith((".mps", ".mps.gz")):
+            raise GurobiError(10024, "only MPS writing of a model read from a file is ported (01 §1.5)")
+        text = self._core.to_mps().encode()
+        if str(filename).endswith(".gz"):
+            import gzip
+            with gzip.open(filename, "wb") as f:
+                f.write(text)
+        else:
+            with open(filename, "wb") as f:
+                f.write(text)
 
     def dispose(self):
         self._core = None

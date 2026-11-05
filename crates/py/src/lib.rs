@@ -86,6 +86,13 @@ impl PyCoreModel {
         let spx = rsolver_lp::spx::Spx::new(&self.inner);
         rsolver_lp::lu::dual_start(&spx, &vstat)
     }
+    /// The model as `Model.write("*.mps")` text (01 §1.5); P0 compares it byte for byte.
+    fn to_mps(&self) -> String { rsolver_model::mps_write::to_string(&self.inner) }
+    /// LP presolve (03 §1) with Gurobi parameter (name, value) pairs; returns the presolved model.
+    fn presolve(&self, py: Python<'_>, params: Vec<(String, f64)>) -> PyCoreModel {
+        let p = rsolver_lp::presolve::Params::from_pairs(&params);
+        PyCoreModel { inner: py.allow_threads(|| rsolver_lp::presolve::run(&self.inner, &p)) }
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)

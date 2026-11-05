@@ -100,7 +100,7 @@ pub fn parse(text: &str) -> Result<Model, MpsError> {
             let kw = t.next().unwrap_or("").to_ascii_uppercase();
             sec = match kw.as_str() {
                 "NAME" => {
-                    m.name = t.collect::<Vec<_>>().join(" ");
+                    m.name = t.next().unwrap_or("").to_string(); // Gurobi keeps the first token only (ModelName)
                     Sec::None
                 }
                 "OBJSENSE" | "OBJSENCE" => match t.next() {
