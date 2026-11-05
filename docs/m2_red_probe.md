@@ -1472,3 +1472,19 @@ return 0
 6. `4e48f7`의 1e7 점검이 부르는 `adf18e(st+0x108)`(= `*(st+0x128) = 0`)의 뜻. cov2에서 neos-860300만 1회 불렸다(그 모델의 `4e48f7` 작업량이 1e7을 넘음).
 7. 기본값 38개에서 안 지나간 경로(asm만 보고 씀): 두 시나리오 모두 모순(nf = 0), 목적 컷오프 기각(Model.presolve는 st+0x490 = 1e100), `<`→`=` 행, 무한 bound 하나 경우의 실제 강화, 활동량 재계산(무한 전환·1e10 이상), 암시 용량 초과, 1e7 점검 중단, `3de18e`(거의 고정 열), selective 행 선택, GUB, SOS, QC, 스레드.
 8. `5b86ce` 한도 식의 st+0x1f8/+0x240/+0x27c/+0x2f8와 `39d9e1`이 고치는 st+0x80/+0x88(열 스케일 범위로 보임)의 이름.
+
+## 6. 포팅 상태 (2026-11-06, part A)
+
+상태를 읽기만 하는 부분을 옮겼다. 상태 쓰기(집계 `564ce0`, bound 반영, `3df916` 고정, lifting `3bea24`, `probe` stub 교체)는 part B다.
+
+| 파일 | 내용 |
+|---|---|
+| `crates/mip/src/conflict.rs` | conflict graph(`5b84b1`의 0x48 구조체): `merge`(`5b9aad`, p4 = 0), `push`(`5b88ce`), `limit`(`5b86ce`의 한도) |
+| `crates/mip/src/probe.rs` | `Ctx`(0x228 구조체), `State::probe_build`(§2.3–2.7: 행 선택, 열 개수, 후보, 행 정렬 `396a2d`, activity, 전치 `7886b`, 예산), `State::probe_export`(§2.8.5 함의 내보내기), `sort_desc`(`aabbe3`/`aae2ff`), 오라클 적재 `State::load_rows` |
+| `crates/mip/src/probe_engine.rs` | `State::probe_engine`(`4e48f7`)과 `4e28ef`, `4eba40`, `4ed528`, `4eb08d`, `4e7515`/`4e7b3e`/`a7d0ab`, IntSet, 난수 `a7b54f` |
+
+- 작업량은 `w: &mut f64`로 받아 더한다. 상태 필드는 쓰지 않는다. `3ba9de`의 예산 초과는 `Stop::Done` / `EngineEnd::Budget`으로 알리고, PRELIMIT −1은 호출자가 쓴다.
+- 거의 고정된 열(`3de18e`)은 `Stop::NearFixed(j)`로 돌려준다. part B에서 후보 루프 안에서 부른다(작업량 덧셈 순서 때문).
+- 확인: `tools/probe_trace.js <model> <out.json>`(모든 4d3a1d 패스의 시작 상태·conflict graph·ctx 입출력·함의 내보내기 전후)과 `tools/probe_check.py <dir>`(py 바인딩 `mip_probe_pass`로 패스마다 다시 돌려 비교). 38개 모델, 61호출, 62패스 전부 같다: merge 뒤 graph와 W, ctx 전체(후보 순서, CSR, activity, range, 예산), 엔진 출력(bound, activity, sense, 집계, 함의 묶음, 중복 행 기록, 카운터, 중단 표시, 마지막 f)과 W, 함의 내보내기 뒤 pending과 마지막 merge의 graph·`*out`·W.
+- 비교에서 ctx+0x150/+0x158(aggmul/aggoff)은 집계된 열만 본다. +0x150은 `396a2d`의 임시 버퍼로도 쓰이고 +0x158은 초기화되지 않는다.
+- Frida 덤프가 가끔 멈춘다(gmu-35-50, neos-4338804-snowy에서 한 번씩, 다시 돌리면 정상).
