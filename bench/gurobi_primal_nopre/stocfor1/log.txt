@@ -1,0 +1,66 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Thu Nov  5 15:01:13 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 0
+Set parameter LogFile to value "bench/gurobi_primal_nopre/stocfor1/log.txt"
+Set parameter Presolve to value 0
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/stocfor1.mps.gz
+Reading time = 0.00 seconds
+STOCFOR1: 117 rows, 111 columns, 447 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Optimize a model with 117 rows, 111 columns and 447 nonzeros (Min)
+Model fingerprint: 0x3f8dcfa2
+Model has 27 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [6e-02, 3e+02]
+  Objective range  [5e-01, 3e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-01, 6e+01]
+
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -2.1615242e+04   1.593392e+01   4.836282e+06      0s
+      33   -4.1131976e+04   0.000000e+00   0.000000e+00      0s
+
+Solved in 33 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -4.113197622e+04
+
+User-callback calls 66, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/stocfor1.mps.gz
+Reading time = 0.00 seconds
+STOCFOR1: 117 rows, 111 columns, 447 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  0
+LogToConsole  0
+Presolve  0
+Threads  1
+
+Presolve a model with 117 rows, 111 columns and 447 nonzeros (Min)
+Model fingerprint: 0x3f8dcfa2
+Model has 27 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [6e-02, 3e+02]
+  Objective range  [5e-01, 3e+02]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e-01, 6e+01]
