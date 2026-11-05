@@ -50,6 +50,8 @@ pub struct Engine<'a> {
     rc_on: bool,
     pub iter: u64,
     pub iter_limit: u64,
+    /// Record the per-iteration trace (objective and infeasibility sums, O(n+m) each); off when nobody reads it.
+    pub trace_on: bool,
     lu_interval: usize,
     perturbed: bool,
     /// Perturbation size spx+0x348 (PerturbValue 2e-4 at the start).
@@ -86,6 +88,9 @@ pub struct Engine<'a> {
     rhs_max: f64,
     /// Last dual pivot for snapshots: τ = B⁻¹ρ by position, α_r, β = ‖ρ‖².
     last_dse: (Vec<f64>, f64, f64),
+    /// `RSOLVER_SNAP` / `RSOLVER_BFRT` dump files, read once.
+    snap_path: Option<String>,
+    bfrt_path: Option<String>,
     /// spx+0x2c8: CHUZR tests violations with the infinite-bound guard (artificial-bound phase or x_B past 1e20).
     c8: bool,
     /// Pivot path: (iteration, entering column, leaving column); bound flips of the entering column leave −1.
@@ -114,6 +119,7 @@ impl<'a> Engine<'a> {
             rc_on: false,
             iter: 0,
             iter_limit: u64::MAX,
+            trace_on: true,
             lu_interval: interval,
             perturbed: false,
             pert_size: 2e-4,
@@ -142,6 +148,8 @@ impl<'a> Engine<'a> {
             col_nnz: 0,
             rhs_max: 0.0,
             last_dse: (Vec::new(), 0.0, 0.0),
+            snap_path: std::env::var("RSOLVER_SNAP").ok(),
+            bfrt_path: std::env::var("RSOLVER_BFRT").ok(),
             c8: false,
             path: Vec::new(),
         }
@@ -369,19 +377,26 @@ impl<'a> Engine<'a> {
         let mut alpha = vec![0.0; self.n + self.m];
         let mut touched = vec![false; self.n];
         let mut order = Vec::new();
-        let mut work = 0usize;
-        for &(i, r) in rho {
-            work += self.rc[i].len();
-            for &(j, a, _) in &self.rc[i] {
-                if !touched[j] {
-                    touched[j] = true;
-                    order.push(j);
-                }
-                alpha[j] += r * a;
-            }
-        }
+        let work: usize = rho.iter().map(|&(i, _)| self.rc[i].len()).sum();
         if rho.len() > 1 && (self.n as f64) < work as f64 * 1.8 {
-            order.sort_unstable();
+            // dense accumulation, output in column order
+            for &(i, r) in rho {
+                for &(j, a, _) in &self.rc[i] {
+                    touched[j] = true;
+                    alpha[j] += r * a;
+                }
+            }
+            order.extend((0..self.n).filter(|&j| touched[j]));
+        } else {
+            for &(i, r) in rho {
+                for &(j, a, _) in &self.rc[i] {
+                    if !touched[j] {
+                        touched[j] = true;
+                        order.push(j);
+                    }
+                    alpha[j] += r * a;
+                }
+            }
         }
         order.retain(|&j| {
             let keep = alpha[j].abs() > ZERO;
@@ -503,7 +518,7 @@ impl<'a> Engine<'a> {
     /// `RSOLVER_SNAP=<file>`: one JSON line per iteration at the SIMPLEX-callback point (vstat, x_B, normalized d,
     /// DSE weights as hex bits, pricing state), for bit comparison with tools/spx_oracle.py.
     fn snap(&self) {
-        let Ok(path) = std::env::var("RSOLVER_SNAP") else { return };
+        let Some(path) = &self.snap_path else { return };
         use std::io::Write;
         let hex = |v: &[f64]| v.iter().map(|x| format!("\"{}\"", hexf(*x))).collect::<Vec<_>>().join(",");
         let dn: Vec<f64> = (0..self.n + self.m)
@@ -523,6 +538,9 @@ impl<'a> Engine<'a> {
     }
 
     fn log(&mut self) {
+        if !self.trace_on {
+            return;
+        }
         let (p, d) = self.sums();
         let z = self.objective();
         self.trace.push((self.iter, z, p, d, self.perturbed));
@@ -896,6 +914,7 @@ impl<'a> Engine<'a> {
                 }
                 None => usize::MAX,
             };
+
             if r == usize::MAX {
                 if self.lu.n_updates > 0 {
                     self.reinvert_with(true); // reason 4
@@ -908,13 +927,17 @@ impl<'a> Engine<'a> {
             }
             let delta = self.primal_infeas(r);
             let rho_sp = self.lu.btran(&[(r, 1.0)]);
+            // β = ‖ρ_r‖² summed in BTRAN output order (1bae9c L1971–2110)
+            let beta = sum_squares(&rho_sp.iter().map(|e| e.1).collect::<Vec<_>>());
             let mut rho = vec![0.0; self.m];
             for &(i, v) in &rho_sp {
                 rho[i] = v;
             }
             let rho_sp: Vec<(usize, f64)> = rho_sp.into_iter().filter(|e| e.1.abs() > ZERO).collect();
+
             let (alpha, order) = self.pivot_row(&rho_sp);
-            if let Ok(path) = std::env::var("RSOLVER_BFRT") {
+
+            if let Some(path) = &self.bfrt_path {
                 // α-vector dump for tools/proto/alphacmp.py: order and raw values as hex
                 use std::io::Write;
                 let vals: Vec<String> = order.iter().map(|&j| format!("\"{}\"", hexf(alpha[j]))).collect();
@@ -946,6 +969,7 @@ impl<'a> Engine<'a> {
             let feas = if self.big_m { BIG_M_TOL } else { FEAS_TOL };
             let (qq, flips) = bfrt(&cands, -delta.abs(), feas);
             let q = qq.unwrap_or(usize::MAX);
+
             if q == usize::MAX && flips.is_empty() {
                 if self.lu.n_updates > 0 && !retried {
                     retried = true;
@@ -1004,7 +1028,9 @@ impl<'a> Engine<'a> {
                 self.perturbed = true;
             }
             retried = false;
+
             let (col, spike) = self.ftran_col(q);
+
             let arq = col[r];
             if arq * alpha[q] <= 0.0 || (arq - alpha[q]).abs() > BIG_TOL * (1.0 + arq.abs()) || arq.abs() <= ZERO {
                 // row and column pivots disagree (028c93 safety ladder): refactor, then MarkowitzTol 0.5, then reject
@@ -1024,7 +1050,7 @@ impl<'a> Engine<'a> {
             // column keeps its rounding residue); the leaving column's row entry is 1 (structural) or ρ_i (slack)
             let theta_d = self.raw_d(q) / alpha[q];
             if theta_d != 0.0 {
-                for j in 0..self.n + self.m {
+                for &j in &order {
                     if alpha[j] != 0.0 && self.vstat[j] < 0 && !(self.vstat[j] == -4 && j < self.n) {
                         // d is stored normalized (negated at upper): the step changes sign with it
                         let t = alpha[j] * theta_d;
@@ -1035,6 +1061,7 @@ impl<'a> Engine<'a> {
             let out = self.head[r];
             let a_out = if out < self.n { 1.0 } else { rho[out - self.n] };
             self.d[out] -= a_out * theta_d;
+
             // DSE weights with τ = B⁻¹ρ
             let mut tau = rho.clone();
             self.lu.ftran_lower(&mut tau);
@@ -1045,33 +1072,35 @@ impl<'a> Engine<'a> {
             }
             // 1bae9c L420-470: β = ‖ρ_r‖² (summed in BTRAN output order), w_r = (β/α_r)/α_r, then
             // w_i = max(1e-8, (β·t·t − (t+t)·τ_i) + w_i) with t = α_i/α_r
-            let beta = sum_squares(&self.lu.btran(&[(r, 1.0)]).iter().map(|e| e.1).collect::<Vec<_>>());
+
             let ar = if arq.abs() >= 1e-8 { arq } else if arq < 0.0 { -1e-8 } else { 1e-8 };
-            if std::env::var_os("RSOLVER_SNAP").is_some() {
+            if self.snap_path.is_some() {
                 self.last_dse = (taup.clone(), arq, beta);
             }
             self.w[r] = if beta == 0.0 { 1e-8 } else { (beta / ar) / ar };
-            for p in 0..self.m {
-                if p != r && col[p] != 0.0 {
+            let supp: Vec<usize> = (0..self.m).filter(|&p| col[p] != 0.0).collect(); // α_q support, position order
+            for &p in &supp {
+                if p != r {
                     let t = col[p] / ar;
                     self.w[p] = ((beta * t * t - (t + t) * taup[p]) + self.w[p]).max(1e-8);
                 }
             }
+
             // primal step
             let theta_p = delta / arq;
-            for p in 0..self.m {
-                if col[p] != 0.0 {
-                    self.xb[p] -= theta_p * col[p];
-                }
+            for &p in &supp {
+                self.xb[p] -= theta_p * col[p];
             }
             let xq = self.x_nonbasic(q) + theta_p;
             let leave = if sgn < 0.0 { -1 } else { -2 }; // 28c93 L845: the direction of the selected violation
             let leave = if self.spx.u[out] - self.spx.l[out] <= 0.0 { -4 } else { leave };
-            let col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
+            let col_nnz = supp.iter().filter(|&&p| col[p].abs() > ZERO).count();
             self.col_nnz = col_nnz;
             let updates_before = self.lu.n_updates;
+
             self.iter += 1; // 28c93 L820: counted before the LU update or refactor (seeds, marks)
             self.pivot(r, q, leave, &spike);
+
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;
             }
@@ -1095,7 +1124,7 @@ impl<'a> Engine<'a> {
                 // pivot position gets at least P+0x60 + 100
                 let p60 = rho_sp.len() as f64;
                 let half = self.m as f64 * 0.5;
-                for p in 0..self.m {
+                for &p in &supp {
                     if p != r && col[p].abs() >= ZERO {
                         self.pr.row_cost[p] = (self.pr.row_cost[p] + p60).min(half);
                     }
@@ -1103,9 +1132,13 @@ impl<'a> Engine<'a> {
                 self.pr.row_cost[r] = self.pr.row_cost[r].max(p60 + 100.0);
             }
             if self.lu.n_updates > updates_before {
-                let changed: Vec<usize> = (0..self.m).filter(|&p| p == r || col[p] != 0.0).collect();
+                let mut changed = supp.clone();
+                if col[r] == 0.0 {
+                    changed.insert(changed.partition_point(|&p| p < r), r);
+                }
                 self.price_touch(&changed, Some(r), true);
             }
+
             self.log();
         }
     }
@@ -1554,6 +1587,11 @@ pub struct LpResult {
 /// shortcut: presolve, warm starts, network/sifting/concurrent branches and the unscaled-violation re-solve
 /// (`2e9ae`) are not ported.
 pub fn solve_model(md: &rsolver_model::Model, method: i32, iter_limit: u64) -> LpResult {
+    solve_model_opts(md, method, iter_limit, true)
+}
+
+/// `solve_model` with the per-iteration trace optional (`want_trace` false: `LpResult::trace` stays empty).
+pub fn solve_model_opts(md: &rsolver_model::Model, method: i32, iter_limit: u64, want_trace: bool) -> LpResult {
     let mut spx = Spx::new(md);
     if md.sense < 0 {
         for c in &mut spx.c {
@@ -1562,6 +1600,7 @@ pub fn solve_model(md: &rsolver_model::Model, method: i32, iter_limit: u64) -> L
     }
     let mut e = Engine::new(&spx);
     e.iter_limit = iter_limit;
+    e.trace_on = want_trace;
     let status = e.solve(method);
     if std::env::var("RSOLVER_DEBUG").is_ok() {
         let xs = e.x();
@@ -1586,6 +1625,7 @@ pub fn solve_model(md: &rsolver_model::Model, method: i32, iter_limit: u64) -> L
         let mut e2 = Engine::new(&sp2);
         e2.iter = e.iter;
         e2.iter_limit = iter_limit;
+        e2.trace_on = want_trace;
         if let Some(st) = e2.resolve_unscaled(e.vstat.clone()) {
             let xs = e2.x();
             let x: Vec<f64> = xs[..sp2.n].to_vec();

@@ -230,6 +230,7 @@ impl Lu {
                 }
             }
         }
+
         let s1 = lu.steps.len();
         // slacks of rows without structural entries
         for (pos, &j) in head.iter().enumerate() {
@@ -258,6 +259,7 @@ impl Lu {
         }
         // phase 4 (1da0b2 L530–690): column singletons of the active part from a stack seeded in ascending position
         // order; skipped when phases 2–3 pivoted nothing
+
         let s3 = lu.steps.len();
         {
             let mut cc = vec![0usize; m];
@@ -289,6 +291,7 @@ impl Lu {
                 }
             }
         }
+
         let ns = lu.steps.len();
         lu.n_singleton = ns;
         lu.lcol = vec![Vec::new(); m];
@@ -296,6 +299,7 @@ impl Lu {
         if ns < m && !lu.kernel(spx, &mut ppos, tol) {
             return lu; // singular: incomplete
         }
+
         // L and U of the singleton steps come straight from the columns (their pivot rows have no other active
         // entries, so the kernel values are unaffected); kernel columns keep their entries in singleton rows as U
         for k in 0..m {
@@ -315,6 +319,7 @@ impl Lu {
                 lu.ucol[ppos[p2] as usize].push((r, u));
             }
         }
+
         lu.finish();
         lu
     }
@@ -374,7 +379,14 @@ impl Lu {
                 }
             }
         }
-        let alive = |l: &Vec<usize>, ec: &Vec<usize>| -> Vec<usize> { l.iter().rev().copied().filter(|&e| ec[e] != DEAD).collect() };
+        // a finished line: its live elements in list order (the list is taken, nothing else walks it again)
+        let take_alive = |l: &mut Vec<usize>, ec: &Vec<usize>| -> Vec<usize> {
+            let mut v = std::mem::take(l);
+            v.retain(|&e| ec[e] != DEAD);
+            v.reverse();
+            v
+        };
+        let first_alive = |l: &Vec<usize>, ec: &Vec<usize>| -> usize { *l.iter().rev().find(|&&e| ec[e] != DEAD).expect("live") };
         self.kernel_u = vec![Vec::new(); m];
         let mut w = vec![0.0f64; m];
         let mut seen = vec![false; m];
@@ -389,13 +401,13 @@ impl Lu {
                 // column singleton (L1003–1140): no threshold
                 let c = cb.head[0] as usize;
                 cb.rem(c, 0);
-                let e = alive(&cl[c], &ec)[0];
+                let e = first_alive(&cl[c], &ec);
                 let r = er[e];
                 rb.rem(r, rcs[r] as usize);
                 ec[e] = DEAD;
                 pivot(self, ppos, r, c, ev[e]);
                 let k = self.steps.len() - 1;
-                for f in alive(&rl[r], &ec) {
+                for f in take_alive(&mut rl[r], &ec) {
                     let j = ec[f];
                     self.kernel_u[k].push((j, ev[f]));
                     ec[f] = DEAD;
@@ -409,14 +421,14 @@ impl Lu {
                 // row singleton (L821–1002): no threshold
                 let r = rb.head[0] as usize;
                 rb.rem(r, 0);
-                let e = alive(&rl[r], &ec)[0];
+                let e = first_alive(&rl[r], &ec);
                 let c = ec[e];
                 cb.rem(c, ccs[c] as usize);
                 let d = ev[e];
                 ec[e] = DEAD;
                 pivot(self, ppos, r, c, d);
                 let k = self.steps.len() - 1;
-                for f in alive(&cl[c], &ec) {
+                for f in take_alive(&mut cl[c], &ec) {
                     let i = er[f];
                     self.lcol[k].push((i, ev[f] / d));
                     ec[f] = DEAD;
@@ -457,9 +469,11 @@ impl Lu {
                         let h = h as usize;
                         let mut x = h;
                         loop {
-                            let line = if side == 0 { alive(&cl[x], &ec) } else { alive(&rl[x], &ec) };
-                            let mx = line.iter().fold(0.0f64, |a, &f| if ev[f].abs() <= a { a } else { ev[f].abs() });
-                            for &f in &line {
+                            let line = if side == 0 { &mut cl[x] } else { &mut rl[x] };
+                            line.retain(|&e| ec[e] != DEAD); // the original compacts while it walks
+                            let line = &*line;
+                            let mx = line.iter().rev().fold(0.0f64, |a, &f| if ev[f].abs() <= a { a } else { ev[f].abs() });
+                            for &f in line.iter().rev() {
                                 let cost = if side == 0 { rcs[er[f]] as f64 * fk } else { ccs[ec[f]] as f64 * fk };
                                 let a = ev[f].abs();
                                 if (cost < bcost && tol * mx < a) || (cost == bcost && bratio * mx < a) {
@@ -495,7 +509,7 @@ impl Lu {
                 pivot(self, ppos, r, c, v);
                 let sk = self.steps.len() - 1;
                 let mut u_row = Vec::new();
-                for f in alive(&rl[r], &ec) {
+                for f in take_alive(&mut rl[r], &ec) {
                     let j = ec[f];
                     u_row.push((j, ev[f]));
                     w[j] = ev[f];
@@ -503,14 +517,16 @@ impl Lu {
                     cb.rem(j, ccs[j] as usize);
                     ccs[j] -= 1;
                 }
-                for f in alive(&cl[c], &ec) {
+                for f in take_alive(&mut cl[c], &ec) {
                     let i = er[f];
                     let l = ev[f] / v;
                     self.lcol[sk].push((i, l));
                     ec[f] = DEAD;
                     rb.rem(i, rcs[i] as usize);
                     rcs[i] -= 1;
-                    for g in alive(&rl[i], &ec) {
+                    rl[i].retain(|&e| ec[e] != DEAD);
+                    for t in (0..rl[i].len()).rev() {
+                        let g = rl[i][t];
                         let j = ec[g];
                         if w[j] != 0.0 {
                             seen[j] = true;
