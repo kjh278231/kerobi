@@ -42,8 +42,6 @@ impl State {
     pub fn dep_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
     /// `5577ba(env, st, nodes, 1, &f4; 1.01, limit)` symmetry
     pub fn symmetry(&mut self, p: &Params, nodes: i32, limit: f64) -> i32 { 0 }
-    /// `59c193` VUB lifting (PREVUBLIFT)
-    pub fn vub_lift(&mut self, p: &Params) -> i32 { 0 }
     /// `55a779` aggregation pass
     pub fn agg_pass(&mut self, p: &Params) -> i32 { 0 }
     /// `594c0c` (PRESS2MIP)

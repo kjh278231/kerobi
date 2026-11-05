@@ -12,6 +12,7 @@
 | `58d4ce(env, st, W)` | 361 | Aggregate·DualReductions·+0x1e4 | Q 대각이 0인 열 → `3c2f36`. Q가 없으면 바로 0 | 없음 | §1 |
 | `5a9282(st, env)` | 2,465 | PREBOUND·DualReductions | 행의 singleton 열 지배: 비용 비율이 좋은 singleton을 activity가 작은 쪽 bound에 고정 | gmu-35-40, gmu-35-50(프렐류드 호출, 72열) | 80/80(§2) |
 | `5ab429(st, env)` | 1,113 | 같음 | 정수 행의 비용 singleton(|a| = 1)을 계수 gcd g로 x = r + g·y 대입(`574764`) | 없음(작업량도 0) | 42/42 + 합성 9(§3) |
+| `59c193(st, env, W)` | 7,021 | PREVUBLIFT | VUB 행 쌍 정리, 클릭 같은 행을 공유하는 VUB 합치기 | 없음(작업량만) | 42/42 + 합성 20(§4) |
 
 ## 1. `58d4ce` Q 대각 열 (`005c9200`)
 
@@ -144,3 +145,90 @@ return 0
 - 기본값 38개 42호출: 모두 아무것도 바꾸지 않는다(작업량도 그대로). 포트 42/42 일치.
 - `574764` 경로는 합성 모델(세션 스크래치 `re/syn/m1–m4.lp`, 정수 행 `2 z1 + 4 z2 + x ≥ b`, x만 비용 singleton)로 확인: r ≠ 0(m1, x = 1 + 2y), r = 0(m3), lb 쪽으로 옮긴 r = 5(m4, objcon 15). 9호출 모두 일치(레코드 type 9 바이트 포함).
 - NumericFocus ≥ 1의 lim, a < 0, 불가능 반환, y가 고정되는 `3de18e` 경로는 확인하지 않았다(해독만).
+
+## 4. `59c193` VUB lifting (`005cf120`)
+
+### 4.1 서명·가드·반환
+`59c193(st, env, W) -> i32`(W = 작업량 포인터 `+0x458`). 가드 PREVUBLIFT(env+0x2c30, timer 13). 자체 가드: `n == st+0xf0`(모두 이진) 또는 `st+0xf0 == 0`이면 작업량 없이 0. 반환은 0, 할당 실패 0x2711, `3bea24`/`3ba9de`의 값. 포트 `vub_lift`(vublift.rs).
+
+### 4.2 알고리즘
+행마다 노드 두 개 `B[i]`(이진), `C[i]`(그 밖) 배열을 둔다(후보가 아니면 둘 다 NULL; 늘 함께 세우고 함께 지운다).
+```
+W0 = W; budget = nnz·1e4 + 1e6
+// 1. VUB 후보: '<' 행, row_cnt == 2, inf_min == 0
+for i in 0..m where 위 조건 {
+  행 노드(살아 있는 것)를 이진이면 B[i], 아니면 C[i]에 넣으며 nb, nc를 센다
+  W += (μ·4)·2
+  a = C.val, x = C.col
+  if nb == 1 && nc == 1 && !(0.001 > |a|) && !(|B.val/a| > 1e8) && |(|a|·(ub[x] − lb[x])) + act_min[i]| < 1e-10 { vubs += 1 }
+  else { B[i] = C[i] = NULL }
+}
+W += (m·3)·μ
+if vubs < 2 { return 0 }
+// 2. 같은 x, 같은 이진 k의 VUB 둘 (n > 0일 때)
+P−[k] = P+[k] = −1 (k = 열), Q−/Q+ = 행
+for j in 0..n where col_cnt[j] >= 0 && vtype[j] != 'B' && !(1e-13 >= ub[j] − lb[j]) {
+  for node in col j (살아 있고 C[i] != NULL, i = node.row) {
+    a = C[i].val; k = B[i].col; (P, Q) = a < 0 ? (P−, Q−) : (P+, Q+)
+    if !(j <= P[k]) { W += μ·3; Q[k] = i; P[k] = j; continue }
+    i2 = Q[k]; b = B[i].val; b2 = B[i2].val
+    if !(0 > b·b2) {                                         // 같은 부호: 하나를 지운다
+      r2 = |b2 / C[i2].val|; W += μ·20
+      drop = |b/a| > r2 ? (Q[k] = i, i2) : i
+      415f4f(st, drop); B[drop] = C[drop] = NULL; gone += 1; continue
+    }
+    d = minsd(|b/a|, |b2/C[i2].val|)                          // 반대 부호: x의 bound를 d만큼
+    if a < 0 { v = d + lb[j]; W += μ·20; if vtype[j] != 'C' { v = ceil(v − 1e-5) }; v = minsd(v, ub[j])
+               if !(v > lb[j]) { continue }; 3dd6f1(lb, ub, v, ub); 5379f1(j); lb[j] = v }
+    else     { v = ub[j] − d; W += μ·20; if vtype[j] != 'C' { v = floor(v + 1e-5) }; v = maxsd(v, lb[j])
+               if !(ub[j] > v) { continue }; 3dd6f1(lb, ub, lb, v); 5379f1(j); ub[j] = v }
+    for node in col j (살아 있고 B[row] != NULL) { gone += 1; B[row] = C[row] = NULL }
+    +0x3f8 += 1; break                                        // 다음 열
+  }
+}
+if vubs − gone < 2 { return 0 }
+// 3. 클릭 같은 행: 모든 이진이 |a| = 최소(또는 '=' 행이면 최대) activity의 여유
+for i in 0..m where row_cnt[i] >= 2 {
+  for s in [1, −1] {
+    slack = s == 1 ? (inf_min[i] == 0 ? act_min[i] : 건너뜀) : (sense == '=' && inf_max == 0 ? −act_max[i] : 건너뜀)
+    행 노드(살아 있는 이진)마다 nb += 1; if |(|a|) + slack| > 1e-10 { 중단 }
+    W += (μ·4)·row_cnt[i]
+    if 중단 없음 && nb > 1 { sign[i] = s; cl += 1; break }
+  }
+}
+W += (cl + m·5)·μ
+if cl == 0 { return 0 }
+// 4. 합치기: 두 번(pass 0: C.val < 0, pass 1: C.val > 0), 열마다
+for pass in 0..2 { for j in 0..n {
+  if W > W0 + budget { break }                                 // 이번 pass 끝
+  if j % 1000 == 0 { 3ba9de(env, st, &stop) }                  // stop은 P0에서 서지 않는다
+  if col_cnt[j] < 0 || vtype[j] == 'B' { continue }
+  R = col j의 살아 있는 노드 중 C[row] != NULL이고 C.val이 pass 쪽인 행; W += (μ·5)·col_cnt[j]
+  if |R| < 2 { continue }
+  for i in R { b = B[i]; for node in col b.col (살아 있는 것) { r = node.row
+      if 0 < node.val·b.val·sign[r] { if cnt[r] == 0 { met에 r 추가 }; cnt[r] += 1 } }
+    W += (μ·7)·col_cnt[b.col] }
+  kept = met 중 cnt ≥ 2(순서 유지, 나머지는 cnt = 0); W = W + μ·(|met| + |met|)
+  ab72b6(kept, cnt): cnt 내림차순 간접 정렬; kept의 cnt = 0; W += (|kept| + |kept|)·μ
+  for rq in kept {
+    rq의 살아 있는 노드마다 mark[col] = sign[rq]·val > 0 ? 1 : −1; W = (μ·4)·row_cnt[rq] + W
+    G = col j의 살아 있는 노드 중 C[row] != NULL, mark[B.col]·B.val > 0, C.val이 pass 쪽인 행; W = W + (μ·6)·col_cnt[j]
+    rq의 mark를 0으로
+    if |G| >= 2 {
+      i0 = G[0]; s = 1/|C[i0].val|; B[i0].val *= s; C[i0].val *= s; rhs[i0] *= s
+      for it in G[1..] { f = B[it].val / |C[it].val|; 3bea24(f, env, st, i0, B[it].col, NULL)
+                         if 0 > f { rhs[i0] += f }; 415f4f(st, it); B[it] = C[it] = NULL }
+      370047(st, env, 1, [i0]); 53763f(i0); 537da8(i0); B[i0] = C[i0] = NULL
+      W += (|G|·15 + 10)·μ
+    }
+  }
+} }
+```
+- `415f4f(st, i)`(69 B): 행 i의 살아 있는 노드를 죽이고(col = −1, 그 열 col_cnt −1), row_cnt = −2, +0x404 += 1. 작업량·표시 없음. 포트 `drop_row`.
+- `3bea24(v, env, st, row, col, NULL)`: 새 노드를 행·열 리스트 앞에(probing 포트의 `new_node`).
+- `ab72b6(n, key, idx, buf)`(1,672 B): int 키 `key[idx]` 내림차순 간접 정렬. n < 32면 바로 Shell 정렬, 아니면 키를 buf에 모아 같은 알고리즘(100 이상 3-way quicksort, 아래는 Shell n/2, ÷2.2). probing의 `sort_desc`(f64 키)와 같은 순열이라 포트는 키를 f64로 바꿔 그것을 쓴다(작은 정수라 정확).
+- `cnt`/`mark`는 `+0x3a8`(크기 max(n, m) 정수 scratch)이고 쓸 때마다 0으로 되돌린다. 포트는 지역 벡터.
+
+### 4.3 오라클 확인
+- 기본값 38개 42호출 일치. 기본값에서는 아무것도 바꾸지 않고 작업량만 쌓는다. 지나는 단계: 1단계까지 32개(후보 < 2), 2단계 9개(exp-1-500-5-5, fhnw-binpack4-4, neos-2657525-crna, neos-3627168-kasai, neos-3754480-nidda, neos859080, ran14x18-disj-8, sp150x300d, tr12-30; 지운 행·bound 변화 0), 3단계에서 클릭 행이 있는 것 3개(exp-1-500-5-5 50, neos-2657525-crna 36, fhnw-binpack4-4 2), 4단계에서 |R| ≥ 2인 열은 없음.
+- 합성 모델(세션 스크래치 `re/syn/v1–v7.lp`, `PrePasses=0 GURO_PAR_PREBOUND=0`이면 패스 없이 원래 모델이 라운드 끝에 온다): 같은 부호 지우기(v2, v6, a > 0·a < 0), 반대 부호 bound(v3 연속 a > 0, v5 정수 a < 0), 합치기(v1 pass 1, v4 정수 pass 0과 kept 2개 정렬, v7 '=' 행의 s = −1)까지 20호출 모두 일치.

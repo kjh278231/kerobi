@@ -25,6 +25,7 @@ mod setpack;
 pub mod state;
 mod subst;
 mod stubs;
+mod vublift;
 pub mod tracker;
 
 use rsolver_model::Model;
