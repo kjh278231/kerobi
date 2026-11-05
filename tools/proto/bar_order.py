@@ -482,7 +482,9 @@ def analyze(m, beg, ln, ind):
     collen = [r - i for cols, r in zip(out, rows) for i in range(len(cols))]
     ops2 = float(sum(x * x for x in ln))  # F+0x48: cost of forming A·D·Aᵀ (all columns; no dense ones here)
     snw = split_blocks([len(c) for c in out], collen, ops < 2.0 * ops2)
-    return dict(ops2=ops2, cp=cp, ri=ri, pos=pos, aat_nnz=cp[n], nnzL_ord=sum(c + 1 for c in cnt),
+    # F+0xc8: per supernode, its columns then the rows below its last column, ascending in the new order
+    rowidx = [x for cols in out for x in sorted([newpos[c] for c in cols] + [newpos[i] for i in st[max(cols)][1:]])]
+    return dict(ops2=ops2, rowidx=rowidx, cp=cp, ri=ri, pos=pos, aat_nnz=cp[n], nnzL_ord=sum(c + 1 for c in cnt),
                 ops_ord=float(sum((c + 1) ** 2 for c in cnt)), perm=[newpos[p] for p in pos],
                 nnzL=nz, ops=ops, collen=collen, snw=snw)
 
@@ -499,7 +501,7 @@ def main():
                    md=x["pos"] == o["perm"],
                    ord=x["nnzL_ord"] == o["nnzL"] and x["ops_ord"] == float.fromhex(o["ops"]),
                    perm=x["perm"] == sy["perm"],
-                   sn=x["snw"] == sy["snw"] and x["collen"] == sy["collen"],
+                   sn=x["snw"] == sy["snw"] and x["collen"] == sy["collen"] and x["rowidx"] == sy["rowidx"],
                    fnz=x["nnzL"] == sy["nnzL"] and x["ops"] == float.fromhex(sy["ops"]))
         for k, v in res.items():
             tally[k] += v
