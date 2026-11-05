@@ -1,0 +1,1 @@
+{"model": "adlittle", "params": {"Method": 1}, "max": 40, "fns": [{"name": "bfrt", "off": "0xc74a0", "enter": ["ai:1", "ai:2", "SV:0x208", "i:0x2f8"], "leave": ["ret", "i:0x2fc", "aI:4:20", "SV:0x208"]}, {"name": "row_a4109", "off": "0x134d90", "enter": ["SV:0x218"]}, {"name": "chuzr", "off": "0xccbc0", "leave": ["i:0x2f8"]}]}
