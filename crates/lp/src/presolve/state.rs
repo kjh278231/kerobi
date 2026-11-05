@@ -21,6 +21,14 @@ pub enum PostRec {
     SingletonRow { j: i32, r: i32, code: i32, a: f64, x: f64 },
     /// type 8 (`4ff158`): forcing row `r` (`dir` 1 at min activity, -1 at max) with its live entries.
     Forcing { r: i32, dir: f64, entries: Vec<(i32, f64)> },
+    /// type 4 (`509fd0`): column `y` = `r` times column `x` merged into `x` (x' = x + r y); the bounds both had.
+    ParallelCol { x: i32, y: i32, lx: f64, ly: f64, ux: f64, uy: f64, r: f64 },
+    /// type 5 (`50b4e5`): `<` rows `a` (kept, now `=`) and `b` (dropped) bound the same line from both sides;
+    /// row a = `ratio` times row b.
+    ParallelRow { a: i32, b: i32, ratio: f64 },
+    /// type 14 (`50c736`): like type 5 with room between the rows: row `a` (`=` at `rhs` now, with range column
+    /// number `k` in [0, rhs - lo]) and dropped row `b`, row a = `ratio` times row b; `entries` row a's live entries.
+    SplitRow { a: i32, b: i32, k: i32, rhs: f64, lo: f64, ratio: f64, entries: Vec<(i32, f64)> },
 }
 
 #[derive(Clone, Debug)]
@@ -69,6 +77,10 @@ pub struct State {
     pub ineq_to_eq: i32,
     pub rows_removed: i32,
     pub cols_removed: i32,
+    /// +0x42c: opposite-sign parallel `<` row pairs left as they are (`50b4e5`), then split (`50c736`)
+    pub antipar: i32,
+    /// +0x3e0 / +0x3e8: per split row, the row and s_a * lo (its range column gets bounds [0, rhs - that])
+    pub splits: Vec<(i32, f64)>,
     /// +0x470 / +0x478: column / row proving infeasibility or unboundedness
     pub bad_col: i32,
     pub bad_row: i32,
@@ -189,6 +201,8 @@ impl State {
             ineq_to_eq: 0,
             rows_removed: 0,
             cols_removed: 0,
+            antipar: 0,
+            splits: Vec::new(),
             bad_col: -1,
             bad_row: -1,
             // shortcut: the constructor's own work terms (3a484d/5118e6/534a8b) are not added yet; add them for P2.
@@ -342,6 +356,18 @@ impl State {
             q.vtype.push(md.vtype[j]);
             q.var_names.push(md.var_names[j].clone());
         }
+        // range columns of split rows, after the live columns; Gurobi leaves them unnamed and writes `C<j>`
+        for &(i, lo) in &self.splits {
+            q.var_names.push(format!("C{}", q.obj.len()));
+            q.col_beg.push(q.col_ind.len() as i64);
+            q.col_ind.push(row_map[i as usize]);
+            q.col_val.push(1.0);
+            q.col_len.push(1);
+            q.obj.push(0.0);
+            q.lb.push(0.0);
+            q.ub.push(self.rhs[i as usize] - lo);
+            q.vtype.push(b'C');
+        }
         q
     }
 
@@ -449,6 +475,70 @@ impl State {
             l
         };
         self.tracker.cols.cache[lv] = Some(out.clone());
+        out
+    }
+
+    /// `53af0f` (columns) / `53a487` (rows): the items marked at the tracker's level plus every item sharing a
+    /// row (column) with the other kind's list (`538f30`/`5399fc`), live ones only; all live items in index
+    /// order when that would be most of them. Cached per level until the next reset.
+    pub fn adjacent_list(&mut self, cols: bool) -> Vec<i32> {
+        let lv = self.tracker.level;
+        let q = if cols { &self.tracker.cols } else { &self.tracker.rows };
+        if lv == 0 {
+            return q.list[0][..q.a[0]].to_vec();
+        }
+        if let Some(c) = &q.cache2[lv] {
+            return c.clone();
+        }
+        let na = q.a[lv];
+        let dim = if cols { self.n } else { self.m };
+        let mult = self.work_mult;
+        let mut dense = !((na as f64) * 5.0 < dim as f64);
+        let mut other = Vec::new();
+        if !dense {
+            other = if cols { self.rows_list() } else { self.cols_list() };
+            let ocnt = if cols { &self.row_cnt } else { &self.col_cnt };
+            let sum: i64 = other.iter().map(|&i| ocnt[i as usize].max(0) as i64).sum();
+            self.work += (other.len() as f64 + other.len() as f64) * mult;
+            dense = dim as f64 <= na as f64 + na as f64 + (sum * 2) as f64;
+        }
+        let out: Vec<i32> = if dense {
+            self.work += (dim as f64 + dim as f64) * mult;
+            let cnt = if cols { &self.col_cnt } else { &self.row_cnt };
+            (0..dim as i32).filter(|&j| cnt[j as usize] >= 0).collect()
+        } else {
+            let q = if cols { &self.tracker.cols } else { &self.tracker.rows };
+            let mut l: Vec<i32> = q.list[lv][..na].to_vec();
+            for &j in &l {
+                self.mark[j as usize] = true;
+            }
+            self.work += mult * 3.0 * na as f64;
+            for &i in &other {
+                let i = i as usize;
+                let (b, len, ind) = if cols {
+                    (self.row_beg[i] as usize, self.row_len[i].max(0) as usize, &self.row_ind)
+                } else {
+                    (self.col_beg[i] as usize, self.col_len[i].max(0) as usize, &self.col_ind)
+                };
+                for &j in &ind[b..b + len] {
+                    if j >= 0 && !self.mark[j as usize] {
+                        self.mark[j as usize] = true;
+                        l.push(j);
+                    }
+                }
+                self.work += len as f64 * mult * 3.0;
+            }
+            self.work += (other.len() as f64 + other.len() as f64) * mult;
+            for &j in &l {
+                self.mark[j as usize] = false;
+            }
+            self.work += mult * 3.0 * l.len() as f64;
+            let cnt = if cols { &self.col_cnt } else { &self.row_cnt };
+            l.retain(|&j| cnt[j as usize] >= 0);
+            l
+        };
+        let q = if cols { &mut self.tracker.cols } else { &mut self.tracker.rows };
+        q.cache2[lv] = Some(out.clone());
         out
     }
 

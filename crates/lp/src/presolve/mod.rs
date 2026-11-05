@@ -2,6 +2,7 @@
 //! docs/m1_presolve.md). Entry from `Model.presolve()` is `999702`, which names the result `<name>_pre`.
 //! Every reduction call counts toward GURO_PAR_PRELIMIT; reaching it jumps straight to model generation, which
 //! is what makes each reduction checkable on its own.
+mod parallel;
 mod reduce;
 mod sort;
 mod state;
@@ -74,13 +75,27 @@ impl Params {
 pub fn run(md: &Model, p: &Params) -> Model {
     let mut st = State::new(md);
     if p.presolve != 0 {
-        reduce(&mut st, p);
+        let tols = ColTols {
+            infbound: p.infbound,
+            feastol: p.feastol,
+            opttol: p.opttol,
+            numeric_focus: p.numeric_focus,
+            agg_mult_limit: p.agg_mult_limit,
+            dual_reductions: p.dual_reductions,
+            precrush: p.precrush,
+        };
+        reduce(&mut st, p, &tols);
+        // `3b0917` with PRESPLITROWS (default -1, assumed): opposite parallel rows 3ff744 left (state+0x42c)
+        // become `=` rows with a range column, unless PreCrush > 1.
+        if st.antipar != 0 && p.precrush <= 1 {
+            st.parallel(2, &tols);
+        }
     }
     st.to_model(md)
 }
 
 /// The reduction sequence; returns when a reduction reports a status or the call limit is reached.
-fn reduce(st: &mut State, p: &Params) {
+fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
     let limit = p.prelimit;
     let mut calls = 0;
     if st.empty_and_free_rows(p.feastol) != 0 {
@@ -105,15 +120,6 @@ fn reduce(st: &mut State, p: &Params) {
             return;
         }
     }
-    let tols = ColTols {
-        infbound: p.infbound,
-        feastol: p.feastol,
-        opttol: p.opttol,
-        numeric_focus: p.numeric_focus,
-        agg_mult_limit: p.agg_mult_limit,
-        dual_reductions: p.dual_reductions,
-        precrush: p.precrush,
-    };
     let passes = if p.prepasses < 0 { if p.presolve == 1 { 5 } else { 100 } } else { p.prepasses };
     let mut pass_snap = st.snapshot();
     for k in 0..passes {
@@ -125,7 +131,7 @@ fn reduce(st: &mut State, p: &Params) {
             // shortcut: 3ba9de's work-budget stop (budget = nnz*1000 + 1e7) is not checked; Netlib never hits
             // it. Port it with the constructor's work terms (P2).
             st.reset_tracker();
-            if st.singleton_cols(&tols) != 0 {
+            if st.singleton_cols(tols) != 0 {
                 return;
             }
             calls += 1;
@@ -201,7 +207,7 @@ fn reduce(st: &mut State, p: &Params) {
             return;
         }
         if early {
-            if st.dual_bound_rows(&tols, p.presolve == 2) != 0 {
+            if st.dual_bound_rows(tols, p.presolve == 2) != 0 {
                 return;
             }
             calls += 1;
@@ -210,7 +216,7 @@ fn reduce(st: &mut State, p: &Params) {
             }
         }
         if p.presolve == 2 {
-            if st.singleton_cols(&tols) != 0 {
+            if st.singleton_cols(tols) != 0 {
                 return;
             }
             calls += 1;
@@ -232,8 +238,30 @@ fn reduce(st: &mut State, p: &Params) {
                 return;
             }
         }
-        // shortcut: the rest of the outer pass (3ff744, 50fe2b, 519a52, 5b488d, 47c445) and the finish stage
-        // are not ported yet; stop here like a reached PRELIMIT.
+        // parallel columns and rows (PREPARALLEL, default 1, assumed on; the 0.8 timer test is always true)
+        if p.dual_reductions {
+            // shortcut: Presolve=2 runs 51f5ab here, not ported; stop like a reached PRELIMIT. Port it with
+            // the other Presolve=2 reductions.
+            if p.presolve == 2 {
+                return;
+            }
+            if st.parallel(1, tols) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        if st.parallel(0, tols) != 0 {
+            return;
+        }
+        calls += 1;
+        if limit <= calls {
+            return;
+        }
+        // shortcut: the rest of the outer pass (50fe2b, 519a52, 5b488d, 47c445) and the finish stage are not
+        // ported yet; stop here like a reached PRELIMIT.
         let _ = &snap;
         return;
     }
