@@ -367,7 +367,7 @@ impl<'a> Engine<'a> {
                 return Status::IterLimit;
             }
             // weights past 1e30 or NaN restart from 1 (06268b L200-415, "simplex pricing changes to steepest edge")
-            if self.w.iter().any(|w| !(w.abs() <= 1e30)) {
+            if self.w.iter().any(|w| w.is_nan() || w.abs() > 1e30) {
                 self.w.iter_mut().for_each(|w| *w = 1.0);
             }
             // CHUZR: largest infeasibility² / weight
