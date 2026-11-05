@@ -102,13 +102,16 @@ tools/gurun.sh ../.venv/bin/python tools/uncrush_oracle.py <model.mps.gz> <out.j
 - 13.0.3 빌드, Threads=1 기준이다.
 - **SolutionTarget=1은 오라클로 쓰면 안 된다.** state+0x100=1이 되어 presolve가 달라진다.
 
-## 5. 상태 (2026-11-05, 1단계 달성)
+## 5. 상태 (2026-11-05, 최종)
 
 | 설정 | 일치 | 비고 |
 |---|---|---|
-| PRELIMIT=17 | **58/58** (uncrush가 도는 모델. 나머지 6개는 reduction이 없어 `363daa`가 안 돈다: degen3, grow7, grow15, grow22, scsd1, scsd6) | 입력은 오라클 `pre_after`. basis·x·dual 비트 일치 |
-| PRELIMIT=1..16 | 전부 일치 | 같은 방법 |
-| 기본값 | §8 참고 (2단계: 53/59) | |
+| 기본값 | **64/64** (`363daa`가 도는 59개는 basis·x·dual 비트 일치, 나머지 5개는 항등) | 입력은 오라클 `pre_after`. 항등 5개: grow7, grow15, grow22, scsd1, scsd6 |
+| PRELIMIT=17 | 64/64 (58 + 항등 6) | |
+| PRELIMIT=1..16 | 전부 일치 | |
+| pytest | 22개 통과(`tests/test_postsolve.py`: afiro, scfxm1, forplan, fit1d, gfrd-pnc + 항등 2개) | `bench/gurobi_uncrush/*.json` 고정 캡처, Gurobi 불필요 |
+
+레코드 종류별 오라클 확인: 1, 2, 3, 4, 5(PRELIMIT 17에는 없음), 6, 7, 8, 11, 14(없음), 21, 24는 기본값 오라클에 있다. type 5, 14는 Netlib 오라클에 나오지 않아 디컴파일 대로만 구현했다.
 
 코드: `crates/lp/src/presolve/postsolve.rs`(`Post`, `uncrush`, `simd_sum`, 타입 4 `parallel_col`). 비교: `tools/postsolve_check.py`.
 
@@ -218,3 +221,16 @@ python tools/postsolve_check.py ... --arena          # 레코드 크기로 설�
   - finnis: Subst(j 55, r 19, mode −1) ↔ type 24(j 155, lb −0.001, ub ∞).
   - beaconfd: Subst(빈 행) 6개 ↔ type 24 5개(위치도 앞쪽에 몰림).
   - ganges: type 24 7개(열 1039, 1050 등은 행 4–6개), type 1 몇 개가 사라진다.
+
+## 9. 항등 경로와 최종 정리 (3단계)
+
+**uncrush가 안 도는 경우**: 기본값에서 5개 모델(grow7, grow15, grow22, scsd1, scsd6)은 `363daa`를 부르지 않는다. 이들은 presolve가 행도 열도 지우지 않는다(레코드 0개; grow*는 bound만 조인다). `0c3d0d`는 presolved 모델(`param_1+0x1d8`)이 있을 때만 `c379f`와 `363daa` 쪽으로 가고(`c379f`는 `+0x1d8 == 0`이면 0으로 돌아온다), 없으면 원래 모델을 바로 푼다. `Post::is_identity()`(레코드 없음, 지운 행·열 0)가 같은 경우에 true이고, 이때 `uncrush`는 입력을 그대로 돌려준다.
+
+**미확인 / 지름길**
+- `+0x1d8`을 비우는 조건 자체는 디컴파일에서 찾지 못했다(`390989`, `3cd406`, `3b0917`을 읽었지만 "아무것도 안 지움"을 가르는 줄이 안 보였다). 위 규칙은 64개 모델과의 일치(5개 항등, 59개 uncrush)에서 얻은 추정이다. 행 분할(범위 열)이나 `<`→`=`만 일어나는 모델은 아직 없다.
+- 입력은 오라클의 `pre_after`다. `363daa` 앞부분(`12edc8`/`12ef7f` 스케일 해제, +0x408 부호 뒤집기, +0x54 블록)은 포팅하지 않았다. 기본값 simplex를 포팅할 때 필요하다.
+- 아레나 크기 식과 청크 시뮬레이션은 레코드만 아레나를 쓴다는 가정이다(59개 모델 일치). 레코드 종류를 더하면 `layout()`을 같이 고친다.
+- 정렬 의존 내적의 최종 합 순서는 트리로 맞았다(단위 테스트가 고정).
+- 구현하지 않은 것: type 12, 0x16, 0xd(`3a141c`), 0x10(`3a484d`)의 uncrush, type 6의 code bit 8(PWL), type 4의 정수 열 분기(+0x30 표시 1, 2), `param_7 == 0`(기저 없음) 경로, spx 없는 경로, 스케일된 원본 모델(`a8ff5e`의 `+0x3e0` 분기).
+- type 24의 `y_idx`/`y_add` 가드(`local_90`)의 배열 정체 미확인(§8). 기본값 오라클의 14개 레코드(forplan, beaconfd, finnis, ganges)로는 일치한다.
+- 오라클은 `Threads=1`, 13.0.3 빌드 기준이다.
