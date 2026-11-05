@@ -11,7 +11,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | (3) MIP postsolve 레코드 | 시작 전 |
 | (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
 
-운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만.
+운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만. 크레이트 수준의 파라미터 표(이름·기본값·범위)는 G5(`m1-lp-driver`)가 만든다. `docs/m2_param_offsets.tsv`는 오라클·도구용이고, `crates/mip`에는 MIP presolve가 읽는 필드만 가진 `Params`(LP `presolve::Params`처럼 `from_pairs`)만 둔다(2026-11-06 오케스트레이터 지시).
 
 ### 진행 중인 하위 작업 (2026-11-06 시작)
 | worktree / 브랜치 | 일 | 산출물 |
@@ -20,6 +20,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | `../rsolver-m2-spine-b` / `m2-spine-b` | `3cd406` 패스 루프(L1696–4400) 해독 | `docs/m2_spine_b.md` |
 | `../rsolver-m2-spine-c` / `m2-spine-c` | 라운드 후 단계(L4400–6450) 해독 | `docs/m2_spine_c.md` |
 | `../rsolver-m2-spine-d` / `m2-spine-d` | FINAL 단계(L6582–9600) 해독 | `docs/m2_spine_d.md` |
+| `../rsolver-m2-inner` / `m2-inner` | 내부 루프 reduction 7개와 보조 함수 해독(뼈대 병합 뒤 같은 에이전트가 포팅) | `docs/m2_red_inner.md` |
 
 ### 다음 단계 (순서)
 1. 위 네 브랜치를 `m2-mip-presolve`에 합친다. 구간 노트로 `3cd406` 제어 흐름 전체를 reduction stub(카운트만)으로 옮긴다. stub이 Gurobi와 같은 k에서 카운트하는지는 sweep의 "바뀐 k"와 reduction 위치가 맞는지로 확인한다.
