@@ -188,7 +188,7 @@ python tools/postsolve_check.py ... --arena          # 레코드 크기로 설�
   - sense = `state+0xc0`[행], rhs = `state+0xb8`[행].
   - terms = 그 행의 **행 CSR** 항목 중 `col_ind ≥ 0 && col_cnt[col] ≥ 0`인 것을 CSR 순서로(열 j 자신 포함).
 - c = rows 수, K = Σ `row_cnt[행]`(push 시점 값. terms 수와 같아야 한다).
-- y_idx / y_add: 열 j에 대해 `|x| ≤ 1e−10`(x는 `5b488d`의 `local_90[j]`. 어느 배열인지 확인하지 못했고, 아마 obj)이면 **−1 / 0.0**. 아니면 y_idx = 기준 행(`local_160`), y_add = `−obj[j] / a_ij`(a_ij는 그 행의 열 j 항목. 행이 비었거나 못 찾으면 1.0이 들어간다. 그리고 아래 obj, objcon 갱신에 같은 값이 쓰인다). forplan에서 y_idx = 159, y_add = −obj(a = 1)로 확인했다.
+- y_idx / y_add: 열 j에 대해 `|obj[j]| ≤ 1e−10`(`5b488d`의 `local_90` = `state+0xb0`, obj로 확인. [m1_presolve_derived.md](m1_presolve_derived.md) §7)이면 **−1 / 0.0**. 아니면 y_idx = 기준 행(`local_160`), y_add = `−obj[j] / a_ij`(a_ij는 그 행의 열 j 항목. 행이 비었거나 못 찾으면 1.0이 들어간다. 그리고 아래 obj, objcon 갱신에 같은 값이 쓰인다). forplan에서 y_idx = 159, y_add = −obj(a = 1)로 확인했다.
 
 **바이트 배치** (rec = 할당 시작, data = rec+0x18. 필드를 쓰는 순서는 L1486–1514 순)
 | 순서 | 위치 | 내용 |
@@ -212,7 +212,7 @@ python tools/postsolve_check.py ... --arena          # 레코드 크기로 설�
 - 레코드를 쌓은 뒤 `5b488d`가 하는 일(presolve 쪽): 열 j의 live 행마다 `row_cnt = −1`, 그 행의 항목들을 열에서 지움(`col_cnt −1`, `row_ind = −1`), `+0x404`++. 마지막에 `col_len[j] = −1`, **`col_cnt[j] = −2`**, `+0x408`++. 지운 행의 `row_cnt`가 −1이라서 uncrush 준비에서 행이 "자기 번호 기저"로 남는다(위 forplan 불일치의 원인이 `−3`이었다).
 
 - uncrush: 각 행에서 `v = (rhs − Σ_{k≠j} a·x_k)/a_ij`. 상한 후보(a_ij > 0 또는 `=`)는 최솟값, 하한 후보(a_ij < 0 또는 `=`)는 최댓값을 잡는다(초기값은 ub, lb). 하한이 그대로 lb이면서 유한하거나, (상한이 무한이거나 ub−1e−10 이하이고 |L| < |U|)이면 L, 아니면 U를 x_j로 둔다. 상태: lb와 같으면 −1, ub와 같으면 −2, 아니면 그 한계를 낸 행의 기저를 받고 그 행은 −1이다. 마지막에 `y[y_idx] += y_add`.
-- `PostRec::ColRows`, `layout`, `kind`, 위 uncrush를 넣었다. 쌓는 쪽이 없어 단위로는 검증하지 못했다. 임시로 forplan의 Subst(빈 행, 빈 열)를 ColRows로 바꿔 보니 x, d, y가 모두 맞고 기저만 한 곳 달랐다(행 159의 `row_cnt`가 −3이라 −1이 된다. 위 `5b488d`처럼 −1이면 맞을 것이다).
+- `PostRec::ColRows`, `layout`, `kind`, 위 uncrush를 넣었다. 쌓는 쪽(`derived.rs`)을 넣은 뒤 기본값 uncrush 오라클에서 forplan·finnis·beaconfd·ganges가 맞는다(57/59). 임시로 forplan의 Subst(빈 행, 빈 열)를 ColRows로 바꿔 보니 x, d, y가 모두 맞고 기저만 한 곳 달랐다(행 159의 `row_cnt`가 −3이라 −1이 된다. 위 `5b488d`처럼 −1이면 맞을 것이다).
 - 기본값 오라클과의 차이(rsolver는 type 2, Gurobi는 type 24):
   - forplan: Subst(j 72, r 159, 빈 행·열) ↔ type 24(j 72, lb 0, ub ∞, 행 1개).
   - finnis: Subst(j 55, r 19, mode −1) ↔ type 24(j 155, lb −0.001, ub ∞).

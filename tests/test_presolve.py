@@ -14,3 +14,9 @@ DATA = ROOT.parent / "re/bench/data"
 def test_presolved_model_matches_gurobi(name):
     got = rsolver.read(DATA / "netlib" / f"{name}.mps.gz")._core.presolve([]).to_mps()
     assert got == (ROOT / "bench/gurobi_presolve" / f"{name}.mps").read_text()
+
+
+def test_derived_bounds_checkpoint():
+    """`5b488d` right after it first acts on finnis (call 39): `=` row 3CPTRT8 and column 3RT8INV leave."""
+    got = rsolver.read(DATA / "netlib" / "finnis.mps.gz")._core.presolve([("GURO_PAR_PRELIMIT", 39.0)]).to_mps()
+    assert got == (ROOT / "bench/gurobi_presolve" / "finnis_lim39.mps").read_text()
