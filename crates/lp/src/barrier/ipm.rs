@@ -80,9 +80,16 @@ fn residuals(lp: &Lp, st: &State) -> Res {
     let ax = lp.ax(&st.x);
     let rp: Vec<f64> = (0..m).map(|i| lp.b[i] * tau - ax[i]).collect();
     let aty = lp.aty(&st.y);
-    // oracle (perold, adlittle all entries): columns cτ − ((Aᵀy + z) − s), slacks −y − z
-    let rd: Vec<f64> =
-        (0..m + n).map(|j| if j < n { lp.c[j] * tau - ((aty[j] + st.z[j]) - st.s[j]) } else { -aty[j] - st.z[j] }).collect();
+    // oracle: columns in the 8-wide SIMD body cτ − ((Aᵀy + z) − s), in the scalar tail ((cτ − Aᵀy) − z) + s
+    // (fffff800 cols 848–853, 25fv47 col 1570); slacks −y − z
+    let nv = if n >= 8 { n - n % 8 } else { 0 };
+    let rd: Vec<f64> = (0..m + n)
+        .map(|j| match j {
+            _ if j < nv => lp.c[j] * tau - ((aty[j] + st.z[j]) - st.s[j]),
+            _ if j < n => ((lp.c[j] * tau - aty[j]) - st.z[j]) + st.s[j],
+            _ => -aty[j] - st.z[j],
+        })
+        .collect();
     let ru: Vec<f64> = (0..n).map(|j| if lp.up[j] { lp.ub[j] * tau - st.x[j] - st.w[j] } else { 0.0 }).collect();
     let amax = |v: &[f64]| v.iter().fold(0.0f64, |a, x| a.max(x.abs()));
     let mut dinf = 0.0f64;
@@ -108,7 +115,7 @@ fn residuals(lp: &Lp, st: &State) -> Res {
     Res {
         rp2: dot8(&rp, &rp, 0).sqrt() / tau,
         rd2: dot8(&rd, &rd, 0).sqrt() / tau,
-        ru2: dot8(&ru, &ru, 0).sqrt() / tau,
+        ru2: dot8(&ru[lo..hi], &ru[lo..hi], lo & 1).sqrt() / tau, // oracle: over the finite-ub range only
         rp_rel: amax(&rp).max(amax(&ru)) / tau,
         rd_rel: dinf / tau,
         compl,
