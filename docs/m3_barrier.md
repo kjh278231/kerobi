@@ -56,13 +56,13 @@
 | (2) BarIterCount 같음 ≥90%, 나머지 ±5% | **64/64** (나머지 없음) | 같은 곳(`same == 64` 단언) |
 | (3) ordering·Factor NZ | 64/64(AA' NZ, Factor NZ/Ops, Free vars, 순열·supernode) | `test_barrier_statistics_equal_gurobi_log`, Rust `bench_lps_match_gurobi`, parity `bar_stats` |
 | (4) 반복별 오라클 비교 도구 | `tools/bar_oracle.py`(`--iters`, `--vec`, `--chol`, `--solve`), `tools/parity.py compare`의 `first_divergence`(비트)·`first_divergence_1e-6` | — |
-| (5) clippy·테스트·문서 | 이 브랜치: barrier 파일 경고 0(남은 4개는 M1 파일 `crates/core`, `lu.rs`, `py/lib.rs` `solve_problem`). **main과 시험 병합한 트리에서는 clippy 경고 0**, `cargo test --workspace`·pytest 통과(main 쪽 xfail 1) | 아래 병합 메모 |
+| (5) clippy·테스트·문서 | **이 브랜치에서 `cargo clippy --workspace --all-targets` 경고 0**, `cargo test --workspace`, pytest 11 통과. 남아 있던 M1 코드 경고 4개는 main과 같은 방식으로 없앴다(아래 병합 메모). main과 시험 병합한 트리에서도 clippy 0·테스트 통과 | 아래 병합 메모 |
 
 **궤적 첫 분기**(반복 수는 같고 콜백 값의 비트가 갈리는 9개, `first_divergence` 반복): 25fv47 22, bnl1 48, degen3 1(분해 3321개 중 15개가 다름), finnis 20, forplan 17, ganges 14, maros 18, modszk1 12(상대 1e-6로는 16. 반복 11까지 상태·K·N·θ가 같고 반복 11의 step이 다름. `2f4fe9`의 ω = 0 분기부터 볼 것), pilot4 79. 나머지 55개는 마지막 반복까지 비트 동일.
 
 **피벗 규칙**: `bar_oracle.py --chol`로 degen2 반복 0–12의 Gurobi 분해를 떴다. 작은 피벗을 대체하지 않는다: |d| ≤ 1e-16·|원 대각|(또는 NaN)만 d = 0·역수 0, 나머지(예: d = −3.6e-15, 원 대각 12)는 그대로 두고 F+0xe8 = 1/d를 곱한다(e = 1/d 예외 0). F+0x100은 버리기 전 min|d/원 대각|. 이것만으로 56 → 59/64(`ddc3040`), 재시작과 비트 일치로 64/64.
 
-**main 병합 메모**(오케스트레이터용, 2026-11-06 main `abeeaf7`과 시험 병합): 충돌은 두 파일뿐이다. (1) `crates/py/src/lib.rs`: main의 `solve`와 이 브랜치의 `barrier_symbolic`·`barrier`를 둘 다 둔다. (2) `python/rsolver/__init__.py`: main의 `optimize` 맨 앞에 `if self._core is not None and self._param("Method", -1) == 2: return self._barrier(callback)`, main의 `cbGet` 맨 앞에 `if what in (getattr(self, "_cbdata", None) or {}): return self._cbdata[what]`를 넣고 이 브랜치의 `_barrier`를 그대로 둔다. 이렇게 푼 트리에서 clippy 0, cargo test, pytest가 통과했다.
+**main 병합 메모**(오케스트레이터용, 2026-11-06 main `abeeaf7`과 시험 병합): 충돌은 두 파일뿐이다. (1) `crates/py/src/lib.rs`: main의 `solve`와 이 브랜치의 `barrier_symbolic`·`barrier`를 둘 다 둔다. (2) `python/rsolver/__init__.py`: main의 `optimize` 맨 앞에 `if self._core is not None and self._param("Method", -1) == 2: return self._barrier(callback)`, main의 `cbGet` 맨 앞에 `if what in (getattr(self, "_cbdata", None) or {}): return self._cbdata[what]`를 넣고 이 브랜치의 `_barrier`를 그대로 둔다. 이렇게 푼 트리에서 clippy 0, cargo test, pytest가 통과했다. 그 뒤 이 브랜치에서 M1 코드 경고 4개를 없앴다: `crates/lp/src/lib.rs` 2행에 main과 **같은 줄** `#![allow(clippy::needless_range_loop)]`(양쪽 동일 변경이라 충돌 없음, `lu.rs`는 손대지 않음), `crates/core`(main에서 삭제됨)의 `lp.rs` 루프와 `Row` 타입 별칭, `crates/py/src/lib.rs` `solve_problem`의 `Vec<Row>`. 병합 때 `crates/core`는 modify/delete 충돌이 나는데 main처럼 삭제하면 되고, `solve_problem`도 main 쪽(삭제)을 따르면 된다.
 
 **남은 위험·안 한 것**: homogeneous 전환·상태 13·`2c4689` 최선 해·밀집 열(m ≥ 1000)·Bunch–Kaufman·단정밀도·SOC/QP 경로는 64개에서 안 타서 옮기지 않았거나 확인하지 않았다. MKL 재현은 AVX2 전용(AVX-512 머신은 커널이 다름), dtrsv는 m ≤ 32까지만 비트 보장, 블록·벡터 16바이트 정렬은 관찰에 기댄다. K₀가 CPU 상수(`a80670`)를 타므로 다른 CPU에서는 반복 수가 달라질 수 있다. Method=2이면 Presolve·Crossover 값을 보지 않는다.
 

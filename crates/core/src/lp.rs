@@ -159,9 +159,7 @@ pub fn solve(p: &Problem) -> Solution {
             cost[j] -= row[j];
         }
     }
-    for j in ncols..total {
-        cost[j] = 0.0;
-    }
+    cost[ncols..total].fill(0.0);
     run(&mut tab, &mut cost, &mut basis, total);
     if -cost[total] > 1e-7 {
         return infeasible;
