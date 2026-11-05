@@ -2,4 +2,5 @@
 //! (docs/m3_barrier.md).
 
 pub mod ldl;
+pub mod normal;
 pub mod ordering;
