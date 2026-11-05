@@ -46,6 +46,11 @@ impl Lu {
     }
 
     pub fn factor(spx: &Spx, head: &[usize]) -> Lu {
+        Lu::factor_tol(spx, head, MARKOWITZ_TOL)
+    }
+
+    /// Factor with Markowitz threshold `tol` (MarkowitzTol, raised by the numerics ladder).
+    pub fn factor_tol(spx: &Spx, head: &[usize], tol: f64) -> Lu {
         let (m, n) = (spx.m, spx.n);
         let mut rc = vec![0usize; m];
         for &j in head {
@@ -136,7 +141,7 @@ impl Lu {
         let ns = lu.steps.len();
         lu.lcol = vec![Vec::new(); m];
         lu.ucol = vec![Vec::new(); m];
-        if ns < m && !lu.markowitz(spx, &mut ppos) {
+        if ns < m && !lu.markowitz(spx, &mut ppos, tol) {
             return lu; // singular: incomplete
         }
         // L and U of the singleton steps come straight from the columns (their pivot rows have no other active
@@ -159,7 +164,7 @@ impl Lu {
     /// Markowitz threshold pivoting on the part the singleton phases leave (rows and positions not yet pivoted).
     /// shortcut: a plain lowest-cost search, not `036ade`'s candidate lists, tie rules, 2x2 blocks or dense dgetrf
     /// switch; the pivot sequence (so the bits) differs from Gurobi's on non-triangular bases.
-    fn markowitz(&mut self, spx: &Spx, ppos: &mut [i64]) -> bool {
+    fn markowitz(&mut self, spx: &Spx, ppos: &mut [i64], tol: f64) -> bool {
         let m = self.head.len();
         // active rows by position with current values; U entries of the column in rows already pivoted
         let mut arow: Vec<Vec<(usize, f64)>> = vec![Vec::new(); m];
@@ -199,7 +204,7 @@ impl Lu {
                     let cm = cmax(p, &arow, &acol);
                     for &i in &acol[p] {
                         let v = get(&arow[i], p).unwrap();
-                        if v.abs() >= MARKOWITZ_TOL * cm && v.abs() > ZERO {
+                        if v.abs() >= tol * cm && v.abs() > ZERO {
                             let cost = (arow[i].len() - 1) * (k - 1);
                             if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
                                 best = Some((i, p, v, cost));
@@ -214,7 +219,7 @@ impl Lu {
                 for &(_, i) in rset.range((k, 0)..(k + 1, 0)) {
                     for &(p, v) in &arow[i] {
                         let cm = cmax(p, &arow, &acol);
-                        if v.abs() >= MARKOWITZ_TOL * cm && v.abs() > ZERO {
+                        if v.abs() >= tol * cm && v.abs() > ZERO {
                             let cost = (k - 1) * (acol[p].len() - 1);
                             if best.is_none_or(|b| cost < b.3 || (cost == b.3 && v.abs() > b.2.abs())) {
                                 best = Some((i, p, v, cost));

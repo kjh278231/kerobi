@@ -14,6 +14,7 @@ use rsolver_model::INFINITY;
 pub const FEAS_TOL: f64 = 1e-6; // spx+0x380
 pub const OPT_TOL: f64 = 1e-6; // spx+0x388
 const PIVOT_TOL: f64 = 1e-7;
+const BIG_TOL: f64 = 3e-6; // spx+0x3a0: allowed relative gap between the row and column pivot
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Status {
@@ -44,6 +45,10 @@ pub struct Engine<'a> {
     pub iter_limit: u64,
     lu_interval: usize,
     perturbed: bool,
+    markowitz_tol: f64,
+    in_dual: bool,
+    /// Columns refused as entering after a pivot mismatch on a fresh factorization; cleared after a pivot.
+    rejected: Vec<bool>,
     pub trace: Vec<TraceRow>,
     /// Pivot path: (iteration, entering column, leaving column); bound flips of the entering column leave −1.
     pub path: Vec<(u64, i64, i64)>,
@@ -75,6 +80,9 @@ impl<'a> Engine<'a> {
             iter_limit: u64::MAX,
             lu_interval: interval,
             perturbed: false,
+            markowitz_tol: crate::lu::MARKOWITZ_TOL,
+            in_dual: false,
+            rejected: vec![false; n + m],
             trace: Vec::new(),
             path: Vec::new(),
         }
@@ -101,7 +109,7 @@ impl<'a> Engine<'a> {
     /// Factor the current basis; a singular basis gets slacks of the unpivoted rows in its unpivoted positions.
     fn refactor(&mut self) {
         loop {
-            self.lu = Lu::factor(self.spx, &self.head);
+            self.lu = Lu::factor_tol(self.spx, &self.head, self.markowitz_tol);
             if self.lu.complete() {
                 break;
             }
@@ -117,6 +125,16 @@ impl<'a> Engine<'a> {
                 self.head[p] = self.n + i;
                 self.vstat[self.n + i] = p as i32;
             }
+        }
+    }
+
+    /// Refactor and recompute x_B and d; in the dual, boxed nonbasics that turned dual infeasible flip (048d5f).
+    fn reinvert(&mut self) {
+        self.refactor();
+        self.compute_xb();
+        self.compute_duals();
+        if self.in_dual && self.make_dual_feasible() {
+            self.compute_xb();
         }
     }
 
@@ -223,9 +241,7 @@ impl<'a> Engine<'a> {
         self.vstat[q] = r as i32;
         self.head[r] = q;
         if !self.lu.update(r, q, spike) || self.lu.n_updates >= self.lu_interval {
-            self.refactor();
-            self.compute_xb();
-            self.compute_duals();
+            self.reinvert();
         }
     }
 
@@ -324,7 +340,7 @@ impl<'a> Engine<'a> {
             }
             seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
             let nnz = if j < self.n { self.spx.len[j] as f64 } else { 1.0 };
-            let delta = ((seed >> 33) % 250 + 1) as f64 * (2e-4 / 500.0) * (1.0 + nnz).log2() * (1.0 + self.spx.c[j].abs());
+            let delta = ((seed >> 33) % 250 + 1) as f64 * (2e-4 / 500.0) * (1.0 + nnz).log2();
             match s {
                 -1 => {
                     self.c[j] += delta;
@@ -343,11 +359,16 @@ impl<'a> Engine<'a> {
     /// Dual simplex until primal feasible. Returns Optimal (for the working costs), Infeasible, or a status that
     /// asks the driver to switch to primal (Unbounded stands for "artificial bounds are in the way").
     pub fn dual(&mut self) -> Status {
+        self.in_dual = true;
         let mut degenerate = 0usize;
         let mut retried = false;
         loop {
             if self.iter >= self.iter_limit {
                 return Status::IterLimit;
+            }
+            // weights past 1e30 or NaN restart from 1 (06268b L200-415, "simplex pricing changes to steepest edge")
+            if self.w.iter().any(|w| !(w.abs() <= 1e30)) {
+                self.w.iter_mut().for_each(|w| *w = 1.0);
             }
             // CHUZR: largest infeasibility² / weight
             let mut r = usize::MAX;
@@ -376,13 +397,13 @@ impl<'a> Engine<'a> {
             let delta = self.primal_infeas(r);
             let rho = self.btran_unit(r);
             let alpha = self.pivot_row(&rho);
-            // Harris two-pass ratio test; t_j > 0 means j can move toward feasibility of row r
+            // bound flipping ratio test (1c35c5): walk the breakpoints d̃_j/|α_j| in Harris groups; boxed columns
+            // whose flip keeps the slope |δ| − Σ|α|(u−l) positive flip instead of entering (m1_notes §8.1)
             let sgn = if delta < 0.0 { -1.0 } else { 1.0 };
-            let mut theta_max = f64::INFINITY;
-            let mut cand = Vec::new();
+            let mut cand: Vec<(usize, f64)> = Vec::new(); // (column, d̃)
             for j in 0..self.n + self.m {
                 let a = alpha[j];
-                if a.abs() <= PIVOT_TOL {
+                if a.abs() <= PIVOT_TOL || self.rejected[j] {
                     continue;
                 }
                 let t = sgn * a;
@@ -392,28 +413,31 @@ impl<'a> Engine<'a> {
                     -3 => self.d[j].abs(),
                     _ => continue,
                 };
-                cand.push(j);
-                theta_max = theta_max.min((dj.max(0.0) + OPT_TOL) / a.abs());
+                cand.push((j, dj));
             }
+            cand.sort_by(|x, y| (x.1.max(0.0) / alpha[x.0].abs()).total_cmp(&(y.1.max(0.0) / alpha[y.0].abs())));
+            let mut slope = delta.abs();
+            let mut flips: Vec<usize> = Vec::new();
             let mut q = usize::MAX;
-            let mut amax = 0.0;
-            for &j in &cand {
-                let dj = match self.vstat[j] {
-                    -1 => self.d[j],
-                    -2 => -self.d[j],
-                    _ => self.d[j].abs(),
-                };
-                if dj.max(0.0) / alpha[j].abs() <= theta_max && alpha[j].abs() > amax {
-                    amax = alpha[j].abs();
-                    q = j;
+            // cand is sorted by ratio, so each Harris group is a prefix of what is left
+            while !cand.is_empty() {
+                let theta_max = cand.iter().map(|&(j, dj)| (dj.max(0.0) + OPT_TOL) / alpha[j].abs()).fold(f64::INFINITY, f64::min);
+                let len = cand.iter().take_while(|&&(j, dj)| dj.max(0.0) / alpha[j].abs() <= theta_max).count();
+                let group = &cand[..len];
+                let cap: f64 = group.iter().map(|&(j, _)| alpha[j].abs() * (self.spx.u[j] - self.spx.l[j])).sum();
+                if group.iter().all(|&(j, _)| self.vstat[j] != -3) && slope - cap > FEAS_TOL {
+                    slope -= cap;
+                    flips.extend(group.iter().map(|&(j, _)| j));
+                    cand.drain(..len);
+                    continue;
                 }
+                q = group.iter().map(|&(j, _)| j).max_by(|&x, &y| alpha[x].abs().total_cmp(&alpha[y].abs())).unwrap();
+                break;
             }
-            if q == usize::MAX {
+            if q == usize::MAX && flips.is_empty() {
                 if self.lu.n_updates > 0 && !retried {
                     retried = true;
-                    self.refactor();
-                    self.compute_xb();
-                    self.compute_duals();
+                    self.reinvert();
                     continue;
                 }
                 // a row that only artificial bounds keep infeasible is no proof
@@ -422,19 +446,54 @@ impl<'a> Engine<'a> {
                 });
                 return if artificial { Status::Unbounded } else { Status::Infeasible };
             }
+            if !flips.is_empty() {
+                // move the flipped columns to their other bound; x_B absorbs the change with one FTRAN (1c8477)
+                let mut dx = vec![0.0; self.m];
+                for &j in &flips {
+                    let old = self.x_nonbasic(j);
+                    self.vstat[j] = if self.vstat[j] == -1 { -2 } else { -1 };
+                    let step = self.x_nonbasic(j) - old;
+                    for (i, a) in self.spx.col(j) {
+                        dx[i] += a * step;
+                    }
+                }
+                let dxb = self.lu.ftran_dense(dx);
+                for p in 0..self.m {
+                    self.xb[p] -= dxb[p];
+                }
+                if q == usize::MAX {
+                    self.iter += 1;
+                    self.log();
+                    continue;
+                }
+            }
+            let delta = {
+                let j = self.head[r];
+                self.xb[r] - if sgn < 0.0 { self.spx.l[j] } else { self.spx.u[j] }
+            };
+            // cost shifting: an entering column that sits slightly on the wrong side gets d_q = 0
+            let dq_t = if self.vstat[q] == -2 { -self.d[q] } else { self.d[q] };
+            if self.vstat[q] != -3 && dq_t < 0.0 {
+                self.c[q] -= self.d[q];
+                self.d[q] = 0.0;
+                self.perturbed = true;
+            }
             retried = false;
             let (col, spike) = self.ftran_col(q);
             let arq = col[r];
-            if (arq - alpha[q]).abs() > 1e-6 * (1.0 + arq.abs()) || arq.abs() <= ZERO {
-                // row and column pivots disagree: refactor and price again (028c93 safety ladder, first rung)
-                if self.lu.n_updates > 0 {
-                    self.refactor();
-                    self.compute_xb();
-                    self.compute_duals();
+            if arq * alpha[q] <= 0.0 || (arq - alpha[q]).abs() > BIG_TOL * (1.0 + arq.abs()) || arq.abs() <= ZERO {
+                // row and column pivots disagree (028c93 safety ladder): refactor, then MarkowitzTol 0.5, then reject
+                if self.lu.n_updates == 0 && self.markowitz_tol >= 0.5 {
+                    self.rejected[q] = true;
                     continue;
                 }
-                return Status::Numeric;
+                if self.lu.n_updates == 0 {
+                    self.markowitz_tol = 0.5;
+                }
+                self.reinvert();
+                continue;
             }
+            self.rejected.iter_mut().for_each(|x| *x = false);
             // dual step
             let theta_d = self.d[q] / arq;
             if theta_d.abs() <= 1e-12 {
@@ -495,6 +554,7 @@ impl<'a> Engine<'a> {
     /// Primal simplex (phase 1 on the bound violations of the basics, then phase 2), Dantzig pricing with
     /// fresh duals each iteration and a textbook ratio test.
     pub fn primal(&mut self) -> Status {
+        self.in_dual = false;
         // nonbasics may not sit on an infinite bound in the primal
         for j in 0..self.n + self.m {
             let s = self.vstat[j];
@@ -629,6 +689,9 @@ impl<'a> Engine<'a> {
             return self.primal();
         }
         let st = self.dual();
+        if std::env::var("RSOLVER_DEBUG").is_ok() {
+            eprintln!("dual -> {st:?} at it {} perturbed {}", self.iter, self.perturbed);
+        }
         match st {
             Status::Optimal => {
                 if self.perturbed {
@@ -683,6 +746,15 @@ pub fn solve_model(md: &rsolver_model::Model, method: i32, iter_limit: u64) -> L
     let mut e = Engine::new(&spx);
     e.iter_limit = iter_limit;
     let status = e.solve(method);
+    if std::env::var("RSOLVER_DEBUG").is_ok() {
+        let xs = e.x();
+        for j in 0..spx.n + spx.m {
+            let v = (spx.l[j] - xs[j]).max(xs[j] - spx.u[j]);
+            if v > 1e-6 {
+                eprintln!("viol j {j} vstat {} x {} l {} u {} d {}", e.vstat[j], xs[j], spx.l[j], spx.u[j], e.d[j]);
+            }
+        }
+    }
     let xs = e.x();
     let x: Vec<f64> = (0..spx.n).map(|j| xs[j] * spx.scaling.col[j]).collect();
     let obj = md.obj.iter().zip(&x).map(|(c, x)| c * x).sum::<f64>() + md.objcon;
