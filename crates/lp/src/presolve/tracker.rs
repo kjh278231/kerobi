@@ -30,7 +30,8 @@ pub struct Tracker {
 impl Queue {
     pub fn new(n: usize) -> Queue {
         let all: Vec<i32> = (0..n as i32).collect();
-        Queue { flag: vec![0; n], a: [n; 3], b: [n; 3], list: [all.clone(), all.clone(), all], cache: [None, None, None] }
+        // `534a8b`: everything starts queued at levels 1 and 2 (flag 5), every list is the identity.
+        Queue { flag: vec![5; n], a: [n; 3], b: [n; 3], list: [all.clone(), all.clone(), all], cache: [None, None, None] }
     }
 
     /// `53763f` (rows) / `5379f1` (columns).

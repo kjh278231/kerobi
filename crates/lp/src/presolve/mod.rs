@@ -7,6 +7,7 @@ mod sort;
 mod state;
 mod tracker;
 
+use reduce::ColTols;
 use rsolver_model::Model;
 use state::State;
 
@@ -27,11 +28,22 @@ pub struct Params {
     pub dual_reductions: bool,
     /// env+0x2544 GURO_PAR_PREBOUND
     pub prebound: i32,
+    /// env+0x2470 OptimalityTol
+    pub opttol: f64,
+    /// env+0x2718 NumericFocus
+    pub numeric_focus: i32,
+    /// env+0x26c0 GURO_PAR_AGGMULTLIMIT
+    pub agg_mult_limit: f64,
+    /// env+0x26f4 PreCrush
+    pub precrush: i32,
+    /// env+0x2540 PrePasses
+    pub prepasses: i32,
 }
 
 impl Default for Params {
     fn default() -> Self {
-        Params { presolve: -1, feastol: 1e-6, infbound: 1e30, fixtol: -1.0, prelimit: 2_000_000_000, dual_reductions: true, prebound: 1 }
+        Params { presolve: -1, feastol: 1e-6, infbound: 1e30, fixtol: -1.0, prelimit: 2_000_000_000, dual_reductions: true, prebound: 1,
+                 opttol: 1e-6, numeric_focus: 0, agg_mult_limit: 1e14, precrush: 0, prepasses: -1 }
     }
 }
 
@@ -47,6 +59,11 @@ impl Params {
                 "guro_par_prelimit" => p.prelimit = *v as i32,
                 "dualreductions" => p.dual_reductions = *v != 0.0,
                 "guro_par_prebound" => p.prebound = *v as i32,
+                "optimalitytol" => p.opttol = *v,
+                "numericfocus" => p.numeric_focus = *v as i32,
+                "guro_par_aggmultlimit" => p.agg_mult_limit = *v,
+                "precrush" => p.precrush = *v as i32,
+                "prepasses" => p.prepasses = *v as i32,
                 _ => {}
             }
         }
@@ -85,6 +102,36 @@ fn reduce(st: &mut State, p: &Params) {
         st.dual_singleton_fix(p.dual_reductions, p.infbound);
         calls += 1;
         if limit <= calls {
+            return;
+        }
+    }
+    let tols = ColTols {
+        infbound: p.infbound,
+        feastol: p.feastol,
+        opttol: p.opttol,
+        numeric_focus: p.numeric_focus,
+        agg_mult_limit: p.agg_mult_limit,
+        dual_reductions: p.dual_reductions,
+        precrush: p.precrush,
+    };
+    let passes = if p.prepasses < 0 { if p.presolve == 1 { 5 } else { 100 } } else { p.prepasses };
+    for _pass in 0..passes {
+        let mut i = 0;
+        loop {
+            let snap = st.snapshot();
+            st.tracker.level = 2;
+            // shortcut: 3ba9de's work-budget stop (budget = nnz*1000 + 1e7) is not checked; Netlib never hits
+            // it. Port it with the constructor's work terms (P2).
+            st.reset_tracker();
+            if st.singleton_cols(&tols) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+            // shortcut: 4ffe11, 4ff158, 50cc90 not ported yet (PRELIMIT 5+).
+            let _ = (&snap, &mut i);
             return;
         }
     }

@@ -10,6 +10,12 @@ pub enum PostRec {
     /// type 1: column `j` fixed at `v`; `obj` its cost then, `status` the bound it sits at (-1 lower, -2 upper,
     /// -3 between, -4 fixed), `entries` its live (row, value) pairs for the dual.
     FixCol { j: i32, v: f64, obj: f64, status: i32, entries: Vec<(i32, f64)> },
+    /// type 2 (`4f4d0a`): column `j`, singleton in row `r`, is `x_j = c0 + sum(row[k] * x_k)`; `mode` 0 free
+    /// column, 1/2 implied upper/lower bound (row kept as inequality); `col` the column's other entries.
+    Subst { j: i32, r: i32, c0: f64, a: f64, obj: f64, mode: i32, row: Vec<(i32, f64)>, col: Vec<(i32, f64)> },
+    /// type 3 (`4f39e3`): column `j` with its rows dropped; it moves toward `dir` (1 up, 0 down) as far as the
+    /// rows allow. `rows[t]` = (row, rhs/a), `terms[t]` = the row's other (column, -a_k/a).
+    DualFix { j: i32, dir: i32, rows: Vec<(i32, f64)>, terms: Vec<Vec<(i32, f64)>> },
 }
 
 #[derive(Clone, Debug)]
@@ -47,6 +53,9 @@ pub struct State {
     pub objcon: f64,
     /// +0xd8
     pub nnz: i64,
+    /// +0x80 / +0x88: per-column growth bounds of substitution multipliers (start at 1.0)
+    pub mult_lo: Vec<f64>,
+    pub mult_hi: Vec<f64>,
     /// +0x170 per-column flags (nonzero = special column, e.g. PWL objective)
     pub col_flag: Vec<i32>,
     /// +0x3f8 / +0x3fc / +0x400 / +0x404 / +0x408
@@ -97,20 +106,33 @@ impl State {
     pub fn new(md: &Model) -> State {
         let (n, m) = (md.num_vars(), md.num_constrs());
         let neg: Vec<bool> = md.row_sense.iter().map(|&s| s == b'>').collect();
+        // `5118e6`: column segments keep the model's starts; entries with |a| <= 1e-13 (or NaN) are squeezed out,
+        // leaving a gap at the end of the segment.
+        let raw_nnz: usize = md.col_len.iter().map(|&l| l as usize).sum();
+        let (mut col_ind, mut col_val) = (vec![-1i32; raw_nnz], vec![0f64; raw_nnz]);
         let mut col_beg = Vec::with_capacity(n);
-        let (mut col_ind, mut col_val) = (Vec::new(), Vec::new());
+        let mut col_len = vec![0i32; n];
         let mut row_len = vec![0i32; m];
+        let mut packed = 0usize;
+        let contiguous = n > 0 && md.col_beg[n - 1] as usize + md.col_len[n - 1] as usize == raw_nnz;
         for j in 0..n {
-            col_beg.push(col_ind.len() as i64);
             let b = md.col_beg[j] as usize;
+            let start = if contiguous { b } else { packed };
+            col_beg.push(start as i64);
+            let mut kept = 0;
             for k in b..b + md.col_len[j] as usize {
-                let i = md.col_ind[k];
-                col_ind.push(i);
-                col_val.push(if neg[i as usize] { -md.col_val[k] } else { md.col_val[k] });
+                let (i, v) = (md.col_ind[k], md.col_val[k]);
+                if !(1e-13 < v.abs()) {
+                    continue;
+                }
+                col_ind[start + kept] = i;
+                col_val[start + kept] = if neg[i as usize] { -v } else { v };
+                kept += 1;
                 row_len[i as usize] += 1;
             }
+            col_len[j] = kept as i32;
+            packed += md.col_len[j] as usize;
         }
-        let col_len = md.col_len.clone();
         let mut row_beg = vec![0i64; m];
         let mut s = 0i64;
         for i in 0..m {
@@ -118,8 +140,8 @@ impl State {
             s += row_len[i] as i64;
         }
         let mut fill = row_beg.clone();
-        let mut row_ind = vec![0i32; s as usize];
-        let mut row_val = vec![0f64; s as usize];
+        let mut row_ind = vec![-1i32; raw_nnz];
+        let mut row_val = vec![0f64; raw_nnz];
         for j in 0..n {
             for k in col_beg[j] as usize..col_beg[j] as usize + col_len[j] as usize {
                 let i = col_ind[k] as usize;
@@ -153,7 +175,9 @@ impl State {
             rhs,
             sense,
             objcon: md.objcon,
-            nnz: s,
+            nnz: raw_nnz as i64,
+            mult_lo: vec![1.0; n],
+            mult_hi: vec![1.0; n],
             col_flag: vec![0; n],
             bounds_tightened: 0,
             coefs_changed: 0,
@@ -162,8 +186,9 @@ impl State {
             cols_removed: 0,
             bad_col: -1,
             bad_row: -1,
+            // shortcut: the constructor's own work terms (3a484d/5118e6/534a8b) are not added yet; add them for P2.
             work: 0.0,
-            work_mult: 1.0,
+            work_mult: if raw_nnz <= 100_000 { 1.0 } else { (raw_nnz as f64 / 1e4).log10().sqrt() },
             tracker: Tracker::new(m, n),
             post: Vec::new(),
             mark: vec![false; n.max(m)],
@@ -422,6 +447,12 @@ impl State {
         out
     }
 
+    /// `5369b8` on the state's tracker.
+    pub fn reset_tracker(&mut self) {
+        let State { tracker, row_cnt, col_cnt, work, work_mult, .. } = self;
+        tracker.reset(row_cnt, col_cnt, work, *work_mult);
+    }
+
     /// `53802c`: mark every row of column `j` (column CSR, removed rows included).
     pub fn mark_rows_of_col(&mut self, j: usize) {
         let b = self.col_beg[j] as usize;
@@ -460,16 +491,20 @@ impl State {
         self.post.push(PostRec::FixCol { j: j as i32, v, obj: self.obj[j], status, entries });
     }
 
-    /// Fix column `j` at `v` and take it out of its rows (inlined in `51a144`; plain LP column, no flags):
-    /// record, objective constant, row marks, rhs and both activities, then the column is gone (-2).
-    pub fn fix_col(&mut self, j: usize, v: f64, infbound: f64) {
-        self.push_fix(j, v);
+    /// `4fa83a`: fix column `j` at `v` and take it out of its rows: record (if `rec`), objective constant, row
+    /// marks, rhs and both activities. With `rec` the column is gone (-2); without, it stays as an empty column
+    /// fixed at `v` (removed later as an empty column).
+    pub fn fix_at(&mut self, j: usize, v: f64, infbound: f64, rec: bool) {
+        if rec {
+            self.push_fix(j, v);
+        }
         self.objcon += self.obj[j] * v;
         self.obj[j] = 0.0;
         self.mark_rows_of_col(j);
         let (l, u) = (self.lb[j], self.ub[j]);
         let b = self.col_beg[j] as usize;
-        for k in b..b + self.col_len[j] as usize {
+        let mut touched = Vec::new();
+        for k in b..b + self.col_len[j].max(0) as usize {
             let i = self.col_ind[k];
             if i < 0 || self.row_cnt[i as usize] < 0 {
                 continue;
@@ -478,6 +513,9 @@ impl State {
             self.col_ind[k] = -1;
             self.row_cnt[i] -= 1;
             let a = self.col_val[k];
+            if !rec && !touched.contains(&i) {
+                touched.push(i);
+            }
             let t = v * a;
             self.rhs[i] -= t;
             self.act_max[i] += t;
@@ -508,8 +546,137 @@ impl State {
                 }
             }
         }
-        self.work += self.col_len[j] as f64 * 10.0;
-        self.col_len[j] = -1;
+        self.work += self.col_len[j].max(0) as f64 * 10.0;
+        if rec {
+            self.col_len[j] = -1;
+            self.col_cnt[j] = -2;
+            return;
+        }
+        self.col_len[j] = 0;
+        self.lb[j] = v;
+        self.ub[j] = v;
+        if self.col_cnt[j] > 0 {
+            self.col_cnt[j] = 0;
+            self.tracker.mark_col(j as i32);
+        }
+        // drop the column from the row CSR of the rows it was in (state+0x390 list, +0x3b0 marks)
+        for &i in &touched {
+            if self.row_cnt[i] >= 0 {
+                let rb = self.row_beg[i] as usize;
+                for k in rb..rb + self.row_len[i].max(0) as usize {
+                    if self.row_ind[k] == j as i32 {
+                        self.row_ind[k] = -1;
+                    }
+                }
+                self.work += self.row_len[i] as f64 * 2.0;
+            }
+        }
+        self.work += touched.len() as f64 * 4.0;
+    }
+
+    /// `4f6740`: fix a column whose bounds are within tolerance, unless its coefficients make the gap matter.
+    /// The value is the bound its cost prefers, or the midpoint (0 if the range contains 0) for a tiny cost.
+    /// Rows lose the column and their rhs; activities are not updated here. Returns 3 if lb > ub + 2 feastol.
+    pub fn fix_near(&mut self, j: usize, feastol: f64) -> i32 {
+        let d = self.ub[j] - self.lb[j];
+        if feastol + feastol < -d {
+            self.bad_col = j as i32;
+            return 3;
+        }
+        let b = self.col_beg[j] as usize;
+        let len = self.col_len[j].max(0) as usize;
+        if 1e-13 < d {
+            let mut amax = 0.0f64;
+            for k in b..b + len {
+                let i = self.col_ind[k];
+                if i >= 0 && self.row_cnt[i as usize] >= 0 && amax <= self.col_val[k].abs() {
+                    amax = self.col_val[k].abs();
+                }
+            }
+            self.work += len as f64 * 3.0;
+            if feastol < amax * d {
+                return 0;
+            }
+        }
+        let c = self.obj[j];
+        let v = if feastol * 0.01 <= (d * c).abs() {
+            if c <= 0.0 { self.ub[j] } else { self.lb[j] }
+        } else if 0.0 < self.lb[j] || self.ub[j] < 0.0 {
+            (self.ub[j] + self.lb[j]) * 0.5
+        } else {
+            0.0
+        };
+        self.push_fix(j, v);
+        self.objcon += c * v;
+        self.obj[j] = 0.0;
+        self.mark_rows_of_col(j);
+        for k in b..b + len {
+            let i = self.col_ind[k];
+            if i >= 0 && self.row_cnt[i as usize] >= 0 {
+                self.row_cnt[i as usize] -= 1;
+                self.rhs[i as usize] -= v * self.col_val[k];
+                self.col_ind[k] = -1;
+            }
+        }
+        self.work += len as f64 * 6.0;
         self.col_cnt[j] = -2;
+        self.col_len[j] = -1;
+        0
+    }
+
+    /// `4f9fc2`: bounds on column `j` implied by its rows' activities (rows with at most one infinite
+    /// contribution, that one being `j`'s own). Returns (lo, hi), starting from (-infbound, infbound).
+    pub fn implied_bounds(&mut self, j: usize, infbound: f64) -> (f64, f64) {
+        let (l, u) = (self.lb[j], self.ub[j]);
+        let (mut lo, mut hi) = (-infbound, infbound);
+        let b = self.col_beg[j] as usize;
+        for k in b..b + self.col_len[j].max(0) as usize {
+            let i = self.col_ind[k];
+            if i < 0 || self.row_cnt[i as usize] < 0 {
+                continue;
+            }
+            let i = i as usize;
+            let a = self.col_val[k];
+            let eq = self.sense[i] == b'=';
+            let min_hi = |t: f64, hi: &mut f64| {
+                if t <= *hi {
+                    *hi = t;
+                }
+            };
+            let max_lo = |t: f64, lo: &mut f64| {
+                if *lo <= t {
+                    *lo = t;
+                }
+            };
+            if a > 1e-9 {
+                if self.inf_min[i] == 0 {
+                    min_hi(l - self.act_min[i] / a, &mut hi);
+                } else if self.inf_min[i] == 1 && l <= -infbound {
+                    min_hi(-self.act_min[i] / a, &mut hi);
+                }
+                if eq {
+                    if self.inf_max[i] == 0 {
+                        max_lo(u - self.act_max[i] / a, &mut lo);
+                    } else if self.inf_max[i] == 1 && infbound <= u {
+                        max_lo(-self.act_max[i] / a, &mut lo);
+                    }
+                }
+            } else if a < -1e-9 {
+                if self.inf_min[i] == 0 {
+                    max_lo(u - self.act_min[i] / a, &mut lo);
+                } else if self.inf_min[i] == 1 && infbound <= u {
+                    max_lo(-self.act_min[i] / a, &mut lo);
+                }
+                if eq {
+                    if self.inf_max[i] == 0 {
+                        min_hi(l - self.act_max[i] / a, &mut hi);
+                    } else if self.inf_max[i] == 1 && l <= -infbound {
+                        min_hi(-self.act_max[i] / a, &mut hi);
+                    }
+                }
+            }
+        }
+        self.work += self.col_len[j] as f64 * 8.0;
+        (lo, hi)
     }
 }
