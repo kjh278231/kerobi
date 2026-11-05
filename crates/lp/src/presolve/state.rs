@@ -29,6 +29,19 @@ pub enum PostRec {
     /// type 14 (`50c736`): like type 5 with room between the rows: row `a` (`=` at `rhs` now, with range column
     /// number `k` in [0, rhs - lo]) and dropped row `b`, row a = `ratio` times row b; `entries` row a's live entries.
     SplitRow { a: i32, b: i32, k: i32, rhs: f64, lo: f64, ratio: f64, entries: Vec<(i32, f64)> },
+    /// type 6 (`39d3d9`, aggregation stage D): before x_e = (b - a_k x_k) / a_e went away through row `r`, e's
+    /// bounds moved onto k (`code` bit 1 lower, bit 2 upper).
+    AggBound { code: i32, e: i32, k: i32, r: i32, b: f64, ae: f64, ak: f64 },
+    /// type 11 (`3a0e1b`, aggregation stage B): `<` row `r` was substituted out with column `j` becoming its
+    /// slack (pivot |a|).
+    SlackCol { r: i32, j: i32, a: f64 },
+    /// type 21 (`39d14c`, aggregation stage C): in `=` row `r`, x_e1 = f1 x_k1 and x_e2 = f2 x_k2 were folded
+    /// away; `a1`/`a2` their row-r coefficients, `obj`/`ub` theirs at push, `n1`/`n2` their other entry counts and
+    /// `entries` those entries (e1's, then e2's).
+    PairAgg {
+        r: i32, e1: i32, e2: i32, k1: i32, k2: i32, n1: i32, n2: i32, f1: f64, f2: f64, a1: f64, a2: f64, obj1: f64,
+        obj2: f64, ub1: f64, ub2: f64, entries: Vec<(i32, f64)>,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -91,8 +104,15 @@ pub struct State {
     pub tracker: Tracker,
     /// +0x370 record list
     pub post: Vec<PostRec>,
-    /// +0x3a8 scratch marks for the tracker list getters
-    mark: Vec<bool>,
+    /// +0x3a8 scratch marks for the tracker list getters (and aggregation)
+    pub(super) mark: Vec<bool>,
+    /// +0x158 / +0x198: aggregation node capacity and free count (`3a484d`: spare + nnz and spare);
+    /// `node_extra` = +0x1b8, nodes added by `3b85ea`
+    pub node_cap: i64,
+    pub node_free: i64,
+    pub node_extra: bool,
+    /// +0x488: aggregation prescan state (0 not run, -1 no pattern)
+    pub agg_scan: i32,
 }
 
 /// Snapshot of the progress counters (`3c546c`); LP uses the first nine.
@@ -167,6 +187,8 @@ impl State {
                 fill[i] += 1;
             }
         }
+        // `3a484d`: spare list nodes for aggregation (model+0x18 and the QC counts are 0 for LP)
+        let spare = if raw_nnz / 10 <= 2_000_000_000 { (raw_nnz as i64 / 10).max(n.max(m).max(10000) as i64) } else { 2_000_000_000 };
         let rhs = md.rhs.iter().zip(&neg).map(|(&r, &g)| if g { -r } else { r }).collect();
         let sense = md.row_sense.iter().map(|&c| if c == b'>' { b'<' } else { c }).collect();
         State {
@@ -211,6 +233,10 @@ impl State {
             tracker: Tracker::new(m, n),
             post: Vec::new(),
             mark: vec![false; n.max(m)],
+            node_cap: spare + raw_nnz as i64,
+            node_free: spare,
+            node_extra: false,
+            agg_scan: 0,
         }
     }
 

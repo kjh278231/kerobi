@@ -2,6 +2,7 @@
 //! docs/m1_presolve.md). Entry from `Model.presolve()` is `999702`, which names the result `<name>_pre`.
 //! Every reduction call counts toward GURO_PAR_PRELIMIT; reaching it jumps straight to model generation, which
 //! is what makes each reduction checkable on its own.
+mod agg;
 mod parallel;
 mod reduce;
 mod sort;
@@ -39,12 +40,19 @@ pub struct Params {
     pub precrush: i32,
     /// env+0x2540 PrePasses
     pub prepasses: i32,
+    /// env+0x242c Aggregate
+    pub aggregate: i32,
+    /// env+0x2428 AggFill (-1 auto)
+    pub agg_fill: i32,
+    /// env+0x2594 GURO_PAR_PREPAIRAGG
+    pub pre_pair_agg: i32,
 }
 
 impl Default for Params {
     fn default() -> Self {
         Params { presolve: -1, feastol: 1e-6, infbound: 1e30, fixtol: -1.0, prelimit: 2_000_000_000, dual_reductions: true, prebound: 1,
-                 opttol: 1e-6, numeric_focus: 0, agg_mult_limit: 1e14, precrush: 0, prepasses: -1 }
+                 opttol: 1e-6, numeric_focus: 0, agg_mult_limit: 1e14, precrush: 0, prepasses: -1, aggregate: 1, agg_fill: -1,
+                 pre_pair_agg: 3 }
     }
 }
 
@@ -65,6 +73,9 @@ impl Params {
                 "guro_par_aggmultlimit" => p.agg_mult_limit = *v,
                 "precrush" => p.precrush = *v as i32,
                 "prepasses" => p.prepasses = *v as i32,
+                "aggregate" => p.aggregate = *v as i32,
+                "aggfill" => p.agg_fill = *v as i32,
+                "guro_par_prepairagg" => p.pre_pair_agg = *v as i32,
                 _ => {}
             }
         }
@@ -270,9 +281,22 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
         if limit <= calls {
             return;
         }
-        // shortcut: the rest of the outer pass (519a52, 5b488d, 47c445) and the finish stage are not ported yet;
+        // aggregation; state+8 is not 4 for a general LP, so the reduced-mode guard (local_38) is off
+        if p.aggregate != 0 && (k == 0 || p.aggregate > 1) {
+            // `390989` resolves AggFill -1 to 10 (20 when model+0xf0 is set, which Model.presolve() does not do)
+            let ap = agg::AggPar { fill: if p.agg_fill == -1 { 10 } else { p.agg_fill }, pair_agg: p.pre_pair_agg, prebound: p.prebound };
+            if st.aggregate(tols, &ap) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
+        }
+        // shortcut: the rest of the outer pass (5b488d, 47c445) and the finish stage are not ported yet;
         // stop here like a reached PRELIMIT.
         let _ = &snap;
         return;
     }
 }
+
