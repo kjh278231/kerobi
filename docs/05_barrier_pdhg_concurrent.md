@@ -128,7 +128,7 @@ push 규칙(Bixby–Saltzman): dual push는 superbasic 중 reduced cost가 0에 
 
 ## 4. PDHG (`lp::pdhg`) (노트 14 §3.3) — M3
 
-QP/QCP 거부. 진입: presolve(조건부) → 작업 모델(스케일링은 원본 포팅. 노트는 미확인이므로 `0b8afb`, `354824`, `352bcb`를 읽어 확정한다) → 본체 → postsolve → crossover(기본 켜짐).
+QP/QCP 거부. 진입: presolve(조건부) → 작업 모델(스케일링은 본체 `34c004`가 `07d3ce(m, 4)`로 한다, 아래 M3 확정) → 본체 → postsolve → crossover(기본 켜짐).
 
 ```
 threads = nnz < 150001 ? 1 : Threads ; 열·행 구간을 nnz 균형으로 분할, barrier 동기화
@@ -146,6 +146,15 @@ loop:
 "PDHG solved model in %.0f iterations and %.2f seconds" ; 해 종류 = 6 (비기저)
 ```
 불가능성 검출은 원본 위치를 위 세 함수에서 찾아 포팅한다(노트 14 §6.2-5) — M6.
+
+**M3 확정(2026-11-05, Netlib 64, Presolve=0, Threads=1, Crossover=0)**: 구현은 `crates/lp/src/pdhg/`, 해독 기록은 [m3_pdhg.md](m3_pdhg.md). 위 의사코드에서 고친 점:
+- 전처리는 `34c004`가 직접 부르는 `07d3ce(m, 4)`(ScaleFlag 4)다. PDLP식 Ruiz ∞-노름 10회 + Pock–Chambolle(α = 1) 1회, [2⁻⁴⁷, 2⁴⁷]로 자르며 2의 거듭제곱으로 반올림하지 않는다. 그다음 공통 꼬리의 목적 스케일을 곱한다. 끝나면 원 데이터를 복원하고 `07d3ce(m, −1)`로 다시 스케일한다(crossover용).
+- 반복: τ = η/ω, σ = η·ω, x̂ = proj(x − (c − Aᵀy)τ), x_ref = (x̂ + x̂) − x, ŷ = t − max(t, −σb)(부등식 행, D가 '>' 행을 뒤집어 둠), y_ref = (ŷ − y) + ŷ, Halpern z = z_ref·w + z⁰·(1 − w), w = (k+1)/(k+2). 평가는 PDHG 반복 100회마다, power iteration은 AAᵀ(행 공간)에서 처음과 restart 뒤 조건부(예산 250, 이후 0.1·P[0] − P[3])로 돈다. PDHGIterCount와 콜백 ITRCNT는 power 반복을 포함한다.
+- restart 정규화 오차는 g² = ω‖Δx‖² + ‖Δy‖²/ω + 2η⟨Δx, AᵀΔy⟩(z − z_ref)다. ω 갱신은 위 PI식이고, "최선 균형 ω"로 돌아가는 경로는 새 solve에서는 ω₀로 돌아간다.
+- 종료: ∞-노름 원·쌍대 잔차 < PDHGAbsTol이고 gap < ConvTol, 또는 2-노름 상대 잔차 < PDHGRelTol이고 gap < ConvTol. 잔차는 1/s, 1/r 가중으로 원 공간에서 잰다. 한도(IterLimit, WorkLimit)도 평가 때만 검사한다.
+- work는 결정적 계수(SpMV 3nnz, primal 6n, dual 6m, Halpern 3(n+m), 평가 8m + 14n, …)라 WorkLimit에서도 같은 반복에서 멈춘다.
+
+**M3 결과**: 상태 64/64, 목적 ≤1e-6 64/64, **PDHGIterCount 64/64**, PDHG 콜백 궤적 비트 동일 64/64, Work 64/64. 비교표 `bench/parity_pdhg.csv`, 반복별 비교 `tools/pdhg_oracle.py` + `tools/pdhg_cmp.py`.
 
 ## 5. Concurrent LP (`lp::concurrent`) (노트 14 §3.4) — M3
 
@@ -175,7 +184,7 @@ QCP/SOCP를 LP + OA cut 반복으로 푸는 대안 경로. "Pass    Dual Objecti
 - ~~ordering 모드 3의 정확한 의미~~: 1단계 이분할(`30b0f2`/`30d189`) + AMD(`3047bb`), M3에서 64/64로 확정([m3_ordering.md](m3_ordering.md)).
 - 단정밀도 경로(`3279a1`, sgemm/strsm)를 쓰는 조건.
 - BarIterative 모드의 Krylov 방법 위치.
-- PDHG 전처리와 불가능성 검출(`0b8afb`, `354824`, `352bcb`).
+- ~~PDHG 전처리~~: `07d3ce` ScaleFlag 4(Ruiz + Pock–Chambolle), M3에서 64/64로 확정([m3_pdhg.md](m3_pdhg.md) §5). `352bcb`는 restart용 정규화 오차, `354824`는 평가다. 불가능성 검출은 이 경로(`34c004` 주 루프)에서 찾지 못했다(M6).
 - PDHG 조기 crossover의 승자 처리(env+0x2358).
 - crossover push 내부(`134a87` 등 4개), auto cleanup 선택, `47c445` 초기 basis 규칙, `2c6a7a` 뒤 축소 문제 해의 반영.
 - concurrent에서 T≥3일 때 CM=0을 고르는 env+0x2d8c의 작성자.
@@ -183,7 +192,7 @@ QCP/SOCP를 LP + OA cut 반복으로 푸는 대안 경로. "Pass    Dual Objecti
 
 ## 9. 테스트
 
-- 패리티 P1(합격 기준): Netlib 64개에서 `BarIterCount`가 `re/bench/results/lp.csv`의 `grb_barrier`의 `bar=` 값과 같고, PDHG 반복 수가 `grb_pdhg`와 같다. Method=3/4의 승자 알고리즘(`ConcurrentWinMethod`)이 같다.
+- 패리티 P1(합격 기준): Netlib 64개에서 `BarIterCount`가 `re/bench/results/lp.csv`의 `grb_barrier`의 `bar=` 값과 같고, PDHG 반복 수(`PDHGIterCount`, Presolve=0 기준값 `bench/gurobi_pdhg_nopre`)가 Gurobi와 같다. Method=3/4의 승자 알고리즘(`ConcurrentWinMethod`)이 같다.
 - 패리티 P3: barrier의 "Factor NZ", "Factor Ops"가 Gurobi 로그와 같고, 시간 기하평균이 1.2배 이내.
 
 - barrier: Netlib 104개 Crossover=0에서 상대 gap < 1e-8, 잔차 < 1e-6; Crossover 켜면 simplex와 같은 목적값·basis 상태 일관성.

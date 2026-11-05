@@ -77,6 +77,25 @@ fn rand01(seed: &mut u64) -> f64 {
     ((u ^ (u >> 18)) & 0x7fffffff) as f64 * 4.656612873077393e-10
 }
 
+/// Debug aid: with PDHGDUMP=<file>, append the state at every PDHG callback as one JSON line (doubles as bit
+/// patterns, keyed by their P offset) for tools/pdhg_cmp.py, which compares it with tools/pdhg_oracle.py output.
+fn dump(st: &State) {
+    let Ok(path) = std::env::var("PDHGDUMP") else { return };
+    use std::io::Write;
+    let b = |v: &[f64]| v.iter().map(|x| x.to_bits().to_string()).collect::<Vec<_>>().join(",");
+    let sc = [(0x38, st.pobj), (0x40, st.dobj), (0x48, st.compl), (0x50, st.rp_inf), (0x58, st.rd_inf), (0x60, st.rp2),
+        (0x68, st.rd2), (0x70, st.rp_rel), (0x78, st.rd_rel), (0x80, st.gap), (0xe0, st.eta), (0xe8, st.omega),
+        (0x100, st.integ), (0x108, st.err), (0x110, st.g), (0x118, st.g_prev), (0x120, st.g0), (0x170, st.bnorm),
+        (0x178, st.cnorm), (0x188, st.eps), (0x190, st.tol)];
+    let sc: Vec<String> = sc.iter().map(|(o, x)| format!("\"{o:#x}\":{}", x.to_bits())).collect();
+    let v = &st.v;
+    let vecs = [(0x28, &v.x), (0x30, &v.y), (0xb8, &v.xhat), (0xc0, &v.yhat), (0x128, &v.x0), (0x130, &v.y0)];
+    let vecs: Vec<String> = vecs.iter().map(|(o, x)| format!("\"{o:#x}\":[{}]", b(x))).collect();
+    let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path).expect("PDHGDUMP file");
+    writeln!(f, "{{\"it\":{},\"cnt\":[{},{},{},{}],\"d\":{{{}}},\"vec\":{{{}}}}}", st.it, st.it, st.it_pdhg, st.k,
+             st.pw_it, sc.join(","), vecs.join(",")).expect("PDHGDUMP write");
+}
+
 /// Solve the LP `m` with PDHG (`34c004`); `cb` runs at every PDHG callback (every 100 PDHG iterations and after
 /// every power-iteration chunk).
 pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResult {
@@ -148,6 +167,7 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
             st.eval(&d, first, &mut work);
             if st.it_pdhg % 100 == 0 {
                 cb(&info(&st));
+                dump(&st);
             }
             let s = status(&st, p, work);
             if s != 1 {
@@ -162,6 +182,7 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
                 let mut s = 1;
                 st.power(&d.a, p.iter_limit, &mut work, &mut |st, w| {
                     cb(&info(st));
+                    dump(st);
                     s = status(st, p, w);
                     s == 1
                 });

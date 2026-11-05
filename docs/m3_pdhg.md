@@ -36,12 +36,19 @@
 
 | 단계 | 대상 | 상태 |
 |---|---|---|
-| 0 | 호출 범위·외부 의존, 기준값, 결정성 | **완료**(이 문서 §1–2) |
-| 1 | 오라클: PDHG 콜백 cbdata에서 P 구조체(노트 14 §4.4)와 스케일된 작업 모델 읽기 | 다음 |
-| 2 | 전처리: `07d3ce` ScaleFlag 4 분기(L3836–) | |
-| 3 | 본체: 초기화(ω, η power iteration `351b1f`), 반복(`35207d`/`3524ec`/`3528a6`/`352bcb`), 평가 `354824`, restart `350614`/`350723`, 종료 `355602`, work 누적 | |
-| 4 | Rust `crates/lp/src/pdhg/`, Python `Method=6` 경로, PDHG 콜백·`cbGet`, `tools/parity.py capture rsolver` | |
-| 5 | 비트 일치(SpMV·내적 합 순서, libm), 64개 PDHGIterCount | |
+| 0 | 호출 범위·외부 의존, 기준값, 결정성 | **완료**(§1–2, `984af95`) |
+| 1 | 오라클 `tools/pdhg_oracle.py`: PDHG 콜백 cbdata+0x68 = P(`34c004`의 `&local_878`), P 블록 0x730바이트, P가 가리키는 벡터(`--vec`), 스케일된 모델 D | **완료**(`1e820a2`) |
+| 2 | 전처리 `07d3ce` ScaleFlag 4 | **완료** 64/64 비트(§5) |
+| 3 | 본체: 초기화, 반복 커널, 평가, restart, ω, power iteration, 종료, work | **완료**(§4, §6) |
+| 4 | Rust `crates/lp/src/pdhg/`(`scale.rs`, `kern.rs`, `eval.rs`, `mod.rs`), Python `Method=6` 경로(`CoreModel.pdhg`, `Model._pdhg`, PDHG 콜백·`cbGet`, `PDHGIterCount`) | **완료**(`60b0b84`) |
+| 5 | 비트 일치, 반복별 비교 도구 `tools/pdhg_cmp.py`, 테스트 | **완료**(§7) |
+
+해독은 하위 에이전트 4개가 asm까지 읽어 나눠 했다(스케일, 본체 흐름, 반복 커널, 평가·restart·step). 각 결과는 오라클로 확인한 뒤 Rust로 옮겼다.
+
+**오라클 사용법**
+- Gurobi 쪽(라이선스 필요): `python tools/pdhg_oracle.py <model.mps.gz> <out.jsonl[.gz]> --vec [--iters 0,93,193|all]`. 콜백마다 P 블록과 벡터를 덤프한다. 원하는 반복을 다 기록하면 `terminate`로 끝낸다.
+- Rust 쪽(Gurobi 불필요): `PDHGDUMP=<file>` 환경 변수를 주고 rsolver Method=6으로 풀면 같은 시점의 P 필드 21개(오프셋 키)와 x, y, x̂, ŷ, x⁰, y⁰를 비트로 쓴다.
+- 비교: `python tools/pdhg_cmp.py <oracle> <dump> [--all]`. 첫 차이가 나는 콜백·필드·벡터 인덱스를 보여 준다. 콜백 값만 비교하려면 `tools/parity.py compare`의 `first_divergence`(비트)·`first_divergence_1e-6`을 쓴다.
 
 ## 4. 커널 (`kern.rs`, 해독 2026-11-05, asm 기준)
 
@@ -89,3 +96,24 @@ P[0]은 PDHG + power 반복(= 콜백 ITRCNT = PDHGIterCount), P[1]은 PDHG 반�
 **restart `350614`**: P[1] < 100 → 0, == 100 → 1, g == 0 → 5, 0.2·g₀ ≥ g → 2, 0.5·g₀ ≥ g && g > g₋ → 3, P[1]·0.36 ≤ P[2] → 4. **`350723`**: Δx = ‖x̂ − x⁰‖, Δy = ‖ŷ − y⁰‖(`354f42`). Δ가 (1e-16, 1e12) 안이고 rel_d/rel_p가 (1e-8, 1e8) 안이면 e = (ln Δy − ln Δx) − ln ω, I = 0.3I + e, ω ← ω·exp(0.99e + 0.01I). 아니면 ω = ω₀, I = 0. 그다음 k = 0, g₋ = 1e100, anchor와 현재점을 (x̂, ŷ)로 둔다. "최선 균형 ω"(P+0xf0/0xf8)는 P+0xf8이 0에서 시작해 새 solve에서는 갱신되지 않는다.
 
 **step `351b1f`**: AAᵀ(행 공간) power iteration. 예산은 처음 250, g == 0이면 1000(ε ≤ tol이면 tol ← max(0.1·tol, 1e-16)), 아니면 trunc(0.1·P[0] − P[3])이고, ε > tol이며 예산 > 100일 때만 돈다. 100회 청크마다: u = v/‖v‖(참 나눗셈), w = Aᵀu, v = Aw, λ = vᵀu, u = v − u·λ, ε = ‖u‖, tol > ε이면 멈춤. 청크 끝에 work += m + 8m·it, P[0]·P[3] += it, 콜백·종료 판정. 끝에 ‖A‖ = √λ, η = ((1 − ε) − ε)/‖A‖(ε ≥ 0.5면 0.01/‖A‖), work += 2(m+n). 첫 실행이 수렴하면(ε ≤ tol) 다시 돌지 않는다(afiro 93회).
+
+## 7. 결과 (2026-11-05)
+
+| G4 기준 | 상태 | 근거 |
+|---|---|---|
+| (1) 상태·목적 ≤1e-6(Gurobi PDHG 대비) | **64/64, 64/64**(목적값은 비트 같음) | `bench/parity_pdhg.csv`, `tests/test_pdhg.py` |
+| (2) PDHGIterCount 같음 ≥90%, 나머지 ±5% | **64/64**(나머지 없음). WORK_LIMIT 4개(bnl1, ganges, perold, pilot4)도 같은 반복에서 멈춘다 | 같은 곳 |
+| (3) 반복별 오라클 비교 도구 | `tools/pdhg_oracle.py`, `PDHGDUMP` + `tools/pdhg_cmp.py`, `tools/parity.py compare`(PDHG 콜백 행) | afiro 7/7, capri 30/30 콜백에서 P 필드·벡터 전부 비트 같음 |
+| (4) clippy·테스트·문서 | `cargo clippy --workspace --all-targets` 경고 0, `cargo test --workspace`, pytest 통과 | 아래 |
+
+- **PDHG 콜백 궤적**(100회마다 + power 청크마다)이 64/64 비트 동일하고 Work도 64/64 같다. 첫 분기점은 없다.
+- 비트 일치에 필요했던 것: `red8` 합 순서(4누산기 2레인, (A+B)+(C+D)), 16바이트 정렬 기준 peel, x86 `maxsd`/`minsd` 의미, FMA 없음, '>' 행 σ, 1/s·1/r 가중치, glibc `log`/`exp`/`sqrt`(Rust `f64::ln`/`exp`가 같은 glibc를 부른다), 모델 RNG(state 0)로 만든 power iteration 시작 벡터.
+
+**남은 위험·안 한 것**
+- 64개에서 안 타서 옮기지 않은 분기: 스케일의 lb = −inf·유한 ub 열 뒤집기, 저장된 스케일 재사용, 모델 등급 D[0] = 1의 목적 스케일, RHSSCALE. 시작 벡터(warm start, `35709b`, P[4] = 1), Seed ≠ 0의 무작위 x 시작, PDHGBNDSTRENGTH, 조기 crossover, GPU, 여러 스레드(nnz ≥ 150,001이면 Threads를 따름), TimeLimit(벽시계)도 옮기지 않았다.
+- "최선 균형 ω"(P+0xf0/0xf8) 갱신은 새 solve에서 일어나지 않아서 옮기지 않았다.
+- 정렬: Gurobi 배열이 glibc malloc의 16바이트 정렬이라는 관찰에 기댄다. peel을 정렬이 아니라 인덱스 홀짝으로 정한다.
+- 해 벡터: x = x̂·s만 돌려준다. y·slack·reduced cost(`7a069`의 rs/os 변환, `7a542`의 y 부호), Pi·RC 속성은 옮기지 않았다(crossover와 속성 마무리 쪽).
+- Method=6이면 Presolve·Crossover 값을 보지 않는다(Presolve=0, Crossover=0을 가정).
+
+**main 병합 메모**(오케스트레이터용): 새 파일은 `crates/lp/src/pdhg/*`, `tools/pdhg_oracle.py`, `tools/pdhg_cmp.py`, `tests/test_pdhg.py`, `bench/gurobi_pdhg_nopre/`, `bench/oracle/pdhg/`, `bench/parity_pdhg.csv`, `bench/gurobi_pdhg_determinism.csv`다. 기존 파일 수정은 `crates/lp/src/lib.rs`(모듈 등록 한 줄), `crates/py/src/lib.rs`(`pdhg` 메서드 추가), `python/rsolver/__init__.py`(PDHG 콜백 상수, `optimize`의 Method=6 분기, `_pdhg`, `ObjVal`은 SolCount가 있으면 OPTIMAL이 아니어도 값을 줌), `tools/parity.py`(PDHG 콜백·`PDHGIterCount`·`pdhg_iters` 열)뿐이다. M1 `scaling.rs`의 목적 스케일 차이는 §5에 적었다.
