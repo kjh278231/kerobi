@@ -154,6 +154,30 @@ pub fn to_string(m: &Model) -> String {
 #[cfg(test)]
 mod tests {
     use super::fmt_num;
+    use crate::Model;
+
+    #[test]
+    fn integer_markers_and_bounds() {
+        let m = Model {
+            name: "t".into(),
+            sense: 1,
+            obj: vec![0.0; 5],
+            lb: vec![0.0, 0.0, 0.0, -1e30, 0.5],
+            ub: vec![1.0, 3.0, 1e30, 2.0, 0.5],
+            vtype: b"BBICB".to_vec(),
+            col_beg: vec![0; 5],
+            col_len: vec![0; 5],
+            var_names: ["a", "b", "c", "d", "e"].map(String::from).to_vec(),
+            ..Default::default()
+        };
+        let s = super::to_string(&m);
+        let cols = s.split_once("COLUMNS\n").unwrap().1.split_once("RHS\n").unwrap().0;
+        assert_eq!(cols.matches("'INTORG'").count(), 2);
+        assert_eq!(cols.matches("'INTEND'").count(), 2);
+        // a [0,1] binary is BV only, a wider one is clipped to [0,1]; an integer with no ub gets LI; a fixed binary FX + BV
+        let bounds = s.split_once("BOUNDS\n").unwrap().1;
+        assert_eq!(bounds, " BV BND1      a       \n BV BND1      b       \n LI BND1      c         0\n MI BND1      d       \n UP BND1      d         2\n FX BND1      e         0.5\n BV BND1      e       \nENDATA\n");
+    }
 
     #[test]
     fn number_format_matches_a8030d() {
