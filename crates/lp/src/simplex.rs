@@ -190,7 +190,8 @@ impl<'a> Engine<'a> {
             } else if self.vstat[j] == -4 && j < self.n {
                 self.c[j]
             } else {
-                self.spx.col(j).fold(self.c[j], |t, (i, a)| t - a * y[i])
+                let t = self.spx.col(j).fold(self.c[j], |t, (i, a)| t - a * y[i]);
+                if self.vstat[j] == -2 { -t } else { t }
             };
         }
     }
@@ -199,19 +200,11 @@ impl<'a> Engine<'a> {
         self.w = (0..self.m).map(|p| sum_squares(&self.lu.btran(&[(p, 1.0)]).iter().map(|e| e.1).collect::<Vec<_>>())).collect();
     }
 
-    /// ρ = e_pᵀB⁻¹ by row.
-    fn btran_unit(&self, p: usize) -> Vec<f64> {
-        let mut rho = vec![0.0; self.m];
-        for (r, v) in self.lu.btran(&[(p, 1.0)]) {
-            rho[r] = v;
-        }
-        rho
-    }
-
-    /// α_j = ρᵀa_j for all nonbasic j (basic entries stay 0).
-    fn pivot_row(&self, rho: &[f64]) -> Vec<f64> {
+    /// α_j = ρᵀa_j scattered over the row-wise copy in BTRAN output order (`0a4109` sparse path); basic entries 0
+    /// except the leaving position's own column is not needed here.
+    fn pivot_row_ordered(&self, rho: &[(usize, f64)]) -> Vec<f64> {
         let mut alpha = vec![0.0; self.n + self.m];
-        for (i, &r) in rho.iter().enumerate() {
+        for &(i, r) in rho {
             if r.abs() > ZERO {
                 for &(j, a) in &self.rows[i] {
                     alpha[j] += r * a;
@@ -248,6 +241,9 @@ impl<'a> Engine<'a> {
         let out = self.head[r];
         self.path.push((self.iter, q as i64, out as i64));
         self.vstat[out] = leave_status;
+        if leave_status == -2 {
+            self.d[out] = -self.d[out];
+        }
         self.vstat[q] = r as i32;
         self.head[r] = q;
         if !self.lu.update(r, q, spike) || self.lu.n_updates >= self.lu_interval {
@@ -276,12 +272,20 @@ impl<'a> Engine<'a> {
         z
     }
 
+    /// Reduced cost c_j − a_jᵀy of a nonbasic column; `d` stores it negated at the upper bound (spx+0x1e0).
+    fn raw_d(&self, j: usize) -> f64 {
+        if self.vstat[j] == -2 {
+            -self.d[j]
+        } else {
+            self.d[j]
+        }
+    }
+
     fn sums(&self) -> (f64, f64) {
         let pinf: f64 = (0..self.m).map(|p| self.primal_infeas(p).abs()).sum();
         let dinf: f64 = (0..self.n + self.m)
             .map(|j| match self.vstat[j] {
-                -1 => (-self.d[j]).max(0.0),
-                -2 => self.d[j].max(0.0),
+                -1 | -2 => (-self.d[j]).max(0.0),
                 -3 => self.d[j].abs(),
                 _ => 0.0,
             })
@@ -296,11 +300,7 @@ impl<'a> Engine<'a> {
         use std::io::Write;
         let hex = |v: &[f64]| v.iter().map(|x| format!("\"{}\"", hexf(*x))).collect::<Vec<_>>().join(",");
         let dn: Vec<f64> = (0..self.n + self.m)
-            .map(|j| match self.vstat[j] {
-                s if s >= 0 => 0.0,
-                -2 => -self.d[j],
-                _ => self.d[j],
-            })
+            .map(|j| self.d[j])
             .collect();
         let line = format!(
             "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\"}}\n",
@@ -426,7 +426,7 @@ impl<'a> Engine<'a> {
     /// favourable reduced cost means unbounded; otherwise all of them move to their finite bound.
     fn end_big_m(&mut self) -> Option<Status> {
         for j in 0..self.n + self.m {
-            let dg = if self.vstat[j] == -2 { -self.d[j] } else { self.d[j] };
+            let dg = self.d[j];
             let art_up = self.vstat[j] == -2 && self.spx.u[j] >= INFINITY;
             let art_lo = j < self.n && self.vstat[j] == -1 && self.spx.l[j] <= -INFINITY;
             if (art_up || art_lo) && dg > OPT_TOL {
@@ -436,11 +436,13 @@ impl<'a> Engine<'a> {
         for j in 0..self.n + self.m {
             if self.vstat[j] == -2 && self.spx.u[j] >= INFINITY {
                 self.vstat[j] = -1;
+                self.d[j] = -self.d[j];
             }
         }
         for j in 0..self.n {
             if self.vstat[j] == -1 && self.spx.l[j] <= -INFINITY {
                 self.vstat[j] = -2;
+                self.d[j] = -self.d[j];
             }
         }
         self.big_m = false;
@@ -482,12 +484,9 @@ impl<'a> Engine<'a> {
         let mut flipped = false;
         for j in 0..self.n + self.m {
             match self.vstat[j] {
-                -1 if self.d[j] < -OPT_TOL => {
-                    self.vstat[j] = -2;
-                    flipped = true;
-                }
-                -2 if self.d[j] > OPT_TOL => {
-                    self.vstat[j] = -1;
+                -1 | -2 if self.d[j] < -OPT_TOL => {
+                    self.vstat[j] = -3 - self.vstat[j];
+                    self.d[j] = -self.d[j];
                     flipped = true;
                 }
                 _ => {}
@@ -514,7 +513,7 @@ impl<'a> Engine<'a> {
                 }
                 -2 => {
                     self.c[j] -= delta;
-                    self.d[j] -= delta;
+                    self.d[j] += delta;
                 }
                 _ => {}
             }
@@ -558,8 +557,12 @@ impl<'a> Engine<'a> {
                 return Status::Optimal;
             }
             let delta = self.primal_infeas(r);
-            let rho = self.btran_unit(r);
-            let alpha = self.pivot_row(&rho);
+            let rho_sp = self.lu.btran(&[(r, 1.0)]);
+            let mut rho = vec![0.0; self.m];
+            for &(i, v) in &rho_sp {
+                rho[i] = v;
+            }
+            let alpha = self.pivot_row_ordered(&rho_sp);
             // bound flipping ratio test (1c35c5): walk the breakpoints d̃_j/|α_j| in Harris groups; boxed columns
             // whose flip keeps the slope |δ| − Σ|α|(u−l) positive flip instead of entering (m1_notes §8.1)
             let sgn = if delta < 0.0 { -1.0 } else { 1.0 };
@@ -574,7 +577,7 @@ impl<'a> Engine<'a> {
                 let t = sgn * a;
                 let (ag, dg) = match self.vstat[j] {
                     -1 => (-t, self.d[j]),
-                    -2 => (t, -self.d[j]),
+                    -2 => (t, self.d[j]),
                     -3 => (-a.abs(), self.d[j].abs()),
                     _ => continue,
                 };
@@ -603,6 +606,7 @@ impl<'a> Engine<'a> {
                 for &j in &flips {
                     let old = self.x_nonbasic(j);
                     self.vstat[j] = if self.vstat[j] == -1 { -2 } else { -1 };
+                    self.d[j] = -self.d[j];
                     let step = self.x_nonbasic(j) - old;
                     huge |= step.abs() >= 1e20;
                     for (i, a) in self.spx.col(j) {
@@ -632,9 +636,9 @@ impl<'a> Engine<'a> {
                 self.xb[r] - if sgn < 0.0 { self.spx.l[j] } else { self.spx.u[j] }
             };
             // cost shifting: an entering column that sits slightly on the wrong side gets d_q = 0
-            let dq_t = if self.vstat[q] == -2 { -self.d[q] } else { self.d[q] };
+            let dq_t = self.d[q];
             if self.vstat[q] != -3 && dq_t < 0.0 {
-                self.c[q] -= self.d[q];
+                self.c[q] -= self.raw_d(q);
                 self.d[q] = 0.0;
                 self.perturbed = true;
             }
@@ -655,20 +659,26 @@ impl<'a> Engine<'a> {
             }
             self.rejected.iter_mut().for_each(|x| *x = false);
             // dual step
-            let theta_d = self.d[q] / arq;
+            // 48d5f L170-215: θ = d_q/α_q with the row value α_q, d_j −= α_j·θ over the pivot row (the entering
+            // column keeps its rounding residue); the leaving column's row entry is 1 (structural) or ρ_i (slack)
+            let theta_d = self.raw_d(q) / alpha[q];
             if theta_d.abs() <= 1e-12 {
                 degenerate += 1;
             } else {
                 degenerate = 0;
             }
-            for j in 0..self.n + self.m {
-                if alpha[j] != 0.0 && self.vstat[j] < 0 {
-                    self.d[j] -= theta_d * alpha[j];
+            if theta_d != 0.0 {
+                for j in 0..self.n + self.m {
+                    if alpha[j] != 0.0 && self.vstat[j] < 0 && !(self.vstat[j] == -4 && j < self.n) {
+                        // d is stored normalized (negated at upper): the step changes sign with it
+                        let t = alpha[j] * theta_d;
+                        self.d[j] = if self.vstat[j] == -2 { self.d[j] + t } else { self.d[j] - t };
+                    }
                 }
             }
             let out = self.head[r];
-            self.d[out] = -theta_d;
-            self.d[q] = 0.0;
+            let a_out = if out < self.n { 1.0 } else { rho[out - self.n] };
+            self.d[out] -= a_out * theta_d;
             // DSE weights with τ = B⁻¹ρ
             let mut tau = rho.clone();
             self.lu.ftran_lower(&mut tau);
@@ -876,8 +886,7 @@ impl<'a> Engine<'a> {
                     self.compute_duals();
                 }
                 let dual_infeasible = (0..self.n + self.m).any(|j| match self.vstat[j] {
-                    -1 => self.d[j] < -OPT_TOL,
-                    -2 => self.d[j] > OPT_TOL,
+                    -1 | -2 => self.d[j] < -OPT_TOL,
                     -3 => self.d[j].abs() > OPT_TOL,
                     _ => false,
                 });
