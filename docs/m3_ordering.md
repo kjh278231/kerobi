@@ -74,7 +74,7 @@ AMD 계열 quotient graph. 목록 = 원소(elen개) + 변수.
 
 ## 3. 오라클 메모
 - "Ordering time" 메시지는 `300f28`이 `304736`(AAᵀ 해제) 전에 찍는다. OutputFlag=1, LogToConsole=0이면 MESSAGE 콜백이 온다. B·F는 스택에서 `(B+0x5c8, B+0x5b8, F)` 세 단어를 찾는다.
-- `309dd0` 시그니처: (xmm0 ops 한도, model, B, F, mode, seed*, perm*, &nnzL, &ops, work*, thread, round, timer, aux*). 이분할 `30b0f2(env, n, colptr, rowind, part*, round, seed*, work*)`: round == 3이면 첫 미매칭 이웃, 아니면 최소 차수 이웃과 매칭.
+- `309dd0` 시그니처: (xmm0 ops 한도, model, B, F, mode, seed*, perm*, &nnzL, &ops, work*, thread, round, timer, aux*). 이분할 `30b0f2(env, n, colptr long*, rowind int*, part*, round, seed*, work*)`, 정제 `30d189(xmm0 ratio, env, seed*, n, xadj long*, adjncy int*, vwgt int*, where*, work*)`. 둘 다 env(model+0x100)만 있으면 콜백 밖에서도 부를 수 있다.
 - BARRIER 콜백 시점에는 D의 행이 최종 순열로 바뀌어 있다(`2e9086`).
 
 ## 4. 미해독 지점
