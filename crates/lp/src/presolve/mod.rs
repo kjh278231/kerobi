@@ -183,9 +183,16 @@ fn reduce(st: &mut State, p: &Params) {
             if limit <= calls {
                 return;
             }
+            if st.cost_point_fix(p.feastol, p.opttol, p.infbound) != 0 {
+                return;
+            }
+            calls += 1;
+            if limit <= calls {
+                return;
+            }
         }
-        // shortcut: the rest of the outer pass (38e49a, 50495e, 505077, 3ff744, 50fe2b, 519a52,
-        // 5b488d, 47c445) and the finish stage are not ported yet; stop here like a reached PRELIMIT.
+        // shortcut: the rest of the outer pass (50495e, 505077, 3ff744, 50fe2b, 519a52, 5b488d, 47c445) and the
+        // finish stage are not ported yet; stop here like a reached PRELIMIT.
         let _ = &snap;
         return;
     }

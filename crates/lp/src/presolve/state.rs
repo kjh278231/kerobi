@@ -97,7 +97,7 @@ pub struct Snapshot {
 
 /// Rounding guard of `4f79a1`: if `s = old + t` was inexact, push `s` one ulp in the safe direction
 /// (`up`: max activity, larger; otherwise min activity, smaller).
-fn guarded_add(old: f64, t: f64, up: bool) -> f64 {
+pub(super) fn guarded_add(old: f64, t: f64, up: bool) -> f64 {
     let s = old + t;
     let inexact = if old.abs() < t.abs() { s - t != old } else { s - old != t };
     if !inexact {

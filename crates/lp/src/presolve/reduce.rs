@@ -1,7 +1,7 @@
 //! LP presolve reductions. Each function names its original; bodies follow the original's loop order, tests and
 //! floating-point operation order, since the presolved model must match byte for byte.
 use super::sort::sort_by_key;
-use super::state::{PostRec, State};
+use super::state::{guarded_add, PostRec, State};
 
 impl State {
     /// `51a144`: in a row with two or more singleton columns (columns that appear nowhere else), sort them by
@@ -866,4 +866,256 @@ impl State {
         self.work += n as f64 * 4.0;
         0
     }
+}
+
+impl State {
+    /// `38e49a`: put every column at the bound its cost prefers (`x`, 0 for a zero cost when 0 is a bound).
+    /// If `x` satisfies every row, all columns are fixed there; if it only satisfies the `=` rows and the
+    /// inequality rows it might break keep the `=`-row columns at their min-activity bound, those columns are
+    /// fixed. Both end with `50cc90(0)`. Gives up on a special column, an infinite preferred bound or a
+    /// zero-cost column strictly inside its range.
+    pub fn cost_point_fix(&mut self, feastol: f64, opttol: f64, inf: f64) -> i32 {
+        let (n, m) = (self.n, self.m);
+        if n < 1 {
+            return 0;
+        }
+        let mu = self.work_mult;
+        let mut x = vec![0.0f64; n];
+        let mut inside = 0;
+        let mut j = 0;
+        while j < n {
+            if self.col_cnt[j] >= 0 {
+                if self.col_flag[j] != 0 {
+                    break;
+                }
+                let (c, l, u) = (self.obj[j], self.lb[j], self.ub[j]);
+                if 0.0 <= c {
+                    if c <= 0.0 {
+                        if l <= 0.0 {
+                            if 0.0 <= u {
+                                if l == 0.0 || u == 0.0 {
+                                    x[j] = 0.0;
+                                } else {
+                                    inside += 1;
+                                    x[j] = 1e101;
+                                }
+                            } else {
+                                x[j] = u;
+                            }
+                        } else {
+                            x[j] = l;
+                        }
+                    } else if l <= -inf {
+                        break;
+                    } else {
+                        x[j] = l;
+                    }
+                } else if inf <= u {
+                    break;
+                } else {
+                    x[j] = u;
+                }
+            }
+            j += 1;
+        }
+        self.work += mu * 5.0 * j as f64;
+        if j < n || 0 < inside {
+            return 0;
+        }
+        // `=` rows must hold at x; their columns are collected (state+0x390, marks +0x3a8)
+        let mut eq_cols: Vec<i32> = Vec::new();
+        let mut mark = vec![false; n];
+        let mut neq = 0;
+        let mut r = 0;
+        let mut w = self.work;
+        while r < m {
+            if self.row_cnt[r] >= 0 && self.sense[r] == b'=' {
+                neq += 1;
+                let before = eq_cols.len();
+                let b = self.row_beg[r] as usize;
+                let len = self.row_len[r] as usize;
+                let mut k = 0;
+                let mut sum = 0.0f64;
+                while k < len {
+                    let jj = self.row_ind[b + k];
+                    if jj >= 0 && self.col_cnt[jj as usize] >= 0 {
+                        if !mark[jj as usize] {
+                            eq_cols.push(jj);
+                            mark[jj as usize] = true;
+                        }
+                        if let Some(s) = point_term(x[jj as usize], self.row_val[b + k], &mut sum) {
+                            sum = s;
+                            break;
+                        }
+                    }
+                    k += 1;
+                }
+                w = k as f64 * 3.0 + self.work + (eq_cols.len() - before) as f64 * 2.0;
+                if inf <= sum.abs() {
+                    break;
+                }
+                self.work = w;
+                if 1e-10 < (sum - self.rhs[r]).abs() {
+                    break;
+                }
+            }
+            r += 1;
+        }
+        if r == m {
+            w = self.work;
+        }
+        self.work = w + (neq as f64 * 5.0 + r as f64 + r as f64) * mu;
+        if r != m {
+            self.work += mu * 2.0 * eq_cols.len() as f64;
+            return 0;
+        }
+        // max activity of the inequality rows with the `=`-row columns moved to x (+0x3b8 / +0x398 copies)
+        let mut infc = self.inf_max.clone();
+        let mut actc = self.act_max.clone();
+        let mut seen = vec![false; m];
+        let mut rows: Vec<i32> = Vec::new();
+        for &jj in &eq_cols {
+            let j = jj as usize;
+            let cb = self.col_beg[j] as usize;
+            let len = self.col_len[j] as usize;
+            let mut cnt = 0;
+            for p in cb..cb + len {
+                let i = self.col_ind[p];
+                if i < 0 || self.row_cnt[i as usize] < 0 || self.sense[i as usize] == b'=' {
+                    continue;
+                }
+                let i = i as usize;
+                cnt += 1;
+                let a = self.col_val[p];
+                if !seen[i] {
+                    seen[i] = true;
+                    rows.push(i as i32);
+                }
+                let v = x[j];
+                let (bnd, finite) = if a <= 0.0 { (self.lb[j], -inf < self.lb[j]) } else { (self.ub[j], self.ub[j] < inf) };
+                if v == bnd {
+                    continue;
+                }
+                if finite {
+                    actc[i] = guarded_add(actc[i], (v - bnd) * a, true);
+                } else {
+                    infc[i] -= 1;
+                    actc[i] = guarded_add(actc[i], a * v, true);
+                }
+            }
+            self.work += (len as f64 * 3.0 + cnt as f64 * 5.0) * mu;
+        }
+        self.work += (eq_cols.len() as f64 * 4.0 + rows.len() as f64) * mu;
+        let nrows = rows.len();
+        rows.retain(|&i| 0 < infc[i as usize] || 1e-10 < actc[i as usize]);
+        self.work += mu * 3.0 * nrows as f64;
+        // in the rows x might break, the `=`-row columns must sit at their min-activity bound
+        let mut t = 0;
+        while t < rows.len() {
+            let i = rows[t] as usize;
+            let b = self.row_beg[i] as usize;
+            let e = b + self.row_len[i] as usize;
+            let mut k = b;
+            while k < e {
+                let jj = self.row_ind[k];
+                if jj >= 0 && self.col_cnt[jj as usize] >= 0 && mark[jj as usize] {
+                    let j = jj as usize;
+                    let at = if self.row_val[k] <= 0.0 { self.ub[j] } else { self.lb[j] };
+                    if x[j] != at {
+                        break;
+                    }
+                }
+                k += 1;
+            }
+            self.work += mu * 4.0 * (k - b) as f64;
+            if k < e {
+                break;
+            }
+            t += 1;
+        }
+        self.work += mu * 4.0 * t as f64;
+        let at_min = t == rows.len();
+        // inequality rows at x
+        let mut nineq = 0;
+        let mut r = 0;
+        loop {
+            while r < m && (self.row_cnt[r] < 0 || self.sense[r] == b'=') {
+                r += 1;
+            }
+            if r >= m {
+                w = self.work;
+                break;
+            }
+            nineq += 1;
+            let b = self.row_beg[r] as usize;
+            let len = self.row_len[r] as usize;
+            let mut k = 0;
+            let mut sum = 0.0f64;
+            while k < len {
+                let jj = self.row_ind[b + k];
+                if jj >= 0 && self.col_cnt[jj as usize] >= 0 {
+                    if let Some(s) = point_term(x[jj as usize], self.row_val[b + k], &mut sum) {
+                        sum = s;
+                        break;
+                    }
+                }
+                k += 1;
+            }
+            w = k as f64 * 3.0 + self.work;
+            if inf <= sum.abs() {
+                break;
+            }
+            self.work = w;
+            if 1e-10 < sum - self.rhs[r] {
+                break;
+            }
+            r += 1;
+        }
+        self.work = w + (nineq as f64 * 5.0 + r as f64 + r as f64) * mu;
+        self.work += mu * 2.0 * eq_cols.len() as f64;
+        if m <= r {
+            for j in 0..n {
+                if self.col_cnt[j] >= 0 {
+                    self.fix_at(j, x[j], inf, true);
+                }
+            }
+            self.work += (n as f64 + n as f64) * mu;
+        } else {
+            if !at_min || eq_cols.is_empty() {
+                return 0;
+            }
+            for &jj in &eq_cols {
+                self.fix_at(jj as usize, x[jj as usize], inf, true);
+            }
+            // the original counts the last column's index here, not the number of columns
+            let last = *eq_cols.last().unwrap() as f64;
+            self.work += (last + last) * mu;
+        }
+        self.redundant_rows(0, feastol, opttol, inf);
+        0
+    }
+}
+
+/// One term of a row evaluated at `38e49a`'s point: adds `a * v`, or returns the saturated sum (+-1e100) when
+/// `v` is infinite (|v| >= 1e30) and `a` is nonzero.
+fn point_term(v: f64, a: f64, sum: &mut f64) -> Option<f64> {
+    if v < 1e30 {
+        if v <= -1e30 {
+            if 0.0 < a {
+                return Some(-1e100);
+            }
+            if a < 0.0 {
+                return Some(1e100);
+            }
+        }
+    } else {
+        if 0.0 < a {
+            return Some(1e100);
+        }
+        if a < 0.0 {
+            return Some(-1e100);
+        }
+    }
+    *sum += a * v;
+    None
 }
