@@ -141,3 +141,7 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 14. C: 레벨 0..2마다 `+= m·(μ·3.0)`, 그다음 `+= (μ·3.0)·n`. 끝에 C L380: `+= 48.0·μ`
 
 기타: `+0x100` = SolutionTarget==1, 또는 (SolutionTarget ≤ 0 && Method ∈ {2,6} && Crossover==0)이면 1. 그렇지 않고 SolutionTarget<2 && NumericFocus>0이면 2. 나머지는 0. `+0x1e0` = PreCrush, `+0x1e8` = IntFeasTol, `+0x1e4` = (OptimalityTarget ≠ 1), `+0x470..+0x484` = −1. `+0x80/+0x88` 열 배열은 1.0이다.
+
+## 부록 B. `47c445`(PreDepRow)의 영향 범위 (2026-11-05)
+
+PreDepRow=0으로 뜬 오라클(`--param PreDepRow=0`)을 기본값과 비교했다. 결과가 다른 모델은 **degen2, degen3 둘뿐**이다. 둘 다 종속 행을 2개씩 지운다("Presolve removed" 행 수 67 vs 65, 98 vs 96). 나머지 62개는 `47c445`가 돌아도 지우는 행이 없다. 결과가 이산값(어느 행을 지우는가)이라, 피벗 순서가 같아 같은 행을 고르면 P0는 맞는다. 다만 작업량(P2)과 PRELIMIT 카운트는 모든 모델에서 맞춰야 한다.
