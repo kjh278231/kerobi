@@ -6,7 +6,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 | G6 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개 기본값 presolved 모델 38/38 | 5/38(reduction 없이도 같은 모델). PRELIMIT ≤ 2 38/38 |
+| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **9/38**(2026-11-06, 내부 루프 병합 `e4173c9`). `sweep_check.py` 첫 불일치는 모두 미포팅 reduction: `parallel` 8, `cancel_rows` 5, `implied_int` 4, `r5a9282`·`knapsack`·`aggregate` 2, `trans_red`·`probe`·`mod_k`·`implied_int_scale`·`dual_bounds`·`clique` 1 |
 | (2) 기본값에서 도는 MIP reduction 전부(probing·대칭성·연결 성분 포함) | 시작 전. 목록은 §2 |
 | (3) MIP postsolve 레코드 | 시작 전 |
 | (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
@@ -27,6 +27,11 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 ### 제어 흐름 (2026-11-06, `crates/mip/src/driver.rs`)
 spine 노트 b·c·d대로 `3cd406`의 단계(≤2) × 라운드(≤5) × 패스 × 내부 반복, 라운드 끝, FINAL을 옮겼다. 카운트 62곳(reduction 없이 세는 I→B·PREPARTOBJ·함의 bound·쌍대 이진화·패스 끝·FINAL 쌍대 고정 포함), timer 28개(시작마다 +1, 한도 B·0.5B·2B·4B·3B), 스냅숏 셋과 진척도 판정 셋, inline I→B·PREPARTOBJ·열 타입 통계·두 번째 probing 판정. 아직 없는 reduction은 `stubs.rs`의 stub(아무것도 안 바꾸고 0)이다. **포팅 = stub을 지우고 같은 이름의 `impl State` 메서드를 새 파일에 둔다.** 확인: 아무것도 안 바뀌는 5개 모델의 총 카운트가 Gurobi 호출 기록과 같다(neos5 62, 두 번째 probing이 없는 모델 61).
+
+### 남은 묶음 (아직 담당 없음, 동시 3개 한도 안에서 차례로)
+- outer-b: `4030c9` 지배 열, `414c03`/`414c53` → `40d2bc` 비영 소거, `36ee92`, `3e40d1`, `37f484` MIP 분기(LP 포트 있음), `418542`, `5466a7`, `45feaa`, `47c445` MIP 분기, inline 쌍대 이진화(작업량만).
+- round-end: `58d4ce`, `5577ba` MIP 분기(LP 포트 있음), `5a9282`, `5ab429`, `59c193`, `55a779`, `594c0c`, `423e35`, `419ffc`, `5a1293`, `5a4d8b`/`5a5eff`, `5aaaf7`, `838543` mod-k, `579e67`, `5a04fc`.
+- final: `52cba4`, `521497`, `470936` sparsify(LP 포트 호출 지점만), `57999f`, inline 쌍대 고정, inline implied int 척도.
 
 ### 다음 단계 (순서)
 1. 위 네 브랜치를 `m2-mip-presolve`에 합친다. 구간 노트로 `3cd406` 제어 흐름 전체를 reduction stub(카운트만)으로 옮긴다. stub이 Gurobi와 같은 k에서 카운트하는지는 sweep의 "바뀐 k"와 reduction 위치가 맞는지로 확인한다.
