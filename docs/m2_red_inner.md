@@ -1433,3 +1433,32 @@ Generals
  u
 End
 ```
+
+## 11. 포팅 (2026-11-06)
+
+코드: `crates/mip/src/`
+- `helpers.rs`: 공용 보조. 다른 reduction(clique, probing)도 이것을 부른다.
+- `inner.rs`: `row_clean` 36ddf2, `bound_tighten` 37168e, `singleton_rows` 36c5cf, `coef_strengthen` 56f793, `gc` 36e6b6, `implied_bounds`(3cd406 인라인, m2_spine_b §5.3)
+- `colpass.rs`: `col_pass` 3e39a6 + 3e2b99
+- `doubleton.rs`: `doubleton_agg` 56c80e + 566cc5/569830/3c3abf
+- `post.rs`: `PostRec`(Fix = type 1, Subst = type 2(39b9e0·39d9e1 같은 배치), T9 = type 9)와 `layout()`(Gurobi 바이트 배치)
+- `dump.rs`: 덤프 상태 적재 `State::from_parts` / `to_parts` / `run_named`
+
+| 보조 API (`impl State`) | 원본 |
+|---|---|
+| `bound_change(j, ol, ou, nl, nu)` | `3dd6f1`(activity만. bound 저장과 표시는 호출자) |
+| `fix_col(j, v, rec) -> i32` | `3de18e` |
+| `fix_near(j, ft) -> i32` | `3df916`(3e39a6 앞부분과 같은 코드) |
+| `push_fix(j, v)` / `push_subst_row(j, r, c0, a)` / `push_agg(j, root, m, o)` / `push_t9(i, d1, d2)` | `39ab33` / `39b9e0` / `39d9e1` / `3a061e` |
+| `implied_col_bounds(j, mode, Option<(r, a)>) -> (lo, hi)` | `3dcc78` |
+| `mark_rows_of_col(j)` / `mark_cols_of_row(i)` | `53802c` / `537da8`(연결 리스트 분기) |
+| `activity(Option<&[i32]>)` | `370047`/`36fcb5`(state.rs) |
+
+model generation 수정: 정수 열이 [0, 1]로 남으면 presolved 모델에서 'B'로 나온다(Gurobi presolved 모델 sweep 전부에서 [0,1] 'I'는 한 번도 없다. 고정된 정수 [0,0]은 'I'로 남는다). enlight_hard·mik-250-20-75-4 k=6에서 드러났다.
+
+확인:
+- `tools/mip_dump_check.py <fn> <dump…>`(Rust 포트를 덤프 진입 상태에서 돌려 복귀 상태와 비교): 38개 모델 3e39a6 147/147, 36ddf2 185/185, 37168e 225/225, 36c5cf 147/147, 56f793 147/147, 56c80e 147/147, 36e6b6 225/225. 합성(부록 A와 §7.4 모델) 36ddf2 48, 37168e 58, 36c5cf 41(+PREBOUND=0 43), 56f793 41, 56c80e 41, 3e39a6 41 전부 일치. implied_bounds는 `414c53` 복귀 상태 → `418542` 진입 상태로 12개 모델 31회 일치(mas74, mas76, csched008, tr12-30에서 bound가 바뀜).
+- `tools/mip_rec_check.py <model> [GURO_PAR_PRELIMIT=k−1]`: 38개 모두 레코드 바이트 일치(첫 불일치 k 직전까지, 9개는 기본값 끝까지). type 1·2 합계 약 1,500개.
+- `tools/sweep_check.py`: 모든 모델의 첫 불일치가 포팅하지 않은 reduction(stub) 위치다.
+
+shortcut(기본 38개에서 안 도는 경로, 코드에 `shortcut:` 주석): Q/PWL 목적 블록(3de18e, 3df916), 열 플래그가 있는 열의 쌍대 고정과 무한 bound 쪽 쌍대 제거(`39e479`), 56c80e의 같은 루트 `3de18e` 경로(해독만), 37168e NumericFocus ≥ 1 forcing(해독만).
