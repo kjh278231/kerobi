@@ -135,6 +135,12 @@ impl PyCoreModel {
         };
         Ok(PyCoreModel { inner })
     }
+    /// What each PRELIMIT count of MIP presolve was (count k is element k-1), as far as the port runs.
+    fn mip_presolve_trace(&self, params: Vec<(String, f64)>) -> Vec<String> {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let mut st = rsolver_mip::state::State::new(&self.inner, &p);
+        rsolver_mip::reduce_traced(&mut st, &p, true).1.into_iter().map(String::from).collect()
+    }
     /// MIP presolve state where it stopped (`finish`: when model generation starts) as `tools/work_oracle.py --mip`
     /// records it: (work, problem type, integer columns, binary columns, +0xf8, rows removed, columns removed,
     /// tracker level).
@@ -142,7 +148,7 @@ impl PyCoreModel {
     fn mip_presolve_state(&self, params: Vec<(String, f64)>, finish: bool) -> (f64, i32, i32, i32, bool, i32, i32, usize) {
         let p = rsolver_mip::Params::from_pairs(&params);
         let mut st = rsolver_mip::state::State::new(&self.inner, &p);
-        if rsolver_mip::prelude(&mut st, &p).is_ok() && finish {
+        if rsolver_mip::reduce(&mut st, &p).is_ok() && finish {
             rsolver_mip::finish(&mut st, &p);
         }
         (st.work, st.ptype, st.nint, st.nbin, st.eq_rows, st.rows_removed, st.cols_removed, st.tracker.level)

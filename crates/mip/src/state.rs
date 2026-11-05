@@ -9,6 +9,13 @@ use rsolver_model::Model;
 
 /// Null link.
 pub const NIL: u32 = u32::MAX;
+/// Index of +0x40c (types changed) in `State::ctr`; +0x410 is 1, ..., +0x428 is 7.
+pub const CTR_TYPES: usize = 0;
+
+/// `3c546c` snapshot: n, m, +0x1f8 SOS, +0x27c QC (both 0 for linear models), +0x408, +0x404, +0x400, +0x3fc,
+/// +0x3f8, then +0x40c..+0x428.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Snapshot([i32; 17]);
 /// env+0x2458 GURO_PAR_INFBOUND at its default (as in the LP port)
 pub const INF: f64 = rsolver_model::INFINITY;
 
@@ -95,6 +102,11 @@ pub struct State {
     pub ineq_to_eq: i32,
     pub rows_removed: i32,
     pub cols_removed: i32,
+    /// +0x40c types changed, +0x410 SOS removed, +0x414, +0x418 QC removed, +0x41c, +0x420, +0x424, +0x428: the
+    /// other progress counters of `3c5595` (see `CTR_*`)
+    pub ctr: [i32; 8],
+    /// +0x3a8 per-index scratch marks of the list getters (sized for rows and columns)
+    pub mark: Vec<bool>,
     /// *(+0x458) deterministic work, +0x448 its multiplier, +0x450 the work when 3cd406 started
     pub work: f64,
     pub work_mult: f64,
@@ -118,6 +130,40 @@ pub fn guarded_add(old: f64, t: f64, up: bool) -> f64 {
 }
 
 impl State {
+    /// `3c546c`.
+    pub fn snapshot(&self) -> Snapshot {
+        let mut s = [self.n as i32, self.m as i32, 0, 0, self.cols_removed, self.rows_removed, self.ineq_to_eq,
+                     self.coefs_changed, self.bounds_tightened, 0, 0, 0, 0, 0, 0, 0, 0];
+        s[9..].copy_from_slice(&self.ctr);
+        Snapshot(s)
+    }
+
+    /// `3c5595`: progress since snapshot `s` (12 §3.4), in the original's operation order.
+    pub fn progress(&self, s: &Snapshot) -> f64 {
+        let s = &s.0;
+        let c = &self.ctr;
+        let cols = (s[0] - s[4]).max(1) as f64;
+        let rows = ((s[1] - s[5]) + (s[2] - s[10]) + (s[3] - s[12])).max(1) as f64;
+        let nnz = self.nnz.max(1) as f64;
+        let d_cols = ((self.cols_removed - s[4]) - (self.n as i32 - s[0])).max(0);
+        let d_rows = ((self.rows_removed - s[5]) - (self.m as i32 - s[1])).max(0);
+        let d_sos = ((c[1] - s[10]) - (0 - s[2])).max(0);
+        let d_qc = ((c[3] - s[12]) - (0 - s[3])).max(0);
+        ((self.coefs_changed - s[7]) as f64 * 0.1) / nnz
+            + d_cols as f64 / cols
+            + ((((self.bounds_tightened - s[8]) + (c[0] - s[9])) + (c[4] - s[13]) + (c[5] - s[14])) as f64 * 0.0001) / cols
+            + (d_rows + d_sos + d_qc + (c[6] - s[15]) + (c[7] - s[16])) as f64 / rows
+            + ((self.ineq_to_eq - s[6]) as f64 * 0.5) / rows
+            + ((c[2] - s[11]) as f64 * 0.001) / rows
+    }
+
+    /// `3ba9de` without time limits: past the budget, PRELIMIT becomes -1 so the next count ends presolve.
+    pub fn budget_check(&mut self) {
+        if self.work - self.work_base > self.budget {
+            self.prelimit = -1;
+        }
+    }
+
     /// `3a484d` with the MIP flag. Work terms are added in the original order (asm checked where the
     /// multiplication order matters for μ = +0x448 != 1).
     /// shortcut: linear models only (no SOS, semicontinuous, Q, QC, general constraints, PWL, MINBPFORBID marks,
@@ -145,7 +191,7 @@ impl State {
 
         // L4021: with dual reductions, an objective on a continuous column asks which rows keep a continuous
         // column integral (+0x390 scratch: 0 integral rhs, then +1 per continuous ±1 entry; n = no)
-        let scan = p.dual_reductions && n > 1; // +0x250 Q, env+0x2728 sub-MIP and semicontinuous count are 0 here
+        let scan = p.dual_reductions != 0 && n > 1; // +0x250 Q, env+0x2728 sub-MIP and semicontinuous count are 0 here
         let mut int_rows = vec![0i32; m];
         let mut check = false;
         if scan {
@@ -321,6 +367,8 @@ impl State {
             ineq_to_eq: 0,
             rows_removed: 0,
             cols_removed: 0,
+            ctr: [0; 8],
+            mark: vec![false; n.max(m)],
             work: w,
             work_mult: mu,
             work_base: 0.0,

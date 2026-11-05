@@ -24,6 +24,9 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | `../rsolver-m2-clique` / `m2-clique` | clique `45885d`/`451bed`/`52be10`/`46a62d` 해독(뒤에 포팅) | `docs/m2_red_clique.md` |
 | `../rsolver-m2-inner` / `m2-inner` | 내부 루프 reduction 7개와 보조 함수 해독(뼈대 병합 뒤 같은 에이전트가 포팅) | `docs/m2_red_inner.md` |
 
+### 제어 흐름 (2026-11-06, `crates/mip/src/driver.rs`)
+spine 노트 b·c·d대로 `3cd406`의 단계(≤2) × 라운드(≤5) × 패스 × 내부 반복, 라운드 끝, FINAL을 옮겼다. 카운트 62곳(reduction 없이 세는 I→B·PREPARTOBJ·함의 bound·쌍대 이진화·패스 끝·FINAL 쌍대 고정 포함), timer 28개(시작마다 +1, 한도 B·0.5B·2B·4B·3B), 스냅숏 셋과 진척도 판정 셋, inline I→B·PREPARTOBJ·열 타입 통계·두 번째 probing 판정. 아직 없는 reduction은 `stubs.rs`의 stub(아무것도 안 바꾸고 0)이다. **포팅 = stub을 지우고 같은 이름의 `impl State` 메서드를 새 파일에 둔다.** 확인: 아무것도 안 바뀌는 5개 모델의 총 카운트가 Gurobi 호출 기록과 같다(neos5 62, 두 번째 probing이 없는 모델 61).
+
 ### 다음 단계 (순서)
 1. 위 네 브랜치를 `m2-mip-presolve`에 합친다. 구간 노트로 `3cd406` 제어 흐름 전체를 reduction stub(카운트만)으로 옮긴다. stub이 Gurobi와 같은 k에서 카운트하는지는 sweep의 "바뀐 k"와 reduction 위치가 맞는지로 확인한다.
 2. 내부 루프 reduction(`3e39a6`, `36ddf2`, `37168e`, `36c5cf`, `56f793`, `56c80e`, `36e6b6`)을 먼저 옮긴다. 모든 모델이 이 루프를 지난다. 검증은 PRELIMIT 체크포인트와 상태 오라클(`mip_state_dump.js`).
@@ -89,6 +92,7 @@ Frida로 38개 모델의 기본값 `Model.presolve()`(Threads=1, WorkLimit 60, `
 | `node tools/presolve_cov.js <진입 함수> <out.json> [name ...]` | Frida coverage. 모델마다 함수별 호출 수, 비-presolve 함수의 첫 호출 backtrace, 진입 함수의 직접 호출 순서(`seq`: [함수, 복귀 주소]). 기본 모델은 MIPLIB 38개. Gurobi 한 프로세스(`tools/gurun.sh`로 감싼다) |
 | `tools/prelimit_sweep.py <out> [name ...]` | 모델마다 PRELIMIT k = 0, 1, 2, …의 presolved 모델. 앞 k와 달라진 k의 MPS만 남기고 `sweep.tsv`(k, 해시, 바뀜)를 쓴다. 기본값 결과와 40번 연달아 같으면 멈춘다. 38개 약 2분 |
 | `node tools/mip_state_dump.js <model> <함수> <n번째\|all> <out.json> [Param=Value ...]` | 상태 오라클. `5b84b1(env, state+0x3f0)`에서 상태 포인터를 잡고, 지정 함수의 n번째 호출 진입·복귀 때 연결 리스트(행·열 순서 그대로 [행, 열, 값]), lb/ub/obj/vtype, rhs/sense, 개수, activity, 카운터(+0x3f8부터 14개), 작업량, 레코드 목록(state+0x370, push 순서로 [type, 원시 바이트, rec 주소, data 주소])을 JSON으로 덤프한다. MIP type 1 레코드는 16바이트 {열 i32, 패딩, 값 f64}로 LP(쌍대 정보 포함)와 다르다(glass4). reduction 하나를 따로 맞출 때 쓴다(진입 상태를 넣고 돌려 복귀 상태와 비교). glass4 `3b0917` 진입에서 행 390·열 316·nnz 1803이 presolved 모델과 같음을 확인 |
+| `PYTHONPATH=python python tools/sweep_check.py <sweep> [-v] [name ...]` | 포트를 sweep의 모든 변화점 k와 기본값 결과에 비교해, 모델마다 첫 불일치 k와 그 k가 포트 추적(`CoreModel.mip_presolve_trace`)에서 어느 reduction인지 알려 준다. Gurobi 불필요 |
 | `docs/m2_param_offsets.tsv` | `ac81d7` 등록 표의 파라미터 415개(이름, env 오프셋)와 getParamInfo 기본값·범위 |
 | `tools/presolve_oracle.py <dir> --param GURO_PAR_PRELIMIT=k <name ...>` | LP와 같은 PRELIMIT 체크포인트. `3cd406`도 reduction 호출마다 카운터(local_68)를 올리고 state+0x1dc와 비교해 마무리(`LAB_004b2415`)로 간다(L1651) |
 

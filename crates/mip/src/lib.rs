@@ -6,69 +6,109 @@
 // Ported comparisons keep the original's form (`!(a < b)` differs from `a >= b` on NaN), and loops index several
 // parallel arrays at once.
 #![allow(clippy::neg_cmp_op_on_partial_ord, clippy::needless_range_loop)]
+pub mod driver;
+mod lists;
 pub mod state;
+mod stubs;
 pub mod tracker;
 
 use rsolver_model::Model;
 use state::State;
 
-/// The Gurobi parameters MIP presolve reads so far. Values as gurobipy takes them; names match case-insensitively.
-/// Defaults are hard-coded here until the shared parameter table (M1 LP driver stream) replaces this struct.
-#[derive(Clone, Debug)]
-pub struct Params {
-    /// env+0x2424 Presolve (-1 auto, 0 off, 1 conservative, 2 aggressive)
-    pub presolve: i32,
-    /// env+0x26ec GURO_PAR_PRELIMIT: number of reduction calls before presolve stops
-    pub prelimit: i32,
-    /// env+0x2430 DualReductions
-    pub dual_reductions: bool,
-    /// env+0x2544 GURO_PAR_PREBOUND
-    pub prebound: i32,
-    /// env+0x2540 PrePasses (-1 auto)
-    pub prepasses: i32,
-    /// env+0x2828 GURO_PAR_PREPROBE (also 3cd406's probe mode, from `999702`)
-    pub preprobe: i32,
-    /// env+0x2680 PreSparsify
-    pub presparsify: i32,
-    /// env+0x26f4 PreCrush
-    pub precrush: i32,
-    /// env+0x2460 FeasibilityTol
-    pub feastol: f64,
-    /// env+0x2468 IntFeasTol
-    pub intfeastol: f64,
-}
-
-impl Default for Params {
-    fn default() -> Self {
-        Params { presolve: -1, prelimit: 2_000_000_000, dual_reductions: true, prebound: 1, prepasses: -1, preprobe: 1,
-                 presparsify: -1, precrush: 0, feastol: 1e-6, intfeastol: 1e-5 }
-    }
-}
-
-impl Params {
-    pub fn from_pairs(pairs: &[(String, f64)]) -> Params {
-        let mut p = Params::default();
-        for (k, v) in pairs {
-            match k.to_ascii_lowercase().as_str() {
-                "presolve" => p.presolve = *v as i32,
-                "guro_par_prelimit" => p.prelimit = *v as i32,
-                "dualreductions" => p.dual_reductions = *v != 0.0,
-                "guro_par_prebound" => p.prebound = *v as i32,
-                "prepasses" => p.prepasses = *v as i32,
-                "guro_par_preprobe" => p.preprobe = *v as i32,
-                "presparsify" => p.presparsify = *v as i32,
-                "precrush" => p.precrush = *v as i32,
-                "feasibilitytol" => p.feastol = *v,
-                "intfeastol" => p.intfeastol = *v,
-                _ => {}
+/// Declares `Params`: field, type, default, the gurobipy name (lower case), and `from_pairs`.
+macro_rules! params {
+    ($($(#[$m:meta])* $f:ident: $t:ty = $d:expr, $key:literal;)*) => {
+        /// The Gurobi parameters MIP presolve reads. Values as gurobipy takes them; names match case-insensitively.
+        /// Defaults are hard-coded here until the shared parameter table (M1 LP driver stream) replaces this struct.
+        #[derive(Clone, Debug)]
+        pub struct Params { $($(#[$m])* pub $f: $t,)* }
+        impl Default for Params {
+            fn default() -> Self { Params { $($f: $d,)* } }
+        }
+        impl Params {
+            pub fn from_pairs(pairs: &[(String, f64)]) -> Params {
+                let mut p = Params::default();
+                for (k, v) in pairs {
+                    match k.to_ascii_lowercase().as_str() {
+                        $($key => p.$f = *v as $t,)*
+                        _ => {}
+                    }
+                }
+                p
             }
         }
-        p
-    }
+    };
+}
+
+params! {
+    /// env+0x2424 Presolve (-1 auto, 0 off, 1 conservative, 2 aggressive)
+    presolve: i32 = -1, "presolve";
+    /// env+0x26ec GURO_PAR_PRELIMIT: number of reduction calls before presolve stops
+    prelimit: i32 = 2_000_000_000, "guro_par_prelimit";
+    /// env+0x2430 DualReductions
+    dual_reductions: i32 = 1, "dualreductions";
+    /// env+0x2544 GURO_PAR_PREBOUND
+    prebound: i32 = 1, "guro_par_prebound";
+    /// env+0x2540 PrePasses (-1 auto)
+    prepasses: i32 = -1, "prepasses";
+    /// env+0x2828 GURO_PAR_PREPROBE (also 3cd406's probe mode, from `999702`)
+    preprobe: i32 = 1, "guro_par_preprobe";
+    /// env+0x2680 PreSparsify
+    presparsify: i32 = -1, "presparsify";
+    /// env+0x26f4 PreCrush
+    precrush: i32 = 0, "precrush";
+    /// env+0x2460 FeasibilityTol
+    feastol: f64 = 1e-6, "feasibilitytol";
+    /// env+0x2468 IntFeasTol
+    intfeastol: f64 = 1e-5, "intfeastol";
+    /// env+0x242c Aggregate
+    aggregate: i32 = 1, "aggregate";
+    /// env+0x2534 PreDepRow (read as is, no auto value in MIP presolve)
+    pre_dep_row: i32 = -1, "predeprow";
+    /// env+0x2864 Symmetry
+    symmetry: i32 = -1, "symmetry";
+    /// env+0x2548 / 0x2688 / 0x2560 / 0x2598 / 0x255c GURO_PAR_PRECOEFFICIENT / PREXORRED / PREPARALLEL /
+    /// PREPARTOBJ / PREDUALSLACK
+    precoefficient: i32 = 1, "guro_par_precoefficient";
+    prexorred: i32 = 1, "guro_par_prexorred";
+    preparallel: i32 = 1, "guro_par_preparallel";
+    prepartobj: i32 = -1, "guro_par_prepartobj";
+    predualslack: i32 = 0, "guro_par_predualslack";
+    /// env+0x2574 / 0x2684 / 0x259c / 0x25a0 / 0x2558 / 0x2550 PRETRANSRED / PREDOMINATE / PRECANCEL /
+    /// PRECANCELCOL / PRESUBSUME / PRECLIQSUB
+    pretransred: i32 = -1, "guro_par_pretransred";
+    predominate: i32 = 1, "guro_par_predominate";
+    precancel: i32 = -1, "guro_par_precancel";
+    precancelcol: i32 = -1, "guro_par_precancelcol";
+    presubsume: i32 = 0, "guro_par_presubsume";
+    precliqsub: i32 = 0, "guro_par_precliqsub";
+    /// env+0x26c8 / 0x254c / 0x253c / 0x2538 AGEQ / PRECLIQUE / PREMERGEVUBS / PRETWOROWS
+    ageq: i32 = -1, "guro_par_ageq";
+    preclique: i32 = 1, "guro_par_preclique";
+    premergevubs: i32 = -1, "guro_par_premergevubs";
+    pretworows: i32 = -1, "guro_par_pretworows";
+    /// env+0x2c30 / 0x2530 / 0x282c / 0x2554 / 0x25ac / 0x25b0 / 0x25b4 PREVUBLIFT / PRESS2MIP / PREPROBE0 /
+    /// PRECOVERS / PREDUALREDUNDANT / PREDERIVED / PRESMARTDISAGG
+    prevublift: i32 = 1, "guro_par_prevublift";
+    press2mip: i32 = 1, "guro_par_press2mip";
+    preprobe0: i32 = 1, "guro_par_preprobe0";
+    precovers: i32 = 1, "guro_par_precovers";
+    predualredundant: i32 = 1, "guro_par_predualredundant";
+    prederived: i32 = 1, "guro_par_prederived";
+    presmartdisagg: i32 = 5, "guro_par_presmartdisagg";
+    /// env+0x28a4 / 0x2590 / 0x289c / 0x28a0 / 0x2820 / 0x27b8 / 0x25a8 PRELIFTGROW / SOLREDUCTION / PRECONNECTED /
+    /// PREBICONNECTED / IMPLIEDINT / SYMMTRANS / PREDUALCONVTOBIN
+    preliftgrow: i32 = 1, "guro_par_preliftgrow";
+    solreduction: i32 = 1, "guro_par_solreduction";
+    preconnected: i32 = -1, "guro_par_preconnected";
+    prebiconnected: i32 = 1, "guro_par_prebiconnected";
+    impliedint: i32 = 1, "guro_par_impliedint";
+    symmtrans: i32 = -1, "guro_par_symmtrans";
+    predualconvtobin: i32 = -1, "guro_par_predualconvtobin";
 }
 
 /// 3cd406's locals that the reduction loop reads.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Run {
     /// `local_68`: reduction calls so far, compared with state+0x1dc (GURO_PAR_PRELIMIT) after each
     pub calls: i32,
@@ -78,12 +118,17 @@ pub struct Run {
     pub probe: i32,
     /// `local_c90`: work limit the reduction timers are set from (L1522-1602)
     pub limit: f64,
+    /// what each count was (`3cd406` call or inline block), when tracing (`trace`)
+    pub trace: Option<Vec<&'static str>>,
 }
 
 impl Run {
     /// One reduction call has finished: count it. True = PRELIMIT reached, go to finishing.
-    pub fn counted(&mut self, st: &State) -> bool {
+    pub fn counted(&mut self, st: &State, what: &'static str) -> bool {
         self.calls += 1;
+        if let Some(t) = &mut self.trace {
+            t.push(what);
+        }
         st.prelimit <= self.calls
     }
 }
@@ -93,26 +138,46 @@ impl Run {
 /// with an integer column fixed at 2.5).
 pub fn presolve(md: &Model, p: &Params) -> Result<Model, i32> {
     let mut st = State::new(md, p);
-    prelude(&mut st, p)?;
+    reduce(&mut st, p)?;
     match finish(&mut st, p) {
         0 => Ok(st.to_model(md)),
         rc => Err(rc),
     }
 }
 
-/// 3cd406 from the constructor to the first reduction (decompiled L756-1745). Ok = go to finishing (PRELIMIT
-/// reached, Presolve 0, or the first reduction that is not ported yet); Err = status (3 infeasible).
-pub fn prelude(st: &mut State, p: &Params) -> Result<Run, i32> {
+/// 3cd406 up to model generation: the prelude, then the rounds (`driver`). Err = status (3 infeasible, ...).
+pub fn reduce(st: &mut State, p: &Params) -> Result<(), i32> {
+    reduce_traced(st, p, false).0
+}
+
+/// `reduce`, also returning what each PRELIMIT count was when `trace` (count k is element k-1).
+pub fn reduce_traced(st: &mut State, p: &Params, trace: bool) -> (Result<(), i32>, Vec<&'static str>) {
+    match prelude(st, p, trace) {
+        Ok(Some(mut run)) => {
+            let r = driver::run(st, p, &mut run);
+            (r, run.trace.unwrap_or_default())
+        }
+        Ok(None) => (Ok(()), Vec::new()),
+        Err(e) => (Err(e), Vec::new()),
+    }
+}
+
+/// 3cd406 from the constructor to the pass loop (decompiled L756-1696). None = go to finishing (PRELIMIT reached
+/// or Presolve 0); Err = status (3 infeasible).
+pub fn prelude(st: &mut State, p: &Params, trace: bool) -> Result<Option<Run>, i32> {
     // `5b84b1` (state+0x3f0 scratch), `3ba5ac` (callback, log) and `3ba9de` (time/work limits) change nothing here.
     // GURO_PAR_DISTRIBUTED (env+0x2ca0) > 1 would go straight to finishing; it is 0 by default.
     let passes = if p.prepasses >= 0 { p.prepasses } else if p.presolve == 2 { 2_000_000_000 } else if p.presolve == 1 { 20 } else { 100 };
-    let mut run = Run { calls: 0, passes, probe: p.preprobe, limit: 0.0 };
+    let mut run = Run { calls: 0, passes, probe: p.preprobe, limit: 0.0, trace: None };
+    if trace {
+        run.trace = Some(Vec::new());
+    }
     if let Err(j) = st.round_integers() {
         st.bad_col = j as i32;
         return Err(3);
     }
-    if run.counted(st) {
-        return Ok(run);
+    if run.counted(st, "round_integers") {
+        return Ok(None);
     }
     if p.presolve != 0 {
         // env+0x2728 (inside a sub-MIP) is 0 and there is no MIP context, so the restart block (L1022) is skipped
@@ -137,27 +202,17 @@ pub fn prelude(st: &mut State, p: &Params) -> Result<Run, i32> {
     if st.empty_and_free_rows(p.feastol) != 0 {
         return Err(3);
     }
-    if run.counted(st) {
-        return Ok(run);
+    if run.counted(st, "empty_and_free_rows") {
+        return Ok(None);
     }
     // `9f566a` (PWL functions, state+0x240) is not ported: linear models only
     st.activity(None);
     if p.presolve == 0 {
-        return Ok(run);
+        return Ok(None);
     }
     // L1638 `3ff744` mode 0 runs when 0.2 n <= local_91c, which stays 0 here: only for n = 0.
     // L1668: problem type 11 goes back to 0 without a MIP solution (`5b58f4` not reached); never set here.
-    // shortcut: no reduction is ported yet; the first one stops presolve as if PRELIMIT were reached there.
-    // L1694: with PREBOUND and dual reductions `5a9282` is count 3.
-    if p.prebound != 0 && p.dual_reductions {
-        return Ok(run);
-    }
-    // L1697-1714: the Q (`42872b`, `429e1b`), QC (`451195`) and NL (`5b1161`) blocks are for nonlinear models only.
-    // L1730 round 0, pass 0, inner loop i = -5: snapshot (`3c546c`), tracker level 2 (`536971`), `5369b8`, then
-    // `3e39a6` is the next count (checked: work and tracker level at its call match Gurobi with PREBOUND 0).
-    st.tracker.level = 2;
-    st.reset_tracker();
-    Ok(run)
+    Ok(Some(run))
 }
 
 /// L1214/L3582 large-model check (n > 10000, 2-20% binaries, probe mode 1, PREPROBE 1): when the binaries hold
