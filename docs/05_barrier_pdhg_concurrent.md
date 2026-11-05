@@ -31,6 +31,11 @@ ops ≤ 1e6이면 스레드 1
 nnz(L)·8 > bar_mem_limit → MEM_LIMIT
 ```
 
+**M3 확정(2026-11-05, Netlib 64, Presolve=0)**: 구현은 `crates/lp/src/barrier/`, 해독 기록은 [m3_barrier.md](m3_barrier.md)·[m3_ordering.md](m3_ordering.md)·[m3_ipm.md](m3_ipm.md)·[m3_rust.md](m3_rust.md).
+- 스케일은 simplex와 같은 `07d3ce` ScaleFlag 3 경로(`scale_flag3`)이고 D에 제자리 적용된다. 행은 ordering 순열로 D에서 재배치되어 분해 피벗 순서가 자연 순서가 된다.
+- 최종 순열은 64개 모두 기준선(mode 3: AMD `3047bb` + 이분할 `30b0f2`/`30d189`)이다. ND 후보는 `threads·work/ops < 0.1`(work는 결정적 계수)일 때만 돌고 64개에서 채택되지 않는다. 로그의 Factor NZ/Ops는 `302921` 값이 아니라 `2e4f14`가 supernode를 완화 병합한 뒤의 값(패딩 포함 원소 수, Σ열 길이²)이다. AA' NZ·순열·supernode·Factor NZ/Ops 64/64.
+- "Free vars"는 `30f5b9`가 자유 열에 활동량 전파로 bound를 하나 단 뒤 남은 자유 열 수다.
+
 **Ordering**(`lp::barrier::ordering`): 기준선 = 1단계 이분할 후 AMD. `BarOrder` 조건(1, 또는 예상 ND 시간 < 0.1s, 또는 n>1000이고 ops ≥ 500·nnz(AAᵀ)…)이면 **nested dissection을 여러 seed(Seed+i+11)로 병렬 시도**(최대 5라운드, ordering 시간이 예상 분해 시간의 5%를 넘으면 중단), 최소 ops 채택. 구현: 원본 ordering(`3047bb`, `309dd0`)을 포팅한다. 여러 seed의 병렬 ND 시도까지 M3에 넣는다. ordering이 다르면 Factor NZ와 반복당 시간이 달라져 P3가 맞지 않는다.
 
 ### 2.4 반복 루프
@@ -62,6 +67,8 @@ loop:
 log "Barrier solved model in %d iterations and %.2f seconds (%.2f work units)" | "Barrier performed %d iterations in …"
 ```
 
+**M3 확정**: corrector 수 자동 조정의 "시간"은 벽시계가 아니라 타이머 11개에 쌓는 결정적 work다(`ade552(t,0)`, 구간 work 증가 + 시작 횟수). 시작값 K₀·격자 수 N₀는 `2e7f38`(F+0x160 = 2·nnz(L), F+0x168 = symbolic 통계와 CPU 상수 `a80670` 50/30/18/10)로 정한다. 그래서 반복 수가 CPU 명령어 집합에 따라 달라질 수 있다. corrector는 ω 격자 선 탐색(`2f4fe9`)으로 합치고, 갱신은 시행점 곱으로 정한 감쇠 η(`2f2e95`)를 쓴다. 정규화 크기 B+0x280은 refinement(`2f9699`) 정지 기준이다. 세부는 [m3_ipm.md](m3_ipm.md) §2–5. 실행 결정성: 같은 설정 재실행 64/64 궤적 동일.
+
 ### 2.5 종료 판정 (노트 14 §3.1.6)
 
 | 반환 | 조건 |
@@ -78,6 +85,7 @@ log "Barrier solved model in %d iterations and %.2f seconds (%.2f work units)" |
 ### 2.6 수치 분해 (`lp::barrier::cholesky`)
 
 - **supernodal LDLᵀ**, 병렬은 etree 서브트리 단위(스레드 풀). 밀집 대각 블록: Bunch–Kaufman 1×1/2×2 피벗(α=(1+√17)/8), 작은 피벗은 `±max(1e-12, min(1e-6, 1e-10·|d|))`로 대체, 2×2 0 대각은 1e-100. 갱신 블록은 밀집 GEMM/TRSM이다. 원본처럼 MKL `dgemm`/`dtrsm`을 부른다([10 §5](10_porting.md)).
+- **M3 상태**: `ldl.rs`(스칼라 up-looking LDLᵀ + 작은 피벗 규칙)로 값은 반올림 수준까지 같다. supernodal 커널과 MKL 합 순서의 비트 이식은 [m3_barrier.md](m3_barrier.md) §4 단계 6. 64개에서 BarIterCount 56/64가 같고, 나머지 8개는 반올림 누적으로 갈라진다.
 - 밀집 열: 정규방정식에 열을 추가 행으로 붙이는 부분 증강계(F+0x138 보정). `2ffcb4`를 포팅해 M3에 넣는다.
 - `bar_iterative`: factor+solve ops가 `(2·nnz(A)+1)·2000·20`을 넘는 반복에서 재분해를 생략하고 이전 인수로 전처리한 PCG 1회 corrector — M6.
 - 메모리·시간 추정: 밀집 GEMM 벤치로 "roughly %.0f seconds per iteration".
@@ -161,7 +169,7 @@ QCP/SOCP를 LP + OA cut 반복으로 푸는 대안 경로. "Pass    Dual Objecti
 ## 8. 포팅으로 확정할 지점 (노트 14 §6.2)
 
 - 밀집 열 보정(`2ffcb4`)이 Sherman–Morrison/Schur인지 부분 증강계인지.
-- ordering 모드 3의 정확한 의미(`3047bb`, `309dd0`).
+- ~~ordering 모드 3의 정확한 의미~~: 1단계 이분할(`30b0f2`/`30d189`) + AMD(`3047bb`), M3에서 64/64로 확정([m3_ordering.md](m3_ordering.md)).
 - 단정밀도 경로(`3279a1`, sgemm/strsm)를 쓰는 조건.
 - BarIterative 모드의 Krylov 방법 위치.
 - PDHG 전처리와 불가능성 검출(`0b8afb`, `354824`, `352bcb`).
