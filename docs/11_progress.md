@@ -28,7 +28,8 @@
 | M1 LP presolve | `rsolver-presolve` / `m1-lp-presolve` | LP presolve, postsolve | `docs/m1_presolve.md` | G2 |
 | ↳ postsolve (presolve 에이전트가 띄운 하위 에이전트, Sonnet) | `rsolver-postsolve` / `m1-postsolve` | postsolve `363daa` | `docs/m1_postsolve.md` | G2의 일부 |
 | ↳ derived·PreDepRow (presolve 하위 에이전트) | 각자 worktree / `m1-derived`, `m1-deprow` | `5b488d`, `47c445` | `docs/m1_presolve.md` | G2의 일부 |
-| M3 barrier | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
+| ~~M3 barrier~~ (완료, main 병합) | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
+| M3 PDHG | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3_pdhg.md` | G4 |
 
 ## 3. 완료 기록
 
@@ -64,6 +65,9 @@
 | 2026-11-05 | M1 dual 반복 원본화 | CHUZR(모드 0/1)·BFRT(코퍼스 99.4%)·DSE·d 갱신·재분해 시점 이식. Netlib 64: 64/64 정확, 반복 일치 7, ±5% 34, sc50a 반복 0–6 비트 일치 | `899c192`, `1979049`, `33b944b`, `93e51af`, `23cad5d` |
 | 2026-11-05 | M1 presolve PREDERIVED·postsolve | `5b488d`(PREDERIVED) 비트 일치 이식, type 24 레코드. 집계 레코드 6/11/21 uncrush, 기본값 postsolve 53/59. rsolver-lp clippy 경고 0 | `25a1494`, `b53fd32`, `15260ee`, `d537b7e` (`m1-lp-presolve`) |
 | 2026-11-05 | M3 비트 일치 분해·해법 | Rust supernodal 분해·해법(`chol.rs`)과 MKL DGEMM/DTRSM 흉내(`mkl.rs`)가 Gurobi와 비트 일치. IPM을 이 위에 올려 **BarIterCount 63/64** | `5557d2b`, `506a26e` (`m3-barrier`) |
+| 2026-11-05 | M1 presolve 기본값 64/64 | `47c445`(PreDepRow) 이식. 기본 파라미터 presolved 모델 64/64 | `38ea4e7` (`m1-lp-presolve`) |
+| 2026-11-05 | M1 postsolve 64/64 | 행·열을 지우지 않은 경우의 항등 uncrush까지, 검사기 64/64. Gurobi 없이 도는 pytest 회귀 | `15b7b65`, `c024356` (`m1-postsolve` → `m1-lp-presolve`) |
+| 2026-11-05 | **M3 barrier 본체 (G3) 완료** | 오케스트레이터가 따로 검증: 상태 64/64, 목적 ≤1e-6 64/64, **BarIterCount 64/64**, clippy 0, cargo test·pytest 통과, 검증 중 Gurobi 미사용. main에 병합(`crates/core` 삭제 유지, SIMPLEX·BARRIER `cbGet` 통합) | `c1a5124`, `3e8a744`, `03d2ca4`, 병합 `e6760c3` |
 
 ## 4. goal 원문
 
@@ -90,3 +94,10 @@
   5. cargo clippy 경고 0, 테스트 통과. `docs/05_barrier_pdhg_concurrent.md`와 `docs/m3_barrier.md`를 갱신한다.
 
   범위 밖은 crossover, PDHG, concurrent, presolve, simplex다.
+- **G4**: PDHG(Method=6) 본체를 완료한다(crossover 제외). 완료 기준(Presolve=0, Threads=1, Crossover=0):
+  1. Netlib 64개에서 상태가 Gurobi와 같고, 목적값이 Gurobi PDHG 결과와 상대 1e-6 이내다.
+  2. P1: Gurobi가 보고하는 PDHG 반복 수와 같은 인스턴스가 90% 이상이다. 나머지는 ±5%이고 첫 분기점을 기록한다.
+  3. 반복별 오라클 비교 도구를 둔다.
+  4. cargo clippy 경고 0, 테스트 통과. `docs/05_barrier_pdhg_concurrent.md`와 `docs/m3_pdhg.md`를 갱신한다.
+
+  범위 밖은 crossover, concurrent, barrier(완료), presolve, simplex다.
