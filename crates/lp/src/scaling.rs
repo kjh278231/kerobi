@@ -88,11 +88,11 @@ pub fn scale_flag3(m: &Model) -> Scaling {
         f = if iter == 9 { 1e100 } else { 2.0 };
         changed = false;
         let mut rmax = vec![0.0f64; nrows];
-        for j in 0..n {
+        for (j, &cj) in col.iter().enumerate() {
             let b = m.col_beg[j] as usize;
             for k in b..b + m.col_len[j] as usize {
                 let i = m.col_ind[k] as usize;
-                let v = (m.col_val[k] * col[j]).abs();
+                let v = (m.col_val[k] * cj).abs();
                 if rmax[i] < v {
                     rmax[i] = v;
                     // shortcut: the original caps rmax at max(1e8, sqrt(..)) when ub_j >= INFBOUND and v > 1e8;
