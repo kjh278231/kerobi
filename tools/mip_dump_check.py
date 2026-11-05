@@ -3,7 +3,7 @@ compare the result with Gurobi's state at its return: bounds, rows, activities, 
 free/pending counts, tracker and new postsolve records (docs/m2_red_inner.md §9). Needs no Gurobi.
 usage: PYTHONPATH=python python tools/mip_dump_check.py <fn> <dump.json ...> [--after DUMP] [--param K=V ...]
   <fn>: 3e39a6 36ddf2 37168e 36c5cf 56f793 56c80e 36e6b6 (mode 0 or 1, whichever matches) 370047 implied_bounds
-  45885d 52be10 46a62d 5a9282 5ab429 59c193 55a779.
+  45885d 52be10 46a62d 5a9282 5ab429 59c193 55a779 5577ba (with an OUT_I32=4 dump, f4 too).
   --after: the "after" state is the entry state of the same call number in DUMP (for an inline block: dump the
   function before it and the one after it).
 Doubles compare with == (the JSON dump loses the sign of -0.0); records compare byte for byte except padding.
@@ -139,6 +139,9 @@ def main():
                 diffs, nd = compare(got, leave, enter["recs"] if not a.after else enter["recs"])
                 if not a.after and a.fn != "36e6b6" and got["ret"] != xs[1]["ret"] and a.fn != "56f793":
                     diffs.append(f"ret port {got['ret']} gurobi {xs[1]['ret']}")
+                    nd += 1
+                if xs[1].get("out") is not None and got["extra"] != xs[1]["out"]:  # OUT_I32 dumps (5577ba f4)
+                    diffs.append(f"out port {got['extra']} gurobi {xs[1]['out']}")
                     nd += 1
                 if best is None or nd < best[1]:
                     best = (diffs, nd, name)

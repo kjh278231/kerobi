@@ -40,8 +40,6 @@ impl State {
     pub fn two_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
     /// `47c445(mode)` linear dependent rows (2: dual side)
     pub fn dep_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// `5577ba(env, st, nodes, 1, &f4; 1.01, limit)` symmetry
-    pub fn symmetry(&mut self, p: &Params, nodes: i32, limit: f64) -> i32 { 0 }
     /// `594c0c` (PRESS2MIP)
     pub fn ss2mip(&mut self, p: &Params) -> i32 { 0 }
     /// `423e35(st, env, T10, probe mode)` (PREPROBE0)

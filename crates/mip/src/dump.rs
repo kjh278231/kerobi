@@ -259,6 +259,11 @@ impl State {
             "5ab429" => (self.r5ab429(p), 0),
             "59c193" => (self.vub_lift(p), 0),
             "55a779" => (self.agg_pass(p), 0),
+            "5577ba" => {
+                // nodes 20000 (Symmetry < 2); the timer-24 work limit is not in the dump: none
+                let mut f4 = 0;
+                (self.symmetry(p, 20000, 1e100, &mut f4), f4 as i64)
+            }
             "370047" => {
                 self.activity(None);
                 (0, 0)
