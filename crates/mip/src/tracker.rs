@@ -63,6 +63,23 @@ impl Queue {
         }
     }
 
+    /// `535d61` / `536369`: indices from..from+k get flag 0, go to the end of the level-0 list (its current and total
+    /// length both move there), then are marked like `5379f1` / `53763f` would.
+    pub fn grow(&mut self, from: usize, k: usize, active: &[bool; 3]) {
+        self.flag.resize(from + k, 0);
+        let mut a0 = self.a[0];
+        for i in from..from + k {
+            if self.list[0].len() <= a0 {
+                self.list[0].resize(a0 + 1, 0);
+            }
+            self.list[0][a0] = i as i32;
+            a0 += 1;
+            self.mark(i as i32, active);
+        }
+        self.a[0] = a0;
+        self.b[0] = a0;
+    }
+
     /// Compaction half of `5369b8`: keep live entries; above level 0 keep only those marked this round.
     /// Returns the number of entries visited (for work).
     fn reset(&mut self, lv: usize, live: &[i32]) -> usize {

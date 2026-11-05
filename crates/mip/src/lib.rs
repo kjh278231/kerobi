@@ -12,6 +12,7 @@ mod cliquerows;
 pub mod conflict;
 pub mod driver;
 pub mod dump;
+mod grow;
 mod helpers;
 mod iint;
 mod inner;
