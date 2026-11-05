@@ -93,7 +93,13 @@ def main():
             c = mdl._callback._cbdata
             B = L(api.PyCapsule_GetPointer(c, api.PyCapsule_GetName(c)) + 0x68)
             F = bo.find_F(B, m)
+            n = I(F + 0) if F else 0
             res["sym"] = {"F_addr": F, "F": arr(F, 0x200 // 8) if F else None, "B": arr(B, 0xa00 // 8)}
+            if F:  # after symbolic 2e4f14: final positions, column lengths, supernode widths, row indices
+                nr = L(F + 0x40)
+                res["sym"].update(n=n, perm=ints(L(F + 0x30), n), collen=ints(L(F + 0xa8), n), snw=ints(L(F + 0x78), n),
+                                  nrowidx=nr, rowidx=ints(L(F + 0xc8), nr), nnzL=L(F + 0x38), ops=D(F + 0x60).hex(),
+                                  ops2=D(F + 0x48).hex())
             res["A_cb"] = snapD(L(mp + 0xe8))
             mdl.terminate()
 
