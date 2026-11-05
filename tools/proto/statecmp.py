@@ -43,7 +43,7 @@ for it in sorted(set(g) & set(mine)):
     la, lb = [ga.get(p) for p in pr.get("list") or []], [gb.get(p) for p in b["list"]]
     if pr and (pr.get("mode") != b["mode"] or la != lb):
         out.append(f"pricing (vars) g mode {pr.get('mode')} list {la[:6]} | mine mode {b['mode']} list {lb[:6]}")
-    if pr.get("score") and b.get("score"):
+    if pr.get("score") and b.get("score") and pr.get("mode") == 1:
         gs, ms = [F(v) for v in pr["score"]], [F(v) for v in b["score"]]
         k = [j for j in range(len(va)) if va[j] >= 0 and vb[j] >= 0 and gs[va[j]] != ms[vb[j]] and (gs[va[j]] or ms[vb[j]])]
         if k:

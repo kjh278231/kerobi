@@ -509,11 +509,12 @@ impl Lu {
                 w[j] -= u * t;
             }
         }
-        for (r, mu) in self.retas.iter().rev() {
-            let yr = y[*r];
-            if yr != 0.0 {
-                for &(i, v) in mu {
-                    y[i] -= v * yr;
+        for (r, eta) in self.retas.iter().rev() {
+            // 221173 eta phase (newest first): v = w_r; w_r = η_r·v, w_i = η_i·v + w_i
+            let v = y[*r];
+            if v != 0.0 {
+                for &(i, e) in eta {
+                    y[i] = if i == *r { e * v } else { e * v + y[i] };
                     if !seen[i] {
                         seen[i] = true;
                         list.push(i);
@@ -555,12 +556,10 @@ impl Lu {
                 }
             }
         }
-        for (r, mu) in &self.retas {
-            let mut v = x[*r];
-            for &(i, f) in mu {
-                v -= f * x[i];
-            }
-            x[*r] = v;
+        for (r, eta) in &self.retas {
+            // 2207de R phase: x_r = η·x (8 lanes), dropped at or below ZERO
+            let v = dot8(eta.iter().map(|&(i, e)| x[i] * e));
+            x[*r] = if v.abs() <= ZERO { 0.0 } else { v };
         }
     }
 
@@ -596,36 +595,70 @@ impl Lu {
     /// by row) is `spike`. The replaced step moves to the end of the U order; its old U row is eliminated into a row
     /// eta. Returns false when the new diagonal is below ZERO (caller refactors).
     pub fn update(&mut self, pos: usize, var: usize, spike: &[f64]) -> bool {
+        // Forrest–Tomlin as 5b257 stores it (m1_notes §8.10): r = the leaving index, q its U position, t the prefix
+        // of empty U columns, p = max(q, t−1), l = max(p, U positions of the spike entries ≠ r). With l = p the column
+        // is replaced in place (U row r kept, no eta). Otherwise the row eta is η = e_rᵀU⁻¹ (old U, r first then U
+        // order), the new diagonal η·S, row r leaves U and r moves to position l.
+        // shortcut: the permutation is a plain cyclic shift of [p, l] (5b257 L1101–1218 may stop earlier), and the
+        // dot product never peels an element (pool alignment unknown)
         let kp = self.kpos[pos];
         let rp = self.steps[kp].0;
+        let at: Vec<usize> = {
+            let mut at = vec![0; self.order.len()];
+            for (i, &k) in self.order.iter().enumerate() {
+                at[k] = i;
+            }
+            at
+        };
+        let q = at[kp];
+        let t = self.order.iter().take_while(|&&k| self.ucol[k].is_empty()).count();
+        let p = q.max(t.saturating_sub(1));
+        let l = spike
+            .iter()
+            .enumerate()
+            .filter(|&(i, &s)| i != rp && s != 0.0)
+            .map(|(i, _)| at[self.prow[i] as usize])
+            .fold(p, usize::max);
+        // old column kp out of U
         for &(i, _) in &std::mem::take(&mut self.ucol[kp]) {
             let ki = self.prow[i] as usize;
             self.urow[ki].retain(|e| e.0 != kp);
         }
-        // eliminate row rp over the steps after kp in U order
-        let rank: std::collections::HashMap<usize, usize> = self.order.iter().enumerate().map(|(a, &k)| (k, a)).collect();
-        let mut row: std::collections::BTreeMap<usize, (usize, f64)> = std::collections::BTreeMap::new(); // rank -> (step, value)
-        for &(j, u) in &std::mem::take(&mut self.urow[kp]) {
-            row.insert(rank[&j], (j, u));
-            self.ucol[j].retain(|e| e.0 != rp);
-        }
-        let mut mu = Vec::new();
-        let mut diag = spike[rp];
-        while let Some((_, (j, v))) = row.pop_first() {
-            let (rj, _, dj) = self.steps[j];
-            let f = v / dj;
-            if f == 0.0 {
-                continue;
+        let diag;
+        if l == p {
+            diag = spike[rp];
+            if q < p {
+                let other = self.order[p];
+                self.order.swap(q, p);
+                let _ = other;
             }
-            mu.push((rj, f));
-            diag -= f * spike[rj];
-            for &(j2, u2) in &self.urow[j] {
-                let e = row.entry(rank[&j2]).or_insert((j2, 0.0));
-                e.1 -= f * u2;
+        } else {
+            // η = e_rᵀU⁻¹ by Uᵀ in U order (the 21a941 output order) on the U before the update
+            let mut w = vec![0.0; self.steps.len()];
+            w[kp] = 1.0;
+            let mut eta: Vec<(usize, f64)> = Vec::new(); // (row, value)
+            for &k in &self.order[q..] {
+                let (r, _, d) = self.steps[k];
+                let z = w[k] / d;
+                if z.abs() <= ZERO {
+                    continue;
+                }
+                eta.push((r, z));
+                for &(j, u) in &self.urow[k] {
+                    w[j] -= u * z;
+                }
+            }
+            diag = dot8(eta.iter().map(|&(i, e)| spike[i] * e));
+            // row r out of U
+            for &(j, _) in &std::mem::take(&mut self.urow[kp]) {
+                self.ucol[j].retain(|e| e.0 != rp);
+            }
+            let k = self.order.remove(q);
+            self.order.insert(l, k);
+            if !eta.is_empty() {
+                self.retas.push((rp, eta));
             }
         }
-        self.order.retain(|&k| k != kp);
-        self.order.push(kp);
         for (i, &s) in spike.iter().enumerate() {
             if i != rp && s != 0.0 {
                 self.ucol[kp].push((i, s));
@@ -633,9 +666,6 @@ impl Lu {
             }
         }
         self.steps[kp].2 = diag;
-        if !mu.is_empty() {
-            self.retas.push((rp, mu));
-        }
         self.head[pos] = var;
         self.general = true;
         self.n_updates += 1;
@@ -696,6 +726,24 @@ pub fn dual_start(spx: &Spx, vstat: &[i32]) -> (Vec<f64>, Vec<f64>) {
         .collect();
     let w = (0..m).map(|p| sum_squares(&lu.btran(&[(p, 1.0)]).iter().map(|e| e.1).collect::<Vec<_>>())).collect();
     (d, w)
+}
+
+/// Σ of products in the original 8-lane order (5b257 L318–420, 2207de R phase): in sequence below 8 terms, else
+/// lanes over the 8-aligned head combined ((0+2)+(4+6)) + ((1+3)+(5+7)), then the tail in sequence.
+pub fn dot8(terms: impl Iterator<Item = f64>) -> f64 {
+    let v: Vec<f64> = terms.collect();
+    if v.len() < 8 {
+        return v.iter().fold(0.0, |a, &t| a + t);
+    }
+    let (head, tail) = v.as_chunks::<8>();
+    let mut a = [0.0; 8];
+    for c in head {
+        for q in 0..8 {
+            a[q] += c[q];
+        }
+    }
+    let w = ((a[0] + a[2]) + (a[4] + a[6])) + ((a[1] + a[3]) + (a[5] + a[7]));
+    tail.iter().fold(w, |w, t| w + t)
 }
 
 /// Σv² as 1bae9c sums it (L1971-2110): in sequence below 8 values, else 8 lanes over the 8-aligned head combined
