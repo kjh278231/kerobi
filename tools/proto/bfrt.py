@@ -44,7 +44,7 @@ def bfrt(e, lens=None):
     d, vs, l, u, big = e[6], e[7], e[8], e[9], e[10]
     feas = 1e-6 * 1e30 * 1e-5 if big else 1e-6
     delta = (ur - x) if p3 else (x - lr)
-    bound, cand, best = -1e100, [], -1
+    bound, cand, best, cbest = -1e100, [], -1, 0.0
     order = list(range(p2, cnt)) + list(range(0, p2))
     amin = 0.0
     for t in order:
@@ -66,13 +66,17 @@ def bfrt(e, lens=None):
         nb = bound
         if upd and d[t] >= 0.0:
             nb = max(bound, OPT / a + ratio)
-        if best < 0 or ratio > cand[best][2] + 1e-10 or (abs(ratio - cand[best][2]) <= 1e-10 and c < cand[best][1]):
-            best = len(cand)
+        if best < 0 or ratio > cand[best][2] + 1e-10:
+            best, cbest = len(cand), c
+        elif ratio >= cand[best][2] - 1e-10:
+            cbest = min(cbest, c)
+            if ratio > cand[best][2]:
+                best = len(cand)
         cand.append((t, c, ratio))
         bound = nb
     if not cand:
         return None, []
-    if delta + cand[best][1] < 0.0:
+    if delta + cbest < 0.0:
         lo, run = quickselect(cand, delta)
     else:
         cand[0], cand[best] = cand[best], cand[0]
@@ -99,6 +103,10 @@ def bfrt(e, lens=None):
         wt = w(t)
         if d[t] <= hmax * val[t] and val[t] < best_s * wt:
             best_s, q = val[t] / wt, t
+    if q is not None:
+        # flips: passed breakpoints within the dual step θ = d_q/α_q, q excluded (L1575-1610)
+        th = hmax
+        flips = [c[0] for c in cand[:lo] if c[0] != q and d[c[0]] <= val[c[0]] * th]
     return (idx[q] if q is not None else None), flips
 
 
