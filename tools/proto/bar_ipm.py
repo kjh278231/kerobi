@@ -271,9 +271,12 @@ NB = 64
 
 
 def ldlt(M):
-    """Dense LDL^T in natural (ordering-permuted) row order with Gurobi's small-pivot rule (32af6a L264-280):
-    a pivot |d| <= t = clamp(1e-10 |diag(M)|, 1e-12, 1e-6) becomes sign(d) t. Returns L (unit lower), d, number of
-    replaced pivots, min |d/diag| (F+0x100). shortcut: no supernodes, so rounding differs from Gurobi."""
+    """Dense LDL^T in natural (ordering-permuted) row order with Gurobi's LP pivot rule (2d8ee5 L767-815, F+0x110 = 0
+    for all 64): a pivot with |d| <= 1e-16 |diag(M)| (or NaN) becomes 0 with inverse 0, every other pivot is kept;
+    multipliers are col * (1/d). (The +-clamp(1e-10 |diag|, 1e-12, 1e-6) replacement is the F+0x110 != 0 branch and
+    the Bunch-Kaufman 32af6a path, F+0xa0 != 0; neither runs for these LPs.) Returns L (unit lower), d, number of
+    replaced pivots (always 0 here), min |d/diag| (F+0x100, 0 on NaN).
+    shortcut: dense blocks instead of Gurobi's supernodes and MKL, so rounding differs (bar_chol.py is the bit model)."""
     A = M.copy()
     m = A.shape[0]
     diag0 = np.diag(M).copy()
@@ -289,14 +292,14 @@ def ldlt(M):
                 minratio = 0.0
             elif diag0[g] != 0.0:
                 minratio = min(minratio, abs(piv / diag0[g]))
-            t = min(max(abs(diag0[g]) * 1e-10, 1e-12), 1e-6)
-            if not t < abs(piv):
-                piv = -t if piv < 0 else t
-                nsmall += 1
+            if abs(diag0[g]) * 1e-16 < abs(piv):
+                inv = 1.0 / piv
+            else:
+                piv = inv = 0.0
             d[g] = piv
             col = P[j + 1:, j].copy()
-            P[j + 1:, j + 1:] -= np.outer(col, col[:k1 - k0 - j - 1]) / piv
-            P[j + 1:, j] = col / piv
+            P[j + 1:, j + 1:] -= np.outer(col * inv, col[:k1 - k0 - j - 1])
+            P[j + 1:, j] = col * inv
         if k1 < m:
             Lr = A[k1:, k0:k1]
             A[k1:, k1:] -= (Lr * d[k0:k1]) @ Lr.T
@@ -331,6 +334,7 @@ class Normal:
         M = (lp.A * th[:n]) @ lp.A.T
         M[np.diag_indices_from(M)] += np.where(lp.eq, 0.0, th[n:])
         self.L, self.d, self.nsmall, self.minratio = ldlt(M)
+        self.dinv = np.divide(1.0, self.d, out=np.zeros_like(self.d), where=self.d != 0)
         self.mode1 = bool((lp.T[:n] == 0).any()) or self.minratio < 1e-10
         self.nsolve = 0
         self.reflog = []  # refinement solves per 2f59f1 call (work counter)
@@ -340,7 +344,7 @@ class Normal:
         lp, th = self.lp, self.th
         self.nsolve += 1
         rhs = ry + lp.Ax(th * rx)
-        dy = trisolve(self.L, trisolve(self.L, rhs) / self.d, lower=False)
+        dy = trisolve(self.L, trisolve(self.L, rhs) * self.dinv, lower=False)
         return th * (lp.ATy(dy) - rx), dy
 
     def refine(self, D, rx, ry, dx, dy, reg):

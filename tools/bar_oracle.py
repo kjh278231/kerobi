@@ -2,13 +2,15 @@
 docs/m3_barrier.md §3) from inside BARRIER callbacks and dump it per iteration, so a port can be compared array by
 array at the first divergence.
 
-usage: python tools/bar_oracle.py <model.mps.gz> <out.jsonl> [--iters 0,1,2|all] [--vec] [--param Name=Value ...]
+usage: python tools/bar_oracle.py <model.mps.gz> <out.jsonl> [--iters 0,1,2|all] [--vec] [--chol] [--param Name=Value ...]
 Default params: Threads=1, Method=2, Presolve=0, Crossover=0. One JSON object per recorded iteration. Doubles are
 float.hex() so they compare bit for bit. The first recorded iteration also carries the raw B block (0xa00 bytes as
 doubles), the factor structure F, found on the stack frame of the main loop 2bf1ea, and the model data D as the
 barrier sees it ("D": scaled, rows permuted, docs/m3_ipm.md §1). --vec adds per iteration the raw B block, the
-history arrays and the work vectors in VEC (residuals, theta, directions of the previous iteration).
-Field meanings: docs/m3_ipm.md.
+history arrays and the work vectors in VEC (residuals, theta, directions of the previous iteration). --chol adds per
+iteration the numeric factor in F (chol_dump: the factor of the theta recorded one iteration earlier; at iteration 0 the
+factor of the starting theta) and, in the first record, the supernode structure it lives in.
+Field meanings: docs/m3_ipm.md, docs/m3_chol.md.
 """
 import argparse, ctypes, gzip, json
 
@@ -80,7 +82,30 @@ def snap_D(Dm):
             "scale": arr(L(Dm + 0x3e0), m + n), "objscale": D(Dm + 0x3e8).hex(), "objcon": D(Dm + 0x60).hex()}
 
 
-def dump(B, it, full, vec=False, Dm=0):
+_F = {}
+
+
+def chol_dump(F, m, static):
+    """Factor storage (docs/m3_chol.md §1): per block start c (F+0x78[c] = w > 0) the doubles at F+0xb8[c], packed lower
+    triangle of the w x w diagonal block by rows then the (len-w) x w rectangle by rows (len = F+0xa8[c]);
+    F+0xe0 pivots d, F+0xf0 assembled diagonal, F+0x100/0x114/0x118/0x178 scalars."""
+    blocks = arr(L(F + 0x78), m, "i")
+    clen = arr(L(F + 0xa8), m, "i")
+    vp = (ctypes.c_long * m).from_address(L(F + 0xb8))
+    out = {"vals": {c: arr(vp[c], blocks[c] * (blocks[c] + 1) // 2 + (clen[c] - blocks[c]) * blocks[c])
+                    for c in range(m) if blocks[c] > 0},
+           "d": arr(L(F + 0xe0), m), "e": arr(L(F + 0xe8), m), "diag0": arr(L(F + 0xf0), m), "f8": arr(L(F + 0xf8), m),
+           "F100": D(F + 0x100).hex(), "F114": I(F + 0x114), "F118": I(F + 0x118), "F178": I(F + 0x178)}
+    if static:
+        rp = (ctypes.c_long * m).from_address(L(F + 0xb0))
+        f88 = arr(L(F + 0x88), m + 1, "i")
+        out.update({"snode": arr(L(F + 0x70), m, "i"), "blocks": blocks, "col_len": clen, "f88": f88,
+                    "f90": arr(L(F + 0x90), f88[m], "i"), "f98": arr(L(F + 0x98), f88[m], "i"),
+                    "rows": {c: arr(rp[c], clen[c], "i") for c in range(m) if blocks[c] > 0}})
+    return out
+
+
+def dump(B, it, full, vec=False, Dm=0, chol=False):
     m, n = I(B + 0x18), I(B + 0x20)
     out = {k: (I(B + o) if t == "i" else D(B + o).hex()) for k, (o, t) in SCALARS.items()}
     out.update({"m": m, "n": n, "ncomp": L(B + 0x210),
@@ -91,6 +116,11 @@ def dump(B, it, full, vec=False, Dm=0):
         k = {"m": m, "n": n, "mn": m + n}
         out.update({nm: arr(L(B + o), k[kd]) for nm, (o, kd) in VEC.items()})
         out.update({nm: arr(L(B + o), min(it + 1, I(B + 0x44))) for nm, o in HIST.items()})
+    if chol:
+        if "F" not in _F:
+            _F["F"] = find_F(B, m)
+        out["theta"] = arr(L(B + 0x808), m + n)
+        out["chol"] = chol_dump(_F["F"], m, full)
     if full:
         out["B"] = arr(B, 0xa00 // 8)
         out["lb"], out["ub"], out["obj"] = arr(L(B + 0x5f8), n), arr(L(B + 0x600), n), arr(L(B + 0x608), n)
@@ -112,6 +142,7 @@ def main():
     ap.add_argument("out")
     ap.add_argument("--iters", default="0")
     ap.add_argument("--vec", action="store_true")
+    ap.add_argument("--chol", action="store_true")
     ap.add_argument("--param", action="append", default=[])
     a = ap.parse_args()
     params = {"OutputFlag": 0, "Threads": 1, "Method": 2, "Presolve": 0, "Crossover": 0}
@@ -131,7 +162,7 @@ def main():
         if want is None or it in want:
             c = mdl._callback._cbdata
             B = L(api.PyCapsule_GetPointer(c, api.PyCapsule_GetName(c)) + 0x68)
-            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L(mp + 0xe8))
+            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L(mp + 0xe8), chol=a.chol)
 
     model.optimize(cb)
     with (gzip.open(a.out, "wt") if a.out.endswith(".gz") else open(a.out, "w")) as f:
