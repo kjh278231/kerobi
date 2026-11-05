@@ -1,0 +1,162 @@
+{
+"model": "afiro",
+"params": {
+"Method": 1
+},
+"fns": [
+{
+"name": "iter28c93",
+"off": "0xc4fe0",
+"leave": [
+"ret",
+"i:0x2f8",
+"i:0x2fc",
+"i:0x294",
+"i:0xf0"
+]
+},
+{
+"name": "chuzr",
+"off": "0xccbc0",
+"leave": [
+"i:0x2f8",
+"Pi:0x40",
+"Pi:0x3c",
+"i:0x2c4",
+"Pi:0x38",
+"Pi:0x28",
+"Pd:0x30"
+]
+},
+{
+"name": "chuzr_b",
+"off": "0x1d58a0"
+},
+{
+"name": "chuzr_c",
+"off": "0x224c00"
+},
+{
+"name": "chuzr_d",
+"off": "0x2ba320"
+},
+{
+"name": "build15d2d",
+"off": "0xbdc10"
+},
+{
+"name": "bfrt",
+"off": "0xc74a0",
+"leave": [
+"ret",
+"i:0x2fc"
+]
+},
+{
+"name": "bfrt_b",
+"off": "0x21f6e0"
+},
+{
+"name": "harris",
+"off": "0xc6900"
+},
+{
+"name": "flip1c8477",
+"off": "0xcd720",
+"enter": [
+"ai:1"
+]
+},
+{
+"name": "flip_b",
+"off": "0x225820"
+},
+{
+"name": "price1bae9c",
+"off": "0xc0050",
+"leave": [
+"ret",
+"Pi:0x40",
+"Pi:0x44"
+]
+},
+{
+"name": "price_b",
+"off": "0x218010"
+},
+{
+"name": "recomp1ca57",
+"off": "0xbf5b0",
+"leave": [
+"ret"
+]
+},
+{
+"name": "pert48d5f",
+"off": "0xe45c0",
+"leave": [
+"ret",
+"i:0x338",
+"d:0x348"
+]
+},
+{
+"name": "opt118725",
+"off": "0x1aa280"
+},
+{
+"name": "c090a",
+"off": "0xcc6a0"
+},
+{
+"name": "upd8b473",
+"off": "0x11f620"
+},
+{
+"name": "df51",
+"off": "0xcd250",
+"enter": [
+"ai:1",
+"i:0x294"
+]
+},
+{
+"name": "dual6268b",
+"off": "0xf6a00",
+"leave": [
+"ret"
+]
+},
+{
+"name": "lu36ade",
+"off": "0xd4190"
+},
+{
+"name": "lu5b257",
+"off": "0xf15c0",
+"enter": [
+"i:0x294",
+"i:0x2c4",
+"Pi:0x3c",
+"Pi:0x40",
+"Pi:0x38"
+],
+"leave": [
+"ret",
+"i:0x294"
+]
+},
+{
+"name": "obj118853",
+"off": "0x1aa840"
+},
+{
+"name": "row_a4109",
+"off": "0x134d90"
+},
+{
+"name": "dinf1be9db",
+"off": "0xc4ca0"
+}
+]
+}

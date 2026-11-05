@@ -1,0 +1,97 @@
+// Call-sequence oracle: run Gurobi on one Netlib model (Presolve=0, Threads=1) under Frida and log entries/returns
+// of chosen libgurobi functions, with spx fields read at each event. SIMPLEX callbacks appear as "CB <itcnt>" (marker: qsort with zero elements).
+// usage: node tools/fn_trace.js <spec.json> <out.jsonl>
+// spec: {"model": "afiro", "params": {"Method": 1}, "max": 200000,
+//        "fns": [{"name": "chuzr", "off": "0xccbc0", "enter": ["i:0x2f8"], "leave": ["i:0x2f8", "Pi:0x40"]}]}
+// field codes, relative to args[0] (spx) saved at entry: i:/d:/l: int/double/long at spx+off;
+// Pi:/Pd: at P+off with P = *(spx+0x478); ai:N / al:N raw integer argument N; ret = return value (rax).
+// Gurobi may run in one process only (gurobi_guard.pth): retry later on "already running".
+const FRIDA = process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida';
+const frida = require(FRIDA);
+const fs = require('fs');
+const path = require('path');
+
+const [specPath, outPath] = process.argv.slice(2);
+const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
+const root = path.resolve(__dirname, '..', '..');
+const py = path.join(root, '.venv/bin/python');
+const mps = path.join(root, 're/bench/data/netlib', spec.model + '.mps.gz');
+const params = Object.assign({ OutputFlag: 0, Threads: 1, Presolve: 0, Method: 1 }, spec.params || {});
+const pyCode = `
+import ctypes, sys, gurobipy as gp
+libc = ctypes.CDLL(None)
+env = gp.Env(params=${JSON.stringify(params)})
+m = gp.read(${JSON.stringify(mps)}, env)
+def cb(mdl, where):
+    if where == gp.GRB.Callback.SIMPLEX:
+        libc.qsort(ctypes.c_void_p(0x5eed000000 + int(mdl.cbGet(gp.GRB.Callback.SPX_ITRCNT))), 0, 0, None)
+m.optimize(cb)
+print("DONE", m.Status, m.IterCount, flush=True)
+`;
+
+const agent = `
+let base = null;
+const spec = ${JSON.stringify(spec.fns)};
+const max = ${spec.max || 200000};
+let n = 0, buf = [];
+function flush() { if (buf.length) { send(buf); buf = []; } }
+function rd(spx, code, args, ret) {
+  const [k, v] = code.split(':');
+  if (k === 'ret') return ret.toString();
+  if (k === 'ai') return args[+v].toInt32();
+  if (k === 'al') return args[+v].toString();
+  let p = spx;
+  if (k[0] === 'P') p = spx.add(0x478).readPointer();
+  const a = p.add(parseInt(v));
+  const t = k[k.length - 1];
+  return t === 'i' ? a.readS32() : t === 'd' ? a.readDouble() : a.readS64().toString();
+}
+function install() {
+for (const f of spec) {
+  Interceptor.attach(base.add(parseInt(f.off)), {
+    onEnter(args) {
+      this.spx = args[0]; this.args = [args[0], args[1], args[2], args[3], args[4], args[5]];
+      if (n++ < max) buf.push([f.name, '>'].concat((f.enter || []).map(c => rd(this.spx, c, this.args, null))));
+      if (buf.length > 2000) flush();
+    },
+    onLeave(ret) {
+      if (f.leave && n++ < max) buf.push([f.name, '<'].concat(f.leave.map(c => rd(this.spx, c, this.args, ret))));
+    }
+  });
+}
+Interceptor.attach(Process.getModuleByName('libc.so.6').getExportByName('qsort'), {
+  onEnter(args) { const v = args[0].toString(16); if (v.startsWith('5eed')) { buf.push(['CB', parseInt(v.slice(4), 16)]); } }
+});
+}
+Process.attachModuleObserver({ onAdded(m) { if (m.name === 'libgurobi130.so') { base = m.base; install(); } } });
+recv('flush', () => { flush(); send('flushed'); });
+`;
+
+(async () => {
+  const device = await frida.getLocalDevice();
+  const out = fs.createWriteStream(outPath);
+  let text = '', flushed = null;
+  const pid = await device.spawn([py, '-c', pyCode], { stdio: 'pipe' });
+  const session = await device.attach(pid);
+  const script = await session.createScript(agent);
+  script.message.connect(msg => {
+    if (msg.type === 'error') { console.error(msg.stack); return; }
+    if (msg.payload === 'flushed') { flushed(); return; }
+    for (const r of msg.payload) out.write(JSON.stringify(r) + '\n');
+  });
+  device.output.connect(async (p, fd, data) => {
+    if (p !== pid) return;
+    text += data.toString();
+    if (fd === 2) process.stderr.write(data);
+    if (text.includes('DONE') && !flushed) {
+      await new Promise(res => { flushed = res; script.post({ type: 'flush' }); });
+      console.log(text.trim().split('\n').pop());
+      out.end();
+      await device.kill(pid).catch(() => {});
+      process.exit(0);
+    }
+  });
+  session.detached.connect(reason => { if (!flushed) { console.error('detached', reason, text); process.exit(1); } });
+  await script.load();
+  await device.resume(pid);
+})();
