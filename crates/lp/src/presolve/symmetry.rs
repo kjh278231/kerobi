@@ -667,15 +667,30 @@ impl State {
     /// `551cc0` with node limit `nodes` (rounds of the hash refinement) and work limit `work_limit`. Returns
     /// local_f4: 1 or 2 when the final partition is equitable (symmetry), else 0, -1 or -2.
     pub fn symmetry_count(&mut self, nodes: i32, work_limit: f64, prelimit: i32) -> i32 {
+        // tools/symmetry_check.py: RSOLVER_SYM_TRACE prints the work before and after (bits) and local_f4;
+        // RSOLVER_SYM_BASE (bits of the oracle's work before the call) also runs a copy from that work, so the
+        // work after compares bit for bit although the port's work differs before the call
+        let trace = std::env::var_os("RSOLVER_SYM_TRACE").is_some();
+        let replay = std::env::var("RSOLVER_SYM_BASE").ok().filter(|_| trace).map(|h| {
+            let mut c = self.clone();
+            c.work = f64::from_bits(u64::from_str_radix(&h, 16).expect("RSOLVER_SYM_BASE: hex bits"));
+            c.symmetry(nodes, work_limit, prelimit);
+            c.work.to_bits()
+        });
         let w0 = self.work;
+        let f4 = self.symmetry(nodes, work_limit, prelimit);
+        if trace {
+            eprintln!("5577ba {} {} {:016x} {:016x} {f4} {:016x}", self.n, self.m, w0.to_bits(), self.work.to_bits(),
+                      replay.unwrap_or(0));
+        }
+        f4
+    }
+
+    fn symmetry(&mut self, nodes: i32, work_limit: f64, prelimit: i32) -> i32 {
         let beg = self.compact_cols();
         let mut w = self.work;
         let f4 = self.detect(beg, nodes, work_limit, prelimit, &mut w);
         self.work = w;
-        // for tools/symmetry_check.py: work before/after (bits) and local_f4, against tools/symmetry_oracle.py
-        if std::env::var_os("RSOLVER_SYM_TRACE").is_some() {
-            eprintln!("5577ba {} {} {:016x} {:016x} {f4}", self.n, self.m, w0.to_bits(), w.to_bits());
-        }
         f4
     }
 
