@@ -53,6 +53,10 @@
 | 2026-11-05 | M1 dual CHUZR 원본 이식 | 순서 있는 후보 목록(표시·재구축 허용량), BTRAN 비용 점수, 인공 bound 단계(1e19). 반복 0 목록 63/64 | `899c192`, `e412440` |
 | 2026-11-05 | M1 presolve 3a–3b | 평행 열·행, PRESPLITROWS, 비용으로 조이는 부등식 행. PRELIMIT 1–17 64/64(기본값 최종 모델은 3/64) | `aba84fe` (`m1-lp-presolve`) |
 | 2026-11-05 | M3 Rust IPM | Method=2 경로, 상태·목적 64/64, Barrier statistics 64/64, `2d8ee5` pivot 규칙으로 **BarIterCount 59/64**(92%, G3 P1 기준 90% 넘음), PRIMINF 반복 0 64/64 | `a4ab223`, `ddc3040`, `df38e2a` (`m3-barrier`) |
+| 2026-11-05 | M1 dual BFRT·DSE 갱신 | 원본 규칙의 BFRT(말뭉치 99.4%), 정확한 DSE 갱신, Gurobi 정규화 규약의 reduced cost. Netlib 64: 정답 64/64, 반복 수 ±5% 21개, 기하평균 1.180배 | `1979049`, `33b944b`, `93e51af` |
+| 2026-11-05 | M1 presolve 4 집계 | 연결 리스트 행렬 위의 aggregation(`519a52`/`37f484` A–D 단계). 집계 뒤 점검 지점 62/62 | `3bbdba0` (`m1-lp-presolve`) |
+| 2026-11-05 | M1 postsolve uncrush | `363daa` 레코드 1·2·3·5·7·8·14와 검사기, 57/58 | `94c4195` (`m1-postsolve`) |
+| 2026-11-05 | M3 재시작·Cholesky | `2bf1ea` 재시작 이식(perold 125회, Gurobi 130회), BarIterCount ±5% 62/64. supernodal 분해 프로토타입이 실제 MKL로 L·d 비트 일치(7개 × 반복 0–2) | `bf116b4`, `6a0057f` (`m3-barrier`) |
 
 ## 4. goal 원문
 
