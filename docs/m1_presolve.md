@@ -3,22 +3,19 @@
 LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolve.md)로 옮긴다. 작업 방식은 [10 §9](10_porting.md)의 재구성 + 오라클 비트 검증이다.
 
 
-## 0. 현재 상태 (2026-11-05, 사용량 한도로 일시 정지)
+## 0. 현재 상태 (2026-11-05 저녁)
 
-- **일치**: Presolve=0 64/64, PRELIMIT 1–17 64/64, 기본값 3/64(fit1p, scsd1, scsd6).
-- **포팅 완료**: `5034e9`, `503985`(Netlib에서는 돌지 않음), `51a144`, 내부 루프(`4fe113`, `4ffe11`, `4ff158`, `50cc90`), 바깥 `50cc90(1)`, `50d878`, `38e49a`, `50495e`, `505077`, `3ff744`(열·행·PRESPLITROWS), `50fe2b`. `mod.rs::reduce()`는 `50fe2b` 다음에서 멈춘다(PRELIMIT에 닿은 것처럼).
-- **멈춘 작업**: 집계 포팅 에이전트와 postsolve 포팅 에이전트를 시작 직후 멈췄다. 코드 변경은 없다. postsolve용으로 만든 detached worktree `../rsolver-postsolve`는 지웠다.
-- **다음 할 일(순서대로)**:
-  1. 집계 `519a52`/`37f484`: 해독 노트 [m1_presolve_agg.md](m1_presolve_agg.md)가 있지만 오라클로는 아직 확인하지 않았다. 기본값 52개 모델이 이것에 달려 있다.
-  2. `5b488d`, `538f30` 행 activity 재계산, `47c445`(degen2·degen3만 바뀜, 부록 B), 패스 끝 검사와 다음 패스, 마무리 단계(§7).
-  3. postsolve `363daa`: [m1_postsolve.md](m1_postsolve.md)와 오라클 `tools/uncrush_oracle.py`를 쓴다. 기본값에서 이미 맞는 fit1p, scsd1, scsd6부터 한다.
-  4. 작업량(부록 A, `3ba9de`), clippy 경고 0, `docs/03_presolve.md` 마무리.
-- **오라클은 세션 스크래치에 있었다**: lim1..100, def, p0, noagg, nodep, nopar, noder는 다시 떠야 할 수 있다. 하나에 약 10초 걸린다.
-  ```
-  tools/gurun.sh ../.venv/bin/python tools/presolve_oracle.py <dir>/lim$k --param GURO_PAR_PRELIMIT=$k
-  ```
-  빌드는 `tools/build_local.sh`로 하고, 실행은 `PYTHONPATH=$PWD/python`으로 한다.
-- **작업 방식 메모**: 같은 폴더에서 에이전트 둘이 동시에 cargo 빌드를 하면 서로의 미완성 코드 때문에 빌드가 깨진다. 병렬로 할 때는 detached worktree를 쓰고, 결과는 diff로 이 브랜치에 옮겨 커밋한다.
+- **일치**: Presolve=0 64/64, PRELIMIT 1–17 64/64, 집계 직후 체크포인트 64/64, **기본값 62/64**(degen2, degen3은 `47c445` 미포팅). postsolve(uncrush `363daa`)는 PRELIMIT 1–17 58/58, **기본값 57/59**(uncrush가 도는 59개 중. 나머지 둘이 degen2/3)([m1_postsolve.md](m1_postsolve.md)).
+- **포팅 완료**: 내부 루프 전부, 바깥 패스 전부(`50cc90(1)`, `50d878`, `38e49a`, `50495e`, `505077`, `3ff744`×2, `50fe2b`, 집계 `519a52`/`37f484`, `538f30`+`4f79a1`), 다음 패스와 종료 판정, 마무리(`51a144`, {`50cc90(1)`, `50d878`} 반복, `50de61`, 끝의 `50d878`), 모델 생성의 PRESPLITROWS. 집계 해독은 [m1_presolve_agg.md](m1_presolve_agg.md), 코드는 `agg.rs`.
+- **진행 중(병렬 에이전트, 각자 worktree와 브랜치)**:
+  - `47c445`(PreDepRow): `../rsolver-deprow`, 브랜치 `m1-deprow`, 파일 `deprow.rs`, 노트 `m1_presolve_deprow.md`(작성 중).
+  - `5b488d`(PREDERIVED): **완료·병합**(브랜치 `m1-derived`, `derived.rs`, 노트 [m1_presolve_derived.md](m1_presolve_derived.md), type 24 레코드). PRELIMIT 17–154 체크포인트에서 degen2/3 외 전부 일치.
+  - postsolve 집계 레코드(type 6, 11, 21)와 기본값 uncrush: `../rsolver-postsolve`, 브랜치 `m1-postsolve`.
+  - 결과는 이 브랜치로 병합한다. 지금 두 함수는 `deprow.rs`/`derived.rs`의 no-op 자리 표시다.
+- **알려진 지름길**(코드에 `shortcut:` 주석): 대칭 검출 `5577ba`→`551cc0`(pass 0, 남은 열 ≥ 500·행 ≥ 100)은 포팅하지 않고 "대칭 없음"으로 둔다. 이 검출은 모델을 바꾸지 않고, 대칭을 찾으면 자동 PreDepRow를 0으로 만들 뿐이다. PRELIMIT 카운트로 보면 Netlib에서 `47c445`가 늘 돈다(64개 모두 마지막 체크포인트까지 호출 수가 같다. 카운트 100 초과인 beaconfd 102, scrs8 135, ganges 154도 확인). 집계의 작업량(+0x458)은 세지 않는다. 집계 prescan 패턴(작은 계수, 단계 D 특수 경로)은 만나면 panic한다(Netlib 없음).
+- **다음 할 일**: 세 브랜치 병합 → 기본값 64/64·체크포인트 전수(k = 1..154) 확인 → 기본값 uncrush 64/64 → clippy 0, `docs/03_presolve.md` 마무리.
+- **오라클**: `tools/presolve_oracle.py <dir> [--param N=V]`(64개 약 10초). 체크포인트 전수 비교는 k마다 오라클을 떠 두고 모델별로 처음 다른 k를 찾는다(이 세션은 스크래치에 lim1..100과 일부 101–154를 떴다). 모델별 호출 번호는 `mod.rs`의 `calls += 1` 뒤에 임시 `eprintln` 추적을 넣어 얻는다(커밋하지 않는다).
+- **작업 방식**: 같은 폴더에서 에이전트 둘이 동시에 cargo 빌드를 하면 서로의 미완성 코드 때문에 빌드가 깨진다. 병렬은 worktree를 따로 쓰고 브랜치를 병합한다.
 
 ## 1. 호출 그래프: presolve는 LP를 풀지 않는다 (2026-11-05)
 
@@ -84,7 +81,8 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 | Presolve=0 | 64/64 | 상태 생성의 `>` → `−1·<` 변환만 |
 | PRELIMIT 1–17 | 64/64 | 내부 루프 전부(`4fe113`, `4ffe11`, `4ff158`, `50cc90(0)`, 진척도 반복), 바깥 `50cc90(1)`, `50d878`, `38e49a`, `50495e`, `505077`, `3ff744(1)`, `3ff744(0)`, `50fe2b`, 그리고 모델 생성의 PRESPLITROWS |
 | PRELIMIT 18–100 | 불일치는 모두 rsolver가 멈춘 뒤 | 18: 59/64, 20: 59/64, 25: 45/64, 30: 27/64, 50: 7/64, 100: 3/64. 도달 범위 검사로 k = 14..100에서 닿는 체크포인트의 불일치가 0임을 확인했다. 동작한 모델 수: `3ff744(1)` 25개, `3ff744(0)` 10개, `50fe2b` 23개(행·열·등식 카운터 기준) |
-| 기본값 | 3/64 | 진행 중(첫 패스 `519a52`에서 멈춘다) |
+| 집계 직후(모델별 k) | 64/64 | 2026-11-05. ganges·scrs8은 k > 70 |
+| 기본값 | 62/64 | degen2, degen3은 `47c445` 몫 |
 
 `mod.rs`의 `reduce()`는 아직 포팅하지 않은 reduction에 닿으면 거기서 멈춘다(PRELIMIT에 닿은 것과 같은 효과). 그래서 PRELIMIT 비교는 멈춘 지점까지 유효하다.
 
@@ -140,6 +138,13 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 - `519a52` 개요(미포팅, 742줄): 처음에 CSR 상태를 MIP용 연결 리스트(+0x160 노드 풀, 노드 0x20바이트, +8 열, +0xc 행, 행 목록 +0x178의 다음 +0x10, 열 목록 +0x180의 다음 +0x18)로 바꾸는 것으로 보이고, `53c507`(추적기) 뒤 최대 5번 `3ba5ac`, `37f484`(MIP 집계기, 3,928줄, 콜리 20여 개), state+0xe0 = 2, 추적기 원시 목록(`53844d`/`5384ca`, 거르기 `53dc94`/`53dcba`)의 행과 바뀐 열의 행을 모아 `370047`을 부른다. 이번 라운드에 지운 행 수 ≥ m·local_98(0.01, Presolve<2이고 문제 유형 4면 0.1)이고 바뀐 것이 있으면 반복한다. 400–742줄은 할당이 많아 CSR로 되돌리는 부분으로 보이나 확인하지 않았다.
 
 **다음 작업: `519a52`/`37f484`**(기본값의 첫 멈춤 지점. 집계는 Netlib 52개 모델을 바꾼다, 부록 B). 연결 리스트 저장소와 그 순회 순서(삽입 위치)를 먼저 정해야 한다. 그 뒤 `5b488d`(10.5KB), activity 재계산, `47c445`(34KB, LU), 마무리 단계(`51a144`, {`50cc90(1)`, `50d878`} 반복, `50de61` 7.9KB).
+
+**포팅 완료(2026-11-05, stage 4–5)**:
+- 집계 `519a52`/`37f484`: [m1_presolve_agg.md](m1_presolve_agg.md)대로 옮겼고 집계 직후 체크포인트 64/64가 첫 시도에 맞았다. 확인한 것: 노드 arena 여유는 `3a484d`의 spare = max(10000, max(m,n), nnz/10)(LP는 model+0x18과 QC 수가 0), +0x198 초기값 = spare. 단계 C의 n1/n2 맞바꿈은 asm(0x389dcc)에서 계수도 함께 바꾼다(디컴파일은 N1을 안 바꾼 것처럼 보인다). B1/B2는 리스트 순서와 activity가 같고 pending·+0xd8만 다르다.
+- 집계 뒤: `5b488d`(DualReductions && PreCrush==0, 카운트), `538f30` 행 목록으로 `4f79a1`, PRETWOROWS는 Presolve 2에서만, 대칭 블록(위 지름길), `47c445` mode 1·2(pass 0, PreDepRow 비트), 그다음 ρ(마지막 내부 반복 스냅숏 대비) ≤ 1e-6이면 마무리.
+- PreDepRow 자동(`390989` L251): Presolve==2이면 3, Presolve==1이면 0, 아니면 Method 2·state+0x100·문제 유형 1이면 3, Method≠6이고 INTBASIS < 1이면 `2.5·n < nnz`(state+0xd8, 시작 시점)일 때 3, 아니면 0.
+- 마무리(`LAB_0048dff3`): 추적기 레벨 0과 reset, PREBOUND면 `51a144`(카운트만, 한도 검사 없음). 카운트가 PRELIMIT보다 작을 때만 `LAB_0048e0de`: (QP·QC·PreSparsify==2 블록은 LP 기본값에서 안 돎) {`50cc90(1)`, DualReductions면 `50d878`}을 `50d878`이 +0x408을 늘리는 동안 반복, PREBOUND면 `50de61`, 그것이 행을 지웠고 DualReductions면 `50d878`. 그다음 `3b0917`.
+- `50de61`(7.9KB): bound 사본 lc/uc와 activity 사본으로 시작한다. 살아 있는 열 수·1000 ≤ 그 열들의 nnz이면 행 전부를 목록으로 바로 3단계. 아니면 (1) 무한 개수 조건(`inf_min+inf_max ≥ 1`이고 `inf_min ≤ 1` 또는 (`=`이고 `inf_max ≤ 1`))을 만족하는 행의 작업 목록으로, **무한 bound인 쪽만** 함의 bound를 구한다(R = min(max(max−min,1),1e6), |a| ≥ R·1e-10, `=` 행은 max activity로 반대쪽도). 새 bound가 들어가면 그 열의 행 사본 activity를 그대로 더해 고치고(가드 없음) 행을 다시 목록에 넣는다(flag += 2, 다음 라운드는 flag ≥ 2인 행만). (2) 행마다 R = min(max(max−min,1),1e4): `=`는 실행 불가 판정, `<`는 inf_max==0 && max < −ft·R이면 지운다(−2, 열 표시), 나머지는 목록. (3) 그 목록으로 `50108e`(시작에서 bound를 사본에 다시 복사한다: (m+1)·0.3 < nnz·|목록|이면 전부, 아니면 목록 행의 열만. 그래서 (1)의 값은 목록에 안 걸린 열에만 남는다). (4) Method 2·state+0x100·m·0.05 < +0x488이 아니면, 유한 bound가 하나라도 있는 열마다 |lc| < 1e7이면 lb = max(lb, lc − (|lc|+1)·0.001), |uc| < 1e7이면 ub = min(ub, uc + (|uc|+1)·0.001). (5) 행마다 lc/uc로 activity를 다시 더해 실행 불가·넘칠 수 없는 `<` 행 삭제를 판정하고, 남는 행은 새 lb/ub로 activity를 다시 더해 저장한다(가드 없음). 기본값 Netlib 59개가 여기서 bound를 얻는다(예: israel A301 ub 305 → 305.306).
 
 나머지 항목:
 - postsolve `363164`/`365159`와 비트 오라클(해·기저). 레코드는 `state.rs`의 `PostRec`에 쌓고 있다(type 1, 2, 3, 4, 5, 7, 8, 14). type 4·14는 `363daa`에서 아직 해독하지 않았다(`35d235`가 4).

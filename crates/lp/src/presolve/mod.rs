@@ -2,6 +2,9 @@
 //! docs/m1_presolve.md). Entry from `Model.presolve()` is `999702`, which names the result `<name>_pre`.
 //! Every reduction call counts toward GURO_PAR_PRELIMIT; reaching it jumps straight to model generation, which
 //! is what makes each reduction checkable on its own.
+// Ported comparisons keep the original's form (`!(a < b)` differs from `a >= b` on NaN), and loops index several
+// parallel arrays at once.
+#![allow(clippy::neg_cmp_op_on_partial_ord, clippy::needless_range_loop)]
 mod agg;
 mod deprow;
 mod derived;
@@ -96,6 +99,7 @@ pub fn run(md: &Model, p: &Params) -> Model {
 /// `run` plus what uncrush needs (`postsolve.rs`).
 pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
     let mut st = State::new(md);
+    let nnz0 = st.nnz; // aggregation changes `st.nnz`; the arena's first chunk size uses the constructor's value
     if p.presolve != 0 {
         let tols = ColTols {
             infbound: p.infbound,
@@ -115,7 +119,7 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
         }
     }
     let q = st.to_model(md);
-    let post = postsolve::Post::new(&st, p.infbound);
+    let post = postsolve::Post::new(&st, p.infbound, nnz0);
     (q, post)
 }
 

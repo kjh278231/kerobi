@@ -38,10 +38,23 @@ pub enum PostRec {
     /// type 21 (`39d14c`, aggregation stage C): in `=` row `r`, x_e1 = f1 x_k1 and x_e2 = f2 x_k2 were folded
     /// away; `a1`/`a2` their row-r coefficients, `obj`/`ub` theirs at push, `n1`/`n2` their other entry counts and
     /// `entries` those entries (e1's, then e2's).
+    /// type 24 (`5b488d` in LP presolve; `3a008f` is the MIP twin from `5a4d8b`/`5a5eff`): column `j` (bounds, vtype byte)
+    /// leaves with all its `rows`; postsolve (`361ab1`) puts it at the bound those rows imply. `y_idx`/`y_add`:
+    /// `y_idx` the row (or -1) and `y_add` (= -obj_j / a_ij, 1.0 when the pivot is not found) correct y[y_idx] afterwards; both -1 / 0.0 when |obj_j| <= 1e-10.
+    ColRows { j: i32, lb: f64, ub: f64, vtype: u8, y_idx: i32, y_add: f64, rows: Vec<ColRow> },
     PairAgg {
         r: i32, e1: i32, e2: i32, k1: i32, k2: i32, n1: i32, n2: i32, f1: f64, f2: f64, a1: f64, a2: f64, obj1: f64,
         obj2: f64, ub1: f64, ub2: f64, entries: Vec<(i32, f64)>,
     },
+}
+
+/// One row of a type-24 record: the row, its sense, rhs and live entries (column, value), the column itself included.
+#[derive(Clone, Debug)]
+pub struct ColRow {
+    pub row: i32,
+    pub sense: u8,
+    pub rhs: f64,
+    pub terms: Vec<(i32, f64)>,
 }
 
 #[derive(Clone, Debug)]

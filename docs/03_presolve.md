@@ -164,3 +164,27 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 - reduction 단위 테스트: 각 reduction에 교과서 예(Achterberg 2020 그림)를 넣고 presolved 모델과 **uncrush 뒤 원래 해의 실행가능성·목적값**을 확인.
 - 속성 테스트(proptest): 무작위 작은 LP/MIP를 presolve 있음/없음으로 풀어 목적값 일치(1e-6), uncrush 해 위반 ≤ FeasTol.
 - Netlib 104개: presolve 켠/끈 결과 일치.
+
+## 10. LP presolve 포팅 결과 (M1, `crates/lp/src/presolve/`)
+
+위 §3의 표는 MIP·LP 공통 설계다. LP presolve `390989`가 실제로 부르는 순서와 가드는 아래와 같다(기본 파라미터 기준, 근거와 세부는 [m1_presolve.md](m1_presolve.md), 집계는 [m1_presolve_agg.md](m1_presolve_agg.md)). 호출마다 숨은 파라미터 `GURO_PAR_PRELIMIT` 카운트가 1 늘고, 한도에 닿으면 마무리 없이 모델 생성으로 간다. 이 카운트가 reduction 하나씩 비교하는 오라클이다.
+
+| 단계 | 함수 | 포트 | 가드 | 레코드 |
+|---|---|---|---|---|
+| 시작 | `5034e9` 빈 행·자유 행, `503985` 거의 고정 열, `51a144` 쌍대 singleton 고정 | `state.rs`, `reduce.rs` | `503985`는 FIXTOL < 0이면 n ≥ 10000일 때만, `51a144`는 PREBOUND | 1 |
+| 내부 루프 | `4fe113` 열, `4ffe11` singleton 행, `4ff158` forcing 행, `50cc90(0)` 중복 행 | `reduce.rs` | 진척도 ρ ≤ 1e-11·max(0,i−5)이면 끝 | 1, 2, 3, 7, 8 |
+| 바깥 패스 | `50cc90(1)`, `50d878` 빈 열, `38e49a` 비용 점 고정, `50495e` 함의 중복 행, `505077` 쌍대 bound 행(k < 5), `4ffe11`, `4ff158` | `reduce.rs` | `50d878`·`38e49a`·`505077`은 DualReductions | 1, 3 |
+| | `3ff744` 평행 열(mode 1)·행(mode 0) | `parallel.rs` | PREPARALLEL, 열은 DualReductions | 4, 5 |
+| | `50fe2b` 비용이 묶는 부등식 → 등식 | `reduce.rs` | DualReductions(카운트는 늘 1) | – |
+| | `519a52`/`37f484` 집계(연결 리스트 행렬, 단계 A–D, 최대 5라운드) | `agg.rs` | Aggregate, pass 0만 | 2, 6, 11, 21 |
+| | `5b488d` 이웃이 무엇을 해도 만족되는 열과 그 행 제거(비용은 `=` 행 하나로 넘김) | `derived.rs` | PREDERIVED, DualReductions, PreCrush==0, 모든 패스 | 24 |
+| | `538f30`+`4f79a1` activity 재계산 | `state.rs` | 카운트 없음 | – |
+| | `47c445` 종속 행(mode 1, 2) | `deprow.rs` | pass 0, PreDepRow 자동 = 2.5·n < nnz이면 3. 대칭 검출 `5577ba`가 대칭을 찾으면 0 | (해독 중) |
+| | 종료 판정 | `mod.rs` | 패스 시작 대비 ρ ≤ 1e-4·max(0,k−2), 패스 끝 ρ ≤ 1e-6, PrePasses 자동 100 | |
+| 마무리 | `51a144`, {`50cc90(1)`, `50d878`} 반복, `50de61` 함의 bound(0.001·(\|b\|+1) 여유), `50d878` | `mod.rs`, `reduce.rs` | PREBOUND, DualReductions | 1 |
+| 모델 생성 | `3b0917`: 살아 있는 행·열을 원래 순서로, 열 CSR 순서로 항목을 쓴다. 마주 보는 평행 행 쌍은 PRESPLITROWS로 `=` 행 + 범위 열(type 14) | `state.rs`, `parallel.rs` | PreCrush ≤ 1 | 14 |
+
+- 저장: CSR+CSC, 지연 삭제(§1). 집계만 MIP식 연결 리스트로 바꿨다가 CSR로 되돌린다. 리스트 순서가 결과 CSR 순서가 되므로 노드 풀(free·pending)과 +0xd8 카운터까지 원본대로 흉내 낸다.
+- activity는 덧셈이 부정확하면 1ulp 안전한 쪽으로 미는 가드 덧셈을 쓴다. 단 `50de61`과 `50495e`/`50108e`의 행 범위는 가드 없이 더한다.
+- 일치(Netlib 64, 기본값): presolved 모델 62/64(degen2·degen3은 `47c445` 대기), PRELIMIT 체크포인트 k ≤ 102 전수 비교에서도 degen2/3만 다르다. uncrush(`363daa`)는 오라클 `pre_after`를 넣어 비트 비교로 57/59(uncrush가 도는 59개 중, 나머지 둘은 degen2/3).
+- 포팅하지 않은 것(지름길, 코드에 `shortcut:` 주석): 대칭 검출 `551cc0`(결과는 PreDepRow 자동값 게이트에만 쓰인다. Netlib PRELIMIT 카운트로는 늘 "대칭 없음"), 작업량 예산 `3ba9de`(Netlib에서 닿지 않음), Presolve=2 전용 reduction, 집계 prescan 특수 경로, 집계의 작업량 항목.

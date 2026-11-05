@@ -214,7 +214,6 @@ impl State {
         let end = b + self.col_len[j] as usize;
         // first live entry with a nonzero value (r and the slot are the last visited if none)
         let (mut r, mut slot) = (-1i32, b);
-        let a;
         let mut last = 0.0f64;
         let mut k = b;
         while k < end {
@@ -228,7 +227,7 @@ impl State {
             }
             k += 1;
         }
-        a = last;
+        let a = last;
         self.work += self.col_len[j] as f64 * 3.0;
         if !(1e-9 < a.abs() && (1e-6 <= a.abs() * (u - l) || cost.abs() * (u - l) <= 1e-6)) {
             return Ok(self.col_cnt[j]);
@@ -1468,7 +1467,7 @@ impl State {
             }
         }
         let sense: Vec<u8> = (0..n)
-            .map(|j| if !plain(self, j) { b'F' } else { [b'F', b'>', b'<', b'='][st[j] as usize] })
+            .map(|j| if !plain(self, j) { b'F' } else { b"F><="[st[j] as usize] })
             .collect();
         self.work += n as f64 + n as f64;
         // row duals (local_90 / local_98): y <= 0 for `<` rows, free for `=` rows
