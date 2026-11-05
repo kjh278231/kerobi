@@ -209,7 +209,7 @@ impl Pricing {
                 self.score[p] = sc;
                 if self.mark[p] == 3 {
                     self.mark[p] = 1;
-                } else if self.mark[p] % 2 == 0 {
+                } else if self.mark[p] & 1 == 0 {
                     if sc < self.thr {
                         self.mark[p] = 0;
                     } else {
