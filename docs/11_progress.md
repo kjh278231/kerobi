@@ -91,6 +91,9 @@
 | 2026-11-06 | M1 unscaled 재검사·CHUZR 비용·BTRAN | `2e9ae` 원 공간 재검사와 재풀이(라이선스 밖 Netlib 최적값 정확), 행 비용 가중치 갱신, Markowitz 분해의 희소 BTRAN. blend는 Gurobi 피벗 경로 전체와 같음. Netlib 64: **반복 수 같음 15**, 경로 전체 일치 6 | `61676e0`, `bf35530`, `4474ff8` |
 | 2026-11-06 | M1 presolve Method 분기 | Method·Crossover·SolutionTarget 분기(`state+0x100`). Method 2·6, Crossover 0에서 presolved 모델 Gurobi와 **64/64** | `ce24d8e` (`m1-lp-driver`) |
 | 2026-11-06 | M2 presolve 제어 흐름·해독 | `3cd406` 라운드·패스·내부 루프·라운드 끝·마지막 단계 제어 흐름(reduction은 빈 함수), probing·clique·내부 루프 해독 노트(하위 에이전트 inner, probe, clique 병합) | `f374378`, `0de8d15` (`m2-mip-presolve`) |
+| 2026-11-06 | M1 dual 원본 규칙 추가 | 이탈 변수 bound 방향(`28c93`), 분해 뒤 CHUZR 목록 재구축, `48d5f` 섭동 발동 규칙, pricing 카운터. Netlib 64: 정답 64/64, **반복 수 같음 18–19**, ±5% 40, 기하평균 1.000 | `f8e9c59`, `549e828`, `a19d442`, `835441c` |
+| 2026-11-06 | M1 드라이버: PDHG 시드·G5 보고 | presolve 모델 난수(`3b0917`/`895c5`)로 PDHG 시드, Presolve 켠 PDHG 64/64. 에이전트가 **G5 기준 충족**을 보고함(검증 대기) | `c8f7170`, `1ea1977` (`m1-lp-driver`) |
+| 2026-11-06 | M2 clique 표 | `451bed` clique 표 이식 | `cf52001` (`m2-mip-presolve`) |
 
 ## 4. goal 원문
 
