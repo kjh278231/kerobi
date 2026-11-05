@@ -1,6 +1,6 @@
 //! PyO3 layer: one call in, one tuple out. Solve runs without the GIL (cf. re/notes/02).
 use pyo3::prelude::*;
-use rsolver_core::{solve, Problem, Status};
+use rsolver_core::{solve, Problem, Row, Status};
 
 /// solve(obj, rows, lb, ub, integer) -> (status: int, obj_val, x)
 /// rows: list of ([(col, coef), ...], lo, hi). Status: 2 optimal, 3 infeasible, 5 unbounded
@@ -9,7 +9,7 @@ use rsolver_core::{solve, Problem, Status};
 fn solve_problem(
     py: Python<'_>,
     obj: Vec<f64>,
-    rows: Vec<(Vec<(usize, f64)>, f64, f64)>,
+    rows: Vec<Row>,
     lb: Vec<f64>,
     ub: Vec<f64>,
     integer: Vec<bool>,

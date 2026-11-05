@@ -3,12 +3,15 @@
 pub mod lp;
 pub mod mip;
 
+/// One constraint: (sparse coefficients, row lower, row upper).
+pub type Row = (Vec<(usize, f64)>, f64, f64);
+
 /// Minimise c·x subject to lo <= A x <= hi, lb <= x <= ub. Use ±INF for free sides.
 #[derive(Clone, Debug, Default)]
 pub struct Problem {
     pub obj: Vec<f64>,
     /// rows[i] = (sparse coefficients, row lower, row upper)
-    pub rows: Vec<(Vec<(usize, f64)>, f64, f64)>,
+    pub rows: Vec<Row>,
     pub lb: Vec<f64>,
     pub ub: Vec<f64>,
     pub integer: Vec<bool>,
