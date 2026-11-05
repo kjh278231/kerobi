@@ -451,9 +451,10 @@ impl<'a> Engine<'a> {
             .map(|j| self.d[j])
             .collect();
         let line = format!(
-            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{}}}\n",
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}]}}\n",
             self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr),
-            self.pr.allow, self.lu.n_updates, self.pr.avg
+            self.pr.allow, self.lu.n_updates, self.pr.avg, hex(&self.pr.score), self.pr.cost_mode, hex(&self.pr.row_cost),
+            hex(&self.pr.var_cost)
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
             let _ = f.write_all(line.as_bytes());
@@ -540,7 +541,8 @@ impl<'a> Engine<'a> {
     }
 
     /// Mark positions whose x_B changed (mode 0) and rebuild the list once the allowance runs out.
-    fn price_touch(&mut self, changed: &[usize], leaving: Option<usize>) {
+    /// `rebuild`: the allowance check of `1bae9c` (after the pivot); the flip pass of `1c8477` only marks.
+    fn price_touch(&mut self, changed: &[usize], leaving: Option<usize>, rebuild: bool) {
         if self.pr.mode != 0 {
             for &p in changed {
                 let sc = self.viol(p).map(|v| self.pr.score(p, self.head[p], v, self.w[p]));
@@ -559,6 +561,9 @@ impl<'a> Engine<'a> {
         for &p in changed {
             let inf = self.viol(p).is_some();
             self.pr.touch(p, inf);
+        }
+        if !rebuild {
+            return;
         }
         if self.pr.allow < 0 {
             self.pr.cursor = 0;
@@ -849,7 +854,7 @@ impl<'a> Engine<'a> {
                     }
                     (0..self.m).filter(|&p| dxb[p] != 0.0).collect()
                 };
-                self.price_touch(&changed, None);
+                self.price_touch(&changed, None, q == usize::MAX);
                 if q == usize::MAX {
                     self.iter += 1;
                     self.log();
@@ -952,9 +957,21 @@ impl<'a> Engine<'a> {
                 // shortcut: spx+0x46c read as 4 (afiro); 1bae9c raises the threshold by 10% on a long list
                 self.pr.thr *= 1.1;
             }
+            if self.lu.n_updates > updates_before && self.pr.cost_mode > 0 {
+                // 9eb18 (5b257 L1330, update branch only): P+0x60 = nnz(ρ_r); rows of α_q gain it up to m/2, the
+                // pivot position gets at least P+0x60 + 100
+                let p60 = rho_sp.len() as f64;
+                let half = self.m as f64 * 0.5;
+                for p in 0..self.m {
+                    if p != r && col[p].abs() >= ZERO {
+                        self.pr.row_cost[p] = (self.pr.row_cost[p] + p60).min(half);
+                    }
+                }
+                self.pr.row_cost[r] = self.pr.row_cost[r].max(p60 + 100.0);
+            }
             if self.lu.n_updates > updates_before {
                 let changed: Vec<usize> = (0..self.m).filter(|&p| p == r || col[p] != 0.0).collect();
-                self.price_touch(&changed, Some(r));
+                self.price_touch(&changed, Some(r), true);
             }
             if !self.perturbed && degenerate > 50 {
                 self.perturb();

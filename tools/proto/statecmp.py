@@ -43,6 +43,22 @@ for it in sorted(set(g) & set(mine)):
     la, lb = [ga.get(p) for p in pr.get("list") or []], [gb.get(p) for p in b["list"]]
     if pr and (pr.get("mode") != b["mode"] or la != lb):
         out.append(f"pricing (vars) g mode {pr.get('mode')} list {la[:6]} | mine mode {b['mode']} list {lb[:6]}")
+    if pr.get("score") and b.get("score"):
+        gs, ms = [F(v) for v in pr["score"]], [F(v) for v in b["score"]]
+        k = [j for j in range(len(va)) if va[j] >= 0 and vb[j] >= 0 and gs[va[j]] != ms[vb[j]] and (gs[va[j]] or ms[vb[j]])]
+        if k:
+            out.append(f"score {len(k)} diff, first var {k[0]}: g {gs[va[k[0]]]!r} mine {ms[vb[k[0]]]!r}")
+    if pr.get("row_cost") and b.get("row_cost"):
+        if pr.get("cost_mode") != b.get("cost_mode"):
+            out.append(f"cost mode g {pr.get('cost_mode')} mine {b.get('cost_mode')}")
+        gs, ms = [F(v) for v in pr["row_cost"]], [F(v) for v in b["row_cost"]]
+        k = [j for j in range(len(va)) if va[j] >= 0 and vb[j] >= 0 and gs[va[j]] != ms[vb[j]]]
+        if k:
+            out.append(f"row_cost {len(k)} diff, first var {k[0]}: g {gs[va[k[0]]]!r} mine {ms[vb[k[0]]]!r}")
+        gv, mv = [F(v) for v in pr["var_cost"]], [F(v) for v in b["var_cost"]]
+        k = [j for j in range(len(gv)) if gv[j] != mv[j]]
+        if k:
+            out.append(f"var_cost {len(k)} diff, first {k[0]}: g {gv[k[0]]!r} mine {mv[k[0]]!r}")
     lu = a.get("lu") or {}
     if lu and (lu.get("k"), pr.get("allow")) != (b.get("k"), b.get("allow")):
         out.append(f"lu k/allow g {lu.get('k')}/{pr.get('allow')} mine {b.get('k')}/{b.get('allow')}")

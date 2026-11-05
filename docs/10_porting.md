@@ -162,7 +162,7 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 |---|---|---|
 | (1) 정확성 Method 1(= 기본) | 91개 중 90: 64개 64/64, 밖 27개 26/27(`bench/lp_check_ext.csv`, 300초) | 남은 실패 pilot: −557.488643 대 정확한 값 −557.489729284(상대 1.9e-6). 원래 공간에서 위반 ≤ 1e-6이라 허용오차 안의 차이로 보인다(`2e9ae` 재풀이도 걸리지만 값이 거의 안 변함). 밖 27개 기준값에 Hager 표의 정확한 값(10⁻¹² 재계산, CPLEX 보정)을 추가했다(`tools/lp_check.py` ACCURATE): pilot87 readme 값은 부정확했다 |
 | (1) 정확성 Method 0 | 91개 중 87(`bench/lp_check_m0.csv`, 120초) | 실패: dfl001·maros-r7(시간 초과), pilot·pilot87(오답). 반복 수 비율 기하평균 1.85(경로는 아직 Gurobi와 다름) |
-| (2) P1 반복 수 | 10/64 일치, ±5% 안 39/64, 비율 기하평균 1.019. 피벗 경로 전체 일치 4/64, 첫 분기 위치 중앙값 8% | `sh tools/m1check.sh`(→ `bench/lp_check.csv`, `bench/pathcmp.txt`). 반복 수가 같아도 경로는 대부분 일찍 갈린다 |
+| (2) P1 반복 수 | 14/64 일치, ±5% 안 38/64, 비율 기하평균 1.016. 피벗 경로 전체 일치 5/64, 첫 분기 위치 중앙값 11.5% | `sh tools/m1check.sh`(→ `bench/lp_check.csv`, `bench/pathcmp.txt`). 최근 두 수정: CHUZR 행 비용 P+0x68을 LU 갱신마다 `9eb18`로 갱신, BFRT flip 단계는 표시만(목록 재구성은 피벗 뒤 `1bae9c`) |
 | (3) P2 work | 미구현 | 작업량 계수 spx+0x148(1.3, m > 10000이면 보정), 커널마다 연산 수 누적 |
 | (4) P3 시간 | 미측정 | release에서 25fv47 0.5–0.7초 대 Gurobi 0.09초. 반복마다 O(n+m) 루프와 조밀 FTRAN/BTRAN이 원인 |
 | (5) 구조 | LU(Markowitz·FT), crash, dual·primal, 드라이버 일부, 행 사본, RNG | Quad(F80) 미착수, `0c3d0d` 분기(웜스타트·network·sifting·비스케일 재풀이) 미이식 |

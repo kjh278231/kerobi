@@ -38,7 +38,8 @@ def dump(spx, it, full):
            # CHUZR state (2896a3): mode P+0x40 (0 = ordered list), list P+0x10 of length P+0x3c, cursor spx+0x2c4,
            # per-position skip flags spx+0x280, rebuild budget P+0x38
            "price": {"mode": I(P + 0x40), "list": arr(L(P + 0x10), I(P + 0x3c), "i"), "cursor": I(spx + 0x2c4),
-                     "flags": list(ctypes.string_at(L(spx + 0x280), m)), "budget": I(P + 0x38), "allow": I(P + 0x28),
+                     "flags": list(ctypes.string_at(L(spx + 0x280), m)), "budget": I(P + 0x38), "allow": I(P + 0x28), "score": arr(L(P + 0x18), m), "cost_mode": I(P + 0x44),
+                     "row_cost": arr(L(P + 0x68), m), "var_cost": arr(L(P + 0x70), n + m),
                      "avg": D(P + 0x48)} if P else None,
            # LU counters (spx+0x470): updates done, refactor interval, row-eta count, Σ nnz of update columns
            "lu": {"k": I(L(spx + 0x470) + 0x18c), "interval": I(L(spx + 0x470) + 0x188),
