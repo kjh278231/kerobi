@@ -145,3 +145,5 @@ PYTHONPATH=$PWD/python python tools/presolve_check.py $S/or/lim$k --param GURO_P
 ## 부록 B. `47c445`(PreDepRow)의 영향 범위 (2026-11-05)
 
 PreDepRow=0으로 뜬 오라클(`--param PreDepRow=0`)을 기본값과 비교했다. 결과가 다른 모델은 **degen2, degen3 둘뿐**이다. 둘 다 종속 행을 2개씩 지운다("Presolve removed" 행 수 67 vs 65, 98 vs 96). 나머지 62개는 `47c445`가 돌아도 지우는 행이 없다. 결과가 이산값(어느 행을 지우는가)이라, 피벗 순서가 같아 같은 행을 고르면 P0는 맞는다. 다만 작업량(P2)과 PRELIMIT 카운트는 모든 모델에서 맞춰야 한다.
+
+같은 방법으로 남은 reduction을 하나씩 끄고 기본값과 비교한 결과(다른 모델 수): Aggregate=0(`519a52`/`37f484`) **52개**, GURO_PAR_PREPARALLEL=0(`3ff744`) **33개**, GURO_PAR_PREDERIVED=0(`5b488d`) **0개**. `5b488d`는 Netlib에서 모델을 바꾸지 않지만 PRELIMIT 카운트와 작업량에는 들어간다.
