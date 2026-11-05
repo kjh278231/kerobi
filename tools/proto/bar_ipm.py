@@ -18,7 +18,8 @@ BIG = 1e30
 class LP:
     """Internal LP: dense A (m x n), b, c, lb, ub (u for boxed), T (types, m+n), eq (row is '=')."""
 
-    def __init__(self, A, b, c, lb, ub, T, eq, objscale=1.0, objcon=0.0, b0=None, ncomp=None, cshift=0.0):
+    def __init__(self, A, b, c, lb, ub, T, eq, objscale=1.0, objcon=0.0, b0=None, ncomp=None, cshift=0.0,
+                 nnz=None, tol=1e-8):
         self.A, self.b, self.c, self.lb, self.ub = A, b, c, lb, ub
         self.T, self.eq, self.objscale, self.objcon = np.asarray(T, dtype=np.int8), np.asarray(eq, bool), objscale, objcon
         self.cshift = cshift  # B+0x618 = c . lb from the 312a1e bound shift
@@ -32,6 +33,9 @@ class LP:
         b0 = b if b0 is None else b0
         self.bnorm2, self.bnorminf = float(np.sqrt(b0 @ b0)), float(np.abs(b0).max(initial=0.0))
         self.cnorm2, self.cnorminf = float(np.sqrt(c @ c)), float(np.abs(c).max(initial=0.0))
+        self.nnz = int(np.count_nonzero(A)) if nnz is None else nnz  # B+0x5a8 = 2 nnz drives the work counter
+        self.ptol = (np.sqrt(self.m + 1.0) + self.bnorm2) * tol  # B+0x260
+        self.dtol = (np.sqrt(self.n + 1.0) + self.cnorm2) * tol  # B+0x268
 
     def Ax(self, x):  # 2d4252 / 2d3b3e: A x[:n] + slack
         r = self.A @ x[:self.n]
@@ -68,7 +72,7 @@ def lp_from_oracle(rec):
     eq = np.array([ch == "=" for ch in Dd["sense"]])
     return LP(A, hexf(rec["rhs"]), hexf(rec["obj"]), hexf(rec["lb"]), hexf(rec["ub"]), rec["type"], eq,
               float.fromhex(Dd["objscale"]), float.fromhex(Dd["objcon"]), b0=hexf(Dd["rhs"]), ncomp=rec["ncomp"],
-              cshift=float.fromhex(rec["B"][0x618 // 8]))
+              cshift=float.fromhex(rec["B"][0x618 // 8]), nnz=Dd["nnz"])
 
 
 class State:
@@ -107,6 +111,15 @@ def residuals(lp, st, it=0, freepert_prev=None):
     return R
 
 
+def theta_inv(lp, st):
+    """B+0x800: z/x (T&1) + s/w (T&2), 0 for free columns and '=' slacks (used by the 2f9699 refinement)."""
+    n = lp.n
+    d = np.zeros(lp.m + n)
+    d[lp.lo] = st.z[lp.lo] / st.x[lp.lo]
+    d[:n][lp.up[:n]] += st.s[lp.up[:n]] / st.w[lp.up[:n]]
+    return d
+
+
 def theta(lp, st, R):
     """2d4977 tail: theta = 1/(z/x + s/w) capped at 1e12; free columns get the BARFREEPERT perturbation."""
     n = lp.n
@@ -126,22 +139,110 @@ def theta(lp, st, R):
     return th
 
 
+NB = 64
+
+
+def ldlt(M):
+    """Dense LDL^T in natural (ordering-permuted) row order with Gurobi's small-pivot rule (32af6a L264-280):
+    a pivot |d| <= t = clamp(1e-10 |diag(M)|, 1e-12, 1e-6) becomes sign(d) t. Returns L (unit lower), d, number of
+    replaced pivots, min |d/diag| (F+0x100). shortcut: no supernodes, so rounding differs from Gurobi."""
+    A = M.copy()
+    m = A.shape[0]
+    diag0 = np.diag(M).copy()
+    d = np.zeros(m)
+    nsmall, minratio = 0, 1e100
+    for k0 in range(0, m, NB):
+        k1 = min(k0 + NB, m)
+        P = A[k0:, k0:k1]
+        for j in range(k1 - k0):
+            g = k0 + j
+            piv = P[j, j]
+            if np.isnan(piv):
+                minratio = 0.0
+            elif diag0[g] != 0.0:
+                minratio = min(minratio, abs(piv / diag0[g]))
+            t = min(max(abs(diag0[g]) * 1e-10, 1e-12), 1e-6)
+            if not t < abs(piv):
+                piv = -t if piv < 0 else t
+                nsmall += 1
+            d[g] = piv
+            col = P[j + 1:, j].copy()
+            P[j + 1:, j + 1:] -= np.outer(col, col[:k1 - k0 - j - 1]) / piv
+            P[j + 1:, j] = col / piv
+        if k1 < m:
+            Lr = A[k1:, k0:k1]
+            A[k1:, k1:] -= (Lr * d[k0:k1]) @ Lr.T
+    return np.tril(A, -1) + np.eye(m), d, nsmall, minratio
+
+
+def trisolve(L, b, lower=True):
+    """Blocked substitution with unit triangular L (lower) or L^T (upper)."""
+    m = len(b)
+    x = b.astype(float).copy()
+    blocks = list(range(0, m, NB))
+    if lower:
+        for k0 in blocks:
+            k1 = min(k0 + NB, m)
+            x[k0:k1] = np.linalg.solve(L[k0:k1, k0:k1], x[k0:k1])
+            x[k1:] -= L[k1:, k0:k1] @ x[k0:k1]
+    else:
+        for k0 in reversed(blocks):
+            k1 = min(k0 + NB, m)
+            x[k0:k1] = np.linalg.solve(L[k0:k1, k0:k1].T, x[k0:k1])
+            x[:k0] -= L[k0:k1, :k0].T @ x[k0:k1]
+    return x
+
+
+class Normal:
+    """Factor of A Theta A^T (2d8e22 -> 31c54b), reused by every solve of the iteration (2ee6c5).
+    mode1 (F+0x178 = 1): free columns remain, or min pivot ratio F+0x100 < 1e-10 -> 2f59f1 refines (2f9699)."""
+
+    def __init__(self, lp, th):
+        self.lp, self.th = lp, th
+        n = lp.n
+        M = (lp.A * th[:n]) @ lp.A.T
+        M[np.diag_indices_from(M)] += np.where(lp.eq, 0.0, th[n:])
+        self.L, self.d, self.nsmall, self.minratio = ldlt(M)
+        self.mode1 = bool((lp.T[:n] == 0).any()) or self.minratio < 1e-10
+        self.nsolve = 0
+        self.reflog = []  # refinement solves per 2f59f1 call (work counter)
+
+    def solve(self, rx, ry):
+        """-Theta^{-1} dx + A^T dy = rx, A dx = ry => (A Theta A^T) dy = ry + A Theta rx, dx = Theta (A^T dy - rx)."""
+        lp, th = self.lp, self.th
+        self.nsolve += 1
+        rhs = ry + lp.Ax(th * rx)
+        dy = trisolve(self.L, trisolve(self.L, rhs) / self.d, lower=False)
+        return th * (lp.ATy(dy) - rx), dy
+
+    def refine(self, D, rx, ry, dx, dy, reg):
+        """2f9699: iterative refinement on the unperturbed system -D dx + A^T dy = rx, A dx = ry while
+        |r|^2 >= reg^2; a correction is kept only if it lowers |r|^2 below 0.99x, at most 5 kept."""
+        lp = self.lp
+
+        def res(dx, dy):
+            return ry - lp.Ax(dx), rx - lp.ATy(dy) + D * dx
+        r_y, r_x = res(dx, dy)
+        nrm = r_y @ r_y + r_x @ r_x
+        kept = 0
+        steps = 0
+        while nrm >= reg * reg:
+            cx, cy = self.solve(r_x, r_y)
+            steps += 1
+            ndx, ndy = dx + cx, dy + cy
+            n_y, n_x = res(ndx, ndy)
+            new = n_y @ n_y + n_x @ n_x
+            if nrm * 0.99 <= new:
+                break
+            dx, dy, r_y, r_x, nrm = ndx, ndy, n_y, n_x, new
+            kept += 1
+            if kept > 4:
+                break
+        return dx, dy, steps
+
+
 def solve_aug(lp, th, rx, ry):
-    """2ee6c5: -Theta^{-1} dx + A^T dy = rx, A dx = ry  =>  (A Theta A^T) dy = ry + A Theta rx, dx = Theta (A^T dy - rx).
-    shortcut: dense Cholesky/LU without Gurobi's pivot regularization (32af6a), fine for Netlib sizes."""
-    n = lp.n
-    Ath = lp.A * th[:n]
-    M = Ath @ lp.A.T
-    M[np.diag_indices_from(M)] += np.where(lp.eq, 0.0, th[n:])
-    rhs = ry + lp.Ax(th * rx)
-    try:
-        dy = np.linalg.solve(M, rhs)
-        if not np.all(np.isfinite(dy)):
-            raise np.linalg.LinAlgError
-    except np.linalg.LinAlgError:  # dependent rows: any solution gives the same dx; take the least-norm dy
-        dy = np.linalg.lstsq(M, rhs, rcond=1e-14)[0]
-    dx = th * (lp.ATy(dy) - rx)
-    return dx, dy
+    return Normal(lp, th).solve(rx, ry)
 
 
 def shifts(lp, st):
@@ -184,12 +285,13 @@ def initial_point(lp, barstart=0):
     th = np.concatenate([th, np.where(lp.eq, 0.0, 1.0)])
     rx = np.zeros(m + n)
     rx[:n][lp.up[:n]] = -lp.ub[lp.up[:n]]
-    st.x, _ = solve_aug(lp, th, rx, lp.b)
+    fac = Normal(lp, th)
+    st.x, _ = fac.solve(rx, lp.b)
     st.w = np.where(lp.up[:n], lp.ub - st.x[:n], 0.0)
     dual_from_c(lp, st)
     da = shifts(lp, st)
     if barstart != 1:
-        v, yb = solve_aug(lp, th, np.concatenate([lp.c, np.zeros(m)]), np.zeros(m))
+        v, yb = fac.solve(np.concatenate([lp.c, np.zeros(m)]), np.zeros(m))
         zb, sb = np.where(lp.lo, -v, 0.0), np.where(lp.up[:n], v[:n], 0.0)
         y0, z0, s0 = st.y, st.z, st.s
         st.y, st.z, st.s = yb, zb, sb
@@ -244,10 +346,14 @@ def predictor_rhs(lp, st, R):
     return rxz, rws, rhs
 
 
-def direction(lp, st, th, rhs_x, rhs_y, ru, rxz, rws):
-    """2f59f1: solve, then dw = r_u - dx, ds = (rws - s dw)/w (T&2), dz = (rxz - z dx)/x (T&1)."""
+def direction(lp, st, fac, rhs_x, rhs_y, ru, rxz, rws):
+    """2f59f1: solve (+ 2f9699 refinement in mode 1), then dw = r_u - dx, ds = (rws - s dw)/w (T&2),
+    dz = (rxz - z dx)/x (T&1)."""
     n, up = lp.n, lp.up[:lp.n]
-    dx, dy = solve_aug(lp, th, rhs_x, rhs_y)
+    dx, dy = fac.solve(rhs_x, rhs_y)
+    if fac.mode1:
+        dx, dy, steps = fac.refine(fac.Dtrue, rhs_x, rhs_y, dx, dy, fac.reg)
+        fac.reflog.append(steps)
     dw = np.where(up, ru - dx[:n], 0.0)
     ds = np.zeros(n)
     ds[up] = (rws[up] - st.s[up] * dw[up]) / st.w[up]
@@ -387,7 +493,10 @@ def iteration(lp, st, R, ctx):
     it = ctx["it"]
     th = theta(lp, st, R)
     rxz, rws, rhs = predictor_rhs(lp, st, R)
-    D0 = direction(lp, st, th, rhs, R["rp"], R["ru"], rxz, rws)
+    fac = Normal(lp, th)
+    fac.Dtrue = theta_inv(lp, st)
+    fac.reg = max(np.sqrt(R["rp2"] ** 2 + R["rd2"] ** 2) / 10.0, 1e-8)  # B+0x280 (no safe mode)
+    D0 = direction(lp, st, fac, rhs, R["rp"], R["ru"], rxz, rws)
     ap, ad = step_lengths(lp, st, D0)
     ma = mu_aff(lp, st, D0, ap, ad)
     compl = R["compl"]
@@ -401,7 +510,7 @@ def iteration(lp, st, R, ctx):
     Daff = {k: v.copy() for k, v in D0.items()}
     for k in range(1, K + 1):
         cxz, cws, crhs = corrector_rhs(lp, st, Daff if k == 1 else D0, mu_t, k, ap, ad)
-        D1 = direction(lp, st, th, crhs, np.zeros(lp.m), np.zeros(lp.n), cxz, cws)
+        D1 = direction(lp, st, fac, crhs, np.zeros(lp.m), np.zeros(lp.n), cxz, cws)
         nap, nad, none = line_search(lp, st, D0, D1, k, ctx["N"], ap, ad)
         ncorr += 1
         stop = none or (nap >= 1.001 and nad >= 1.001) or (k > 1 and nad * nap < 1e-100)
@@ -411,11 +520,100 @@ def iteration(lp, st, R, ctx):
         if stop:
             break
     ctx["ncorr_done"] = ncorr
+    ctx["reflog"] = fac.reflog if fac.mode1 else []
     ab = ctx["ab"]
     ctx["ab"] = [ap * ad, ab[0], ab[1]]
     fap, fad, eta = update(lp, st, D0, ap, ad, it, ctx)
     ctx["alpha"] = (ap, ad, fap, fad, eta)
     return D0
+
+
+def corrector_start(lp, F160, F168):
+    """2e7f38: initial K (B+0x298) and line-search grid N (B+0x29c) from solve vs factor work."""
+    r = (2 * lp.nnz * 2 + F160) / F168
+    K = int(min(max(0.1 / r, 1.0), 20.0))
+    return K, (3 if r > 0.2 else 5)
+
+
+def terminate(lp, R, it, H, tol=1e-8, kappa=0.0, tau=1.0):
+    """b2aecf for LP with Crossover=0 (B+0x2a0 = 0): returns 2 (optimal), 13 (stalled) or 1 (continue)."""
+    N = lp.ncomp
+    pobj, dobj, mu, compl = R["pobj"], R["dobj"], R["mu"], R["compl"]
+    gap = abs(pobj - dobj)
+    grel = max(gap / (abs(pobj - lp.objcon) + 1), gap / (100 * abs(pobj) + 1))
+    cg = compl * N / (abs(R["ctx"]) + 1)
+    mg = N * mu / (abs(pobj) + 1)
+    h78 = H["mu"]
+    fast = it > 0 and mu > tol and h78[it] < 0.5 * h78[it - 1]
+    pfeas = np.sqrt(R["rp2"] ** 2 + R["ru2"] ** 2) < lp.ptol or R["rp_rel"] < 10 * tol
+    dfeas = R["rd2"] < lp.dtol or R["rd_rel"] < 10 * tol
+    kc = kappa < 100 * tol * tau
+    if np.isnan(mu) or mu > 1e100 or (it > 5 and compl > 1e20 and compl > 0.99 * H["compl"][it - 1]):
+        return 13
+    if ((grel < tol and mg < 100 * tol and pfeas and dfeas and kc and not fast)
+            or (cg < tol and mg < 100 * tol and grel < 0.1 and pfeas and dfeas and not fast)
+            or (grel < tol and cg < tol and pfeas and dfeas and it > 1 and h78[it] > 0.5 * h78[it - 1])
+            or (mu < 1e-16 and pfeas and dfeas)):
+        return 2
+    if it > 10 and kc and grel < 10 * tol and pfeas and dfeas and compl > 0.8 * H["compl"][it - 3]:
+        return 2
+    if it >= 1000:
+        return 7
+    return 1  # shortcut: stall rules (status 13, b2aecf L180-285) not ported yet
+
+
+def run(lp, F160, F168, barcorrectors=-1, maxit=1000, log=None):
+    """Whole barrier loop (2bf1ea L455-1030) without homogeneous mode. Returns (status, iterations, trace)."""
+    m, n = lp.m, lp.n
+    nub = int(np.flatnonzero(lp.ub < 1e30).max() + 1 - np.flatnonzero(lp.ub < 1e30).min()) if (lp.ub < 1e30).any() else 0
+    w_solve = (2 * lp.nnz * 2 + F160 + 11 * m + 4 * n) * 0.75  # 2ee6c5 incl. 2d3b3e, 2d3d91
+    w_dir = w_solve + (5 * (m + n) + 9 * nub) * 0.75             # 2f59f1
+    w_ratio = (7 * (m + n) + 6 * nub) * 0.75                    # 2f15ba, one 2f4fe9 grid point
+    w_crhs = (3 * (m + nub) + 13 * n) * 0.75                     # 2d64b4
+    T = {"f": 1 + 0.75 * F168, "p": 0.0, "c1": 0.0, "cx": 0.0, "u": 0.0}  # timers: work + 1 per start
+    K, N = corrector_start(lp, F160, F168)
+    st = initial_point(lp)
+    ctx = dict(K=K, N=N, f4=0, ab=[1e100] * 3, barcorrectors=barcorrectors)
+    H = {k: [] for k in ("mu", "compl", "rp2", "rd2")}
+    trace = []
+    base = max(1, int(np.floor(np.log10(max(n, 1)))) - 2)
+    status = 1
+    for it in range(maxit + 1):
+        ctx["it"] = it
+        R = residuals(lp, st)
+        if it >= 11 and not H["mu"][it - 1] <= H["mu"][it - 2] * 0.99:
+            recenter(lp, st, R["rd"], R["compl"])
+        trace.append((it, R["pobj"], R["dobj"], R["rp2"], R["rd2"], R["compl"], ctx["K"], dict(T)))
+        if log:
+            log(trace[-1])
+        H["mu"].append(R["mu"])
+        H["compl"].append(R["compl"])
+        H["rp2"].append(R["rp2"])
+        H["rd2"].append(R["rd2"])
+        status = terminate(lp, R, it, H)
+        if status != 1:
+            break
+        T["f"] += 1 + 0.75 * F168
+        Kcur, ab = ctx["K"], ctx["ab"]
+        Ngrid = ctx["N"]
+        iteration(lp, st, R, ctx)
+        nc = ctx["ncorr_done"]
+        rl = ctx["reflog"]
+        w_ref = [1.5 * 2 * lp.nnz + k * (w_solve + 1.5 * 2 * lp.nnz) for k in rl] or [0.0] * (nc + 1)  # 2f9699
+        T["p"] += 1 + w_dir + w_ratio + w_ref[0]
+        wc = 1 + w_crhs + w_dir
+        T["c1"] += (wc + w_ratio * Ngrid + w_ref[1]) if nc >= 1 else 0
+        T["cx"] += sum(wc + w_ratio * (Ngrid - 1) + w_ref[k] for k in range(2, nc + 1))  # k>=2: omega=0 skips RT
+        if barcorrectors < 0:
+            avg = 1.0 if it < 3 else (ab[0] + ab[1] + ab[2]) * 0.3333333333333333
+            ratio = T["cx"] / (T["f"] + T["p"] + T["c1"] + T["u"])
+            ctx["K"] = adjust_K(Kcur, ratio, avg, base)
+        ctx["N"] = max(3, min(ctx["K"] + 1, 10))
+        T["u"] += 1
+        if ctx["f4"] < it and barcorrectors == -1:
+            ctx["K"] = max(ctx["K"], 10) if ctx["K"] >= 11 else 10
+            ctx["N"] = 10
+    return status, it, trace
 
 
 if __name__ == "__main__":
