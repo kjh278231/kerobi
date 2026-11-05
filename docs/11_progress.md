@@ -16,7 +16,7 @@
 공통 규칙(모든 에이전트):
 - Gurobi는 한 프로세스만 돌린다(`gurobi_guard.pth`). "already running"이면 기다렸다 다시 시도한다.
 - 공유 `.venv`에 `maturin develop`이나 `pip install`은 main 트리만 한다. worktree는 cargo로 빌드한 `.so`를 자기 `python/rsolver`에 두고 `PYTHONPATH=$PWD/python`으로 쓴다.
-- worktree는 `crates/lp`의 기존 파일을 고치지 않는다(`lib.rs` 모듈 등록은 허용). 예외: G2가 끝난 뒤 `crates/lp/src/presolve/`는 M1 LP 드라이버 흐름(G5)이 고쳐도 된다(2026-11-06, simplex 흐름은 이 폴더를 쓰지 않는다). 커밋은 자기 브랜치에만, 단계마다 한다.
+- worktree는 `crates/lp`의 기존 파일을 고치지 않는다(`lib.rs` 모듈 등록은 허용). 예외(2026-11-06): M1 LP 드라이버 흐름(G5)은 이미 끝난 흐름의 폴더 `crates/lp/src/presolve/`, `barrier/`, `pdhg/`와 `crates/model`을 고쳐도 된다. simplex 흐름의 파일(simplex·lu·spx·start·bfrt·scaling 등)은 계속 금지다. 고칠 때마다 barrier·PDHG 64/64가 유지되는지 확인한다. 커밋은 자기 브랜치에만, 단계마다 한다.
 - `docs/11_progress.md`는 오케스트레이터가 main에서만 고친다. worktree 에이전트는 자기 인수인계 메모에만 적는다.
 - 답변은 한국어로 한다.
 
@@ -88,6 +88,9 @@
 | 2026-11-06 | M1 LU Markowitz 수정 | 허용 가능한 피벗 없이 4줄을 지나도 기저를 singular로 판정하지 않음(정상 기저에 slack 29–62개가 들어가던 문제). Method 1: Netlib 91 중 89 | `736c3b5` |
 | 2026-11-06 | M1 드라이버: 연속 모델 `optimize()` | Method 확정, 자동 조정, presolve → simplex·barrier·PDHG → uncrush, 상태·요약 로그, Presolve≠0이면 Python `_driver` 분기, `tools/driver_check.py`. Method 2·6 + Presolve 켬: 상태·목적 64/64, presolved 모델 8/64, BarIterCount 20/64. presolve의 Method 분기가 남음 | `9f5a723` (`m1-lp-driver`) |
 | 2026-11-06 | M2 presolve 골격·패스 해독 | `crates/mip` 상태(연결 리스트), `3cd406` 앞부분·마무리·모델 생성, 패스 루프·라운드 끝·마지막 단계 해독(하위 에이전트 skel, spine-b/c/d 병합) | `54f3923`, `e69eb66`, `4d5b7b0`, `1b1e9b3` (`m2-mip-presolve`) |
+| 2026-11-06 | M1 unscaled 재검사·CHUZR 비용·BTRAN | `2e9ae` 원 공간 재검사와 재풀이(라이선스 밖 Netlib 최적값 정확), 행 비용 가중치 갱신, Markowitz 분해의 희소 BTRAN. blend는 Gurobi 피벗 경로 전체와 같음. Netlib 64: **반복 수 같음 15**, 경로 전체 일치 6 | `61676e0`, `bf35530`, `4474ff8` |
+| 2026-11-06 | M1 presolve Method 분기 | Method·Crossover·SolutionTarget 분기(`state+0x100`). Method 2·6, Crossover 0에서 presolved 모델 Gurobi와 **64/64** | `ce24d8e` (`m1-lp-driver`) |
+| 2026-11-06 | M2 presolve 제어 흐름·해독 | `3cd406` 라운드·패스·내부 루프·라운드 끝·마지막 단계 제어 흐름(reduction은 빈 함수), probing·clique·내부 루프 해독 노트(하위 에이전트 inner, probe, clique 병합) | `f374378`, `0de8d15` (`m2-mip-presolve`) |
 
 ## 4. goal 원문
 
