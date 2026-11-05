@@ -6,6 +6,29 @@ D = Path(__file__).resolve().parents[2] / "bench/oracle/bfrt_io"
 OPT, PIV = 1e-6, 3e-8
 
 
+def lane_sum(run, xs, start, sign):
+    """run ± Σxs as the original sums (asm 0xcba7f): one element peeled when the start index is odd (16-byte
+    aligned buffer), fewer than 8 then in sequence, else 8 lanes with run in lane 0 combined
+    ((L0+L2)+(L4+L6)) + ((L1+L3)+(L5+L7)), then the tail in sequence."""
+    xs = [sign * x for x in xs]
+    k = 1 if start % 2 else 0
+    if len(xs) < k + 8:
+        for x in xs:
+            run += x
+        return run
+    for x in xs[:k]:
+        run += x
+    nv = k + ((len(xs) - k) // 8) * 8
+    L = [run] + [0.0] * 7
+    for b in range(k, nv, 8):
+        for t in range(8):
+            L[t] += xs[b + t]
+    run = ((L[0] + L[2]) + (L[4] + L[6])) + ((L[1] + L[3]) + (L[5] + L[7]))
+    for x in xs[nv:]:
+        run += x
+    return run
+
+
 def quickselect(cand, run):
     """Hoare partitions (pivot = first, ratio descending, contribution ascending) narrowing to the crossing."""
     lo, hi = 0, len(cand) - 1
@@ -24,17 +47,13 @@ def quickselect(cand, run):
             if cand[j][2] < cand[i][2] or cand[i][1] < cand[j][1]:
                 cand[i], cand[j] = cand[j], cand[i]
         if run >= 0:
-            run2 = run - sum(c[1] for c in cand[i + 1:hi + 1])
-            if run2 >= 0:
-                hi, run = i, run2
-            else:
-                lo, run = i + 1, run2
+            run = lane_sum(run, [c[1] for c in cand[i + 1:hi + 1]], i + 1, -1.0)
         else:
-            run2 = run + sum(c[1] for c in cand[lo:i + 1])
-            if run2 >= 0:
-                hi, run = i, run2
-            else:
-                lo, run = i + 1, run2
+            run = lane_sum(run, [c[1] for c in cand[lo:i + 1]], lo, 1.0)
+        if run >= 0:
+            hi = i
+        else:
+            lo = i + 1
     return lo, run
 
 
