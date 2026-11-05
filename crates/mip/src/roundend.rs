@@ -322,3 +322,20 @@ impl State {
         0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gcd_and_inverse() {
+        assert_eq!(fgcd(1e100, 4.0), 4.0);
+        assert_eq!(fgcd(4.0, 6.0), 2.0);
+        assert_eq!(fgcd(2.0, 7.0), 1.0);
+        assert_eq!(fgcd(0.0, 3.0), 0.0);
+        assert_eq!(fgcd(1.5, 3.0), 1.5);
+        // 3·5 = 15 ≡ 1 (mod 7)
+        assert_eq!(mod_inverse(3, 7), 5);
+        assert_eq!(mod_inverse(1, 2), 1);
+    }
+}
