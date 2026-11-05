@@ -1713,3 +1713,97 @@ impl State {
         self.work += self.row_len[i] as f64 * 7.0;
     }
 }
+
+impl State {
+    /// `50fe2b`: a column without `=` rows whose cost does not oppose moving it down (c >= -1e-10), with exactly
+    /// one `<` row that tightens as it moves down (a <= 0) and a lower bound that is -inf or implied by its rows,
+    /// pushes that row to its rhs at some optimum: the row becomes `=` and the lower bound is relaxed by
+    /// 0.001 (|lb| + 1) so it stays inactive. Same upward (c <= 1e-10, a > 0, upper bound); when both apply, the
+    /// row with fewer entries is taken (ties go up). No status.
+    pub fn cost_tight_rows(&mut self, inf: f64) {
+        // shortcut: state+0x100, GURO_PAR_INTBASIS and env+0x2728 are not in Params; at their defaults the bound is
+        // relaxed (off only for state+0x100 == 0 with INTBASIS > 0 or env+0x2728 > 1). Add them with Method etc.
+        let relax = true;
+        let cols = self.cols_list();
+        for &j in &cols {
+            let j = j as usize;
+            if self.col_cnt[j] <= 0 || self.col_flag[j] != 0 || self.lb[j] > self.ub[j] - 1e-10 {
+                continue;
+            }
+            let c = self.obj[j];
+            // -1 none yet, -2 ruled out, else the row
+            let mut up: i64 = if 1e-10 < c { -2 } else { -1 };
+            let mut down: i64 = if c < -1e-10 { -2 } else { -1 };
+            let b = self.col_beg[j] as usize;
+            let len = self.col_len[j];
+            let mut eq = false;
+            for k in b..b + len.max(0) as usize {
+                let i = self.col_ind[k];
+                if i < 0 || self.row_cnt[i as usize] < 0 {
+                    continue;
+                }
+                let s = self.sense[i as usize];
+                if s == b'=' {
+                    eq = true;
+                    break;
+                }
+                let slot = if self.col_val[k] > 0.0 { &mut up } else { &mut down };
+                *slot = if s == b'<' && *slot == -1 { i as i64 } else { -2 };
+            }
+            self.work += len as f64 * 4.0;
+            if eq {
+                continue;
+            }
+            let mut hi_implied = None;
+            let use_up = 'd: {
+                if down >= 0 && -inf < self.lb[j] {
+                    let (lo, hi) = self.implied_bounds(j, inf);
+                    hi_implied = Some(hi);
+                    if self.lb[j] - 1e-9 > lo {
+                        down = -2;
+                    }
+                }
+                if up < 0 {
+                    break 'd if down >= 0 { Some(false) } else { None };
+                }
+                if inf > self.ub[j] {
+                    let hi = match hi_implied {
+                        Some(h) => h,
+                        None => self.implied_bounds(j, inf).1,
+                    };
+                    if hi > self.ub[j] + 1e-9 {
+                        break 'd if down >= 0 { Some(false) } else { None };
+                    }
+                }
+                if down < 0 {
+                    break 'd Some(true);
+                }
+                Some(self.row_cnt[up as usize] <= self.row_cnt[down as usize])
+            };
+            let (l, u) = (self.lb[j], self.ub[j]);
+            let r = match use_up {
+                None => continue,
+                Some(true) => {
+                    if inf > u && relax {
+                        let nu = (u.abs() + 1.0) * 0.001 + u;
+                        self.bound_change(j, l, u, l, nu, inf);
+                        self.ub[j] = nu;
+                    }
+                    up
+                }
+                Some(false) => {
+                    if l > -inf && relax {
+                        let nl = l - (l.abs() + 1.0) * 0.001;
+                        self.bound_change(j, l, u, nl, u, inf);
+                        self.lb[j] = nl;
+                    }
+                    down
+                }
+            };
+            self.sense[r as usize] = b'=';
+            self.ineq_to_eq += 1;
+            self.tracker.mark_row(r as i32);
+        }
+        self.work += cols.len() as f64 * 20.0;
+    }
+}

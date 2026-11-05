@@ -260,8 +260,16 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
         if limit <= calls {
             return;
         }
-        // shortcut: the rest of the outer pass (50fe2b, 519a52, 5b488d, 47c445) and the finish stage are not
-        // ported yet; stop here like a reached PRELIMIT.
+        // no PWL columns in LP; `50fe2b` needs DualReductions but the call counts either way
+        if p.dual_reductions {
+            st.cost_tight_rows(p.infbound);
+        }
+        calls += 1;
+        if limit <= calls {
+            return;
+        }
+        // shortcut: the rest of the outer pass (519a52, 5b488d, 47c445) and the finish stage are not ported yet;
+        // stop here like a reached PRELIMIT.
         let _ = &snap;
         return;
     }
