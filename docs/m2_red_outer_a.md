@@ -404,3 +404,47 @@ PreCrush == 0, 둘 다 정수, s_x/s_y가 정수(frac ≤ 1e-10, `v − floor(v 
 ### 3.7 오라클 확인
 - 38개 237호출(3cd406 안 234 + `3b0917` mode 2 3) 중 mode 0/1/3 232호출이 모두 일치(`s_par.py`). 빠진 5호출: mode 2 3개(이 묶음 밖), 열 집계 2단계 2개(exp-1-500-5-5#2, mik#2).
 - 지난 경로: 쌍 3,581, 열 경우 0 667·병합 5·경우 5 4, 행 '<''<' 0번 1,888·1번 763·3번 47, P-P slack 병합 60, T-T 2, 숨긴 행 P 1,742·T 465. 열 경우 1–4와 고정, 행 '=' 쌍, T/'='·T/'<', 2단계 행(`3fa2f6`)·열 집계는 오라클을 지나지 않았다.
+
+## 4. `57627e(st, env)` implied integer, 정수 등식 (10,175 B, `005b8f70`)
+
+### 4.1 흐름
+```
+(cnt, list) = 538353(tr)                                   // 레벨 1 원시 행 a-목록
+for i in list: if row_cnt[i] > 1 && sense[i] == '=':
+  rhs0 = rhs[i]; classes = []; allok = true; cont = null; ints = []; fixed = 0
+  행 리스트의 살아 있는 노드(c, a)마다:
+    if ub[c] − lb[c] <= 1e-13: node.col = −1, fixed = fixed + lb[c]·a, row_cnt[i]−−, col_cnt[c]−−   // 고정 열을 rhs로(레코드 없음)
+    else:
+      if !allok || lb <= −1e30 || 1e30 <= ub || ift + ub < lb || vtype ∉ {B, I}: allok = false
+      else: |a| < 0.001 || |a| > 2e9이면 allok = false, 아니면 같은 |a|의 클래스(|a − v| ≤ max(|a|,v)·1.6e-9)에
+            개수 +1, 범위 [lo, hi] += (a<0 ? [−ub, −lb] : [lb, ub]); 없으면 새 클래스(최대 5개, 6번째면 allok = false)
+      vtype == 'C'면 cont가 이미 있으면 중단(이 행은 끝), 아니면 cont = 노드; 아니면 ints.push(|a|)  // +0x398 scratch
+  W += (row_cnt[i]·5)·μ                                      // 고정 열을 뺀 개수
+  rhs[i] −= fixed; rhs0 −= fixed
+  if 중단 || row_cnt[i] <= 1: continue
+  if cont: |a_c| < 0.01 || |a_c| > 100이면 continue; |rhs[i]| > 1e-10이면 ints.push(|rhs[i]|)
+  g = a7bea8(ints); if !(0.001 < |g|): continue
+  if cont: IMPLIED_INT; continue
+  INT_ROW
+W += (cnt·10)·μ
+if 바꾼 행 목록: 370047(st, env, k, 목록)                    // activity 재계산
+```
+IMPLIED_INT (연속 열 xc 하나, 나머지 정수): d = g/|a_c|. d ≤ 1e8, d ≥ 1e-8, colflag[xc] == 0, (lb ≤ −INF || −1e8·d ≤ lb), (INF ≤ ub || ub ≤ 1e8·d)이면 x_c = d·x′(x′ 정수)로 바꾼다:
+- type 9 레코드 `3a061e(0.0, d, env, st, xc)`(0x30 B, data {i32 xc, pad, f64 0.0, f64 d}).
+- `53802c(xc)`(행 표시, `W += (μ·5)·방문`), `5379f1(xc)`.
+- lb > −INF면 lb′ = ceil(lb/d − ift), `3dd6f1(lb, ub, d·lb′, ub)`, lb = lb′. ub < INF면 ub′ = floor(ub/d + ift), `3dd6f1(lb_now, ub, lb_now, d·ub′)`, ub = ub′(activity는 원래 척도의 bound로 고친다).
+- 열 리스트의 모든 노드 a ← a·d, `3c3abf(new, new, …)`(|new| ≤ 1e-13이면 노드 제거, 아니면 아무것도).
+- `W += (col_cnt[xc]·2)·μ`; IMPLIEDINT(env+0x2820) ≠ 0이면 vtype = 'I'; obj[xc] ·= d; ft + ub < lb면 +0x470 = xc, 3.
+
+INT_ROW (모두 정수):
+- ratio = rhs/g, tolr = min(ft/min(g,1), 0.1), fl = floor(tolr + ratio); ratio − fl > tolr면 +0x478 = i, 3. rhs = fl.
+- 행 리스트의 노드마다(방문 v) 살아 있으면 a ← floor(a/g + 0.5); 0이면 행·열 표시, row_cnt−−, col_cnt−−, col = −1; 아니면 |a|가 가장 작은 노드를 기억(mn). `W += (v·5)·μ`. |g − 1| > 1e-10이면 행을 재계산 목록에.
+- 클래스 분석(allok, 클래스 ≥ 2, 개수 1인 클래스가 있을 때): G = a7bea8(클래스 값), G ≥ 0.001이면 rq = rhs0/G(나누기 전 rhs), infeas = (rq − floor(rq + 0.01) > 0.01). rq가 정수(1e-10)이면 rq = floor(rq + 0.5), 클래스 값 v_k = floor(|a_k|/G + 0.5)(정수가 아니면 중단), 범위가 ±1e9 밖이거나 Σv·lo, Σv·hi(와 rhs를 뺀 값)가 ±2e9 밖이면 중단; 중단이 아니면 infeas면 3. |rq| < 1e8이면 개수 1 클래스마다 나머지의 gcd G1(ift + 1 ≤ G1 < 99999999), bound가 ±1e8·G1 안, `r3 = rq − (G1 − 1)·v_k·sgn`, `(r3 − floor(ift + r3))/G1`가 정수면 `574764`(대입, x_k = G1·z + r)를 부르고 다음 행으로. 아니면 `575405(&클래스 구조)`(9,181 B, 작은 배낭 열거로 bound를 좁힘, `571c44`)와 그 결과의 bound 적용(`3dd6f1`). 중단이면 infeas일 때 3.
+- 가장 작은 계수의 대입: thr = (mn + 0.5)·g, ints 중 thr 이상을 floor(·/g + 0.5)로 모으고 `W += len(ints)·μ`. 하나만 빠졌으면 나머지의 gcd G2 ≥ 1.5, rhs가 정수이고 |rhs| ≤ 1e8, `(rhs − (G2−1)·a_min)`의 나머지 조건이 맞으면 `3c5996`(모듈러 역원)과 `574764`.
+
+### 4.2 `a7bea8(n, v)` double gcd (2,630 B, 작업량 없음)
+n = 0 → 0, n = 1 → |v0|. mn = min|v|, mx = max|v|(같으면 앞 것). mx > 2e9이거나 mn < 1e-5면 0. mx − mn ≤ 1e-10이면 mn. 모든 |v|/mn이 정수(허용 max(1/mn,1)·1e-10)면 mn. mx·600 ≤ 2e9면 모든 |v|·600이 정수(6e-8)일 때 floor(|v|·600 + 0.5)의 정수 gcd/600(정수 gcd: 0이 있으면 0, 2e9 이상인 쪽은 상대를 돌려줌). 아니면 mn ≥ 1.9999999999이고 모두 정수(1e-10)면 정수 gcd. 아니면 double Euclid(v0부터, 몫 floor((큰 + 1e-10)/작은), 나머지 ≤ 0이면 0, 작은 ≤ 1e-10까지, 결과 < 1e-9면 0) → g ≤ 1e-10이면 0; 1/g가 정수(1e-11)이고 모든 |v|/g가 정수면 g; 아니면 g의 연분수(분모 ≤ 1000, 오차 1e-13)로 p/q를 찾고 모든 |v|·q/p가 정수면 p/q, 아니면 0.
+
+### 4.3 오라클 확인
+- 38개 78호출 전부 일치(`s_iint.py`). IMPLIED_INT 495번(csched007 246, csched008 238, markshare2 7, markshare_4_0 4: vtype 'I'와 type 9 레코드, d = 1이라 bound·계수는 그대로), 클래스 분석 251번 → `575405` 251번(cov2의 호출 수와 같다).
+- **`575405`는 해독하지 않았다.** 38개에서 bound를 바꾼 적이 없어(덤프에 bound 변화 없음) 모형은 "변화 없음"으로 두었다. `574764`, `3c5996`, 고정 열 접기, 계수 0, 행 나누기(g ≠ 1), 불가능 반환은 오라클을 지나지 않았다. a7bea8의 Euclid·연분수 가지는 gmu-35-40/50에서 지났다.
