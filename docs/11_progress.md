@@ -25,12 +25,14 @@
 | 탭 | 폴더 / 브랜치 | 담당 | 인수인계 메모 | goal |
 |---|---|---|---|---|
 | M1 심플렉스 | `rsolver` / `main` | LP simplex(dual·primal), LU, crash, Quad, LP 드라이버, `crates/core` 삭제 | `docs/10_porting.md` §9 | G1 |
-| M1 LP presolve | `rsolver-presolve` / `m1-lp-presolve` | LP presolve, postsolve | `docs/m1_presolve.md` | G2 |
+| ~~M1 LP presolve~~ (완료, main 병합) | `rsolver-presolve` / `m1-lp-presolve` | LP presolve, postsolve | `docs/m1_presolve.md` | G2 |
 | ↳ ~~postsolve~~ (완료, `m1-lp-presolve`에 병합. pane `w4:pP`는 유휴) | `rsolver-postsolve` / `m1-postsolve` | postsolve `363daa` | `docs/m1_postsolve.md` | G2의 일부 |
 | ↳ ~~derived·PreDepRow~~ (완료, 병합, 브랜치 삭제) | — / `m1-derived`, `m1-deprow` | `5b488d`, `47c445` | `docs/m1_presolve.md` | G2의 일부 |
 | ↳ symmetry (presolve 하위 에이전트, pane `w4:pV`) | `rsolver-symmetry` / `m1-symmetry` | 대칭 검출 `5577ba`→`551cc0` | `docs/m1_presolve.md` | G2의 일부 |
 | ~~M3 barrier~~ (완료, main 병합) | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
 | ~~M3 PDHG~~ (완료, main 병합) | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3_pdhg.md` | G4 |
+| M1 LP 드라이버 | `rsolver-presolve` / `m1-lp-driver` | 파라미터 표, 드라이버, Presolve 켠 연속 경로 | `docs/m1_driver.md` | G5 |
+| M2 MIP presolve | `rsolver-barrier` / `m2-mip-presolve` | MIP presolve `3cd406` P0 | `docs/m2_presolve.md` | G6 |
 
 ## 3. 완료 기록
 
@@ -77,6 +79,7 @@
 | 2026-11-05 | M1 대칭 검출 게이트 | `5577ba`/`551cc0` LP 경로 이식, 합성 대칭 LP 회귀 | `fcb1bb2`, `6e30a98` (`m1-symmetry`) |
 | 2026-11-05 | M3 PDHG (G4) 에이전트 보고 완료 | Rust PDHG(Method=6)가 Netlib 64에서 Gurobi와 비트 일치, 콜백별 상태 비교 도구. **오케스트레이터 검증·병합 대기** | `60b0b84`, `1479067` (`m3-pdhg`) |
 | 2026-11-06 | **M3 PDHG (G4) 완료** | 오케스트레이터가 따로 검증(기준값 로그의 파라미터 그대로, WorkLimit 60): 상태 64/64, 목적 ≤1e-6 64/64, **PDHGIterCount 64/64**. clippy 0, cargo test·pytest 통과. main 병합 뒤 barrier 64/64도 다시 확인 | `60b0b84`, `1479067`, 병합 `1d0118c` |
+| 2026-11-06 | **M1 LP presolve·postsolve (G2) 완료** | 오케스트레이터가 따로 검증: presolved 모델을 처음 뜬 Gurobi 기준값(`bench/gurobi/*/presolved.mps.gz`)과 비교해 **64/64**, postsolve 64/64, clippy 0, cargo test·pytest 31 통과. main 병합 뒤 barrier·PDHG 64/64 다시 확인 | `a8e01e7`, `6a92185`, 병합 `df70174` |
 
 ## 4. goal 원문
 
@@ -85,9 +88,9 @@
   2. P1: Netlib 64개에서 IterCount가 Gurobi와 같은 인스턴스가 90% 이상이다. 나머지는 ±5%이고 첫 분기점을 기록한다.
   3. P2: work ±5%.
   4. P3: 시간 기하평균 ≤1.2배. 기계가 한가할 때 잰다.
-  5. LP 드라이버(`0c3d0d`), dual·primal simplex, Markowitz·FT LU, crash, Quad, 필요한 common을 포팅하고 `crates/core`를 지운다. cargo clippy 경고 0, 테스트 전부 통과.
+  5. dual·primal simplex, Markowitz·FT LU, crash, Quad, 필요한 common을 포팅한다. cargo clippy 경고 0, 테스트 전부 통과.
 
-  범위 밖은 LP presolve·postsolve(`rsolver-presolve`)와 barrier(`rsolver-barrier`)다. Presolve=1 검증과 M1 관문 속도 스냅숏은 presolve를 합친 뒤에 한다.
+  범위 밖은 LP 드라이버·파라미터 표·Presolve 켠 경로(G5), presolve·postsolve·barrier·PDHG(완료)다. M1 관문 속도 스냅숏은 G1·G5가 끝난 뒤 오케스트레이터가 한다.
 - **G2**: LP presolve(`390989`)와 postsolve를 완료한다. 완료 기준:
   1. P0: Netlib 64개에서 기본 파라미터의 presolved 모델(`presolved.mps.gz` SHA-256)이 Gurobi와 64/64 같다.
   2. presolved 모델의 해·기저를 postsolve로 원래 공간에 되돌린 결과가 Gurobi와 비트 단위로 같다. 64/64, 오라클로 검증한다.
@@ -110,3 +113,18 @@
   4. cargo clippy 경고 0, 테스트 통과. `docs/05_barrier_pdhg_concurrent.md`와 `docs/m3_pdhg.md`를 갱신한다.
 
   범위 밖은 crossover, concurrent, barrier(완료), presolve, simplex다.
+- **G5**: M1 LP 드라이버를 완료한다. 기준은 `docs/02_driver.md`이고, 대상은 `9828a1`→`c23877`의 연속 모델 경로와 LP 드라이버 `0c3d0d`다. 완료 기준:
+  1. 파라미터 표(`ac81d7` 등록): 모든 파라미터의 이름·기본값·최소·최대가 gurobipy와 같다.
+  2. Optimize 헤더 로그("Optimize a model with …", 지문, 계수 범위 통계)가 `bench/gurobi`의 Netlib 64개 + miplib_small 38개 `log.txt`와 같다.
+  3. 모델 분류, Method 확정 표, 자동 조정, 상태 확정, 요약 로그를 원본대로 옮긴다.
+  4. Presolve를 켠 연속 경로(presolve → simplex·barrier·PDHG → postsolve → 상태)가 돈다. Netlib 64개에서 Presolve=-1이고 Method=2·Crossover=0, Method=6·Crossover=0일 때 상태·목적(≤1e-6)·BarIterCount/PDHGIterCount가 Gurobi와 같다(기준값은 새로 뜬다). Method=1은 상태·목적만 본다.
+  5. cargo clippy 경고 0, 테스트 통과. `docs/02_driver.md`와 `docs/m1_driver.md`를 갱신한다.
+
+  범위 밖은 simplex 내부(G1)와 MIP다.
+- **G6**: M2 MIP presolve(`3cd406`)의 P0를 완료한다. 완료 기준:
+  1. miplib_small 38개에서 기본 파라미터(Threads=1)의 presolved 모델이 `bench/gurobi/<이름>/presolved.mps.gz`와 38/38 같다.
+  2. 기본값에서 도는 MIP reduction(probing·대칭성·연결 성분 포함, docs/03 기준)을 모두 원본대로 옮긴다.
+  3. MIP presolve의 postsolve 레코드도 원본대로 쌓는다.
+  4. cargo clippy 경고 0, 테스트 통과. `docs/03_presolve.md`와 `docs/m2_presolve.md`를 갱신한다.
+
+  첫 단계는 호출 그래프로 `3cd406` 경로가 LP 풀이·simplex·barrier를 부르는지 확인하는 것이다. 범위 밖은 B&B, cut, 휴리스틱, simplex다.
