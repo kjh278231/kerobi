@@ -189,6 +189,14 @@ impl Lp {
             .collect()
     }
 
+    /// B+0x630..B+0x634: first column with a finite upper bound and one past the last (empty: (n, n)).
+    pub(crate) fn ub_range(&self) -> (usize, usize) {
+        match (self.up.iter().position(|&u| u), self.up.iter().rposition(|&u| u)) {
+            (Some(a), Some(b)) => (a, b + 1),
+            _ => (self.n, self.n),
+        }
+    }
+
     /// Row i of A as (column, position in the column arrays), columns ascending.
     pub(crate) fn row_entries(&self, i: usize) -> impl Iterator<Item = (usize, usize)> + '_ {
         (self.rbeg[i]..self.rbeg[i + 1]).map(|k| (self.rind[k], self.rpos[k]))

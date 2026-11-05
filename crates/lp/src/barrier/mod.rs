@@ -4,6 +4,7 @@
 //! shortcut: Presolve=0 and Crossover=0 are assumed (no presolve, no crossover; the last iterate is the answer).
 
 pub mod chol;
+pub mod f80;
 pub mod ipm;
 pub mod ldl;
 pub mod mkl;

@@ -6,7 +6,8 @@
 //! shortcut: no homogeneous switch (`2d35d7`, `2f8f0e`), no status-13 stall rules and no best-iterate
 //! choice (`2c4689`); the last iterate is returned. None of them fires on the 64 bench LPs (docs/m3_ipm.md §8).
 #![allow(clippy::needless_range_loop)] // index loops over parallel arrays, as in the original
-use super::normal::Factor;
+use super::chol::{vsum, Factor};
+use super::f80::{kahan_dot, F80};
 use super::ordering::Symbolic;
 use super::setup::{dot, Lp};
 use super::{BarResult, IterInfo, Params};
@@ -19,6 +20,31 @@ struct State {
     s: Vec<f64>,
     tau: f64,
     kappa: f64,
+}
+
+/// `2f9515`: Σ a·b with Gurobi's 8-lane order; `peel` = 1 when b starts at an 8-mod-16 address (B arrays are 16-byte
+/// aligned, so it is the parity of the start offset).
+fn dot8(a: &[f64], b: &[f64], peel: usize) -> f64 {
+    let p: Vec<f64> = a.iter().zip(b).map(|(x, y)| x * y).collect();
+    vsum(0.0, &p, peel, 8)
+}
+
+/// `2f28c2` slack/box sums: 4 lanes (lane 0 seeded by `acc`) over 8-element blocks after a `peel`, reduced
+/// (l0+l2)+(l1+l3), the tail sequentially; sequential below peel + 8 terms.
+fn vsum4(mut acc: f64, p: &[f64], peel: usize) -> f64 {
+    let n = p.len();
+    if n < peel + 8 {
+        return p.iter().fold(acc, |a, &v| a + v);
+    }
+    for &v in &p[..peel] {
+        acc += v;
+    }
+    let nv = n - (n - peel) % 8;
+    let mut l = [acc, 0.0, 0.0, 0.0];
+    for k in peel..nv {
+        l[(k - peel) % 4] += p[k];
+    }
+    p[nv..].iter().fold((l[0] + l[2]) + (l[1] + l[3]), |a, &v| a + v)
 }
 
 /// `2d4977` output: residual vectors, norms, objectives, compl and μ.
@@ -54,11 +80,9 @@ fn residuals(lp: &Lp, st: &State) -> Res {
     let ax = lp.ax(&st.x);
     let rp: Vec<f64> = (0..m).map(|i| lp.b[i] * tau - ax[i]).collect();
     let aty = lp.aty(&st.y);
-    let mut rd: Vec<f64> =
-        (0..m + n).map(|j| (if j < n { lp.c[j] * tau } else { 0.0 }) - aty[j] - st.z[j]).collect();
-    for j in 0..n {
-        rd[j] += st.s[j];
-    }
+    // oracle (perold, adlittle all entries): columns cτ − ((Aᵀy + z) − s), slacks −y − z
+    let rd: Vec<f64> =
+        (0..m + n).map(|j| if j < n { lp.c[j] * tau - ((aty[j] + st.z[j]) - st.s[j]) } else { -aty[j] - st.z[j] }).collect();
     let ru: Vec<f64> = (0..n).map(|j| if lp.up[j] { lp.ub[j] * tau - st.x[j] - st.w[j] } else { 0.0 }).collect();
     let amax = |v: &[f64]| v.iter().fold(0.0f64, |a, x| a.max(x.abs()));
     let mut dinf = 0.0f64;
@@ -71,15 +95,20 @@ fn residuals(lp: &Lp, st: &State) -> Res {
             dinf = dinf.max(st.y[i]);
         }
     }
-    let xz = (0..m + n).filter(|&j| lp.lo[j]).fold(0.0, |a, j| a + st.x[j] * st.z[j])
-        + (0..n).filter(|&j| lp.up[j]).fold(0.0, |a, j| a + st.w[j] * st.s[j]);
+    // 2d4977 asm 0x2ee7e4: x87 Kahan sums (3439d5) of x·z over all m+n and of w·s over the finite-ub column
+    // range B+0x630..0x634, each rounded to double when combined: τκ + dbl(S_ws + dbl(S_xz))
+    let (lo, hi) = lp.ub_range();
+    let sxz = F80::from_f64(kahan_dot(&st.x, &st.z).to_f64());
+    let xz = (kahan_dot(&st.w[lo..hi], &st.s[lo..hi]) + sxz).to_f64();
     let compl = (tau * st.kappa + xz) / lp.ncomp as f64;
-    let ctx = dot(&lp.c, &st.x[..n]) + lp.cshift * tau;
-    let bty = dot(&lp.b, &st.y) - (0..n).filter(|&j| lp.up[j]).fold(0.0, |a, j| a + lp.ub[j] * st.s[j]) + lp.cshift * tau;
+    // 2d4977 L1333-1352: 2f9515 dots; the s·u dot runs over the finite-ub range
+    let ctx = (dot8(&st.x[..n], &lp.c, 0) + 0.0) + lp.cshift * tau;
+    let su = dot8(&st.s[lo..hi], &lp.ub[lo..hi], lo & 1);
+    let bty = ((0.0 + (dot8(&st.y, &lp.b, 0) - su)) - 0.0) + tau * lp.cshift;
     Res {
-        rp2: dot(&rp, &rp).sqrt() / tau,
-        rd2: dot(&rd, &rd).sqrt() / tau,
-        ru2: dot(&ru, &ru).sqrt() / tau,
+        rp2: dot8(&rp, &rp, 0).sqrt() / tau,
+        rd2: dot8(&rd, &rd, 0).sqrt() / tau,
+        ru2: dot8(&ru, &ru, 0).sqrt() / tau,
         rp_rel: amax(&rp).max(amax(&ru)) / tau,
         rd_rel: dinf / tau,
         compl,
@@ -175,11 +204,14 @@ fn shifts(lp: &Lp, st: &State, floor: f64) -> (f64, f64) {
     }
     let mut ex = if sz > 0.0 { (sxz * 0.5) / sz + dx } else { 100.0 };
     let mut ez = if sx > 0.0 { dz + (sxz * 0.5) / sx } else { 100.0 };
-    if (lp.bnorminf * 1.0001 * ex).sqrt() >= ex {
-        ex = (ex * lp.bnorminf * 1.0001).sqrt();
+    // asm 0x2ebe4e: both products are (‖·‖∞ · 1.0001) · shift
+    let tx = lp.bnorminf * 1.0001 * ex;
+    if tx.sqrt() >= ex {
+        ex = tx.sqrt();
     }
-    if (lp.cnorminf * 1.0001 * ez).sqrt() >= ez {
-        ez = (ez * lp.cnorminf * 1.0001).sqrt();
+    let tz = lp.cnorminf * 1.0001 * ez;
+    if tz.sqrt() >= ez {
+        ez = tz.sqrt();
     }
     let fl = if floor == 0.0 { 0.1 } else { floor };
     (ex.max(fl), ez.max(fl))
@@ -261,6 +293,8 @@ struct Ipm<'a> {
     f8: usize,
     /// (B+0x770, B+0x780) of the last combined direction
     last_res: [f64; 2],
+    /// debug: (ω_p, ω_d) of the last line search
+    last_om: (f64, f64),
 }
 
 impl<'a> Ipm<'a> {
@@ -434,7 +468,7 @@ impl<'a> Ipm<'a> {
 
     /// `2f4fe9`: grid over ω from 1 down to lo (clamp(α_pα_d, 0.01, 1) for k = 1, 0 for k ≥ 2); primal and dual pick
     /// their own ω (first strict 1.0001× improvement); d0 += ω d1. Returns (α_p, α_d, both ω = 0).
-    fn line_search(&self, d0: &mut Dir, d1: &Dir, k: i32, ap: f64, ad: f64) -> (f64, f64, bool) {
+    fn line_search(&mut self, d0: &mut Dir, d1: &Dir, k: i32, ap: f64, ad: f64) -> (f64, f64, bool) {
         let lo = if k < 2 { (ap * ad).clamp(0.01, 1.0) } else { 0.0 };
         let nn = self.ngrid;
         let (mut bp, mut bd, mut wp, mut wd) = (-1e100, -1e100, 0.0, 0.0);
@@ -455,6 +489,7 @@ impl<'a> Ipm<'a> {
         add(&mut d0.ds, &d1.ds, wd);
         add(&mut d0.dy, &d1.dy, wd);
         d0.res = [d0.res[0].max(wp * d1.res[0]), d0.res[1].max(wd * d1.res[1])];
+        self.last_om = (wp, wd);
         (bp, bd, wp == 0.0 && wd == 0.0)
     }
 
@@ -515,10 +550,15 @@ impl<'a> Ipm<'a> {
         self.reflog.clear();
         let mut d0 = self.direction(&rhs, &r.rp, &r.ru, &rxz, &rws);
         let (mut ap, mut ad) = step_lengths(lp, &self.st, &d0, None);
-        // 2f28c2: μ_aff = complementarity at the trial point / ncomp (floor 1e-30)
+        // 2f28c2: μ_aff = complementarity at the trial point / ncomp (floor 1e-30). Columns with a lower bound
+        // sequentially, then all slacks and the finite-ub column range w·s with 4 lanes over 8-blocks (asm 0x30ca96)
         let st = &self.st;
-        let s = (0..lp.m + n).filter(|&j| lp.lo[j]).fold(0.0, |a, j| a + (d0.dx[j] * ap + st.x[j]) * (d0.dz[j] * ad + st.z[j]))
-            + (0..n).filter(|&j| lp.up[j]).fold(0.0, |a, j| a + (d0.dw[j] * ap + st.w[j]) * (d0.ds[j] * ad + st.s[j]));
+        let pxz = |j: usize| (d0.dx[j] * ap + st.x[j]) * (d0.dz[j] * ad + st.z[j]);
+        let s = (0..n).filter(|&j| lp.lo[j]).fold(0.0, |a, j| a + pxz(j));
+        let s = vsum4(s, &(n..n + lp.m).map(pxz).collect::<Vec<_>>(), n & 1);
+        let (lo, hi) = lp.ub_range();
+        let pws = |j: usize| (d0.dw[j] * ap + st.w[j]) * (d0.ds[j] * ad + st.s[j]);
+        let s = vsum4(s, &(lo..hi).map(pws).collect::<Vec<_>>(), lo & 1);
         let mu_aff = ((st.tau * st.kappa + s) / lp.ncomp as f64).max(1e-30);
         let q = mu_aff / r.compl.max(1e-30);
         let sigma = q * q * q.min(0.1);
@@ -527,11 +567,15 @@ impl<'a> Ipm<'a> {
             self.k = barcorr.max(1);
         }
         let mut ncorr = 0;
+        let mut last_d1 = None;
+        let mut oms = vec![];
         for k in 1..=self.k {
             // k = 1 uses the affine direction, which d0 still is
             let (cxz, cws, crhs) = self.corrector_rhs(&d0, mu_t, k, ap, ad);
             let d1 = self.direction(&crhs, &vec![0.0; lp.m], &vec![0.0; n], &cxz, &cws);
             let (nap, nad, none) = self.line_search(&mut d0, &d1, k, ap, ad);
+            oms.push(self.last_om);
+            last_d1 = Some(d1.clone());
             ncorr += 1;
             let stop = none
                 || (nap >= 1.001 && nad >= 1.001)
@@ -554,6 +598,15 @@ impl<'a> Ipm<'a> {
             if d0.res[1] > lim {
                 ad = (lim / d0.res[1]).min(ad);
             }
+        }
+        if let Ok(path) = std::env::var("BARDUMP") {
+            use std::io::Write;
+            let hx = |v: &[f64]| v.iter().map(|x| format!("\"{:016x}\"", x.to_bits())).collect::<Vec<_>>().join(",");
+            let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap();
+            writeln!(f, "{{\"step\":{it},\"theta\":[{}],\"dx\":[{}],\"dy\":[{}],\"dz\":[{}],\"dw\":[{}],\"ds\":[{}],\"a\":[{}],\"ncorr\":{ncorr},\"mu_t\":\"{:016x}\",\"d1x\":[{}],\"d1y\":[{}],\"oms\":[{}]}}",
+                hx(&th), hx(&d0.dx), hx(&d0.dy), hx(&d0.dz), hx(&d0.dw), hx(&d0.ds), hx(&[ap, ad]), mu_t.to_bits(),
+                hx(&last_d1.as_ref().map_or(vec![], |d| d.dx.clone())), hx(&last_d1.as_ref().map_or(vec![], |d| d.dy.clone())),
+                hx(&oms.iter().flat_map(|&(a, b)| [a, b]).collect::<Vec<_>>())).unwrap();
         }
         self.ab = [ap * ad, self.ab[0], self.ab[1]];
         self.last_res = d0.res;
@@ -641,6 +694,7 @@ pub fn run(lp: &Lp, sym: &Symbolic, f160: f64, f168: f64, p: &Params, cb: &mut d
         shift_min: 0.0,
         f8: 0,
         last_res: [0.0; 2],
+        last_om: (0.0, 0.0),
     };
     ipm.initial_point();
     let base = 1.max((n.max(1.0)).log10().floor() as i32 - 2);

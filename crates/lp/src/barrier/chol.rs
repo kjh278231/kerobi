@@ -19,7 +19,7 @@ use super::setup::Lp;
 /// `acc + Σ prods` in the order of Gurobi's SSE2 reductions: sequential below `lanes + peel` terms (and below 8 for
 /// 8 lanes); else `peel` terms sequentially, `lanes` accumulators with lane 0 seeded by `acc`, reduced
 /// ((l0+l2)+(l4+l6)) + ((l1+l3)+(l5+l7)) (2 lanes: l0+l1), then the tail sequentially. `a − p` is passed as −p.
-fn vsum(mut acc: f64, prods: &[f64], peel: usize, lanes: usize) -> f64 {
+pub(crate) fn vsum(mut acc: f64, prods: &[f64], peel: usize, lanes: usize) -> f64 {
     let n = prods.len();
     if n < peel + lanes {
         return prods.iter().fold(acc, |a, &p| a + p);

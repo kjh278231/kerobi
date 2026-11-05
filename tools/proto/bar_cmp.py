@@ -5,7 +5,7 @@ import gzip, json, struct, sys
 h = lambda v: [float.fromhex(x) for x in v]
 b = lambda v: [struct.unpack('<d', bytes.fromhex(x)[::-1])[0] for x in v]
 orc = {r['iter']: r for r in map(json.loads, gzip.open(sys.argv[1], 'rt'))}
-mine = {r['iter']: r for r in map(json.loads, open(sys.argv[2]))}
+mine = {r['iter']: r for r in map(json.loads, open(sys.argv[2])) if 'iter' in r}
 SC = {'compl': 0x1f0, 'mu': 0x1f8, 'rp2': 0x198, 'rd2': 0x1a8, 'ru2': 0x1b8, 'pobj': 0x130, 'dobj': 0x140,
       'rp_rel': 0x1d8, 'rd_rel': 0x1e0, 'ctx': 0x138}
 for it in sorted(set(orc) & set(mine))[: int(sys.argv[3]) if len(sys.argv) > 3 else None]:
