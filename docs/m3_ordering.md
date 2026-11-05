@@ -5,7 +5,7 @@
 | 파일 | 내용 |
 |---|---|
 | `tools/proto/bar_order_oracle.py` | 오라클. "Ordering time" MESSAGE 콜백에서 AAᵀ 그래프·순열·nnz(L)·ops를 뜨고 `309dd0`을 ctypes로 직접 부른다(mode 3, mode 1 seed 11–15). 첫 BARRIER 콜백에서 symbolic 뒤 F를 뜬다 |
-| `bench/oracle/bar_order/*.json.gz` | 64개 덤프. `expected.tsv`는 Rust 테스트용 요약(Gurobi 값) |
+| `bench/oracle/bar_order/*.json.gz` | 64개 덤프. `expected.tsv`는 Rust 테스트용 요약(Gurobi 값). `bisect/`는 `--bisect`로 `30b0f2`를 직접 부른 결과 |
 | `tools/proto/bar_order.py` | 프로토타입. `python3 -I tools/proto/bar_order.py bench/oracle/bar_order` |
 | `crates/lp/src/barrier/ordering.rs` | Rust 포트 `analyze(&Model) -> Symbolic` |
 
@@ -14,14 +14,16 @@
 | 대상 | Gurobi 위치 | 프로토타입 | Rust |
 |---|---|---|---|
 | AAᵀ 패턴(AA' NZ = nnz/2) | B+0x100/0x110/0x118 | 64/64 | 64/64 |
-| 최소 차수 순열(ordering 직후) | F+0x30 | 53/64 | (중간값, 비공개) |
-| `302921` nnz(L)·ops | F+0x38/0x60(ordering 직후) | 53/64 | 옮기지 않음 |
-| 최종 순열(postorder 뒤) | F+0x30(symbolic 뒤) | 53/64 | 53/64 |
-| supernode·블록·열 길이·행 번호 | F+0x78/0xa8/0xc8 | 53/64 | 53/64 |
-| Factor NZ / Factor Ops | F+0x38/0x60(symbolic 뒤) | 53/64 | 53/64 |
+| 최소 차수 순열(ordering 직후) | F+0x30 | 64/64 | (중간값, 비공개) |
+| `302921` nnz(L)·ops | F+0x38/0x60(ordering 직후) | 64/64 | 옮기지 않음 |
+| 최종 순열(postorder 뒤) | F+0x30(symbolic 뒤) | 64/64 | 64/64 |
+| supernode·블록·열 길이·행 번호 | F+0x78/0xa8/0xc8 | 64/64 | 64/64 |
+| Factor NZ / Factor Ops | F+0x38/0x60(symbolic 뒤) | 64/64 | 64/64 |
 | F+0x48(Σ A 열 길이²) | F+0x48 | 64/64 | 64/64 |
 
-틀린 11개(25fv47, bnl1, degen3, ganges, gfrd-pnc, maros, modszk1, perold, scfxm2, scfxm3, sctap2)는 모두 AAᵀ에 행 600개 넘는 연결 성분이 있어 이분할(`30b0f2`)을 타는 인스턴스다. 이분할은 아직 옮기지 않았다(§4).
+단계별 기록: AMD만 53/64(`dec8e5d`) → symbolic 53/64(`66054a0`) → 이분할 64/64(`915ad7f`). 이분할을 타는 11개는 25fv47, bnl1, degen3, ganges, gfrd-pnc, maros, modszk1, perold, scfxm2, scfxm3, sctap2(AAᵀ에 행 600개 넘는 연결 성분).
+
+Rust 검증: `cargo test -p rsolver-lp ordering`(`bench_lps_match_gurobi`가 64개 MPS를 읽어 `expected.tsv`의 Gurobi 값·체크섬과 비교).
 
 ## 2. 확정 규칙
 
@@ -37,6 +39,14 @@
 ### 2.3 `309dd0` 라벨
 - 밀집 임계 t = max(100, min((int)(50·nnz/n), 10·√n)). 차수 > t인 행은 -2(2단계), 나머지 -1, 밀집 열(n>m 부분)은 -3.
 - mode≥1: 라벨 -1 노드의 연결 성분 중 크기 > max(600, n/100)인 것을 `30b0f2`로 이분할하고 구분자를 -2로 바꾼다. mode 1은 모든 성분이 작아질 때까지 반복, mode 2·3은 한 번만.
+
+### 2.3a 이분할 `30b0f2` → `30d189`
+- RNG `a7b4d6`: state = state·0x5851f42d4c957f2d + 0x14057b7ef767814f(64비트), 상위 32비트를 MT식으로 tempering해 31비트. `a7b54f` = 그 값·4.656612873077393e-10. 기준선의 state는 model+0xb0(처음 0)이고 성분을 차례로 이어 쓴다.
+- 성분 추출: 라벨 -1 노드의 DFS 성분, 성분 안 노드는 번호 순서로 다시 매기고 이웃은 인접 목록 순서. 크기 > max(600, n/100)인 성분마다 한 번.
+- coarsening(최대 19단계, 노드 > 99이고 줄어드는 동안): 노드를 차수 오름차순(안정)으로 놓고 같은 차수 구간마다 끝에서부터 Fisher–Yates(r = rand % 남은 길이). 그 순서로 아직 짝 없는 노드를, 짝 없는 이웃 중 차수가 가장 작은 첫 이웃과 묶는다(round = 3이면 첫 짝 없는 이웃; 기준선 round = -1). coarse 노드 번호는 방문 순서, 무게는 합, 인접은 만나는 순서(자기 자신 제외).
+- 가장 거친 그래프는 전부 구분자(2)에서 시작. ratio = `a7b54f`·5 + 5. 각 단계에서 `30d189`로 정제하고 한 단계 아래로 투영한다.
+- `30d189`(2면 FM, METIS `FM_2WayNodeRefine2Sided`와 같은 골격): 큐 k(이진 max-heap, 정수 키, 같은 키는 움직이지 않음)에 구분자 노드를 키 vwgt − edeg[1−k]로 넣는다. 패스 시작마다 구분자 노드를 번호 순서로 모아 끝에서부터 섞고(r = rand % (k+1), k = 0까지) 그 순서로 두 큐에 넣는다. 이동 방향: q0가 비면 1, q1이 비었거나 p1 > ratio·p0이면 0, p0 > ratio·p1이면 1, 아니면 두 후보의 이동 뒤 비용 |S|/(|P0|·|P1|)을 비교(같으면 1). 이동 수 − 최선 위치 > min(500, 5·초기 구분자 수)이면 멈춘다. 패스 끝에 최선 위치까지 되돌리고, 개선이 없거나 10패스면 끝.
+- **Gurobi 특이점**: v를 옮길 때 구분자 이웃 u의 반대 큐 키 갱신 조건이 asm(0x3281eb)에서 `contains(q[other], v)`다. v는 방금 지웠으므로 갱신이 일어나지 않는다. 의사코드는 인자를 잃어 이 점이 보이지 않았고, 이것을 고치자 11/11이 맞았다(오라클 `fm_replay`로 `30d189`를 직접 불러 RNG 소비 수가 다른 것을 보고 찾음).
 
 ### 2.4 최소 차수 `3047bb` (Seed=0)
 AMD 계열 quotient graph. 목록 = 원소(elen개) + 변수.
@@ -68,8 +78,8 @@ AMD 계열 quotient graph. 목록 = 원소(elen개) + 변수.
 - BARRIER 콜백 시점에는 D의 행이 최종 순열로 바뀌어 있다(`2e9086`).
 
 ## 4. 미해독 지점
-- `shortcut:` 이분할 `30b0f2`(다단계 coarsening: 차수 정렬 + 같은 차수 구간 Fisher–Yates(`a7b4d6`) + 매칭, 19단계·크기 100까지) → `30d189`(구분자 FM 정제, 우선순위 큐 `a786fc`/`a787f2`/`a78af7`/`a7936f`, 균형 인자 5+5·`a7b54f`) → 투영. 11개 인스턴스.
-- `shortcut:` ND 후보와 그 채택 판단의 work 계산. 64개 범위에서는 결과에 영향 없음(§2.2).
+- `shortcut:` ND 후보(mode 1: 성분이 모두 작아질 때까지 반복 이분할, round별 seed)와 채택 판단의 work 계산. 64개에서는 결과에 영향 없음(§2.2). work가 작은 큰 모델에서 필요해지면 `3047bb`·`302921`·`30b0f2`·`30d189`의 work 증분부터 옮긴다.
 - `shortcut:` `ab9789`의 n ≥ 100 quicksort 단계. 64개에서 |Lme| ≥ 100인 정렬이 없다.
 - `shortcut:` 밀집 열(`2fd14c`, m ≥ 1000)과 그 라벨 -3, F+0x138. 64개 모두 Dense cols 0.
-- Seed≠0일 때 `3047bb`의 노드 순서 섞기.
+- Seed≠0일 때 `3047bb`의 노드 순서 섞기, model+0xb0의 초기값(Seed=0이면 0).
+- Threads>1일 때 블록 상한(`2e4f14` L2160-2240).

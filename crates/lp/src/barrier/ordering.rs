@@ -1,10 +1,11 @@
-//! 05 §2.3 Ordering and symbolic analysis (`300f28`, `309dd0`, `3047bb`, `2e4f14`), docs/m3_ordering.md.
-//! AAᵀ pattern (`303e2a`) → stage labels (`309dd0`) → approximate minimum degree (`3047bb`, Seed = 0) →
-//! column structures, supernodes, relaxed amalgamation, postorder and block split (`2e4f14`). Matches Gurobi's
-//! permutation, supernodes and Factor NZ/Ops on the 53 bench LPs whose AAᵀ components all have ≤ 600 rows.
-//! shortcut: the nested-dissection bisection (`30b0f2`/`30d189`) for components > 600 rows, the ND trials of
-//! `300f28` (mode 1, seeds Seed+11+k, taken only when ordering work/ops < 0.1) and dense columns
-//! (`2fd14c`, m ≥ 1000) are not ported; port them when an instance needs them (11 of the 64 bench LPs bisect).
+//! 05 §2.3 Ordering and symbolic analysis (`300f28`, `309dd0`, `30b0f2`, `30d189`, `3047bb`, `2e4f14`),
+//! docs/m3_ordering.md. AAᵀ pattern (`303e2a`) → stage labels with one bisection of every component > 600 rows
+//! (`309dd0` mode 3) → approximate minimum degree (`3047bb`, Seed = 0) → column structures, supernodes, relaxed
+//! amalgamation, postorder and block split (`2e4f14`). Matches Gurobi's permutation, supernodes and Factor NZ/Ops
+//! on all 64 bench LPs.
+//! shortcut: the ND trials of `300f28` (mode 1, seeds Seed+11+k, run only when ordering work/ops < 0.1, which on the
+//! bench LPs happens only for instances without bisection where they equal mode 3), Seed ≠ 0 and dense columns
+//! (`2fd14c`, m ≥ 1000) are not ported; port them when an instance needs them.
 use rsolver_model::Model;
 
 /// Result of the structure analysis (field doc = Gurobi location).
@@ -36,7 +37,7 @@ pub struct Symbolic {
 pub fn analyze(m: &Model) -> Symbolic {
     let nr = m.num_constrs();
     let (cp, ri) = aat(m);
-    let pos = amd(nr, &cp, &ri, stage_labels(nr, &cp));
+    let pos = amd(nr, &cp, &ri, nd_labels(nr, &cp, &ri, &mut 0));
     let st = col_structs(nr, &cp, &ri, &pos);
     let (sns, rows) = supernodes(nr, &st);
     let mut newpos = vec![0usize; nr];
@@ -109,10 +110,402 @@ fn dense_thresh(n: usize, nnz: usize) -> usize {
     (d as i32).max(100) as usize
 }
 
-/// `309dd0` without bisection: rows of degree > threshold are ordered in stage 2 (label −2), the rest in stage 1.
-fn stage_labels(n: usize, cp: &[usize]) -> Vec<i32> {
+/// `309dd0` mode 3: rows of degree > threshold go to stage 2 (label −2); every remaining connected component larger
+/// than max(600, n/100) is bisected once (`30b0f2`, RNG state `seed` = model+0xb0) and its separator joins stage 2.
+fn nd_labels(n: usize, cp: &[usize], ri: &[usize], seed: &mut u64) -> Vec<i32> {
     let t = dense_thresh(n, cp[n]);
-    (0..n).map(|i| if cp[i + 1] - cp[i] > t { -2 } else { -1 }).collect()
+    let mut lab: Vec<i32> = (0..n).map(|i| if cp[i + 1] - cp[i] > t { -2 } else { -1 }).collect();
+    let mut comp: Vec<usize> = lab.iter().map(|&l| if l == -1 { usize::MAX } else { usize::MAX - 1 }).collect();
+    let mut nc = 0;
+    for s in 0..n {
+        if comp[s] != usize::MAX {
+            continue;
+        }
+        comp[s] = nc;
+        let mut stack = vec![s];
+        while let Some(v) = stack.pop() {
+            for &u in &ri[cp[v]..cp[v + 1]] {
+                if comp[u] == usize::MAX {
+                    comp[u] = nc;
+                    stack.push(u);
+                }
+            }
+        }
+        nc += 1;
+    }
+    let mut size = vec![0usize; nc];
+    for &c in comp.iter().filter(|&&c| c < nc) {
+        size[c] += 1;
+    }
+    let leaf = (n / 100).max(600);
+    let mut loc = vec![usize::MAX; n];
+    for c in (0..nc).filter(|&c| size[c] > leaf) {
+        let nodes: Vec<usize> = (0..n).filter(|&i| comp[i] == c).collect();
+        for (k, &i) in nodes.iter().enumerate() {
+            loc[i] = k;
+        }
+        let (mut xa, mut ad) = (vec![0usize], Vec::new());
+        for &i in &nodes {
+            ad.extend(ri[cp[i]..cp[i + 1]].iter().filter(|&&j| comp[j] == c).map(|&j| loc[j]));
+            xa.push(ad.len());
+        }
+        let part = bisect(&xa, &ad, -1, seed);
+        for (k, &i) in nodes.iter().enumerate() {
+            if part[k] == 2 {
+                lab[i] = -2;
+            }
+        }
+    }
+    lab
+}
+
+/// `a7b4d6`: 64-bit LCG step with a tempered 31-bit output.
+fn rand31(seed: &mut u64) -> i32 {
+    *seed = seed.wrapping_mul(0x5851f42d4c957f2d).wrapping_add(0x14057b7ef767814f);
+    let mut u = (*seed >> 32) as u32;
+    u ^= u >> 11;
+    u ^= (u & 0x13a58ad) << 7;
+    u ^= (u & 0x1df8c) << 15;
+    ((u ^ (u >> 18)) & 0x7fffffff) as i32
+}
+
+/// `a786fc`…`a7936f`: binary max-heap on int keys with a node locator; equal keys never move.
+struct Heap {
+    node: Vec<usize>,
+    key: Vec<i32>,
+    loc: Vec<i64>,
+}
+
+impl Heap {
+    fn new(n: usize) -> Self {
+        Heap { node: Vec::new(), key: Vec::new(), loc: vec![-1; n] }
+    }
+    fn reset(&mut self) {
+        for &v in &self.node {
+            self.loc[v] = -1;
+        }
+        self.node.clear();
+        self.key.clear();
+    }
+    fn swap(&mut self, i: usize, j: usize) {
+        self.node.swap(i, j);
+        self.key.swap(i, j);
+        self.loc[self.node[i]] = i as i64;
+        self.loc[self.node[j]] = j as i64;
+    }
+    fn up(&mut self, mut i: usize) {
+        while i > 0 {
+            let p = (i - 1) / 2;
+            if self.key[i] <= self.key[p] {
+                return;
+            }
+            self.swap(i, p);
+            i = p;
+        }
+    }
+    fn down(&mut self, mut i: usize) {
+        let n = self.node.len();
+        while 2 * i + 1 < n {
+            let mut c = 2 * i + 2;
+            if n <= c || self.key[c] <= self.key[2 * i + 1] {
+                c = 2 * i + 1;
+            }
+            if self.key[c] <= self.key[i] {
+                return;
+            }
+            self.swap(i, c);
+            i = c;
+        }
+    }
+    /// Sift after the key at `i` changed: down at the root or when not above the parent, else up.
+    fn fix(&mut self, i: usize) {
+        if i > 0 && self.key[(i - 1) / 2] < self.key[i] {
+            self.up(i);
+        } else {
+            self.down(i);
+        }
+    }
+    fn insert(&mut self, v: usize, k: i32) {
+        self.node.push(v);
+        self.key.push(k);
+        self.loc[v] = self.node.len() as i64 - 1;
+        self.up(self.node.len() - 1);
+    }
+    fn peek(&self) -> Option<usize> {
+        self.node.first().copied()
+    }
+    fn contains(&self, v: usize) -> bool {
+        self.loc[v] >= 0
+    }
+    fn delete(&mut self, v: usize) {
+        let i = self.loc[v];
+        if i < 0 {
+            return;
+        }
+        let i = i as usize;
+        self.loc[v] = -1;
+        let last = self.node.len() - 1;
+        self.node.swap_remove(i);
+        self.key.swap_remove(i);
+        if i != last {
+            self.loc[self.node[i]] = i as i64;
+            self.fix(i);
+        }
+    }
+    fn update(&mut self, v: usize, k: i32) {
+        let i = self.loc[v] as usize;
+        self.key[i] = k;
+        self.fix(i);
+    }
+}
+
+/// `30d189` separator cost: |S| / (|P0|·|P1|), or 100·total when a side is empty.
+fn sep_cost(p: [i32; 3]) -> f64 {
+    if p[0] == 0 || p[1] == 0 {
+        (p[0] + p[1] + p[2]) as f64 * 100.0
+    } else {
+        p[2] as f64 / (p[0] as f64 * p[1] as f64)
+    }
+}
+
+/// `30d189`: two-sided FM refinement of a vertex separator (part 2) with balance factor `ratio`; up to 10 passes,
+/// each rolled back to its best cut. Queue k holds separator nodes for a move to side k, key vwgt − edeg[1−k].
+fn fm_refine(ratio: f64, seed: &mut u64, xa: &[usize], ad: &[usize], vw: &[i32], wh: &mut [usize]) {
+    let n = vw.len();
+    let mut pw = [0i32; 3];
+    let mut edeg = [vec![0i32; n], vec![0i32; n]];
+    let mut nsep = 0;
+    for v in 0..n {
+        pw[wh[v]] += vw[v];
+        if wh[v] == 2 {
+            nsep += 1;
+            for &u in &ad[xa[v]..xa[v + 1]] {
+                if wh[u] != 2 {
+                    edeg[wh[u]][v] += vw[u];
+                }
+            }
+        }
+    }
+    let limit = (5 * nsep).min(500) as i64;
+    let mut q = [Heap::new(n), Heap::new(n)];
+    let mut moved = vec![0i64; n];
+    for _pass in 0..10 {
+        q[0].reset();
+        q[1].reset();
+        let mut perm: Vec<usize> = (0..n).filter(|&v| wh[v] == 2).collect();
+        for k in (0..perm.len()).rev() {
+            let r = rand31(seed) as usize % (k + 1);
+            perm.swap(r, k);
+        }
+        for &v in &perm {
+            q[0].insert(v, vw[v] - edeg[1][v]);
+            q[1].insert(v, vw[v] - edeg[0][v]);
+        }
+        moved.fill(-1);
+        let mut mincut = sep_cost(pw);
+        let mut mincutorder: i64 = -1;
+        let (mut swaps, mut hist, mut mlist) = (Vec::new(), Vec::new(), Vec::new());
+        while swaps.len() < n {
+            if limit < swaps.len() as i64 - mincutorder {
+                break;
+            }
+            let t = [q[0].peek(), q[1].peek()];
+            let to = match t {
+                [None, _] => 1,
+                [Some(t0), Some(t1)] if pw[1] as f64 <= ratio * pw[0] as f64 => {
+                    if (pw[1] as f64 * ratio) < pw[0] as f64 {
+                        1
+                    } else {
+                        let (w0, e1) = (vw[t0], edeg[1][t0]);
+                        let (a, b) = (pw[0] + w0, pw[1] - e1);
+                        let c0 = if a == 0 || b == 0 {
+                            (pw[0] + pw[1] + pw[2]) as f64 * 100.0
+                        } else {
+                            (pw[2] - w0 + e1) as f64 / (a as f64 * b as f64)
+                        };
+                        let (e0, w1) = (edeg[0][t1], vw[t1]);
+                        let (a, b) = (pw[0] - e0, pw[1] + w1);
+                        let c1 = if a == 0 || b == 0 {
+                            (pw[0] + pw[1] + pw[2]) as f64 * 100.0
+                        } else {
+                            (pw[2] - w1 + e0) as f64 / (b as f64 * a as f64)
+                        };
+                        usize::from(c1 <= c0)
+                    }
+                }
+                _ => 0,
+            };
+            let Some(v) = t[to] else { break };
+            let other = 1 - to;
+            q[to].delete(v);
+            q[other].delete(v);
+            wh[v] = to;
+            moved[v] = swaps.len() as i64;
+            swaps.push(v);
+            hist.push(mlist.len());
+            pw[2] -= vw[v];
+            pw[to] += vw[v];
+            for &u in &ad[xa[v]..xa[v + 1]] {
+                if wh[u] == 2 {
+                    edeg[to][u] += vw[v];
+                    // asm 0x3281eb tests contains(q[other], v), not u: v was just deleted, so this never fires
+                    if q[other].contains(v) {
+                        q[other].update(u, vw[u] - edeg[to][u]);
+                    }
+                } else if wh[u] == other {
+                    wh[u] = 2;
+                    pw[other] -= vw[u];
+                    mlist.push(u);
+                    edeg[0][u] = 0;
+                    edeg[1][u] = 0;
+                    pw[2] += vw[u];
+                    for &x in &ad[xa[u]..xa[u + 1]] {
+                        if wh[x] == 2 {
+                            edeg[other][x] -= vw[u];
+                            if q[to].contains(x) {
+                                q[to].update(x, vw[x] - edeg[other][x]);
+                            }
+                        } else {
+                            edeg[wh[x]][u] += vw[x];
+                        }
+                    }
+                    if moved[u] == -1 {
+                        q[to].insert(u, vw[u] - edeg[other][u]);
+                        moved[u] = -2;
+                    }
+                }
+            }
+            let cost = sep_cost(pw);
+            if cost < mincut {
+                mincutorder = swaps.len() as i64 - 1;
+                mincut = cost;
+            }
+        }
+        hist.push(mlist.len());
+        for i in ((mincutorder + 1) as usize..swaps.len()).rev() {
+            let v = swaps[i];
+            let to = wh[v];
+            let other = 1 - to;
+            wh[v] = 2;
+            pw[to] -= vw[v];
+            edeg[0][v] = 0;
+            edeg[1][v] = 0;
+            pw[2] += vw[v];
+            for &u in &ad[xa[v]..xa[v + 1]] {
+                if wh[u] == 2 {
+                    edeg[to][u] -= vw[v];
+                } else {
+                    edeg[wh[u]][v] += vw[u];
+                }
+            }
+            for &u in &mlist[hist[i]..hist[i + 1]] {
+                pw[2] -= vw[u];
+                pw[other] += vw[u];
+                wh[u] = other;
+                for &x in &ad[xa[u]..xa[u + 1]] {
+                    if wh[x] == 2 {
+                        edeg[other][x] += vw[u];
+                    }
+                }
+            }
+        }
+        if mincutorder == -1 {
+            break;
+        }
+    }
+}
+
+/// `30b0f2`: multilevel vertex bisection; returns 0/1 per side and 2 for the separator. Coarsening (≤ 19 levels,
+/// while > 99 nodes and shrinking) visits nodes by degree with equal-degree runs shuffled and matches each to its
+/// lowest-degree unmatched neighbour (first unmatched when `round` = 3). The coarsest graph starts all-separator.
+fn bisect(xa: &[usize], ad: &[usize], round: i32, seed: &mut u64) -> Vec<usize> {
+    let mut levels = vec![(xa.to_vec(), ad.to_vec(), vec![1i32; xa.len() - 1])];
+    let mut maps: Vec<(Vec<usize>, Vec<usize>)> = Vec::new();
+    loop {
+        let (xl, al, vl) = levels.last().unwrap();
+        let nl = xl.len() - 1;
+        let deg: Vec<usize> = (0..nl).map(|i| xl[i + 1] - xl[i]).collect();
+        let mut order: Vec<usize> = (0..nl).collect();
+        order.sort_by_key(|&i| deg[i]); // stable, like the counting sort
+        let mut i = 0;
+        while i < nl {
+            let mut j = i + 1;
+            while j < nl && deg[order[j]] == deg[order[i]] {
+                j += 1;
+            }
+            for k in (i + 1..j).rev() {
+                let r = rand31(seed) as usize % (k - i + 1);
+                order.swap(k, i + r);
+            }
+            i = j;
+        }
+        let mut mat = vec![usize::MAX; nl];
+        let (mut cptr, mut clist) = (Vec::new(), Vec::new());
+        for &v in &order {
+            if mat[v] != usize::MAX {
+                continue;
+            }
+            let (mut best, mut bd) = (usize::MAX, nl + 1);
+            for &u in &al[xl[v]..xl[v + 1]] {
+                if mat[u] == usize::MAX && (round == 3 || deg[u] < bd) {
+                    (best, bd) = (u, deg[u]);
+                    if round == 3 {
+                        break;
+                    }
+                }
+            }
+            mat[v] = cptr.len();
+            cptr.push(clist.len());
+            clist.push(v);
+            if best != usize::MAX {
+                mat[best] = cptr.len() - 1;
+                clist.push(best);
+            }
+        }
+        let nc = cptr.len();
+        cptr.push(clist.len());
+        let mut mark = vec![usize::MAX; nc];
+        let (mut cx, mut ca, mut cw) = (vec![0usize], Vec::new(), Vec::with_capacity(nc));
+        for c in 0..nc {
+            mark[c] = c;
+            let mut w = 0;
+            for &f in &clist[cptr[c]..cptr[c + 1]] {
+                w += vl[f];
+                for &x in &al[xl[f]..xl[f + 1]] {
+                    if mark[mat[x]] != c {
+                        mark[mat[x]] = c;
+                        ca.push(mat[x]);
+                    }
+                }
+            }
+            cw.push(w);
+            cx.push(ca.len());
+        }
+        levels.push((cx, ca, cw));
+        maps.push((cptr, clist));
+        if !(nc > 99 && nc != nl && levels.len() - 1 < 19) {
+            break;
+        }
+    }
+    let mut lev = levels.len() - 1;
+    let mut wh = vec![2usize; levels[lev].2.len()];
+    let ratio = rand31(seed) as f64 * 4.656612873077393e-10 * 5.0 + 5.0; // a7b54f
+    loop {
+        let (xl, al, vl) = &levels[lev];
+        fm_refine(ratio, seed, xl, al, vl, &mut wh);
+        if lev == 0 {
+            return wh;
+        }
+        let (cptr, clist) = &maps[lev - 1];
+        let mut fine = vec![0usize; levels[lev - 1].2.len()];
+        for c in 0..vl.len() {
+            for &f in &clist[cptr[c]..cptr[c + 1]] {
+                fine[f] = wh[c];
+            }
+        }
+        wh = fine;
+        lev -= 1;
+    }
 }
 
 /// `3047bb` with Seed = 0: quotient-graph approximate minimum degree in stages. `label[i]` = −stage on entry;
@@ -639,26 +1032,22 @@ mod tests {
         }
     }
 
-    /// All bench LPs against bench/oracle/bar_order/expected.tsv; instances that bisect are only counted.
+    /// All bench LPs against bench/oracle/bar_order/expected.tsv (column 2 marks the 11 that bisect).
     #[test]
     fn bench_lps_match_gurobi() {
         let tsv = format!("{}/../../bench/oracle/bar_order/expected.tsv", env!("CARGO_MANIFEST_DIR"));
         let ck = |v: &[i32]| v.iter().enumerate().map(|(i, &x)| (i as i64 + 1) * x as i64).sum::<i64>();
-        let (mut ok, mut bisect) = (0, 0);
+        let (mut ok, mut nbis) = (0, 0);
         for line in std::fs::read_to_string(tsv).unwrap().lines().filter(|l| !l.starts_with('#')) {
             let f: Vec<&str> = line.split('\t').collect();
             let v: Vec<i64> = f[1..].iter().map(|x| x.parse().unwrap()).collect();
             let s = analyze(&netlib(f[0]));
             let got = [s.aat_nnz, s.nnz_l, s.ops as i64, ck(&s.perm), ck(&s.blocks), ck(&s.col_len), ck(&s.row_idx)];
-            if v[0] == 1 {
-                bisect += 1;
-                assert_eq!(got[0], v[1], "{}", f[0]); // AA' pattern does not depend on the ordering
-                continue;
-            }
             assert_eq!(&got[..], &v[1..], "{}", f[0]);
+            nbis += v[0];
             ok += 1;
         }
-        assert_eq!((ok, bisect), (53, 11));
+        assert_eq!((ok, nbis), (64, 11));
     }
 
     #[test]
