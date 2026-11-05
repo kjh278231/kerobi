@@ -20,6 +20,8 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | `../rsolver-m2-spine-b` / `m2-spine-b` | `3cd406` 패스 루프(L1696–4400) 해독 | `docs/m2_spine_b.md` |
 | `../rsolver-m2-spine-c` / `m2-spine-c` | 라운드 후 단계(L4400–6450) 해독 | `docs/m2_spine_c.md` |
 | `../rsolver-m2-spine-d` / `m2-spine-d` | FINAL 단계(L6582–9600) 해독 | `docs/m2_spine_d.md` |
+| `../rsolver-m2-probe` / `m2-probe` | probing `4d3a1d`와 보조 함수 해독(뒤에 포팅) | `docs/m2_red_probe.md` |
+| `../rsolver-m2-clique` / `m2-clique` | clique `45885d`/`451bed`/`52be10`/`46a62d` 해독(뒤에 포팅) | `docs/m2_red_clique.md` |
 | `../rsolver-m2-inner` / `m2-inner` | 내부 루프 reduction 7개와 보조 함수 해독(뼈대 병합 뒤 같은 에이전트가 포팅) | `docs/m2_red_inner.md` |
 
 ### 다음 단계 (순서)
