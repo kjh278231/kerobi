@@ -135,6 +135,94 @@ impl PyCoreModel {
         };
         Ok(PyCoreModel { inner })
     }
+    /// Replay one probing pass from a tools/probe_trace.js dump (tools/probe_check.py builds `d`): conflict-graph
+    /// merge, probe matrix, engine, implication export and final merge. Returns what each stage produced.
+    fn mip_probe_pass<'py>(&self, py: Python<'py>, d: &Bound<'py, pyo3::types::PyDict>) -> PyResult<Bound<'py, pyo3::types::PyDict>> {
+        use pyo3::types::PyDict;
+        use rsolver_mip::{conflict::ConflictGraph, probe, probe_engine::EngineEnd};
+        fn get<'py, T: pyo3::FromPyObject<'py>>(d: &Bound<'py, PyDict>, k: &str) -> PyResult<T> {
+            d.get_item(k)?.ok_or_else(|| pyo3::exceptions::PyKeyError::new_err(k.to_string()))?.extract()
+        }
+        let graph = |pre: &str| -> PyResult<ConflictGraph> {
+            Ok(ConflictGraph { n0: get(d, &format!("{pre}n0"))?, rc0: get(d, &format!("{pre}rc0"))?, ptr: get(d, &format!("{pre}ptr"))?,
+                               adj: get(d, &format!("{pre}adj"))?, pa: get(d, &format!("{pre}pa"))?, pb: get(d, &format!("{pre}pb"))?,
+                               flag: get(d, &format!("{pre}flag"))? })
+        };
+        let p = rsolver_mip::Params::from_pairs(&get::<Vec<(String, f64)>>(d, "params")?);
+        let mut st = rsolver_mip::state::State::new(&self.inner, &p);
+        st.lb = get(d, "lb")?; st.ub = get(d, "ub")?; st.obj = get(d, "obj")?; st.vtype = get(d, "vtype")?;
+        st.rhs = get(d, "rhs")?; st.sense = get(d, "sense")?; st.row_cnt = get(d, "row_cnt")?; st.col_cnt = get(d, "col_cnt")?;
+        st.inf_max = get(d, "inf_max")?; st.inf_min = get(d, "inf_min")?; st.act_max = get(d, "act_max")?; st.act_min = get(d, "act_min")?;
+        st.mult_lo = get(d, "mult_lo")?; st.mult_hi = get(d, "mult_hi")?; st.objcon = get(d, "objcon")?; st.nnz = get(d, "nnz")?;
+        st.cutoff = get(d, "cutoff")?; st.work_mult = get(d, "mu")?; st.work_base = get(d, "work_base")?; st.budget = get(d, "budget")?;
+        st.prelimit = get(d, "prelimit")?; st.eq_rows = get::<i32>(d, "eq_rows")? != 0;
+        st.cols_removed = get(d, "cols_removed")?; st.rows_removed = get(d, "rows_removed")?;
+        st.load_rows(&get::<Vec<i64>>(d, "rbeg")?, &get::<Vec<i32>>(d, "rcol")?, &get::<Vec<f64>>(d, "rval")?);
+        let mut g = graph("g_")?;
+        let mut w: f64 = get(d, "work")?;
+        let a: Vec<i32> = get(d, "args")?;
+        let args = probe::Args { mode: a[0], a7: a[1], a8: a[2], a9: a[3], a10: a[4] };
+        let t = probe::TimerView { acc: get(d, "t_acc")?, running: get::<i32>(d, "t_running")? != 0, limit: get(d, "t_limit")? };
+        let o = PyDict::new(py);
+        let n = st.n;
+        let (n0, rc) = (n, st.cols_removed);
+        let out = g.merge(n0, rc, &st.col_cnt.clone(), &mut w, st.work_mult);
+        o.set_item("merged_out", out)?;
+        o.set_item("merged_work", w)?;
+        o.set_item("merged_g", (g.n0, g.rc0, g.ptr.clone(), g.adj.clone()))?;
+        let (mut c, mut cand) = match st.probe_build(&p, &args, get::<i32>(d, "pass")? == 1, &t, &mut w) {
+            Ok(x) => x,
+            Err(e) => {
+                o.set_item("build_stop", format!("{e:?}"))?;
+                o.set_item("build_work", w)?;
+                return Ok(o);
+            }
+        };
+        let ctx = |c: &probe::Ctx| -> PyResult<Bound<'py, PyDict>> {
+            let x = PyDict::new(py);
+            x.set_item("rbeg", c.rbeg.clone())?; x.set_item("rnb", c.rnb.clone())?; x.set_item("rcol", c.rcol.clone())?;
+            x.set_item("rval", c.rval.clone())?; x.set_item("cbeg", c.cbeg.clone())?; x.set_item("crow", c.crow.clone())?;
+            x.set_item("cval", c.cval.clone())?; x.set_item("rhs", c.rhs.clone())?; x.set_item("range", c.range.clone())?;
+            x.set_item("sense", c.sense.clone())?; x.set_item("lb", c.lb.clone())?; x.set_item("ub", c.ub.clone())?;
+            x.set_item("amin", c.amin.clone())?; x.set_item("amax", c.amax.clone())?; x.set_item("budget", c.budget)?;
+            x.set_item("fac", c.fac)?; x.set_item("stop", c.stop as i32)?; x.set_item("nchg", c.nchg)?; x.set_item("nbin", c.nbin)?;
+            x.set_item("neq", c.neq)?; x.set_item("nagg", c.nagg)?; x.set_item("aggto", c.aggto.clone())?;
+            x.set_item("aggmul", c.aggmul.clone())?; x.set_item("aggoff", c.aggoff.clone())?; x.set_item("cnt0", c.cnt0.clone())?;
+            x.set_item("cnt1", c.cnt1.clone())?; x.set_item("gbeg", c.gbeg.clone())?; x.set_item("imps", c.imps.clone())?;
+            x.set_item("imp", c.imp as i32)?; x.set_item("cap", c.cap)?; x.set_item("rec", c.rec as i32)?;
+            x.set_item("rhead", c.rhead.clone())?; x.set_item("rnext", c.rnext.clone())?; x.set_item("rlit", c.rlit.clone())?;
+            x.set_item("rslack", c.rslack.clone())?;
+            Ok(x)
+        };
+        o.set_item("ctx_in", ctx(&c)?)?;
+        o.set_item("cand_in", cand.clone())?;
+        o.set_item("in_work", w)?;
+        let end = st.probe_engine(&p, &g, &mut c, &mut cand, &mut w);
+        o.set_item("engine_end", format!("{end:?}"))?;
+        o.set_item("ctx_out", ctx(&c)?)?;
+        o.set_item("cand_out", cand.clone())?;
+        o.set_item("out_work", w)?;
+        if end != EngineEnd::Done || d.get_item("imp_work")?.is_none() {
+            return Ok(o);
+        }
+        // the export reads the state after the write-back (part B): take its bounds and counts from the dump
+        st.lb = get(d, "imp_lb")?; st.ub = get(d, "imp_ub")?; st.col_cnt = get(d, "imp_col_cnt")?; st.nnz = get(d, "imp_nnz")?;
+        st.cols_removed = get(d, "imp_cols_removed")?; st.rows_removed = get(d, "imp_rows_removed")?;
+        let mut g = graph("imp_g_")?;
+        let mut w: f64 = get(d, "imp_work")?;
+        match st.probe_export(&p, &mut g, &c, &cand, &mut w) {
+            None => o.set_item("export", py.None())?,
+            Some(nadd) => {
+                o.set_item("export", nadd)?;
+                o.set_item("pending", (g.pa.clone(), g.pb.clone()))?;
+                let out = g.merge(st.n, st.cols_removed, &st.col_cnt.clone(), &mut w, st.work_mult);
+                o.set_item("end_out", out)?;
+                o.set_item("end_g", (g.n0, g.rc0, g.ptr.clone(), g.adj.clone()))?;
+                o.set_item("end_work", w)?;
+            }
+        }
+        Ok(o)
+    }
     /// What each PRELIMIT count of MIP presolve was (count k is element k-1), as far as the port runs.
     fn mip_presolve_trace(&self, params: Vec<(String, f64)>) -> Vec<String> {
         let p = rsolver_mip::Params::from_pairs(&params);

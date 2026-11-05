@@ -6,8 +6,11 @@
 // Ported comparisons keep the original's form (`!(a < b)` differs from `a >= b` on NaN), and loops index several
 // parallel arrays at once.
 #![allow(clippy::neg_cmp_op_on_partial_ord, clippy::needless_range_loop)]
+pub mod conflict;
 pub mod driver;
 mod lists;
+pub mod probe;
+pub mod probe_engine;
 pub mod state;
 mod stubs;
 pub mod tracker;
@@ -61,6 +64,8 @@ params! {
     feastol: f64 = 1e-6, "feasibilitytol";
     /// env+0x2468 IntFeasTol
     intfeastol: f64 = 1e-5, "intfeastol";
+    /// env+0x26c0 GURO_PAR_AGGMULTLIMIT
+    aggmultlimit: f64 = 1e14, "guro_par_aggmultlimit";
     /// env+0x242c Aggregate
     aggregate: i32 = 1, "aggregate";
     /// env+0x2534 PreDepRow (read as is, no auto value in MIP presolve)
