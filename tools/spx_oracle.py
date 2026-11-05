@@ -48,7 +48,10 @@ def dump(spx, it, full):
                      "avg": D(P + 0x48)} if P else None,
            # LU counters (spx+0x470): updates done, refactor interval, row-eta count, Σ nnz of update columns
            "lu": {"k": I(L(spx + 0x470) + 0x18c), "interval": I(L(spx + 0x470) + 0x188),
-                  "eta": I(L(spx + 0x470) + 0x184), "cols": L(L(spx + 0x470) + 0x190)} if L(spx + 0x470) else None}
+                  "eta": I(L(spx + 0x470) + 0x184), "cols": L(L(spx + 0x470) + 0x190),
+                  # U position of each LU index (LU+0x40) and the prefix of empty U columns (LU+0x100)
+                  "upos": arr(L(L(spx + 0x470) + 0x40), m, "i"), "t": I(L(spx + 0x470) + 0x100)}
+           if L(spx + 0x470) else None}
     if full:
         beg = arr(L(spx + 0x70), n + 1, "l")
         nnz = beg[n] if beg else 0

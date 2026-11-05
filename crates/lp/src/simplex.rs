@@ -500,10 +500,10 @@ impl<'a> Engine<'a> {
             .map(|j| self.d[j])
             .collect();
         let line = format!(
-            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}]}}\n",
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{}}}\n",
             self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr),
             self.pr.allow, self.lu.n_updates, self.pr.avg, hex(&self.pr.score), self.pr.cost_mode, hex(&self.pr.row_cost),
-            hex(&self.pr.var_cost)
+            hex(&self.pr.var_cost), self.lu.n_singleton, self.lu.eta_nnz(), self.upd_cols
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
             let _ = f.write_all(line.as_bytes());

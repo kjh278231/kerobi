@@ -24,8 +24,12 @@ pub struct Lu {
     /// (later step, u).
     ucol: Vec<Vec<(usize, f64)>>,
     urow: Vec<Vec<(usize, f64)>>,
-    /// U order of the steps (factor order, then each FT update moves the replaced step to the end).
+    /// U order of the steps (LU+0x48 ord: position → step); identity after a factor, permuted by FT updates.
     order: Vec<usize>,
+    /// Prefix of U positions with empty U columns as the original tracks it (LU+0x100).
+    prefix: usize,
+    /// Cache of the highest U position with an empty column (LU+0xe8).
+    e8: usize,
     /// Forrest–Tomlin row etas in creation order: (row r, [(row i, μ)]) with x_r −= Σ μ·x_i.
     retas: Vec<(usize, Vec<(usize, f64)>)>,
     /// Sparse-solve multiplier LU+0x104: a sparse Lᵀ needs `mult·nnz ≤ m` (036ade L5709).
@@ -150,6 +154,8 @@ impl Lu {
             ucol: Vec::new(),
             urow: Vec::new(),
             order: Vec::new(),
+            prefix: 0,
+            e8: 0,
             retas: Vec::new(),
             sparse_mult: 2,
             level: None,
@@ -359,6 +365,12 @@ impl Lu {
             self.kpos[pos] = k;
         }
         self.order = (0..m).collect();
+        // 5b257 L2595–2733 after a factor: t = leading empty U columns, LU+0xe8 = highest empty column above t
+        self.prefix = self.ucol.iter().take_while(|c| c.is_empty()).count();
+        self.e8 = m.saturating_sub(1);
+        while self.e8 > self.prefix && !self.ucol[self.e8].is_empty() {
+            self.e8 -= 1;
+        }
         self.urow = vec![Vec::new(); m];
         for k in 0..m {
             for &(i, u) in &self.ucol[k] {
@@ -596,43 +608,29 @@ impl Lu {
     /// eta. Returns false when the new diagonal is below ZERO (caller refactors).
     pub fn update(&mut self, pos: usize, var: usize, spike: &[f64]) -> bool {
         // Forrest–Tomlin as 5b257 stores it (m1_notes §8.10): r = the leaving index, q its U position, t the prefix
-        // of empty U columns, p = max(q, t−1), l = max(p, U positions of the spike entries ≠ r). With l = p the column
-        // is replaced in place (U row r kept, no eta). Otherwise the row eta is η = e_rᵀU⁻¹ (old U, r first then U
-        // order), the new diagonal η·S, row r leaves U and r moves to position l.
-        // shortcut: the permutation is a plain cyclic shift of [p, l] (5b257 L1101–1218 may stop earlier), and the
-        // dot product never peels an element (pool alignment unknown)
+        // LU+0x100, p = max(q, t−1), l = max(p, U positions of the spike entries ≠ r). With l ≠ p and a non-empty U
+        // row r the row eta is η = e_rᵀU⁻¹ (old U, r first then U order), the new diagonal η·S and row r leaves U;
+        // otherwise the diagonal is S_r and U row r stays. r ends at position l (swap with ord[p], then the ord[l]
+        // chain of L1101–1218 and a rotation of [p, l]).
+        // shortcut: the dot product never peels an element (pool alignment unknown)
         let kp = self.kpos[pos];
         let rp = self.steps[kp].0;
-        let at: Vec<usize> = {
-            let mut at = vec![0; self.order.len()];
-            for (i, &k) in self.order.iter().enumerate() {
-                at[k] = i;
-            }
-            at
-        };
+        let mut at = vec![0; self.order.len()];
+        for (i, &k) in self.order.iter().enumerate() {
+            at[k] = i;
+        }
         let q = at[kp];
-        let t = self.order.iter().take_while(|&&k| self.ucol[k].is_empty()).count();
-        let p = q.max(t.saturating_sub(1));
-        let l = spike
-            .iter()
-            .enumerate()
-            .filter(|&(i, &s)| i != rp && s != 0.0)
-            .map(|(i, _)| at[self.prow[i] as usize])
-            .fold(p, usize::max);
+        let t = self.prefix;
+        let p0 = q.max(t.saturating_sub(1));
+        let others: Vec<usize> = (0..spike.len()).filter(|&i| i != rp && spike[i].abs() > ZERO).collect();
+        let l = others.iter().map(|&i| at[self.prow[i] as usize]).fold(p0, usize::max);
         // old column kp out of U
         for &(i, _) in &std::mem::take(&mut self.ucol[kp]) {
             let ki = self.prow[i] as usize;
             self.urow[ki].retain(|e| e.0 != kp);
         }
-        let diag;
-        if l == p {
-            diag = spike[rp];
-            if q < p {
-                let other = self.order[p];
-                self.order.swap(q, p);
-                let _ = other;
-            }
-        } else {
+        let mut diag = spike[rp];
+        if l != p0 && !self.urow[kp].is_empty() {
             // η = e_rᵀU⁻¹ by Uᵀ in U order (the 21a941 output order) on the U before the update
             let mut w = vec![0.0; self.steps.len()];
             w[kp] = 1.0;
@@ -649,21 +647,91 @@ impl Lu {
                 }
             }
             diag = dot8(eta.iter().map(|&(i, e)| spike[i] * e));
-            // row r out of U
+            // row r out of U; a column left empty raises the LU+0xe8 cache (L1023, position before the permutation)
             for &(j, _) in &std::mem::take(&mut self.urow[kp]) {
                 self.ucol[j].retain(|e| e.0 != rp);
+                if self.ucol[j].is_empty() {
+                    self.e8 = self.e8.max(at[j]);
+                }
             }
-            let k = self.order.remove(q);
-            self.order.insert(l, k);
-            if !eta.is_empty() {
-                self.retas.push((rp, eta));
+            self.retas.push((rp, eta));
+        }
+        // new prefix (L463–512): local_40, with an empty column above p taking the place of p when q < p
+        let (tm1, nz) = (t as i64 - 1, !others.is_empty());
+        let (pi, qi, li) = (p0 as i64, q as i64, l as i64);
+        let mut p = p0;
+        let local40 = if li == pi {
+            if qi < pi || pi == tm1 { tm1 - nz as i64 } else { tm1 }
+        } else if qi < pi {
+            let mut e = self.e8 as i64;
+            let mut found = false;
+            if pi < e {
+                loop {
+                    if self.ucol[self.order[e as usize]].is_empty() {
+                        found = true;
+                        break;
+                    }
+                    e -= 1;
+                    if pi >= e {
+                        break;
+                    }
+                }
+            }
+            self.e8 = e as usize;
+            if found {
+                p = e as usize;
+                tm1
+            } else if pi < li {
+                t as i64 - 2
+            } else {
+                tm1
+            }
+        } else if pi < li && pi == tm1 {
+            t as i64 - 2 + (!nz) as i64
+        } else {
+            tm1
+        };
+        // permutation (L1101–1218)
+        let swap = |order: &mut Vec<usize>, at: &mut Vec<usize>, a: usize, b: usize| {
+            order.swap(a, b);
+            at[order[a]] = a;
+            at[order[b]] = b;
+        };
+        if l <= p {
+            if q < p {
+                swap(&mut self.order, &mut at, q, p);
+            }
+        } else {
+            if q < p {
+                swap(&mut self.order, &mut at, q, p);
+            }
+            let base = p;
+            let mut ll = l;
+            loop {
+                let x = self.order[ll];
+                if ll - base <= self.ucol[x].len() {
+                    break;
+                }
+                let m2 = self.ucol[x]
+                    .iter()
+                    .map(|&(i, _)| at[self.prow[i] as usize])
+                    .filter(|&pp| base < pp && pp < ll)
+                    .fold(base, usize::max);
+                swap(&mut self.order, &mut at, base, ll);
+                ll = m2;
+            }
+            self.order[base..=ll].rotate_left(1);
+            for i in base..=ll {
+                at[self.order[i]] = i;
             }
         }
-        for (i, &s) in spike.iter().enumerate() {
-            if i != rp && s != 0.0 {
-                self.ucol[kp].push((i, s));
-                self.urow[self.prow[i] as usize].push((kp, s));
-            }
+        self.prefix = (local40 + 1) as usize;
+        for &i in &others {
+            self.ucol[kp].push((i, spike[i]));
+            self.urow[self.prow[i] as usize].push((kp, spike[i]));
+        }
+        if others.is_empty() {
+            self.e8 = self.e8.max(at[kp]);
         }
         self.steps[kp].2 = diag;
         self.head[pos] = var;

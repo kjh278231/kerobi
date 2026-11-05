@@ -62,4 +62,6 @@ for it in sorted(set(g) & set(mine)):
     lu = a.get("lu") or {}
     if lu and (lu.get("k"), pr.get("allow")) != (b.get("k"), b.get("allow")):
         out.append(f"lu k/allow g {lu.get('k')}/{pr.get('allow')} mine {b.get('k')}/{b.get('allow')}")
+    if lu and "eta" in b and (lu.get("eta"), lu.get("cols")) != (b["eta"], b["cols"]):
+        out.append(f"lu eta/cols g {lu.get('eta')}/{lu.get('cols')} mine {b['eta']}/{b['cols']}")
     print(f"iter {it}: " + ("OK" if not out else "; ".join(out)))
