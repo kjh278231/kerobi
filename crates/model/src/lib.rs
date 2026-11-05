@@ -32,6 +32,8 @@ pub struct Model {
     pub rhs: Vec<f64>,
     pub var_names: Vec<String>,
     pub constr_names: Vec<String>,
+    /// model+0xb0: state of the model's RNG (`a7b4d6`); 0 on a fresh model, set by `895c5` for a presolved one.
+    pub rng: u64,
 }
 
 impl Model {

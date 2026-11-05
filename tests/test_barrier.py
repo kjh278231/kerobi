@@ -27,6 +27,7 @@ def test_barrier_solves_64_lps_like_gurobi():
         g = json.load(open(f))
         m = rsolver.read(DATA / f"{f.parent.name}.mps.gz")
         m.setParam("Method", 2)
+        m.setParam("Presolve", 0)
         its = []
         m.optimize(lambda model, where: its.append((where, model.cbGet(rsolver.GRB.Callback.BARRIER_ITRCNT))))
         assert m.Status == g["Status"], f.parent.name

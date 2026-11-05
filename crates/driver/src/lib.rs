@@ -262,9 +262,11 @@ fn simplex_driver(md: &Model, p: &Params, method: i32, h: &mut Hooks, t0: Instan
         None => (code, x[..md.num_vars()].to_vec()),
     };
     let obj = objective(md, &x);
-    (h.log)(&format!("\nSolved in {iter} iterations and {:.2} seconds ({:.2} work units)\n", t0.elapsed().as_secs_f64(), 0.0));
+    let work = pre.as_ref().map_or(0.0, |(_, post)| post.work) * 1e-9;
+    (h.log)(&format!("\nSolved in {iter} iterations and {:.2} seconds ({work:.2} work units)\n", t0.elapsed().as_secs_f64()));
     (h.log)(&status_line(status, obj));
-    Outcome { status, obj, x, iter_count: iter, trace, ..Default::default() }
+    // shortcut: simplex work is not counted yet (P2 of G1); Work holds the presolve part only
+    Outcome { status, obj, x, iter_count: iter, trace, work, ..Default::default() }
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -310,7 +312,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
             };
             let r = barrier::solve(qe, &bp, &mut *h.barrier);
             out.bar_iter_count = r.bar_iters;
-            out.work = r.work;
+            out.work = pre.as_ref().map_or(0.0, |(_, post)| post.work) * 1e-9 + r.work;
             (r.status, r.x)
         }
         Alg::Pdhg => {
@@ -321,6 +323,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
                 abs_tol: p.get("PDHGAbsTol"),
                 conv_tol: p.get("PDHGConvTol"),
                 work_limit: p.get("WorkLimit"),
+                work0: pre.as_ref().map_or(0.0, |(_, post)| post.work),
             };
             let r = pdhg::solve(qe, &pp, &mut *h.pdhg);
             out.pdhg_iter_count = r.iters;

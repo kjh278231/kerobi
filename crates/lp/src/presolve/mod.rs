@@ -65,6 +65,8 @@ pub struct Params {
     pub crossover: i32,
     /// env+0x2b9c SolutionTarget
     pub solution_target: i32,
+    /// env+0x2cd0 Seed
+    pub seed: i64,
 }
 
 impl Default for Params {
@@ -72,7 +74,7 @@ impl Default for Params {
         Params { presolve: -1, feastol: 1e-6, infbound: 1e30, fixtol: -1.0, prelimit: 2_000_000_000, dual_reductions: true, prebound: 1,
                  opttol: 1e-6, numeric_focus: 0, agg_mult_limit: 1e14, precrush: 0, prepasses: -1, aggregate: 1, agg_fill: -1,
                  pre_pair_agg: 3, pre_dep_row: -1, symmetry: -1, presym_passes: -1, method: -1, crossover: -1,
-                 solution_target: -1 }
+                 solution_target: -1, seed: 0 }
     }
 }
 
@@ -102,6 +104,7 @@ impl Params {
                 "method" => p.method = *v as i32,
                 "crossover" => p.crossover = *v as i32,
                 "solutiontarget" => p.solution_target = *v as i32,
+                "seed" => p.seed = *v as i64,
                 _ => {}
             }
         }
@@ -157,7 +160,9 @@ pub fn run_post(md: &Model, p: &Params) -> (Model, postsolve::Post) {
             st.parallel(2, &tols);
         }
     }
-    let q = st.to_model(md);
+    let mut q = st.to_model(md);
+    // `3b0917` → `895c5`: the presolved model's RNG starts at 13 n + 7 m + 23 nnz + Seed
+    q.rng = (13 * q.num_vars() as i64 + 7 * q.num_constrs() as i64 + 23 * q.num_nz() as i64 + p.seed) as u64;
     let post = postsolve::Post::new(&st, p.infbound, nnz0, work);
     (q, post)
 }
@@ -171,9 +176,11 @@ fn reduce(st: &mut State, p: &Params, tols: &ColTols) {
         p.pre_dep_row
     } else if 0 < p.presym_passes || p.presolve == 1 {
         0
-    } else if p.presolve == 2 || p.method == 2 || p.sol_mode() != 0 {
-        3
-    } else if p.method != 6 && (st.ptype == 1 || (st.n as f64) * 2.5 < st.nnz as f64) {
+    } else if p.presolve == 2
+        || p.method == 2
+        || p.sol_mode() != 0
+        || (p.method != 6 && (st.ptype == 1 || (st.n as f64) * 2.5 < st.nnz as f64))
+    {
         3
     } else {
         0

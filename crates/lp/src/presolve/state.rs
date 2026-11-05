@@ -194,7 +194,6 @@ fn relax_zero_one(md: &Model, mu: f64, ub: &mut [f64], ty: i32) -> (f64, bool) {
 /// Work the constructor counts (`3a484d` with `5118e6` CSR build and `534a8b` tracker; docs/m1_presolve.md
 /// appendix A), in the original order. Checked against `tools/work_oracle.py` at PRELIMIT=1.
 #[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
 fn constructor_work(md: &Model, n: usize, m: usize, nnz: usize, spare: i64, contiguous: bool, ub: &mut [f64], ptype: &mut i32,
                     method: i32) -> f64 {
     let mu = if nnz <= 100_000 { 1.0 } else { (nnz as f64 / 1e4).log10().sqrt() };

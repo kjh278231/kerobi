@@ -230,7 +230,7 @@ impl PyCoreModel {
         conv_tol: f64,
         work_limit: f64,
     ) -> PyResult<(i32, f64, i64, Vec<f64>, f64)> {
-        let p = rsolver_lp::pdhg::Params { iter_limit, rel_tol, abs_tol, conv_tol, work_limit };
+        let p = rsolver_lp::pdhg::Params { iter_limit, rel_tol, abs_tol, conv_tol, work_limit, work0: 0.0 };
         let mut err = None;
         let r = rsolver_lp::pdhg::solve(&self.inner, &p, &mut |i| {
             if err.is_none() {

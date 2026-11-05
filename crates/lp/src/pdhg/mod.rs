@@ -18,11 +18,13 @@ pub struct Params {
     pub abs_tol: f64,
     pub conv_tol: f64,
     pub work_limit: f64,
+    /// the optimize's work timer (1e-9 units) when `34c004` starts, e.g. the presolve work; WorkLimit counts it
+    pub work0: f64,
 }
 
 impl Default for Params {
     fn default() -> Self {
-        Params { iter_limit: 1e100, rel_tol: 1e-6, abs_tol: 1e-6, conv_tol: 1e-6, work_limit: 1e100 }
+        Params { iter_limit: 1e100, rel_tol: 1e-6, abs_tol: 1e-6, conv_tol: 1e-6, work_limit: 1e100, work0: 0.0 }
     }
 }
 
@@ -126,7 +128,7 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
     st.omega = if st.bnorm > 0.0 && st.cnorm > 0.0 { st.cnorm / st.bnorm } else { 1.0 };
     st.omega0 = st.omega;
     (st.eps, st.eta) = if m == 0 || n == 0 { (0.0, 1.0) } else { (1e100, 0.0) };
-    let mut work = (nnz as f64 + m as f64 * 5.0) + n as f64 * 9.0;
+    let mut work = p.work0 + ((nnz as f64 + m as f64 * 5.0) + n as f64 * 9.0);
     // start point: x = clamp(0, l, u) (ties keep the bound), y = 0
     let x0: Vec<f64> = (0..n)
         .map(|j| {
@@ -155,7 +157,7 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
     work += nnz as f64 * 3.0;
     d.a.aty(&st.v.y, &mut st.v.aty);
     work += nnz as f64 * 3.0;
-    let mut seed = 0u64;
+    let mut seed = md.rng;
     st.pv = (0..m).map(|_| rand01(&mut seed)).collect();
 
     let eq: Vec<bool> = d.sense.iter().map(|&s| s == b'=').collect();
