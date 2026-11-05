@@ -392,7 +392,10 @@ impl Lu {
     /// ported, and with U off-diagonals or row etas a plain dense solve stands in for the original's paths.
     pub fn btran(&self, x: &[(usize, f64)]) -> Vec<(usize, f64)> {
         assert!(self.complete(), "singular basis");
-        if self.general || !self.retas.is_empty() {
+        if self.n_updates > 0 {
+            return self.btran_updated(x);
+        }
+        if self.general {
             return self.btran_general(x);
         }
         let m = self.head.len();
@@ -430,8 +433,15 @@ impl Lu {
             }
             return y;
         }
+        self.lt_sparse(&xs)
+    }
+
+    /// Sparse Lᵀ of BTRAN (`221173` L262–616) on step-indexed inputs in arrival order: the descending-step heap
+    /// when LU+0x140 < 0 (m < 250 among others), else level buckets; output (row, value) in visit order.
+    fn lt_sparse(&self, xs: &[(usize, f64)]) -> Vec<(usize, f64)> {
+        let m = self.head.len();
         let mut val: Vec<Option<f64>> = vec![None; m]; // touched steps
-        for &(k, t) in &xs {
+        for &(k, t) in xs {
             val[k] = Some(t);
         }
         let mut out = Vec::new();
@@ -460,7 +470,7 @@ impl Lu {
                 // level path (L619): level buckets from the lowest, each in insertion order; fills go to higher levels
                 let depth = lev.iter().copied().max().unwrap_or(0);
                 let mut buckets: Vec<Vec<usize>> = vec![Vec::new(); depth + 1];
-                for &(k, _) in &xs {
+                for &(k, _) in xs {
                     buckets[lev[k]].push(k);
                 }
                 for l in 0..=depth {
@@ -470,6 +480,68 @@ impl Lu {
                     }
                 }
             }
+        }
+        out
+    }
+
+    /// BTRAN with Forrest–Tomlin updates (m1_notes §8.10): Uᵀ in U order, row etas newest first, then Lᵀ — sparse
+    /// (`lt_sparse`, so the output order is the original's) when 0x104·nnz ≤ m, else dense in row order.
+    /// shortcut: the etas are textbook FT multipliers, not the original η = Uᵀ⁻¹e_r, so values can differ in the last
+    /// bits; the Uᵀ phase is computed densely.
+    fn btran_updated(&self, x: &[(usize, f64)]) -> Vec<(usize, f64)> {
+        let m = self.head.len();
+        let mut w = vec![0.0; m]; // by step
+        for &(pos, v) in x {
+            w[self.kpos[pos]] += v;
+        }
+        let mut y = vec![0.0; m]; // by row
+        let mut list = Vec::new(); // rows in arrival order
+        let mut seen = vec![false; m];
+        for &k in &self.order {
+            let (r, _, d) = self.steps[k];
+            let t = w[k] / d;
+            if t.abs() <= ZERO {
+                continue;
+            }
+            y[r] = t;
+            seen[r] = true;
+            list.push(r);
+            for &(j, u) in &self.urow[k] {
+                w[j] -= u * t;
+            }
+        }
+        for (r, mu) in self.retas.iter().rev() {
+            let yr = y[*r];
+            if yr != 0.0 {
+                for &(i, v) in mu {
+                    y[i] -= v * yr;
+                    if !seen[i] {
+                        seen[i] = true;
+                        list.push(i);
+                    }
+                }
+            }
+        }
+        let xs: Vec<(usize, f64)> =
+            list.iter().filter(|&&r| y[r].abs() >= ZERO).map(|&r| (self.prow[r] as usize, y[r])).collect();
+        if self.sparse_mult * xs.len() <= m {
+            return self.lt_sparse(&xs);
+        }
+        let mut dense = vec![0.0; m]; // by step
+        for &(k, v) in &xs {
+            dense[k] = v;
+        }
+        for k in (0..m).rev() {
+            let v = dense[k];
+            if ZERO < v.abs() {
+                for &(j, l) in &self.lrow[k] {
+                    dense[j] -= l * v;
+                }
+            }
+        }
+        let mut out = vec![(0, 0.0); m];
+        for (k, &(r, _, _)) in self.steps.iter().enumerate() {
+            out[r] = (r, dense[k]);
         }
         out
     }
