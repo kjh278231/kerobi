@@ -274,13 +274,15 @@ impl Driver<'_> {
                 self.budget();
             }
             if dual && p.predominate != 0 && self.ok(17) {
-                rc(self.timed(17, |s, p| s.dominated(p)))?;
+                let t = self.t[17];
+                rc(self.timed(17, |s, p| s.dominated(p, t)))?;
                 self.count("dominated")?;
                 self.budget();
             }
             if p.precancel != 0 && self.ok(15) {
                 let m = if p.precancel == -1 { 2 } else { p.precancel - 1 };
-                rc(self.timed(15, |s, p| s.cancel_rows(p, m)))?;
+                let t = self.t[15];
+                rc(self.timed(15, |s, p| s.cancel_rows(p, m, t)))?;
                 self.count("cancel_rows")?;
                 self.budget();
             }
@@ -306,7 +308,8 @@ impl Driver<'_> {
             self.budget();
             if p.precancelcol != 0 && self.ok(16) {
                 let m = if p.precancelcol == -1 { 2 } else { p.precancelcol - 1 };
-                rc(self.timed(16, |s, p| s.cancel_cols(p, m)))?;
+                let t = self.t[16];
+                rc(self.timed(16, |s, p| s.cancel_cols(p, m, t)))?;
                 self.count("cancel_cols")?;
                 self.budget();
             }

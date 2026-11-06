@@ -3,7 +3,8 @@ compare the result with Gurobi's state at its return: bounds, rows, activities, 
 free/pending counts, tracker and new postsolve records (docs/m2_red_inner.md §9). Needs no Gurobi.
 usage: PYTHONPATH=python python tools/mip_dump_check.py <fn> <dump.json ...> [--after DUMP] [--param K=V ...]
   <fn>: 3e39a6 36ddf2 37168e 36c5cf 56f793 56c80e 36e6b6 (mode 0 or 1, whichever matches) 370047 implied_bounds
-  45885d 52be10 46a62d 5a9282 5ab429 59c193 55a779.
+  45885d 52be10 46a62d 5a9282 5ab429 59c193 55a779 374521 5431ee 3e5363 57627e 3ff744:<mode>:<flag>
+  3e40d1 36ee92 418542 37f484 4030c9 414c03 414c53.
   --after: the "after" state is the entry state of the same call number in DUMP (for an inline block: dump the
   function before it and the one after it).
 Doubles compare with == (the JSON dump loses the sign of -0.0); records compare byte for byte except padding.
@@ -15,6 +16,8 @@ from rsolver import _core
 
 FIELDS = ["lb", "ub", "obj", "rhs", "row_cnt", "col_cnt", "inf_max", "inf_min", "act_max", "act_min", "mult_lo",
           "mult_hi", "objcon", "nnz", "work"]
+# void functions (the dumped return value is a stale register)
+NO_RET = {"56f793", "3e40d1"}
 
 
 def to_parts(s):
@@ -28,6 +31,7 @@ def to_parts(s):
     d["nfree"], d["npend"] = int(s["free"][0]), int(s["free"][1])
     d["nbin"] = s.get("nbin", -1)  # +0xf0 (counted at bound rounding, not kept up to date)
     d["nint"] = s.get("nint", -1)  # +0xf4 (likewise)
+    d["node_cap"], d["chunk"] = int(s.get("node_cap", 0)), int(s.get("chunk", 0))  # 0: not in older dumps
     d["rows"] = [[tuple(x) for x in r] for r in s["rows"]]
     d["cols"] = [[tuple(x) for x in c] for c in s["cols"]]
     t = s["tracker"]
@@ -140,7 +144,7 @@ def main():
             for name in names:
                 got = _core.mip_dump_run(name, to_parts(enter), params)
                 diffs, nd = compare(got, leave, enter["recs"] if not a.after else enter["recs"])
-                if not a.after and a.fn != "36e6b6" and got["ret"] != xs[1]["ret"] and a.fn != "56f793":
+                if not a.after and a.fn != "36e6b6" and got["ret"] != xs[1]["ret"] and a.fn not in NO_RET:
                     diffs.append(f"ret port {got['ret']} gurobi {xs[1]['ret']}")
                     nd += 1
                 if best is None or nd < best[1]:

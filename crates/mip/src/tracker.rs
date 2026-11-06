@@ -16,6 +16,8 @@ pub struct Queue {
     pub cache: [Option<Vec<i32>>; 3],
     /// `53a487`/`53af0f` result cache per level (tracker+0xe0/+0x108).
     pub cache2: [Option<Vec<i32>>; 3],
+    /// `53c422` result cache per level (columns only, tracker+0x158; rows' +0x130 counterpart unused).
+    pub cache3: [Option<Vec<i32>>; 3],
 }
 
 #[derive(Clone, Debug, Default)]
@@ -35,7 +37,7 @@ impl Queue {
         let all: Vec<i32> = (0..n as i32).collect();
         // `534a8b`: everything starts queued at levels 1 and 2 (flag 5), every list is the identity.
         Queue { flag: vec![5; n], a: [n; 3], b: [n; 3], list: [all.clone(), all.clone(), all], cache: [None, None, None],
-                cache2: [None, None, None] }
+                cache2: [None, None, None], cache3: [None, None, None] }
     }
 
     /// `53763f` (rows) / `5379f1` (columns).
@@ -138,6 +140,7 @@ impl Tracker {
                 self.cols.cache[lv] = None;
                 self.rows.cache2[lv] = None;
                 self.cols.cache2[lv] = None;
+                self.cols.cache3[lv] = None;
             }
         }
         self.active[lv] = true;

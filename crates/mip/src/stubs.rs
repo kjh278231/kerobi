@@ -8,20 +8,6 @@ use crate::Params;
 impl State {
     /// `578fd2` knapsack coefficient lifting
     pub fn knapsack(&mut self, p: &Params) -> i32 { 0 }
-    /// `4030c9` dominated columns
-    pub fn dominated(&mut self, p: &Params) -> i32 { 0 }
-    /// `414c03(st, env, mode, T15)` row nonzero cancellation (`40d2bc` mode 0)
-    pub fn cancel_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// `36ee92` compression (no count)
-    pub fn compress(&mut self, p: &Params) -> i32 { 0 }
-    /// `3e40d1` inequalities to equalities (return value ignored)
-    pub fn dual_ineq_to_eq(&mut self, p: &Params) -> i32 { 0 }
-    /// `37f484` aggregation
-    pub fn aggregate(&mut self, p: &Params) -> i32 { 0 }
-    /// `414c53(st, env, mode, T16)` column nonzero cancellation (`40d2bc` mode 1)
-    pub fn cancel_cols(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// `418542` dual aggregation
-    pub fn dual_agg(&mut self, p: &Params) -> i32 { 0 }
     /// 3cd406 inline dual binarization candidates (m2_spine_b.md §5.4; `3c2f36` never runs on the 38 models)
     pub fn dual_conv_bin(&mut self, p: &Params) -> i32 { 0 }
     /// `5466a7` VUB merging

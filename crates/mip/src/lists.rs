@@ -85,16 +85,27 @@ impl State {
         out
     }
 
+    /// `53c422`: `53af0f` one step further: marked columns plus every column of the rows `53a487` gives (rows of
+    /// the columns `5399fc` gives); all live columns in index order when that would be most of them. Cached per
+    /// level until the next reset (tracker+0x158).
+    pub fn adjacent2_cols(&mut self) -> Vec<i32> {
+        self.adjacent_any(true, true)
+    }
+
     /// `53af0f` (columns) / `53a487` (rows): the items marked at the tracker's level plus every item sharing a row
     /// (column) with the other kind's list (`538f30` / `5399fc`), live ones only; all live items in index order when
     /// that would be most of them. Cached per level until the next reset.
     pub fn adjacent_list(&mut self, cols: bool) -> Vec<i32> {
+        self.adjacent_any(cols, false)
+    }
+
+    fn adjacent_any(&mut self, cols: bool, hop2: bool) -> Vec<i32> {
         let lv = self.tracker.level;
         let q = if cols { &self.tracker.cols } else { &self.tracker.rows };
         if lv == 0 {
             return q.list[0][..q.a[0]].to_vec();
         }
-        if let Some(c) = &q.cache2[lv] {
+        if let Some(c) = if hop2 { &q.cache3[lv] } else { &q.cache2[lv] } {
             return c.clone();
         }
         let na = q.a[lv];
@@ -103,7 +114,7 @@ impl State {
         let mut dense = !((na as f64) * 5.0 < dim as f64);
         let mut other = Vec::new();
         if !dense {
-            other = if cols { self.rows_list() } else { self.cols_list() };
+            other = if hop2 { self.adjacent_list(false) } else if cols { self.rows_list() } else { self.cols_list() };
             let ocnt = if cols { &self.row_cnt } else { &self.col_cnt };
             let sum: i64 = other.iter().map(|&i| ocnt[i as usize].max(0) as i64).sum();
             self.work += (other.len() as f64 + other.len() as f64) * mult;
@@ -134,7 +145,7 @@ impl State {
             l
         };
         let q = if cols { &mut self.tracker.cols } else { &mut self.tracker.rows };
-        q.cache2[lv] = Some(out.clone());
+        if hop2 { q.cache3[lv] = Some(out.clone()) } else { q.cache2[lv] = Some(out.clone()) }
         out
     }
 }
