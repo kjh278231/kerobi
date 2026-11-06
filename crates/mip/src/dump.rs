@@ -46,6 +46,9 @@ pub struct Parts {
     pub counters: Vec<i32>,
     pub nfree: i64,
     pub npend: i64,
+    /// +0x158 arena size and +0x1a8 next chunk size (0: not dumped; then the loaded arena's size and 10000)
+    pub node_cap: i64,
+    pub chunk: i64,
     /// [row, column, value] per list, in list order
     pub rows: Vec<Vec<(i32, i32, f64)>>,
     pub cols: Vec<Vec<(i32, i32, f64)>>,
@@ -55,10 +58,13 @@ pub struct Parts {
     pub c: QueueParts,
     /// +0xf0 when dumped (-1: count the 'B' columns; Gurobi keeps the count from bound rounding)
     pub nbin: i32,
+    /// +0xf4 when dumped (-1: count the 'B' and 'I' columns)
+    pub nint: i32,
 }
 
 fn queue(q: &QueueParts) -> Queue {
-    Queue { flag: q.flag.clone(), a: q.a, b: q.b, list: q.list.clone(), cache: q.cache.clone(), cache2: q.cache2.clone() }
+    Queue { flag: q.flag.clone(), a: q.a, b: q.b, list: q.list.clone(), cache: q.cache.clone(), cache2: q.cache2.clone(),
+            cache3: Default::default() }
 }
 
 fn queue_parts(q: &Queue) -> QueueParts {
@@ -137,11 +143,11 @@ impl State {
             objcon: d.objcon,
             nnz: d.nnz,
             nbin: if d.nbin >= 0 { d.nbin } else { cnt(b'B') },
-            nint: cnt(b'B') + cnt(b'I'),
+            nint: if d.nint >= 0 { d.nint } else { cnt(b'B') + cnt(b'I') },
             eq_rows: false,
             vtype: d.vtype.clone(),
             col_flag: d.col_flag.clone(),
-            node_cap: nd.len() as i64,
+            node_cap: if d.node_cap > 0 { d.node_cap } else { nd.len() as i64 },
             nd,
             row_head,
             col_head,
@@ -149,7 +155,7 @@ impl State {
             nfree: d.nfree,
             pend,
             npend: d.npend,
-            chunk: 10000,
+            chunk: if d.chunk > 0 { d.chunk } else { 10000 },
             prelimit: p.prelimit,
             precrush: p.precrush,
             opt_target_off: true,
@@ -169,6 +175,8 @@ impl State {
             bad_col: -1,
             bad_row: -1,
             cutoff: 1e100,
+            antipar: ctr(13),
+            splits: Vec::new(),
             post: Vec::new(),
             cg: Default::default(),
             row_int: vec![0.0; m],
@@ -188,8 +196,10 @@ impl State {
         };
         let mut counters = vec![self.bounds_tightened, self.coefs_changed, self.ineq_to_eq, self.rows_removed, self.cols_removed];
         counters.extend_from_slice(&self.ctr);
+        counters.push(self.antipar);
         Parts {
             nbin: self.nbin,
+            nint: self.nint,
             n: self.n,
             m: self.m,
             lb: self.lb.clone(),
@@ -214,6 +224,8 @@ impl State {
             counters,
             nfree: self.nfree,
             npend: self.npend,
+            node_cap: self.node_cap,
+            chunk: self.chunk,
             rows: (0..self.m).map(|i| walk(self.row_head[i], true)).collect(),
             cols: (0..self.n).map(|j| walk(self.col_head[j], false)).collect(),
             level: self.tracker.level,
@@ -255,6 +267,15 @@ impl State {
             "45885d" => (self.clique(p), 0),
             "52be10" => (self.set_packing(p), 0),
             "46a62d" => (self.clique_rows(p, if p.presolve > 1 || p.preclique > 1 { 2 } else { 1 }), 0),
+            "374521" => (self.dual_bounds(p), 0),
+            "5431ee" => (self.trans_red(p), 0),
+            "3e5363" => (self.xor_rows(p), 0),
+            "57627e" => (self.implied_int(p), 0),
+            "578fd2" => (self.knapsack(p), 0),
+            _ if name.starts_with("3ff744:") => {
+                let a: Vec<i32> = name.split(':').skip(1).map(|x| x.parse().unwrap_or(0)).collect();
+                (self.parallel(p, a[0], a[1]), 0)
+            }
             "5a9282" => (self.r5a9282(p), 0),
             "5ab429" => (self.r5ab429(p), 0),
             "59c193" => (self.vub_lift(p), 0),
@@ -264,6 +285,14 @@ impl State {
                 let mut f4 = 0;
                 (self.symmetry(p, 20000, 1e100, &mut f4), f4 as i64)
             }
+            "3e40d1" => (self.dual_ineq_to_eq(p), 0),
+            "36ee92" => (self.compress(p), 0),
+            "418542" => (self.dual_agg(p), 0),
+            "37f484" => (self.aggregate(p), 0),
+            "4030c9" => (self.dominated(p, Default::default()), 0),
+            // the reduction timer is not dumped: a zero limit never stops the call
+            "414c03" => (self.cancel_rows(p, 2, Default::default()), 0),
+            "414c53" => (self.cancel_cols(p, 2, Default::default()), 0),
             "370047" => {
                 self.activity(None);
                 (0, 0)

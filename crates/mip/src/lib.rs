@@ -12,11 +12,22 @@ mod cliquerows;
 pub mod conflict;
 pub mod driver;
 pub mod dump;
+mod grow;
 mod helpers;
+mod iint;
+mod knapsack;
 mod inner;
+mod cancel;
+mod aggregate;
 mod colpass;
+mod compress;
+mod dominate;
 mod doubleton;
+mod dualbnd;
+mod dualagg;
+mod dualeq;
 mod lists;
+mod parallel;
 pub mod post;
 pub mod probe;
 mod probe_apply;
@@ -29,6 +40,8 @@ mod stubs;
 mod symmetry;
 mod vublift;
 pub mod tracker;
+mod transred;
+mod xorrows;
 
 use rsolver_model::Model;
 use state::State;
@@ -91,6 +104,10 @@ params! {
     preqsubst: i32 = -1, "guro_par_preqsubst";
     /// env+0x242c Aggregate
     aggregate: i32 = 1, "aggregate";
+    /// env+0x2428 AggFill (-1: `3db19d` makes it 0 for MIP presolve)
+    aggfill: i32 = -1, "aggfill";
+    /// env+0x2594 GURO_PAR_PREPAIRAGG
+    prepairagg: i32 = 3, "guro_par_prepairagg";
     /// env+0x2534 PreDepRow (read as is, no auto value in MIP presolve)
     pre_dep_row: i32 = -1, "predeprow";
     /// env+0x2864 Symmetry
@@ -108,6 +125,8 @@ params! {
     predominate: i32 = 1, "guro_par_predominate";
     precancel: i32 = -1, "guro_par_precancel";
     precancelcol: i32 = -1, "guro_par_precancelcol";
+    /// env+0x25a4 GURO_PAR_PRECANCELSELECT: how `40d2bc` picks between a candidate's two multipliers
+    precancelselect: i32 = -1, "guro_par_precancelselect";
     presubsume: i32 = 0, "guro_par_presubsume";
     precliqsub: i32 = 0, "guro_par_precliqsub";
     /// env+0x26c8 / 0x254c / 0x253c / 0x2538 AGEQ / PRECLIQUE / PREMERGEVUBS / PRETWOROWS
@@ -133,6 +152,14 @@ params! {
     impliedint: i32 = 1, "guro_par_impliedint";
     symmtrans: i32 = -1, "guro_par_symmtrans";
     predualconvtobin: i32 = -1, "guro_par_predualconvtobin";
+    /// env+0x258c GURO_PAR_PRESPLITROWS (-1: split only rows of 100+ continuous entries, MIP)
+    presplitrows: i32 = -1, "guro_par_presplitrows";
+    /// env+0x256c / 0x2570 / 0x2564 GURO_PAR_PREPWLRED / PREOBJPWLRED / PREPOWER (3ff744 second phases, 6aec61)
+    prepwlred: i32 = 1, "guro_par_prepwlred";
+    preobjpwlred: i32 = 1, "guro_par_preobjpwlred";
+    prepower: i32 = 0, "guro_par_prepower";
+    /// env+0x2568 GURO_PAR_PREKNAPLIFTLEN (-1: 512 in `6aec61` mode 2)
+    preknapliftlen: i32 = -1, "guro_par_preknapliftlen";
 }
 
 /// 3cd406's locals that the reduction loop reads.
@@ -168,9 +195,22 @@ pub fn presolve(md: &Model, p: &Params) -> Result<Model, i32> {
     let mut st = State::new(md, p);
     reduce(&mut st, p)?;
     match finish(&mut st, p) {
-        0 => Ok(st.to_model(md)),
+        0 => match split_rows(&mut st, p) {
+            0 => Ok(st.to_model(md)),
+            rc => Err(rc),
+        },
         rc => Err(rc),
     }
+}
+
+/// `3b0917` before it builds the model: opposite parallel `<` rows that `3ff744` left (+0x42c) are split
+/// (`3ff744(st, env, 0, 2, 0)`) when PRESPLITROWS > 0, or < 0 and some column is continuous. Returns a status.
+/// shortcut: env+0x2728 (unnamed, 0 at defaults) is assumed 0.
+pub fn split_rows(st: &mut State, p: &Params) -> i32 {
+    if st.antipar == 0 || p.presplitrows == 0 || (p.presplitrows < 0 && st.nint >= st.n as i32) {
+        return 0;
+    }
+    st.parallel(p, 2, 0)
 }
 
 /// 3cd406 up to model generation: the prelude, then the rounds (`driver`). Err = status (3 infeasible, ...).

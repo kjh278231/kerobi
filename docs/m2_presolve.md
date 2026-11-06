@@ -6,7 +6,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 | G6 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **9/38**(2026-11-06, 내부 루프 병합 `e4173c9`). `sweep_check.py` 첫 불일치는 모두 미포팅 reduction: `parallel` 8, `cancel_rows` 5, `implied_int` 4, `r5a9282`·`knapsack`·`aggregate` 2, `trans_red`·`probe`·`mod_k`·`implied_int_scale`·`dual_bounds`·`clique` 1 |
+| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **22/38**(2026-11-06, `32361e8`). 첫 불일치: `two_rows` 7, `implied_int_scale` 3, `knapsack` 2, `ss2mip`·`sparsify`·`probe0`·`mod_k` 1. 추가된 행·열 이름은 R<번호>/C<번호>(나머지는 원래 이름) |
 | (2) 기본값에서 도는 MIP reduction 전부(probing·대칭성·연결 성분 포함) | 시작 전. 목록은 §2 |
 | (3) MIP postsolve 레코드 | 시작 전 |
 | (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
@@ -21,7 +21,8 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | ~~`m2-spine-c`~~ (완료, 병합 `e492342`) | 라운드 후 단계 해독. 라운드 0–4 × 바깥 반복 2, PRELIMIT 카운트 round 0은 19, 이후 16. 호출 없이 세는 곳 목록 | [m2_spine_c.md](m2_spine_c.md) |
 | ~~`m2-spine-d`~~ (완료, 병합) | FINAL 단계 해독. 두 번째 probing 뒤 ρ > 1e-4면 라운드 루프 재시작(최대 1회), 마무리 사슬 `52cba4`→`521497`→`470936`→`57999f`→{`36ddf2`+inline 쌍대 고정}→inline implied int. 카운트 C1–C23 | [m2_spine_d.md](m2_spine_d.md) |
 | ~~`m2-probe`~~ (완료, 병합 `54125bd`) | probing `4d3a1d` 전체 포팅(`probe*.rs`, `conflict.rs`, `subst.rs`). 엔진 62/62 패스 비트 일치(`tools/probe_check.py`), 쓰기 13호출 일치(`tools/probe_apply_check.py`). sweep에서 `probe` 첫 불일치 0 | [m2_red_probe.md](m2_red_probe.md) |
-| `../rsolver-m2-outer-b` / `m2-outer-b` | 바깥 패스 중간: `4030c9` 지배 열, `414c03`/`414c53`→`40d2bc` 비영 소거, `36ee92`, `3e40d1`, `37f484` MIP 분기, `418542` | `docs/m2_red_outer_b.md` |
+| `../rsolver-m2-outer-b` / `m2-outer-b` | `bd6d2e3`까지 병합(`4030c9`, `40d2bc`, `36ee92`, `3e40d1`, `37f484` MIP, `418542`, 덤프 각 78/78). 이 worktree는 사용자가 맡긴 Codex 에이전트가 마무리 중(`37f484` 단계 C 쌍 집계, `3bb6fe`). 끝나면 다시 병합 | [m2_red_outer_b.md](m2_red_outer_b.md) |
+| `../rsolver-m2-outer-c` / `m2-outer-c` | `45feaa` two-row(+`45d7ec`), `5466a7` VUB 병합, `47c445` MIP 분기, inline 쌍대 이진화 작업량 | `docs/m2_red_outer_c.md` |
 | ~~`m2-clique`~~ (완료, 병합 `3ece196`) | `451bed`, `45885d`, `52be10`, `46a62d` 포팅. 덤프 비교 각 78/78, 레코드 38/38. 덤프에 +0xf0/+0xf4(prelude에서 센 이진·정수 수)를 더함 | [m2_red_clique.md](m2_red_clique.md) |
 | `../rsolver-m2-roundend` / `m2-roundend` | 병합(`f2e0c80`): `58d4ce`, `5a9282`, `5ab429`(+`574764` `mod_subst`, `a7c550`, `3c5996`), `59c193`, `55a779` 1부. 덤프 80/42/42/38 전부 일치. 지금 `5577ba` 대칭 MIP 분기(작업량만 바뀜, `551cc0` 정수 경로·`5507cb`). 다음 `594c0c`(ran14x18, outer-a의 `3bbf87`/`3bde19` 뒤) | [m2_red_roundend.md](m2_red_roundend.md) |
 | `../rsolver-m2-outer-a` / `m2-outer-a` | 바깥 패스 앞쪽 해독 → 포팅: `3e5363`, `3ff744` MIP 분기, `57627e`, `578fd2`, `374521`, `5431ee` | `docs/m2_red_outer_a.md` |
@@ -31,7 +32,6 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 spine 노트 b·c·d대로 `3cd406`의 단계(≤2) × 라운드(≤5) × 패스 × 내부 반복, 라운드 끝, FINAL을 옮겼다. 카운트 62곳(reduction 없이 세는 I→B·PREPARTOBJ·함의 bound·쌍대 이진화·패스 끝·FINAL 쌍대 고정 포함), timer 28개(시작마다 +1, 한도 B·0.5B·2B·4B·3B), 스냅숏 셋과 진척도 판정 셋, inline I→B·PREPARTOBJ·열 타입 통계·두 번째 probing 판정. 아직 없는 reduction은 `stubs.rs`의 stub(아무것도 안 바꾸고 0)이다. **포팅 = stub을 지우고 같은 이름의 `impl State` 메서드를 새 파일에 둔다.** 확인: 아무것도 안 바뀌는 5개 모델의 총 카운트가 Gurobi 호출 기록과 같다(neos5 62, 두 번째 probing이 없는 모델 61).
 
 ### 남은 묶음 (아직 담당 없음, 동시 3개 한도 안에서 차례로)
-- outer-c: `5466a7`, `45feaa`, `47c445` MIP 분기, inline 쌍대 이진화(작업량만).
 - round-end-b: `423e35`, `419ffc`, `5a1293`, `5a4d8b`/`5a5eff`, `5aaaf7`, `838543` mod-k, `579e67`, `5a04fc`.
 - final: `52cba4`, `521497`, `470936` sparsify(LP 포트 호출 지점만), `57999f`, inline 쌍대 고정, inline implied int 척도.
 

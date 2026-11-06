@@ -606,7 +606,7 @@ impl State {
 
     /// `3c3abf`: a moved node whose new coefficient is tiny (|new| <= 1e-13) dies, taking the old coefficient's
     /// contribution (old column's bounds, guarded) out of the row.
-    fn agg_tiny(&mut self, r: usize, at: usize, j_old: usize, new: f64, old: f64) {
+    pub(crate) fn agg_tiny(&mut self, r: usize, at: usize, j_old: usize, new: f64, old: f64) {
         if 1e-13 < new.abs() || self.nd[at].col < 0 {
             return;
         }

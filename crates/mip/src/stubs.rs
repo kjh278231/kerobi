@@ -6,32 +6,6 @@ use crate::state::State;
 use crate::Params;
 
 impl State {
-    /// `3e5363` XOR / parity rows
-    pub fn xor_rows(&mut self, p: &Params) -> i32 { 0 }
-    /// `3ff744(st, env, T6, mode, flag, 0)` parallel rows / columns
-    pub fn parallel(&mut self, p: &Params, mode: i32, flag: i32) -> i32 { 0 }
-    /// `57627e` implied integers, integer equations
-    pub fn implied_int(&mut self, p: &Params) -> i32 { 0 }
-    /// `578fd2` knapsack coefficient lifting
-    pub fn knapsack(&mut self, p: &Params) -> i32 { 0 }
-    /// `374521` dual bounds
-    pub fn dual_bounds(&mut self, p: &Params) -> i32 { 0 }
-    /// `5431ee` binary implication graph SCC
-    pub fn trans_red(&mut self, p: &Params) -> i32 { 0 }
-    /// `4030c9` dominated columns
-    pub fn dominated(&mut self, p: &Params) -> i32 { 0 }
-    /// `414c03(st, env, mode, T15)` row nonzero cancellation (`40d2bc` mode 0)
-    pub fn cancel_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// `36ee92` compression (no count)
-    pub fn compress(&mut self, p: &Params) -> i32 { 0 }
-    /// `3e40d1` inequalities to equalities (return value ignored)
-    pub fn dual_ineq_to_eq(&mut self, p: &Params) -> i32 { 0 }
-    /// `37f484` aggregation
-    pub fn aggregate(&mut self, p: &Params) -> i32 { 0 }
-    /// `414c53(st, env, mode, T16)` column nonzero cancellation (`40d2bc` mode 1)
-    pub fn cancel_cols(&mut self, p: &Params, mode: i32) -> i32 { 0 }
-    /// `418542` dual aggregation
-    pub fn dual_agg(&mut self, p: &Params) -> i32 { 0 }
     /// 3cd406 inline dual binarization candidates (m2_spine_b.md §5.4; `3c2f36` never runs on the 38 models)
     pub fn dual_conv_bin(&mut self, p: &Params) -> i32 { 0 }
     /// `5466a7` VUB merging

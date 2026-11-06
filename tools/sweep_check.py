@@ -24,13 +24,20 @@ def main():
     for name in names:
         d = Path(a.sweep) / name
         core = rsolver.read(str(insts[name]))._core
-        trace = core.mip_presolve_trace([])
+        try:
+            trace = core.mip_presolve_trace([])
+        except BaseException as e:  # a Rust panic surfaces as PanicException (BaseException)
+            print(f"{name:22s} PANIC {e}")
+            continue
         ks = sorted(int(p.stem) for p in d.glob("*.mps"))
         last = max(ks)
         bad = None
         for k in ks[1:] + [None]:  # every change point, then the default result (== the last saved file)
             want = (d / f"{last if k is None else k}.mps").read_text().splitlines()
-            got = core.presolve([] if k is None else [("GURO_PAR_PRELIMIT", k)]).to_mps().splitlines()
+            try:
+                got = core.presolve([] if k is None else [("GURO_PAR_PRELIMIT", k)]).to_mps().splitlines()
+            except BaseException as e:
+                got = [f"PANIC {e}"]
             if got != want:
                 i = next((j for j, (x, y) in enumerate(zip(got, want)) if x != y), min(len(got), len(want)))
                 bad = (k, i, got[i] if i < len(got) else "<eof>", want[i] if i < len(want) else "<eof>")
