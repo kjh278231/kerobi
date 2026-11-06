@@ -450,8 +450,8 @@ impl Driver<'_> {
             self.budget();
         }
         if p.preprobe0 != 0 && self.ok(10) {
-            let probe = self.run.probe;
-            rc(self.timed(10, |s, p| s.probe0(p, probe)))?;
+            let (probe, t) = (self.run.probe, self.t[10]);
+            rc(self.timed(10, |s, p| s.probe0(p, probe, t)))?;
             self.count("probe0")?;
             self.budget();
         }

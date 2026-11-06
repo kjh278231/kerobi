@@ -8,8 +8,6 @@ use crate::Params;
 impl State {
     /// `594c0c` (PRESS2MIP)
     pub fn ss2mip(&mut self, p: &Params) -> i32 { 0 }
-    /// `423e35(st, env, T10, probe mode)` (PREPROBE0)
-    pub fn probe0(&mut self, p: &Params, probe: i32) -> i32 { 0 }
     /// `419ffc` (PRECOVERS)
     pub fn covers(&mut self, p: &Params) -> i32 { 0 }
     /// `5a1293` (PREDUALREDUNDANT)
