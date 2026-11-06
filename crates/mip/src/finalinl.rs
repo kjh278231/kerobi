@@ -1,5 +1,5 @@
-//! 3cd406's inline blocks of the final stage: dual fixing of empty columns and implied-integer scaling
-//! (docs/m2_spine_d.md §5.2, §5.3; docs/m2_red_final.md).
+//! Small pieces of 3cd406's final stage: `57999f` (tiny coefficients) and the inline blocks dual fixing of empty
+//! columns and implied-integer scaling (docs/m2_spine_d.md §5.2, §5.3; docs/m2_red_final.md).
 use crate::iint::gcd_f64;
 use crate::state::{State, INF, NIL};
 use crate::Params;
@@ -29,6 +29,43 @@ impl State {
             v.push((self.rhs[i] / a).abs());
         }
         (c2, v)
+    }
+
+    /// `57999f(st, env)`: per row, drop entries whose whole range moves the row by less than 0.1·min(1e-6, ft) and
+    /// the objective by less than 0.1·ot (both summed over the dropped ones), moving a·l into the rhs; rows that lost
+    /// any get their activity again (`370047(st, env, 1, &i)`). nnz (+0xd8) is not lowered. W += nnz·μ first.
+    pub fn r57999f(&mut self, p: &Params) {
+        let (ot, tol) = (p.opttol, if p.feastol <= 1e-6 { p.feastol } else { 1e-6 });
+        self.work = self.nnz as f64 * self.work_mult + self.work;
+        for i in 0..self.m {
+            let (mut s1, mut s2) = (0.0f64, 0.0f64);
+            let mut q = self.row_head[i];
+            while q != NIL {
+                let (at, x) = (q as usize, self.nd[q as usize]);
+                q = x.nr;
+                if x.col < 0 {
+                    continue;
+                }
+                let j = x.col as usize;
+                let (l, d) = (self.lb[j], self.ub[j] - self.lb[j]);
+                let t1 = (d * x.val).abs() + s1;
+                if !(t1 < tol * 0.1) {
+                    continue;
+                }
+                let t2 = (self.obj[j] * d).abs() + s2;
+                if !(t2 < ot * 0.1) {
+                    continue;
+                }
+                self.row_cnt[i] -= 1;
+                self.col_cnt[j] -= 1;
+                self.rhs[i] -= x.val * l;
+                self.nd[at].col = -1;
+                (s1, s2) = (t1, t2);
+            }
+            if 0.0 < s1 {
+                self.activity(Some(&[i as i32]));
+            }
+        }
     }
 
     /// Final dual fixing (0x3b9f0e): empty unflagged columns go to the bound their cost prefers (type 1 record), then

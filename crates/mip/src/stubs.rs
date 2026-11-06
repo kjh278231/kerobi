@@ -30,6 +30,4 @@ impl State {
     pub fn components(&mut self, p: &Params, ncomp: &mut i32) -> i32 { 0 }
     /// `521497(st, env, T22)` (PREBICONNECTED)
     pub fn biconnected(&mut self, p: &Params) -> i32 { 0 }
-    /// `57999f` (return value ignored)
-    pub fn r57999f(&mut self, p: &Params) {}
 }

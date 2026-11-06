@@ -17,7 +17,7 @@ from rsolver import _core
 FIELDS = ["lb", "ub", "obj", "rhs", "row_cnt", "col_cnt", "inf_max", "inf_min", "act_max", "act_min", "mult_lo",
           "mult_hi", "objcon", "nnz", "work"]
 # void functions (the dumped return value is a stale register)
-NO_RET = {"56f793", "3e40d1"}
+NO_RET = {"56f793", "3e40d1", "57999f"}
 
 
 def to_parts(s):
