@@ -32,8 +32,8 @@
 | ~~M3 barrier~~ (완료, main 병합) | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
 | ~~M3 PDHG~~ (완료, main 병합) | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3_pdhg.md` | G4 |
 | M1 LP 드라이버 | `rsolver-presolve` / `m1-lp-driver` | 파라미터 표, 드라이버, Presolve 켠 연속 경로 | `docs/m1_driver.md` | G5 |
-| M2 MIP presolve | `rsolver-barrier` / `m2-mip-presolve` | MIP presolve `3cd406` P0 | `docs/m2_presolve.md` | G6 |
-| ↳ MIP presolve 하위 에이전트(동시 3개 이하로 제한) | `rsolver-m2-*` / `m2-skel`, `m2-spine-b/c/d`, `m2-inner`, `m2-probe`, `m2-clique` | G6 분담 | `docs/m2_presolve.md` | G6의 일부 |
+| M2 MIP presolve (에이전트 검증 완료, main 병합 대기) | `rsolver-barrier` / `m2-mip-presolve` | MIP presolve `3cd406` P0. 검증 범위·한계는 §3 | `docs/m2_presolve.md` | G6 |
+| ↳ MIP presolve 하위 작업 (상위 브랜치에 병합 완료) | `m2-mip-presolve`에 통합 | probing·clique·바깥 reduction·마무리 | `docs/m2_presolve.md` | G6의 일부 |
 
 ## 3. 완료 기록
 
@@ -105,6 +105,14 @@
 | 2026-11-06 | M2 바깥 reduction A·B | 함의 그래프 추이 축소(`5431ee`), dual bound(`374521`), 부등식→등식(`3e40d1`), 노드 아레나 압축(`36ee92`), dual 집계(`418542`). 덤프 호출 78/78 | `f280d7c`, `0ea348a`, `8624df7`, `d1d083d`, `2ebdf67` (`m2-outer-a`, `m2-outer-b`) |
 | 2026-11-06 | M1 simplex 속도 개선 | 비트는 그대로(피벗 경로 64/64 동일). BTRAN 출력 재사용, α 지지 집합만 순회, LU 평면 배열, FT 갱신에서 U 위치 역순열 유지 | `61ccd6b`, `2cb6739` |
 | 2026-11-06 | M2 round end·바깥 reduction 추가 | 지배된 singleton 열(`5a9282`), 비용 singleton mod gcd(`5ab429`), VUB lifting(`59c193`), 계수 패턴 사전(`55a779` 1부), XOR 행(`3e5363`), 함의 정수(`57627e`), 평행 행·열 MIP 분기(`3ff744`), 비영 소거(`40d2bc`), MIP 집계(`37f484`) | `dff8109`, `91c379b`, `2b791f0`, `79ae5aa`, `f001cff`, `b14499b` (`m2-*`) |
+| 2026-11-06 | M2 MIP presolve (G6) 에이전트 검증 완료 | 에이전트가 `m2-outer-b` 병합 후 재검증했다고 보고함. 기본값 presolved 모델, PRELIMIT sweep 변화점, postsolve 레코드 각각 **38/38** 일치. probing·대칭·연결 성분 탐색 포함, reduction stub 삭제. clippy 경고 0, cargo test 통과, pytest 37 passed·1 xfailed. **오케스트레이터 별도 검증·main 병합 대기** | `a683710`, 병합 `83f4fc3`, 최종 `2f28f77` (`m2-mip-presolve`) |
+
+### G6 검증 범위와 남은 작업 (2026-11-06)
+
+- 위 결과는 `m2-mip-presolve`의 `2f28f77`에서 에이전트가 보고한 값이다. main에는 아직 이 구현을 병합하지 않았다. 검증 절차와 상세 결과는 해당 브랜치의 `docs/m2_presolve.md` §0에 있다. `git show 2f28f77:docs/m2_presolve.md`로 확인한다.
+- 검증 범위는 miplib_small 38개다. 그 범위에서 실행되지 않은 covers 적용, type 24 레코드 바이트, Q·QC·SOS·NL, 재시작 문맥은 오라클로 확인하지 못했다.
+- 하위 풀이 `5307f4`·`522aa2`와 doubleton 등식 처리 `56b360`은 건너뛴다. 여러 연결 성분이 있어 하위 풀이가 필요한 모델에서는 Gurobi와 결과가 달라질 수 있다.
+- `cliquerows.rs`·`setpack.rs`의 노드 풀 확장 `3b85ea`는 아직 `assert!`로 막혀 있어 더 큰 모델에서 중단될 수 있다. 오케스트레이터의 별도 검증과 main 병합이 남았다.
 
 ## 4. goal 원문
 
