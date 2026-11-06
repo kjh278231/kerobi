@@ -418,7 +418,9 @@ impl Driver<'_> {
                     limit *= 10.0;
                 }
             }
-            rc(self.timed(24, |s, p| s.symmetry(p, nodes, limit)))?;
+            // f4 (local_1a4) goes to the presolved model's +0x218, not to the MPS
+            let mut f4 = 0;
+            rc(self.timed(24, |s, p| s.symmetry(p, nodes, limit, &mut f4)))?;
             self.count("symmetry")?;
             self.budget();
         }

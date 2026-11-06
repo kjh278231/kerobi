@@ -12,6 +12,9 @@ pub enum PostRec {
     Subst { j: i32, c0: f64, ind: Vec<i32>, val: Vec<f64> },
     /// type 9 (`3a061e`): {i32 i, f64 d1, f64 d2}.
     T9 { i: i32, d1: f64, d2: f64 },
+    /// type 19 (`3a0a17`, symmetry): the columns of one cell merged into the first, {i32 rep, i32 cnt, cols ptr,
+    /// cols}.
+    T19 { rep: i32, cols: Vec<i32> },
     /// type 4 (`39a1e9`): parallel columns, `y` merged into `x` (flag 0, x = x + r·y) or two integer columns into
     /// one integer (flag 1, `3ff744` mode 3); the bounds are those before the merge.
     Par { x: i32, y: i32, lx: f64, ly: f64, ux: f64, uy: f64, r: f64, flag: i32 },
@@ -43,6 +46,7 @@ impl PostRec {
             PostRec::Fix { .. } => 1,
             PostRec::Subst { .. } => 2,
             PostRec::T9 { .. } => 9,
+            PostRec::T19 { .. } => 19,
             PostRec::Par { .. } => 4,
             PostRec::Xor { .. } => 25,
             PostRec::Split { .. } => 14,
@@ -68,6 +72,15 @@ impl PostRec {
                 f64b(&mut b, *v);
                 if let PostRec::T9 { d2, .. } = self {
                     f64b(&mut b, *d2);
+                }
+            }
+            PostRec::T19 { rep, cols } => {
+                i32b(&mut b, *rep);
+                i32b(&mut b, cols.len() as i32);
+                ptrs.push(b.len());
+                b.extend_from_slice(&0x10u64.to_le_bytes());
+                for &k in cols {
+                    i32b(&mut b, k);
                 }
             }
             PostRec::Par { x, y, lx, ly, ux, uy, r, flag } => {

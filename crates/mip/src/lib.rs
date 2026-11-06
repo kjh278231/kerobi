@@ -37,6 +37,7 @@ mod setpack;
 pub mod state;
 mod subst;
 mod stubs;
+mod symmetry;
 mod vublift;
 pub mod tracker;
 mod transred;
