@@ -150,8 +150,6 @@ params! {
     impliedint: i32 = 1, "guro_par_impliedint";
     symmtrans: i32 = -1, "guro_par_symmtrans";
     predualconvtobin: i32 = -1, "guro_par_predualconvtobin";
-    /// env+0x2428 AggFill (-1: `3db19d` makes it 0 for MIP presolve)
-    agg_fill: i32 = -1, "aggfill";
     /// env+0x256c / 0x2570 / 0x2564 GURO_PAR_PREPWLRED / PREOBJPWLRED / PREPOWER (3ff744 second phases, 6aec61)
     prepwlred: i32 = 1, "guro_par_prepwlred";
     preobjpwlred: i32 = 1, "guro_par_preobjpwlred";

@@ -495,7 +495,7 @@ impl State {
                 row_map[i] = q.rhs.len() as i32;
                 q.rhs.push(self.rhs[i]);
                 q.row_sense.push(self.sense[i]);
-                q.constr_names.push(md.constr_names[i].clone());
+                q.constr_names.push(md.constr_names.get(i).cloned().unwrap_or_default()); // rows added by presolve have no name
             }
         }
         for j in 0..self.n {
@@ -521,7 +521,7 @@ impl State {
             // models, e.g. enlight_hard at PRELIMIT 6 after `37168e`; fixed integers stay 'I')
             let int01 = self.vtype[j] == b'I' && self.lb[j] == 0.0 && self.ub[j] == 1.0;
             q.vtype.push(if int01 { b'B' } else { self.vtype[j] });
-            q.var_names.push(md.var_names[j].clone());
+            q.var_names.push(md.var_names.get(j).cloned().unwrap_or_default()); // likewise added columns
         }
         if q.rhs.is_empty() && q.obj.is_empty() {
             q.name = "Presolved".into();
