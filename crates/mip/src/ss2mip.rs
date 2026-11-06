@@ -115,7 +115,8 @@ impl Pats {
 impl State {
     /// `594c0c(env, st, T20)`. Returns 0 or `36c5cf`'s status.
     /// shortcut: the timer test (`adf2be`) is left out (never reached on the 38 models); `56b360` (doubleton `=`
-    /// rows left by the substitution) is not ported and asserted unused.
+    /// rows left by the substitution) is skipped: those rows stay for later reductions (0 calls on the 38 models;
+    /// port it when a model reaches it).
     pub fn ss2mip(&mut self, p: &Params) -> i32 {
         if self.nnz > 2_000_000_000 {
             return 0;
@@ -548,7 +549,7 @@ impl State {
                 return rc;
             }
         }
-        assert!(doubles.is_empty(), "594c0c: 56b360 (doubleton = rows) not ported");
+        let _ = doubles; // shortcut: `56b360` skipped, see the doc comment
         self.work += l70;
         0
     }

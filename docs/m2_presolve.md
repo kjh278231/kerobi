@@ -36,12 +36,16 @@ spine 노트 b·c·d대로 `3cd406`의 단계(≤2) × 라운드(≤5) × 패스
 ### 남은 묶음 (아직 담당 없음, 동시 3개 한도 안에서 차례로)
 - 그 뒤: `594c0c`(roundend, `inner.rs` 작업 파일), `6b5e11`/`6b56d2`(outer-a 노트 §5.3), `52cba4`/`521497` 성분·블록 탐색 포팅(G6 기준 (2)).
 
-### 다음 단계 (순서)
-1. 위 네 브랜치를 `m2-mip-presolve`에 합친다. 구간 노트로 `3cd406` 제어 흐름 전체를 reduction stub(카운트만)으로 옮긴다. stub이 Gurobi와 같은 k에서 카운트하는지는 sweep의 "바뀐 k"와 reduction 위치가 맞는지로 확인한다.
-2. 내부 루프 reduction(`3e39a6`, `36ddf2`, `37168e`, `36c5cf`, `56f793`, `56c80e`, `36e6b6`)을 먼저 옮긴다. 모든 모델이 이 루프를 지난다. 검증은 PRELIMIT 체크포인트와 상태 오라클(`mip_state_dump.js`).
-3. 바깥 reduction을 묶음으로 하위 에이전트에 나눈다(각자 worktree·브랜치, 새 파일). 앞 reduction이 아직 없어도 상태 오라클로 진입 상태를 넣어 한 reduction씩 비트 비교할 수 있게 상태 적재 함수(`State::from_dump`)를 둔다.
-4. probing `4d3a1d`, 대칭 `5577ba`(LP 포트와 MIP 분기 차이), 연결 성분 `52cba4`, sparsify `470936`, 마무리 inline 블록.
-5. postsolve 레코드 비교(레코드 목록 오라클), 작업량, clippy·테스트·문서.
+### 다시 확인하는 법 (오라클은 세션 스크래치라 새로 뜬다)
+```
+tools/build_local.sh
+tools/gurun.sh ../.venv/bin/python tools/presolve_oracle.py <dir> <miplib_small 38개 이름>   # = bench/gurobi/*/presolved.mps.gz
+PYTHONPATH=$PWD/python ../.venv/bin/python tools/presolve_check.py <dir>                     # 38/38
+for n in <38개>; do PYTHONPATH=$PWD/python ../.venv/bin/python tools/mip_rec_check.py $n; done  # 레코드 38/38
+tools/gurun.sh ../.venv/bin/python tools/prelimit_sweep.py <sweep>; PYTHONPATH=$PWD/python ../.venv/bin/python tools/sweep_check.py <sweep>  # 38/38
+cargo clippy --release --workspace --all-targets; cargo test --release --workspace; pytest tests/
+```
+2026-11-06 병합 트리(`m2-outer-b` Codex 커밋 `29db5bb`까지 포함)에서 위 순서로 presolve 38/38, 레코드 38/38, sweep 38/38, clippy 0, cargo test 통과, pytest 37 passed·1 xfailed.
 
 ## 1. 호출 그래프와 실제 호출: MIP presolve는 LP를 풀지 않는다 (2026-11-06)
 
