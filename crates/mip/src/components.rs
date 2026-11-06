@@ -101,49 +101,69 @@ impl State {
             a.sort_unstable();
             a.dedup();
         }
-        // iterative Hopcroft-Tarjan in the original's edge order; parent n marks a root
-        let (mut parent, mut disc, mut low) = (vec![-1i64; n], vec![-1i64; n], vec![-1i64; n]);
-        let mut blocks = Vec::new();
-        for v in 0..n {
-            if adj[v].is_empty() || self.col_cnt[v] < 0 || parent[v] >= 0 {
+        cut_blocks(&adj, |v| self.col_cnt[v] >= 0, |p| self.vtype[p] != b'C' && self.ub[p] == self.lb[p] + 1.0)
+    }
+}
+
+/// `521497`'s DFS over a sorted, deduplicated adjacency: (non-root articulation p with `cut_ok(p)`, the subtree of the
+/// child it cuts off, in DFS order); roots are taken in index order among vertices with edges and `root_ok`.
+fn cut_blocks(adj: &[Vec<usize>], root_ok: impl Fn(usize) -> bool, cut_ok: impl Fn(usize) -> bool) -> Vec<(usize, Vec<usize>)> {
+    let n = adj.len();
+    // iterative Hopcroft-Tarjan in the original's edge order; parent n marks a root
+    let (mut parent, mut disc, mut low) = (vec![-1i64; n], vec![-1i64; n], vec![-1i64; n]);
+    let mut blocks = Vec::new();
+    for v in 0..n {
+        if adj[v].is_empty() || !root_ok(v) || parent[v] >= 0 {
+            continue;
+        }
+        parent[v] = n as i64;
+        disc[v] = 0;
+        low[v] = 0;
+        let (mut order, mut stack, mut cnt) = (vec![v], vec![(v, 0usize)], 1i64);
+        while let Some(&(u, it)) = stack.last() {
+            let next = adj[u][it..].iter().position(|&w| parent[w] < 0).map(|k| it + k);
+            for &x in &adj[u][it..next.unwrap_or(adj[u].len())] {
+                if parent[u] != x as i64 && disc[x] < disc[u] {
+                    low[u] = low[u].min(disc[x]);
+                }
+            }
+            if let Some(k) = next {
+                let w = adj[u][k];
+                parent[w] = u as i64;
+                order.push(w);
+                disc[w] = cnt;
+                low[w] = cnt;
+                cnt += 1;
+                stack.last_mut().unwrap().1 = k;
+                stack.push((w, 0));
                 continue;
             }
-            parent[v] = n as i64;
-            disc[v] = 0;
-            low[v] = 0;
-            let (mut order, mut stack, mut cnt) = (vec![v], vec![(v, 0usize)], 1i64);
-            while let Some(&(u, it)) = stack.last() {
-                let next = adj[u][it..].iter().position(|&w| parent[w] < 0).map(|k| it + k);
-                for &x in &adj[u][it..next.unwrap_or(adj[u].len())] {
-                    if parent[u] != x as i64 && disc[x] < disc[u] {
-                        low[u] = low[u].min(disc[x]);
-                    }
-                }
-                if let Some(k) = next {
-                    let w = adj[u][k];
-                    parent[w] = u as i64;
-                    order.push(w);
-                    disc[w] = cnt;
-                    low[w] = cnt;
-                    cnt += 1;
-                    stack.last_mut().unwrap().1 = k;
-                    stack.push((w, 0));
-                    continue;
-                }
-                stack.pop();
-                let Some(top) = stack.last_mut() else { break };
-                let (p, c) = (top.0, adj[top.0][top.1]);
-                top.1 += 1;
-                if disc[p] <= low[c] && parent[p] < n as i64 && self.vtype[p] != b'C' && self.ub[p] == self.lb[p] + 1.0 {
-                    blocks.push((p, order[disc[c] as usize..cnt as usize].to_vec()));
-                }
-                low[p] = low[p].min(low[c]);
+            stack.pop();
+            let Some(top) = stack.last_mut() else { break };
+            let (p, c) = (top.0, adj[top.0][top.1]);
+            top.1 += 1;
+            if disc[p] <= low[c] && parent[p] < n as i64 && cut_ok(p) {
+                blocks.push((p, order[disc[c] as usize..cnt as usize].to_vec()));
             }
-            for &x in &order {
-                disc[x] = -1;
-                low[x] = -1;
-            }
+            low[p] = low[p].min(low[c]);
         }
-        blocks
+        for &x in &order {
+            disc[x] = -1;
+            low[x] = -1;
+        }
+    }
+    blocks
+}
+
+#[cfg(test)]
+mod tests {
+    use super::cut_blocks;
+
+    #[test]
+    fn blocks_of_path_and_triangle() {
+        let path = vec![vec![1], vec![0, 2], vec![1]];
+        assert_eq!(cut_blocks(&path, |_| true, |_| true), vec![(1, vec![2])]);
+        let tri = vec![vec![1, 2], vec![0, 2], vec![0, 1]];
+        assert!(cut_blocks(&tri, |_| true, |_| true).is_empty());
     }
 }
