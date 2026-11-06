@@ -12,7 +12,7 @@
 |---|---|---|---|---|---|
 | `3e5363(env, st)` | 5,451 | PREXORRED && PreCrush==0 | XOR(패리티) 행 묶음 제거, type 25 | 0 / 78 | 78/78(§2) |
 | `5431ee(st, env)` | 3,175 | round==0 && k==0 && PRETRANSRED | 이진 함의 그래프 SCC | 1 / 42(fhnw-binpack4-4) | 42/42(§7) |
-| `578fd2(st, env)` | 1,281 | PRECOEFFICIENT | `<` 행 knapsack 계수 lifting(`6aec61`) | 11 / 78 | 65/78: `6b4738`/`6b5e11`(정확 이진 knapsack) 미포팅 13호출(§5) |
+| `578fd2(st, env)` | 1,281 | PRECOEFFICIENT | `<` 행 knapsack 계수 lifting(`6aec61`) | 11 / 78 | 78/78(§5.3) |
 | `57627e(st, env)` | 10,175 | PRECOEFFICIENT | implied integer, type 9 | 4 / 78 | 78/78, `575405`는 bound를 바꿀 수 있으나 미포팅(§4) |
 | `374521(st, env)` | 12,783 | DualReductions && p<3 && T4 | 쌍대 bound, 부등식→등식 | 2 / 78 | 78/78(§6) |
 | `3ff744(st, env, T6, mode, flag, 0)` | 16,559 | (spine-b) | 평행 행·열 | 16 / 234 | 237/237(열 집계, mode 2 포함, §3) |
@@ -495,7 +495,7 @@ maxact; −ft ≤ rhs − maxact면 중복(rhs = 0, k = 0, changed)
 drop(있으면 changed, maxact 다시); 다시 중복 검사
 앞쪽 연속 열 수 c(cont = 1), W += 3c; 모두 연속이면 끝
 rhs 정수 && cont≠1: 모든 |a|가 같고(ft·d 안) 정수면 rhs/d 정수일 때 끝(W += 2·본 수)
-2 < k ≤ PREKNAPLIFTLEN(−1 → 512) && cont≠1: 모두 [0,1] 이진이면 6b4738(k<11) / 6b5e11   ← 미포팅
+2 < k ≤ PREKNAPLIFTLEN(−1 → 512) && cont≠1: 모두 [0,1] 이진이면 6b4738(k<11) / 6b5e11(b0 ≠ 0이면 끝)
 주 루프(최대 10회, 바뀌는 동안):
   A  s = maxact − rhs > 0: d = 최소 |a|(연속 있으면 0); 정수 열마다 δ = |a|>s ? |a|−s : (s−100ft ≤ |a| 또는 d+|a| ≤ s ? 0 : min(|a|−s/2, |a|+(d−s))),
      δ > 1e-10이면 a를 0 쪽으로 δ, rhs −= ub·δ(a>0) / rhs += lb·δ; W += 3k
@@ -512,7 +512,7 @@ changed면 drop 한 번 더(cont 1 → −1)
 s = maxact − rhs: ft < s < 1e10이면 6b33dd(1/s, 0)
 ```
 `6b33dd(f, sumC)`: k < 2, f ∉ [1e-4, 1000], sumC·f ≥ 1이면 끝. r = rhs·f − act·f(f ≤ 0이면 maxact, 아니면 minact) ∈ [ft, 1e8]. fl = floor(r + 1e-10), fr = r − fl. 앞에서부터 합(연속: |fa|·(ub−lb), 정수: 소수부 fa ≥ fr + 1e-10이면 (1−fa)·d를 합과 fr에, 아니면 d·fa)이 1 미만인 동안, W += 5t. fr ∉ (0.001, 0.999)이거나 fr − 합 ≤ min(f,1)·(−ft)이면 끝. rhs = fl, 계수 = 반올림(연속 0, fa ≥ fr2+1e-10이면 |fa|+1−fa), W += 5k, rhs += Σ a·(a ≤ 0 ? ub : lb), W += 3k, compact, cont = 0, 캐시 낡음.
-- 확인: 78호출 중 66 일치(`6b4738` 포함). 다른 12호출(csched008#2, gmu-35-40#1–4, gmu-35-50#1–4, nidda#1, ran14x18#1–2)은 `6b5e11`에 가는 행이 있다(§5.3, 미포팅 `shortcut:`). PREPOWER ≠ 0 블록(0x5863aa–)도 미포팅.
+- 확인: 78/78 일치(`6b4738`, `6b5e11` 포함). PREPOWER ≠ 0 블록(0x5863aa–)은 미포팅(`shortcut:`).
 
 ### 5.3 정확 이진 knapsack (2 < k ≤ PREKNAPLIFTLEN, 모두 [0,1] 이진, 연속 열 없음)
 6aec61은 c = rhs + Σ_{a<0}|a|로 부르고, 돌아오면 `ac`면 changed, **`b0`(local_b0) ≠ 0이면 바로 0을 반환**한다(주 루프·마무리 없음).
@@ -526,9 +526,20 @@ s = maxact − rhs: ft < s < 1e10이면 6b33dd(1/s, 0)
 - |a_i| > 1e-13이면 뒤쪽 계수 중 |a|가 1e-10 안에서 같은 것을 표시(건너뜀).
 - 끝: ac면 |a| > 1e-10만 남기고 캐시 낡음. b0 = 1.
 
-`6b56d2(v, pA, pB, pC, pD, pE, pF, pcnt, pcap, j, W)` (부분합 + 비트마스크, 최대 64개): x = v[j], bit = j < 64 ? 1≪j : 0. x > *pcap → 1, x ≤ 1e-13 → 0, 목록 비면 1. T = S + x(cap 넘으면 멈춤, 마스크 | bit), 없으면 1. 병합(|차| < 1e-10이면 S 마스크 &= T 마스크, T가 작거나 같으면 T 먼저) 최대 64개, 새 값이 있으면 개수 갱신, 64개면 *pcap = 64번째 값, 버퍼 교체. W += (소비 수 합)·5. 0 반환.
+`6b56d2(v, pA, pB, pC, pD, pE, pF, pcnt, pcap, j, W)` (`knapsack.rs::add_sums`, 부분합 + 비트마스크, 최대 64개): x = v[j], bit = j < 64 ? 1≪j : 0. x > *pcap → 1, x ≤ 1e-13 → 0, 목록 비면 1. T = S + x(cap 넘으면 멈춤, 마스크 | bit), 없으면 1. 병합(|차| < 1e-10이면 S 마스크 &= T 마스크, T가 작거나 같으면 T 먼저) 최대 64개, 새 값이 있으면 개수 갱신, 64개면 *pcap = 64번째 값, 버퍼 교체. W += (소비 수 합)·5. 0 반환.
 
-`6b5e11` (k ≥ 11, 16,193 B, **미포팅**): 버퍼 두 개(각 64 double ×3 + n), V = |a| 복사, idx, 합 = 4×2 lane 벡터 합(8개 블록, acc0+acc1, acc2+acc3, 합침, lo+hi, 나머지 순차), W += 3n, `aaedd9`로 V 오름차순 정렬. c < 0 또는 k < 3이면 b0 = 0. c + ft ≥ 합이면 b0 = 0. 100ft > max V 또는 max/min > 1e12면 b0 = 0. min == max면 특수 경로(0x58c19e). c + ft ≥ 합 − min이면 V를 모두 1, c = n − 1(카디널리티 행). 그 뒤 `6b56d2` 4곳(0x589d9d, 0x58a156, 0x58aedd, 0x58b50b), 두 번째 `aaedd9`(0x58be68), floor 3곳. 디컴파일은 벡터화 잡음이 심해 asm(3,491줄)으로 읽어야 한다. 기본값 38개에서 csched008, gmu-35-40/50, nidda, ran14x18이 부른다.
+`6b5e11` (k ≥ 11, 16,193 B, `knapsack.rs::knap_big`, 포팅됨). ac = *p9(local_58), b0 = *p10(local_60, 처음 1). ft, tol = 100ft. 정렬 V = |a|(`aaedd9`, idx 함께), 합 = vsum(버퍼 16바이트 정렬: 8개 블록 2-lane 누산 4개, (a0+a1)+(a2+a3), lo+hi, 나머지 순차), W += 3n.
+- c < 0 → ac 0, b0 1. c + ft ≥ 합, max < tol, max/min > 1e12 → b0 0. min == max이고 c ∈ {1, n−1} → b0 1.
+- 합 − min ≤ c + ft: V = 1(W += n), c ≠ n−1이면 c = n−1 → 쓰기. s2 = 합 − c; 합 − min < s2 − tol(하나도 안 들어감): V = 1, c ≠ 0이면 c = 0 → 쓰기.
+- n88: 끝에서 V − c > tol인 항목 제외(s2 −= V, W += n−n88+1, 쓰기 때 2c). l138 = V[n88−1]. c + tol < V[0]+V[1]: V[..n88] = 1, c = 1 → 쓰기(집합 포장). 모두 같고(1e-13) min < c: q = floor(c/min + ft), 모두 1이고 c ≤ q면 b0 1로 끝, 아니면 c = q(1이 아니면 V = 1).
+- u: V[u−1] ≤ c − ft인 끝(W += n88−u+1). u = 0이거나 (V[u−1] − min ≤ 1e-10이고 c/min이 정수)이면 ac 0, b0 1.
+- e8: V[e8−1] + min ≤ c + ft인 끝(> 1, W += n88−e8; e8 = 1이면 0). 앞 e8 합 ≤ c+ft면: ft + c/e8 < V[e8−1]이면 c ≤ V[e8]일 때 b0 1, 아니면 V[e8..n88] = c; 그렇지 않으면 c = max(e8,1), V[..e8] = 1, V[e8..n88] = c. 합 − min ≤ c+ft이고 (e8 = n88 또는 V[e8−1]/(e8−1) − V[e8] ≥ −ft): V[..e8] = 1, 나머지·c = e8−1. 모두 → 쓰기.
+- 앞으로(`6b56d2`, cap f0 = max(c, s2+l138) + tol): t = e8에서 c+tol 넘는 첫 합 k가 있으면 L = min(S[k−1], c)로 V[t..n88]를 L로 자르거나 L/c배, c = L. `6b56d2`가 1이면 멈춤; l138 + f0 ≤ min(s2, c) + tol이면 **ac·b0를 쓰지 않고** 반환(V 변경 버림).
+- 뒤로 1(t = e8−1..0, 표시 1 건너뜀, V ≤ 1e-13이면 멈춤, f0 + V ≤ c + tol이면 b0 0으로 멈춤): 단계 0 a = c, 1 a = c − V[t]. 합이 64개이고 tol + a ≥ f0면 건너뜀(b0 후보 0). 위에서부터 a + tol 이하이고 t 비트 없는 합(t ≥ 64면 비트 무시, W += (n−l)·(비트 있으면 2, 없으면 1)), d = a − S > tol이면 단계 0: c, V −= d(V ≤ max(1,d)·1e-13이면 c −= V[t], V[t..=1]을 c에서 빼고 0, **V[0]은 그대로**, b0 0, 끝), 단계 1: V += d. 그 뒤 64개 미만이면 비트 있는 합 제거(W += 2·개수), `6b56d2`(V[t]), b0 후보 0. b0 = 후보. V[t] > 1e-13이면 아래쪽 같은 값(1e-10) 표시.
+- 앞 e8이 정렬이 깨졌으면 다시 `aaedd9`(local_50 = 1). n88 = e8이면: ac면 s2 = vsum − c(W += n88); u = V < s2 − ft인 끝(**local_e8 = u**, 뒤로 2의 시작). min < s2−ft ≤ V[1]+min: V[..u] ≠ 0이면 1, V[u..n88] = 2, c = 2(n88−u) − 2 + (1 개수). 앞 u 합 < s2−ft: V[..u] = 0, 나머지 1, c = n88−u−1. 합 − min < s2−ft: V[u−1] −= 합 − s2(> ft), V[u..]는 s2 + ft 넘으면 앞 값으로, c = 그 합. 아니고 u < n88: s2 − tol 이상 첫 합부터 s2 + 1e-13 이하 마지막 합 k(W += k, k = 0이면 b0 0으로 끝), V[u..n88]를 S[k](k = 개수면 s2)로(`6b56d2`), W += n88−u, c −= (S[k] − s2) + Σ차이.
+- 뒤로 2(local_50 = 0이고 b0 = 0일 때, a73 = ac면 vsum − c 아니면 s2, 시작 local_e8, 표시 2): 단계 0 a = a73, 1 a = a73 − V[t]. a − tol 이상인 첫 합(비트 있으면 비트 없는 것, 없으면 마지막 합; W += 2(개수 − l), 비트 없으면 W += l), d = S − a > tol이면 단계 0: a73, V += d, 단계 1: V, c −= d(0 처리는 뒤로 1과 같음). 합 제거·`6b56d2`는 뒤로 1과 같음.
+- 쓰기(ac2d는 ac = 1, b5e2는 ac일 때만): V[n88..] = 2c, W += n − n88; rhs = c, a ≤ 0이면 a = −V·rhs −= V 아니면 a = V, W += 3n; |a| > 1e-10만 남김, 캐시 낡음.
+- 확인: 5개 모델의 96호출(tools/knap_trace.js로 입출력 캡처) 비트 일치(테스트 `knap_big_matches_gurobi`, 10호출 fixture; `KNAP_CASES=<캡처>`로 전체).
 
 ## 9. 도구와 확인 요약 (세션 스크래치 `outer/`)
 
@@ -546,12 +557,12 @@ s = maxact − rhs: ft < s < 1e10이면 6b33dd(1/s, 0)
 | `3e5363` | 78 | 78 | 축소 전부(레코드 25, 행 삭제, 고정) |
 | `3ff744` | 237 | 237 | 열 경우 1–4·고정·비유계, 행 `=`쌍·T/=·T/<, `3fa2f6`, mode 2 분할 |
 | `57627e` | 78 | 78 | `575405`(해독 안 함, 변화 없음 가정), `574764`, 고정 열 접기, g ≠ 1 |
-| `578fd2` | 78 | 66 | `6b5e11` 12호출, PREPOWER ≠ 0 |
+| `578fd2` | 78 | 78 | PREPOWER ≠ 0 미포팅 |
 | `374521` | 78 | 78 | 고정, 불가능, Presolve 2 |
 | `5431ee` | 42 | 42 | SCC 원소(`3bb6fe`), PRETRANSRED 2 |
 
 ## 10. 미해결
-1. `578fd2`: `6b5e11`(+`6b56d2`, §5.3)을 포팅해야 gmu-35-40/50(sweep k=28 첫 불일치), csched008, nidda, ran14x18의 12호출이 맞는다.
+1. ~~`578fd2`: `6b5e11`(+`6b56d2`, §5.3)~~ 포팅됨: 78/78, presolve_check·mip_rec_check 38/38.
 2. `57627e`: `575405`/`571c44`(bound를 바꿀 수 있음), `574764` 두 호출 자리 연결(`State::mod_subst`).
 3. `3ff744`의 `3fa2f6`, `5431ee`의 `3bb6fe`(SCC 원소 집계): 38개에서 지나지 않음.
 4. 합성 XOR 모델(`tools/outer_syn/xor1.lp`, `xor3.lp`)로 `3e5363` 축소 경로 확인됨(§2).

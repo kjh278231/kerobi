@@ -6,7 +6,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 | G6 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **36/38**(2026-11-06, `594c0c` 병합 `1f685af`). 남은: gmu-35-40·gmu-35-50(`578fd2`의 정확 knapsack `6b5e11`/`6b56d2`, worktree `m2-knap`) |
+| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **38/38**(2026-11-06, `578fd2`의 정확 knapsack `6b5e11`/`6b56d2` 포팅, 브랜치 `m2-knap`; mip_rec_check 38/38, sweep 기본값 38/38) |
 | (2) 기본값에서 도는 MIP reduction 전부(probing·대칭성·연결 성분 포함) | 시작 전. 목록은 §2 |
 | (3) MIP postsolve 레코드 | 시작 전 |
 | (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |

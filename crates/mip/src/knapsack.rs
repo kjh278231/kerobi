@@ -279,9 +279,8 @@ impl Kn<'_> {
     }
 
     /// `6aec61(env, &k, ind, val, &rhs, lb, ub, vtype, p9, p10, &changed, W)` with p10 >= 1 (578fd2 passes 2).
-    /// shortcut: the PREPOWER != 0 block is not ported (default 0), nor the exact binary knapsack `6b5e11` for rows
-    /// of 11..PREKNAPLIFTLEN binaries (ran14x18, nidda, csched008, gmu-35-40/50 reach it; docs §5.3): such rows skip
-    /// that step. Port it before trusting those models.
+    /// shortcut: the PREPOWER != 0 block is not ported (GURO_PAR_PREPOWER is 0 by default); port it before
+    /// supporting that parameter.
     fn lift(&mut self, p9: i32, knaplen: i32, changed: &mut bool) -> i32 {
         let ft = self.ft;
         *changed = false;
@@ -935,6 +934,8 @@ impl Kn<'_> {
         let mut mark = vec![0u8; n];
         let (mut s, mut m): (Vec<f64>, Vec<u64>) = (vec![0.0], vec![0]);
         let w = &mut *self.w;
+        // shortcut: vsum assumes the 16-byte aligned buffer Gurobi's allocator gave in every captured call (an
+        // 8-byte aligned one peels one element first); recheck with tools/knap_trace.js if sums drift.
         let end = 'body: {
             if sum - mn <= cpt {
                 // any n-1 items fit: a cardinality row
@@ -1494,10 +1495,10 @@ fn vsum(v: &[f64]) -> f64 {
     }
     let b = n - n % 8;
     let mut acc = [[0.0f64; 2]; 4];
-    for blk in v[..b].chunks_exact(8) {
+    for i in (0..b).step_by(8) {
         for (q, a) in acc.iter_mut().enumerate() {
-            a[0] += blk[2 * q];
-            a[1] += blk[2 * q + 1];
+            a[0] += v[i + 2 * q];
+            a[1] += v[i + 2 * q + 1];
         }
     }
     let lo = (acc[0][0] + acc[1][0]) + (acc[2][0] + acc[3][0]);
