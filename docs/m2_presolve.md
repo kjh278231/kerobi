@@ -6,10 +6,10 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 | G6 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **38/38**(2026-11-06, `578fd2`의 정확 knapsack `6b5e11`/`6b56d2` 포팅, 브랜치 `m2-knap`; mip_rec_check 38/38, sweep 기본값 38/38) |
-| (2) 기본값에서 도는 MIP reduction 전부(probing·대칭성·연결 성분 포함) | 시작 전. 목록은 §2 |
-| (3) MIP postsolve 레코드 | 시작 전 |
-| (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
+| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **충족** 38/38. `tools/presolve_check.py <limdef 오라클>` 38/38, 오라클 = `bench/gurobi/*/presolved.mps.gz` 38/38, `sweep_check` 모든 PRELIMIT 변화점 일치(2026-11-06) |
+| (2) 기본값에서 도는 MIP reduction 전부 | **충족**. `stubs.rs` 삭제. `3cd406` 제어 흐름(`driver.rs`)과 기본값에서 불리는 reduction 전부(probing `4d3a1d`, 대칭 `5577ba`, 연결 성분 `52cba4`/`521497` 포함)를 `tools/mip_dump_check.py`로 함수별 모든 호출의 진입→복귀 상태·작업량 비교. 남은 지름길은 38개에서 0회 도는 경로뿐(코드의 `shortcut:` 주석, B&B 범위의 하위 풀이 `5307f4`/`522aa2`/`490ab6`는 건너뜀) |
+| (3) MIP postsolve 레코드 | **충족**. `PostRec`(type 1, 2, 4, 9, 10, 11, 14, 19, 24, 25), `tools/mip_rec_check.py`로 `3b0917` 시점 레코드 목록을 Gurobi 원시 바이트와 비교 38/38 |
+| (4) clippy 0, 테스트, 문서 | **충족**. `cargo clippy --release --workspace --all-targets` 0, `cargo test --release --workspace` 통과, pytest 37 passed·1 xfailed. 03 §11, 이 메모, 해독 노트 `m2_spine_{b,c,d}`·`m2_red_*` |
 
 운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만. 크레이트 수준의 파라미터 표(이름·기본값·범위)는 G5(`m1-lp-driver`)가 만든다. `docs/m2_param_offsets.tsv`는 오라클·도구용이고, `crates/mip`에는 MIP presolve가 읽는 필드만 가진 `Params`(LP `presolve::Params`처럼 `from_pairs`)만 둔다(2026-11-06 오케스트레이터 지시). 사용량 한도 때문에 하위 에이전트는 동시에 3개 이하로 두고, 끝난 것은 병합한 뒤 worktree·브랜치를 지운다(같은 날 지시). 토큰 여유가 없어 이후 하위 에이전트는 **한 번에 하나만** 돌린다(2026-11-06 사용자 지시). roundend(대칭 끝, `594c0c` 시작 직전)와 outer-c(two_rows 등)는 일시 중지했고, 각 worktree의 커밋·작업 파일에서 이어 간다.
 

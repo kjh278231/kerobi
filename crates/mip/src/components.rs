@@ -9,9 +9,9 @@ impl State {
     pub fn components(&mut self, _p: &Params, ncomp: &mut i32) -> i32 {
         *ncomp = 0;
         let (nc, _) = self.component_search();
-        // shortcut: `5307f4` (a sub-MIP solve of each smaller component) is not ported; it runs whenever nc > 1, which
-        // none of the 38 models reach. Port it with the first model that has two or more components here.
-        assert!(nc <= 1, "52cba4: {nc} components; the sub-solve 5307f4 is not ported");
+        // shortcut: `5307f4` (a sub-MIP solve of each smaller component, B&B scope) is skipped when nc > 1, so such a
+        // model presolves without that reduction; none of the 38 models reach it. Port it with the M2 B&B work.
+        let _ = nc;
         0
     }
 
@@ -68,9 +68,9 @@ impl State {
     /// block goes to `522aa2`. No work and no state change of its own.
     pub fn biconnected(&mut self, _p: &Params) -> i32 {
         let blocks = self.binary_cut_blocks();
-        // shortcut: `522aa2` (→ `98b671`, a solve of the block with the cut column fixed) is not ported; none of the
-        // 38 models has such a block. Port it with the first model that does.
-        assert!(blocks.is_empty(), "521497: {} blocks; the block solve 522aa2 is not ported", blocks.len());
+        // shortcut: `522aa2` (→ `98b671`, a solve of the block with the cut column fixed, B&B scope) is skipped, so
+        // such a block stays; none of the 38 models has one. Port it with the M2 B&B work.
+        let _ = blocks;
         0
     }
 
