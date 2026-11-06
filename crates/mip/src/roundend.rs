@@ -160,7 +160,7 @@ pub(crate) fn fgcd(a: f64, b: f64) -> f64 {
 }
 
 /// `3c5996(a, m)`: inverse of `a` modulo `m` by the extended Euclid algorithm (0 when gcd is 0).
-fn mod_inverse(a: i32, m: i32) -> i32 {
+pub(crate) fn mod_inverse(a: i32, m: i32) -> i32 {
     let (mut u, mut v, mut s0, mut s1, mut g) = (a, m, 1i32, 0i32, a);
     let mut x = 1;
     if m != 0 {

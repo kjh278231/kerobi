@@ -949,7 +949,7 @@ impl Kn<'_> {
 
 /// `a7c752(env, n, v, out, W)`: for each i the gcd of the other |v| (rounded; 2e9 = none), by a segment tree;
 /// all 0 when some |v| is not integral.
-fn gcd_excl(v: &[f64], w: &mut f64) -> Vec<f64> {
+pub(crate) fn gcd_excl(v: &[f64], w: &mut f64) -> Vec<f64> {
     let n = v.len();
     let mut out = vec![0.0; n];
     if n == 1 {

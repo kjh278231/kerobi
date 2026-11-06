@@ -40,6 +40,7 @@ mod probe0;
 mod probe_apply;
 pub mod probe_engine;
 mod roundend;
+mod roundend_b;
 mod setpack;
 mod sparsify;
 pub mod state;
