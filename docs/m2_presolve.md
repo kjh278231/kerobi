@@ -6,7 +6,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 | G6 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **21/38**(2026-11-06, `3d69bdf`: + outer-b `bd6d2e3`, outer-a `906bb06`). 첫 불일치: `two_rows` 6, `knapsack` 4, `implied_int_scale` 2, `parallel`(mik, 추가 행 뒤 이름 규칙)·`sparsify`·`ss2mip`·`probe0`·`mod_k` 1 |
+| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **22/38**(2026-11-06, `32361e8`). 첫 불일치: `two_rows` 7, `implied_int_scale` 3, `knapsack` 2, `ss2mip`·`sparsify`·`probe0`·`mod_k` 1. 추가된 행·열 이름은 R<번호>/C<번호>(나머지는 원래 이름) |
 | (2) 기본값에서 도는 MIP reduction 전부(probing·대칭성·연결 성분 포함) | 시작 전. 목록은 §2 |
 | (3) MIP postsolve 레코드 | 시작 전 |
 | (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
