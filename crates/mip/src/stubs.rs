@@ -34,8 +34,4 @@ impl State {
     pub fn sparsify(&mut self, p: &Params) -> i32 { 0 }
     /// `57999f` (return value ignored)
     pub fn r57999f(&mut self, p: &Params) {}
-    /// 3cd406 inline final dual fixing of empty columns (m2_spine_d.md §5.2)
-    pub fn dual_fix_empty_cols(&mut self, p: &Params) -> i32 { 0 }
-    /// 3cd406 inline implied-integer scaling (m2_spine_d.md §5.3)
-    pub fn implied_int_scale(&mut self, p: &Params) -> i32 { 0 }
 }

@@ -28,6 +28,7 @@ mod dualbin;
 mod dualbnd;
 mod dualagg;
 mod dualeq;
+mod finalinl;
 mod lists;
 mod mergevub;
 mod parallel;

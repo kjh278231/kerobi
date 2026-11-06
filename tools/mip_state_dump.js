@@ -3,6 +3,7 @@
 // and the postsolve record list (type + raw data bytes, push order) of the n-th call of a chosen function, so one reduction can be checked in isolation (load "before", run, compare "after").
 // usage: node tools/mip_state_dump.js <model name | .mps/.lp path> <fn short id> <call no. (1-based) | all> <out.json> [Param=Value ...]
 // The state pointer comes from 5b84b1(env, state+0x3f0), which 3cd406 calls right after building the state.
+// RET=<hex file offset> counts and dumps only the calls returning there (one call site, e.g. around an inline block).
 // OUT_I32=<k> also records, at return, the i32 that the k-th integer argument points to (`out`; 5577ba's f4: 4).
 // Gurobi: one process at a time (wrap in tools/gurun.sh).
 const FRIDA = process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida';
@@ -28,7 +29,7 @@ q = m.presolve()
 print("DONE", q.NumConstrs, q.NumVars, flush=True)
 `;
 const agent = `
-const F = ${off(fn)}, P = ${off('5b84b1')}, NTH = ${nth === 'all' ? 0 : Number(nth)}, OUT = ${Number(process.env.OUT_I32 ?? -1)};
+const F = ${off(fn)}, P = ${off('5b84b1')}, RET = ${process.env.RET ? parseInt(process.env.RET, 16) : -1}, NTH = ${nth === 'all' ? 0 : Number(nth)}, OUT = ${Number(process.env.OUT_I32 ?? -1)};
 let base = null, st = null, calls = 0;
 const I = (p, o) => p.add(o).readS32(), D = (p, o) => p.add(o).readDouble(), Pt = (p, o) => p.add(o).readPointer();
 function arrD(p, n) { const a = []; if (p.isNull()) return null; for (let i = 0; i < n; i++) a.push(p.add(8 * i).readDouble()); return a; }
@@ -90,7 +91,7 @@ function dump(tag) {
 function install() {
   Interceptor.attach(base.add(P), { onEnter(a) { st = a[1].sub(0x3f0); } });
   Interceptor.attach(base.add(F), {
-    onEnter(a) { calls++; this.on = st && (NTH === 0 || calls === NTH); this.out = OUT >= 0 ? a[OUT] : null; if (this.on) send({ call: calls, args: [0, 1, 2, 3, 4, 5].map(i => a[i].toInt32()), s: dump('enter') }); },
+    onEnter(a) { if (RET >= 0 && !this.returnAddress.sub(base).equals(ptr(RET))) { this.on = false; return; } calls++; this.on = st && (NTH === 0 || calls === NTH); this.out = OUT >= 0 ? a[OUT] : null; if (this.on) send({ call: calls, args: [0, 1, 2, 3, 4, 5].map(i => a[i].toInt32()), s: dump('enter') }); },
     onLeave(r) { if (this.on) send({ call: calls, ret: r.toInt32(), out: this.out ? this.out.readS32() : null, s: dump('leave') }); }
   });
 }
