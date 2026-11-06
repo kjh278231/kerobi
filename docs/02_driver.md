@@ -2,7 +2,7 @@
 
 포팅 원본: [port_map.tsv](port_map.tsv)의 `02_driver`(169개). `GRBoptimize → 9828a1 → c23877`을 `driver` 크레이트 하나로 옮긴다. 근거: 노트 10, 11 전체.
 
-**포팅 상태(2026-11-06, G5)**: 연속 LP 몫이 `crates/driver`에 있다(헤더 `header.rs`, `optimize`·`resolve_method`·`adjust`·세 LP 경로 `lib.rs`). 파라미터 표는 `crates/model/src/params.rs`(548개, gurobipy와 같음). Netlib 64개에서 Presolve 기본값의 Method 2·6(Crossover 0)은 상태·목적·BarIterCount/PDHGIterCount 64/64, Method 1은 상태·목적 64/64. 연속 LP의 상태 규칙(§7), uncrush(`363daa`, `365159`), 요약·반복 표 로그(§8)를 원본대로 옮겼다. 세부·지름길은 [m1_driver.md](m1_driver.md).
+**포팅 상태(2026-11-06, G5)**: 연속 LP 몫이 `crates/driver`에 있다(헤더 `header.rs`, `optimize`·`resolve_method`·`adjust`·세 LP 경로 `lib.rs`). 파라미터 표는 `crates/model/src/params.rs`(548개, gurobipy와 같음). Netlib 64개에서 Presolve 기본값의 Method 2·6(Crossover 0)은 상태·목적·BarIterCount/PDHGIterCount 64/64, Method 1은 상태·목적 64/64. 연속 LP의 상태 규칙(§7), uncrush(`363daa`, `365159`), 요약·반복 표 로그(§8)를 구현했다. 최신 simplex 웜스타트와 비스케일 재확인을 연결했고, barrier 공통 계수 열의 합산 경로를 보완했다. 시간 필드를 가린 요약은 barrier 64/64, dual 63/64이며 `etamacro`와 simplex 추가 반복의 차이는 남아 있다. 세부·지름길은 [m1_driver.md](m1_driver.md).
 
 ## 1. 진입 순서
 

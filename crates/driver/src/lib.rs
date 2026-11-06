@@ -337,10 +337,8 @@ pub fn simplex(md: &Model, method: i32, iter_limit: u64) -> (Status, u64, Vec<Tr
     let mut e = Engine::new(&spx);
     e.iter_limit = iter_limit;
     let st = e.solve(method);
-    let (x, dj) = spx_arrays(&e, &spx);
-    let scale = spx.scaling.obj * md.sense as f64;
-    let trace = e.trace.iter().map(|&(k, z, pi, di, pt)| (k, z / scale + md.objcon, pi, di, pt)).collect();
-    (st, e.iter, trace, x, dj, e.vstat.clone())
+    let (r, trace, basis) = finish_simplex(md, &spx, &e, st);
+    (r.0, r.1, trace, r.2, r.3, basis)
 }
 
 fn code(st: Status) -> i32 {
@@ -356,11 +354,41 @@ fn code(st: Status) -> i32 {
 /// (status, iterations, x and dj as spx arrays, the engine's objective)
 type Reopt = (Status, u64, Vec<f64>, Vec<f64>, f64);
 
+/// `2e9ae`: check a scaled optimum in the original units and continue from its basis when necessary. Both the
+/// presolved solve and the post-uncrush solve need this, just like `simplex::solve_model_run`.
+#[allow(clippy::type_complexity)]
+fn finish_simplex(md: &Model, spx: &Spx, e: &Engine, status: Status) -> (Reopt, Vec<TraceRow>, Vec<i32>) {
+    let collect = |sp: &Spx, en: &Engine, st| {
+        let (x, dj) = spx_arrays(en, sp);
+        let scale = sp.scaling.obj * md.sense as f64;
+        let obj = en.objective() / scale + md.objcon;
+        let trace: Vec<TraceRow> = en.trace.iter().map(|&(k, z, pi, di, pt)| (k, z / scale + md.objcon, pi, di, pt)).collect();
+        ((st, en.iter, x, dj, obj), trace, en.vstat.clone())
+    };
+    let (r, mut trace, basis) = collect(spx, e, status);
+    if status == Status::Optimal {
+        let mut unscaled = Spx::unscaled(md);
+        if md.sense < 0 {
+            for c in &mut unscaled.c {
+                *c = -*c;
+            }
+        }
+        let mut check = Engine::new(&unscaled);
+        check.iter = e.iter;
+        check.iter_limit = e.iter_limit;
+        if let Some(st) = check.resolve_unscaled(basis.clone()) {
+            let (r, more, basis) = collect(&unscaled, &check, st);
+            trace.extend(more);
+            return (r, trace, basis);
+        }
+    }
+    (r, trace, basis)
+}
+
 /// `cda5b` on the original model started from the uncrushed basis (`0c3d0d` L444–476, "Extra simplex iterations
-/// after uncrush"). None when the basis does not give a complete factorization.
-/// shortcut: the engine's dual needs its own start (`dual_start` crashes a new basis), so the primal runs from the
-/// basis; 0c3d0d passes the method's algorithm (dual for Method 1). Both stop at once on an optimal basis.
-fn reoptimize(md: &Model, basis: &[i32], lim: u64) -> Option<Reopt> {
+/// after uncrush"). Start with the selected algorithm; the dual's warm entry prepares pricing, weights and row
+/// copies without discarding the uncrushed basis. None when the basis does not give a complete factorization.
+fn reoptimize(md: &Model, basis: &[i32], method: i32, lim: u64) -> Option<Reopt> {
     use rsolver_lp::lu::Lu;
     use rsolver_model::INFINITY;
     let mut spx = Spx::new(md);
@@ -370,6 +398,9 @@ fn reoptimize(md: &Model, basis: &[i32], lim: u64) -> Option<Reopt> {
         }
     }
     let (n, m) = (spx.n, spx.m);
+    if basis.len() != n + m {
+        return None;
+    }
     let (mut vstat, mut head) = (vec![0i32; n + m], Vec::with_capacity(m));
     for j in 0..n + m {
         vstat[j] = if basis[j] >= 0 {
@@ -394,13 +425,16 @@ fn reoptimize(md: &Model, basis: &[i32], lim: u64) -> Option<Reopt> {
     }
     let mut e = Engine::new(&spx);
     e.iter_limit = lim;
-    (e.vstat, e.head, e.lu) = (vstat, head, lu);
-    let st = e.primal();
+    let st = if method == 0 {
+        (e.vstat, e.head, e.lu) = (vstat, head, lu);
+        e.primal()
+    } else {
+        // `363daa` uses basic positions and −4 for fixed nonbasics; the warm API takes VBasis/CBasis codes.
+        let codes: Vec<i32> = vstat.iter().map(|&s| if s >= 0 { 0 } else if s == -4 { -1 } else { s }).collect();
+        e.solve_warm(&codes[..n], &codes[n..])
+    };
     e.compute_duals();
-    let (x, dj) = spx_arrays(&e, &spx);
-    // the reported objective is the engine's own (scaled costs over the internal x), as `a6a8da` copies it
-    let obj = e.objective() / (spx.scaling.obj * md.sense as f64) + md.objcon;
-    Some((st, e.iter, x, dj, obj))
+    Some(finish_simplex(md, &spx, &e, st).0)
 }
 
 /// `0c3d0d` without warm starts, PreDual, network, sifting or concurrent: presolve → simplex → `363daa` → simplex
@@ -439,7 +473,7 @@ fn simplex_driver(md: &Model, p: &Params, method: i32, h: &mut Hooks, t0: Instan
     let (status, (x, slack, pi, rc)) = match &pre {
         Some((_, post)) if code(st) == 2 && !post.is_identity() => {
             let u = postsolve::uncrush(post, md, &postsolve::PreSol { x: &x, dj: &dj, st: &vs }, None);
-            match reoptimize(md, &u.basis, lim.saturating_sub(iter)) {
+            match reoptimize(md, &u.basis, method, lim.saturating_sub(iter)) {
                 Some((st2, extra, x2, d2, o2)) => {
                     engine_obj = Some(o2);
                     if extra > 0 {
@@ -644,6 +678,21 @@ mod tests {
         assert_eq!(resolve(&small, &[("Method", 6.0)]).1.int("LPWarmStart"), 2);
         assert_eq!(resolve(&small, &[("Method", 1.0)]).1.int("LPWarmStart"), 1);
         assert_eq!(resolve(&small, &[]).1.int("LPWarmStart"), 1);
+    }
+
+    #[test]
+    fn big_uncrush_status_matches_gurobi_fault_injection() {
+        // `tools/uncrush_oracle.py --uncrush-delta` on afiro, Method 2/6, Crossover 0. These controlled
+        // postsolve errors exercise both sides of Gurobi's rare status-13 branch, including its PDHG residual term.
+        let fixture = include_str!("../../../bench/gurobi_status/uncrush_violation.tsv");
+        for row in fixture.lines().skip(1) {
+            let f: Vec<&str> = row.split('\t').collect();
+            let status: i32 = f[2].parse().unwrap();
+            let pre: f64 = f[3].parse().unwrap();
+            let scale: f64 = f[4].parse().unwrap();
+            let viol: f64 = f[5].parse().unwrap();
+            assert_eq!(big_uncrush_violation(viol, pre, scale, 1e-6), status == 13, "{row}");
+        }
     }
 
     #[test]

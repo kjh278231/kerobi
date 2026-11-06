@@ -1,6 +1,8 @@
 """G5 (4): optimize() with presolve (Presolve -1, Threads 1, WorkLimit 60) through the Rust driver against Gurobi
 captures of tools/parity.py: status, objective (relative 1e-6) and BarIterCount / PDHGIterCount on Netlib 64.
 Method 1 checks status and objective only. Also the log anchors of each path. No Gurobi is needed."""
+import csv
+import gzip
 import json
 import re
 from pathlib import Path
@@ -62,3 +64,20 @@ def test_driver_log(cap, params, iters, tmp_path):
         solve(name, params, tmp_path / f"{name}.log")
         got = body((tmp_path / f"{name}.log").read_text(), iters is None)
         assert got == body((ROOT / "bench" / cap / name / "log.txt").read_text(), iters is None)
+
+
+@pytest.mark.parametrize("name", ["degen3", "forplan"])
+def test_barrier_common_coefficient_trace(name):
+    """Common-coefficient columns need an unpeeled solve product and a two-accumulator residual product.
+    Both models previously diverged immediately after iteration zero; compare every callback against Gurobi.
+    """
+    c = rsolver.GRB.Callback
+    keys = (c.BARRIER_ITRCNT, c.BARRIER_PRIMOBJ, c.BARRIER_DUALOBJ, c.BARRIER_PRIMINF, c.BARRIER_DUALINF, c.BARRIER_COMPL)
+    m = rsolver.read(DATA / f"{name}.mps.gz")
+    for k, v in {"OutputFlag": 0, "Threads": 1, "Method": 2, "Crossover": 0, "Presolve": -1}.items():
+        m.setParam(k, v)
+    rows = []
+    m.optimize(lambda model, where: rows.append([float(model.cbGet(k)).hex() for k in keys]))
+    with gzip.open(ROOT / "bench/gurobi_bar_pre" / name / "trace.csv.gz", "rt") as f:
+        want = [[float(v).hex() for v in row[1:]] for row in csv.reader(f) if row[0] == "barrier"]
+    assert rows == want

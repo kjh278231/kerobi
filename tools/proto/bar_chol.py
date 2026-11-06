@@ -419,7 +419,9 @@ class Chol:
         dx = []
         for j in range(n):  # 2d3d91: column-wise
             b0, b1 = A["beg"][j], A["beg"][j + 1]
-            t = vsum(0.0, [A["val"][k] * y[A["ind"][k]] for k in range(b0, b1)], b0 & 1)
+            coeff = A["col_coeff"][j]
+            t = vsum(0.0, [(coeff or A["val"][k]) * y[A["ind"][k]] for k in range(b0, b1)],
+                     0 if coeff else b0 & 1)
             dx.append((t - rhs_x[j]) * theta[j])
         for i in range(m):
             t = 0.0 if A["sense"][i] == "=" else y[i]
@@ -446,6 +448,16 @@ def load(path):
     m, n = Dm["m"], Dm["n"]
     beg = [b for b in Dm["beg"]] + [Dm["beg"][-1] + Dm["len"][-1]]
     A = {"m": m, "n": n, "beg": beg, "ind": Dm["ind"], "val": h(Dm["val"]), "sense": Dm["sense"]}
+    # 2ca086 B+0x648: common coefficient columns use an unpeeled gather loop in 2d3d91.
+    coeff, score = [0.0] * n, 0
+    for j in range(n):
+        values = A["val"][beg[j]:beg[j + 1]]
+        if values and all(abs(v - values[0]) <= 1e-10 for v in values):
+            coeff[j] = values[0]
+            score += len(values) ** 2
+    A["col_coeff"] = coeff if score >= 2 * n else [0.0] * n
+    if "col_coeff" in r0:
+        A["col_coeff"] = h(r0["col_coeff"]) if r0["col_coeff"] is not None else [0.0] * n
     rows = [[] for _ in range(m)]
     for j in range(n):
         for k in range(beg[j], beg[j + 1]):

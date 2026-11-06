@@ -10,7 +10,7 @@ Gurobi 13.0.3 barrier(Method=2, Presolve=0, Crossover=0, Threads=1, LP)의 수�
 |---|---|
 | 상태, 목적 ≤1e-6, Barrier statistics | 64/64, 64/64, 64/64 |
 | **BarIterCount 같음** | **64/64** (이전 59/64) |
-| BARRIER 콜백 궤적(pobj, dobj, PRIMINF, DUALINF, COMPL) 전 반복 repr 동일 | **55/64** |
+| BARRIER 콜백 궤적(pobj, dobj, PRIMINF, DUALINF, COMPL) 전 반복 repr 동일 | **56/64** |
 | 같은 궤적, 상대 1e-6 안 | 63/64 (modszk1만 반복 16에서 갈림) |
 
 단계별 비트 일치(오라클 비교):
@@ -53,7 +53,7 @@ Gurobi 13.0.3 barrier(Method=2, Presolve=0, Crossover=0, Threads=1, LP)의 수�
 dy = (LDLᵀ)⁻¹(rhs_y + A(θ∘rhs_x)), dx = (Aᵀdy − rhs_x)·θ(slack은 y 또는 0).
 
 - `2d3b3e`(A·v): 행 순(D+0x118 행 사본, 열 오름차순) 8레인 dot, peel = 행 첫 값 주소의 16바이트 위상 = rbeg[i] & 1(D+0x138은 16바이트 정렬), 그 뒤 slack v[n+i]를 더한다.
-- `2d3d91`(Aᵀy): 열 순 8레인, peel = beg[j] & 1.
+- `2d3d91`(Aᵀy): 보통 열은 8레인, peel = beg[j] & 1. 공통 계수 열(B+0x648)은 계수를 broadcast하고 peel 없이 8레인 gather를 쓴다. `2d4252` 잔차 곱은 이 열에서 짝/홀 두 누산기를 쓴다. `2ca086`은 스케일된 열에서 첫 계수와의 차이 ≤1e-10을 검사하고, 해당 열 길이 제곱의 합 ≥2n일 때만 표를 유지한다(행 정렬 전). 2026-11-06 G5 복구에서 이 경로를 추가해 Presolve=0의 degen3 궤적이 일치했다([m1_driver §12](m1_driver.md#12-중단-세션-복구-공통-계수-열과-상태-13-오라클)).
 - **Threads=1이면 `31cfeb`/`31d3c7`가 블록 커널을 [0, m) 한 번으로 부른다**(작업 목록 무시). 작업 목록을 쓰면 multi-task 인스턴스에서 틀린다.
 - 전진 `2efdb8`(한 범위): 블록마다 블록 안 대입(삼각 행 8레인, peel = (블록 오프셋 + i(i+1)/2) & 1; 버린 피벗 자리는 0), 그다음 직사각 행에 오른쪽 방향으로 밀어넣기: 행 4개씩 2레인(peel은 4번째 행 주소), 남은 행은 8레인.
 - ×1/d, 후진 `2efe1f`: 블록을 거꾸로; 직사각 행을 위에서부터 4개 묶음 x −= ((p0+p1)+p2)+p3(묶음 안은 행 오름차순), 남은 행은 하나씩, 그다음 블록 안 열 방향 갱신(원소별, 리덕션 없음).
@@ -86,8 +86,8 @@ dy = (LDLᵀ)⁻¹(rhs_y + A(θ∘rhs_x)), dx = (Aᵀdy − rhs_x)·θ(slack은 
 
 ## 6. 남은 차이와 `shortcut:`
 
-- 궤적이 비트로 갈리는 9개(반복 수는 같음): 25fv47(행 22), bnl1(48), degen3(1), finnis(20), forplan(17), ganges(14), maros(18), modszk1(12), pilot4(79). degen3은 첫 해법 x가 15/3321 원소 다르다(12개 작업, 분해 쪽으로 추정, 미조사). modszk1은 반복 0–11 상태가 전 원소 같고 K = 3, N = 4, θ도 같은데 반복 11 스텝의 최종 방향과 마지막 corrector 방향이 갈린다(이 반복의 두 번째 corrector에서 ω_p = 0이 처음 나온다; `2f4fe9`의 ω = 0 분기부터 볼 것). 나머지는 어느 단계인지 아직 보지 않았다.
+- 궤적이 비트로 갈리는 8개(반복 수는 같음): 25fv47(행 22), bnl1(48), finnis(20), forplan(17), ganges(14), maros(18), modszk1(12), pilot4(79). degen3의 첫 해법 차이는 공통 계수 열의 합산 경로를 추가해 해소했다. modszk1은 반복 0–11 상태가 전 원소 같고 K = 3, N = 4, θ도 같은데 반복 11 스텝의 최종 방향과 마지막 corrector 방향이 갈린다(이 반복의 두 번째 corrector에서 ω_p = 0이 처음 나온다; `2f4fe9`의 ω = 0 분기부터 볼 것). 나머지는 어느 단계인지 아직 보지 않았다.
 - `shortcut:` 정렬 가정: 블록 저장·D 값 배열·B 벡터의 시작이 16바이트 정렬이라고 둔다(관찰값). 다른 할당자에서는 peel이 바뀐다.
-- `shortcut:` Bunch–Kaufman(`32af6a`, F+0xa0), 명시 행렬 경로(F+0x1e0 = 1/2), 단정밀도(`3279a1`), 밀집 열(F+0x138, B+0x648/0x7f0), SOC·QP 항(x87 `343b08`, `2f28c2` 원뿔 부분)은 옮기지 않았다(64개에서 안 탄다).
+- `shortcut:` Bunch–Kaufman(`32af6a`, F+0xa0), 명시 행렬 경로(F+0x1e0 = 1/2), 단정밀도(`3279a1`), 밀집 열(F+0x138, B+0x7f0), SOC·QP 항(x87 `343b08`, `2f28c2` 원뿔 부분)은 옮기지 않았다(64개에서 안 탄다).
 - `shortcut:` f80은 inf/NaN·subnormal double 결과를 다루지 않는다.
 - `normal.rs`/`ldl.rs`(스칼라 LDLᵀ)는 IPM에서 더 쓰지 않고 `chol.rs` 시험의 비교 기준으로만 남았다.

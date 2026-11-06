@@ -361,11 +361,14 @@ impl<'a> Factor<'a> {
         self.backward(&mut y);
         let mut dx = Vec::with_capacity(m + n);
         for j in 0..n {
-            // 2d3d91: column-wise, peel by the parity of the column's first value
+            // `2d3d91`: common-coefficient columns gather y with a broadcast coefficient and no alignment peel.
+            // Other columns peel by the parity of the column's first value.
             let (b0, b1) = (lp.beg[j], lp.beg[j + 1]);
+            let coeff = lp.col_coeff[j];
             pr.clear();
-            pr.extend((b0..b1).map(|k| lp.val[k] * y[lp.ind[k]]));
-            dx.push((vsum(0.0, &pr, b0 & 1, 8) - rhs_x[j]) * th[j]);
+            pr.extend((b0..b1).map(|k| (if coeff != 0.0 { coeff } else { lp.val[k] }) * y[lp.ind[k]]));
+            let peel = if coeff != 0.0 { 0 } else { b0 & 1 };
+            dx.push((vsum(0.0, &pr, peel, 8) - rhs_x[j]) * th[j]);
         }
         for i in 0..m {
             dx.push(((if lp.eq[i] { 0.0 } else { y[i] }) - rhs_x[n + i]) * th[n + i]);

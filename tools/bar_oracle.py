@@ -166,6 +166,7 @@ def dump(B, it, full, vec=False, Dm=0, chol=False, solve=False, Mp=0):
         out["B"] = arr(B, 0xa00 // 8)
         out["lb"], out["ub"], out["obj"] = arr(L(B + 0x5f8), n), arr(L(B + 0x600), n), arr(L(B + 0x608), n)
         out["rhs"] = arr(L(B + 0x610), m)
+        out["col_coeff"] = arr(L(B + 0x648), n)
         out["type"] = list((ctypes.c_ubyte * (m + n)).from_address(L(B + 0x640))) if L(B + 0x640) else None
         if Dm:
             out["D"] = snap_D(Dm)
