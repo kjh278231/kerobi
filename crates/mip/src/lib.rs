@@ -20,6 +20,7 @@ mod inner;
 mod cancel;
 mod aggregate;
 mod colpass;
+mod components;
 mod compress;
 mod deprow;
 mod dominate;

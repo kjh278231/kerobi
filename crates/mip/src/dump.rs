@@ -296,6 +296,11 @@ impl State {
             "dual_fix_empty_cols" => (self.dual_fix_empty_cols(p), 0),
             "implied_int_scale" => (self.implied_int_scale(p), 0),
             "470936" => (self.sparsify(p, Default::default()), 0),
+            "52cba4" => {
+                let mut k = 0;
+                (self.components(p, &mut k), k as i64)
+            }
+            "521497" => (self.biconnected(p), 0),
             "57999f" => {
                 self.r57999f(p);
                 (0, 0)

@@ -26,8 +26,4 @@ impl State {
     pub fn r579e67(&mut self, p: &Params) -> i32 { 0 }
     /// `5a04fc` smart disaggregation (PRESMARTDISAGG >= 2)
     pub fn smart_disagg(&mut self, p: &Params) -> i32 { 0 }
-    /// `52cba4(st, env, T21, &ncomp)` connected components
-    pub fn components(&mut self, p: &Params, ncomp: &mut i32) -> i32 { 0 }
-    /// `521497(st, env, T22)` (PREBICONNECTED)
-    pub fn biconnected(&mut self, p: &Params) -> i32 { 0 }
 }
