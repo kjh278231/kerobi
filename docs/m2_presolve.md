@@ -22,9 +22,9 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | ~~`m2-spine-d`~~ (완료, 병합) | FINAL 단계 해독. 두 번째 probing 뒤 ρ > 1e-4면 라운드 루프 재시작(최대 1회), 마무리 사슬 `52cba4`→`521497`→`470936`→`57999f`→{`36ddf2`+inline 쌍대 고정}→inline implied int. 카운트 C1–C23 | [m2_spine_d.md](m2_spine_d.md) |
 | ~~`m2-probe`~~ (완료, 병합 `54125bd`) | probing `4d3a1d` 전체 포팅(`probe*.rs`, `conflict.rs`, `subst.rs`). 엔진 62/62 패스 비트 일치(`tools/probe_check.py`), 쓰기 13호출 일치(`tools/probe_apply_check.py`). sweep에서 `probe` 첫 불일치 0 | [m2_red_probe.md](m2_red_probe.md) |
 | `../rsolver-m2-outer-b` / `m2-outer-b` | `bd6d2e3`까지 병합(`4030c9`, `40d2bc`, `36ee92`, `3e40d1`, `37f484` MIP, `418542`, 덤프 각 78/78). 이 worktree는 사용자가 맡긴 Codex 에이전트가 마무리 중(`37f484` 단계 C 쌍 집계, `3bb6fe`). 끝나면 다시 병합 | [m2_red_outer_b.md](m2_red_outer_b.md) |
-| `../rsolver-m2-outer-c` / `m2-outer-c` | `45feaa` two-row(+`45d7ec`), `5466a7` VUB 병합, `47c445` MIP 분기, inline 쌍대 이진화 작업량 | `docs/m2_red_outer_c.md` |
+| `../rsolver-m2-outer-c` / `m2-outer-c` (일시 중지, 커밋 없음) | `45feaa` two-row(+`45d7ec`), `5466a7` VUB 병합, `47c445` MIP 분기, inline 쌍대 이진화 작업량 | `docs/m2_red_outer_c.md` |
 | ~~`m2-clique`~~ (완료, 병합 `3ece196`) | `451bed`, `45885d`, `52be10`, `46a62d` 포팅. 덤프 비교 각 78/78, 레코드 38/38. 덤프에 +0xf0/+0xf4(prelude에서 센 이진·정수 수)를 더함 | [m2_red_clique.md](m2_red_clique.md) |
-| `../rsolver-m2-roundend` / `m2-roundend` | 병합(`f2e0c80`): `58d4ce`, `5a9282`, `5ab429`(+`574764` `mod_subst`, `a7c550`, `3c5996`), `59c193`, `55a779` 1부. 덤프 80/42/42/38 전부 일치. 지금 `5577ba` 대칭 MIP 분기(작업량만 바뀜, `551cc0` 정수 경로·`5507cb`). 다음 `594c0c`(ran14x18, outer-a의 `3bbf87`/`3bde19` 뒤) | [m2_red_roundend.md](m2_red_roundend.md) |
+| `../rsolver-m2-roundend` / `m2-roundend` (일시 중지) | 병합(`ad481f7`): 라운드 끝 A + 대칭 `5577ba` MIP 분기(`5507cb`, use 블록, type 19, 덤프 38/38 f4 포함). 남은 일 `594c0c`(작업 파일 `inner.rs` 수정 중에 멈춤) | [m2_red_roundend.md](m2_red_roundend.md) |
 | `../rsolver-m2-outer-a` / `m2-outer-a` | 바깥 패스 앞쪽 해독 → 포팅: `3e5363`, `3ff744` MIP 분기, `57627e`, `578fd2`, `374521`, `5431ee` | `docs/m2_red_outer_a.md` |
 | ~~`m2-inner`~~ (완료, 병합 `a4dcbf1`) | 내부 루프 7개 + inline 함의 bound 포팅. 덤프 비교 147–225/호출 전부 일치(`tools/mip_dump_check.py`), 레코드 38/38 바이트 일치(`tools/mip_rec_check.py`, `CoreModel.mip_post_records`). 공용 보조 API는 `helpers.rs`(m2_red_inner.md §11) | [m2_red_inner.md](m2_red_inner.md) |
 
