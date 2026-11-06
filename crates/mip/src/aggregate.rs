@@ -2,7 +2,7 @@
 //! (crates/lp/src/presolve/agg.rs, docs/m1_presolve_agg.md; LP modules are private and crates/lp stays as it is)
 //! with the MIP branches: the `53af0f` candidate list, integer columns in stage A (`377cb6`/`3773aa` with the
 //! integer row cache `local_170`, the binary VUB pattern), stage B's cls-0 columns, two-term rows and slack upper
-//! bound, stage C's integer guard, MIP records (`39b9e0` MIP branch, type 11), no stage D.
+//! bound, stage C's integer guards and pair folding, MIP records (`39b9e0` MIP branch, type 11), no stage D.
 use crate::state::{guarded_add, Node, State, NIL};
 use crate::subst::sort_asc;
 use crate::post::PostRec;
@@ -411,10 +411,11 @@ impl State {
                     k += 1;
                 }
                 self.work = (k as f64 + k as f64) * self.work_mult + self.work;
-                // shortcut: the other column needs a flag (+0x170) for the "2" result (an integer pair x = ±y
-                // through a two-term row, 37f484 L1172-1249); flags are always 0 here, so this is 0
-                let _other = mat.nd[s as usize].col;
-                return 0;
+                if s == NIL || self.col_flag[mat.nd[s as usize].col as usize] == 0
+                    || !(1e-10 > ((mat.nd[s as usize].val / q.val).abs() - 1.0).abs()) {
+                    return 0;
+                }
+                return 2;
             }
         }
         1
@@ -730,6 +731,7 @@ impl State {
             }
             let thr = colmax * rho;
             let (mut ratio_best, mut cnt_best, mut piv) = (0.0f64, lim, NIL);
+            let mut pivot_kind = 0;
             let mut seen = 0;
             for (&key, &p) in keys.iter().zip(nodes.iter()) {
                 let cnt = key as i32;
@@ -758,11 +760,14 @@ impl State {
                 let a = q.val.abs();
                 if (cnt != cnt_best || rmax / a < ratio_best)
                     && ((thr <= a && !int) || rho * rmax <= a || (rmax * rho2 <= a && cnt < 3 && !int))
-                    && self.ag_mult_ok(mat, rc, p as u32, lim_l, int) != 0
                 {
-                    ratio_best = rmax / a;
-                    piv = p as u32;
-                    cnt_best = cnt;
+                    let kind = self.ag_mult_ok(mat, rc, p as u32, lim_l, int);
+                    if kind != 0 {
+                        ratio_best = rmax / a;
+                        piv = p as u32;
+                        cnt_best = cnt;
+                        pivot_kind = kind;
+                    }
                 }
             }
             self.work += seen as f64 * 4.0 * mu;
@@ -781,12 +786,49 @@ impl State {
             mat.nd[piv as usize].col = -1;
             self.ag_compact_row(mat, r);
             self.ag_compact_col(mat, j);
+            if pivot_kind == 2 {
+                self.ag_integer_pair(mat, rc, j, r, a);
+            }
             self.ag_subst(mat, rc, a, r, j, t.infbound);
             let k = Self::ag_kill_row(mat, r);
             self.work += (k + k) * mu;
         }
         self.work += total as f64 * 10.0 * mu;
         Ok(())
+    }
+
+    /// Stage A's protected integer pair: transfer integrality and intersect the other column's bounds.
+    fn ag_integer_pair(&mut self, mat: &Mat, rc: &mut RowCache, j: usize, r: usize, a: f64) {
+        let mut walked = 0;
+        if self.row_cnt[r] == 2 && self.rhs[r].abs() < 1e-10 {
+            let q = mat.nd[mat.rh[r] as usize];
+            let k = q.col as usize;
+            let old = self.vtype[k];
+            let ratio = q.val / a;
+            if (ratio - 1.0).abs() < 1e-10 {
+                if old == b'C' { self.vtype[k] = b'I'; }
+                self.lb[k] = crate::helpers::maxsd((self.lb[k] + self.intfeastol).floor(), -self.ub[j]);
+                self.ub[k] = crate::helpers::minsd((self.ub[k] - self.intfeastol).ceil(), -self.lb[j]);
+            } else if (ratio + 1.0).abs() < 1e-10 {
+                self.vtype[k] = self.vtype[j];
+                self.lb[k] = crate::helpers::maxsd((self.lb[k] + self.intfeastol).floor(), self.lb[j]);
+                self.ub[k] = crate::helpers::minsd((self.ub[k] - self.intfeastol).ceil(), self.ub[j]);
+            }
+            if old != self.vtype[k] {
+                let mut p = mat.ch[k];
+                while p != NIL {
+                    let q = mat.nd[p as usize];
+                    if q.col >= 0 {
+                        rc.ints[q.row as usize] = 0.0;
+                        rc.hi[q.row as usize] = 0.0;
+                    }
+                    walked += 1;
+                    p = q.nc;
+                }
+            }
+            self.work = walked as f64 * 3.0 * self.work_mult + self.work;
+        }
+        self.work += self.work_mult * 20.0;
     }
 
     /// `39b9e0(c0, a, env, st, 0, j, r, rowhead[r], cnt)`, MIP branch (as `helpers::push_subst_row`, on the
@@ -1343,7 +1385,8 @@ impl State {
                 let ((p1, pv1), (p2, pv2)) = (pos[0], pos[1]);
                 let ((mut n1, mut nv1), (mut n2, mut nv2)) = (neg[0], neg[1]);
                 let close = |x: f64| x.abs() <= 1e-10;
-                if (close(nv1 + pv1) || close(pv1 + nv2)) && (close(nv1 + pv1) || close(nv1 + pv2)) {
+                if ![p1, p2, n1, n2].iter().all(|&k| self.vtype[k] == b'B')
+                    && (close(nv1 + pv1) || close(pv1 + nv2)) && (close(nv1 + pv1) || close(nv1 + pv2)) {
                     let mut paired = close(nv1 + pv1) && self.ag_pairable(mat, p1, n1);
                     if !paired && close(pv1 + nv2) && self.ag_pairable(mat, p1, n2) {
                         std::mem::swap(&mut n1, &mut n2);
@@ -1381,7 +1424,7 @@ impl State {
     /// `395c97`: can columns p and n be shifted together (rows only allow it if p + n stays put on `=` rows and does
     /// not go down on `<` rows, and rows with only one of them do not mind it going up)?
     fn ag_pairable(&mut self, mat: &mut Mat, pc: usize, nc: usize) -> bool {
-        if self.obj[pc] + self.obj[nc] < -1e-10 {
+        if (self.vtype[pc] == b'C') != (self.vtype[nc] == b'C') || self.obj[pc] + self.obj[nc] < -1e-10 {
             return false;
         }
         let mu = self.work_mult;
@@ -1448,28 +1491,140 @@ impl State {
         ok
     }
 
-    /// Stage C pair (`37f484` L1550-1700) up to the multiplier test: ratio range, MIP integer guard (an integer
-    /// among the four columns needs ratio 1), growth bounds.
-    /// shortcut: a pair that passes is not aggregated (the MIP branch of the `39d14c` record, the integer type
-    /// merge with floored bounds and the column folding are not ported); no row of the 38 models gets this far.
+    /// Stage C: MIP `39d14c` emits two one-term type-2 records; then fold both columns.
     fn ag_pair(&mut self, mat: &mut Mat, r: usize, c: [usize; 4], v: [f64; 4], pmin: f64, t: &ColTols) {
-        let _ = (mat, r);
         let [p1, p2, n1, n2] = c;
         let [pv1, pv2, _, _] = v;
-        let lim_l = t.agg_mult_limit;
         let rho = pv2 / pv1;
         if 1e6 < pv1 || pv1 < pmin || 1e6 < pv2 || pv2 < pmin || 1e6 < rho || rho < pmin {
             return;
         }
-        if c.iter().any(|&k| self.vtype[k] != b'C') && 1e-10 < (rho - 1.0).abs() {
+        let integer = c.iter().any(|&k| self.vtype[k] != b'C');
+        if integer && 1e-10 < (rho - 1.0).abs() {
             return;
         }
         let (e1, k1, f1) = if self.ub[n2] * rho < self.ub[p1] { (n2, p1, 1.0 / rho) } else { (p1, n2, rho) };
         let (e2, k2, f2) = if self.ub[p2] * rho <= self.ub[n1] { (p2, n1, 1.0 / rho) } else { (n1, p2, rho) };
-        let inv = 1.0 / lim_l;
+        let lim = t.agg_mult_limit;
+        let inv = 1.0 / lim;
         let grow_ok = |k: usize, e: usize, f: f64, st: &State| {
-            inv <= st.mult_lo[k] && st.mult_hi[k] <= lim_l && inv <= f * st.mult_lo[e] && f * st.mult_hi[e] <= lim_l
+            inv <= st.mult_lo[k] && st.mult_hi[k] <= lim && inv <= f * st.mult_lo[e] && f * st.mult_hi[e] <= lim
         };
-        let _ = grow_ok(k1, e1, f1, self) && grow_ok(k2, e2, f2, self);
+        if !(grow_ok(k1, e1, f1, self) && grow_ok(k2, e2, f2, self)) {
+            return;
+        }
+        let need = (self.col_cnt[e1] + self.col_cnt[e2]) as i64;
+        if mat.nfree < need { self.ag_gc(mat); }
+        if mat.nfree < need { return; }
+        for (e, k, f) in [(e1, k1, f1), (e2, k2, f2)] {
+            self.cols_removed += 1;
+            self.rows_removed += 1;
+            // The original constructs a one-node synthetic row with value -1, pivot 1/f.
+            let pivot = 1.0 / f;
+            let value = 1.0 / pivot;
+            let growth = (-1.0 / pivot).abs();
+            let lo = self.mult_lo[e] * growth;
+            if lo <= self.mult_lo[k] { self.mult_lo[k] = lo; }
+            let hi = self.mult_hi[e] * growth;
+            if self.mult_hi[k] <= hi { self.mult_hi[k] = hi; }
+            self.post.push(PostRec::Subst { j: e as i32, c0: 0.0, ind: vec![k as i32], val: vec![value] });
+            self.work = 5.0 * self.work_mult + self.work;
+        }
+        self.rows_removed -= 1;
+        self.ag_mark_row(mat, r);
+        self.ag_mark_col(mat, e1);
+        self.ag_mark_col(mat, e2);
+        for (e, k, f) in [(e1, k1, f1), (e2, k2, f2)] {
+            if integer {
+                if self.vtype[e] == b'B' || self.vtype[k] == b'C' { self.vtype[k] = self.vtype[e]; }
+                self.ub[k] = (self.ub[e] + self.intfeastol).floor();
+            } else {
+                self.ub[k] = if t.infbound <= self.ub[e] { t.infbound } else { self.ub[e] / f };
+            }
+        }
+        let walked = Self::ag_kill_row(mat, r);
+        self.work = walked * self.work_mult + self.work;
+        self.row_cnt[r] = -3;
+        self.obj[k1] = f1 * self.obj[e1] + self.obj[k1];
+        self.obj[k2] = f2 * self.obj[e2] + self.obj[k2];
+        self.obj[e1] = 0.0;
+        self.obj[e2] = 0.0;
+        self.col_cnt[k1] -= 1;
+        self.col_cnt[k2] -= 1;
+        self.col_cnt[e1] = -3 - r as i32;
+        self.col_cnt[e2] = -3 - r as i32;
+        self.ag_fold(mat, e1, k1, f1);
+        self.ag_fold(mat, e2, k2, f2);
     }
+
+    /// Fold column e into k without activity updates; release e to pending and compact k.
+    fn ag_fold(&mut self, mat: &mut Mat, e: usize, k: usize, f: f64) {
+        let mu = self.work_mult;
+        let mut x = mat.ch[k];
+        let mut c = 0;
+        while x != NIL {
+            let q = mat.nd[x as usize];
+            if q.col >= 0 {
+                mat.scat[q.row as usize] = x;
+            }
+            x = q.nc;
+            c += 1;
+        }
+        self.work += c as f64 * 3.0 * mu;
+        let mut none = NIL;
+        let mut y = mat.ch[e];
+        let mut c = 0;
+        while y != NIL {
+            let q = mat.nd[y as usize];
+            y = q.nc;
+            c += 1;
+            if q.col < 0 {
+                continue;
+            }
+            let i = q.row as usize;
+            let v = f * q.val;
+            let s = mat.scat[i];
+            self.ag_upd(mat, s, i, k, v, false, &mut none, 0.0);
+            if s != NIL {
+                mat.scat[i] = NIL;
+            }
+        }
+        self.work += c as f64 * 10.0 * mu;
+        let mut x = mat.ch[k];
+        let mut c = 0;
+        while x != NIL {
+            let q = mat.nd[x as usize];
+            if q.col >= 0 {
+                mat.scat[q.row as usize] = NIL;
+            }
+            x = q.nc;
+            c += 1;
+        }
+        self.work += c as f64 * 3.0 * mu;
+        self.ag_release_col(mat, e);
+        self.ag_compact_col(mat, k);
+    }
+
+    /// `36f8e0` + head reset: every node of column e goes to pending; live ones leave their row's count.
+    fn ag_release_col(&mut self, mat: &mut Mat, e: usize) {
+        let mut p = mat.ch[e];
+        let mut k = 0;
+        while p != NIL {
+            k += 1;
+            let q = mat.nd[p as usize];
+            if q.col >= 0 {
+                self.row_cnt[q.row as usize] -= 1;
+            }
+            mat.npend += 1;
+            self.nnz -= 1;
+            mat.nd[p as usize].nc = mat.pend;
+            mat.nd[p as usize].col = -1;
+            mat.pend = p;
+            p = q.nc;
+        }
+        mat.ch[e] = NIL;
+        self.work += k as f64 * 3.0 * self.work_mult;
+    }
+
+
 }
