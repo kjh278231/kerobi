@@ -14,6 +14,4 @@ impl State {
     pub fn derived_a(&mut self, p: &Params) -> i32 { 0 }
     /// `5a5eff` (PREDERIVED)
     pub fn derived_b(&mut self, p: &Params) -> i32 { 0 }
-    /// `5a04fc` smart disaggregation (PRESMARTDISAGG >= 2)
-    pub fn smart_disagg(&mut self, p: &Params) -> i32 { 0 }
 }

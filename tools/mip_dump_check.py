@@ -4,7 +4,7 @@ free/pending counts, tracker and new postsolve records (docs/m2_red_inner.md §9
 usage: PYTHONPATH=python python tools/mip_dump_check.py <fn> <dump.json ...> [--after DUMP] [--param K=V ...]
   <fn>: 3e39a6 36ddf2 37168e 36c5cf 56f793 56c80e 36e6b6 (mode 0 or 1, whichever matches) 370047 implied_bounds
   45885d 52be10 46a62d 5a9282 5ab429 59c193 55a779 374521 5431ee 3e5363 57627e 3ff744:<mode>:<flag>
-  3e40d1 36ee92 418542 37f484 4030c9 414c03 414c53 5577ba 838543 423e35 5aaaf7 579e67 5a1293 (with an OUT_I32=4 dump, f4 too).
+  3e40d1 36ee92 418542 37f484 4030c9 414c03 414c53 5577ba 838543 423e35 5aaaf7 579e67 5a1293 5a04fc (with an OUT_I32=4 dump, f4 too).
   --after: the "after" state is the entry state of the same call number in DUMP (for an inline block: dump the
   function before it and the one after it).
 Doubles compare with == (the JSON dump loses the sign of -0.0); records compare byte for byte except padding.
