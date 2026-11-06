@@ -25,7 +25,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | `../rsolver-m2-outer-c` / `m2-outer-c` (일시 중지, 커밋 없음) | `45feaa` two-row(+`45d7ec`), `5466a7` VUB 병합, `47c445` MIP 분기, inline 쌍대 이진화 작업량 | `docs/m2_red_outer_c.md` |
 | ~~`m2-clique`~~ (완료, 병합 `3ece196`) | `451bed`, `45885d`, `52be10`, `46a62d` 포팅. 덤프 비교 각 78/78, 레코드 38/38. 덤프에 +0xf0/+0xf4(prelude에서 센 이진·정수 수)를 더함 | [m2_red_clique.md](m2_red_clique.md) |
 | `../rsolver-m2-roundend` / `m2-roundend` (일시 중지) | 병합(`ad481f7`): 라운드 끝 A + 대칭 `5577ba` MIP 분기(`5507cb`, use 블록, type 19, 덤프 38/38 f4 포함). 남은 일 `594c0c`(작업 파일 `inner.rs` 수정 중에 멈춤) | [m2_red_roundend.md](m2_red_roundend.md) |
-| `../rsolver-m2-outer-a` / `m2-outer-a` | 바깥 패스 앞쪽 해독 → 포팅: `3e5363`, `3ff744` MIP 분기, `57627e`, `578fd2`, `374521`, `5431ee` | `docs/m2_red_outer_a.md` |
+| `../rsolver-m2-outer-a` / `m2-outer-a` (대기) | 병합: `374521`, `5431ee`, `3e5363`, `57627e`, `3ff744` mode 0–3(+열 집계, `add_cols`/`add_rows`), `578fd2`(+`6aec61` mode 2, `6b4738`) — 덤프 전부 일치, `578fd2`만 66/78. 남은 일: `6b5e11`(11–512개 이진 행 정확 knapsack, asm 3,491줄)과 `6b56d2` 포팅 → gmu 둘의 첫 불일치(k=28). 노트 §5.3에서 이어 감 | [m2_red_outer_a.md](m2_red_outer_a.md) |
 | ~~`m2-inner`~~ (완료, 병합 `a4dcbf1`) | 내부 루프 7개 + inline 함의 bound 포팅. 덤프 비교 147–225/호출 전부 일치(`tools/mip_dump_check.py`), 레코드 38/38 바이트 일치(`tools/mip_rec_check.py`, `CoreModel.mip_post_records`). 공용 보조 API는 `helpers.rs`(m2_red_inner.md §11) | [m2_red_inner.md](m2_red_inner.md) |
 
 ### 제어 흐름 (2026-11-06, `crates/mip/src/driver.rs`)
