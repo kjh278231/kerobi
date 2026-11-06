@@ -119,6 +119,9 @@ pub struct State {
     pub cutoff: f64,
     /// +0x42c opposite parallel `<` rows left apart (`3ff744` mode 0 counts them; model generation splits them)
     pub antipar: i32,
+    /// +0x3e0 / +0x3e8: per row split by `3ff744` mode 2, the row and s_a·rhs_b/s_b (its range column gets bounds
+    /// [0, rhs − that] at model generation)
+    pub splits: Vec<(i32, f64)>,
     /// +0x370 postsolve records, in push order
     pub post: Vec<PostRec>,
     /// +0x3f0 conflict graph (`5b84b1`): probing's implications
@@ -385,6 +388,7 @@ impl State {
             bad_row: -1,
             cutoff: 1e100,
             antipar: 0,
+            splits: Vec::new(),
             post: Vec::new(),
             cg: Default::default(),
             row_int: vec![0.0; m],
@@ -485,7 +489,7 @@ impl State {
     /// Presolved model (`3b0917`, MIP state): live rows and columns in original order, each column's live nodes in
     /// list order, types from +0x150. Gurobi names it `<name>_pre`; with nothing left `999702` makes the empty model
     /// `Presolved` (minimize, minimization-form constant), as in the LP port.
-    /// shortcut: no split-row range columns or other appended columns (none before reductions run).
+    /// Range columns of split rows (`splits`) come after the live columns, unnamed (`C<j>` in MPS files).
     pub fn to_model(&self, md: &Model) -> Model {
         let mut row_map = vec![-1i32; self.m];
         let s = md.sense as f64;
@@ -495,7 +499,7 @@ impl State {
                 row_map[i] = q.rhs.len() as i32;
                 q.rhs.push(self.rhs[i]);
                 q.row_sense.push(self.sense[i]);
-                q.constr_names.push(md.constr_names[i].clone());
+                q.constr_names.push(md.constr_names.get(i).cloned().unwrap_or_else(|| format!("R{}", q.rhs.len() - 1)));
             }
         }
         for j in 0..self.n {
@@ -521,7 +525,19 @@ impl State {
             // models, e.g. enlight_hard at PRELIMIT 6 after `37168e`; fixed integers stay 'I')
             let int01 = self.vtype[j] == b'I' && self.lb[j] == 0.0 && self.ub[j] == 1.0;
             q.vtype.push(if int01 { b'B' } else { self.vtype[j] });
-            q.var_names.push(md.var_names[j].clone());
+            // columns added by reductions (`3bbf87`) have no name: `C<j>` in MPS files
+            q.var_names.push(md.var_names.get(j).cloned().unwrap_or_else(|| format!("C{}", q.obj.len() - 1)));
+        }
+        for &(i, lo) in &self.splits {
+            q.var_names.push(format!("C{}", q.obj.len()));
+            q.col_beg.push(q.col_ind.len() as i64);
+            q.col_ind.push(row_map[i as usize]);
+            q.col_val.push(1.0);
+            q.col_len.push(1);
+            q.obj.push(0.0);
+            q.lb.push(0.0);
+            q.ub.push(self.rhs[i as usize] - lo);
+            q.vtype.push(b'C');
         }
         if q.rhs.is_empty() && q.obj.is_empty() {
             q.name = "Presolved".into();

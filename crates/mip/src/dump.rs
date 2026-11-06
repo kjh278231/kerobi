@@ -172,6 +172,7 @@ impl State {
             bad_row: -1,
             cutoff: 1e100,
             antipar: ctr(13),
+            splits: Vec::new(),
             post: Vec::new(),
             cg: Default::default(),
             row_int: vec![0.0; m],

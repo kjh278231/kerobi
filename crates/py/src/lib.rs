@@ -314,8 +314,8 @@ impl PyCoreModel {
     fn mip_post_records(&self, params: Vec<(String, f64)>) -> Recs {
         let p = rsolver_mip::Params::from_pairs(&params);
         let mut st = rsolver_mip::state::State::new(&self.inner, &p);
-        if rsolver_mip::reduce(&mut st, &p).is_ok() {
-            rsolver_mip::finish(&mut st, &p);
+        if rsolver_mip::reduce(&mut st, &p).is_ok() && rsolver_mip::finish(&mut st, &p) == 0 {
+            rsolver_mip::split_rows(&mut st, &p);
         }
         st.post.iter().map(|r| {
             let l = r.layout();

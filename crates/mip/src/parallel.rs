@@ -29,18 +29,23 @@ struct Tol {
     preparallel: i32,
     /// AggFill as 3cd406 sees it (-1 is 0)
     fill: i32,
+    /// env+0x258c GURO_PAR_PRESPLITROWS
+    presplitrows: i32,
 }
 
 impl State {
-    /// `3ff744(st, env, T6, mode, flag, 0)` for modes 0, 1, 3. Returns 0, 3 or 5.
+    /// `3ff744(st, env, T6, mode, flag, 0)` for modes 0, 1, 3, and mode 2 (opposite `<` rows split at model
+    /// generation, `3f26d9`). Returns 0, 3 or 5.
     pub fn parallel(&mut self, p: &Params, mode: i32, flag: i32) -> i32 {
         let t = Tol { ft: p.feastol, ift: self.intfeastol, ot: p.opttol, nf: p.numeric_focus, precrush: self.precrush,
-                      preparallel: p.preparallel, fill: p.agg_fill.max(0) };
+                      preparallel: p.preparallel, fill: p.agg_fill.max(0), presplitrows: p.presplitrows };
         let cols = mode == 1 || mode == 3;
-        let saved = self.antipar;
+        let saved = if mode == 2 { 0 } else { self.antipar };
         let (mut pwl, mut objpwl) = (0, 0);
         let gate = flag != 0 && p.precrush == 0 && p.dual_reductions != 0;
-        if mode == 0 {
+        if mode == 2 {
+            self.antipar = 0;
+        } else if mode == 0 {
             self.antipar = 0;
             if gate {
                 pwl = p.prepwlred;
@@ -55,6 +60,14 @@ impl State {
                 l.into_iter().filter(|&i| self.row_cnt[i as usize] > 1 && !self.row_slack(i as usize, t.ft)).collect()
             }
             1 => self.adjacent_list(true).into_iter().filter(|&j| self.col_cnt[j as usize] > 0).collect(),
+            2 => {
+                let l: Vec<i32> = (0..self.m as i32)
+                    .filter(|&i| self.row_cnt[i as usize] > 1 && self.sense[i as usize] != b'=' && !self.row_slack(i as usize, t.ft))
+                    .collect();
+                // +0x3e0 / +0x3e8 start over
+                self.splits.clear();
+                l
+            }
             _ => self
                 .adjacent_list(true)
                 .into_iter()
@@ -446,6 +459,8 @@ impl State {
                 if rc != 0 {
                     return rc;
                 }
+            } else if mode == 2 {
+                continue;
             } else if len < 7 {
                 for i in b..e - 1 {
                     let x = list[i];
@@ -522,7 +537,68 @@ impl State {
 
     fn par_pair(&mut self, mode: i32, scale: &[f64], x: i32, y: i32, t: &Tol) -> i32 {
         let (x, y) = (x as usize, y as usize);
-        if mode == 0 { self.pair_rows(scale[x], scale[y], x, y, t) } else { self.pair_cols(scale[x], scale[y], x, y, mode, t) }
+        match mode {
+            0 => self.pair_rows(scale[x], scale[y], x, y, t),
+            2 => self.split_pair(scale[x], scale[y], x, y, t),
+            _ => self.pair_cols(scale[x], scale[y], x, y, mode, t),
+        }
+    }
+
+    /// `3f26d9(s1, s2, st, env, r1, r2)`: opposite parallel `<` rows a (positive scale) and b with
+    /// rhs_b/s_b <= rhs_a/s_a − ft: a becomes `=` and gets a range column at model generation (`splits`), b goes
+    /// (type 14 record). With PRESPLITROWS < 0 only rows a of 100 or more entries, all continuous. No work.
+    fn split_pair(&mut self, s1: f64, s2: f64, r1: usize, r2: usize, t: &Tol) -> i32 {
+        if !(s1 * s2 <= 0.0) {
+            return 0;
+        }
+        let (a, b, sa, sb) = if s1 < 0.0 { (r2, r1, s2, s1) } else { (r1, r2, s1, s2) };
+        let rb = self.rhs[b];
+        if !(rb / sb <= self.rhs[a] / sa - t.ft) {
+            return 0;
+        }
+        if t.presplitrows < 0 {
+            if self.row_cnt[a] < 100 {
+                return 0;
+            }
+            let mut q = self.row_head[a];
+            while q != NIL {
+                let x = self.nd[q as usize];
+                if x.col >= 0 && self.vtype[x.col as usize] != b'C' {
+                    return 0;
+                }
+                q = x.nr;
+            }
+        }
+        // `399cbe`: the record, with a's live entries
+        let (mut ind, mut val) = (Vec::new(), Vec::new());
+        let mut q = self.row_head[a];
+        while q != NIL {
+            let x = self.nd[q as usize];
+            if x.col >= 0 {
+                ind.push(x.col);
+                val.push(x.val);
+            }
+            q = x.nr;
+        }
+        let lo = (sa * rb) / sb;
+        self.post.push(PostRec::Split { a: a as i32, b: b as i32, k: self.antipar, rhs: self.rhs[a], lo, ratio: sa / sb, ind, val });
+        self.splits.push((a as i32, lo));
+        self.antipar += 1;
+        self.tracker.mark_row(a as i32);
+        self.rows_removed += 1;
+        self.sense[a] = b'=';
+        let mut q = self.row_head[b];
+        while q != NIL {
+            let x = self.nd[q as usize];
+            if x.col >= 0 {
+                self.tracker.mark_col(x.col);
+                self.col_cnt[x.col as usize] -= 1;
+                self.nd[q as usize].col = -1;
+            }
+            q = x.nr;
+        }
+        self.row_cnt[b] = -2;
+        0
     }
 
     /// The single hidden slack node of a 'P'/'T' row; Err when it has more than one.

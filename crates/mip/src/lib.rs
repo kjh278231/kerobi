@@ -138,6 +138,8 @@ params! {
     impliedint: i32 = 1, "guro_par_impliedint";
     symmtrans: i32 = -1, "guro_par_symmtrans";
     predualconvtobin: i32 = -1, "guro_par_predualconvtobin";
+    /// env+0x258c GURO_PAR_PRESPLITROWS (-1: split only rows of 100+ continuous entries, MIP)
+    presplitrows: i32 = -1, "guro_par_presplitrows";
     /// env+0x2428 AggFill (-1: `3db19d` makes it 0 for MIP presolve)
     agg_fill: i32 = -1, "aggfill";
     /// env+0x256c / 0x2570 / 0x2564 GURO_PAR_PREPWLRED / PREOBJPWLRED / PREPOWER (3ff744 second phases, 6aec61)
@@ -179,9 +181,22 @@ pub fn presolve(md: &Model, p: &Params) -> Result<Model, i32> {
     let mut st = State::new(md, p);
     reduce(&mut st, p)?;
     match finish(&mut st, p) {
-        0 => Ok(st.to_model(md)),
+        0 => match split_rows(&mut st, p) {
+            0 => Ok(st.to_model(md)),
+            rc => Err(rc),
+        },
         rc => Err(rc),
     }
+}
+
+/// `3b0917` before it builds the model: opposite parallel `<` rows that `3ff744` left (+0x42c) are split
+/// (`3ff744(st, env, 0, 2, 0)`) when PRESPLITROWS > 0, or < 0 and some column is continuous. Returns a status.
+/// shortcut: env+0x2728 (unnamed, 0 at defaults) is assumed 0.
+pub fn split_rows(st: &mut State, p: &Params) -> i32 {
+    if st.antipar == 0 || p.presplitrows == 0 || (p.presplitrows < 0 && st.nint >= st.n as i32) {
+        return 0;
+    }
+    st.parallel(p, 2, 0)
 }
 
 /// 3cd406 up to model generation: the prelude, then the rounds (`driver`). Err = status (3 infeasible, ...).
