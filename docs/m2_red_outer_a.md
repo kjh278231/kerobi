@@ -12,10 +12,12 @@
 |---|---|---|---|---|---|
 | `3e5363(env, st)` | 5,451 | PREXORRED && PreCrush==0 | XOR(패리티) 행 묶음 제거, type 25 | 0 / 78 | 78/78(§2) |
 | `5431ee(st, env)` | 3,175 | round==0 && k==0 && PRETRANSRED | 이진 함의 그래프 SCC | 1 / 42(fhnw-binpack4-4) | 42/42(§7) |
-| `578fd2(st, env)` | 1,281 | PRECOEFFICIENT | `<` 행 knapsack 계수 lifting(`6aec61`) | 11 / 78 | 미확인: 호출부만 해독(§5) |
-| `57627e(st, env)` | 10,175 | PRECOEFFICIENT | implied integer, type 9 | 4 / 78 | 78/78, `575405`는 "변화 없음" 가정(§4) |
+| `578fd2(st, env)` | 1,281 | PRECOEFFICIENT | `<` 행 knapsack 계수 lifting(`6aec61`) | 11 / 78 | 65/78: `6b4738`/`6b5e11`(정확 이진 knapsack) 미포팅 13호출(§5) |
+| `57627e(st, env)` | 10,175 | PRECOEFFICIENT | implied integer, type 9 | 4 / 78 | 78/78, `575405`는 bound를 바꿀 수 있으나 미포팅(§4) |
 | `374521(st, env)` | 12,783 | DualReductions && p<3 && T4 | 쌍대 bound, 부등식→등식 | 2 / 78 | 78/78(§6) |
-| `3ff744(st, env, T6, mode, flag, 0)` | 16,559 | (spine-b) | 평행 행·열 | 16 / 234 | 232/232, 열 집계 2단계 2호출 미확인(§3) |
+| `3ff744(st, env, T6, mode, flag, 0)` | 16,559 | (spine-b) | 평행 행·열 | 16 / 234 | 237/237(열 집계, mode 2 포함, §3) |
+
+포팅 위치(crates/mip/src): `xorrows.rs`, `transred.rs`, `knapsack.rs`, `iint.rs`, `dualbnd.rs`, `parallel.rs`, 행·열 추가 `grow.rs`(`3bbf87`/`3bde19`, `Queue::grow` = `535d61`/`536369`). 확인: `tools/outer_dump.sh <dir>`로 dump를 만들고 `tools/mip_dump_check.py <fn> <dir>/*_<fn>.json`.
 
 "상태를 바꾼"은 작업량 말고 다른 필드(bound, 타입, 행렬, 카운터, 레코드)가 달라진 호출이다. PRELIMIT sweep의 변화점이 이 함수들의 카운트에 떨어져도(예: timtab1 k=25 = `3e5363`) 그 호출이 아무것도 안 바꿀 수 있다: k−1(내부 루프 끝, 추적기 레벨 2)과 k(레벨 1로 reset 뒤)의 마무리가 `538353`/`5383d0`로 다른 목록을 반올림하기 때문이다(m2_spine_b §8-1). 그래서 판정은 상태 dump로 한다.
 
@@ -223,7 +225,7 @@ return 3ba5ac(env, st, 0, 0, −1)
 ```
 - nl/th 식(LP와 같음, s = sense_c[j]): nl = ylo, nh = yhi에서 시작. s ∈ {'<','='}이면 (dm, k) = (dmin, cmin): a < −1e-8이면 k==0: nl = yhi − min(dm,0)/a, k==1 && INF <= yhi: nl = −dm/a. a > 1e-8이면 k==0: nh = ylo − min(dm,0)/a, k==1 && ylo <= −INF: nh = −dm/a. th = nh. s ∈ {'=','>'}이면 a2 = −a, dx = dmax, (tl, th) = (ylo, yhi)에서 같은 식(min(−dx, 0), k = cmax, k==1이면 dx/a2), 그다음 tl = max(tl, nl) → nl, th = min(th, nh).
 - Presolve == 2 분기(디컴파일만): 'F' 열은 cmax==0 && dmax < 1e-10 && lb > −INF면 lb, 아니면 cmin==0 && dmin > −1e-10 && ub < INF면 ub. 다른 열은 위와 같다. 끝 작업량 (μ·8)·n.
-- 불가능 인덱스: 디컴파일상 열은 +0x478, 행은 +0x470에 쓴다(LP 포트와 반대). 오라클로 확인하지 않았다.
+- 불가능 인덱스: 열은 +0x478, 행은 +0x470에 쓴다(LP 포트와 반대). asm으로 확인: 0x37bd0e에서 queue[head]의 열(r9)을 +0x478에, 0x37bb46에서 node.row(eax)를 +0x470에 쓴다.
 
 ### 6.3 오라클 확인
 - 38개 78호출 전부 일치(`s_dual.py`): 연속 열이 없어 바로 끝난 호출 11, 1단계 67. 자유로 푼 bound ub 5,955·lb 187, ylo 올림 551(유한에서 100, 무한에서 451), yhi 내림 106(71/35), `=`로 바꾼 행 71(neos-4338804-snowy 21, csched007 50).
@@ -337,7 +339,7 @@ for idx = q−1 down to 0:
 
 ## 3. `3ff744(st, env, T6, mode, flag, 0)` 평행 행·열, MIP 연결 리스트 분기 (16,559 B, `004cded0`)
 
-LP 포트 `crates/lp/src/presolve/parallel.rs`(CSR 콜백, m1_presolve §7)와 뼈대가 같다. 아래는 MIP(+0xe0 = 0, +0xfc = 1)에서 다른 점과 MIP 전용 블록이다. 3cd406은 바깥 패스에서 mode 3 flag 0, mode 1 flag 1, mode 0 flag 1 순으로 부른다(spine-b). mode 2는 `3b0917`의 행 분할(PRESPLITROWS, 이 묶음 밖), mode 4/5는 QC.
+LP 포트 `crates/lp/src/presolve/parallel.rs`(CSR 콜백, m1_presolve §7)와 뼈대가 같다. 아래는 MIP(+0xe0 = 0, +0xfc = 1)에서 다른 점과 MIP 전용 블록이다. 3cd406은 바깥 패스에서 mode 3 flag 0, mode 1 flag 1, mode 0 flag 1 순으로 부른다(spine-b). mode 2는 `3b0917`의 행 분할(§3.8), mode 4/5는 QC.
 
 ### 3.1 콜백과 플래그
 | mode | 해시 | 값 해시(척도) | 비교 | 쌍 |
@@ -396,13 +398,36 @@ PreCrush == 0, 둘 다 정수, s_x/s_y가 정수(frac ≤ 1e-10, `v − floor(v 
 
 ### 3.5 2단계
 - 행(iv41 ≠ 0): 각 묶음(크기 ≥ 2)에서 살아 있는 행을 모아 P/T 행이 하나라도 있으면 `3fa2f6`(1,338줄, 해독 안 함)에 넘긴다. **38개에서 이런 묶음은 한 번도 없었다.**
-- 열(f0 ≠ 0): 크기 ≥ 2 묶음마다 원소를 차례로 보며 col_cnt == 1인 살아 있는 열이 나오면 그 묶음을 버리고(그 자리까지), `W += ((t − b)·μ)·3`(t = 멈춘 위치). col_cnt ≥ 2인 살아 있는 열이 2개 이상이면 집합으로 모은다. 끝에 `W += (nb·2)·μ`(nb = 묶음 수). 집합이 있으면 **새 열과 새 `=` 행으로 묶음을 하나의 변수로 집계**한다(`3bbf87` 열 추가, `3bde19` 행 추가, `3bea24` 항목 추가, `3c3abf`, `370047`; 크기 ≥ 3이고 `(len−1)·col_cnt − 1 − len > AggFill + 10`일 때). 38개에서 exp-1-500-5-5 2번째, mik-250-20-75-4 2번째 호출이 여기 온다(246개 집합). **해독 개요만 있고 모형·확인은 안 했다.**
+- 열(f0 ≠ 0): 크기 ≥ 2 묶음마다 원소를 차례로 보며 col_cnt == 1인 살아 있는 열이 나오면 그 묶음을 버리고(그 자리까지), `W += ((t − b)·μ)·3`(t = 멈춘 위치). col_cnt ≥ 2인 살아 있는 열이 2개 이상이면 집합으로 모은다. 끝에 `W += (nb·2)·μ`(nb = 묶음 수). 집합이 있으면 **새 열과 새 `=` 행으로 묶음을 하나의 변수로 집계**한다. 38개에서 exp-1-500-5-5 2번째, mik-250-20-75-4 2번째 호출이 여기 온다(asm 0x3d0767–0x3d1940, 포트와 일치).
+```
+W += (n·0.5)·μ                                   // 척도 배열 복사, n = 그때의 열 수
+집합마다(L = 크기, cols = 살아 있는 원소, 묶음 순서):
+  L < 3 또는 AggFill+10 >= ((L−1)·col_cnt[cols0] − 1) − L(AggFill −1은 0)이면 건너뜀
+  s = 척도[c]: best = |s|가 가장 큰 열(차 > 1e-13, 또는 차 >= −1e-13이고 s > 0이면 바꿈), smin = minsd, allint
+  W += (L+L)·μ; best 없음, smax < 1e-10, smax > smin·1e6이면 건너뜀
+  base = s_best; allint이고 g = a7bea8(|s|)가 [0.001, 1000]이면 base = ±g(s_best 부호)
+  z = 3bbf87(1)                                   // 빈 'C' 열 [0, INF], 추적기 레벨 0 목록 끝 + 표시
+  best의 살아 있는 노드: col = z, val = (base/s_best)·val, 3c3abf(행, 노드, best, 새, 옛), 행 표시, row_cnt −= L−1
+  W += (방문·3)·μ; col_head[z] = col_head[best], col_head[best] = NIL, col_cnt[z] += col_cnt[best], col_cnt[best] = 0
+  원소마다 모든 노드 col = −1, col_cnt = 0, W += (방문+방문)·μ;  W += (L·3)·μ
+  f = minsd(maxsd(1, max_k 1/|s_k/base|), |base|·10)
+  r = 3bde19(1); sense[r] = '='; 3bea24(−f, r, z)
+  원소마다 t = s/base: int &= vtype≠'C' && t − floor(t+1e-10) ≤ 1e-10; 3bea24(f·t, r, c);
+    lo/hi += (t>0 ? lb,ub : ub,lb)·t (gdn/gup, ±1e30이면 무한으로 고정); 열 표시
+  W += (L·12)·μ; int이면 vtype[z] = 'I', lo = ceil(lo − ift), hi = floor(hi + ift); lb/ub[z] = lo/hi
+  370047(r); lo ≤ −1e30 또는 hi ≥ 1e30이면 z의 살아 있는 노드 행마다 370047, W += (방문+방문)·μ
+W += (집합 수·2)·μ
+```
+`3bde19`: 빈 `<` 행, rhs 0, activity 0, 추적기 `536369`(레벨 0 목록 끝, 표시). 새 행·열은 이름이 없고 MPS에는 `R<번호>`/`C<번호>`(presolve 모델 안 번호)로 나온다(mik: R75, C266).
 
 ### 3.6 마무리
 `+0x42c = max(진입 값, 지금 값)`. mode 0(MIP)이면 후보 목록(정렬된 순서)의 'P'/'T' 행마다 col < −1 노드를 `col = −2 − col`로 되살리고 row_cnt += 1, sense를 'T' → '=', 'P' → '<'로.
 
+### 3.8 mode 2 (`3b0917`, 모델 생성)
+`3b0917`: +0x42c ≠ 0이고 (+0xfc ≠ 0 또는 PreCrush ≤ 1)이고 PRESPLITROWS(env+0x258c) ≠ 0, env+0x2728 == 0, (PRESPLITROWS > 0 또는 +0xf4 < n)이면 `3ff744(st, env, 0, 2, 0)`. mode 2: +0x42c = 0(끝의 max도 0 기준), 후보 = 모든 행 중 row_cnt > 1, sense ≠ '=', `36dce1` 아님. +0x3e0/+0x3e8 새로 할당. 크기 2 묶음만 쌍 함수 `3f26d9`(작업량 없음): s1·s2 ≤ 0이고 a(양 척도)·b에서 rhs_b/s_b ≤ rhs_a/s_a − ft이면, PRESPLITROWS < 0일 때 row_cnt[a] < 100이거나 a에 'C' 아닌 열이 있으면 0. 아니면 type 14 `399cbe`(data {a, b, k, cnt, rhs_a, s_a·rhs_b/s_b, s_a/s_b, ind @+0x38, val @+0x40+((4cnt−1)&!7)}), +0x3e0[k] = a, +0x3e8[k] = s_a·rhs_b/s_b, +0x42c++, a 표시, +0x404++, sense_a = '=', b의 살아 있는 노드마다 열 표시·col_cnt −1·col = −1, row_cnt[b] = −2. 모델 생성은 살아 있는 열 뒤에 분할마다 열('C', 비용 0, [0, rhs_a − +0x3e8[k]], 행 a에 1)을 붙인다. 기본값 38개: ic97_potential, neos-3046615-murg, supportcase26에서 불리지만 분할은 없다(100 미만 또는 정수 열).
+
 ### 3.7 오라클 확인
-- 38개 237호출(3cd406 안 234 + `3b0917` mode 2 3) 중 mode 0/1/3 232호출이 모두 일치(`s_par.py`). 빠진 5호출: mode 2 3개(이 묶음 밖), 열 집계 2단계 2개(exp-1-500-5-5#2, mik#2).
+- 38개 237호출(3cd406 안 234 + `3b0917` mode 2 3) 모두 포트와 일치(`mip_dump_check.py`).
 - 지난 경로: 쌍 3,581, 열 경우 0 667·병합 5·경우 5 4, 행 '<''<' 0번 1,888·1번 763·3번 47, P-P slack 병합 60, T-T 2, 숨긴 행 P 1,742·T 465. 열 경우 1–4와 고정, 행 '=' 쌍, T/'='·T/'<', 2단계 행(`3fa2f6`)·열 집계는 오라클을 지나지 않았다.
 
 ## 4. `57627e(st, env)` implied integer, 정수 등식 (10,175 B, `005b8f70`)
@@ -447,36 +472,47 @@ n = 0 → 0, n = 1 → |v0|. mn = min|v|, mx = max|v|(같으면 앞 것). mx > 2
 
 ### 4.3 오라클 확인
 - 38개 78호출 전부 일치(`s_iint.py`). IMPLIED_INT 495번(csched007 246, csched008 238, markshare2 7, markshare_4_0 4: vtype 'I'와 type 9 레코드, d = 1이라 bound·계수는 그대로), 클래스 분석 251번 → `575405` 251번(cov2의 호출 수와 같다).
-- **`575405`는 해독하지 않았다.** 38개에서 bound를 바꾼 적이 없어(덤프에 bound 변화 없음) 모형은 "변화 없음"으로 두었다. `574764`, `3c5996`, 고정 열 접기, 계수 0, 행 나누기(g ≠ 1), 불가능 반환은 오라클을 지나지 않았다. a7bea8의 Euclid·연분수 가지는 gmu-35-40/50에서 지났다.
+- **`575405`는 해독하지 않았다.** 디컴파일을 보면 클래스 합의 bound를 좁혀 클래스 lo/hi 배열에 쓰고 불가능 플래그(param_1[5])와 개수(param_1[6])를 세운다. 즉 bound를 **바꿀 수 있다**. 38개에서는 바꾼 적이 없어(덤프에 bound 변화 없음) 포트는 아무것도 하지 않는다(`shortcut:`). `571c44`와 함께 포팅해야 한다. `574764`는 round-end의 `State::mod_subst`(roundend.rs)로 포팅되어 있다. 57627e의 두 호출 자리(0x4bb04a 클래스 대입, 0x4bb3a7 가장 작은 계수 대입)는 38개에서 지나지 않아 인자 해독만 일부 하고 연결하지 않았다(`shortcut:`). `574764`, `3c5996`, 고정 열 접기, 계수 0, 행 나누기(g ≠ 1), 불가능 반환은 오라클을 지나지 않았다. a7bea8의 Euclid·연분수 가지는 gmu-35-40/50에서 지났다.
 
-## 5. `578fd2(st, env)` knapsack 계수 강화 (1,281 B, `005bea50`) — 호출부만 해독
+## 5. `578fd2(st, env)` knapsack 계수 강화 (1,281 B, `005bea50`)
 
-### 5.1 호출부 (decompile·asm으로 읽음, 오라클 미확인)
+### 5.1 호출부
 ```
-(cnt, rows) = 538f30(tr, st)                           // 레벨 1 행 목록(캐시, 작업량은 538f30 안)
-k_chg = 0
-for t in 0..cnt:
-  i = rows[t]
-  if !(row_cnt[i] > 0 && sense[i] != '='): continue
-  k = 0; 행 리스트의 살아 있는 노드마다 ind[k] = col(+0x390), val[k] = a(+0x398), k++
-  W += (μ·5)·row_cnt[i]
-  rc = 6aec61(env, &k, ind, val, &rhs[i], lb, ub, vtype, PREPOWER(env+0x2564), 2, &changed, W); rc ≠ 0이면 반환
-  if changed:
-    chg[k_chg++] = i(+0x3b8); 53763f(i)
-    p < k마다 tmp(+0x3b0)[ind[p]] = val[p]; W += (μ·3)·k
-    row_cnt[i] = k(새 개수)
-    행 리스트의 살아 있는 노드마다 nv = tmp[col], tmp[col] = 0; |a − nv| > 1e-10이면 5379f1(col); nv == 0이면 col_cnt−−, col = −1, 아니면 a = nv
+(cnt, rows) = 538f30(tr, st);  k_chg = 0;  tmp = 열 크기 0 배열(+0x3b0)
+for i in rows: row_cnt[i] > 0 && sense[i] != '='일 때
+  ind/val = 행 리스트의 살아 있는 노드;  W += (μ·5)·row_cnt[i]
+  rc = 6aec61(env, &k, ind, val, &rhs[i], lb, ub, vtype, PREPOWER(env+0x2564), 2, &changed, W)   // W 포인터에 μ 없이 더한다
+  changed면: chg에 i, 행 표시, tmp[ind] = val, W += (μ·3)·k, row_cnt[i] = k,
+    행의 살아 있는 노드마다 nv = tmp[col], tmp[col] = 0, |a − nv| > 1e-10이면 열 표시, nv == 0이면 col_cnt −1·col = −1 아니면 a = nv
     W += (μ·4)·row_cnt[i]
-W += (cnt·6)·μ
-if k_chg: st+0x3fc += k_chg; 370047(st, env, k_chg, chg)
-return 0
+W += (cnt·6)·μ;  k_chg > 0이면 +0x3fc += k_chg, 370047(chg)
 ```
-`6aec61`은 rhs를 직접 고칠 수 있다(&rhs[i]). 변경은 계수(+0x3fc), rhs, 0이 된 항목 제거로 나타난다(gen-ip054, neos-2657525-crna, csched008#2, gmu-35-40/50의 11호출).
 
-### 5.2 `6aec61` (14,706 B, common 모듈, 작업량 포인터를 받는다)
-cut 모듈과 함께 쓰는 knapsack 행 강화 루틴이다. 첫머리: `a7cec0(−1, k, ind, val, lb, ub, W)`로 행의 최대 activity를 구해 rhs와 비교(여유가 −ft 이상이면 끝), 고정 열(ub−lb < 1e-10)과 기여가 작은 열(`0.01·ft > (ub−lb)·|a|·k`)을 rhs로 옮기고 목록을 줄인다, 계수 gcd(`a7bea8`), param_10(=2)에 따라 `6b33dd`(1,695 B), `6b4738`(3,858 B), `6b5e11`(16,193 B, `6b56d2`·`aaedd9` 사용), `a7c752`(1,547 B), `882313`(207 B)을 부른다. PREPOWER(0)는 끝부분 분기(`param_9 == 0`)를 고른다.
-38개 기본값 호출 수(`outer/bin/cnto.js`, 반환 주소로 구분): `6aec61` 20,661(34개 모델), 그 안의 `a7cec0` 20,661 + 12,412, `6b33dd` 154,798(24개), `a7bea8` 2,779, `a7c752` 2,379, `6b5e11` 96(5개), `6b56d2` 1,947, `6b4738` 8(3개).
-**해독하지 않았다.** 다음 작업: `6aec61` 본체와 `6b33dd`·`6b5e11`·`6b4738`·`a7c752`·`a7cec0`·`882313`의 asm 해독, 모형(`s_lift.py`)으로 78호출 확인. 총 약 42 KB.
+### 5.2 `6aec61` (p10 = 2, p9 = 0 경로; 작업량은 모두 W에 μ 없이)
+보조: `a7cec0(s)` = Σ bound·(s·a)(s·a ≤ 0이면 ub, 아니면 lb, 무한이면 −1e100), W += 3·방문. maxact = −a7cec0(−1), minact = a7cec0(1), 1e101 = 낡음. drop = 고정 열(ub−lb < 1e-10)과 `ft·0.01 > (d·|a|)·k`인 열을 rhs로(a > 0 → lb, 아니면 ub), |a| < 1e-10 제거, W += 4k. compact = |a| ≤ 1e-10 제거, W += 3k. cont(local_38) = 1 연속 열 있음, 0 없음, −1 모름.
+```
+maxact; −ft ≤ rhs − maxact면 중복(rhs = 0, k = 0, changed)
+drop(있으면 changed, maxact 다시); 다시 중복 검사
+앞쪽 연속 열 수 c(cont = 1), W += 3c; 모두 연속이면 끝
+rhs 정수 && cont≠1: 모든 |a|가 같고(ft·d 안) 정수면 rhs/d 정수일 때 끝(W += 2·본 수)
+2 < k ≤ PREKNAPLIFTLEN(−1 → 512) && cont≠1: 모두 [0,1] 이진이면 6b4738(k<11) / 6b5e11   ← 미포팅
+주 루프(최대 10회, 바뀌는 동안):
+  A  s = maxact − rhs > 0: d = 최소 |a|(연속 있으면 0); 정수 열마다 δ = |a|>s ? |a|−s : (s−100ft ≤ |a| 또는 d+|a| ≤ s ? 0 : min(|a|−s/2, |a|+(d−s))),
+     δ > 1e-10이면 a를 0 쪽으로 δ, rhs −= ub·δ(a>0) / rhs += lb·δ; W += 3k
+  B  k > 2, minact ≥ −1e10, s2 = rhs − minact ∈ [1000ft, 1e10]: dmin(최소 |a|), m2 = min(2dmin, |a| > dmin+ft인 최소 |a|)(W += k);
+     계수 루프(W += 5k): 연속·작은 정수 열은 sumC += (ub−lb)·|a|, s2−ft보다 큰 계수 처리, 조건이 맞으면 sumC로 rhs/계수 재구성(W += 3k)
+  C  모두 정수: g = a7bea8(val)(1e4 초과면 계수가 정수일 때 1), rhs/g − ft > floor(100ft + rhs/g)이면 rhs = floor, 계수 /g 반올림
+  D  모두 정수·lb ≥ 0: i = 1..9, f = −(i + min(0.01, 1000ft))/slack, r = rhs·f − maxact·f ∈ [ft, 1e8], c2 = ceil(r);
+     모든 계수가 ceil(|f·a|−1e-10)·(r/c2) 근처이고 하나라도 엄격하면 계수 = ±ceil(...), rhs = −c2 + Σ a·(a≤0 ? lb : ub), compact
+  E  |minact| < 1e6: amin, amax, sumC(연속 열의 |a·(ub−lb)|), W += k; 6b33dd(1, sumC), 6b33dd(i/amax, sumC) i=1..5,
+     6b33dd(i/(2·amin), sumC) i=1..10, 바뀌면 멈춤
+a7c752 단계: k > 2, cont≠1, 모든 계수가 정수이고 |a| ≤ 2e7이고 같지 않으면 a7c752(다른 계수들의 gcd, 세그먼트 트리,
+  W += 2·size, 2·size, 4·size), 처음으로 gcd > 1인 정수 열 t에서 6b33dd(1/gcd_t, 0) 한 번, W += 3t
+changed면 drop 한 번 더(cont 1 → −1)
+s = maxact − rhs: ft < s < 1e10이면 6b33dd(1/s, 0)
+```
+`6b33dd(f, sumC)`: k < 2, f ∉ [1e-4, 1000], sumC·f ≥ 1이면 끝. r = rhs·f − act·f(f ≤ 0이면 maxact, 아니면 minact) ∈ [ft, 1e8]. fl = floor(r + 1e-10), fr = r − fl. 앞에서부터 합(연속: |fa|·(ub−lb), 정수: 소수부 fa ≥ fr + 1e-10이면 (1−fa)·d를 합과 fr에, 아니면 d·fa)이 1 미만인 동안, W += 5t. fr ∉ (0.001, 0.999)이거나 fr − 합 ≤ min(f,1)·(−ft)이면 끝. rhs = fl, 계수 = 반올림(연속 0, fa ≥ fr2+1e-10이면 |fa|+1−fa), W += 5k, rhs += Σ a·(a ≤ 0 ? ub : lb), W += 3k, compact, cont = 0, 캐시 낡음.
+- 확인: 78호출 중 65 일치. 다른 13호출(csched007#2, csched008#2, gmu-35-40#1–4, gmu-35-50#1–4, nidda#1, ran14x18#1–2)은 `6b4738`(3,858 B, 부분합 열거)/`6b5e11`(16,193 B, `6b56d2`·`aaedd9`)에 가는 행이 있다. 미포팅(`shortcut:`). PREPOWER ≠ 0 블록(0x5863aa–)도 미포팅.
 
 ## 9. 도구와 확인 요약 (세션 스크래치 `outer/`)
 
@@ -492,14 +528,14 @@ cut 모듈과 함께 쓰는 knapsack 행 강화 루틴이다. 첫머리: `a7cec0
 | 함수 | 호출 | 일치 | 오라클을 지나지 않은 것 |
 |---|---|---|---|
 | `3e5363` | 78 | 78 | 축소 전부(레코드 25, 행 삭제, 고정) |
-| `3ff744` | 237 | 232(+ mode 2 3, 열 집계 2 제외) | 열 경우 1–4·고정·비유계, 행 `=`쌍·T/=·T/<, `3fa2f6`, 열 집계 |
+| `3ff744` | 237 | 237 | 열 경우 1–4·고정·비유계, 행 `=`쌍·T/=·T/<, `3fa2f6`, mode 2 분할 |
 | `57627e` | 78 | 78 | `575405`(해독 안 함, 변화 없음 가정), `574764`, 고정 열 접기, g ≠ 1 |
-| `578fd2` | 78 | – | 해독 안 함(`6aec61`) |
+| `578fd2` | 78 | 65 | `6b4738`/`6b5e11` 13호출, PREPOWER ≠ 0 |
 | `374521` | 78 | 78 | 고정, 불가능, Presolve 2 |
 | `5431ee` | 42 | 42 | SCC 원소(`3bb6fe`), PRETRANSRED 2 |
 
 ## 10. 미해결
-1. `578fd2`의 `6aec61` 묶음(§5.2), `57627e`의 `575405`/`571c44`, `3ff744`의 열 집계(`3bbf87`/`3bde19`/`3bea24`)와 `3fa2f6`, `5431ee`의 `3bb6fe`.
-2. `3e5363`의 축소 경로는 합성 모델(3·4 변수 XOR, pivot이 다른 행에 한 부호로 있는 경우)로 확인할 것(`dumpo.js`는 `.lp` 경로를 받는다).
-3. `374521`의 불가능 인덱스(+0x470/+0x478가 LP 포트와 반대로 읽힘)는 asm 레지스터 추적으로 확인할 것.
-4. 공유 보조 함수(`3de18e`, `3dd6f1`, `3dcc78`, `39ab33`, `53802c`, `370047`, `3c3abf`)는 inner 노트의 정의를 썼다. 포팅 때 inner 쪽 구현을 그대로 부른다.
+1. `578fd2`: 정확 이진 knapsack `6b4738`/`6b5e11`(+`6b56d2`)을 포팅해야 gmu-35-40/50(sweep k=28 첫 불일치), csched007/8, nidda, ran14x18의 13호출이 맞는다.
+2. `57627e`: `575405`/`571c44`(bound를 바꿀 수 있음), `574764` 두 호출 자리 연결(`State::mod_subst`).
+3. `3ff744`의 `3fa2f6`, `5431ee`의 `3bb6fe`(SCC 원소 집계): 38개에서 지나지 않음.
+4. 합성 XOR 모델(`tools/outer_syn/xor1.lp`, `xor3.lp`)로 `3e5363` 축소 경로 확인됨(§2).
