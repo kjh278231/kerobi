@@ -7,8 +7,6 @@ use crate::state::State;
 use crate::Params;
 
 impl State {
-    /// `594c0c` (PRESS2MIP)
-    pub fn ss2mip(&mut self, p: &Params) -> i32 { 0 }
     /// `419ffc` (PRECOVERS)
     pub fn covers(&mut self, p: &Params) -> i32 { 0 }
     /// `5a4d8b` (PREDERIVED)

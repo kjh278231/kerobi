@@ -286,6 +286,7 @@ impl State {
             "5ab429" => (self.r5ab429(p), 0),
             "59c193" => (self.vub_lift(p), 0),
             "55a779" => (self.agg_pass(p), 0),
+            "594c0c" => (self.ss2mip(p), 0),
             "5577ba" => {
                 // nodes 20000 (Symmetry < 2); the timer-24 work limit is not in the dump: none
                 let mut f4 = 0;

@@ -47,6 +47,7 @@ mod setpack;
 mod sparsify;
 pub mod state;
 mod subst;
+mod ss2mip;
 mod stubs;
 mod symmetry;
 mod vublift;
