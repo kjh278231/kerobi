@@ -295,6 +295,7 @@ impl State {
             "dual_conv_bin" => (self.dual_conv_bin(p), 0),
             "dual_fix_empty_cols" => (self.dual_fix_empty_cols(p), 0),
             "implied_int_scale" => (self.implied_int_scale(p), 0),
+            "470936" => (self.sparsify(p, Default::default()), 0),
             "47c445" => (self.dep_rows(p, 2), 0),
             "5466a7" => (self.merge_vubs(p, Default::default()), 0),
             "45feaa" => (self.two_rows(p, 1, Default::default()), 0),

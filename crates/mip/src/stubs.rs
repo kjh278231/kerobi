@@ -30,8 +30,6 @@ impl State {
     pub fn components(&mut self, p: &Params, ncomp: &mut i32) -> i32 { 0 }
     /// `521497(st, env, T22)` (PREBICONNECTED)
     pub fn biconnected(&mut self, p: &Params) -> i32 { 0 }
-    /// `470936(st, env, T20, 0, 0)` sparsify
-    pub fn sparsify(&mut self, p: &Params) -> i32 { 0 }
     /// `57999f` (return value ignored)
     pub fn r57999f(&mut self, p: &Params) {}
 }

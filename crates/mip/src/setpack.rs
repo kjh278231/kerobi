@@ -164,7 +164,7 @@ impl State {
 
     /// `469c12(coef, env, st, j, r)`: a new node from the free list at the head of column j's and row r's lists.
     /// shortcut: an empty free list (`3b85ea` growing the pool) is not ported; the spare nodes never run out here.
-    fn add_node(&mut self, j: usize, r: usize, v: f64) {
+    pub(crate) fn add_node(&mut self, j: usize, r: usize, v: f64) {
         assert!(self.free != NIL, "52be10: node pool growth (3b85ea) not ported");
         let at = self.free;
         self.free = self.nd[at as usize].nc;

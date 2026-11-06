@@ -84,6 +84,9 @@ def compare(got, want, enter_recs, show=12):
             b = int(b)
         if isinstance(b, list):
             for i, (x, y) in enumerate(zip(a, b)):
+                # dead rows' activities are stale memory: with --after it comes from another process
+                if k.startswith("act_") and got["row_cnt"][i] < 0 and want["row_cnt"][i] < 0:
+                    continue
                 ck(f"{k}[{i}]", x, y)
         else:
             ck(k, a, b)

@@ -38,6 +38,7 @@ mod probe_apply;
 pub mod probe_engine;
 mod roundend;
 mod setpack;
+mod sparsify;
 pub mod state;
 mod subst;
 mod stubs;

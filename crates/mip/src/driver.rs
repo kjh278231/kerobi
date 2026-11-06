@@ -596,7 +596,8 @@ impl Driver<'_> {
         }
         // the component block (ncomp > 0) only treats SOS, QC and NL parts: nothing for linear models
         if p.presolve != 0 && p.presparsify != 0 && self.ok(20) {
-            rc(self.timed(20, |s, p| s.sparsify(p)))?;
+            let t = self.t[20];
+            rc(self.timed(20, |s, p| s.sparsify(p, t)))?;
             self.count("sparsify")?;
         }
         self.budget();
