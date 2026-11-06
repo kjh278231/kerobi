@@ -23,6 +23,7 @@ mod colpass;
 mod compress;
 mod dominate;
 mod doubleton;
+mod dualbin;
 mod dualbnd;
 mod dualagg;
 mod dualeq;
