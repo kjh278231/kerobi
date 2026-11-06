@@ -28,6 +28,9 @@ pub enum PostRec {
     T11 { r: i32, j: i32, a: f64 },
     /// type 10 (`3a07b5`): x_j = d1·x_j' + d2·x_k + d3 (`40d2bc` mode 1: column k cancelled with pivot j).
     T10 { j: i32, k: i32, d1: f64, d2: f64, d3: f64 },
+    /// type 24 (`3a008f`, PREDERIVED): column `j` (bounds, type) left with its rows, each as sense, rhs and live
+    /// entries (`beg` has rows + 1 entries); +0x1c is -1 and +0x20 is 0.0 (the LP twin's cost-move fields).
+    T24 { j: i32, lb: f64, ub: f64, vt: u8, beg: Vec<i32>, sense: Vec<u8>, rhs: Vec<f64>, ind: Vec<i32>, val: Vec<f64> },
 }
 
 /// Data bytes of a record as Gurobi lays them out: padding bytes are 0 here (Gurobi leaves arena garbage) and
@@ -52,6 +55,7 @@ impl PostRec {
             PostRec::Split { .. } => 14,
             PostRec::T10 { .. } => 10,
             PostRec::T11 { .. } => 11,
+            PostRec::T24 { .. } => 24,
         }
     }
 
@@ -166,6 +170,55 @@ impl PostRec {
                 for &x in val {
                     f64b(&mut b, x);
                 }
+                for &x in rhs {
+                    f64b(&mut b, x);
+                }
+            }
+            PostRec::T24 { j, lb, ub, vt, beg, sense, rhs, ind, val } => {
+                // `3a008f`: beg at +0x60, ind at +0x68+Pb, val at +0x70+Pb+Pi, sense right after val, rhs at
+                // sense+8+((rows − 1) & !7); Pb = (4·rows + 3) & !7, Pi = (4·nz − 1) & !7; +0x38 is never written
+                let (nr, nz) = (sense.len(), ind.len());
+                let pb = (4 * nr + 3) & !7;
+                let o_ind = 0x68 + pb;
+                let o_val = 0x70 + pb + ((4 * nz).saturating_sub(1) & !7);
+                let o_sense = o_val + 8 * nz;
+                let o_rhs = o_sense + 8 + (nr.saturating_sub(1) & !7);
+                let fill = |b: &mut Vec<u8>, pads: &mut Vec<(usize, usize)>, to: usize| {
+                    if b.len() < to {
+                        pads.push((b.len(), to));
+                        b.resize(to, 0);
+                    }
+                };
+                i32b(&mut b, *j);
+                pad(&mut b, &mut pads, 4);
+                f64b(&mut b, *lb);
+                f64b(&mut b, *ub);
+                b.push(*vt);
+                pad(&mut b, &mut pads, 3);
+                i32b(&mut b, -1);
+                f64b(&mut b, 0.0);
+                i32b(&mut b, nr as i32);
+                pad(&mut b, &mut pads, 4);
+                ptrs.push(b.len());
+                b.extend_from_slice(&0x60u64.to_le_bytes());
+                pad(&mut b, &mut pads, 8);
+                for o in [o_sense, o_rhs, o_ind, o_val] {
+                    ptrs.push(b.len());
+                    b.extend_from_slice(&(o as u64).to_le_bytes());
+                }
+                for &k in beg {
+                    i32b(&mut b, k);
+                }
+                fill(&mut b, &mut pads, o_ind);
+                for &k in ind {
+                    i32b(&mut b, k);
+                }
+                fill(&mut b, &mut pads, o_val);
+                for &x in val {
+                    f64b(&mut b, x);
+                }
+                b.extend_from_slice(sense);
+                fill(&mut b, &mut pads, o_rhs);
                 for &x in rhs {
                     f64b(&mut b, x);
                 }

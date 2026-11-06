@@ -23,6 +23,7 @@ mod colpass;
 mod components;
 mod compress;
 mod deprow;
+mod derived;
 mod disagg;
 mod dominate;
 mod doubleton;
