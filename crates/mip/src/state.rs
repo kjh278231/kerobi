@@ -499,7 +499,8 @@ impl State {
                 row_map[i] = q.rhs.len() as i32;
                 q.rhs.push(self.rhs[i]);
                 q.row_sense.push(self.sense[i]);
-                q.constr_names.push(md.constr_names.get(i).cloned().unwrap_or_default()); // rows added by presolve have no name
+                // rows added by presolve have no name; Gurobi writes them as R<index> (mik-250-20-75-4: R75)
+                q.constr_names.push(md.constr_names.get(i).cloned().unwrap_or_else(|| format!("R{}", q.rhs.len() - 1)));
             }
         }
         for j in 0..self.n {
@@ -525,7 +526,8 @@ impl State {
             // models, e.g. enlight_hard at PRELIMIT 6 after `37168e`; fixed integers stay 'I')
             let int01 = self.vtype[j] == b'I' && self.lb[j] == 0.0 && self.ub[j] == 1.0;
             q.vtype.push(if int01 { b'B' } else { self.vtype[j] });
-            q.var_names.push(md.var_names.get(j).cloned().unwrap_or_default()); // likewise added columns
+            // likewise added columns: C<index> (mik-250-20-75-4: C266)
+            q.var_names.push(md.var_names.get(j).cloned().unwrap_or_else(|| format!("C{}", q.obj.len() - 1)));
         }
         for &(i, lo) in &self.splits {
             q.var_names.push(format!("C{}", q.obj.len()));
