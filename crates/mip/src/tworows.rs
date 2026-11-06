@@ -885,3 +885,28 @@ fn add_act(l: f64, u: f64, ar: f64, ai: f64, s: &mut [&mut f64; 4], k: &mut [&mu
         if ai <= 0.0 { *k[2] += 1 } else { *k[3] += 1 }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{knap, vsum, Side};
+
+    #[test]
+    fn knapsack_takes_cheapest_ratio_first() {
+        // need 4: all of w=2 at ratio 1, then 2 of w=3 at ratio 2 -> 2 + 4
+        let k = Side { s: 0.0, b: 4.0, rmax: 0.0, inf: false, w: vec![1.0, 2.0, 3.0], r: vec![3.0, 1.0, 2.0], base: 0 };
+        let mut w = 0.0;
+        assert_eq!(knap(k, &mut w, 1.0), 6.0);
+        // infeasible: not enough weight
+        let k = Side { s: 0.0, b: 7.0, rmax: 0.0, inf: false, w: vec![1.0, 2.0, 3.0], r: vec![3.0, 1.0, 2.0], base: 0 };
+        assert_eq!(knap(k, &mut w, 1.0), 1e100);
+    }
+
+    #[test]
+    fn vector_sum_matches_scalar_on_exact_values() {
+        let p: Vec<f64> = (1..=19).map(|x| x as f64).collect();
+        for addr in 0..2 {
+            assert_eq!(vsum(0.5, &p, addr, false), 190.5);
+            assert_eq!(vsum(0.5, &p, addr, true), -189.5);
+        }
+    }
+}
