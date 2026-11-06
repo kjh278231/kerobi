@@ -4,6 +4,7 @@
 //! type, integer columns and rows are split by their integer entry counts, and when the hash refinement stalls with
 //! integer columns `5507cb` may individualize them. Cell ids, queue order, sort tie order, the random stream and the
 //! work follow the original.
+use crate::post::PostRec;
 use crate::state::{State, NIL};
 use crate::subst::sort_asc;
 use crate::Params;
@@ -404,6 +405,38 @@ impl Side {
         }
     }
 
+    /// `551cc0`'s output partition: cells renumbered in the order of their lowest item, items grouped by cell and
+    /// sorted within (`a9d3ef`). W += 3 per item, then 2 per item. Returns (cell, perm).
+    fn renumber(&self, w: &mut f64) -> (Vec<i32>, Vec<i32>) {
+        let len = self.cell.len();
+        let mut cell = self.cell.clone();
+        let (mut nc, mut np) = (vec![0i32; len], Vec::with_capacity(len));
+        let mut id = 0;
+        for x in 0..len {
+            let c = cell[x];
+            if c < 0 {
+                continue;
+            }
+            let s = self.start[c as usize] as usize;
+            let (g0, mut p) = (np.len(), s);
+            while p < len {
+                let y = self.perm[p] as usize;
+                if cell[y] != c {
+                    break;
+                }
+                cell[y] = -1;
+                nc[y] = id;
+                np.push(y as i32);
+                p += 1;
+            }
+            *w = (p - s) as f64 * 3.0 + *w;
+            id += 1;
+            np[g0..].sort_unstable();
+        }
+        *w = len as f64 + len as f64 + *w;
+        (nc, np)
+    }
+
     /// whether the refinement should go on: #cells * ratio < #items, counting live items only
     fn open(&self, live: usize, flags: i32, ratio: f64) -> bool {
         (((self.ncell - flags - self.removed) as f64) * ratio) < live as f64
@@ -707,6 +740,9 @@ impl Timer {
     }
 }
 
+/// `551cc0`'s outputs for local_f4 = 1, 2 or -1: column cell and order, row cell and order.
+type Parts = (Vec<i32>, Vec<i32>, Vec<i32>, Vec<i32>);
+
 /// The integer mode of `551cc0` (local_a8): the extra cell stacks and arrays `5507cb` works with.
 struct IntMode {
     /// local_1a8 / local_1a0 (columns), local_198 (rows), local_190 (columns), local_188 (rows)
@@ -730,9 +766,8 @@ impl State {
     /// `5577ba(env, st, nodes, 1, &f4; 1.01, limit)`: the column CSR from the column lists (live nodes, list order,
     /// no work), then `551cc0`. Returns the status (0); `f4` gets local_f4: 1 or 2 for an equitable partition, else
     /// 0, -1 or -2.
-    /// shortcut: with f4 > 0 the original merges the columns of each cell (type 19 records `3a0a17`, `564ce0`) and
-    /// drops all but one row per cell (`397538`); no default run of the 38 models gets f4 > 0 (`54d420` never
-    /// runs), so that block is not ported.
+    /// With f4 > 0 the columns of each cell merge into its first (type 19 record `3a0a17`, then `564ce0`) and all
+    /// but one row of each row cell go (`397538`).
     pub fn symmetry(&mut self, _p: &Params, nodes: i32, limit: f64, f4: &mut i32) -> i32 {
         let n = self.n;
         let mut beg = vec![0i64; n + 1];
@@ -752,16 +787,81 @@ impl State {
         beg[n] = ind.len() as i64;
         let mut w = self.work;
         let prelimit = Cell::new(self.prelimit);
-        *f4 = self.detect(beg, ind, val, nodes, limit, 1.01, &prelimit, &mut w);
+        let mut parts = None;
+        *f4 = self.detect(beg, ind, val, nodes, limit, 1.01, &prelimit, &mut parts, &mut w);
         self.work = w;
         self.prelimit = prelimit.get();
+        if *f4 <= 0 {
+            return 0;
+        }
+        let Some((cc, cp, rc, rp)) = parts else { return 0 };
+        // each cell's columns merge into its first (type 19 record, `564ce0`), each cell's rows but the first go
+        let (n, m) = (self.n, self.m);
+        let mut map = vec![-1i32; n];
+        let mut any = false;
+        let mut p = 0;
+        while p < n {
+            let rep = cp[p];
+            let c = cc[rep as usize];
+            let mut q = p + 1;
+            while q < n && cc[cp[q] as usize] == c {
+                map[cp[q] as usize] = rep;
+                q += 1;
+            }
+            if 2 <= q - p {
+                self.post.push(PostRec::T19 { rep, cols: cp[p..q].to_vec() });
+                any = true;
+            }
+            p = q;
+        }
+        if !any {
+            return 0;
+        }
+        let (rc0, _) = self.substitute(&mut map, &mut vec![1.0; n], &mut vec![0.0; n], true);
+        if rc0 != 0 {
+            return rc0;
+        }
+        let mut p = 0;
+        while p < m {
+            let c = rc[rp[p] as usize];
+            let mut q = p + 1;
+            while q < m && rc[rp[q] as usize] == c {
+                q += 1;
+            }
+            for &i in &rp[p + 1..q] {
+                self.drop_row_marked(i as usize);
+            }
+            p = q;
+        }
         0
+    }
+
+    /// `397538(st, i)`: a live row goes (-1), its live nodes die and their columns are marked. W += (nodes·7)·μ.
+    fn drop_row_marked(&mut self, i: usize) {
+        if self.row_cnt[i] < 0 {
+            return;
+        }
+        let mut q = self.row_head[i];
+        let mut walked = 0;
+        while q != NIL {
+            let nd = self.nd[q as usize];
+            if nd.col >= 0 {
+                self.tracker.mark_col(nd.col);
+                self.col_cnt[nd.col as usize] -= 1;
+                self.nd[q as usize].col = -1;
+            }
+            walked += 1;
+            q = nd.nr;
+        }
+        self.work = (walked as f64 * 7.0) * self.work_mult + self.work;
+        self.row_cnt[i] = -1;
+        self.rows_removed += 1;
     }
 
     /// `551cc0` with MIP arguments (variable types, no Q, no rounding, no `54d420` inside the rounds).
     #[allow(clippy::too_many_arguments)]
     fn detect(&self, beg: Vec<i64>, ind: Vec<i32>, val: Vec<f64>, nodes: i32, limit: f64, ratio: f64,
-              prelimit: &Cell<i32>, w: &mut f64) -> i32 {
+              prelimit: &Cell<i32>, parts: &mut Option<Parts>, w: &mut f64) -> i32 {
         let (n, m) = (self.n, self.m);
         let close = |a: f64, b: f64| !(1e-9 < (a - b).abs());
         let mut tm = Timer {
@@ -1095,6 +1195,9 @@ impl State {
             if f4 == 1 && col.ncell < live_c / 5 && row.ncell < live_rows as i32 / 5 {
                 f4 = 2;
             }
+            let (cc, cp) = col.renumber(w);
+            let (rc, rp) = row.renumber(w);
+            *parts = Some((cc, cp, rc, rp));
             return f4;
         }
     }
