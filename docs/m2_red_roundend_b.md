@@ -1,6 +1,6 @@
 # M2 라운드 끝 B: `423e35`, `5a1293`, `5aaaf7`, `838543`, `579e67` (+ 남은 것)
 
-`3cd406` 라운드 끝 뒷부분(m2_spine_c.md §2, 카운트 9–21) 해독·포팅 노트. 코드는 `crates/mip/src/`의 `modk.rs`, `probe0.rs`, `roundend_b.rs`, `dualred.rs`. 확인은 `tools/mip_dump_check.py <fn>`(38개 모델 모든 호출)과 `tools/sweep_check.py`.
+`3cd406` 라운드 끝 뒷부분(m2_spine_c.md §2, 카운트 9–21) 해독·포팅 노트. 코드는 `crates/mip/src/`의 `modk.rs`, `probe0.rs`, `roundend_b.rs`, `dualred.rs`, `disagg.rs`. 확인은 `tools/mip_dump_check.py <fn>`(38개 모델 모든 호출)과 `tools/sweep_check.py`.
 
 | 함수 | 파일 | 덤프 비교(38개 모델) | 무엇을 바꾸나 |
 |---|---|---|---|
@@ -9,6 +9,10 @@
 | `5aaaf7` | roundend_b.rs | 42/42 | 쌍대 고정 |
 | `579e67` | roundend_b.rs | 42/42 | type 9 대입(neos-911970, markshare 등) |
 | `5a1293` PREDUALREDUNDANT | dualred.rs | 42/42 | 38개에서는 작업량만(`39fb6d` 0회) |
+| `5a04fc` PRESMARTDISAGG | disagg.rs | 42/42 | 38개에서는 작업량만(분해 0회) |
+| `419ffc`, `5a4d8b`, `5a5eff` | stubs.rs | 안 함 | 38개에서는 작업량만(§7) |
+
+레코드: `tools/mip_rec_check.py` 38/38(gmu 둘은 PRELIMIT=27, ran14x18은 71). clippy 0, cargo test·pytest 통과.
 
 sweep: 35/38(시작 33/38). 남은 첫 불일치는 knapsack 2(gmu, `6b5e11`)와 ss2mip 1(ran14x18, `594c0c`)로 이 묶음 밖이다.
 
@@ -56,7 +60,21 @@ shortcut: `426093`의 목적값 검사(`4f2c32` 플래그, cutoff 1e100이라 �
 
 shortcut: 통과한 행의 `39fb6d`(레코드)·`415f4f`(행 삭제)는 38개에서 0회라 포팅 안 함.
 
-## 6. 남은 것
+## 6. `5a04fc(st, env)` PRESMARTDISAGG ≥ 2
 
-- `5a4d8b`/`5a5eff` PREDERIVED: `5b2ea6` 3,680회(13개 모델), `5b208f` 1,186회(3개 모델)가 돈다. `3a008f`(type 24) 0회. 성공 시 col_cnt = −3, 행은 `537da8`+`415f4f`.
-- `419ffc` PRECOVERS, `5a04fc` 스마트 분해.
+1. 리터럴 행: `<`, row_cnt > 1, inf 0, act_max + act_min ≤ 1e-6. [0,1] 이진 열 중 |a| + act_min ≥ −1e-6인 것이 하나면 리터럴(a ≤ 0이면 j + n), 둘 이상이면 −2. W += 6μ·row_cnt, 끝에 5μ·m. 없으면 끝.
+2. W += 2n·μ. 리터럴 행의 다른 리터럴(a ≥ 0이면 j) 사용 수. W += 5μ·row_cnt.
+3. 리터럴 행에 ub − lb > 1e-10이고 사용 수 ≥ PRESMARTDISAGG(env+0x25b4, 기본 5)인 항목이 없으면 버린다. W += 5μ·row_cnt, 끝에 4μ·m. 남은 게 없으면 끝.
+4. 리터럴별 행 CSR(행 오름차순). W += (5m + 6n)·μ.
+5. 예산 W₀ + 1000·nnz + 1e6(넘으면 W += 14μ·i, 끝). 리터럴 행이 아니고 row_cnt > 1, inf 0인 행: 쪽 s(`=`면 −1 그다음 +1, `<`면 +1), d = act_max(s=−1) 또는 −act_min. |a·s| > 0.51·d + 1e-5인 [0,1] 이진 항목이 2개 이상이면(W += 6μ·row_cnt) 그 리터럴의 리터럴 행들을 돌며(W += 5μ·row_cnt, 리터럴마다 3μ·행 수) 다른 자유 리터럴의 도달 수를 센다. 도달 수 ≥ PRESMARTDISAGG면 분해(`3bde19` 새 행, `3bea24` 새 열, `370047`). W += 3μ·리터럴 수 + 3μ·본 행 수. 끝에 W += 14μ·m.
+
+shortcut: 분해 자체(38개에서 0회).
+
+## 7. 남은 것 (stub)
+
+38개 모델에서 덤프 진입·복귀 상태를 비교하면 셋 다 작업량 말고는 바꾸는 것이 없다(덤프의 recs 차이는 레코드 패딩 바이트). stub은 작업량을 더하지 않으므로 덤프 비교는 W만 틀린다. sweep에는 드러나지 않는다(35/38).
+
+| 함수 | 크기 | 하는 일 | 작업량 예(dW) |
+|---|---|---|---|
+| `419ffc` PRECOVERS(timer 23) | 7,235 B | 계수 ±1 이진 `<` 행(길이 2..499, rhs + 1 = 양수 항 수)을 리터럴 집합으로 보고, 64비트 서명 두 개와 정렬 병합으로 포함 관계를 찾아 행을 지우거나(`537da8`, row_cnt −2) 항목을 뺀다(rhs −1, +0x3fc, `370047`). 의사코드가 심하게 꼬여 asm으로 다시 읽어야 한다 | tr12-30 1,932, gmu-35-50 12,705 |
+| `5a4d8b`/`5a5eff` PREDERIVED | 4,096 / 약 4 KB | LP `5b488d`의 MIP 판: col_cnt 2..19, 행 길이 ≤ 9, 이웃 ≤ 9, 정수 범위 곱 ≤ 1024. `5b2ea6`(행 식, 3,680회/13개 모델)과 `5b208f`(정수 꼭짓점 열거, 679줄, 1,186회/3개 모델)가 돈다. 성공(`3a008f` type 24, 0회)이면 col_cnt = −3, 행은 `537da8`+`415f4f` | tr12-30 81,068 / 20,884 |
