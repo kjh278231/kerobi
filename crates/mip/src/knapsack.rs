@@ -1,6 +1,7 @@
 //! `578fd2` knapsack row strengthening (docs/m2_red_outer_a.md §5): each `<` row of the level-1 list goes through
 //! `6aec61` (the knapsack routine shared with the cut code; mode 2, PREPOWER), which may tighten coefficients and
 //! rhs, round with Chvátal–Gomory multipliers (`6b33dd`) and drop columns. Its work goes to W unscaled.
+use crate::helpers::minsd;
 use crate::iint::gcd_f64;
 use crate::state::{State, NIL};
 use crate::Params;
@@ -357,7 +358,7 @@ impl Kn<'_> {
         self.maxact = mx;
         let lim = if knaplen == -1 { 512 } else { knaplen };
         if 2 < n && n as i32 <= lim && hint != 1 {
-            let (mut all01, mut t) = (true, 0);
+            let (mut all01, mut neg, mut t) = (true, 0.0f64, 0);
             while t < n {
                 if self.is_c(t) {
                     self.cont = 1;
@@ -367,13 +368,24 @@ impl Kn<'_> {
                 if self.lb[j] != 0.0 || self.ub[j] != 1.0 {
                     all01 = false;
                 }
+                if self.val[t] < 0.0 {
+                    neg = neg - self.val[t];
+                }
                 t += 1;
             }
             *self.w += t as f64 * 5.0;
             if t == n {
                 self.cont = 0;
+                if all01 && n < 11 {
+                    self.ac = false;
+                    self.knap_small(neg + self.rhs);
+                    if self.ac {
+                        *changed = true;
+                    }
+                    return 0;
+                }
                 if all01 {
-                    // shortcut: 6b4738 (n < 11) / 6b5e11 not ported, see above
+                    // shortcut: 6b5e11 (11..PREKNAPLIFTLEN binaries) not ported, see above
                 }
             }
         }
@@ -755,6 +767,138 @@ impl Kn<'_> {
             }
         }
         false
+    }
+
+    /// `6b4738(c, ...)` (rows of 3..10 binaries, c = rhs + Σ|a<0|): per coefficient i (not marked, |a_i| > 1e-13),
+    /// the sorted subset sums (<= c + 100ft, deduplicated within 1e-10) of the other coefficients decide a decrease
+    /// of |a_i| (when no sum reaches c − 100ft) and an increase (when no sum + |a_i| is within 100ft of c); later
+    /// coefficients with the same |a| are skipped. W += 5 per merge step. Sets `ac`; leaves the row compacted.
+    fn knap_small(&mut self, mut c: f64) {
+        let n = self.ind.len();
+        let tol = 100.0 * self.ft;
+        let mut done = vec![false; n];
+        for i in 0..n {
+            if done[i] {
+                continue;
+            }
+            let mut ai = self.val[i].abs();
+            if 1e-13 >= ai {
+                continue;
+            }
+            let (lo, hi) = (c - tol, c + tol);
+            let mut sums = vec![0.0f64];
+            let (mut below, mut far, mut quit) = (true, true, false);
+            for j in 0..n {
+                let aj = self.val[j].abs();
+                if j == i || 1e-13 >= aj {
+                    continue;
+                }
+                let mut add = Vec::new();
+                for &x in &sums {
+                    let y = x + aj;
+                    if y > hi {
+                        break;
+                    }
+                    add.push(y);
+                    far = far && tol < ((y - c) + ai).abs();
+                }
+                let Some(&last) = add.last() else { continue };
+                if below && lo > last {
+                    below = true;
+                } else {
+                    below = false;
+                    if !far {
+                        quit = true;
+                        break;
+                    }
+                }
+                // merge (new sums equal to an old one within 1e-10 are dropped)
+                let (mut out, mut a, mut b, mut new) = (Vec::new(), 0, 0, false);
+                while a < sums.len() && b < add.len() {
+                    if 1e-10 > (sums[a] - add[b]).abs() {
+                        b += 1;
+                    } else if add[b] <= sums[a] {
+                        out.push(add[b]);
+                        new = true;
+                        b += 1;
+                    } else {
+                        out.push(sums[a]);
+                        a += 1;
+                    }
+                }
+                if b < add.len() {
+                    out.extend_from_slice(&add[b..]);
+                    b = add.len();
+                    new = true;
+                }
+                if new && a < sums.len() {
+                    out.extend_from_slice(&sums[a..]);
+                    a = sums.len();
+                }
+                *self.w += (b + a) as f64 * 5.0;
+                if new {
+                    sums = out;
+                }
+            }
+            if !quit {
+                let phases = if far { 1 } else { 0 };
+                let mut ph = if below { 0 } else { 1 };
+                while ph <= phases {
+                    let base = if ph == 0 { c } else { c - ai };
+                    if ph == 1 {
+                        while sums.last().is_some_and(|&x| x > tol + base) {
+                            sums.pop();
+                        }
+                    }
+                    let mx = sums.last().copied().unwrap_or(0.0);
+                    let mut d = base - mx;
+                    if ph == 0 {
+                        d = minsd(d, ai);
+                    }
+                    if d > tol {
+                        self.ac = true;
+                        let v = self.val[i];
+                        if (ph == 0 && v < 0.0) || (ph == 1 && v > 0.0) {
+                            self.val[i] = v + d;
+                        } else {
+                            self.val[i] = v - d;
+                            self.rhs = self.rhs - d;
+                        }
+                        if ph == 0 {
+                            c = c - d;
+                            if 1e-13 > self.val[i].abs() {
+                                self.val[i] = 0.0;
+                                ai = 0.0;
+                                break;
+                            }
+                        }
+                        ai = self.val[i].abs();
+                    }
+                    ph += 1;
+                }
+            }
+            if 1e-13 < ai {
+                for t in i + 1..n {
+                    if 1e-10 > (ai - self.val[t].abs()).abs() {
+                        done[t] = true;
+                    }
+                }
+            }
+        }
+        if self.ac {
+            let mut k = 0;
+            for t in 0..n {
+                if 1e-10 < self.val[t].abs() {
+                    self.ind[k] = self.ind[t];
+                    self.val[k] = self.val[t];
+                    k += 1;
+                }
+            }
+            self.ind.truncate(k);
+            self.val.truncate(k);
+            self.minact = STALE;
+            self.maxact = STALE;
+        }
     }
 
     /// After the main loop (p10 >= 1): with integral coefficients (|a| <= 2e7, not all equal), `a7c752` gives each
