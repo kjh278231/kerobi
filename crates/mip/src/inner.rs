@@ -305,12 +305,17 @@ impl State {
     /// on their column (rounded for integer columns; an `=` row fixes it via `3de18e`), or prove infeasibility; the
     /// row goes (-1). `gc` gets the number of entries this removed. Returns 0, 3 or `3de18e`'s status.
     pub fn singleton_rows(&mut self, p: &Params, gc: &mut i64) -> i32 {
-        let (ft, ift) = (p.feastol, p.intfeastol);
         let lv = self.tracker.level;
         let rows = self.tracker.rows.list[lv][..self.tracker.rows.a[lv]].to_vec();
+        self.singleton_rows_in(p, &rows, gc)
+    }
+
+    /// `36c5cf(st, env, cnt, rows, &gc)` on an explicit row list (`594c0c`).
+    pub fn singleton_rows_in(&mut self, p: &Params, rows: &[i32], gc: &mut i64) -> i32 {
+        let (ft, ift) = (p.feastol, p.intfeastol);
         let (mut nnz, mut nrem) = (0i64, 0);
         let rc = 'rows: {
-            for &ii in &rows {
+            for &ii in rows {
                 let i = ii as usize;
                 if self.row_cnt[i] != 1 {
                     continue;
