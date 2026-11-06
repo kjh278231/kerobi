@@ -286,11 +286,11 @@ impl State {
             let thr = (mn + 0.5) * g;
             let others: Vec<f64> = ints.iter().filter(|&&x| thr <= x).map(|&x| (x / g + 0.5).floor()).collect();
             self.work += ints.len() as f64 * mu;
-            if ints.len() <= others.len() + 1 && mnode.is_some() && ints.len() > 1 {
+            if let Some(mat) = mnode.filter(|_| ints.len() <= others.len() + 1 && ints.len() > 1) {
                 let g2 = gcd_f64(&others[..ints.len() - 1]);
                 let r = self.rhs[i];
                 if 1.5 <= g2 && r - (r + 1e-10).floor() <= 1e-10 && r.abs() <= 100000000.0 {
-                    let am = self.nd[mnode.unwrap()].val;
+                    let am = self.nd[mat].val;
                     let r2 = r - (g2 - 1.0) * am;
                     let r2 = (r2 - (r2 + 1e-10).floor()) / g2;
                     if r2 - (r2 + 1e-10).floor() <= 1e-10 {
@@ -313,7 +313,7 @@ impl State {
         let x = self.nd[at];
         let d = g / x.val.abs();
         let xc = x.col as usize;
-        if !(d <= 100000000.0 && 1e-08 <= d && self.col_flag[xc] == 0
+        if !((1e-08..=100000000.0).contains(&d) && self.col_flag[xc] == 0
             && (self.lb[xc] <= -INF || -100000000.0 * d <= self.lb[xc])
             && (INF <= self.ub[xc] || self.ub[xc] <= d * 100000000.0))
         {

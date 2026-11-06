@@ -2,6 +2,8 @@
 //! crates/lp/src/presolve/parallel.rs). Mode 0 rows (singleton slack columns hidden: rows 'P'/'T'), mode 1 columns,
 //! mode 3 integer columns. Candidates are grouped by a pattern hash, a value hash and an exact comparison; each
 //! class goes to the pair routine (`3ee2bb` rows, `3eaf1d` columns) in the order that decides the survivor.
+use crate::helpers::{maxsd, minsd};
+use crate::iint::gcd_f64;
 use crate::post::PostRec;
 use crate::state::{guarded_add, State, INF, NIL};
 use crate::subst::sort_asc;
@@ -25,13 +27,15 @@ struct Tol {
     nf: i32,
     precrush: i32,
     preparallel: i32,
+    /// AggFill as 3cd406 sees it (-1 is 0)
+    fill: i32,
 }
 
 impl State {
     /// `3ff744(st, env, T6, mode, flag, 0)` for modes 0, 1, 3. Returns 0, 3 or 5.
     pub fn parallel(&mut self, p: &Params, mode: i32, flag: i32) -> i32 {
         let t = Tol { ft: p.feastol, ift: self.intfeastol, ot: p.opttol, nf: p.numeric_focus, precrush: self.precrush,
-                      preparallel: p.preparallel };
+                      preparallel: p.preparallel, fill: p.agg_fill.max(0) };
         let cols = mode == 1 || mode == 3;
         let saved = self.antipar;
         let (mut pwl, mut objpwl) = (0, 0);
@@ -511,7 +515,7 @@ impl State {
             // the 38 models
         }
         if objpwl {
-            return self.par_col_aggregation(list, &bounds);
+            return self.par_col_aggregation(list, &bounds, &scale, t);
         }
         0
     }
@@ -932,11 +936,9 @@ impl State {
         let unit = !(1e-10 < (r.abs() - 1.0).abs());
         let pair_ok = yint && unit;
         let (mut case, mut dispatch) = (0, false);
-        if lx <= -INF || -tx <= lox - lx {
-            if !(cx <= q - 1e-10) {
-                case = 1;
-                if !xint || pair_ok { dispatch = true } else { case = 0 }
-            }
+        if (lx <= -INF || -tx <= lox - lx) && !(cx <= q - 1e-10) {
+            case = 1;
+            if !xint || pair_ok { dispatch = true } else { case = 0 }
         }
         if !dispatch && (INF <= ux || hix - ux <= tx) {
             if !(q + 1e-10 <= cx) {
@@ -1141,37 +1143,154 @@ impl State {
         self.merge_test(x, y, r, t)
     }
 
-    /// The column aggregation phase of `3ff744` (PREOBJPWLRED, docs/m2_red_outer_a.md §3.5): classes of parallel
-    /// columns that all appear in two or more rows.
-    fn par_col_aggregation(&mut self, list: &[i32], bounds: &[usize]) -> i32 {
+    /// The column aggregation phase of `3ff744` (PREOBJPWLRED, docs/m2_red_outer_a.md §3.5): the live members of a
+    /// class of parallel columns (all in two or more rows) become one new column z with coefficient base/s_best in
+    /// best's rows, and a new row `-f·z + Σ f·(s_k/base)·x_k = 0` ties them to it. Returns a status.
+    fn par_col_aggregation(&mut self, list: &[i32], bounds: &[usize], scale: &[f64], t: &Tol) -> i32 {
         let mu = self.work_mult;
-        let mut sets = 0;
+        let mut sets: Vec<Vec<i32>> = Vec::new();
         for g in 1..bounds.len() {
             let (b, e) = (bounds[g - 1], bounds[g]);
             if e - b < 2 {
                 continue;
             }
-            let (mut live, mut tt) = (0, b);
+            let (mut set, mut tt) = (Vec::new(), b);
             while tt < e {
                 let c = self.col_cnt[list[tt] as usize];
                 if 0 < c {
                     if c < 2 {
-                        live = 0;
+                        set.clear();
                         break;
                     }
-                    live += 1;
+                    set.push(list[tt]);
                 }
                 tt += 1;
             }
-            self.work += (tt - b) as f64 * mu * 3.0;
-            if live > 1 {
-                sets += 1;
+            self.work += (tt - b) as f64 * (3.0 * mu);
+            if set.len() > 1 {
+                sets.push(set);
             }
         }
         self.work += (bounds.len() - 1) as f64 * 2.0 * mu;
-        if sets > 0 {
-            // shortcut: the aggregation into a new column and `=` row (3bbf87/3bde19/3bea24) is not ported yet
+        if sets.is_empty() {
+            return 0;
         }
+        self.work += (self.n as f64 * 0.5) * mu;
+        for set in &sets {
+            let l = set.len();
+            let lf = l as f64;
+            if l < 3 || (t.fill + 10) as f64 >= (lf - 1.0) * self.col_cnt[set[0] as usize] as f64 - 1.0 - lf {
+                continue;
+            }
+            // best: the largest |scale| (ties within 1e-13 to a positive one); all within a factor 1e6
+            let (mut smax, mut sbest, mut best, mut smin, mut allint) = (0.0f64, 0.0f64, -1i32, 1e100f64, true);
+            let mut absv = vec![0.0; l];
+            for (k, &c) in set.iter().enumerate() {
+                let s = scale[c as usize];
+                let a = s.abs();
+                let d = a - smax;
+                if 1e-13 < d || (-1e-13 <= d && 0.0 < s) {
+                    (smax, sbest, best) = (a, s, c);
+                }
+                absv[k] = a;
+                smin = minsd(smin, a);
+                allint = allint && self.vtype[c as usize] != b'C';
+            }
+            self.work += (lf + lf) * mu;
+            if best < 0 || 1e-10 > smax || smax > smin * 1e6 {
+                continue;
+            }
+            let mut base = sbest;
+            if allint {
+                let g = gcd_f64(&absv);
+                if (0.001..=1000.0).contains(&g) {
+                    base = if 0.0 < sbest { g } else { -g };
+                }
+            }
+            let z = self.add_cols(1);
+            // best's nodes move to z (scaled by base/s_best); the other members' nodes die
+            let (bst, ratio) = (best as usize, base / sbest);
+            let (mut v, mut q) = (0, self.col_head[bst]);
+            while q != NIL {
+                let at = q as usize;
+                let x = self.nd[at];
+                if x.col >= 0 {
+                    let new = ratio * x.val;
+                    self.nd[at].col = z as i32;
+                    self.nd[at].val = new;
+                    self.agg_tiny(x.row as usize, at, bst, new, x.val);
+                    self.tracker.mark_row(x.row);
+                    self.row_cnt[x.row as usize] -= l as i32 - 1;
+                }
+                v += 1;
+                q = x.nc;
+            }
+            self.work += (v as f64 * 3.0) * mu;
+            self.col_head[z] = self.col_head[bst];
+            self.col_head[bst] = NIL;
+            self.col_cnt[z] += self.col_cnt[bst];
+            self.col_cnt[bst] = 0;
+            for &c in set {
+                let (mut v, mut q) = (0, self.col_head[c as usize]);
+                while q != NIL {
+                    self.nd[q as usize].col = -1;
+                    v += 1;
+                    q = self.nd[q as usize].nc;
+                }
+                self.col_cnt[c as usize] = 0;
+                self.work += (v as f64 + v as f64) * mu;
+            }
+            self.work += (lf * 3.0) * mu;
+            let mut f = 1.0f64;
+            for &c in set {
+                f = maxsd(f, 1.0 / (scale[c as usize] / base).abs());
+            }
+            f = minsd(f, base.abs() * 10.0);
+            let r = self.add_rows(1);
+            self.sense[r] = b'=';
+            self.new_node(-f, r, z);
+            // z's bounds from the members' (guarded sums), integral when every t_k is
+            let (mut int, mut lo, mut hi) = (true, 0.0f64, 0.0f64);
+            for &c in set {
+                let cu = c as usize;
+                let tk = scale[cu] / base;
+                let (lb, ub) = (self.lb[cu], self.ub[cu]);
+                int = int && self.vtype[cu] != b'C' && tk - (tk + 1e-10).floor() <= 1e-10;
+                self.new_node(f * tk, r, cu);
+                let (lo_b, hi_b) = if 0.0 < tk { (lb, ub) } else { (ub, lb) };
+                if -INF < lo {
+                    let inf = if 0.0 < tk { -INF >= lo_b } else { lo_b >= INF };
+                    lo = if inf { -INF } else { guarded_add(lo, lo_b * tk, false) };
+                }
+                if hi < INF {
+                    let inf = if 0.0 < tk { hi_b >= INF } else { -INF >= hi_b };
+                    hi = if inf { INF } else { guarded_add(hi, hi_b * tk, true) };
+                }
+                self.tracker.mark_col(c);
+            }
+            self.work += (lf * 12.0) * mu;
+            if int {
+                self.vtype[z] = b'I';
+                lo = (lo - t.ift).ceil();
+                hi = (hi + t.ift).floor();
+            }
+            self.lb[z] = lo;
+            self.ub[z] = hi;
+            self.activity(Some(&[r as i32]));
+            if -INF >= lo || hi >= INF {
+                let (mut v, mut q) = (0, self.col_head[z]);
+                while q != NIL {
+                    let x = self.nd[q as usize];
+                    if x.col >= 0 {
+                        self.activity(Some(&[x.row]));
+                    }
+                    v += 1;
+                    q = x.nc;
+                }
+                self.work += (v as f64 + v as f64) * mu;
+            }
+        }
+        self.work += (sets.len() as f64 + sets.len() as f64) * mu;
         0
     }
 }
