@@ -17,9 +17,15 @@ mod helpers;
 mod iint;
 mod knapsack;
 mod inner;
+mod cancel;
+mod aggregate;
 mod colpass;
+mod compress;
+mod dominate;
 mod doubleton;
 mod dualbnd;
+mod dualagg;
+mod dualeq;
 mod lists;
 mod parallel;
 pub mod post;
@@ -97,6 +103,10 @@ params! {
     preqsubst: i32 = -1, "guro_par_preqsubst";
     /// env+0x242c Aggregate
     aggregate: i32 = 1, "aggregate";
+    /// env+0x2428 AggFill (-1: `3db19d` makes it 0 for MIP presolve)
+    aggfill: i32 = -1, "aggfill";
+    /// env+0x2594 GURO_PAR_PREPAIRAGG
+    prepairagg: i32 = 3, "guro_par_prepairagg";
     /// env+0x2534 PreDepRow (read as is, no auto value in MIP presolve)
     pre_dep_row: i32 = -1, "predeprow";
     /// env+0x2864 Symmetry
@@ -114,6 +124,8 @@ params! {
     predominate: i32 = 1, "guro_par_predominate";
     precancel: i32 = -1, "guro_par_precancel";
     precancelcol: i32 = -1, "guro_par_precancelcol";
+    /// env+0x25a4 GURO_PAR_PRECANCELSELECT: how `40d2bc` picks between a candidate's two multipliers
+    precancelselect: i32 = -1, "guro_par_precancelselect";
     presubsume: i32 = 0, "guro_par_presubsume";
     precliqsub: i32 = 0, "guro_par_precliqsub";
     /// env+0x26c8 / 0x254c / 0x253c / 0x2538 AGEQ / PRECLIQUE / PREMERGEVUBS / PRETWOROWS
@@ -141,8 +153,6 @@ params! {
     predualconvtobin: i32 = -1, "guro_par_predualconvtobin";
     /// env+0x258c GURO_PAR_PRESPLITROWS (-1: split only rows of 100+ continuous entries, MIP)
     presplitrows: i32 = -1, "guro_par_presplitrows";
-    /// env+0x2428 AggFill (-1: `3db19d` makes it 0 for MIP presolve)
-    agg_fill: i32 = -1, "aggfill";
     /// env+0x256c / 0x2570 / 0x2564 GURO_PAR_PREPWLRED / PREOBJPWLRED / PREPOWER (3ff744 second phases, 6aec61)
     prepwlred: i32 = 1, "guro_par_prepwlred";
     preobjpwlred: i32 = 1, "guro_par_preobjpwlred";

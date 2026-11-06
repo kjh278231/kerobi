@@ -21,6 +21,10 @@ pub enum PostRec {
     /// type 14 (`399cbe`): opposite parallel rows split at model generation (`3ff744` mode 2): row `a` (now `=`,
     /// rhs `rhs`, range column number `k`, lower side `lo`), row `b` removed, ratio s_a/s_b, a's live entries.
     Split { a: i32, b: i32, k: i32, rhs: f64, lo: f64, ratio: f64, ind: Vec<i32>, val: Vec<f64> },
+    /// type 11 (`3a0e1b`): row r became the slack column j (coefficient |a|).
+    T11 { r: i32, j: i32, a: f64 },
+    /// type 10 (`3a07b5`): x_j = d1·x_j' + d2·x_k + d3 (`40d2bc` mode 1: column k cancelled with pivot j).
+    T10 { j: i32, k: i32, d1: f64, d2: f64, d3: f64 },
 }
 
 /// Data bytes of a record as Gurobi lays them out: padding bytes are 0 here (Gurobi leaves arena garbage) and
@@ -42,6 +46,8 @@ impl PostRec {
             PostRec::Par { .. } => 4,
             PostRec::Xor { .. } => 25,
             PostRec::Split { .. } => 14,
+            PostRec::T10 { .. } => 10,
+            PostRec::T11 { .. } => 11,
         }
     }
 
@@ -151,6 +157,18 @@ impl PostRec {
                     f64b(&mut b, x);
                 }
             }
+            PostRec::T11 { r, j, a } => {
+                i32b(&mut b, *r);
+                i32b(&mut b, *j);
+                f64b(&mut b, *a);
+            }
+            PostRec::T10 { j, k, d1, d2, d3 } => {
+                i32b(&mut b, *j);
+                i32b(&mut b, *k);
+                for x in [d1, d2, d3] {
+                    f64b(&mut b, *x);
+                }
+            }
             PostRec::Subst { j, c0, ind, val } => {
                 let cnt = ind.len();
                 // `39b9e0`: values start at data+0x30+P, P = (4·cnt − 1) & !7
@@ -208,5 +226,19 @@ mod tests {
         let l = PostRec::Subst { j: 1, c0: 1.0, ind: vec![0, 2, 4], val: vec![1.0, -1.0, 0.5] }.layout();
         assert_eq!(&l.bytes[0x20..0x28], &0x38u64.to_le_bytes());
         assert_eq!(l.bytes.len(), 0x38 + 24);
+    }
+
+    #[test]
+    fn t10_t11_layouts() {
+        // 3a07b5: {p, i, 1.0, mult, 0.0}, no padding (neos-860300 414c53 record bytes)
+        let l = PostRec::T10 { j: 3, k: 2, d1: 1.0, d2: -1.0, d3: 0.0 }.layout();
+        assert_eq!(l.bytes, hex("0300000002000000000000000000f03f000000000000f0bf0000000000000000"));
+        // 3a0e1b: {r, j, |a|} (graphdraw-domain 37f484 record bytes)
+        let l = PostRec::T11 { r: 0x2d, j: 0x14, a: 1.0 }.layout();
+        assert_eq!(l.bytes, hex("2d00000014000000000000000000f03f"));
+    }
+
+    fn hex(s: &str) -> Vec<u8> {
+        (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap()).collect()
     }
 }

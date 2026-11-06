@@ -38,7 +38,7 @@ impl State {
     /// generation, `3f26d9`). Returns 0, 3 or 5.
     pub fn parallel(&mut self, p: &Params, mode: i32, flag: i32) -> i32 {
         let t = Tol { ft: p.feastol, ift: self.intfeastol, ot: p.opttol, nf: p.numeric_focus, precrush: self.precrush,
-                      preparallel: p.preparallel, fill: p.agg_fill.max(0), presplitrows: p.presplitrows };
+                      preparallel: p.preparallel, fill: p.aggfill.max(0), presplitrows: p.presplitrows };
         let cols = mode == 1 || mode == 3;
         let saved = if mode == 2 { 0 } else { self.antipar };
         let (mut pwl, mut objpwl) = (0, 0);

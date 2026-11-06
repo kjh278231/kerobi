@@ -19,8 +19,7 @@ impl State {
                 self.nd.push(Node { val: 0.0, row: 0, col: -1, nr: NIL, nc });
             }
             self.free = at as u32;
-            self.nfree += n as i64;
-            self.node_cap += n as i64;
+            self.nfree += n as i64; // +0x158 stays: the chunk goes on the +0x1b8 chain
         }
         let at = self.free;
         let q = &mut self.nd[at as usize];
