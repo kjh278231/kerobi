@@ -70,6 +70,15 @@ impl Stack {
     }
 }
 
+/// What `54e5eb` splits a cell by: the side's hashes, other per-item keys (`5507cb`'s marks), or nothing (every item
+/// its own cell, no sort).
+#[derive(Clone, Copy)]
+enum By<'a> {
+    Hash,
+    Keys(&'a [i64]),
+    Each,
+}
+
 /// One side (rows or columns): its partition and its sparse lines for the hash refinement.
 struct Side {
     /// cell id per item, first position per cell, items ordered by cell
@@ -304,7 +313,7 @@ impl Side {
             }
             *w += (e - s) as f64 * 3.0;
             if differ {
-                self.split(o, rand, c, e, runs, ext, w);
+                self.split(o, rand, c, e, By::Hash, runs, ext, w);
             }
         }
     }
@@ -314,34 +323,42 @@ impl Side {
     /// item adds key * (rand[new] - rand[c]) to its partner's hash and queues the partner's cell. The extra stacks
     /// (integer mode) fix a new cell when `c` was fixed there or the cell is a singleton, else queue it when `c` was.
     #[allow(clippy::too_many_arguments)]
-    fn split(&mut self, o: &mut Side, rand: &[i64], c: i32, e: usize, runs: &mut Vec<usize>,
+    fn split(&mut self, o: &mut Side, rand: &[i64], c: i32, e: usize, by: By, runs: &mut Vec<usize>,
              ext: &mut [Option<&mut Stack>; 2], w: &mut f64) {
         let s = self.start[c as usize] as usize;
         let rc = rand[c as usize];
         let flags = ext.each_ref().map(|x| x.as_ref().map(|t| (t.queued(c), t.fixed(c))));
-        let seg = &mut self.perm[s..e];
-        let mut k: Vec<u64> = seg.iter().map(|&j| self.hash[j as usize] as u64).collect();
-        sort_asc(&mut k, seg);
         let len = |b: &[i64], j: i32| b[j as usize + 1] - b[j as usize];
         runs.clear();
         runs.push(s);
-        let (mut best, mut most) = (0, 0);
-        let mut g = s;
-        while g < e {
-            let j0 = self.perm[g];
-            let mut tot = len(self.cur().0, j0);
-            let mut t = g + 1;
-            while t < e && self.hash[self.perm[t] as usize] == self.hash[j0 as usize] {
-                tot += len(self.cur().0, self.perm[t]);
-                t += 1;
+        let mut best = 0;
+        let mut k: Vec<u64> = match by {
+            By::Hash => self.perm[s..e].iter().map(|&j| self.hash[j as usize] as u64).collect(),
+            By::Keys(h) => self.perm[s..e].iter().map(|&j| h[j as usize] as u64).collect(),
+            By::Each => Vec::new(),
+        };
+        if let By::Each = by {
+            // no keys: every item its own group in order, the first keeps `c`
+            runs.extend(s + 1..=e);
+        } else {
+            sort_asc(&mut k, &mut self.perm[s..e]);
+            let mut most = 0;
+            let mut g = s;
+            while g < e {
+                let mut tot = len(self.cur().0, self.perm[g]);
+                let mut t = g + 1;
+                while t < e && k[t - s] == k[g - s] {
+                    tot += len(self.cur().0, self.perm[t]);
+                    t += 1;
+                }
+                *w += (t - g) as f64 * 4.0;
+                runs.push(t);
+                if most < tot {
+                    most = tot;
+                    best = runs.len() - 2;
+                }
+                g = t;
             }
-            *w += (t - g) as f64 * 4.0;
-            runs.push(t);
-            if most < tot {
-                most = tot;
-                best = runs.len() - 2;
-            }
-            g = t;
         }
         for r in 0..runs.len() - 1 {
             let (a, b) = (runs[r], runs[r + 1]);
@@ -703,6 +720,8 @@ struct IntMode {
     d150: Vec<i32>,
     mask: Vec<u64>,
     d160: Vec<i64>,
+    /// local_d0 as marks per component (column index)
+    marks: Vec<i32>,
     /// local_88: integer columns
     nint: i32,
 }
@@ -925,7 +944,7 @@ impl State {
             }
             *w += n as f64 + n as f64;
             Some(IntMode { s1a8, s1a0, s198, s190, s188, d168: vec![-1; n], d150: vec![0; m], mask, d160: vec![0; n],
-                           nint })
+                           marks: vec![0; n], nint })
         } else {
             None
         };
@@ -1020,7 +1039,10 @@ impl State {
                     if col.ncell == last_c && row.ncell == last_r {
                         // `5507cb` may refine the cells itself; true = individualize the integer columns
                         let split = match &mut im {
-                            Some(im) => self.int_split(&mut col, &mut row, im, live_cols, w),
+                            Some(im) => {
+                                let want = (live_cols as i32 / 20) > im.nint;
+                                self.int_split(&mut col, &mut row, im, &rand, want, w)
+                            }
                             None => false,
                         };
                         if !split && col.ncell == last_c && row.ncell == last_r {
@@ -1077,9 +1099,328 @@ impl State {
         }
     }
 
-    /// `5507cb` when the hash refinement stalls in integer mode. True = individualize the integer columns.
-    /// shortcut: not ported yet (returns false: stable).
-    fn int_split(&self, _col: &mut Side, _row: &mut Side, _im: &mut IntMode, _live_cols: usize, _w: &mut f64) -> bool {
+    /// `5507cb(…)` when the hash refinement stalls in integer mode. It works through three cell queues: integer
+    /// column cells (s1a8: are the columns' row sets disjoint? if not, split by sharing or individualize), row cells
+    /// (s198: requeue column cells met unevenly or with other keys), and checked column cells (s1a0: are the columns in
+    /// distinct components of the graph over fixed cells?). It stops at the first split it makes (`54e5eb`) or when
+    /// the queues are empty. Returns the flag (*param_36): true = individualize all integer columns (only when
+    /// `want`, i.e. few integer columns, and the cell to split is continuous).
+    fn int_split(&self, col: &mut Side, row: &mut Side, im: &mut IntMode, rand: &[i64], want: bool, w: &mut f64) -> bool {
+        let mut size: Vec<i32> = Vec::new(); // local_60: cell sizes, allocated on first use
+        let mut runs = Vec::new();
+        loop {
+            if im.s1a8.len() == 0 && im.s198.len() == 0 && im.s1a0.len() == 0 {
+                return false;
+            }
+            while let Some(c) = im.s1a8.pop() {
+                if let Some(flag) = self.int_cell(col, row, im, rand, want, c, &mut runs, w) {
+                    return flag;
+                }
+            }
+            while let Some(r) = im.s198.pop() {
+                self.int_row_cell(col, row, im, r, &mut size, w);
+                if im.s1a8.len() > 0 {
+                    break;
+                }
+            }
+            if im.s1a8.len() > 0 {
+                continue;
+            }
+            while let Some(c) = im.s1a0.pop() {
+                if let Some(flag) = self.int_components(col, row, im, rand, want, c, &mut runs, w) {
+                    return flag;
+                }
+            }
+        }
+    }
+
+    /// `5507cb` part 1, integer column cell `c`: a cheap test on 64-bit row masks, then an exact one on the original
+    /// lines (d150 per row). Disjoint: the cell is done, its rows' cells queued (s198), itself queued for part 3.
+    /// Overlapping: split by "shares a row with an earlier column" (d160), or individualize when every column shares
+    /// rows with all earlier ones (a chain). Some(flag) = a split was made (or the flag set): stop.
+    #[allow(clippy::too_many_arguments)]
+    fn int_cell(&self, col: &mut Side, row: &mut Side, im: &mut IntMode, rand: &[i64], want: bool, c: i32,
+                runs: &mut Vec<usize>, w: &mut f64) -> Option<bool> {
+        let n = self.n;
+        let cu = c as usize;
+        let st = col.start[cu] as usize;
+        if st == n - 1 || col.cell[col.perm[st + 1] as usize] != c {
+            im.s1a8.fix(c);
+            return None;
+        }
+        let (mut acc, mut pos, mut conf) = (0u64, st, false);
+        while pos < n {
+            let j = col.perm[pos] as usize;
+            if col.cell[j] != c {
+                break;
+            }
+            if acc & im.mask[j] != 0 {
+                conf = true;
+                break;
+            }
+            acc |= im.mask[j];
+            pos += 1;
+        }
+        *w = (pos - st) as f64 * 3.0 + *w;
+        if conf {
+            let (mut lvl, mut shared) = (0i32, false);
+            let mut q = st;
+            while q < n {
+                let j = col.perm[q] as usize;
+                if col.cell[j] != c {
+                    break;
+                }
+                let (b, e) = (col.beg[j] as usize, col.beg[j + 1] as usize);
+                let mut k = e;
+                if q != st {
+                    k = b;
+                    while k < e && im.d150[col.ind[k] as usize] == 0 {
+                        k += 1;
+                    }
+                    *w = (k - b) as f64 * 2.0 + *w;
+                }
+                if k >= e {
+                    im.d160[j] = 0;
+                    for kk in b..e {
+                        im.d150[col.ind[kk] as usize] = 1;
+                    }
+                    *w = (e - b) as f64 * 2.0 + *w;
+                    lvl = 1;
+                } else {
+                    shared = true;
+                    im.d160[j] = 1;
+                    let i = (q - st) as i32;
+                    if lvl == i {
+                        for kk in k..e {
+                            let r = col.ind[kk] as usize;
+                            if im.d150[r] == i {
+                                im.d150[r] = i + 1;
+                                lvl = i + 1;
+                            }
+                        }
+                        *w = (e - k) as f64 * 2.0 + *w;
+                    }
+                }
+                q += 1;
+            }
+            *w = (q - st) as f64 * 2.0 + *w;
+            for t in st..q {
+                let j = col.perm[t] as usize;
+                if im.d160[j] != 0 {
+                    continue;
+                }
+                let (b, e) = (col.beg[j] as usize, col.beg[j + 1] as usize);
+                for kk in b..e {
+                    im.d150[col.ind[kk] as usize] = 0;
+                }
+                *w = (e - b) as f64 * 2.0 + *w;
+            }
+            *w = *w + (q - st) as f64 * 2.0;
+            if shared {
+                let each = lvl == (q - st) as i32;
+                if each {
+                    im.s1a8.fix(c);
+                } else {
+                    im.s1a8.push(c);
+                }
+                return Some(self.int_split_cell(col, row, im, rand, want, c, each, runs, w));
+            }
+        }
+        im.s1a8.fix(c);
+        let st = col.start[cu] as usize;
+        let mut p = st;
+        while p < n {
+            let j = col.perm[p] as usize;
+            if col.cell[j] != c {
+                break;
+            }
+            let (b, ind) = col.cur();
+            let (s0, e0) = (b[j] as usize, b[j + 1] as usize);
+            for k in s0..e0 {
+                im.s198.push(row.cell[ind[k] as usize]);
+            }
+            *w = (e0 - s0) as f64 * 3.0 + *w;
+            p += 1;
+        }
+        *w = *w + (p - st) as f64 * 3.0;
+        im.s1a0.push(c);
+        None
+    }
+
+    /// `5507cb` part 2, row cell `r`: per row, column cells met a number of times other than their size go back to
+    /// s1a8 (d160 counts per cell); if some met cell is in no s1a8 state, cells whose keys differ from the first
+    /// row's go back to s1a8 too.
+    fn int_row_cell(&self, col: &Side, row: &Side, im: &mut IntMode, r: i32, size: &mut Vec<i32>, w: &mut f64) {
+        let (n, m) = (self.n, self.m);
+        im.s198.fix(r);
+        let mut flag = false;
+        let rst = row.start[r as usize] as usize;
+        let (rb, rind) = row.cur();
+        let mut p = rst;
+        while p < m {
+            let i = row.perm[p] as usize;
+            if row.cell[i] != r {
+                break;
+            }
+            let (b, e) = (rb[i] as usize, rb[i + 1] as usize);
+            for k in b..e {
+                im.d160[col.cell[rind[k] as usize] as usize] = 0;
+            }
+            *w = (e - b) as f64 * 3.0 + *w;
+            for k in b..e {
+                im.d160[col.cell[rind[k] as usize] as usize] += 1;
+            }
+            *w = *w + (e - b) as f64 * 3.0;
+            for k in b..e {
+                let cc = col.cell[rind[k] as usize];
+                let cnt = im.d160[cc as usize];
+                if cnt == 0 {
+                    continue;
+                }
+                if size.is_empty() {
+                    *size = vec![0; n];
+                }
+                if size[cc as usize] == 0 {
+                    let s0 = col.start[cc as usize] as usize;
+                    let mut t = s0 + 1;
+                    while t < n && col.cell[col.perm[t] as usize] == cc {
+                        t += 1;
+                    }
+                    size[cc as usize] = (t - s0) as i32;
+                }
+                if size[cc as usize] as i64 != cnt {
+                    im.s1a8.push(cc);
+                }
+                im.d160[cc as usize] = 0;
+                if !flag {
+                    flag = !im.s1a8.queued(cc) && !im.s1a8.fixed(cc);
+                }
+            }
+            *w = *w + (e - b) as f64 * 5.0;
+            p += 1;
+        }
+        if !flag {
+            return;
+        }
+        let i0 = row.perm[rst] as usize;
+        let (b0, e0) = (rb[i0] as usize, rb[i0 + 1] as usize);
+        for k in b0..e0 {
+            im.d160[col.cell[rind[k] as usize] as usize] = row.key[k];
+        }
+        *w = (e0 - b0) as f64 * 4.0 + *w;
+        let mut p = rst;
+        while p < m {
+            let i = row.perm[p] as usize;
+            if row.cell[i] != r {
+                break;
+            }
+            let (b, e) = (rb[i] as usize, rb[i + 1] as usize);
+            for k in b..e {
+                let cc = col.cell[rind[k] as usize];
+                if im.d160[cc as usize] != row.key[k] {
+                    im.s1a8.push(cc);
+                }
+            }
+            *w = (e - b) as f64 * 4.0 + *w;
+            p += 1;
+        }
+        *w = *w + (p - rst) as f64 * 3.0;
+    }
+
+    /// `5507cb` part 3, column cell `c` from s1a0: the columns' components (d168, found by a search through rows and
+    /// columns of fixed s1a8 cells, s190/s188) must differ; if two coincide the cell is individualized.
+    #[allow(clippy::too_many_arguments)]
+    fn int_components(&self, col: &mut Side, row: &mut Side, im: &mut IntMode, rand: &[i64], want: bool, c: i32,
+                      runs: &mut Vec<usize>, w: &mut f64) -> Option<bool> {
+        let n = self.n;
+        let st = col.start[c as usize] as usize;
+        if st == n - 1 || col.cell[col.perm[st + 1] as usize] != c {
+            im.s1a0.fix(c);
+            return None;
+        }
+        let mut p = st;
+        while p < n {
+            let j = col.perm[p] as usize;
+            if col.cell[j] != c {
+                break;
+            }
+            if im.d168[j] == -1 {
+                self.component(col, row, im, j, w);
+            }
+            im.marks[im.d168[j] as usize] = 0;
+            p += 1;
+        }
+        *w = (p - st) as f64 * 4.0 + *w;
+        let mut distinct = true;
+        let mut p = st;
+        while p < n {
+            let j = col.perm[p] as usize;
+            if col.cell[j] != c {
+                break;
+            }
+            let k = im.d168[j] as usize;
+            if im.marks[k] != 0 {
+                distinct = false;
+                break;
+            }
+            im.marks[k] = 1;
+            p += 1;
+        }
+        *w = *w + (p - st) as f64 * 4.0;
+        if distinct {
+            return None;
+        }
+        Some(self.int_split_cell(col, row, im, rand, want, c, true, runs, w))
+    }
+
+    /// The component of column `j` (`5507cb`'s search): columns reached through their current rows, over columns
+    /// whose cell is fixed in s1a8; each gets d168 = j.
+    fn component(&self, col: &Side, row: &Side, im: &mut IntMode, j: usize, w: &mut f64) {
+        im.s190.push(j as i32);
+        let (cb, cind) = col.cur();
+        let (rb, rind) = row.cur();
+        while im.s190.len() > 0 {
+            while let Some(x) = im.s190.pop() {
+                let x = x as usize;
+                im.s190.fix(x as i32);
+                im.d168[x] = j as i32;
+                for k in cb[x] as usize..cb[x + 1] as usize {
+                    im.s188.push(cind[k]);
+                }
+                *w = (cb[x + 1] - cb[x]) as f64 * 2.0 + *w;
+            }
+            while let Some(r) = im.s188.pop() {
+                let r = r as usize;
+                im.s188.fix(r as i32);
+                for k in rb[r] as usize..rb[r + 1] as usize {
+                    let cj = rind[k];
+                    if im.s1a8.fixed(col.cell[cj as usize]) {
+                        im.s190.push(cj);
+                    }
+                }
+                *w = (rb[r + 1] - rb[r]) as f64 * 2.0 + *w;
+            }
+        }
+    }
+
+    /// `5507cb`'s split of column cell `c`: the flag when wanted and the cell is continuous, else `54e5eb` with the
+    /// cell's end searched (work 2 per position past the first) by d160 marks or every column apart. Returns the flag.
+    #[allow(clippy::too_many_arguments)]
+    fn int_split_cell(&self, col: &mut Side, row: &mut Side, im: &mut IntMode, rand: &[i64], want: bool, c: i32,
+                      each: bool, runs: &mut Vec<usize>, w: &mut f64) -> bool {
+        let n = self.n;
+        let st = col.start[c as usize] as usize;
+        if want && self.vtype[col.perm[st] as usize] == b'C' {
+            return true;
+        }
+        let mut e = st + 1;
+        while e < n && col.cell[col.perm[e] as usize] == c {
+            e += 1;
+        }
+        *w = ((e - st) as f64 - 1.0) * 2.0 + *w;
+        let IntMode { s1a8, s1a0, d160, .. } = im;
+        let by = if each { By::Each } else { By::Keys(d160) };
+        col.split(row, rand, c, e, by, runs, &mut [Some(s1a8), Some(s1a0)], w);
         false
     }
 
