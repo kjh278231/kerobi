@@ -16,7 +16,7 @@
 공통 규칙(모든 에이전트):
 - Gurobi는 한 프로세스만 돌린다(`gurobi_guard.pth`). "already running"이면 기다렸다 다시 시도한다.
 - 공유 `.venv`에 `maturin develop`이나 `pip install`은 main 트리만 한다. worktree는 cargo로 빌드한 `.so`를 자기 `python/rsolver`에 두고 `PYTHONPATH=$PWD/python`으로 쓴다.
-- worktree는 `crates/lp`의 기존 파일을 고치지 않는다(`lib.rs` 모듈 등록은 허용). 커밋은 자기 브랜치에만, 단계마다 한다.
+- worktree는 `crates/lp`의 기존 파일을 고치지 않는다(`lib.rs` 모듈 등록은 허용). 예외(2026-11-06): M1 LP 드라이버 흐름(G5)은 이미 끝난 흐름의 폴더 `crates/lp/src/presolve/`, `barrier/`, `pdhg/`와 `crates/model`을 고쳐도 된다. simplex 흐름의 파일(simplex·lu·spx·start·bfrt·scaling 등)은 계속 금지다. 고칠 때마다 barrier·PDHG 64/64가 유지되는지 확인한다. 커밋은 자기 브랜치에만, 단계마다 한다.
 - `docs/11_progress.md`는 오케스트레이터가 main에서만 고친다. worktree 에이전트는 자기 인수인계 메모에만 적는다.
 - 답변은 한국어로 한다.
 
@@ -85,6 +85,26 @@
 | 2026-11-06 | M1 primal simplex 원본 이식 | `0478d3` 명세의 primal(행 표시, 복합 phase 1, 부분 목록 CHUZC, Harris·`54eef` ratio, 진입 flip), `b1da8` 퇴화 bound shift, `cda5b` primal↔dual 넘김. Method 0: Netlib 91 중 84, Method 1: 64 중 63 | `7affabb` |
 | 2026-11-06 | M1 드라이버: 파라미터 표·헤더 로그 | Frida로 `9828a1`/`c23877`/`0c3d0d` 호출 범위 확인. 파라미터 표가 libgurobi130에서 **548/548 = gurobipy**(G5 (1)). 새 driver 크레이트의 Optimize 헤더 로그 **102/102**(G5 (2)) | `0d22211`, `320fba5` (`m1-lp-driver`) |
 | 2026-11-06 | M2 MPS 쓰기(정수) | 정수 MARKER, BV/LI bound를 `a4590c`처럼 씀(MIPLIB 원본 38/38) | `b5a93c1` (`m2-skel`) |
+| 2026-11-06 | M1 LU Markowitz 수정 | 허용 가능한 피벗 없이 4줄을 지나도 기저를 singular로 판정하지 않음(정상 기저에 slack 29–62개가 들어가던 문제). Method 1: Netlib 91 중 89 | `736c3b5` |
+| 2026-11-06 | M1 드라이버: 연속 모델 `optimize()` | Method 확정, 자동 조정, presolve → simplex·barrier·PDHG → uncrush, 상태·요약 로그, Presolve≠0이면 Python `_driver` 분기, `tools/driver_check.py`. Method 2·6 + Presolve 켬: 상태·목적 64/64, presolved 모델 8/64, BarIterCount 20/64. presolve의 Method 분기가 남음 | `9f5a723` (`m1-lp-driver`) |
+| 2026-11-06 | M2 presolve 골격·패스 해독 | `crates/mip` 상태(연결 리스트), `3cd406` 앞부분·마무리·모델 생성, 패스 루프·라운드 끝·마지막 단계 해독(하위 에이전트 skel, spine-b/c/d 병합) | `54f3923`, `e69eb66`, `4d5b7b0`, `1b1e9b3` (`m2-mip-presolve`) |
+| 2026-11-06 | M1 unscaled 재검사·CHUZR 비용·BTRAN | `2e9ae` 원 공간 재검사와 재풀이(라이선스 밖 Netlib 최적값 정확), 행 비용 가중치 갱신, Markowitz 분해의 희소 BTRAN. blend는 Gurobi 피벗 경로 전체와 같음. Netlib 64: **반복 수 같음 15**, 경로 전체 일치 6 | `61676e0`, `bf35530`, `4474ff8` |
+| 2026-11-06 | M1 presolve Method 분기 | Method·Crossover·SolutionTarget 분기(`state+0x100`). Method 2·6, Crossover 0에서 presolved 모델 Gurobi와 **64/64** | `ce24d8e` (`m1-lp-driver`) |
+| 2026-11-06 | M2 presolve 제어 흐름·해독 | `3cd406` 라운드·패스·내부 루프·라운드 끝·마지막 단계 제어 흐름(reduction은 빈 함수), probing·clique·내부 루프 해독 노트(하위 에이전트 inner, probe, clique 병합) | `f374378`, `0de8d15` (`m2-mip-presolve`) |
+| 2026-11-06 | M1 dual 원본 규칙 추가 | 이탈 변수 bound 방향(`28c93`), 분해 뒤 CHUZR 목록 재구축, `48d5f` 섭동 발동 규칙, pricing 카운터. Netlib 64: 정답 64/64, **반복 수 같음 18–19**, ±5% 40, 기하평균 1.000 | `f8e9c59`, `549e828`, `a19d442`, `835441c` |
+| 2026-11-06 | M1 드라이버: PDHG 시드·G5 보고 | presolve 모델 난수(`3b0917`/`895c5`)로 PDHG 시드, Presolve 켠 PDHG 64/64. 에이전트가 **G5 기준 충족**을 보고함(검증 대기) | `c8f7170`, `1ea1977` (`m1-lp-driver`) |
+| 2026-11-06 | M2 clique 표 | `451bed` clique 표 이식 | `cf52001` (`m2-mip-presolve`) |
+| 2026-11-06 | M2 presolve 내부 루프 병합 | 내부 루프 reduction 병합. 기본값 presolved 모델 **9/38**. XOR 행(`3e5363`) 해독(하위 에이전트 outer-a) | `f070a16`, `f4320c9` (`m2-outer-a`) |
+| 2026-11-06 | M1 LU 갱신(Forrest–Tomlin) | `5b257` 원형 FT 갱신(제자리 열 교체 또는 row eta, 8레인 합) | `670afe9` |
+| 2026-11-06 | M2 probing A·내부 루프 도구 | probe 행렬·엔진 `4e48f7`·충돌 그래프 이식, 레코드·덤프 검사 도구. dual bound(`374521`)·함의 그래프(`5431ee`) 해독 | `ce3522e`, `4b425d6`, `1010d5a` (`m2-mip-presolve`, `m2-outer-a`) |
+| 2026-11-06 | M1 FT 갱신 세부 규칙 | `5b257` prefix·빈 열 캐시, U 행이 비면 row eta 생략, 순열 교환 | `4fa5ef6` |
+| 2026-11-06 | M1 드라이버: 기저 없는 uncrush·상태 규칙 | `36578f`/`365159` 기저 없는 uncrush(Method 2·6, 오라클과 64/64 비트), 원본 상태 규칙, big-uncrush-violation 검사 | `fcd853e` (`m1-lp-driver`) |
+| 2026-11-06 | M2 probing B·clique 그룹 | probing 결과 반영(대입·bound·고정·lifting)과 호출 13개 상태 일치, clique 덮개 강화(`45885d`)·set packing 쌍 그래프(`52be10`)·clique 행 정규화(`46a62d`) | `0789b47`, `a91287e`, `2ba8870`, `955a8be` (`m2-mip-presolve`) |
+| 2026-11-06 | M1 Markowitz 커널·CHUZR 모드 1 | 비트 일치 프로토타입에서 `036ade` Markowitz 커널 이식, `1bae9c`/`2896a3` CHUZR 모드 1 임계값, 시작 단계 섭동 카운터(tuff가 Gurobi처럼 반복 27에서 섭동) | `f513cd2`, `5b21c30`, `6aa3b46` |
+| 2026-11-06 | M1 드라이버: 엔진 로그 | barrier·PDHG·simplex 반복 로그 행, 증명 상태 로그, `tools/log_check.py`, 전체 로그 테스트 | `73491b9` (`m1-lp-driver`) |
+| 2026-11-06 | M2 바깥 reduction A·B | 함의 그래프 추이 축소(`5431ee`), dual bound(`374521`), 부등식→등식(`3e40d1`), 노드 아레나 압축(`36ee92`), dual 집계(`418542`). 덤프 호출 78/78 | `f280d7c`, `0ea348a`, `8624df7`, `d1d083d`, `2ebdf67` (`m2-outer-a`, `m2-outer-b`) |
+| 2026-11-06 | M1 simplex 속도 개선 | 비트는 그대로(피벗 경로 64/64 동일). BTRAN 출력 재사용, α 지지 집합만 순회, LU 평면 배열, FT 갱신에서 U 위치 역순열 유지 | `61ccd6b`, `2cb6739` |
+| 2026-11-06 | M2 round end·바깥 reduction 추가 | 지배된 singleton 열(`5a9282`), 비용 singleton mod gcd(`5ab429`), VUB lifting(`59c193`), 계수 패턴 사전(`55a779` 1부), XOR 행(`3e5363`), 함의 정수(`57627e`), 평행 행·열 MIP 분기(`3ff744`), 비영 소거(`40d2bc`), MIP 집계(`37f484`) | `dff8109`, `91c379b`, `2b791f0`, `79ae5aa`, `f001cff`, `b14499b` (`m2-*`) |
 
 ## 4. goal 원문
 

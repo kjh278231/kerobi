@@ -248,7 +248,8 @@ class Model:
             raise GurobiError(10024, "MIP engine is not ported yet (M2)")
         import time
         t0 = time.perf_counter()
-        st, obj, x, it, trace, self._path = core.solve(int(self._param("Method", -1)), float(self._param("IterationLimit", 1e100)))
+        st, obj, x, it, trace, self._path = core.solve(int(self._param("Method", -1)), float(self._param("IterationLimit", 1e100)),
+                                                       callback is not None)
         self.Runtime = time.perf_counter() - t0
         self.Status, self.IterCount = st, it
         self._x = x[:len(self._vars)] if built else x

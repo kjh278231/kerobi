@@ -299,17 +299,20 @@ impl PyCoreModel {
         let r = py.allow_threads(|| rsolver_lp::pdhg::solve(&self.inner, &rsolver_lp::pdhg::Params::default(), &mut |_| {}));
         (r.slack, r.d, r.y)
     }
-    /// LP solve without presolve: (status, objective, x, iterations, trace rows, pivot path).
+    /// LP solve without presolve: (status, objective, x, iterations, trace rows, pivot path). `trace` false skips
+    /// the per-iteration trace (no SIMPLEX callback to replay).
     #[allow(clippy::type_complexity)]
+    #[pyo3(signature = (method, iter_limit, trace=true))]
     fn solve(
         &self,
         py: Python<'_>,
         method: i32,
         iter_limit: f64,
+        trace: bool,
     ) -> (i32, f64, Vec<f64>, f64, Vec<(f64, f64, f64, f64, bool)>, Vec<(u64, i64, i64)>) {
-        use rsolver_lp::simplex::{solve_model, Status};
+        use rsolver_lp::simplex::{solve_model_opts, Status};
         let lim = if iter_limit >= 1e18 { u64::MAX } else { iter_limit as u64 };
-        let r = py.allow_threads(|| solve_model(&self.inner, method, lim));
+        let r = py.allow_threads(|| solve_model_opts(&self.inner, method, lim, trace));
         let code = match r.status {
             Status::Optimal => 2,
             Status::Infeasible => 3,

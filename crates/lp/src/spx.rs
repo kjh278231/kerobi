@@ -24,7 +24,16 @@ pub struct Spx {
 
 impl Spx {
     pub fn new(md: &Model) -> Spx {
-        let sc = scale_flag3(md);
+        Spx::with_scaling(md, scale_flag3(md))
+    }
+
+    /// Workspace without any scaling (`2e9ae` re-solve: row and column scales 1, objective scale 1).
+    pub fn unscaled(md: &Model) -> Spx {
+        let sc = Scaling { col: vec![1.0; md.num_vars()], row: vec![1.0; md.num_constrs()], obj: 1.0 };
+        Spx::with_scaling(md, sc)
+    }
+
+    pub fn with_scaling(md: &Model, sc: Scaling) -> Spx {
         let (m, n) = (md.num_constrs(), md.num_vars());
         let sigma: Vec<f64> = md.row_sense.iter().map(|&s| if s == b'>' { -1.0 } else { 1.0 }).collect();
         let mut val = Vec::with_capacity(md.col_val.len());
