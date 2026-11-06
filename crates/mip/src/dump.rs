@@ -308,6 +308,7 @@ impl State {
                 (self.components(p, &mut k), k as i64)
             }
             "521497" => (self.biconnected(p), 0),
+            "52da19" => (0, self.component_search().0 as i64),
             "5a4d8b" => (self.derived_a(p), 0),
             "5a5eff" => (self.derived_b(p), 0),
             "419ffc" => (self.covers(p), 0),
