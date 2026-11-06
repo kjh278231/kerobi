@@ -11,7 +11,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | (3) MIP postsolve 레코드 | 시작 전 |
 | (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
 
-운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만. 크레이트 수준의 파라미터 표(이름·기본값·범위)는 G5(`m1-lp-driver`)가 만든다. `docs/m2_param_offsets.tsv`는 오라클·도구용이고, `crates/mip`에는 MIP presolve가 읽는 필드만 가진 `Params`(LP `presolve::Params`처럼 `from_pairs`)만 둔다(2026-11-06 오케스트레이터 지시). 사용량 한도 때문에 하위 에이전트는 동시에 3개 이하로 두고, 끝난 것은 병합한 뒤 worktree·브랜치를 지운다(같은 날 지시).
+운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만. 크레이트 수준의 파라미터 표(이름·기본값·범위)는 G5(`m1-lp-driver`)가 만든다. `docs/m2_param_offsets.tsv`는 오라클·도구용이고, `crates/mip`에는 MIP presolve가 읽는 필드만 가진 `Params`(LP `presolve::Params`처럼 `from_pairs`)만 둔다(2026-11-06 오케스트레이터 지시). 사용량 한도 때문에 하위 에이전트는 동시에 3개 이하로 두고, 끝난 것은 병합한 뒤 worktree·브랜치를 지운다(같은 날 지시). 토큰 여유가 없어 이후 하위 에이전트는 **한 번에 하나만** 돌린다(2026-11-06 사용자 지시). roundend(대칭 끝, `594c0c` 시작 직전)와 outer-c(two_rows 등)는 일시 중지했고, 각 worktree의 커밋·작업 파일에서 이어 간다.
 
 ### 진행 중인 하위 작업 (2026-11-06 시작)
 | worktree / 브랜치 | 일 | 산출물 |
