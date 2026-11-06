@@ -355,7 +355,8 @@ impl Driver<'_> {
             }
             if p.pretworows != 0 && p.presolve != 1 && self.ok(7) {
                 let m = p.pretworows.abs();
-                rc(self.timed(7, |s, p| s.two_rows(p, m)))?;
+                let t = self.t[7];
+                rc(self.timed(7, |s, p| s.two_rows(p, m, t)))?;
                 self.count("two_rows")?;
                 self.budget();
             }
@@ -501,7 +502,8 @@ impl Driver<'_> {
         // `5a7c0f` and `45feaa(2)` run only with a MIP context or PRETWOROWS 2
         if p.pretworows == 2 {
             if self.ok(7) {
-                rc(self.timed(7, |s, p| s.two_rows(p, 2)))?;
+                let t = self.t[7];
+                rc(self.timed(7, |s, p| s.two_rows(p, 2, t)))?;
                 self.count("two_rows")?;
             }
             self.budget();

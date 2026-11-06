@@ -292,6 +292,7 @@ impl State {
             "4030c9" => (self.dominated(p, Default::default()), 0),
             // the reduction timer is not dumped: a zero limit never stops the call
             "414c03" => (self.cancel_rows(p, 2, Default::default()), 0),
+            "45feaa" => (self.two_rows(p, 1, Default::default()), 0),
             "414c53" => (self.cancel_cols(p, 2, Default::default()), 0),
             "370047" => {
                 self.activity(None);

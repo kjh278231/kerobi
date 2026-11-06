@@ -10,8 +10,6 @@ impl State {
     pub fn dual_conv_bin(&mut self, p: &Params) -> i32 { 0 }
     /// `5466a7` VUB merging
     pub fn merge_vubs(&mut self, p: &Params) -> i32 { 0 }
-    /// `45feaa(st, env, T7, mode)` two-row reductions
-    pub fn two_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
     /// `47c445(mode)` linear dependent rows (2: dual side)
     pub fn dep_rows(&mut self, p: &Params, mode: i32) -> i32 { 0 }
     /// `594c0c` (PRESS2MIP)

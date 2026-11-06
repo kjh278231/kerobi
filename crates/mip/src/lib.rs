@@ -41,6 +41,7 @@ mod symmetry;
 mod vublift;
 pub mod tracker;
 mod transred;
+mod tworows;
 mod xorrows;
 
 use rsolver_model::Model;
