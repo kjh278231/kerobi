@@ -1,6 +1,7 @@
 //! `578fd2` knapsack row strengthening (docs/m2_red_outer_a.md §5): each `<` row of the level-1 list goes through
 //! `6aec61` (the knapsack routine shared with the cut code; mode 2, PREPOWER), which may tighten coefficients and
 //! rhs, round with Chvátal–Gomory multipliers (`6b33dd`) and drop columns. Its work goes to W unscaled.
+use crate::helpers::minsd;
 use crate::iint::gcd_f64;
 use crate::state::{State, NIL};
 use crate::Params;
@@ -112,23 +113,8 @@ impl State {
 }
 
 impl Kn<'_> {
-    /// `a7cec0(s, ...)`: Σ bound·(s·a), the bound that minimizes each term; -1e100 at the first infinite one.
-    /// W += 3 per entry visited.
     fn act(&mut self, s: f64) -> f64 {
-        let (mut sum, mut t) = (0.0, 0);
-        while t < self.ind.len() {
-            let v = self.val[t] * s;
-            let j = self.ind[t] as usize;
-            let b = if v <= 0.0 { self.ub[j] } else { self.lb[j] };
-            if (v <= 0.0 && 1e30 <= b) || (0.0 < v && b <= -1e30) {
-                sum = -1e100;
-                break;
-            }
-            sum += b * v;
-            t += 1;
-        }
-        *self.w += t as f64 * 3.0;
-        sum
+        act_sum(&self.ind, &self.val, self.lb, self.ub, s, self.w)
     }
 
     fn max_act(&mut self) -> f64 {
@@ -293,9 +279,9 @@ impl Kn<'_> {
     }
 
     /// `6aec61(env, &k, ind, val, &rhs, lb, ub, vtype, p9, p10, &changed, W)` with p10 >= 1 (578fd2 passes 2).
-    /// shortcut: the PREPOWER != 0 block is not ported (default 0), nor the exact binary knapsack `6b4738`/`6b5e11`
-    /// (rows of 3..PREKNAPLIFTLEN binaries; ran14x18, nidda, csched007/8, gmu-35-40/50 reach it): such rows skip
-    /// that step. Port both before trusting those models.
+    /// shortcut: the PREPOWER != 0 block is not ported (default 0), nor the exact binary knapsack `6b5e11` for rows
+    /// of 11..PREKNAPLIFTLEN binaries (ran14x18, nidda, csched008, gmu-35-40/50 reach it; docs §5.3): such rows skip
+    /// that step. Port it before trusting those models.
     fn lift(&mut self, p9: i32, knaplen: i32, changed: &mut bool) -> i32 {
         let ft = self.ft;
         *changed = false;
@@ -357,7 +343,7 @@ impl Kn<'_> {
         self.maxact = mx;
         let lim = if knaplen == -1 { 512 } else { knaplen };
         if 2 < n && n as i32 <= lim && hint != 1 {
-            let (mut all01, mut t) = (true, 0);
+            let (mut all01, mut neg, mut t) = (true, 0.0f64, 0);
             while t < n {
                 if self.is_c(t) {
                     self.cont = 1;
@@ -367,13 +353,24 @@ impl Kn<'_> {
                 if self.lb[j] != 0.0 || self.ub[j] != 1.0 {
                     all01 = false;
                 }
+                if self.val[t] < 0.0 {
+                    neg = neg - self.val[t];
+                }
                 t += 1;
             }
             *self.w += t as f64 * 5.0;
             if t == n {
                 self.cont = 0;
+                if all01 && n < 11 {
+                    self.ac = false;
+                    self.knap_small(neg + self.rhs);
+                    if self.ac {
+                        *changed = true;
+                    }
+                    return 0;
+                }
                 if all01 {
-                    // shortcut: 6b4738 (n < 11) / 6b5e11 not ported, see above
+                    // shortcut: 6b5e11 (11..PREKNAPLIFTLEN binaries) not ported, see above
                 }
             }
         }
@@ -757,6 +754,138 @@ impl Kn<'_> {
         false
     }
 
+    /// `6b4738(c, ...)` (rows of 3..10 binaries, c = rhs + Σ|a<0|): per coefficient i (not marked, |a_i| > 1e-13),
+    /// the sorted subset sums (<= c + 100ft, deduplicated within 1e-10) of the other coefficients decide a decrease
+    /// of |a_i| (when no sum reaches c − 100ft) and an increase (when no sum + |a_i| is within 100ft of c); later
+    /// coefficients with the same |a| are skipped. W += 5 per merge step. Sets `ac`; leaves the row compacted.
+    fn knap_small(&mut self, mut c: f64) {
+        let n = self.ind.len();
+        let tol = 100.0 * self.ft;
+        let mut done = vec![false; n];
+        for i in 0..n {
+            if done[i] {
+                continue;
+            }
+            let mut ai = self.val[i].abs();
+            if 1e-13 >= ai {
+                continue;
+            }
+            let (lo, hi) = (c - tol, c + tol);
+            let mut sums = vec![0.0f64];
+            let (mut below, mut far, mut quit) = (true, true, false);
+            for j in 0..n {
+                let aj = self.val[j].abs();
+                if j == i || 1e-13 >= aj {
+                    continue;
+                }
+                let mut add = Vec::new();
+                for &x in &sums {
+                    let y = x + aj;
+                    if y > hi {
+                        break;
+                    }
+                    add.push(y);
+                    far = far && tol < ((y - c) + ai).abs();
+                }
+                let Some(&last) = add.last() else { continue };
+                if below && lo > last {
+                    below = true;
+                } else {
+                    below = false;
+                    if !far {
+                        quit = true;
+                        break;
+                    }
+                }
+                // merge (new sums equal to an old one within 1e-10 are dropped)
+                let (mut out, mut a, mut b, mut new) = (Vec::new(), 0, 0, false);
+                while a < sums.len() && b < add.len() {
+                    if 1e-10 > (sums[a] - add[b]).abs() {
+                        b += 1;
+                    } else if add[b] <= sums[a] {
+                        out.push(add[b]);
+                        new = true;
+                        b += 1;
+                    } else {
+                        out.push(sums[a]);
+                        a += 1;
+                    }
+                }
+                if b < add.len() {
+                    out.extend_from_slice(&add[b..]);
+                    b = add.len();
+                    new = true;
+                }
+                if new && a < sums.len() {
+                    out.extend_from_slice(&sums[a..]);
+                    a = sums.len();
+                }
+                *self.w += (b + a) as f64 * 5.0;
+                if new {
+                    sums = out;
+                }
+            }
+            if !quit {
+                let phases = if far { 1 } else { 0 };
+                let mut ph = if below { 0 } else { 1 };
+                while ph <= phases {
+                    let base = if ph == 0 { c } else { c - ai };
+                    if ph == 1 {
+                        while sums.last().is_some_and(|&x| x > tol + base) {
+                            sums.pop();
+                        }
+                    }
+                    let mx = sums.last().copied().unwrap_or(0.0);
+                    let mut d = base - mx;
+                    if ph == 0 {
+                        d = minsd(d, ai);
+                    }
+                    if d > tol {
+                        self.ac = true;
+                        let v = self.val[i];
+                        if (ph == 0 && v < 0.0) || (ph == 1 && v > 0.0) {
+                            self.val[i] = v + d;
+                        } else {
+                            self.val[i] = v - d;
+                            self.rhs = self.rhs - d;
+                        }
+                        if ph == 0 {
+                            c = c - d;
+                            if 1e-13 > self.val[i].abs() {
+                                self.val[i] = 0.0;
+                                ai = 0.0;
+                                break;
+                            }
+                        }
+                        ai = self.val[i].abs();
+                    }
+                    ph += 1;
+                }
+            }
+            if 1e-13 < ai {
+                for t in i + 1..n {
+                    if 1e-10 > (ai - self.val[t].abs()).abs() {
+                        done[t] = true;
+                    }
+                }
+            }
+        }
+        if self.ac {
+            let mut k = 0;
+            for t in 0..n {
+                if 1e-10 < self.val[t].abs() {
+                    self.ind[k] = self.ind[t];
+                    self.val[k] = self.val[t];
+                    k += 1;
+                }
+            }
+            self.ind.truncate(k);
+            self.val.truncate(k);
+            self.minact = STALE;
+            self.maxact = STALE;
+        }
+    }
+
     /// After the main loop (p10 >= 1): with integral coefficients (|a| <= 2e7, not all equal), `a7c752` gives each
     /// coefficient the gcd of the others; the first column whose value is > 1 gets `6b33dd(1/value, 0)`.
     fn gcd_others(&mut self, changed: &mut bool) {
@@ -803,9 +932,28 @@ impl Kn<'_> {
     }
 }
 
+/// `a7cec0(s, n, ind, val, lb, ub, W)`: Σ bound·(s·a), the bound that minimizes each term; -1e100 at the first
+/// infinite one. W += 3 per entry visited.
+pub(crate) fn act_sum(ind: &[i32], val: &[f64], lb: &[f64], ub: &[f64], s: f64, w: &mut f64) -> f64 {
+    let (mut sum, mut t) = (0.0, 0);
+    while t < ind.len() {
+        let v = val[t] * s;
+        let j = ind[t] as usize;
+        let b = if v <= 0.0 { ub[j] } else { lb[j] };
+        if (v <= 0.0 && 1e30 <= b) || (0.0 < v && b <= -1e30) {
+            sum = -1e100;
+            break;
+        }
+        sum += b * v;
+        t += 1;
+    }
+    *w += t as f64 * 3.0;
+    sum
+}
+
 /// `a7c752(env, n, v, out, W)`: for each i the gcd of the other |v| (rounded; 2e9 = none), by a segment tree;
 /// all 0 when some |v| is not integral.
-fn gcd_excl(v: &[f64], w: &mut f64) -> Vec<f64> {
+pub(crate) fn gcd_excl(v: &[f64], w: &mut f64) -> Vec<f64> {
     let n = v.len();
     let mut out = vec![0.0; n];
     if n == 1 {

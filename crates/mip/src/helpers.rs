@@ -12,6 +12,41 @@ pub(crate) fn maxsd(a: f64, b: f64) -> f64 {
     if a > b { a } else { b }
 }
 
+/// `7722f(nmin, nmaj, beg, len, ind, val, obeg, olen, oind, oval, W)`: transpose a CSR of `beg.len()` major lines
+/// into `nmin` minor lines (each minor line's entries in major order); work without the multiplier. Returns
+/// (beg, len, ind, val) of the transpose (`beg` has nmin + 1 entries).
+pub(crate) fn transpose_csr(nmin: usize, beg: &[usize], len: &[usize], ind: &[usize], val: &[f64], w: &mut f64)
+    -> (Vec<usize>, Vec<usize>, Vec<usize>, Vec<f64>) {
+    let nmaj = len.len();
+    let mut cnt = vec![0usize; nmin];
+    for j in 0..nmaj {
+        for t in beg[j]..beg[j] + len[j] {
+            cnt[ind[t]] += 1;
+        }
+        *w = len[j] as f64 * 2.0 + *w;
+    }
+    *w = *w + nmaj as f64 * 3.0;
+    let mut ob = vec![0usize; nmin + 1];
+    for i in 0..nmin {
+        ob[i + 1] = ob[i] + cnt[i];
+    }
+    *w = (*w + nmin as f64) + nmin as f64;
+    let total = ob[nmin];
+    let (mut oind, mut oval) = (vec![0; total], vec![0.0; total]);
+    let mut fill = ob.clone();
+    for j in 0..nmaj {
+        for t in beg[j]..beg[j] + len[j] {
+            let r = ind[t];
+            oind[fill[r]] = j;
+            oval[fill[r]] = val[t];
+            fill[r] += 1;
+        }
+        *w = len[j] as f64 * 5.0 + *w;
+    }
+    *w = *w + nmaj as f64 * 3.0;
+    (ob, cnt, oind, oval)
+}
+
 impl State {
     /// `53802c(tr, st, j)` (linked-list branch): mark the rows of column `j`'s live nodes. W += (μ·5)·nodes walked.
     pub fn mark_rows_of_col(&mut self, j: usize) {

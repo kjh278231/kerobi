@@ -276,6 +276,12 @@ impl State {
                 let a: Vec<i32> = name.split(':').skip(1).map(|x| x.parse().unwrap_or(0)).collect();
                 (self.parallel(p, a[0], a[1]), 0)
             }
+            _ if name.starts_with("423e35:") => (self.probe0(p, name[7..].parse().unwrap_or(1), Default::default()), 0),
+            _ if name.starts_with("838543:") => (self.mod_k(p, name[7..].parse().unwrap_or(2)), 0),
+            "5a04fc" => (self.smart_disagg(p), 0),
+            "5a1293" => (self.dual_redundant(p), 0),
+            "5aaaf7" => (self.r5aaaf7(p), 0),
+            "579e67" => (self.r579e67(p), 0),
             "5a9282" => (self.r5a9282(p), 0),
             "5ab429" => (self.r5ab429(p), 0),
             "59c193" => (self.vub_lift(p), 0),
@@ -292,6 +298,22 @@ impl State {
             "4030c9" => (self.dominated(p, Default::default()), 0),
             // the reduction timer is not dumped: a zero limit never stops the call
             "414c03" => (self.cancel_rows(p, 2, Default::default()), 0),
+            "dual_conv_bin" => (self.dual_conv_bin(p), 0),
+            "dual_fix_empty_cols" => (self.dual_fix_empty_cols(p), 0),
+            "implied_int_scale" => (self.implied_int_scale(p), 0),
+            "470936" => (self.sparsify(p, Default::default()), 0),
+            "52cba4" => {
+                let mut k = 0;
+                (self.components(p, &mut k), k as i64)
+            }
+            "521497" => (self.biconnected(p), 0),
+            "57999f" => {
+                self.r57999f(p);
+                (0, 0)
+            }
+            "47c445" => (self.dep_rows(p, 2), 0),
+            "5466a7" => (self.merge_vubs(p, Default::default()), 0),
+            "45feaa" => (self.two_rows(p, 1, Default::default()), 0),
             "414c53" => (self.cancel_cols(p, 2, Default::default()), 0),
             "370047" => {
                 self.activity(None);

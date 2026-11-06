@@ -92,6 +92,11 @@ impl State {
         self.adjacent_any(true, true)
     }
 
+    /// `53b99a`: the row counterpart of `adjacent2_cols` (rows of the `53af0f` columns; cache tracker+0x130).
+    pub fn adjacent2_rows(&mut self) -> Vec<i32> {
+        self.adjacent_any(false, true)
+    }
+
     /// `53af0f` (columns) / `53a487` (rows): the items marked at the tracker's level plus every item sharing a row
     /// (column) with the other kind's list (`538f30` / `5399fc`), live ones only; all live items in index order when
     /// that would be most of them. Cached per level until the next reset.
@@ -114,7 +119,7 @@ impl State {
         let mut dense = !((na as f64) * 5.0 < dim as f64);
         let mut other = Vec::new();
         if !dense {
-            other = if hop2 { self.adjacent_list(false) } else if cols { self.rows_list() } else { self.cols_list() };
+            other = if hop2 { self.adjacent_list(!cols) } else if cols { self.rows_list() } else { self.cols_list() };
             let ocnt = if cols { &self.row_cnt } else { &self.col_cnt };
             let sum: i64 = other.iter().map(|&i| ocnt[i as usize].max(0) as i64).sum();
             self.work += (other.len() as f64 + other.len() as f64) * mult;

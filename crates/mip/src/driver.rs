@@ -349,13 +349,15 @@ impl Driver<'_> {
             }
             self.budget();
             if p.premergevubs != 0 && self.ok(13) {
-                rc(self.timed(13, |s, p| s.merge_vubs(p)))?;
+                let t = self.t[13];
+                rc(self.timed(13, |s, p| s.merge_vubs(p, t)))?;
                 self.count("merge_vubs")?;
                 self.budget();
             }
             if p.pretworows != 0 && p.presolve != 1 && self.ok(7) {
                 let m = p.pretworows.abs();
-                rc(self.timed(7, |s, p| s.two_rows(p, m)))?;
+                let t = self.t[7];
+                rc(self.timed(7, |s, p| s.two_rows(p, m, t)))?;
                 self.count("two_rows")?;
                 self.budget();
             }
@@ -448,8 +450,8 @@ impl Driver<'_> {
             self.budget();
         }
         if p.preprobe0 != 0 && self.ok(10) {
-            let probe = self.run.probe;
-            rc(self.timed(10, |s, p| s.probe0(p, probe)))?;
+            let (probe, t) = (self.run.probe, self.t[10]);
+            rc(self.timed(10, |s, p| s.probe0(p, probe, t)))?;
             self.count("probe0")?;
             self.budget();
         }
@@ -501,7 +503,8 @@ impl Driver<'_> {
         // `5a7c0f` and `45feaa(2)` run only with a MIP context or PRETWOROWS 2
         if p.pretworows == 2 {
             if self.ok(7) {
-                rc(self.timed(7, |s, p| s.two_rows(p, 2)))?;
+                let t = self.t[7];
+                rc(self.timed(7, |s, p| s.two_rows(p, 2, t)))?;
                 self.count("two_rows")?;
             }
             self.budget();
@@ -593,7 +596,8 @@ impl Driver<'_> {
         }
         // the component block (ncomp > 0) only treats SOS, QC and NL parts: nothing for linear models
         if p.presolve != 0 && p.presparsify != 0 && self.ok(20) {
-            rc(self.timed(20, |s, p| s.sparsify(p)))?;
+            let t = self.t[20];
+            rc(self.timed(20, |s, p| s.sparsify(p, t)))?;
             self.count("sparsify")?;
         }
         self.budget();

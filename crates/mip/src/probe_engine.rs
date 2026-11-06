@@ -76,9 +76,9 @@ impl IntSet {
 }
 
 /// `a7b54f` (crates/lp/src/common.rs `Rng`)
-struct Rng(u64);
+pub(crate) struct Rng(pub(crate) u64);
 impl Rng {
-    fn f64(&mut self) -> f64 {
+    pub(crate) fn f64(&mut self) -> f64 {
         self.0 = self.0.wrapping_mul(0x5851f42d4c957f2d).wrapping_add(0x14057b7ef767814f);
         let mut y = (self.0 >> 32) as u32;
         y ^= y >> 11;

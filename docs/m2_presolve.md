@@ -6,12 +6,12 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 
 | G6 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **22/38**(2026-11-06, `32361e8`). 첫 불일치: `two_rows` 7, `implied_int_scale` 3, `knapsack` 2, `ss2mip`·`sparsify`·`probe0`·`mod_k` 1. 추가된 행·열 이름은 R<번호>/C<번호>(나머지는 원래 이름) |
+| (1) miplib_small 38개 기본값 presolved 모델 38/38 | **35/38**(2026-11-06, roundend-b 병합 `641aa0f`, `presolve_check` 기본값). 남은: gmu-35-40·gmu-35-50(`6b5e11`), ran14x18-disj-8(`594c0c`) |
 | (2) 기본값에서 도는 MIP reduction 전부(probing·대칭성·연결 성분 포함) | 시작 전. 목록은 §2 |
 | (3) MIP postsolve 레코드 | 시작 전 |
 | (4) clippy 0, 테스트, 03·이 메모 갱신 | 시작 전 |
 
-운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만. 크레이트 수준의 파라미터 표(이름·기본값·범위)는 G5(`m1-lp-driver`)가 만든다. `docs/m2_param_offsets.tsv`는 오라클·도구용이고, `crates/mip`에는 MIP presolve가 읽는 필드만 가진 `Params`(LP `presolve::Params`처럼 `from_pairs`)만 둔다(2026-11-06 오케스트레이터 지시). 사용량 한도 때문에 하위 에이전트는 동시에 3개 이하로 두고, 끝난 것은 병합한 뒤 worktree·브랜치를 지운다(같은 날 지시).
+운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만. 크레이트 수준의 파라미터 표(이름·기본값·범위)는 G5(`m1-lp-driver`)가 만든다. `docs/m2_param_offsets.tsv`는 오라클·도구용이고, `crates/mip`에는 MIP presolve가 읽는 필드만 가진 `Params`(LP `presolve::Params`처럼 `from_pairs`)만 둔다(2026-11-06 오케스트레이터 지시). 사용량 한도 때문에 하위 에이전트는 동시에 3개 이하로 두고, 끝난 것은 병합한 뒤 worktree·브랜치를 지운다(같은 날 지시). 토큰 여유가 없어 이후 하위 에이전트는 **한 번에 하나만** 돌린다(2026-11-06 사용자 지시). roundend(대칭 끝, `594c0c` 시작 직전)와 outer-c(two_rows 등)는 일시 중지했고, 각 worktree의 커밋·작업 파일에서 이어 간다.
 
 ### 진행 중인 하위 작업 (2026-11-06 시작)
 | worktree / 브랜치 | 일 | 산출물 |
@@ -22,18 +22,19 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | ~~`m2-spine-d`~~ (완료, 병합) | FINAL 단계 해독. 두 번째 probing 뒤 ρ > 1e-4면 라운드 루프 재시작(최대 1회), 마무리 사슬 `52cba4`→`521497`→`470936`→`57999f`→{`36ddf2`+inline 쌍대 고정}→inline implied int. 카운트 C1–C23 | [m2_spine_d.md](m2_spine_d.md) |
 | ~~`m2-probe`~~ (완료, 병합 `54125bd`) | probing `4d3a1d` 전체 포팅(`probe*.rs`, `conflict.rs`, `subst.rs`). 엔진 62/62 패스 비트 일치(`tools/probe_check.py`), 쓰기 13호출 일치(`tools/probe_apply_check.py`). sweep에서 `probe` 첫 불일치 0 | [m2_red_probe.md](m2_red_probe.md) |
 | `../rsolver-m2-outer-b` / `m2-outer-b` | `bd6d2e3`까지 병합(`4030c9`, `40d2bc`, `36ee92`, `3e40d1`, `37f484` MIP, `418542`, 덤프 각 78/78). 이 worktree는 사용자가 맡긴 Codex 에이전트가 마무리 중(`37f484` 단계 C 쌍 집계, `3bb6fe`). 끝나면 다시 병합 | [m2_red_outer_b.md](m2_red_outer_b.md) |
-| `../rsolver-m2-outer-c` / `m2-outer-c` | `45feaa` two-row(+`45d7ec`), `5466a7` VUB 병합, `47c445` MIP 분기, inline 쌍대 이진화 작업량 | `docs/m2_red_outer_c.md` |
+| ~~`m2-outer-c`~~ (완료, 병합 `4358dd1`) | `45feaa`(+`45d7ec`), `5466a7`, `47c445` mode 2, inline 쌍대 이진화. 덤프 78/78·78/78·47/47·78/78 | [m2_red_outer_c.md](m2_red_outer_c.md) |
+| ~~`m2-final`~~ (완료) | FINAL 단계: inline implied int 척도, `470936` sparsify, `57999f`, inline 쌍대 고정 포팅(덤프 각 38/38, 합성 쌍대 고정 2/2). `52cba4`·`521497`은 하위 풀이(`5307f4`/`522aa2`) 미포팅 shortcut(38개에서 안 돎) | [m2_red_final.md](m2_red_final.md) |
+| ~~`m2-roundend-b`~~ (완료, 병합 `641aa0f`) | `838543`, `423e35`, `5aaaf7`, `579e67`, `5a1293`, `5a04fc` 포팅(덤프 전부 일치). `419ffc`, `5a4d8b`, `5a5eff`는 stub(38개에서 작업량만 바뀜) | [m2_red_roundend_b.md](m2_red_roundend_b.md) |
 | ~~`m2-clique`~~ (완료, 병합 `3ece196`) | `451bed`, `45885d`, `52be10`, `46a62d` 포팅. 덤프 비교 각 78/78, 레코드 38/38. 덤프에 +0xf0/+0xf4(prelude에서 센 이진·정수 수)를 더함 | [m2_red_clique.md](m2_red_clique.md) |
-| `../rsolver-m2-roundend` / `m2-roundend` | 병합(`f2e0c80`): `58d4ce`, `5a9282`, `5ab429`(+`574764` `mod_subst`, `a7c550`, `3c5996`), `59c193`, `55a779` 1부. 덤프 80/42/42/38 전부 일치. 지금 `5577ba` 대칭 MIP 분기(작업량만 바뀜, `551cc0` 정수 경로·`5507cb`). 다음 `594c0c`(ran14x18, outer-a의 `3bbf87`/`3bde19` 뒤) | [m2_red_roundend.md](m2_red_roundend.md) |
-| `../rsolver-m2-outer-a` / `m2-outer-a` | 바깥 패스 앞쪽 해독 → 포팅: `3e5363`, `3ff744` MIP 분기, `57627e`, `578fd2`, `374521`, `5431ee` | `docs/m2_red_outer_a.md` |
+| `../rsolver-m2-roundend` / `m2-roundend` (일시 중지) | 병합(`ad481f7`): 라운드 끝 A + 대칭 `5577ba` MIP 분기(`5507cb`, use 블록, type 19, 덤프 38/38 f4 포함). 남은 일 `594c0c`(작업 파일 `inner.rs` 수정 중에 멈춤) | [m2_red_roundend.md](m2_red_roundend.md) |
+| `../rsolver-m2-outer-a` / `m2-outer-a` (대기) | 병합: `374521`, `5431ee`, `3e5363`, `57627e`, `3ff744` mode 0–3(+열 집계, `add_cols`/`add_rows`), `578fd2`(+`6aec61` mode 2, `6b4738`) — 덤프 전부 일치, `578fd2`만 66/78. 남은 일: `6b5e11`(11–512개 이진 행 정확 knapsack, asm 3,491줄)과 `6b56d2` 포팅 → gmu 둘의 첫 불일치(k=28). 노트 §5.3에서 이어 감 | [m2_red_outer_a.md](m2_red_outer_a.md) |
 | ~~`m2-inner`~~ (완료, 병합 `a4dcbf1`) | 내부 루프 7개 + inline 함의 bound 포팅. 덤프 비교 147–225/호출 전부 일치(`tools/mip_dump_check.py`), 레코드 38/38 바이트 일치(`tools/mip_rec_check.py`, `CoreModel.mip_post_records`). 공용 보조 API는 `helpers.rs`(m2_red_inner.md §11) | [m2_red_inner.md](m2_red_inner.md) |
 
 ### 제어 흐름 (2026-11-06, `crates/mip/src/driver.rs`)
 spine 노트 b·c·d대로 `3cd406`의 단계(≤2) × 라운드(≤5) × 패스 × 내부 반복, 라운드 끝, FINAL을 옮겼다. 카운트 62곳(reduction 없이 세는 I→B·PREPARTOBJ·함의 bound·쌍대 이진화·패스 끝·FINAL 쌍대 고정 포함), timer 28개(시작마다 +1, 한도 B·0.5B·2B·4B·3B), 스냅숏 셋과 진척도 판정 셋, inline I→B·PREPARTOBJ·열 타입 통계·두 번째 probing 판정. 아직 없는 reduction은 `stubs.rs`의 stub(아무것도 안 바꾸고 0)이다. **포팅 = stub을 지우고 같은 이름의 `impl State` 메서드를 새 파일에 둔다.** 확인: 아무것도 안 바뀌는 5개 모델의 총 카운트가 Gurobi 호출 기록과 같다(neos5 62, 두 번째 probing이 없는 모델 61).
 
 ### 남은 묶음 (아직 담당 없음, 동시 3개 한도 안에서 차례로)
-- round-end-b: `423e35`, `419ffc`, `5a1293`, `5a4d8b`/`5a5eff`, `5aaaf7`, `838543` mod-k, `579e67`, `5a04fc`.
-- final: `52cba4`, `521497`, `470936` sparsify(LP 포트 호출 지점만), `57999f`, inline 쌍대 고정, inline implied int 척도.
+- 그 뒤: `594c0c`(roundend, `inner.rs` 작업 파일), `6b5e11`/`6b56d2`(outer-a 노트 §5.3), `52cba4`/`521497` 성분·블록 탐색 포팅(G6 기준 (2)).
 
 ### 다음 단계 (순서)
 1. 위 네 브랜치를 `m2-mip-presolve`에 합친다. 구간 노트로 `3cd406` 제어 흐름 전체를 reduction stub(카운트만)으로 옮긴다. stub이 Gurobi와 같은 k에서 카운트하는지는 sweep의 "바뀐 k"와 reduction 위치가 맞는지로 확인한다.

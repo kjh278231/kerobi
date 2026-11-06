@@ -4,7 +4,7 @@ free/pending counts, tracker and new postsolve records (docs/m2_red_inner.md §9
 usage: PYTHONPATH=python python tools/mip_dump_check.py <fn> <dump.json ...> [--after DUMP] [--param K=V ...]
   <fn>: 3e39a6 36ddf2 37168e 36c5cf 56f793 56c80e 36e6b6 (mode 0 or 1, whichever matches) 370047 implied_bounds
   45885d 52be10 46a62d 5a9282 5ab429 59c193 55a779 374521 5431ee 3e5363 57627e 3ff744:<mode>:<flag>
-  3e40d1 36ee92 418542 37f484 4030c9 414c03 414c53 5577ba (with an OUT_I32=4 dump, f4 too).
+  3e40d1 36ee92 418542 37f484 4030c9 414c03 414c53 5577ba 838543 423e35 5aaaf7 579e67 5a1293 5a04fc (with an OUT_I32=4 dump, f4 too).
   --after: the "after" state is the entry state of the same call number in DUMP (for an inline block: dump the
   function before it and the one after it).
 Doubles compare with == (the JSON dump loses the sign of -0.0); records compare byte for byte except padding.
@@ -17,7 +17,7 @@ from rsolver import _core
 FIELDS = ["lb", "ub", "obj", "rhs", "row_cnt", "col_cnt", "inf_max", "inf_min", "act_max", "act_min", "mult_lo",
           "mult_hi", "objcon", "nnz", "work"]
 # void functions (the dumped return value is a stale register)
-NO_RET = {"56f793", "3e40d1"}
+NO_RET = {"56f793", "3e40d1", "57999f"}
 
 
 def to_parts(s):
@@ -84,6 +84,9 @@ def compare(got, want, enter_recs, show=12):
             b = int(b)
         if isinstance(b, list):
             for i, (x, y) in enumerate(zip(a, b)):
+                # dead rows' activities are stale memory: with --after it comes from another process
+                if k.startswith("act_") and got["row_cnt"][i] < 0 and want["row_cnt"][i] < 0:
+                    continue
                 ck(f"{k}[{i}]", x, y)
         else:
             ck(k, a, b)
@@ -140,6 +143,8 @@ def main():
             names = ["36e6b6:0", "36e6b6:1"] if a.fn == "36e6b6" else [a.fn]
             if a.fn == "3ff744":  # mode and flag are the 4th and 5th arguments
                 names = [f"3ff744:{xs[0]['args'][3]}:{xs[0]['args'][4]}"]
+            if a.fn in ("838543", "423e35"):  # k / probe mode is the 4th argument
+                names = [f"{a.fn}:{xs[0]['args'][3]}"]
             best = None
             for name in names:
                 got = _core.mip_dump_run(name, to_parts(enter), params)

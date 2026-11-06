@@ -2,6 +2,7 @@
 //! its row transpose `7722f`), a column j that can move in one direction only against the rows it shares with
 //! column k fixes k (phase 1) or itself (phase 2) at a bound, checked by `40a768`.
 use crate::driver::Timer;
+use crate::helpers::transpose_csr;
 use crate::probe::TimerView;
 use crate::state::{State, NIL};
 use crate::Params;
@@ -528,38 +529,10 @@ impl State {
         self.work = self.work_mult * 2.0 * (big.touched.len() - 1) as f64 + self.work;
     }
 
-    /// `7722f(m, n, …, W)`: column CSR to row CSR (rows' entries in column order); work without the multiplier.
+    /// `7722f(m, n, …, W)`: column CSR to row CSR (rows' entries in column order).
     fn transpose(&mut self, s: &mut Snap) {
-        let (m, n) = (self.m, self.n);
-        let mut cnt = vec![0usize; m];
-        for j in 0..n {
-            for t in s.cs[j]..s.cs[j] + s.cn[j] {
-                cnt[s.crow[t]] += 1;
-            }
-            self.work = s.cn[j] as f64 * 2.0 + self.work;
-        }
-        self.work = self.work + n as f64 * 3.0;
-        s.rs[0] = 0;
-        for i in 0..m {
-            s.rs[i + 1] = s.rs[i] + cnt[i];
-        }
-        self.work = (self.work + m as f64) + m as f64;
-        let total = s.rs[m];
-        s.rcol = vec![0; total];
-        s.rval = vec![0.0; total];
-        let mut fill = s.rs.clone();
-        for j in 0..n {
-            for t in s.cs[j]..s.cs[j] + s.cn[j] {
-                let r = s.crow[t];
-                s.rcol[fill[r]] = j;
-                s.rval[fill[r]] = s.cval[t];
-                fill[r] += 1;
-            }
-            self.work = s.cn[j] as f64 * 5.0 + self.work;
-        }
-        self.work = self.work + n as f64 * 3.0;
-        for i in 0..m {
-            s.re[i] = cnt[i] + s.rs[i];
-        }
+        let (rs, rcnt, rcol, rval) = transpose_csr(self.m, &s.cs, &s.cn, &s.crow, &s.cval, &mut self.work);
+        s.re = rs.iter().zip(&rcnt).map(|(&b, &c)| b + c).collect();
+        (s.rs, s.rcol, s.rval) = (rs, rcol, rval);
     }
 }

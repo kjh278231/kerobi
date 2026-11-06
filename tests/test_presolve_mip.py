@@ -22,6 +22,8 @@ def test_writer_integer_sections():
     (DATA / "miplib/neos859080.mps.gz", [("Presolve", 0.0)], "neos859080_pre0.mps"),
     (DATA / "miplib/timtab1.mps.gz", [("GURO_PAR_PRELIMIT", 2.0)], "timtab1_lim2.mps"),
     (FIX / "syn_round.mps", [("Presolve", 0.0)], "syn_round_pre0.mps"),
+    # syn_dfix: 57999f drops x's tiny coefficient, the final dual fixing fixes the now empty x at its lower bound
+    (FIX / "syn_dfix.mps", [], "syn_dfix_pre.mps"),
 ])
 def test_presolved_model_matches_gurobi(src, params, want):
     assert rsolver.read(src)._core.presolve(params).to_mps() == (FIX / want).read_text()

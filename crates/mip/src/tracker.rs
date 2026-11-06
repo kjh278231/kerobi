@@ -16,7 +16,7 @@ pub struct Queue {
     pub cache: [Option<Vec<i32>>; 3],
     /// `53a487`/`53af0f` result cache per level (tracker+0xe0/+0x108).
     pub cache2: [Option<Vec<i32>>; 3],
-    /// `53c422` result cache per level (columns only, tracker+0x158; rows' +0x130 counterpart unused).
+    /// `53c422` / `53b99a` result cache per level (columns tracker+0x158, rows +0x130).
     pub cache3: [Option<Vec<i32>>; 3],
 }
 
@@ -141,6 +141,7 @@ impl Tracker {
                 self.rows.cache2[lv] = None;
                 self.cols.cache2[lv] = None;
                 self.cols.cache3[lv] = None;
+                self.rows.cache3[lv] = None;
             }
         }
         self.active[lv] = true;
