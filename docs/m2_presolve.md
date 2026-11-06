@@ -24,6 +24,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | `../rsolver-m2-outer-b` / `m2-outer-b` | `bd6d2e3`까지 병합(`4030c9`, `40d2bc`, `36ee92`, `3e40d1`, `37f484` MIP, `418542`, 덤프 각 78/78). 이 worktree는 사용자가 맡긴 Codex 에이전트가 마무리 중(`37f484` 단계 C 쌍 집계, `3bb6fe`). 끝나면 다시 병합 | [m2_red_outer_b.md](m2_red_outer_b.md) |
 | ~~`m2-outer-c`~~ (완료, 병합 `4358dd1`) | `45feaa`(+`45d7ec`), `5466a7`, `47c445` mode 2, inline 쌍대 이진화. 덤프 78/78·78/78·47/47·78/78 | [m2_red_outer_c.md](m2_red_outer_c.md) |
 | ~~`m2-final`~~ (완료) | FINAL 단계: inline implied int 척도, `470936` sparsify, `57999f`, inline 쌍대 고정 포팅(덤프 각 38/38, 합성 쌍대 고정 2/2). `52cba4`·`521497`은 하위 풀이(`5307f4`/`522aa2`) 미포팅 shortcut(38개에서 안 돎) | [m2_red_final.md](m2_red_final.md) |
+| `../rsolver-m2-roundend-b` / `m2-roundend-b` | 라운드 끝 뒷부분: `423e35`, `419ffc`, `5a1293`, `5a4d8b`/`5a5eff`, `5aaaf7`, `838543`(+`83e123`), `579e67`, `5a04fc` | `docs/m2_red_roundend_b.md` |
 | ~~`m2-clique`~~ (완료, 병합 `3ece196`) | `451bed`, `45885d`, `52be10`, `46a62d` 포팅. 덤프 비교 각 78/78, 레코드 38/38. 덤프에 +0xf0/+0xf4(prelude에서 센 이진·정수 수)를 더함 | [m2_red_clique.md](m2_red_clique.md) |
 | `../rsolver-m2-roundend` / `m2-roundend` (일시 중지) | 병합(`ad481f7`): 라운드 끝 A + 대칭 `5577ba` MIP 분기(`5507cb`, use 블록, type 19, 덤프 38/38 f4 포함). 남은 일 `594c0c`(작업 파일 `inner.rs` 수정 중에 멈춤) | [m2_red_roundend.md](m2_red_roundend.md) |
 | `../rsolver-m2-outer-a` / `m2-outer-a` (대기) | 병합: `374521`, `5431ee`, `3e5363`, `57627e`, `3ff744` mode 0–3(+열 집계, `add_cols`/`add_rows`), `578fd2`(+`6aec61` mode 2, `6b4738`) — 덤프 전부 일치, `578fd2`만 66/78. 남은 일: `6b5e11`(11–512개 이진 행 정확 knapsack, asm 3,491줄)과 `6b56d2` 포팅 → gmu 둘의 첫 불일치(k=28). 노트 §5.3에서 이어 감 | [m2_red_outer_a.md](m2_red_outer_a.md) |
@@ -33,7 +34,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 spine 노트 b·c·d대로 `3cd406`의 단계(≤2) × 라운드(≤5) × 패스 × 내부 반복, 라운드 끝, FINAL을 옮겼다. 카운트 62곳(reduction 없이 세는 I→B·PREPARTOBJ·함의 bound·쌍대 이진화·패스 끝·FINAL 쌍대 고정 포함), timer 28개(시작마다 +1, 한도 B·0.5B·2B·4B·3B), 스냅숏 셋과 진척도 판정 셋, inline I→B·PREPARTOBJ·열 타입 통계·두 번째 probing 판정. 아직 없는 reduction은 `stubs.rs`의 stub(아무것도 안 바꾸고 0)이다. **포팅 = stub을 지우고 같은 이름의 `impl State` 메서드를 새 파일에 둔다.** 확인: 아무것도 안 바뀌는 5개 모델의 총 카운트가 Gurobi 호출 기록과 같다(neos5 62, 두 번째 probing이 없는 모델 61).
 
 ### 남은 묶음 (아직 담당 없음, 동시 3개 한도 안에서 차례로)
-- round-end-b: `423e35`, `419ffc`, `5a1293`, `5a4d8b`/`5a5eff`, `5aaaf7`, `838543` mod-k, `579e67`, `5a04fc`.
+- 그 뒤: `594c0c`(roundend, `inner.rs` 작업 파일), `6b5e11`/`6b56d2`(outer-a 노트 §5.3), `52cba4`/`521497` 성분·블록 탐색 포팅(G6 기준 (2)).
 
 ### 다음 단계 (순서)
 1. 위 네 브랜치를 `m2-mip-presolve`에 합친다. 구간 노트로 `3cd406` 제어 흐름 전체를 reduction stub(카운트만)으로 옮긴다. stub이 Gurobi와 같은 k에서 카운트하는지는 sweep의 "바뀐 k"와 reduction 위치가 맞는지로 확인한다.
