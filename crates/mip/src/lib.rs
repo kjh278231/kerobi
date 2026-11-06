@@ -15,6 +15,7 @@ pub mod dump;
 mod grow;
 mod helpers;
 mod iint;
+mod knapsack;
 mod inner;
 mod colpass;
 mod doubleton;
@@ -146,6 +147,8 @@ params! {
     prepwlred: i32 = 1, "guro_par_prepwlred";
     preobjpwlred: i32 = 1, "guro_par_preobjpwlred";
     prepower: i32 = 0, "guro_par_prepower";
+    /// env+0x2568 GURO_PAR_PREKNAPLIFTLEN (-1: 512 in `6aec61` mode 2)
+    preknapliftlen: i32 = -1, "guro_par_preknapliftlen";
 }
 
 /// 3cd406's locals that the reduction loop reads.

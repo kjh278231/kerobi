@@ -6,8 +6,6 @@ use crate::state::State;
 use crate::Params;
 
 impl State {
-    /// `578fd2` knapsack coefficient lifting
-    pub fn knapsack(&mut self, p: &Params) -> i32 { 0 }
     /// `4030c9` dominated columns
     pub fn dominated(&mut self, p: &Params) -> i32 { 0 }
     /// `414c03(st, env, mode, T15)` row nonzero cancellation (`40d2bc` mode 0)
