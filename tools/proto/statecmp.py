@@ -40,10 +40,39 @@ for it in sorted(set(g) & set(mine)):
     pr = a.get("price") or {}
     hv = lambda v: {s: j for j, s in enumerate(v) if s >= 0}  # position -> variable
     ga, gb = hv(va), hv(vb)
-    la, lb = [ga.get(p) for p in pr.get("list") or []], [gb.get(p) for p in b["list"]]
+    gl = pr.get("list") or []
+    if pr.get("mode") == 1:  # mode 1: the list is P+0x10[:P+0x28] (P+0x3c is the count at the last full path)
+        gl = gl[:pr.get("allow")]
+        if pr.get("thr") and b.get("thr") and F(pr["thr"]) != F(b["thr"]):
+            out.append(f"thr g {F(pr['thr'])!r} mine {F(b['thr'])!r}")
+    la, lb = [ga.get(p) for p in gl], [gb.get(p) for p in b["list"]]
     if pr and (pr.get("mode") != b["mode"] or la != lb):
-        out.append(f"pricing (vars) g mode {pr.get('mode')} list {la[:6]} | mine mode {b['mode']} list {lb[:6]}")
+        k = next((t for t in range(min(len(la), len(lb))) if la[t] != lb[t]), min(len(la), len(lb)))
+        out.append(f"pricing (vars) g mode {pr.get('mode')} len {len(la)} | mine mode {b['mode']} len {len(lb)}; first diff at {k}: "
+                   f"g {la[k:k + 4]} mine {lb[k:k + 4]}")
+    if pr.get("score") and b.get("score") and pr.get("mode") == 1:
+        gs, ms = [F(v) for v in pr["score"]], [F(v) for v in b["score"]]
+        fl = pr.get("flags") or [0] * len(gs)  # stale scores sit at feasible positions (flag ≥ 2): skip them
+        k = [j for j in range(len(va)) if va[j] >= 0 and vb[j] >= 0 and fl[va[j]] < 2 and gs[va[j]] != ms[vb[j]]]
+        if k:
+            out.append(f"score {len(k)} diff, first var {k[0]}: g {gs[va[k[0]]]!r} mine {ms[vb[k[0]]]!r}")
+    if pr.get("row_cost") and b.get("row_cost"):
+        if pr.get("cost_mode") != b.get("cost_mode"):
+            out.append(f"cost mode g {pr.get('cost_mode')} mine {b.get('cost_mode')}")
+        gs, ms = [F(v) for v in pr["row_cost"]], [F(v) for v in b["row_cost"]]
+        k = [j for j in range(len(va)) if va[j] >= 0 and vb[j] >= 0 and gs[va[j]] != ms[vb[j]]]
+        if k:
+            out.append(f"row_cost {len(k)} diff, first var {k[0]}: g {gs[va[k[0]]]!r} mine {ms[vb[k[0]]]!r}")
+        gv, mv = [F(v) for v in pr["var_cost"]], [F(v) for v in b["var_cost"]]
+        k = [j for j in range(len(gv)) if gv[j] != mv[j]]
+        if k:
+            out.append(f"var_cost {len(k)} diff, first {k[0]}: g {gv[k[0]]!r} mine {mv[k[0]]!r}")
     lu = a.get("lu") or {}
-    if lu and (lu.get("k"), pr.get("allow")) != (b.get("k"), b.get("allow")):
-        out.append(f"lu k/allow g {lu.get('k')}/{pr.get('allow')} mine {b.get('k')}/{b.get('allow')}")
+    if lu and (lu.get("k"), pr.get("allow")) != (b.get("k"), b.get("allow") if b.get("mode") != 1 else len(b["list"])):
+        out.append(f"lu k/allow g {lu.get('k')}/{pr.get('allow')} mine {b.get('k')}/{b.get('allow') if b.get('mode') != 1 else len(b['list'])}")
+    if lu and "eta" in b and (lu.get("eta"), lu.get("cols")) != (b["eta"], b["cols"]):
+        out.append(f"lu eta/cols g {lu.get('eta')}/{lu.get('cols')} mine {b['eta']}/{b['cols']}")
+    gp, mp = a.get("pt") or {}, b.get("pt") or {}
+    if mp and any(gp.get(k) != mp[k] for k in ("rc", "deg", "deg0")) or mp and gp.get("it0") != float(mp["it0"]):
+        out.append(f"pt g {[gp.get(k) for k in ('rc', 'deg', 'deg0', 'it0')]} mine {[mp[k] for k in ('rc', 'deg', 'deg0', 'it0')]}")
     print(f"iter {it}: " + ("OK" if not out else "; ".join(out)))
