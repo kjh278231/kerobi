@@ -113,23 +113,8 @@ impl State {
 }
 
 impl Kn<'_> {
-    /// `a7cec0(s, ...)`: Σ bound·(s·a), the bound that minimizes each term; -1e100 at the first infinite one.
-    /// W += 3 per entry visited.
     fn act(&mut self, s: f64) -> f64 {
-        let (mut sum, mut t) = (0.0, 0);
-        while t < self.ind.len() {
-            let v = self.val[t] * s;
-            let j = self.ind[t] as usize;
-            let b = if v <= 0.0 { self.ub[j] } else { self.lb[j] };
-            if (v <= 0.0 && 1e30 <= b) || (0.0 < v && b <= -1e30) {
-                sum = -1e100;
-                break;
-            }
-            sum += b * v;
-            t += 1;
-        }
-        *self.w += t as f64 * 3.0;
-        sum
+        act_sum(&self.ind, &self.val, self.lb, self.ub, s, self.w)
     }
 
     fn max_act(&mut self) -> f64 {
@@ -945,6 +930,25 @@ impl Kn<'_> {
             *changed = true;
         }
     }
+}
+
+/// `a7cec0(s, n, ind, val, lb, ub, W)`: Σ bound·(s·a), the bound that minimizes each term; -1e100 at the first
+/// infinite one. W += 3 per entry visited.
+pub(crate) fn act_sum(ind: &[i32], val: &[f64], lb: &[f64], ub: &[f64], s: f64, w: &mut f64) -> f64 {
+    let (mut sum, mut t) = (0.0, 0);
+    while t < ind.len() {
+        let v = val[t] * s;
+        let j = ind[t] as usize;
+        let b = if v <= 0.0 { ub[j] } else { lb[j] };
+        if (v <= 0.0 && 1e30 <= b) || (0.0 < v && b <= -1e30) {
+            sum = -1e100;
+            break;
+        }
+        sum += b * v;
+        t += 1;
+    }
+    *w += t as f64 * 3.0;
+    sum
 }
 
 /// `a7c752(env, n, v, out, W)`: for each i the gcd of the other |v| (rounded; 2e9 = none), by a segment tree;

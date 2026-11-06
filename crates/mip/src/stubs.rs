@@ -10,8 +10,6 @@ impl State {
     pub fn ss2mip(&mut self, p: &Params) -> i32 { 0 }
     /// `419ffc` (PRECOVERS)
     pub fn covers(&mut self, p: &Params) -> i32 { 0 }
-    /// `5a1293` (PREDUALREDUNDANT)
-    pub fn dual_redundant(&mut self, p: &Params) -> i32 { 0 }
     /// `5a4d8b` (PREDERIVED)
     pub fn derived_a(&mut self, p: &Params) -> i32 { 0 }
     /// `5a5eff` (PREDERIVED)

@@ -278,6 +278,7 @@ impl State {
             }
             _ if name.starts_with("423e35:") => (self.probe0(p, name[7..].parse().unwrap_or(1), Default::default()), 0),
             _ if name.starts_with("838543:") => (self.mod_k(p, name[7..].parse().unwrap_or(2)), 0),
+            "5a1293" => (self.dual_redundant(p), 0),
             "5aaaf7" => (self.r5aaaf7(p), 0),
             "579e67" => (self.r579e67(p), 0),
             "5a9282" => (self.r5a9282(p), 0),

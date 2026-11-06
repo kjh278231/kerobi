@@ -29,6 +29,7 @@ mod dualbin;
 mod dualbnd;
 mod dualagg;
 mod dualeq;
+mod dualred;
 mod finalinl;
 mod lists;
 mod mergevub;
