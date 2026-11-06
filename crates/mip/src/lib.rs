@@ -21,6 +21,7 @@ mod cancel;
 mod aggregate;
 mod colpass;
 mod compress;
+mod deprow;
 mod dominate;
 mod doubleton;
 mod dualbin;

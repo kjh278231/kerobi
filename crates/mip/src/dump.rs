@@ -293,6 +293,7 @@ impl State {
             // the reduction timer is not dumped: a zero limit never stops the call
             "414c03" => (self.cancel_rows(p, 2, Default::default()), 0),
             "dual_conv_bin" => (self.dual_conv_bin(p), 0),
+            "47c445" => (self.dep_rows(p, 2), 0),
             "5466a7" => (self.merge_vubs(p, Default::default()), 0),
             "45feaa" => (self.two_rows(p, 1, Default::default()), 0),
             "414c53" => (self.cancel_cols(p, 2, Default::default()), 0),
