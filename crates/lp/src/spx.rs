@@ -14,6 +14,8 @@ pub struct Spx {
     pub val: Vec<f64>,
     /// Original row sense characters (spx+0x90); '>' rows are stored negated.
     pub sense: Vec<u8>,
+    /// Structural column types (spx+0xb8), retained when solving a MIP's LP relaxation.
+    pub vtype: Vec<u8>,
     /// n+m costs, n+m bounds (slacks: [0, INF] or [0, 0] on '=' rows), m right-hand sides.
     pub c: Vec<f64>,
     pub l: Vec<f64>,
@@ -62,12 +64,18 @@ impl Spx {
             ind: md.col_ind.clone(),
             val,
             sense: md.row_sense.clone(),
+            vtype: md.vtype.clone(),
             c,
             l,
             u,
             b,
             scaling: sc,
         }
+    }
+
+    /// Integer-column preference shared by pricing, BFRT and cost perturbation.
+    pub fn var_factor(&self, j: usize) -> f64 {
+        if j < self.n && self.vtype.get(j).is_some_and(|&t| t != b'C') { 1.5 } else { 1.0 }
     }
 
     /// Entries (row, value) of column j over structural and slack columns.

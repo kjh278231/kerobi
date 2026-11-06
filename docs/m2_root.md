@@ -6,8 +6,8 @@ MIP presolve(`3cd406`, G6) 다음 단계인 루트 LP 풀이를 옮기며 알아
 
 | 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개, 기본값 + Threads=1, "Root relaxation" 줄 | **목적 38/38, 반복 7/38**(둘 다 맞는 것 7/38). 38에는 루트가 없는 enlight_hard(presolve가 전부 지움, 우리도 `None`)를 포함한다. 루트가 있는 37개만 세면 목적 37/37, 반복 6/37. 기준값 `bench/gurobi/<이름>/log.txt`는 이미 Threads=1 로그다 |
-| (2) 불일치 모델의 첫 분기점 | §4 표. 입력 모델(bound) 3, 열 형식 가중(G1) 12, simplex 경로(G1) 16 |
+| (1) miplib_small 38개, 기본값 + Threads=1, "Root relaxation" 줄 | **목적 38/38, 반복 12/38**. 열 형식 가중 반영 전은 반복 7/38. 38에는 루트가 없는 enlight_hard(presolve가 전부 지움, 우리도 `None`)를 포함한다. 루트가 있는 37개만 세면 목적 37/37, 반복 11/37. 기준값 `bench/gurobi/<이름>/log.txt`는 Threads=1 로그다 |
+| (2) 불일치 모델의 첫 분기점 | §4는 가중 반영 전 분류. 가중 반영 후 26개 불일치가 남는다. §7과 `bench/mip_root_weights.txt` 참조 |
 | (3) clippy 0, `cargo test --release --workspace`, 이 노트 | 충족 |
 
 코드: `crates/mip/src/root.rs`(`root_method` = `69f0bd` 규칙, `solve_root`), `Params`에 Method·Threads·ConcurrentMethod 추가, py `CoreModel.mip_root(params)`. 도구: `tools/mip_root_check.py`(Gurobi 불필요), `tools/mip_root_trace.js`(오라클).
@@ -42,7 +42,7 @@ MIP presolve(`3cd406`, G6) 다음 단계인 루트 LP 풀이를 옮기며 알아
 | +0x30 | 1 | 0 | env+0x2dc0 루트 로그 모드("Root simplex log...") |
 | +0x08, +0x128 | 0, 0.0 | 1.5e-4, −0.0 | 의미 미확인 |
 
-**확정**: LP 단독 실행에서 2f7e1 직후 spx+0xb8에 MIP의 열 형식을 써 넣으면(`PATCH_VT`) 37/37 모두 로그의 루트 반복 수와 같아진다(glass4 36 → 72). 즉 루트 LP 경로 = 그 모델·파라미터·열 형식의 dual simplex다. `crates/lp`는 열 형식을 읽지 않는다(G1 범위, 고치지 않음).
+**기존 Gurobi 추적 결과**: LP 단독 실행에서 2f7e1 직후 spx+0xb8에 MIP의 열 형식을 써 넣으면(`PATCH_VT`) 37/37 모두 로그의 루트 반복 수와 같아진다(glass4 36 → 72). 즉 루트 LP 경로 = 그 모델·파라미터·열 형식의 dual simplex다. 후속 수정에서 `crates/lp`에도 열 형식을 보존하고 pricing, BFRT, GLOBAL 섭동 가중을 반영했다(§7). 이 수정만으로 rsolver의 전체 루트 경로가 같아지는 것은 아니다.
 
 MIP LP 환경의 비기본 파라미터(.prm): Cutoff(루트 전 incumbent가 있으면), ObjScale −3(API로는 설정 불가 값), LPWarmStart 1, GURO_PAR_WARMBASIS 3, GURO_PAR_INTBASIS 1, GURO_PAR_UNSCALEDVIO 0, GURO_PAR_CUTOFFPIVOTS 0 등. 하나씩 빼 보면 반복 수를 바꾸는 것은 **INTBASIS=1**(ran14x18-disj-8 609↔622, cod105 3470↔3310)과 **UNSCALEDVIO=0**(gmu-35-50 482↔480)뿐이다. INTBASIS는 이름으로 보아 crash가 정수 열을 다루는 방식(시작 기저)으로 추정, 미확인. 둘 다 simplex 쪽 설정이라 G1에 넘긴다.
 
@@ -62,6 +62,8 @@ MIP LP 환경의 비기본 파라미터(.prm): Cutoff(루트 전 incumbent가 �
 또 하나: `5ca999`는 slack 상한 ≤ 1e-10인 부등식 행(조건 `7889a5` 거짓)을 '='로 바꿔 LP에 싣는다. 37개 루트 LP에서는 sense 차이가 없었다(위 비교).
 
 ## 4. 38개 표
+
+아래는 열 형식 가중을 반영하기 전 측정이다. 반영 후 결과는 `bench/mip_root_weights.txt`에 있다.
 
 열: Gurobi 루트(로그) / 루트 LP 모델의 상한 차이 수 / Gurobi LP 단독(같은 모델, 파라미터 없음) / +MIP .prm / +.prm+열 형식(PATCH_VT) / rsolver(루트 LP 모델) / rsolver(presolved, 실제 `mip_root`) / 첫 분기점.
 
@@ -114,7 +116,7 @@ MIP LP 환경의 비기본 파라미터(.prm): Cutoff(루트 전 incumbent가 �
 
 ```
 tools/build_local.sh
-PYTHONPATH=$PWD/python ../.venv/bin/python tools/mip_root_check.py            # 목적 38/38, 반복 7/38 (Gurobi 불필요)
+PYTHONPATH=$PWD/python ../.venv/bin/python tools/mip_root_check.py            # 목적 38/38, 반복 12/38 (Gurobi 불필요)
 tools/gurun.sh node tools/mip_root_trace.js <이름> <dir>                        # events.jsonl, <k>.mps, <k>.prm, load_<i>.mps, log.txt
 SPX_K=<k> tools/gurun.sh node tools/mip_root_trace.js <이름> <dir>              # + spx_<k>.json (2f7e1 직후 spx, vtype 포함)
 LP=<dir>/<k>.prm SPX_K=1 tools/gurun.sh node tools/mip_root_trace.js <dir>/<k>.mps <dir2>             # LP 단독
@@ -126,8 +128,20 @@ PATCH_VT=<vt 파일> LP=<dir>/<k>.prm SPX_K=1 tools/gurun.sh node tools/mip_root
 
 ## 6. 남은 일
 
-1. (G1) `crates/lp`가 열 형식을 읽어 CHUZR 점수 ×1.5·섭동 w=1.5를 넣기(`028c93`, `048d5f`), INTBASIS=1·UNSCALEDVIO=0의 효과 해독. B2 12개·B1 3개가 걸려 있다.
+1. (G1) INTBASIS=1·UNSCALEDVIO=0의 효과 해독. 열 형식 보존과 pricing, BFRT, GLOBAL 섭동 가중은 반영했다. 가중 전 B2였던 12개 중 6개는 여전히 다르므로 첫 분기점을 다시 추적해야 한다.
 2. (G1) LP 단독 parity: C 16개.
 3. (propagate/휴리스틱 범위) 루트 전 domain store: `66bdf6`의 초기 조이기, `715361`/`670717`, `5ebfbc` incumbent 조이기, `8ac5fe` 루트 휴리스틱. 들어오면 `solve_root`가 domain bound를 받도록 바꾼다.
 4. 자동 concurrent(4)·barrier 루트(5ccea5의 `98b671` 분기), RELAXPREP/PreDual로 가는 `c3d0d` 분기: 38개에 없어 미포팅.
 5. 확인 못 한 것: spx+0x08·+0x128 차이의 의미(PATCH_VT만으로 37/37이 맞아 영향 없다고 봄), `66bdf6` 등이 조인 모든 열의 출처(열 하나씩만 추적), INTBASIS의 실제 의미, 루트 시간·work 단위.
+
+## 7. 열 형식 가중 반영 (2026-11-06)
+
+`m2-root`를 `m2-mip-presolve`에 fast-forward로 반영했다. `Spx`는 `Model.vtype`을 스케일링과 unscaled 재풀이에서도 보존한다. 정수·이진 열의 계수는 1.5, 연속 열과 기존 slack의 계수는 1.0이다. pricing의 모든 점수 계산은 비용 모드 보정 후 이 계수를 곱한다. BFRT 선택 가중과 GLOBAL 섭동은 열 길이에 `(계수 * 0.3 + 0.7)`을 곱한다. BFRT slack 가중 0.5와 섭동 slack 가중 1은 그대로다. 근거는 저장된 `15d2d`, `028c93`, `1c35c5`, `048d5f` 디컴파일이며 새 Gurobi 추적은 수행하지 않았다.
+
+동일한 38개 모델을 수정 전후 각각 한 번씩 실행했다. 모든 루트는 status 2이고 로그의 표시 정밀도(목적값 `.6e`)에서 일치한다. `enlight_hard`는 양쪽 모두 루트가 없다. 반복 수는 7/38에서 12/38로 바뀌었다. 새로 일치한 모델은 gen-ip002, markshare2, tr12-30, mik-250-20-75-4, neos-4338804-snowy, fhnw-binpack4-4다. 기존에 우연히 일치했던 mas74는 53회에서 52회로 바뀌었다. 모델별 전후 수치는 `bench/mip_root_weights.txt`에 있다.
+
+가중 전 B2로 분류했던 ic97_potential, markshare_4_0, mad, glass4, graphdraw-domain, timtab1은 여전히 다르다. 기존의 "가중만 넣으면 12개가 바로 맞을 가능성"은 검증 결과 성립하지 않았다. 나머지 simplex 경로, MIP LP 파라미터와 루트 전 bound 변경을 구현하기 전에는 전체 동작 일치를 선언할 수 없다.
+
+회귀 검증은 Rust의 두 pricing 모드와 점수 갱신, GLOBAL 섭동의 난수 순서 및 연속 열 유지, BFRT 진입 변수 선택을 확인한다. `tests/test_mip_root.py`는 새로 일치한 6개 모델의 목적값·반복 수와 루트 없는 모델을 저장된 Gurobi 로그와 비교한다.
+
+검증 결과: `cargo test --release --workspace` 61개 통과, `cargo clippy --release --workspace --all-targets -- -D warnings` 통과, `PYTHONPATH=$PWD/python ../.venv/bin/python -m pytest -q` 70개 통과·기존 xfail 1개. 연속변수 Netlib 64개도 `bench/lp_check.csv`의 method 1 기준 status·목적값·반복 수를 유지했다. 목적값 허용 오차는 `1e-12 * max(1, |obj|)`, 반복 수는 정확히 비교했다.

@@ -1099,6 +1099,7 @@ mod tests {
             ind,
             val,
             sense: vec![b'<'; m],
+            vtype: vec![b'C'; n],
             c: vec![0.0; n + m],
             l: vec![0.0; n + m],
             u: vec![1.0; n + m],
