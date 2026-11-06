@@ -294,9 +294,9 @@ impl Kn<'_> {
     }
 
     /// `6aec61(env, &k, ind, val, &rhs, lb, ub, vtype, p9, p10, &changed, W)` with p10 >= 1 (578fd2 passes 2).
-    /// shortcut: the PREPOWER != 0 block is not ported (default 0), nor the exact binary knapsack `6b4738`/`6b5e11`
-    /// (rows of 3..PREKNAPLIFTLEN binaries; ran14x18, nidda, csched007/8, gmu-35-40/50 reach it): such rows skip
-    /// that step. Port both before trusting those models.
+    /// shortcut: the PREPOWER != 0 block is not ported (default 0), nor the exact binary knapsack `6b5e11` for rows
+    /// of 11..PREKNAPLIFTLEN binaries (ran14x18, nidda, csched008, gmu-35-40/50 reach it; docs §5.3): such rows skip
+    /// that step. Port it before trusting those models.
     fn lift(&mut self, p9: i32, knaplen: i32, changed: &mut bool) -> i32 {
         let ft = self.ft;
         *changed = false;
