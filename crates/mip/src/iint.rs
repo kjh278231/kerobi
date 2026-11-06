@@ -294,8 +294,8 @@ impl State {
                     let r2 = r - (g2 - 1.0) * am;
                     let r2 = (r2 - (r2 + 1e-10).floor()) / g2;
                     if r2 - (r2 + 1e-10).floor() <= 1e-10 {
-                        // shortcut: the 574764 substitution x = g2·z + r is not ported (never reached from 57627e on
-                        // the 38 models); port 574764/3c5996 before relying on such rows
+                        // shortcut: the 574764 substitution x = g2·z + r (call at 0x4bb3a7, with 3c5996) is not wired;
+                        // never reached on the 38 models. Wire it to State::mod_subst (roundend.rs) when a model does
                     }
                 }
             }
@@ -408,7 +408,7 @@ impl State {
                         let r3 = rq - (g1 - 1.0) * vals[ki] * sg;
                         let r3 = (r3 - (ift + r3).floor()) / g1;
                         if r3 - (r3 + 1e-10).floor() <= 1e-10 {
-                            // shortcut: the 574764 class substitution is not ported (never reached on the 38 models)
+                            // shortcut: the 574764 class substitution (0x4bb04a) is not wired to State::mod_subst; never reached on the 38 models
                             return 0;
                         }
                     }
