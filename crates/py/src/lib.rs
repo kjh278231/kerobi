@@ -505,7 +505,7 @@ fn mip_dump_run<'py>(py: Python<'py>, name: &str, d: &Bound<'py, pyo3::types::Py
     let r = pyo3::types::PyDict::new(py);
     macro_rules! put { ($($k:ident),*) => { $( r.set_item(stringify!($k), o.$k.clone())?; )* } }
     put!(n, m, lb, ub, obj, rhs, sense, vtype, row_cnt, col_cnt, inf_max, inf_min, act_max, act_min, mult_lo, mult_hi,
-         col_flag, objcon, nnz, work, work_mult, counters, nfree, npend, rows, cols, level);
+         col_flag, objcon, nnz, work, work_mult, counters, nfree, npend, rows, cols, level, node_cap, chunk);
     r.set_item("active", o.active.to_vec())?;
     for (k, qp) in [("r", &o.r), ("c", &o.c)] {
         r.set_item(format!("{k}_flag"), qp.flag.clone())?;

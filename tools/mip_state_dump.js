@@ -11,6 +11,11 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const [model, fn, nth, outPath, ...kv] = process.argv.slice(2);
+// Direct calls start after the constructor's first activity recompute, before any reduction can remove the
+// synthetic pattern. Flags model protected columns; dominated columns also gets a zero-limit timer.
+const direct = kv.includes('--direct');
+if (direct && !['418542', '37f484', '4030c9'].includes(fn)) throw new Error('unsupported direct call: ' + fn);
+const flags = JSON.parse((kv.find(x => x.startsWith('--col-flags=')) || '--col-flags=[]').split('=')[1]);
 const root = path.resolve(__dirname, '..', '..');
 const shortOf = n => { const m = /^PRIVATE0*([0-9a-f]+)$/.exec(n); return m ? m[1].slice(-6).replace(/^0+/, '') : n; };
 const idx = fs.readFileSync(path.join(root, 're/decomp/index.tsv'), 'utf8').trim().split('\n').slice(1).map(l => l.split('\t'));
@@ -18,7 +23,7 @@ const off = s => { const r = idx.find(r => shortOf(r[1]) === s); if (!r) throw n
 const mps = model.endsWith('.mps') || model.endsWith('.lp') ? model : execFileSync(path.join(root, '.venv/bin/python'), ['-I', '-c',
   `import sys; sys.path.insert(0, ${JSON.stringify(__dirname)}); from parity import instances; print(instances()[${JSON.stringify(model)}])`]).toString().trim();
 const params = { LogToConsole: 0, Threads: 1, WorkLimit: 60 };
-for (const p of kv) { const [k, v] = p.split('='); params[k] = Number(v); }
+for (const p of kv.filter(x => !x.startsWith('--'))) { const [k, v] = p.split('='); params[k] = Number(v); }
 const pyCode = `
 import gurobipy as gp
 env = gp.Env(params=${JSON.stringify(params)})
@@ -28,7 +33,7 @@ print("DONE", q.NumConstrs, q.NumVars, flush=True)
 `;
 const agent = `
 const F = ${off(fn)}, P = ${off('5b84b1')}, NTH = ${nth === 'all' ? 0 : Number(nth)};
-let base = null, st = null, calls = 0;
+let base = null, st = null, env = null, calls = 0;
 const I = (p, o) => p.add(o).readS32(), D = (p, o) => p.add(o).readDouble(), Pt = (p, o) => p.add(o).readPointer();
 function arrD(p, n) { const a = []; if (p.isNull()) return null; for (let i = 0; i < n; i++) a.push(p.add(8 * i).readDouble()); return a; }
 function arrI(p, n) { const a = []; if (p.isNull()) return null; for (let i = 0; i < n; i++) a.push(p.add(4 * i).readS32()); return a; }
@@ -87,7 +92,27 @@ function dump(tag) {
   return s;
 }
 function install() {
-  Interceptor.attach(base.add(P), { onEnter(a) { st = a[1].sub(0x3f0); } });
+  Interceptor.attach(base.add(P), { onEnter(a) { env = a[0]; st = a[1].sub(0x3f0); } });
+  if (${direct}) {
+    let done = false;
+    Interceptor.attach(base.add(${off('370047')}), { onLeave() {
+      if (!st || done) return;
+      done = true;
+      for (const [j, f] of ${JSON.stringify(flags)}) Pt(st, 0x170).add(4*j).writeU32(f);
+      send({call: 1, s: dump('enter')});
+      let ret;
+      if (${JSON.stringify(fn)} === '4030c9') {
+        const timer = Memory.alloc(0x30); // zero limit: no timer stop, as dump::run_named
+        timer.writeByteArray(new Uint8Array(0x30));
+        ret = new NativeFunction(base.add(F), 'int', ['pointer', 'pointer', 'pointer'])(st, env, timer);
+      } else {
+        ret = new NativeFunction(base.add(F), 'int', ['pointer', 'pointer'])(st, env);
+      }
+      send({call: 1, ret, s: dump('leave')});
+      send({directDone: true});
+    }});
+    return;
+  }
   Interceptor.attach(base.add(F), {
     onEnter(a) { calls++; this.on = st && (NTH === 0 || calls === NTH); if (this.on) send({ call: calls, s: dump('enter') }); },
     onLeave(r) { if (this.on) send({ call: calls, ret: r.toInt32(), s: dump('leave') }); }
@@ -101,7 +126,15 @@ Process.attachModuleObserver({ onAdded(m) { if (m.name === 'libgurobi130.so') { 
   const pid = await device.spawn([path.join(root, '.venv/bin/python'), '-c', pyCode], { stdio: 'pipe' });
   const session = await device.attach(pid);
   const script = await session.createScript(agent);
-  script.message.connect(msg => { if (msg.type === 'error') console.error(msg.stack); else res.push(msg.payload); });
+  script.message.connect(async msg => {
+    if (msg.type === 'error') console.error(msg.stack);
+    else if (msg.payload.directDone) {
+      fs.writeFileSync(outPath, JSON.stringify(res));
+      console.log('DIRECT DONE', res.length, 'dumps');
+      await device.kill(pid).catch(() => {});
+      process.exit(0);
+    } else res.push(msg.payload);
+  });
   device.output.connect(async (p, fd, data) => {
     if (p !== pid) return;
     text += data.toString();

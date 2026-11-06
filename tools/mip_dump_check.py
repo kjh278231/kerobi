@@ -8,7 +8,7 @@ usage: PYTHONPATH=python python tools/mip_dump_check.py <fn> <dump.json ...> [--
   function before it and the one after it).
 Doubles compare with == (the JSON dump loses the sign of -0.0); records compare byte for byte except padding.
 """
-import argparse, json, struct, sys
+import argparse, gzip, json, struct, sys
 
 import rsolver  # noqa: F401
 from rsolver import _core
@@ -17,6 +17,11 @@ FIELDS = ["lb", "ub", "obj", "rhs", "row_cnt", "col_cnt", "inf_max", "inf_min", 
           "mult_hi", "objcon", "nnz", "work"]
 # void functions (the dumped return value is a stale register)
 NO_RET = {"56f793", "3e40d1"}
+
+
+def read_dump(path):
+    with (gzip.open(path, 'rt') if str(path).endswith('.gz') else open(path)) as f:
+        return json.load(f)
 
 
 def to_parts(s):
@@ -86,6 +91,10 @@ def compare(got, want, enter_recs, show=12):
             ck(k, a, b)
     ck("sense", bytes(got["sense"]).decode(), want["sense"])
     ck("vtype", bytes(got["vtype"]).decode(), want["vtype"])
+    ck("col_flag", list(got["col_flag"]), want["col_flag"])
+    for k in ("node_cap", "chunk"):
+        if k in want:
+            ck(k, int(got[k]), int(want[k]))
     ck("counters", list(got["counters"][:13]), want["counters"][:13])
     ck("free/pending", [got["nfree"], got["npend"]], [int(x) for x in want["free"]])
     for kind in ("rows", "cols"):
@@ -118,13 +127,13 @@ def main():
     params = [(k, float(v)) for k, v in (p.split("=") for p in a.param)]
     after = {}
     if a.after:
-        for x in json.load(open(a.after)):
+        for x in read_dump(a.after):
             if "ret" not in x:
                 after[x["call"]] = x["s"]
     tot = ok = 0
     for path in a.dumps:
         by = {}
-        for x in json.load(open(path)):
+        for x in read_dump(path):
             by.setdefault(x["call"], []).append(x)
         for c, xs in sorted(by.items()):
             if len(xs) < 2:

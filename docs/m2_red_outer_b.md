@@ -122,8 +122,20 @@ loop:
 - 기본값 38개에서는 `3bb6fe`가 한 번도 불리지 않는다(coverage `cov2.json` 0회, 훅 있음). 그래서 mark·succ는 늘 0이고, (n − 지운 열) < 50이면 둘째 pass가 돈다(작업량만 다시 더함).
 - 곱 순서는 asm 그대로: `walked·(3·μ)`, `μ·n`, `before·(4·μ)`, `(4·μ)·walked`, `(5·μ)·m`.
 
-### 3.3 오라클 확인과 지름길
-`mip_dump_check.py 418542`: **78/78**(작업량 비트 일치, 둘째 pass를 도는 작은 모델 포함). 포트는 `3bb6fe`를 옮기지 않았다(`shortcut:`): 후보에 닿으면 집계하지 않은 것으로 센다. `5431ee`의 SCC 분기와 함께 옮길 것.
+### 3.3 `3bb6fe` 실제 집계 (2026-11-06 보완)
+`dualagg.rs::dual_agg_subst`에 대입 `x_c = b + x·x_k`를 옮겼다. `|x|·mult_lo[k] < 1/L` 또는 `L < |x|·mult_hi[k]`이면 실패. **pass 0은 검사만 하고 성공을 센다.** 성공 수가 `(n − 지운 열)/50` 미만이면 실제 집계 없이 끝난다. pass 1에서만 다음을 적용한다.
+
+1. c의 행 scatter를 비우고 k의 살아 있는 노드를 표시한다. c에만 있는 행에는 값 0의 k 노드를 먼저 만들어 행·열 머리에 넣는다. 작업량은 차례로 `2·walk_c·μ`, `2·walk_k·μ`, `(6·added + 2·walk_c)·μ`.
+2. c의 노드마다 `a_k = a_c·x + a_k`, `rhs -= a_c·b`. `|a_k| < 1e-10`이면 k 노드도 죽인다. c 노드는 모두 죽이고 행을 mark 및 추적기에 표시한다. 작업량 `walk_c·6·μ`. 삭제는 lazy: nnz는 GC까지 그대로다.
+3. `obj[k] = obj[c]·x + obj[k]`, `objcon += obj[c]·b`, `obj[c] = 0`, `col_cnt[c] = −3`, 열 제거 카운터 +1. type 2 `{c, b, [k], [x]}`를 만든다. x ≠ 1이면 k의 multiplier bound에 c의 `|x|` 배율을 반영한다. k를 추적기에 표시한다.
+4. 표시된 행은 다음 방문 직전에 `370047`로 재계산한다. pass 1에서 성공했으면 끝에서도 남은 mark를 재계산하고 `m·μ`를 더한다. k의 pos/neg는 2e9로 막는다.
+
+`5431ee`에서 부르는 경로 및 그 호출자의 이식은 outer A 범위다. 여기서는 `418542`가 사용하는 지연 activity 갱신 경로를 구현했다.
+
+### 3.4 오라클 확인
+기존 38개 모델은 실제 대입이 0회라 분기 검증이 되지 않는다. 현재 코드로 기존 덤프 **78/78을 재비교**했고, 별도의 직접 호출 합성 상태 7개(`bench/oracle/mip_outer_b/dual_*.json.gz`)도 **7/7 일치**했다. 계수 부호 × 이진 계수 부호 4조합(폭 2, 0이 아닌 절편), 두 후보 연속 집계(폭 0.5), 배율 한도 거절, n ≥ 100에서 첫 검사 패스만 하고 끝나는 경로를 포함한다. 실제 열 제거·채움·상쇄·목적 상수·레코드 원시 바이트·행 activity·추적기·작업량을 비교했다.
+
+재현: `PYTHONPATH=$PWD/python ../.venv/bin/python tools/mip_dump_check.py 418542 bench/oracle/mip_outer_b/dual_a*.json.gz bench/oracle/mip_outer_b/dual_two_candidates.json.gz bench/oracle/mip_outer_b/dual_test_only.json.gz`. 배율 거절 픽스처는 `dual_growth_reject.json.gz --param GURO_PAR_AGGMULTLIMIT=1`로 따로 비교한다. 새 오라클의 `--direct`는 첫 activity 계산 직후 원본 함수를 호출하므로, 앞선 reduction에 의해 합성 패턴이 사라지지 않는다.
 
 ## 4. `36ee92` 노드 배열 압축 (`00478040`)
 
