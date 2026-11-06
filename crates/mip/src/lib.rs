@@ -43,6 +43,7 @@ pub mod probe;
 mod probe0;
 mod probe_apply;
 pub mod probe_engine;
+pub mod root;
 mod roundend;
 mod roundend_b;
 mod setpack;
@@ -174,6 +175,10 @@ params! {
     prepower: i32 = 0, "guro_par_prepower";
     /// env+0x2568 GURO_PAR_PREKNAPLIFTLEN (-1: 512 in `6aec61` mode 2)
     preknapliftlen: i32 = -1, "guro_par_preknapliftlen";
+    /// env+0x2438 / 0x2708 / 0x233c Method / Threads / ConcurrentMethod: the root LP method (`69f0bd`, root.rs)
+    method: i32 = -1, "method";
+    threads: i32 = 0, "threads";
+    concurrent_method: i32 = -1, "concurrentmethod";
 }
 
 /// 3cd406's locals that the reduction loop reads.

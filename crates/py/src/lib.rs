@@ -452,6 +452,21 @@ impl PyCoreModel {
         let trace = r.trace.iter().map(|&(k, z, p, d, pt)| (k as f64, z, p, d, pt)).collect();
         (code, r.obj, r.x, r.iter as f64, trace, r.path)
     }
+    /// MIP root LP of this presolved model (crates/mip root.rs): (method, status, objective, iterations), status coded
+    /// as in `solve`; None when the model has no columns.
+    fn mip_root(&self, py: Python<'_>, params: Vec<(String, f64)>) -> Option<(i32, i32, f64, f64)> {
+        use rsolver_lp::simplex::Status;
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let r = py.allow_threads(|| rsolver_mip::root::solve_root(&self.inner, &p))?;
+        let code = match r.lp.status {
+            Status::Optimal => 2,
+            Status::Infeasible => 3,
+            Status::Unbounded => 5,
+            Status::IterLimit => 7,
+            Status::Numeric => 12,
+        };
+        Some((r.method, code, r.lp.obj, r.lp.iter as f64))
+    }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);
         (s.col, s.row, s.obj)
