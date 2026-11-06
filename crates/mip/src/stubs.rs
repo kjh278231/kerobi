@@ -20,8 +20,6 @@ impl State {
     pub fn derived_b(&mut self, p: &Params) -> i32 { 0 }
     /// `5aaaf7` (PREDUALREDUNDANT)
     pub fn r5aaaf7(&mut self, p: &Params) -> i32 { 0 }
-    /// `838543(env, st, 1, k, W)` mod-k (k = 2, 3, 5)
-    pub fn mod_k(&mut self, p: &Params, k: i32) -> i32 { 0 }
     /// `579e67`
     pub fn r579e67(&mut self, p: &Params) -> i32 { 0 }
     /// `5a04fc` smart disaggregation (PRESMARTDISAGG >= 2)

@@ -276,6 +276,7 @@ impl State {
                 let a: Vec<i32> = name.split(':').skip(1).map(|x| x.parse().unwrap_or(0)).collect();
                 (self.parallel(p, a[0], a[1]), 0)
             }
+            _ if name.starts_with("838543:") => (self.mod_k(p, name[7..].parse().unwrap_or(2)), 0),
             "5a9282" => (self.r5a9282(p), 0),
             "5ab429" => (self.r5ab429(p), 0),
             "59c193" => (self.vub_lift(p), 0),

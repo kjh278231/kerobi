@@ -32,6 +32,7 @@ mod dualeq;
 mod finalinl;
 mod lists;
 mod mergevub;
+mod modk;
 mod parallel;
 pub mod post;
 pub mod probe;
