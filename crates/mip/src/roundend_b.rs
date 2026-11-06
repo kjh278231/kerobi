@@ -130,7 +130,7 @@ impl State {
                 continue;
             }
             let g = gcd_f64(&val);
-            if !(0.001 <= g && g <= 10000.0 && (rhs / g).abs() <= 1e6) {
+            if !((0.001..=10000.0).contains(&g) && (rhs / g).abs() <= 1e6) {
                 continue;
             }
             let gi = 1.0 / g;

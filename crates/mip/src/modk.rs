@@ -461,3 +461,17 @@ impl State {
         0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn neg_inv_tables() {
+        for k in [2, 3, 5] {
+            for a in 1..k {
+                assert_eq!(a * neg_inv(k, a) % k, k - 1);
+            }
+        }
+    }
+}
