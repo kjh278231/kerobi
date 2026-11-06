@@ -349,7 +349,8 @@ impl Driver<'_> {
             }
             self.budget();
             if p.premergevubs != 0 && self.ok(13) {
-                rc(self.timed(13, |s, p| s.merge_vubs(p)))?;
+                let t = self.t[13];
+                rc(self.timed(13, |s, p| s.merge_vubs(p, t)))?;
                 self.count("merge_vubs")?;
                 self.budget();
             }

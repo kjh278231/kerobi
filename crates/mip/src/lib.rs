@@ -27,6 +27,7 @@ mod dualbnd;
 mod dualagg;
 mod dualeq;
 mod lists;
+mod mergevub;
 mod parallel;
 pub mod post;
 pub mod probe;
