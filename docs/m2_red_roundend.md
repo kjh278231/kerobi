@@ -15,7 +15,7 @@
 | `59c193(st, env, W)` | 7,021 | PREVUBLIFT | VUB 행 쌍 정리, 클릭 같은 행을 공유하는 VUB 합치기 | 없음(작업량만) | 42/42 + 합성 20(§4) |
 | `55a779(env, st, T20)` | 10,702 | round 0, PreSparsify | 긴 행을 열 종류별로 잘라 계수 패턴 사전을 만들고, 두 번 나온 패턴을 새 열로 묶음(2부) | 없음(작업량만, 2부는 0회) | 38/38(§5) |
 | `594c0c(env, st, T20)` | 11,746 | round 0, PRESS2MIP | 여러 행에 같은 계수(부호 포함)로 나오는 열 묶음을 새 연속 열 하나와 정의 `=` 행으로 바꿈 | ran14x18-disj-8(열 2·행 2 추가) | **포팅 안 함**(§6) |
-| `5577ba(env, st, nodes, 1, &f4; 1.01, limit)` | 2,900 | round 0, Symmetry·DualReductions | 대칭 검출(MIP 분기) | 없음(작업량만) | **포팅 안 함**(§7) |
+| `5577ba(env, st, nodes, 1, &f4; 1.01, limit)` | 2,900 | round 0, Symmetry·DualReductions | 대칭 검출(MIP 분기, `551cc0` 정수 모드, `5507cb`), f4 > 0이면 대칭 열 병합·행 삭제 | 없음(작업량만, f4 모두 0) | 38/38 + 합성 86(§7) |
 
 ## 1. `58d4ce` Q 대각 열 (`005c9200`)
 
@@ -279,24 +279,102 @@ if dups > 0 && !adf2be(T20) { 2부 }
 - 기본값 38개: 해시 `5919f4`는 11개 모델(ran14x18 610, bppc4-08 2118, cod105 2048, neos-860300 1006, mad 343, pk1 158, …)에서, 비교 `591ba8`은 ran14x18 144·mad 63·mas74 2·pk1 1회 불린다(세션 스크래치 `re/cov_594b.json`). 모델을 바꾸는 것은 ran14x18-disj-8뿐이다(열 504 → 506, 행 447 → 449, nnz +28, 행 17개에서 열 묶음이 새 열로 바뀜).
 - 포팅에 필요한 것: 상태 배열을 늘리는 `3bbf87`(791줄)·`3bde19`(304줄)(outer-a의 `3ff744` 열 집계도 같은 함수를 쓴다), `5941d6`, 두 해시표, `ab6a5f`(int 키 정렬), presolved 모델 생성에서 새 열의 이름. 덤프 비교도 n, m이 늘어나는 것을 받아야 한다.
 
-## 7. `5577ba` 대칭 MIP 분기 (해독 개요만)
+## 7. `5577ba` 대칭 MIP 분기 (`0059fda0`, `551cc0` 정수 모드, `5507cb`)
 
-**포팅하지 않았다.** stub `symmetry`가 그대로다(작업량 0).
-- 상태가 연결 리스트(+0xe0 = 0)라 LP의 열 CSR 압축 대신 **열 리스트에서 새 CSR을 만든다**(살아 있는 노드만, 열 순서). 그다음 `551cc0`에 vtype(+0x150)을 넘기므로 LP 포트(`crates/lp/src/presolve/symmetry.rs`)가 건너뛴 **정수 열 경로**가 돈다: 열 길이 키 정제, `ab6a5f`, 탐색 트리 `5507cb`(6,867 B).
-- 기본값 38개 Frida 호출 수(세션 스크래치 `re/cov_sym.json`): `551cc0` 38/38. `5507cb`는 9개 모델(sp150x300d 49, neos-911970·berkel·assign1-5-8 7, neos5·cod105 2, kasai·fhnw 1), `54d420`(검증)은 0회, `54e5eb`는 34개, `a7bea8`는 37개, `ab6a5f`는 38개. 대칭을 쓰는 블록(`3a0a17` type 19, `564ce0`, `397538`)은 0회(timtab1의 `564ce0` 1회는 probing 쪽).
-- 모든 모델에서 상태는 그대로이고 작업량만 바뀐다(+80 ~ +5.6e6). 그래서 포트에서 빠진 것은 작업량이다(timer 24와 이후 0.8 판정, 덤프 비교의 work).
-- 포팅에 필요한 것: LP 포트를 `crates/mip`에 복사(LP 모듈은 private), CSR 생성, `551cc0`의 정수 분기와 `5507cb`·`ab6a5f` 해독, f4 > 0일 때의 사용 블록(type 19 레코드, `564ce0`, 행 삭제 `397538`)은 합성 대칭 MIP로 확인.
+LP 경로는 [m1_presolve_symmetry.md](m1_presolve_symmetry.md)에 있다. 아래는 MIP 호출(`3cd406` 라운드 끝, 비율 1.01, 여섯째 인자 1)에서 달라지는 것만 적는다. 포트는 `crates/mip/src/symmetry.rs`이고, LP 포트를 복사해 MIP 분기를 더했다(LP 모듈은 private이다). 함수는 `State::symmetry(p, nodes, limit, &mut f4)`이다.
+
+### 7.1 `5577ba` MIP 분기
+- 상태 +0xe0 = 0이면 열 리스트에서 새 CSR을 만든다. 열 순서대로 살아 있는 노드(col ≥ 0)만 넣는다. 크기 합은 Σ max(col_cnt, 0)이고 **작업량은 없다**. 이어서 `551cc0(1.01, limit, env, st, n, m, beg, 0, ind, val, obj, Q, lb, ub, rhs, sense, col_cnt, row_cnt, vtype, colflag, 0, nodes, 0, …, &f4, W)`를 부른다. 여섯째 인자가 1이라 출력 배열(열 셀·순서, 행 셀·순서)을 받는다.
+- **사용 블록**은 rc == 0이고 f4 > 0일 때 돈다.
+  - 출력 열 순서에서 같은 셀이 이어지는 묶음마다 대표 = 첫(가장 작은) 열로 두고, 나머지 열에 map[j] = 대표를 넣는다. 크기 ≥ 2인 묶음마다 `3a0a17(env, st, rep, cnt, &cols)`로 **type 19 레코드**를 남긴다(data {i32 rep, i32 cnt, ptr → +0x10, cols}).
+  - 묶음이 하나라도 있으면 `564ce0(st, env, map, NULL, NULL, 1, &out)`(sc = 1, of = 0과 같다)를 부른다. 그다음 행 순서에서 같은 셀이 이어지는 묶음마다 첫 행만 두고 나머지를 `397538(st, i)`로 지운다.
+  - `397538`은 살아 있는 행이면 노드를 죽이고(열 표시 `5379f1`, col_cnt −1), `W = (방문·7)·μ + W`, row_cnt = −1, +0x404 += 1을 한다.
+- f4는 반환값이 아니라 local_1a4(→ 새 모델 +0x218)로 간다. 포트는 출력 인자로 둔다.
+
+### 7.2 `551cc0`의 MIP 분기 (vtype ≠ NULL, 비율 param_1 = 1.01)
+- **열 첫 분할**: 살아 있고 플래그 없는 열을 vtype == 'C'면 키 0, 아니면 키 1로 둔다(local_a8 = 정수 열 있음, local_88 = 정수 열 수). W += 4n.
+  - 살아 있는 열 수 ≤ (연속 있음 + 정수 있음)이면 끝이다.
+  - 둘 다 있으면 `ab6a5f`(int 키 오름차순 간접 정렬, `aaedd9`와 같은 알고리즘)로 정렬한다. 경계 b = 1부터 placed − 1 사이에서 처음 키 1인 위치이고, 셀 2개가 된다. b == 1이면 셀 0을, b == placed − 1이면 셀 1을 고정한다.
+  - 정수만 있으면 키를 모두 0으로 둔다.
+- obj, lb, ub 정제는 LP와 같고, 판정 비율만 1.01이다.
+- **정수 정제**(local_a8, 전치 뒤 키 계산 전): d[j] = vtype C ? 0 : 열 길이(모든 n). W += 3n. 열을 d로 정제(int 키 `ab6a5f`, 작업량은 `549df5`와 같은 꼴)한 뒤 열 판정을 한다. 그다음 행마다 정수 열 항목 수를 센다(정수 열마다 W += 2·len, 끝에 W += n). 행을 정제하고 행 판정을 한다.
+- **정수 모드 준비**: 스택 5개를 만든다(s1a8·s1a0·s190은 n, s198·s188은 m, 각 W += 크기). 이어서 local_168 = −1(n), local_150 = 0(m), 열마다 64비트 행 마스크 `1 << (row & 63)`(W += 2·len), W += n + n, local_160 = 0(n).
+- 루프 A: 모든 셀을 큐에 넣은 뒤, 첫 열이 정수인 열 셀을 s1a8에 넣는다(W += 3·셀 수).
+- 루프 B의 `54e5eb`에 보조 스택을 넘긴다(열: s1a8, s1a0. 행: s198). 새 셀은 원래 셀 c가 그 스택에서 고정이었거나 크기 1이면 고정되고, c가 큐에 있었으면 큐에 들어간다.
+- 루프 B에서 셀 수가 그대로면(정수 모드일 때) `5507cb`를 부른다(§7.3). 출력 flag는 (살아 있는 열/20 > 정수 열 수)일 때만 요청한다.
+  - flag = 0이면 셀 수를 다시 본다. 그대로면 stable이고, 바뀌었으면 라운드를 계속한다.
+  - flag = 1이면 d[j] = vtype C ? 0 : j + 1(W += n + n)로 정수 열을 낱낱이 나누고, 정수 모드를 끝낸다. 열 판정에 걸리면 끝이고, 아니면 round + 1로 루프 A(새 난수)로 간다.
+- 검증 단계: 정수 모드인데 stable이 아니면 f4 = −2. f4가 1, 2, −1이면 출력용으로 셀을 다시 번호 매긴다(가장 작은 항목 순으로 셀 id, 셀 안은 항목 오름차순 `a9d3ef`. 항목마다 W += 3, 끝에 W += 2·크기. 열 다음 행).
+
+### 7.3 `5507cb` (6,867 B, asm으로 해독)
+큐 셋을 처리하고, 처음 분할을 만들면 끝난다. 반환은 rc 0이고 flag는 출력이다.
+```
+loop {
+  if s1a8, s198, s1a0 모두 비었으면 return
+  while c = s1a8.pop():                                  // 1부: 정수 열 셀
+    st = start[c]; 크기 1이면 s1a8.fix(c), 다음
+    마스크 검사: 셀 열마다 (acc & mask[j]) ≠ 0이면 겹침(그 위치에서 멈춤), 아니면 acc |= mask[j]
+    W = (멈춘 위치 − st)·3 + W
+    if 겹침 {                                            // 원래 열 줄과 d150(행별)으로 정확히
+      lvl = 0, shared = false
+      셀의 q번째 열 j: q > 0이면 d150[row] ≠ 0인 첫 항목까지 훑는다(W = 훑은 수·2 + W)
+        없으면(첫 열 포함): d160[j] = 0, 행마다 d150 = 1, W = len·2 + W, lvl = 1
+        있으면: shared, d160[j] = 1; lvl == q이면 그 위치부터 d150 == q인 행을 q+1로(그때 lvl = q+1), W = (len − 위치)·2 + W
+      W = 크기·2 + W; d160[j] == 0인 열의 행 d150을 0으로(W = len·2 + W); W = W + 크기·2
+      if shared: lvl == 크기면 s1a8.fix(c)하고 낱낱이, 아니면 s1a8.push(c)하고 d160 키로 → 분할(아래), return
+    }
+    s1a8.fix(c); 셀 열의 현재 줄 행 셀을 s198에(열마다 W = len·3 + W), W = W + 크기·3, s1a0.push(c)
+  while r = s198.pop():                                  // 2부: 행 셀
+    s198.fix(r); flag = false
+    셀의 행마다: d160[행의 열 셀] = 0 (W = len·3 + W), += 1 (W = W + len·3),
+      개수 > 0인 열 셀 cc: 크기(local_60, 처음 쓸 때 calloc, 셀마다 한 번 계산)와 개수가 다르면 s1a8.push(cc); d160[cc] = 0;
+      flag가 아직 거짓이면 flag = (cc가 s1a8에서 큐에도 고정에도 없음);  W = W + len·5
+    flag면: 첫 행의 열 셀마다 d160 = 행 키, W = len·4 + W; 셀의 행마다 키가 다른 열 셀을 s1a8에(W = len·4 + W); W = W + 행 수·3
+    s1a8이 비지 않았으면 처음으로
+  while c = s1a0.pop():                                  // 3부: 성분
+    크기 1이면 s1a0.fix(c), 다음
+    셀 열마다 d168[j] == −1이면 탐색(아래); marks[d168[j]] = 0;  W = 크기·4 + W
+    셀 열마다 marks[d168[j]] ≠ 0이면 중복(멈춤), 아니면 1;  W = W + (멈춘 위치 − st)·4
+    중복이면 낱낱이 분할 → return
+}
+탐색(j): s190.push(j); s190이 빌 때까지 { x = s190.pop(): fix, d168[x] = j, 현재 열 줄의 행을 s188에(W = len·2 + W);
+                                       r = s188.pop(): fix, 현재 행 줄의 열 중 셀이 s1a8에서 고정인 열을 s190에(W = len·2 + W) }
+분할: flag 요청이고 셀 첫 열이 'C'면 flag = 1로 return(셀은 정수 열만 있으므로 실제로는 안 탄다).
+      아니면 셀 끝을 찾고(W = (끝 − st − 1)·2 + W) 54e5eb(키 = d160 또는 없음(항목마다 셀 하나, 정렬 없음, 첫 항목이 c를 가짐),
+      보조 스택 s1a8·s1a0)
+```
+- s190/s188의 고정 표시와 d168은 `551cc0` 한 번 동안 남는다. 그래서 성분은 한 번만 계산한다. d160은 1부(열 번호)와 2부(셀 번호)에서 같은 배열을 쓰고 지우지 않는다. 포트도 한 배열로 둔다.
+
+### 7.4 확인
+- **기본값 38개 38호출**: 상태·작업량·f4 모두 일치. f4는 38개 모두 0이다. f4는 `tools/mip_state_dump.js`의 새 옵션 `OUT_I32=4`(5577ba의 &f4)로 덤프하고, `mip_dump_check.py`가 `out`과 비교한다. 덤프는 세션 스크래치 `re/sym/`에 있다.
+- 지난 경로:
+  - `5507cb`는 8개 모델에서 돈다: sp150x300d 49, neos-911970·berkel·assign1-5-8 7, neos5·cod105 2, kasai·fhnw 1.
+  - 겹침 → 낱낱이: 5개 모델. 겹침 → d160 키 분할: cod105, fhnw. 행 셀 2단계: berkel 4. 성분 중복 → 분할: kasai.
+  - flag 요청 경로와 `54d420`은 38개에서 돌지 않는다.
+- **합성 86호출**(세션 스크래치 `re/symsyn/`, `tools/symmetry_models.py`의 블록·cube·cycles를 정수로 바꾼 것, 기본값과 PrePasses=0): 모두 일치한다.
+  - isym_k5·k6h·k8t는 f4 = 1·2이고 사용 블록이 돈다(type 19 레코드, `564ce0` 병합, `397538` 행 삭제, 레코드 바이트 포함).
+  - icube8·icube8h·icycles는 정수 모드에서 f4 = 0이다(icycles PrePasses=0은 76호출).
+- **확인 못 한 것**:
+  - flag = 1 경로(정수 열 낱낱이 + 정수 모드 종료).
+  - 정수 모드가 끝난 뒤 LP식 재시도와 −2, f4 = −1.
+  - 덤프 실행의 work 한도: 덤프에 timer 24가 없어 1e100(한도 없음)으로 돌린다. 실제 한도 2B − 사용량에는 닿지 않는다.
 
 ## 8. 포팅과 확인 (2026-11-06)
 
-코드: `crates/mip/src/roundend.rs`(`q_diag` 58d4ce, `r5a9282`, `r5ab429`, `mod_subst` 574764, `fgcd` a7c550, `mod_inverse` 3c5996), `vublift.rs`(`vub_lift` 59c193, `drop_row` 415f4f), `aggpass.rs`(`agg_pass` 55a779 1부). 덤프 적재 이름(`run_named`, `tools/mip_dump_check.py`): `5a9282`, `5ab429`, `59c193`, `55a779`.
+코드:
+- `crates/mip/src/roundend.rs`: `q_diag` 58d4ce, `r5a9282`, `r5ab429`, `mod_subst` 574764, `fgcd` a7c550, `mod_inverse` 3c5996.
+- `vublift.rs`: `vub_lift` 59c193, `drop_row` 415f4f.
+- `aggpass.rs`: `agg_pass` 55a779 1부.
+- `symmetry.rs`: `symmetry` 5577ba + 551cc0 + 5507cb, `drop_row_marked` 397538. `post.rs`에 type 19를 더했다.
+
+덤프 적재 이름(`run_named`, `tools/mip_dump_check.py`): `5a9282`, `5ab429`, `59c193`, `55a779`, `5577ba`.
 
 | 확인 | 결과 |
 |---|---|
-| `mip_dump_check.py` 기본값 38개 모든 호출 | 5a9282 80/80, 5ab429 42/42, 59c193 42/42, 55a779 38/38. 58d4ce는 42호출 모두 상태·작업량 그대로(포트도 0) |
-| 합성(`re/syn/`) | 5ab429 9/9(574764 경로), 59c193 20/20 |
+| `mip_dump_check.py` 기본값 38개 모든 호출 | 5a9282 80/80, 5ab429 42/42, 59c193 42/42, 55a779 38/38, 5577ba 38/38(f4 포함). 58d4ce는 42호출 모두 상태·작업량 그대로(포트도 0) |
+| 합성(`re/syn/`, `re/symsyn/`) | 5ab429 9/9(574764 경로), 59c193 20/20, 5577ba 86/86 |
 | `sweep_check.py` | 첫 불일치 중 이 묶음 이름 0. 기본값 일치 9/38. 라벨: parallel 8, cancel_rows 5, knapsack 4, implied_int 4, implied_int_scale 2, aggregate 2, trans_red·mod_k·dual_bounds·dominated 1 (gmu-35-40/50이 r5a9282 k=3 → knapsack k=28) |
 | `mip_rec_check.py` 각 모델 첫 불일치 k−1(일치 모델은 기본값) | 38/38 |
 | clippy, `cargo test --release --workspace`, `pytest tests/` | 경고 0, 통과, 36 통과 + 기존 xfail 1 |
 
-남은 것(`shortcut:`/stub): `594c0c`, `5577ba` MIP 분기, `55a779` 2부, `58d4ce`의 Q 분기.
+남은 것(`shortcut:`/stub): `594c0c`, `55a779` 2부, `58d4ce`의 Q 분기.
