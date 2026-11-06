@@ -46,6 +46,10 @@ pub struct Engine<'a> {
     y: Vec<f64>,
     /// Row copy (see `rc_build`): per row (column, value, nonzero index), and each nonzero's slot in its row.
     rc: Vec<Vec<(usize, f64, usize)>>,
+    /// Row-wise copy of the structural columns (column, value), rows ascending; the d recomputation of `a4268`
+    /// accumulates row by row.
+    arow_start: Vec<usize>,
+    arow: Vec<(usize, f64)>,
     rc_pos: Vec<usize>,
     rc_on: bool,
     pub iter: u64,
@@ -116,6 +120,8 @@ impl<'a> Engine<'a> {
             w: vec![1.0; m],
             y: vec![0.0; m],
             rc: Vec::new(),
+            arow_start: Vec::new(),
+            arow: Vec::new(),
             rc_pos: Vec::new(),
             rc_on: false,
             iter: 0,
@@ -317,16 +323,50 @@ impl<'a> Engine<'a> {
     /// y = c_Bᵀ B⁻¹ (dense BTRAN, as for the iteration-0 d) and d = c − Aᵀy.
     pub fn compute_duals(&mut self) {
         self.compute_duals_only();
-        let y = &self.y;
-        for j in 0..self.n + self.m {
-            self.d[j] = if self.vstat[j] >= 0 {
-                0.0
-            } else if self.vstat[j] == -4 && j < self.n {
-                self.c[j]
-            } else {
-                let t = self.spx.col(j).fold(self.c[j], |t, (i, a)| t - a * y[i]);
-                if self.vstat[j] == -2 { -t } else { t }
-            };
+        let (n, m) = (self.n, self.m);
+        if self.arow_start.is_empty() {
+            let mut start = vec![0usize; m + 1];
+            for &i in &self.spx.ind {
+                start[i as usize + 1] += 1;
+            }
+            for i in 0..m {
+                start[i + 1] += start[i];
+            }
+            let mut fill = start.clone();
+            let mut arow = vec![(0usize, 0.0f64); start[m]];
+            for j in 0..n {
+                for (i, a) in self.spx.col(j) {
+                    arow[fill[i]] = (j, a);
+                    fill[i] += 1;
+                }
+            }
+            self.arow_start = start;
+            self.arow = arow;
+        }
+        // a4268: d = c over the nonbasics, then row by row (ascending, rows with |y_i| ≤ ZERO skipped) d_j −= y_i·a_ij
+        // for the nonbasic non-fixed structurals and the slack; fixed structurals keep c_j; upper-bounded ones are
+        // negated at the end (the original adds to −c with the row copy's flipped sign, the same bits)
+        for j in 0..n + m {
+            self.d[j] = if self.vstat[j] >= 0 { 0.0 } else { self.c[j] };
+        }
+        for i in 0..m {
+            let yi = self.y[i];
+            if yi.abs() <= ZERO {
+                continue;
+            }
+            if self.vstat[n + i] < 0 {
+                self.d[n + i] -= yi;
+            }
+            for &(j, a) in &self.arow[self.arow_start[i]..self.arow_start[i + 1]] {
+                if self.vstat[j] < 0 && self.vstat[j] != -4 {
+                    self.d[j] -= a * yi;
+                }
+            }
+        }
+        for j in 0..n + m {
+            if self.vstat[j] == -2 {
+                self.d[j] = -self.d[j];
+            }
         }
     }
 
@@ -1723,6 +1763,32 @@ fn solve_model_run(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reduced_costs_follow_row_order_with_upper_and_fixed_nonbasics() {
+        // The column order 0, 2, 1 loses the final unit term if costs are summed column-wise.
+        // An identity slack basis makes y equal to the chosen basic costs.
+        let spx = Spx {
+            m: 3, n: 3,
+            beg: vec![0, 3, 6], len: vec![3; 3],
+            ind: vec![0, 2, 1, 0, 2, 1, 0, 2, 1],
+            val: vec![1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0],
+            sense: vec![b'<'; 3],
+            c: vec![0.0, 0.0, 7.0, 1e16, 1e16, 1.0],
+            l: vec![0.0; 6], u: vec![INFINITY; 6], b: vec![0.0; 3],
+            scaling: crate::scaling::Scaling { col: vec![1.0; 3], row: vec![1.0; 3], obj: 1.0 },
+        };
+        let mut e = Engine::new(&spx);
+        e.head = vec![3, 4, 5];
+        e.vstat = vec![-1, -2, -4, 0, 1, 2];
+        e.compute_duals();
+        assert_eq!(e.d, vec![-1.0, 1.0, 7.0, 0.0, 0.0, 0.0]);
+        // Refactorizations reuse the row copy, but must read the current costs and statuses.
+        e.c[0] = 4.0;
+        e.vstat[1] = -1;
+        e.compute_duals();
+        assert_eq!(e.d, vec![3.0, -1.0, 7.0, 0.0, 0.0, 0.0]);
+    }
 
     #[test]
     fn warm_start_from_the_optimal_basis_takes_no_pivots() {
