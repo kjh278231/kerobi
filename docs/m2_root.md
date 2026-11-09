@@ -198,3 +198,15 @@ PYTHONPATH=$PWD/python ../.venv/bin/python tools/mip_root_replay.py bench/oracle
 ```
 
 `tests/test_mip_root.py::test_mad_captured_root_bounds_explain_remaining_iteration_difference`는 두 입력의 차이가 위 20개 상한뿐인지와 34/32회 재현을 함께 검사한다. 루트 테스트 전체 13 passed, git diff --check 통과. 재실행 도구는 현재 38개에서 관측한 dual simplex 경로용이며 MIP LP의 비공개 파라미터를 별도로 구현하지 않는다.
+
+## 10. 루트 도메인과 incumbent 입력 (2026-11-09)
+
+`mad` 열 200의 상한을 함수 진입·복귀에서 추적하면 `66bdf6` 직후에는 1e30이고, `5ebfbc`의 해 제출 중 `6f2e4a` → `5e73b9` → `6c5042`를 거쳐 6.9639999992036이 된다. `6f45ed`는 incumbent 목적에서 `(abs(obj)+1)*1e-10`을 빼 개선 cutoff를 만든다. 프리솔브 전 로그의 휴리스틱 해는 정수 열 여러 개가 1인 해다. 이 해의 생성 휴리스틱과 원본 → presolved 해 변환은 아직 포팅하지 않았다.
+
+`root_domain`은 별도 모델에 `66bdf6`의 등식 기반 암시적 정수 판정과 경계 반올림을 적용한다. `5ca999`는 도메인 형식(+0x650)이 아닌 별도 LP 형식(+0x660)을 사용하므로 LP의 열 형식은 원래 형식으로 유지한다. 선택 입력 incumbent는 **presolved 열 순서의 완전한 해**여야 하며, 각 열 경계·정수성·모든 행을 검사한 뒤 목적식의 나머지 열에 대한 최솟값으로 경계를 조인다. 목적 방향과 상수, 무한 경계, 정수 반올림을 처리한다. 누적 오차 여유를 두는 일반 구현이며, 원본 `6c5042`의 모든 사전 계산 자료구조와 후속 행 전파를 그대로 이식한 것은 아니다. 잘못된 해는 오류로 거부한다. 개선 cutoff가 모순을 보이는 경우 해당 경계는 적용하지 않으므로 최적성 판정이나 종료 처리는 제공하지 않는다. 부등식 기반 암시적 정수 판정 및 추가 전파도 남았다.
+
+Python에서 `presolved.mip_root(params, incumbent)`로 해를 전달하고 `mip_root_bounds(params, incumbent)`로 적용 경계를 확인할 수 있다. 캡처 해 `bench/oracle/mip_root/mad/incumbent.json`은 테스트에만 쓰며 실행 경로는 fixture나 Gurobi 로그를 읽지 않는다. 해당 해를 검증해 입력하면 원본 루트 MPS와 전체 하한·상한이 비트 단위로 같고 루트 34회가 나온다. 해를 생략하면 32회다. 따라서 자동 휴리스틱 없이 기본 mad가 34회가 된 것은 아니다.
+
+38개 기본 비교는 목적 38/38, 반복 17/38을 유지한다. 저장된 presolved MPS 비교는 102/102 일치했다. `tests/test_mip_root.py`는 mad 전체 bound, 반복 수와 잘못된 incumbent 거부를 검사한다.
+
+검증: Rust workspace 테스트·clippy 통과, 전체 pytest 77 passed·1 xfailed, 루트 pytest 14 passed. 별도 API 검사에서도 mad 전체 bound·34회·presolved 입력 불변·잘못된 길이/NaN/무한 incumbent 거부 및 해 생략 시 32회를 확인했다. 구현은 사용자 요청에 따라 Terra 하위 에이전트가 수행했다.

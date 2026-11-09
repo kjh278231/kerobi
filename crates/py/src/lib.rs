@@ -454,10 +454,13 @@ impl PyCoreModel {
     }
     /// MIP root LP of this presolved model (crates/mip root.rs): (method, status, objective, iterations), status coded
     /// as in `solve`; None when the model has no columns.
-    fn mip_root(&self, py: Python<'_>, params: Vec<(String, f64)>) -> Option<(i32, i32, f64, f64)> {
+    #[pyo3(signature = (params, incumbent=None))]
+    fn mip_root(&self, py: Python<'_>, params: Vec<(String, f64)>, incumbent: Option<Vec<f64>>) -> PyResult<Option<(i32, i32, f64, f64)>> {
         use rsolver_lp::simplex::Status;
         let p = rsolver_mip::Params::from_pairs(&params);
-        let r = py.allow_threads(|| rsolver_mip::root::solve_root(&self.inner, &p))?;
+        let r = py.allow_threads(|| rsolver_mip::root::solve_root_with_incumbent(&self.inner, &p, incumbent.as_deref()))
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        let Some(r) = r else { return Ok(None) };
         let code = match r.lp.status {
             Status::Optimal => 2,
             Status::Infeasible => 3,
@@ -465,7 +468,15 @@ impl PyCoreModel {
             Status::IterLimit => 7,
             Status::Numeric => 12,
         };
-        Some((r.method, code, r.lp.obj, r.lp.iter as f64))
+        Ok(Some((r.method, code, r.lp.obj, r.lp.iter as f64)))
+    }
+    /// Bounds used by the MIP root LP after domain initialization and optional incumbent propagation.
+    #[pyo3(signature = (params, incumbent=None))]
+    fn mip_root_bounds(&self, params: Vec<(String, f64)>, incumbent: Option<Vec<f64>>) -> PyResult<(Vec<f64>, Vec<f64>)> {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let d = rsolver_mip::root::root_domain(&self.inner, &p, incumbent.as_deref())
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        Ok((d.lb, d.ub))
     }
     fn scaling(&self) -> (Vec<f64>, Vec<f64>, f64) {
         let s = rsolver_lp::scaling::scale_flag3(&self.inner);

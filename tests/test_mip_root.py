@@ -1,4 +1,5 @@
 """Root LP regressions against the stored Gurobi Threads=1 logs."""
+import json
 import re
 import sys
 from pathlib import Path
@@ -48,3 +49,17 @@ def test_mad_captured_root_bounds_explain_remaining_iteration_difference():
     # Change only these bounds: the solver and all matrix/column-type inputs stay the same.
     status, obj, _, iterations, *_ = rebuild(model, typed.vtype, pre.lb, pre.ub).solve(1, 1e18, False)
     assert (status, obj, iterations) == (2, 0.0, 32)
+
+
+def test_mad_incumbent_tightens_root_domain():
+    x = json.loads((ROOT / 'bench/oracle/mip_root/mad/incumbent.json').read_text())
+    model = _core.read_model(str(DATA / 'mad.mps.gz')).presolve([('Threads', 1.0)])
+    captured = _core.read_model(str(ROOT / 'bench/oracle/mip_root/mad/0.mps.gz'))
+    lb, ub = model.mip_root_bounds([('Threads', 1.0)], x)
+    assert lb == captured.lb
+    assert ub == captured.ub
+    assert model.mip_root([('Threads', 1.0)], x)[3] == 34
+    assert model.mip_root([('Threads', 1.0)])[3] == 32
+    x[0] = 0.5
+    with pytest.raises(ValueError):
+        model.mip_root([('Threads', 1.0)], x)
