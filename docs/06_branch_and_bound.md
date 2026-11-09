@@ -206,3 +206,11 @@ StartNodeLimit=-3이면 생략. 각 start: 완전해면 검사·제출("Loaded u
 - 통합: `re/bench/data/miplib_small.csv`의 easy 인스턴스를 60초 한도로 풀어 `best_obj`와 비교(OPTIMAL이면 상대 1e-6, TIME_LIMIT이면 bound ≤ best ≤ inc). `neos859080`은 INFEASIBLE.
 - 결정성: 같은 인스턴스를 Threads=4로 3회 → NodeCount·IterCount·ObjVal 동일.
 - 콜백: MIPNODE에서 cbGet(MIP_OBJBND, MIP_NODCNT), MIPSOL에서 cbGetSolution, cbLazy로 TSP subtour 예제.
+
+## 구현 현황: 기본 트리 탐색
+
+`crates/mip/src/bnb.rs`의 `solve`와 Python `CoreModel.mip_solve(params, incumbent=None)`은 입력 모델 좌표에서 루트 이후 최선 경계 노드를 선택하고, 가장 분수성이 큰 정수 변수를 양방향 분기해 각 노드의 LP를 다시 푼다. 해의 원 모델 실행 가능성을 검사하고 incumbent, 경계, gap 및 노드·반복·시간 제한을 갱신한다. 반환값은 `(status, bound, incumbent_objective, incumbent, nodes, iterations)`이다. presolve/postsolve는 호출자가 별도로 처리한다.
+
+현재 노드 LP는 매번 새로 풀며 strong/reliability branching, cut, 병렬 탐색과 노드별 휴리스틱은 아직 없다. LP 비유계만으로 MIP 비유계를 증명하지 않으므로 해당 경로는 수치 중단 상태를 반환한다. 작업량·메모리 제한을 위한 노드별 계측도 아직 없다.
+
+검증: `tests/test_bnb.py`는 고정 난수 시드의 이진 모델 200개를 완전 탐색과 비교한다. `tools/bnb_oracle.py`는 정수·연속 혼합 모델 200개(최소화·최대화)와 cutoff 경계 3개를 Gurobi와 비교한다. 사용자 cutoff와 목적값이 같은 해는 수락하며, incumbent가 없을 때 그 경계의 노드를 먼저 제거하지 않는다.

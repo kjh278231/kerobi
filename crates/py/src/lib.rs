@@ -484,6 +484,16 @@ impl PyCoreModel {
         Ok((r.status as i32, r.bound, r.incumbent_objective, r.incumbent, r.root.map(root_summary),
             (r.domain.lb, r.domain.ub), r.propagation_complete))
     }
+    /// Solve a linear MIP in this model's coordinates: status, bound, objective, solution, nodes, iterations.
+    #[pyo3(signature = (params, incumbent=None))]
+    fn mip_solve(&self, py: Python<'_>, params: Vec<(String, f64)>, incumbent: Option<Vec<f64>>)
+        -> PyResult<(i32, f64, Option<f64>, Option<Vec<f64>>, u64, f64)>
+    {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let r = py.allow_threads(|| rsolver_mip::bnb::solve(&self.inner, &p, incumbent.as_deref()))
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        Ok((r.status as i32, r.bound, r.incumbent_objective, r.incumbent, r.nodes, r.iterations))
+    }
     /// Original incumbent and (presolve status, unchanged P0, whole-MIP root progress).
     fn mip_presolve_progress(&self, py: Python<'_>, params: Vec<(String, f64)>)
         -> PyResult<PresolveProgressOutput>
