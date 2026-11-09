@@ -129,7 +129,9 @@ down(`<`, floor) 먼저, up(`>`, floor+1). `child.bound = max(parent.bound, 추�
 
 ## 6. incumbent, 해 풀, cutoff (노트 15 §4.4, 16 §3.6.7)
 
-`submit(x)`: 목적값·실행가능성 검사(FeasTol·IntFeasTol, 원 presolved 모델) → 풀에 정렬 삽입(PoolSolutions, PoolGap) → incumbent 갱신 → cutoff = `min(Cutoff, inc − (|inc|+1)·1e-10)`, 목적 간격(objective step: 모든 목적 계수가 정수 배수면 그 gcd)이 있으면 다음 아래 간격값 → 로그 `*`(노드 LP 정수해) 또는 `H`(휴리스틱) 행, "Found heuristic solution: objective %s"(헤더 전) → 콜백 MIPSOL → SolFiles.
+`submit(x)`: 목적값·실행가능성 검사(FeasTol·IntFeasTol, 원 presolved 모델) → 풀에 정렬 삽입(PoolSolutions, PoolGap) → incumbent 갱신 → cutoff 갱신 → 로그 `*`(노드 LP 정수해) 또는 `H`(휴리스틱) 행, "Found heuristic solution: objective %s"(헤더 전) → 콜백 MIPSOL → SolFiles.
+
+cutoff(`6f45ed`)는 최소화 좌표에서 계산한다. `Cutoff < inc`이면 사용자 값을 그대로 사용한다. 그 외에는 `inc − (|inc|+1)·1e-10`을 쓴다. 양수 목적 격자가 있으면 바로 아래 격자점에 수치 허용오차를 더한 값과의 최솟값을 쓴다. [구현과 정확한 식](m2_root.md#19-목적-격자와-사용자-cutoff-2026-11-09)은 루트 작업 기록에 있다.
 
 ## 7. 종료 조건 (`termination::check`) (노트 15 §3.9)
 
@@ -137,7 +139,7 @@ down(`<`, floor) 먼저, up(`>`, floor+1). `child.bound = max(parent.bound, 추�
 if status != Running: return status
 limits::check (MEM/terminate/Time/Work)
 bound = tree.lower_bound(목적 간격 반올림) ; inc = pool.best
-if 열린 노드 없음: return inc < ∞ ? OPTIMAL : INFEASIBLE
+if 도메인 충돌 또는 탐색 소진: return inc < ∞ ? OPTIMAL : INFEASIBLE
 if bound ≥ ∞: INFEASIBLE ; if cutoff ≤ bound: OPTIMAL
 if inc < ∞: MIPGap>0 && (inc−bound)/max(|inc|,1e-6) < MIPGap → OPTIMAL ; MIPGapAbs>0 && inc−bound < MIPGapAbs → OPTIMAL
 if inc < BestObjStop+1e-10 || BestBdStop−1e-10 < bound: USER_OBJ_LIMIT(15)
@@ -145,6 +147,8 @@ NodeLimit → NODE_LIMIT ; Σ simplex iters ≥ IterationLimit → ITERATION_LIM
 ImproveStartGap/Nodes/Time/Work 도달 && incumbent → ImproveStart 전환 (내부 상태)
 ```
 로그 gap은 `|inc−bound|/|inc|`(|inc|<1e-6이면 "-").
+
+공통 종료 판정은 `crates/mip/src/termination.rs`에 구현했다. 루트 후속 전파와 Python progress API의 연결 범위는 [루트 작업 기록 §20](m2_root.md#20-전체-mip-종료-판정과-후속-전파-2026-11-09)에 있다. 사용자 cutoff가 있고 수락한 해가 없으면 최종 OPTIMAL·INFEASIBLE은 CUTOFF(6)로 바뀐다. ImproveStart는 종료가 아닌 단계 전환이다.
 
 ## 8. 재시작 (노트 15 §3.10)
 

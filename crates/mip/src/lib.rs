@@ -14,6 +14,7 @@ pub mod driver;
 pub mod dump;
 mod grow;
 mod helpers;
+mod heur;
 mod iint;
 mod knapsack;
 mod inner;
@@ -22,6 +23,9 @@ mod aggregate;
 mod colpass;
 mod components;
 mod covers;
+mod cutoff;
+pub mod termination;
+pub mod propagate;
 mod compress;
 mod deprow;
 mod derived;
@@ -87,6 +91,24 @@ macro_rules! params {
 }
 
 params! {
+    mip_gap: f64 = 1e-4, "mipgap";
+    mip_gap_abs: f64 = 1e-10, "mipgapabs";
+    best_obj_stop: f64 = -1e100, "bestobjstop";
+    best_bd_stop: f64 = 1e100, "bestbdstop";
+    node_limit: f64 = 1e100, "nodelimit";
+    iteration_limit: f64 = 1e100, "iterationlimit";
+    solution_limit: i32 = 2_000_000_000, "solutionlimit";
+    time_limit: f64 = 1e100, "timelimit";
+    work_limit: f64 = 1e100, "worklimit";
+    soft_mem_limit: f64 = 1e100, "softmemlimit";
+    improve_start_gap: f64 = 0.0, "improvestartgap";
+    improve_start_nodes: f64 = 1e100, "improvestartnodes";
+    improve_start_time: f64 = 1e100, "improvestarttime";
+    improve_start_work: f64 = 1e100, "improvestartwork";
+    /// env+0x24a8 Cutoff, in the input model's objective direction (1e100 disables it).
+    cutoff: f64 = 1e100, "cutoff";
+    /// env+0x2810 GURO_PAR_OBJGCD
+    objgcd: i32 = 1, "guro_par_objgcd";
     /// env+0x2424 Presolve (-1 auto, 0 off, 1 conservative, 2 aggressive)
     presolve: i32 = -1, "presolve";
     /// env+0x26ec GURO_PAR_PRELIMIT: number of reduction calls before presolve stops
@@ -179,6 +201,10 @@ params! {
     method: i32 = -1, "method";
     threads: i32 = 0, "threads";
     concurrent_method: i32 = -1, "concurrentmethod";
+    /// Initial primal heuristic; zero disables automatic incumbent search.
+    heuristics: f64 = 0.05, "heuristics";
+    prepreheur: i32 = 1, "guro_par_prepreheur";
+    seed: i32 = 0, "seed";
 }
 
 /// 3cd406's locals that the reduction loop reads.

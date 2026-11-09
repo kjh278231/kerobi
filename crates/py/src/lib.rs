@@ -8,6 +8,19 @@ use pyo3::prelude::*;
 type Rows = Vec<(Vec<(usize, f64)>, f64, f64)>;
 /// MIP postsolve records: (type, data bytes, padding ranges, pointer offsets).
 type Recs = Vec<(i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>)>;
+type PresolveProgressOutput = (Option<(f64, Vec<f64>)>, (i32, Option<PyCoreModel>, Option<RootProgressOutput>));
+type RootProgressOutput = (i32, f64, Option<f64>, Option<Vec<f64>>, Option<RootSummary>, (Vec<f64>, Vec<f64>), bool);
+type RootSummary = (i32, i32, f64, f64);
+type InitialRootOutput = (Option<(f64, Vec<f64>)>, (i32, Option<PyCoreModel>, Option<RootSummary>, Option<(Vec<f64>, Vec<f64>)>));
+
+fn root_summary(r: rsolver_mip::root::RootLp) -> RootSummary {
+    use rsolver_lp::simplex::Status;
+    let status = match r.lp.status {
+        Status::Optimal => 2, Status::Infeasible => 3, Status::Unbounded => 5,
+        Status::IterLimit => 7, Status::Numeric => 12,
+    };
+    (r.method, status, r.lp.obj, r.lp.iter as f64)
+}
 
 #[pyfunction]
 fn build_model(
@@ -456,21 +469,60 @@ impl PyCoreModel {
     /// as in `solve`; None when the model has no columns.
     #[pyo3(signature = (params, incumbent=None))]
     fn mip_root(&self, py: Python<'_>, params: Vec<(String, f64)>, incumbent: Option<Vec<f64>>) -> PyResult<Option<(i32, i32, f64, f64)>> {
-        use rsolver_lp::simplex::Status;
         let p = rsolver_mip::Params::from_pairs(&params);
         let r = py.allow_threads(|| rsolver_mip::root::solve_root_with_incumbent(&self.inner, &p, incumbent.as_deref()))
             .map_err(pyo3::exceptions::PyValueError::new_err)?;
-        let Some(r) = r else { return Ok(None) };
-        let code = match r.lp.status {
-            Status::Optimal => 2,
-            Status::Infeasible => 3,
-            Status::Unbounded => 5,
-            Status::IterLimit => 7,
-            Status::Numeric => 12,
-        };
-        Ok(Some((r.method, code, r.lp.obj, r.lp.iter as f64)))
+        Ok(r.map(root_summary))
     }
-    /// Bounds used by the MIP root LP after domain initialization and optional incumbent propagation.
+    /// Continue a presolved MIP root: (MIP status, bound, incumbent objective, incumbent,
+    /// root LP summary, bounds after propagation, propagation complete). Status 1 requires further search.
+    #[pyo3(signature = (params, incumbent=None))]
+    fn mip_root_progress(&self, py: Python<'_>, params: Vec<(String, f64)>, incumbent: Option<Vec<f64>>) -> PyResult<RootProgressOutput> {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let r = py.allow_threads(|| rsolver_mip::root::solve_root_progress(&self.inner, &p, incumbent.as_deref()))
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        Ok((r.status as i32, r.bound, r.incumbent_objective, r.incumbent, r.root.map(root_summary),
+            (r.domain.lb, r.domain.ub), r.propagation_complete))
+    }
+    /// Original incumbent and (presolve status, unchanged P0, whole-MIP root progress).
+    fn mip_presolve_progress(&self, py: Python<'_>, params: Vec<(String, f64)>)
+        -> PyResult<PresolveProgressOutput>
+    {
+        use rsolver_mip::root::InitialRootError;
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let run = py.allow_threads(|| rsolver_mip::root::solve_root_progress_from_original(&self.inner, &p));
+        let incumbent = run.original_incumbent.map(|v| (v.objective, v.x));
+        match run.presolve {
+            Ok((model, r)) => Ok((incumbent, (0, Some(PyCoreModel { inner: model }), Some((
+                r.status as i32, r.bound, r.incumbent_objective, r.incumbent, r.root.map(root_summary),
+                (r.domain.lb, r.domain.ub), r.propagation_complete))))),
+            Err(InitialRootError::Presolve(status)) => Ok((incumbent, (status, None, None))),
+            Err(InitialRootError::UnsupportedModel) => Err(pyo3::exceptions::PyNotImplementedError::new_err(
+                "mip_presolve_progress requires a linear MIP with C, B, or I columns")),
+        }
+    }
+    /// Run the initial heuristic on this original MIP, then presolve and solve its root.
+    fn mip_presolve_root(&self, py: Python<'_>, params: Vec<(String, f64)>) -> PyResult<InitialRootOutput> {
+        use rsolver_mip::root::InitialRootError;
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let run = py.allow_threads(|| rsolver_mip::root::solve_root_from_original(&self.inner, &p));
+        let incumbent = run.original_incumbent.map(|v| (v.objective, v.x));
+        match run.presolve {
+            Ok(q) => Ok((incumbent, (0, Some(PyCoreModel { inner: q.presolved }),
+                q.root.map(root_summary), Some((q.lower_bounds, q.upper_bounds))))),
+            Err(InitialRootError::Presolve(status)) => Ok((incumbent, (status, None, None, None))),
+            Err(InitialRootError::UnsupportedModel) => Err(pyo3::exceptions::PyNotImplementedError::new_err(
+                "mip_presolve_root requires a linear MIP with C, B, or I columns")),
+        }
+    }
+    /// Initial heuristic solution in presolved coordinates: (objective, values), or None if none found.
+    fn mip_initial_incumbent(&self, py: Python<'_>, params: Vec<(String, f64)>) -> Option<(f64, Vec<f64>)> {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let x = py.allow_threads(|| rsolver_mip::root::initial_incumbent(&self.inner, &p))?;
+        let obj = self.inner.objcon + self.inner.obj.iter().zip(&x).map(|(c, v)| c * v).sum::<f64>();
+        Some((obj, x))
+    }
+    /// Bounds used by the MIP root LP after domain initialization and automatic or explicit incumbent propagation.
     #[pyo3(signature = (params, incumbent=None))]
     fn mip_root_bounds(&self, params: Vec<(String, f64)>, incumbent: Option<Vec<f64>>) -> PyResult<(Vec<f64>, Vec<f64>)> {
         let p = rsolver_mip::Params::from_pairs(&params);
