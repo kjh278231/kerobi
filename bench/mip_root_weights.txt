@@ -1,0 +1,46 @@
+MIP root LP: default parameters + Threads=1, one complete sweep before/after.
+Objective equality uses the .6e precision of bench/gurobi/<name>/log.txt.
+enlight_hard has no root in either solver and counts as a match.
+
+model                     Gurobi  before   after  status  objective
+ran14x18-disj-8              762     583     753       2         OK
+gen-ip002                     39      37      39       2         OK
+gen-ip054                     31      39      50       2         OK
+ic97_potential               560     516     505       2         OK
+pk1                           52      47      48       2         OK
+neos859080                     3       3       3       2         OK
+neos-911970                  182     229     282       2         OK
+markshare2                    23      19      23       2         OK
+mas74                         53      53      52       2         OK
+exp-1-500-5-5                621     621     621       2         OK
+markshare_4_0                 13      12      14       2         OK
+mas76                         47      54      59       2         OK
+neos-860300                  487     484     553       2         OK
+tr12-30                      364     363     364       2         OK
+neos5                        107      95     108       2         OK
+enlight_hard                none    none    none       -         OK
+sp150x300d                   206     206     206       2         OK
+mik-250-20-75-4               81      82      81       2         OK
+neos17                       574     557     548       2         OK
+neos-4954672-berkel          405     398     413       2         OK
+neos-4338804-snowy           399     400     399       2         OK
+neos-2657525-crna            177     128     125       2         OK
+neos-3627168-kasai          1253    1360    1292       2         OK
+neos-3046615-murg             87      87      87       2         OK
+neos-3754480-nidda           201     167     188       2         OK
+csched008                    563     487     467       2         OK
+mad                           34       9       9       2         OK
+bppc4-08                     921     627    1007       2         OK
+glass4                        72      36      36       2         OK
+gmu-35-50                    692     542     577       2         OK
+supportcase26                207     207     207       2         OK
+fhnw-binpack4-4              389     390     389       2         OK
+cod105                      7428    4277    7699       2         OK
+gmu-35-40                    452     350     335       2         OK
+graphdraw-domain             192     160     177       2         OK
+timtab1                      141      68      67       2         OK
+csched007                    988     784     727       2         OK
+assign1-5-8                  415     363     457       2         OK
+
+Objective: 38/38 before and after (37 solved roots, one empty model).
+Iterations: 7/38 before, 12/38 after.

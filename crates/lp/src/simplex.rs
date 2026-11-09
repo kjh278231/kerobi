@@ -620,10 +620,15 @@ impl<'a> Engine<'a> {
         hit.then_some(if l <= x { x - u } else { l - x })
     }
 
+    fn price_score(&self, p: usize, v: f64) -> f64 {
+        let j = self.head[p];
+        self.spx.var_factor(j) * self.pr.score(p, j, v, self.w[p])
+    }
+
     fn price_rebuild(&mut self) {
         let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol(p)).collect();
         let score: Vec<f64> =
-            (0..self.m).map(|p| viol[p].map_or(0.0, |v| self.pr.score(p, self.head[p], v, self.w[p]))).collect();
+            (0..self.m).map(|p| viol[p].map_or(0.0, |v| self.price_score(p, v))).collect();
         self.pr.allow = self.lu_interval as i64;
         self.pr.rebuild(&viol, &score);
     }
@@ -655,7 +660,7 @@ impl<'a> Engine<'a> {
         } else {
             let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol1(p, true)).collect();
             let score: Vec<f64> =
-                (0..self.m).map(|p| viol[p].map_or(0.0, |v| self.pr.score(p, self.head[p], v, self.w[p]))).collect();
+                (0..self.m).map(|p| viol[p].map_or(0.0, |v| self.price_score(p, v))).collect();
             // divisor 1000 when the violations are at least nnz(α_q) of the last pivot (or none yet) and not c8
             let few = self.path.is_empty() || viol.iter().flatten().count() >= self.col_nnz.saturating_sub(1);
             self.pr.full_init(&viol, &score, if few && !self.c8 { 1000.0 } else { 100000.0 });
@@ -695,7 +700,7 @@ impl<'a> Engine<'a> {
         if self.pr.mode != 0 {
             for &p in changed {
                 let v = if Some(p) == leaving { self.viol(p) } else { self.viol1(p, leaving.is_none()) };
-                let sc = v.map(|v| self.pr.score(p, self.head[p], v, self.w[p]));
+                let sc = v.map(|v| self.price_score(p, v));
                 if Some(p) == leaving {
                     // 1bae9c L481–555: the leaving position (test VA) is listed again with a fresh score, or marked
                     // listed-feasible (3)
@@ -900,7 +905,7 @@ impl<'a> Engine<'a> {
                 continue;
             }
             let k = rng.next_int();
-            let w = if j < self.n { self.spx.len[j] as f64 * (1.0 * 0.3 + 0.7) } else { 1.0 * (1.0 * 0.3 + 0.7) };
+            let w = if j < self.n { self.spx.len[j] as f64 * (self.spx.var_factor(j) * 0.3 + 0.7) } else { 1.0 };
             let delta = ((k % 250 + 1) as f64 * pp) * (w + 1.0).log2();
             match self.vstat[j] {
                 -1 => {
@@ -1008,7 +1013,7 @@ impl<'a> Engine<'a> {
                 if ag >= -1e-10 {
                     continue; // bfrt skips it first thing
                 }
-                let w = if j < self.n { self.spx.len[j] as f64 * (1.0 * 0.3 + 0.7) } else { 0.5 * (1.0 * 0.3 + 0.7) };
+                let w = if j < self.n { self.spx.len[j] as f64 * (self.spx.var_factor(j) * 0.3 + 0.7) } else { 0.5 };
                 cands.push(Cand { j, a: ag, d: dg, range: self.spx.u[j] - self.spx.l[j], back: j >= self.n, w });
             }
             let feas = if self.big_m { BIG_M_TOL } else { FEAS_TOL };
@@ -1764,6 +1769,82 @@ fn solve_model_run(
 mod tests {
     use super::*;
 
+    fn mixed_workspace() -> Spx {
+        Spx::unscaled(&rsolver_model::Model {
+            sense: 1,
+            obj: vec![0.0; 3], lb: vec![0.0; 3], ub: vec![10.0; 3],
+            vtype: b"CIB".to_vec(),
+            col_beg: vec![0, 1, 2], col_len: vec![1; 3],
+            col_ind: vec![0, 1, 2], col_val: vec![1.0; 3],
+            row_sense: vec![b'<'; 3], rhs: vec![0.0; 3],
+            ..Default::default()
+        })
+    }
+
+    #[test]
+    fn integer_basics_get_preference_in_both_pricing_modes_and_updates() {
+        let spx = mixed_workspace();
+        for mode in [0, 1] {
+            let mut e = Engine::new(&spx);
+            // Basis position zero holds binary column 2, not continuous column 0.
+            e.head = vec![2, 0, 1];
+            e.xb = vec![-1.0, -1.1, -0.5];
+            e.pr.mode = mode;
+            e.price_full();
+            assert_eq!(e.chuzr(), Some(0), "mode {mode}");
+            // Refreshing an integer's score must keep the preference too.
+            e.xb[2] = -1.0;
+            e.xb[0] = 0.0;
+            e.price_touch(&[0, 2], None, true);
+            if mode == 0 { e.price_rebuild(); }
+            assert_eq!(e.chuzr(), Some(2), "mode {mode} update");
+        }
+    }
+
+    #[test]
+    fn integer_cost_perturbation_preserves_continuous_columns_and_rng_order() {
+        let spx = mixed_workspace();
+        let mut continuous = spx.clone();
+        continuous.vtype.fill(b'C');
+        let perturb = |spx: &Spx| {
+            let mut e = Engine::new(spx);
+            e.head = vec![3, 4, 5];
+            e.vstat = vec![-1, -2, -1, 0, 1, 2];
+            e.pt_lvl = 3;
+            e.perturb();
+            e.c
+        };
+        let (mixed, plain) = (perturb(&spx), perturb(&continuous));
+        assert_eq!(mixed[0], plain[0]);
+        let integer_width = 1.5_f64 * 0.3 + 0.7;
+        let ratio = (integer_width + 1.0).log2();
+        for j in [1, 2] {
+            assert!((mixed[j] / plain[j] - ratio).abs() < 1e-14);
+        }
+        assert!(mixed[1] < 0.0 && mixed[2] > 0.0);
+        assert_eq!(&mixed[3..], &plain[3..]);
+    }
+
+    #[test]
+    fn bfrt_accounts_for_integer_column_weight() {
+        let mut md = rsolver_model::Model {
+            sense: 1,
+            obj: vec![0.0; 2], lb: vec![0.0; 2], ub: vec![INFINITY; 2],
+            vtype: b"IC".to_vec(),
+            col_beg: vec![0, 1], col_len: vec![1; 2],
+            col_ind: vec![0, 0], col_val: vec![-1.1, -1.0],
+            row_sense: vec![b'<'], rhs: vec![-1.0],
+            ..Default::default()
+        };
+        for (integer, entering) in [(true, 1), (false, 0)] {
+            md.vtype[0] = if integer { b'I' } else { b'C' };
+            let spx = Spx::unscaled(&md);
+            let mut e = Engine::new(&spx);
+            assert_eq!(e.solve_warm(&[-1, -1], &[0]), Status::Optimal);
+            assert_eq!(e.path[0].1, entering);
+        }
+    }
+
     #[test]
     fn reduced_costs_follow_row_order_with_upper_and_fixed_nonbasics() {
         // The column order 0, 2, 1 loses the final unit term if costs are summed column-wise.
@@ -1774,6 +1855,7 @@ mod tests {
             ind: vec![0, 2, 1, 0, 2, 1, 0, 2, 1],
             val: vec![1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0],
             sense: vec![b'<'; 3],
+            vtype: vec![b'C'; 3],
             c: vec![0.0, 0.0, 7.0, 1e16, 1e16, 1.0],
             l: vec![0.0; 6], u: vec![INFINITY; 6], b: vec![0.0; 3],
             scaling: crate::scaling::Scaling { col: vec![1.0; 3], row: vec![1.0; 3], obj: 1.0 },

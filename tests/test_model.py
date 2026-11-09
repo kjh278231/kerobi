@@ -14,7 +14,6 @@ def test_lp_max():
     assert (x.X, y.X) == pytest.approx((4, 0))
 
 
-@pytest.mark.xfail(raises=Exception, strict=True, reason="MIP engine is ported in M2; the textbook core was removed in M1")
 def test_mip_knapsack():
     m = Model()
     v = m.addVars(3, vtype=GRB.BINARY)

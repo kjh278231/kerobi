@@ -192,3 +192,17 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 - 생성자 `5118e6`의 문제 유형(+0x08): 계수가 모두 +1이고 rhs가 1(유형 6), 또는 모두 −1이고 `>= 1` 행(유형 5)이며 열이 모두 0/1 열이면 행이 함의하는 ub를 푼다(유형 6은 항목 있는 비고정 열, 유형 5는 비용 > 0.001인 열). 뒤의 `50de61`이 그 bound를 1.002로 다시 잡는다. 유형 1·4는 옮기지 않았다(assert).
 - 대칭 검출 일치: Netlib 21개 호출 local_f4·작업량 21/21, MIPLIB small 38개 LP 완화 presolved 38/38, 합성 대칭 LP 7/7([m1_presolve_symmetry.md](m1_presolve_symmetry.md)). 모든 행·열이 지워지면 Gurobi는 빈 모델을 `Presolved`라는 이름으로 낸다.
 - 포팅하지 않은 것(지름길, 코드에 `shortcut:` 주석): 문제 유형 1·4, 빈 결과 모델의 목적 상수, Presolve=2 전용 reduction(`51f5ab`, `51aba6`), 집계 prescan 특수 경로, `503985`(n ≥ 10000), Params에 없는 숨은 파라미터(PREPARALLEL, PRESPLITROWS, MarkowitzTol, GURO_PAR_ZERO, INTBASIS 등)는 기본값 가정.
+
+## 11. MIP presolve 포팅 결과 (M2, `crates/mip/`)
+
+`3cd406`(P0 경로 `999702` → `3db19d` → `3db15a` → `3cd406`)을 원본대로 따로 옮겼다(§1의 결정). 근거와 세부는 [m2_presolve.md](m2_presolve.md)와 해독 노트 `m2_spine_b/c/d.md`(제어 흐름), `m2_red_*.md`(reduction별).
+
+- **LP를 풀지 않는다**: Frida coverage(`tools/presolve_cov.js`)로 38개 모델에서 simplex·barrier·LP 드라이버가 0회임을 확인했다. cut 모듈과 겹치는 것은 `838543`이 쓰는 mod-k 보조 루틴뿐이다.
+- **상태**: `3a484d`의 MIP 분기는 처음부터 행·열 연결 리스트(노드 0x20바이트, free/pending 풀)다. 추적기 목록 getter(`538f30`/`5399fc`/`53af0f`/`53a487`)는 연결 리스트 분기(죽은 노드도 세고 작업량 상수가 CSR과 다름)를 쓴다.
+- **제어 흐름**(`driver.rs`): 단계(≤2) × 라운드(≤5) × 패스(전역 번호) × 내부 반복(−5부터). 내부 반복은 7카운트, 바깥 패스는 22 + [p<3] + [round==0 && k==0] + [k==0], 라운드 끝은 19(라운드 0)·16, FINAL은 7–8. reduction 없이 세는 곳(I→B, PREPARTOBJ, 함의 bound, 쌍대 이진화, 패스 끝, FINAL 쌍대 고정)까지 원본 위치에서 센다. reduction timer 28개(시작마다 +1, 한도 B = 2500·nnz + 1e7과 그 배수)를 공유 객체로 흉내 낸다.
+- **reduction**: 내부 루프(`3e39a6`, `36ddf2`, `37168e`, `36c5cf`, `56f793`, `56c80e`, `36e6b6`), 바깥 패스(`3e5363`, `3ff744` mode 0–3과 모델 생성의 mode 2, `57627e`, `578fd2`+`6aec61`/`6b4738`/`6b5e11`, `374521`, `5431ee`, `4030c9`, `40d2bc`, `36ee92`, `3e40d1`, `37f484` MIP 분기, `418542`, clique `45885d`/`451bed`/`52be10`/`46a62d`, `5466a7`, `45feaa`+`45d7ec`, `47c445` mode 2, inline 함의 bound·PREPARTOBJ·쌍대 이진화), 라운드 끝(`58d4ce`, `5577ba` MIP 분기, `5a9282`, `5ab429`, `59c193`, `55a779`, `594c0c`, `423e35`, `419ffc`, `5a1293`, `5a4d8b`/`5a5eff`, `5aaaf7`, `838543`, `579e67`, probing `4d3a1d`, `5a04fc`), FINAL(두 번째 probing, `52cba4`/`521497`, `470936`, `57999f`, inline 쌍대 고정, inline implied int 척도).
+- **모델 생성**: 살아 있는 행·열을 원래 순서로, presolve가 붙인 행·열만 `R<번호>`/`C<번호>` 이름. [0,1]에 남은 정수 열은 'B'. MPS 라이터는 `MARKER INTORG/INTEND`와 BV를 쓴다.
+- **레코드**(MIP 배치는 LP와 다르다. 예: type 1은 16바이트 {열, 값}): 1, 2, 4, 9, 10, 11, 14, 19, 24, 25. sparsify(`470936`)는 MIP에서 레코드를 남기지 않는다(type 22는 LP 전용).
+- **일치**(miplib_small 38개, 기본 파라미터, Threads=1): presolved 모델 38/38, PRELIMIT sweep 모든 변화점 일치, 레코드 바이트 38/38, 함수별 덤프 비교 전 호출 일치.
+- **도구**: `tools/prelimit_sweep.py`·`sweep_check.py`(PRELIMIT 단계 비교), `tools/mip_state_dump.js`·`mip_dump_check.py`(한 reduction 단위 상태 오라클), `mip_rec_check.py`(레코드), `presolve_cov.js`(coverage), `docs/m2_param_offsets.tsv`(파라미터 오프셋·기본값, 도구용).
+- **지름길**(코드에 `shortcut:` 주석, 모두 38개에서 0회): Q·QC·SOS·PWL·NL·일반 제약 블록, MIP 문맥(재시작 presolve), B&B 범위의 하위 풀이(`490ab6` 행 1개 모델, `5307f4` 성분별 sub-MIP, `522aa2` 블록 풀이: 건너뜀), 노드 풀 증설 `3b85ea`(assert), 기본값에서 꺼진 파라미터 경로(PREDUALSLACK, PRESUBSUME, PRECLIQSUB, AGEQ, PREPOWER 등). 기본값에서 지나지 않은 성공 경로 일부(covers 적용, type 24 바이트, `56b360`)는 해독대로만 넣고 오라클로 확인하지 못했다.
