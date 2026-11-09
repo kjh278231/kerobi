@@ -238,11 +238,16 @@ impl Run {
 /// skips model generation and `Model.presolve()` fails with "Unable to create presolved model" (checked on a model
 /// with an integer column fixed at 2.5).
 pub fn presolve(md: &Model, p: &Params) -> Result<Model, i32> {
+    presolve_with_state(md, p).map(|(model, _)| model)
+}
+
+/// Presolve while retaining the reduction records and index state needed to restore a solution.
+pub fn presolve_with_state(md: &Model, p: &Params) -> Result<(Model, State), i32> {
     let mut st = State::new(md, p);
     reduce(&mut st, p)?;
     match finish(&mut st, p) {
         0 => match split_rows(&mut st, p) {
-            0 => Ok(st.to_model(md)),
+            0 => Ok((st.to_model(md), st)),
             rc => Err(rc),
         },
         rc => Err(rc),
@@ -437,5 +442,23 @@ impl State {
         }
         self.work += (done as f64 * 3.0) * self.work_mult;
         bad.map_or(Ok(()), Err)
+    }
+}
+
+#[cfg(test)]
+mod presolve_state_tests {
+    use super::*;
+
+    #[test]
+    fn retains_records_for_removed_fixed_variable() {
+        let model = Model {
+            sense: 1, obj: vec![2.0], lb: vec![3.0], ub: vec![3.0], vtype: b"I".to_vec(),
+            col_beg: vec![0], col_len: vec![0], ..Model::default()
+        };
+        let (reduced, state) = presolve_with_state(&model, &Params::default()).unwrap();
+        assert!(reduced.obj.is_empty());
+        assert!(state.col_cnt[0] < 0);
+        assert!(state.post.iter().any(|record| matches!(record, post::PostRec::Fix { j: 0, v } if *v == 3.0)));
+        assert_eq!(reduced.objcon, 6.0);
     }
 }

@@ -14,6 +14,46 @@ pub struct SearchResult {
 
 struct Node { model: Model, bound: f64 }
 
+/// Solve in reduced coordinates and restore the incumbent. Unsupported reductions use the original model.
+pub fn solve_original(model: &Model, p: &Params) -> Result<SearchResult, &'static str> {
+    if p.presolve == 0 { return solve(model, p, None); }
+    let (reduced, state) = match crate::presolve_with_state(model, p) {
+        Ok(result) => result,
+        Err(_) => return solve(model, p, None),
+    };
+    if state.post.iter().any(|r| !matches!(r, crate::post::PostRec::Fix { .. } | crate::post::PostRec::Subst { .. })) {
+        return solve(model, p, None);
+    }
+    // An empty root has no LP workspace in the current B&B driver.
+    if reduced.obj.is_empty() { return solve(model, p, None); }
+    let mut result = solve(&reduced, p, None)?;
+    if let Some(ref reduced_x) = result.incumbent {
+        let mut x = vec![0.0; state.n];
+        let mut k = 0;
+        for j in 0..state.n {
+            if state.col_cnt[j] >= 0 { x[j] = reduced_x[k]; k += 1; }
+        }
+        for record in state.post.iter().rev() {
+            match record {
+                crate::post::PostRec::Fix { j, v } => x[*j as usize] = *v,
+                crate::post::PostRec::Subst { j, c0, ind, val } => {
+                    x[*j as usize] = *c0 + ind.iter().zip(val).map(|(&i, a)| a * x[i as usize]).sum::<f64>();
+                }
+                _ => unreachable!(),
+            }
+        }
+        x.truncate(model.num_vars());
+        let Ok(z) = root::incumbent_objective(model, p, &x) else { return solve(model, p, None); };
+        let objective = z * model.sense as f64;
+        if result.incumbent_objective.is_some_and(|v| (v - objective).abs() > p.feastol * (1.0 + objective.abs())) {
+            return solve(model, p, None);
+        }
+        result.incumbent = Some(x);
+        result.incumbent_objective = Some(objective);
+    }
+    Ok(result)
+}
+
 /// Solve a linear MIP without presolving it. Solutions use the supplied model's coordinates.
 pub fn solve(model: &Model, p: &Params, incumbent: Option<&[f64]>) -> Result<SearchResult, &'static str> {
     let started = std::time::Instant::now();
@@ -36,8 +76,7 @@ pub fn solve(model: &Model, p: &Params, incumbent: Option<&[f64]>) -> Result<Sea
     let mut nodes = Vec::new();
     if status == Status::Running {
         let lp = root.root.as_ref().ok_or("missing root relaxation")?;
-        if lp.lp.status != LpStatus::Optimal { status = Status::Numeric; }
-        else if !branch(&mut nodes, root.domain, state.bound, &lp.lp.x, p.intfeastol) {
+        if lp.lp.status != LpStatus::Optimal || !branch(&mut nodes, root.domain, state.bound, &lp.lp.x, p.intfeastol) {
             status = Status::Numeric;
         }
     }
@@ -101,6 +140,26 @@ fn branch(nodes: &mut Vec<Node>, model: Model, bound: f64, x: &[f64], tol: f64) 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn original_pipeline_restores_eliminated_variable() {
+        let model = Model { sense: 1, obj: vec![3.0, -1.0, -1.0, -1.0],
+            lb: vec![2.0, 0.0, 0.0, 0.0], ub: vec![2.0, 1.0, 1.0, 1.0], vtype: b"IBBB".to_vec(),
+            col_beg: vec![0, 0, 2, 4], col_len: vec![0, 2, 2, 2],
+            col_ind: vec![0, 2, 0, 1, 1, 2], col_val: vec![1.0; 6],
+            row_sense: vec![b'<'; 3], rhs: vec![1.0; 3], ..Model::default() };
+        let p = (1..100).map(|prelimit| Params { prelimit, mip_gap: 0.0, mip_gap_abs: 0.0, ..Params::default() })
+            .find(|p| {
+                let (q, s) = crate::presolve_with_state(&model, p).unwrap();
+                !q.obj.is_empty() && s.post.iter().any(|r| matches!(r, crate::post::PostRec::Fix { j: 0, .. }))
+                    && s.post.iter().all(|r| matches!(r, crate::post::PostRec::Fix { .. } | crate::post::PostRec::Subst { .. }))
+            }).expect("a presolve limit that eliminates the fixed variable");
+        let result = solve_original(&model, &p).unwrap();
+        assert_eq!(result.status, Status::Optimal);
+        assert_eq!(result.incumbent_objective, Some(5.0));
+        let x = result.incumbent.unwrap();
+        assert_eq!(x[0], 2.0);
+        assert_eq!(x[1..].iter().sum::<f64>(), 1.0);
+    }
     fn triangle(sense: i32) -> Model {
         Model { sense, obj: vec![1.0; 3], lb: vec![0.0; 3], ub: vec![1.0; 3], vtype: b"BBB".to_vec(),
             col_beg: vec![0, 2, 4], col_len: vec![2; 3], col_ind: vec![0, 2, 0, 1, 1, 2],

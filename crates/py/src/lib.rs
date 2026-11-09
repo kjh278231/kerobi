@@ -9,6 +9,7 @@ type Rows = Vec<(Vec<(usize, f64)>, f64, f64)>;
 /// MIP postsolve records: (type, data bytes, padding ranges, pointer offsets).
 type Recs = Vec<(i32, Vec<u8>, Vec<(usize, usize)>, Vec<usize>)>;
 type PresolveProgressOutput = (Option<(f64, Vec<f64>)>, (i32, Option<PyCoreModel>, Option<RootProgressOutput>));
+type MipSolveOutput = (i32, f64, Option<f64>, Option<Vec<f64>>, u64, f64);
 type RootProgressOutput = (i32, f64, Option<f64>, Option<Vec<f64>>, Option<RootSummary>, (Vec<f64>, Vec<f64>), bool);
 type RootSummary = (i32, i32, f64, f64);
 type InitialRootOutput = (Option<(f64, Vec<f64>)>, (i32, Option<PyCoreModel>, Option<RootSummary>, Option<(Vec<f64>, Vec<f64>)>));
@@ -487,10 +488,19 @@ impl PyCoreModel {
     /// Solve a linear MIP in this model's coordinates: status, bound, objective, solution, nodes, iterations.
     #[pyo3(signature = (params, incumbent=None))]
     fn mip_solve(&self, py: Python<'_>, params: Vec<(String, f64)>, incumbent: Option<Vec<f64>>)
-        -> PyResult<(i32, f64, Option<f64>, Option<Vec<f64>>, u64, f64)>
+        -> PyResult<MipSolveOutput>
     {
         let p = rsolver_mip::Params::from_pairs(&params);
         let r = py.allow_threads(|| rsolver_mip::bnb::solve(&self.inner, &p, incumbent.as_deref()))
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        Ok((r.status as i32, r.bound, r.incumbent_objective, r.incumbent, r.nodes, r.iterations))
+    }
+    /// Solve a MIP through presolve and restore the incumbent to the input model.
+    fn mip_solve_original(&self, py: Python<'_>, params: Vec<(String, f64)>)
+        -> PyResult<MipSolveOutput>
+    {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let r = py.allow_threads(|| rsolver_mip::bnb::solve_original(&self.inner, &p))
             .map_err(pyo3::exceptions::PyValueError::new_err)?;
         Ok((r.status as i32, r.bound, r.incumbent_objective, r.incumbent, r.nodes, r.iterations))
     }

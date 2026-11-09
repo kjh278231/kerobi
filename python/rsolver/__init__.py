@@ -222,9 +222,9 @@ class Model:
         return default
 
     def optimize(self, callback=None):
-        if self._core is not None and self.Params.get("Method") == 2:
+        if self._core is not None and not self.IsMIP and self.Params.get("Method") == 2:
             return self._barrier(callback)
-        if self._core is not None and self.Params.get("Method") == 6:
+        if self._core is not None and not self.IsMIP and self.Params.get("Method") == 6:
             return self._pdhg(callback)
         core, built = self._core, self._core is None
         if built:  # a model built through the API: same engine, minimization form, ranged rows as slack columns
@@ -232,9 +232,21 @@ class Model:
             for v, c in self._obj.terms.items():
                 obj[v.index] += c * self.ModelSense
             core = build_model(obj, self._rows, [v.lb for v in self._vars], [v.ub for v in self._vars],
-                               "".join("C" if v.vtype == GRB.CONTINUOUS else "I" for v in self._vars))
+                               "".join(v.vtype for v in self._vars))
         if any(t != "C" for t in core.vtype):
-            raise GurobiError(10024, "MIP engine is not ported yet (M2)")
+            if callback is not None:
+                raise GurobiError(10024, "MIP callbacks are not supported")
+            import time
+            t0 = time.perf_counter()
+            params = [(k, float(v)) for k, v in self.Params.items() if isinstance(v, (int, float))]
+            st, bound, obj, x, nodes, it = core.mip_solve_original(params)
+            self.Runtime = time.perf_counter() - t0
+            self.Status, self.IterCount, self.NodeCount = st, it, float(nodes)
+            self._x = (x[:len(self._vars)] if built else x) if x is not None else []
+            self._objval = (obj * self.ModelSense + self._obj.const if built else obj) if obj is not None else None
+            self._objbound = bound * self.ModelSense + self._obj.const if built else bound
+            self.BarIterCount, self.SolCount, self.Work = 0, int(x is not None), 0.0
+            return
         import time
         t0 = time.perf_counter()
         st, obj, x, it, trace, self._path = core.solve(int(self._param("Method", -1)), float(self._param("IterationLimit", 1e100)),
@@ -260,7 +272,7 @@ class Model:
 
     @property
     def ObjBound(self):
-        return self.ObjVal
+        return self._objbound if self.IsMIP and hasattr(self, "_objbound") else self.ObjVal
 
     def _barrier(self, callback):
         """M3 barrier (Presolve=0, Crossover=0 assumed): BARRIER callback (where = 7) once per iteration."""
