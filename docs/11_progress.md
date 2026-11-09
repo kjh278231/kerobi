@@ -1,5 +1,9 @@
 # 11. 진행 기록과 운영
 
+## 현재 작업 상태 (2026-11-09)
+
+`m2-mip-presolve`에서 B&B, 루트 전파·휴리스틱, presolve 후 B&B 및 고정·치환 변수 복원, Python MIP `optimize()` 연결을 구현했다(`13ce2fe`까지 커밋, main 미병합). 다른 복원 레코드와 빈 축약 모델은 원래 모델을 직접 푼다. LP presolve→simplex→postsolve 연결, 나머지 MIP 복원과 MIP 콜백은 남았다. 별도 검증: G6 기본 축약 모델·postsolve 레코드·PRELIMIT 저장 변화점 및 최종 모델 각 38/38, workspace clippy 경고 0·Rust 테스트 통과·Python 테스트 498개 통과. 38개에서 실행되지 않은 하위 풀이 등은 미구현이다. 두 worktree의 진행 문서 변경은 미커밋이다.
+
 ## 1. 운영 규칙 (2026-11-05 사용자 지시)
 
 오케스트레이터(Herdr 워크스페이스 w4 1번 탭의 Claude 세션)가 M 단계 작업을 탭별 에이전트에게 나눠 맡긴다.
@@ -17,7 +21,7 @@
 - Gurobi는 한 프로세스만 돌린다(`gurobi_guard.pth`). "already running"이면 기다렸다 다시 시도한다.
 - 공유 `.venv`에 `maturin develop`이나 `pip install`은 main 트리만 한다. worktree는 cargo로 빌드한 `.so`를 자기 `python/rsolver`에 두고 `PYTHONPATH=$PWD/python`으로 쓴다.
 - worktree는 `crates/lp`의 기존 파일을 고치지 않는다(`lib.rs` 모듈 등록은 허용). 예외(2026-11-06): M1 LP 드라이버 흐름(G5)은 이미 끝난 흐름의 폴더 `crates/lp/src/presolve/`, `barrier/`, `pdhg/`와 `crates/model`을 고쳐도 된다. simplex 흐름의 파일(simplex·lu·spx·start·bfrt·scaling 등)은 계속 금지다. 고칠 때마다 barrier·PDHG 64/64가 유지되는지 확인한다. 커밋은 자기 브랜치에만, 단계마다 한다.
-- `docs/11_progress.md`는 오케스트레이터가 main에서만 고친다. worktree 에이전트는 자기 인수인계 메모에만 적는다.
+- 작업 완료 시 현재 worktree와 main의 진행 기록과 로드맵에 작업·검증 결과와 미병합 상태를 반영한다.
 - 답변은 한국어로 한다.
 
 ## 2. 작업 흐름
@@ -106,6 +110,8 @@
 | 2026-11-06 | M1 simplex 속도 개선 | 비트는 그대로(피벗 경로 64/64 동일). BTRAN 출력 재사용, α 지지 집합만 순회, LU 평면 배열, FT 갱신에서 U 위치 역순열 유지 | `61ccd6b`, `2cb6739` |
 | 2026-11-06 | M2 round end·바깥 reduction 추가 | 지배된 singleton 열(`5a9282`), 비용 singleton mod gcd(`5ab429`), VUB lifting(`59c193`), 계수 패턴 사전(`55a779` 1부), XOR 행(`3e5363`), 함의 정수(`57627e`), 평행 행·열 MIP 분기(`3ff744`), 비영 소거(`40d2bc`), MIP 집계(`37f484`) | `dff8109`, `91c379b`, `2b791f0`, `79ae5aa`, `f001cff`, `b14499b` (`m2-*`) |
 | 2026-11-06 | M2 MIP presolve (G6) 에이전트 검증 완료 | 에이전트가 `m2-outer-b` 병합 후 재검증했다고 보고함. 기본값 presolved 모델, PRELIMIT sweep 변화점, postsolve 레코드 각각 **38/38** 일치. probing·대칭·연결 성분 탐색 포함, reduction stub 삭제. clippy 경고 0, cargo test 통과, pytest 37 passed·1 xfailed. **오케스트레이터 별도 검증·main 병합 대기** | `a683710`, 병합 `83f4fc3`, 최종 `2f28f77` (`m2-mip-presolve`) |
+
+| 2026-11-09 | M2 풀이 경로 진행 (worktree, 미커밋) | `m2-mip-presolve`에서 B&B와 루트 전파·휴리스틱을 구현했고, 고정·치환 레코드를 역순으로 복원하는 presolve→B&B 경로와 Python MIP `optimize()`를 연결했다. 미지원 레코드, 빈 축약 모델, 복원 검증 실패는 원래 모델을 직접 푼다. 원래 제약과 목적값으로 복원 해를 검증한다. Rust MIP 60개, Python B&B·모델 405개 통과(작은 이진 MIP 200개를 완전탐색과 비교). LP presolve→simplex→postsolve, 다른 MIP 복원 레코드, MIP 콜백은 미완료. 이 작업은 main에 병합되지 않았다. | `faf357d` 이후 미커밋 변경 (`rsolver-barrier`) |
 
 ### G6 검증 범위와 남은 작업 (2026-11-06)
 

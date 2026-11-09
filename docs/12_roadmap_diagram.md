@@ -1,6 +1,6 @@
 # 12. 로드맵 다이어그램
 
-상태: ✅ 완료 · 🔄 진행 · 🔎 에이전트 검증 완료·병합 대기 · ⏳ 예정 (2026-11-06 기준. 세부 기록은 [11_progress.md](11_progress.md), 심플렉스 최신 검증은 [10_porting.md §9.2](10_porting.md))
+상태: ✅ 완료 · 🔄 진행 · 🔎 에이전트 검증 완료·병합 대기 · ⏳ 예정 (2026-11-09 기준. main과 `rsolver-barrier` worktree의 미병합 작업을 함께 표시한다. 세부 기록은 [11_progress.md](11_progress.md), 심플렉스 최신 검증은 [10_porting.md §9.2](10_porting.md))
 
 ```mermaid
 flowchart TD
@@ -25,11 +25,12 @@ flowchart TD
     end
 
     subgraph M2["M2 MIP 엔진"]
-        MPRE["🔎 MIP presolve G6<br/>모델·sweep·레코드 38/38<br/>별도 검증·main 병합 대기"]:::pending
-        BNB["⏳ B&B 본체"]:::todo
+        MPRE["🔎 MIP presolve G6<br/>모델·sweep·레코드 별도 검증 38/38<br/>main 병합 대기"]:::pending
+        BNB["🔄 B&B 진행 중<br/>분기·노드 탐색·종료 구현<br/>worktree 검증, main 미병합"]:::doing
         CUT["⏳ Cut separator"]:::todo
-        HEU["⏳ 휴리스틱"]:::todo
-        PROP["⏳ 전파"]:::todo
+        HEU["🔄 휴리스틱<br/>worktree 구현"]:::doing
+        PROP["🔄 전파<br/>worktree 구현"]:::doing
+        POST["🔄 MIP 해 복원<br/>고정·치환 지원, 나머지 직접 풀이"]:::doing
         GATE2["⏳ M2 관문"]:::todo
     end
 
@@ -44,18 +45,15 @@ flowchart TD
     SPX & DRV --> GATE1
     GATE1 --> XO
     BAR --> XO
-    GATE1 & MPRE --> BNB
-    BNB --> CUT & HEU & PROP
-    CUT & HEU & PROP --> GATE2
+    MPRE --> BNB
+    BNB --> CUT & HEU & PROP & POST
+    CUT & HEU & PROP & POST --> GATE2
     MPRE --> M4
     GATE2 --> M4 --> M5 --> M6
 ```
 
-## 병렬 구간
+## 현재 작업 범위
 
-- 지금: 심플렉스와 LP 드라이버는 진행 중이다. MIP presolve는 에이전트 검증을 마쳤고, 별도 검증과 main 병합을 기다린다.
-- M1 관문 뒤: Crossover·Concurrent와 B&B 본체를 함께 시작한다.
-- B&B 골격 뒤: Cut, 휴리스틱, 전파를 각자 다른 탭에서 진행한다.
-- MIP presolve 검증·병합 뒤: M4 일반 제약 변환은 B&B와 겹쳐 진행할 수 있다.
-
-G6의 38/38은 `m2-mip-presolve`의 `2f28f77`에서 에이전트가 보고한 결과다. 미검증 경로와 미구현 처리의 한계는 [11_progress.md §3](11_progress.md#3-완료-기록)에 기록했다.
+- `rsolver-barrier`의 `m2-mip-presolve`에는 B&B, 루트 전파·휴리스틱과 Python MIP 풀이가 있다. presolve 연결과 고정·치환 해 복원은 `13ce2fe`에 커밋됐고 main에 병합되지 않았다. 진행 문서 변경은 미커밋이다.
+- 다른 MIP 복원 레코드와 빈 축약 모델은 원래 모델 직접 풀이로 돌아간다. LP presolve→simplex→postsolve 연결, MIP 콜백과 cut separator는 남아 있다.
+- G6의 모델·레코드·PRELIMIT 저장 변화점 및 최종 모델 38/38을 2026-11-09 별도 검증했다. 38개에서 실행되지 않은 하위 풀이는 미구현이며 main 병합 대기다. 범위는 [m2_presolve.md](m2_presolve.md)에 있다.
