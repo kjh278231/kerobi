@@ -59,6 +59,10 @@ pub fn start_basis(spx: &Spx) -> Vec<i32> {
             }
         }
         if let Some((j0, a0)) = ch {
+            // 1e7531 L1075: reject the chosen integer column without trying the runner-up.
+            if spx.vtype.get(j0).is_some_and(|&t| t != b'C') {
+                continue;
+            }
             let c0 = cw[j0];
             enter(j0, row, -4, &mut vstat, &mut head, &mut active);
             cw[j0] = 0.0;
@@ -77,7 +81,9 @@ pub fn start_basis(spx: &Spx) -> Vec<i32> {
         }
         let (mut bk, mut babs, mut ch) = (5i64, 0.0, None);
         for &(j, a) in &rows[row] {
-            if (cw[j].abs() <= 1e-10 || l[j] <= -INFINITY) && vstat[j] < 0 && a.abs() >= 1e-6 && clen(j) < 6 {
+            if (cw[j].abs() <= 1e-10 || l[j] <= -INFINITY)
+                && !spx.vtype.get(j).is_some_and(|&t| t != b'C')
+                && vstat[j] < 0 && a.abs() >= 1e-6 && clen(j) < 6 {
                 let key = clen(j) as i64 - if l[j] <= -INFINITY { 2 * m as i64 } else { 0 };
                 if key < bk || (key == bk && babs < a.abs()) {
                     (bk, babs, ch) = (clen(j) as i64, a.abs(), Some(j)); // the original keeps the length, not the key

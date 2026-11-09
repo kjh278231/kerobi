@@ -6,7 +6,7 @@ MIP presolve(`3cd406`, G6) 다음 단계인 루트 LP 풀이를 옮기며 알아
 
 | 기준 | 상태 |
 |---|---|
-| (1) miplib_small 38개, 기본값 + Threads=1, "Root relaxation" 줄 | **목적 38/38, 반복 12/38**. 열 형식 가중 반영 전은 반복 7/38. 38에는 루트가 없는 enlight_hard(presolve가 전부 지움, 우리도 `None`)를 포함한다. 루트가 있는 37개만 세면 목적 37/37, 반복 11/37. 기준값 `bench/gurobi/<이름>/log.txt`는 Threads=1 로그다 |
+| (1) miplib_small 38개, 기본값 + Threads=1, "Root relaxation" 줄 | **목적 38/38, 반복 17/38**. 열 형식 가중만 반영하면 12/38, 정수 열 crash 제외까지 반영하면 17/38(§8). 38에는 루트가 없는 enlight_hard(presolve가 전부 지움, 우리도 `None`)를 포함한다. 루트가 있는 37개만 세면 목적 37/37, 반복 16/37. 기준값 `bench/gurobi/<이름>/log.txt`는 Threads=1 로그다 |
 | (2) 불일치 모델의 첫 분기점 | §4는 가중 반영 전 분류. 가중 반영 후 26개 불일치가 남는다. §7과 `bench/mip_root_weights.txt` 참조 |
 | (3) clippy 0, `cargo test --release --workspace`, 이 노트 | 충족 |
 
@@ -116,7 +116,7 @@ MIP LP 환경의 비기본 파라미터(.prm): Cutoff(루트 전 incumbent가 �
 
 ```
 tools/build_local.sh
-PYTHONPATH=$PWD/python ../.venv/bin/python tools/mip_root_check.py            # 목적 38/38, 반복 12/38 (Gurobi 불필요)
+PYTHONPATH=$PWD/python ../.venv/bin/python tools/mip_root_check.py            # 목적 38/38, 반복 17/38 (Gurobi 불필요)
 tools/gurun.sh node tools/mip_root_trace.js <이름> <dir>                        # events.jsonl, <k>.mps, <k>.prm, load_<i>.mps, log.txt
 SPX_K=<k> tools/gurun.sh node tools/mip_root_trace.js <이름> <dir>              # + spx_<k>.json (2f7e1 직후 spx, vtype 포함)
 LP=<dir>/<k>.prm SPX_K=1 tools/gurun.sh node tools/mip_root_trace.js <dir>/<k>.mps <dir2>             # LP 단독
@@ -128,7 +128,7 @@ PATCH_VT=<vt 파일> LP=<dir>/<k>.prm SPX_K=1 tools/gurun.sh node tools/mip_root
 
 ## 6. 남은 일
 
-1. (G1) INTBASIS=1·UNSCALEDVIO=0의 효과 해독. 열 형식 보존과 pricing, BFRT, GLOBAL 섭동 가중은 반영했다. 가중 전 B2였던 12개 중 6개는 여전히 다르므로 첫 분기점을 다시 추적해야 한다.
+1. (G1) INTBASIS=1·UNSCALEDVIO=0의 효과 해독. 열 형식 보존과 pricing, BFRT, GLOBAL 섭동 가중은 반영했다. 등식 crash의 정수 열 제외까지 반영한 뒤 가중 전 B2 모델 중 남은 것은 mad(32/34)다. 동일 입력 재실행으로 simplex가 아닌 루트 전 bound 차이로 확정했다(§9).
 2. (G1) LP 단독 parity: C 16개.
 3. (propagate/휴리스틱 범위) 루트 전 domain store: `66bdf6`의 초기 조이기, `715361`/`670717`, `5ebfbc` incumbent 조이기, `8ac5fe` 루트 휴리스틱. 들어오면 `solve_root`가 domain bound를 받도록 바꾼다.
 4. 자동 concurrent(4)·barrier 루트(5ccea5의 `98b671` 분기), RELAXPREP/PreDual로 가는 `c3d0d` 분기: 38개에 없어 미포팅.
@@ -145,3 +145,56 @@ PATCH_VT=<vt 파일> LP=<dir>/<k>.prm SPX_K=1 tools/gurun.sh node tools/mip_root
 회귀 검증은 Rust의 두 pricing 모드와 점수 갱신, GLOBAL 섭동의 난수 순서 및 연속 열 유지, BFRT 진입 변수 선택을 확인한다. `tests/test_mip_root.py`는 새로 일치한 6개 모델의 목적값·반복 수와 루트 없는 모델을 저장된 Gurobi 로그와 비교한다.
 
 검증 결과: `cargo test --release --workspace` 61개 통과, `cargo clippy --release --workspace --all-targets -- -D warnings` 통과, `PYTHONPATH=$PWD/python ../.venv/bin/python -m pytest -q` 70개 통과·기존 xfail 1개. 연속변수 Netlib 64개도 `bench/lp_check.csv`의 method 1 기준 status·목적값·반복 수를 유지했다. 목적값 허용 오차는 `1e-12 * max(1, |obj|)`, 반복 수는 정확히 비교했다.
+
+
+## 8. 등식 crash의 정수 열 제외 (2026-11-09)
+
+`markshare_4_0`(Gurobi 13, rsolver 14)을 최소 추적 대상으로 골랐다. `mip_root_trace.js`에 `SPX_TRACE=1`을 추가해 LP 단독 실행의 SIMPLEX 콜백마다 `spx_oracle.dump`를 저장한다. 같은 반복의 마지막 콜백을 남긴다. MIP 루트 k=0에서 얻은 MPS·prm·열 형식을 LP 단독 실행에 넣으면 13회가 재현된다. LP 단독은 c3d0d(k=0) 안의 cda5b(k=1)에서 setup이 실행되므로 **SPX_K=1**이어야 열 형식 패치가 적용된다. SPX_K=0이면 패치되지 않아 12회다.
+
+첫 분기는 반복 0의 기저다. Gurobi는 네 slack이 basic인데 rsolver는 정수 열 32를 넣고 마지막 slack을 fixed로 내렸다. 원본 `1e7531`(file offset 0xeaaa0) L396–397은 spx+0x4e8 > 0일 때 열 형식을 읽는다. L1075의 등식 pass 1은 최종 후보가 정수 열이면 선택을 버린다(다음 후보를 고르지 않음). L1126의 pass 2는 정수 열을 후보에서 제외한다. 기본 spx+0x4e8 = 1(`b08b12` L237). `start.rs`에 이 두 조건을 반영했다. 이 수정은 INTBASIS 파라미터 해독과 별개다.
+
+수정 후 `markshare_4_0`의 반복 0–5는 vstat·xB·d·DSE w가 참조와 비트 동일하다. 반복 6부터 d는 일부 비트가 다르지만 마지막 반복 13까지 vstat·xB·w는 같다.
+
+38개 전체 비교: 상태는 루트가 있는 37개 모두 2, 목적은 로그 표시 정밀도에서 38/38, 반복 수는 **12/38 → 17/38**. 기존 일치 모델은 유지됐고 다음 다섯 개가 새로 일치했다.
+
+| 모델 | 수정 전 | 수정 후 | Gurobi |
+|---|---:|---:|---:|
+| ic97_potential | 505 | 560 | 560 |
+| markshare_4_0 | 14 | 13 | 13 |
+| glass4 | 36 | 72 | 72 |
+| graphdraw-domain | 177 | 192 | 192 |
+| timtab1 | 67 | 141 | 141 |
+
+`mad`는 9 → 32로 바뀌었으나 참조는 34다. 반면 csched008은 467 → 1185(참조 563), csched007은 727 → 1230(참조 988)으로 멀어졌다. 전체 경로 일치를 뜻하지 않는다. 다음 추적은 남은 여섯 모델 중 유일하게 해결되지 않은 `mad`에서 입력 root bound를 고정하고 시작 기저와 첫 피벗 분기를 비교한다. 그 뒤 INTBASIS·UNSCALEDVIO 및 기존 C 분류 모델을 잇는다.
+
+새로 일치한 다섯 모델을 `tests/test_mip_root.py`에 추가했다. 먼저 markshare_4_0의 14 != 13 실패를 확인한 뒤 수정했다. 원본 Gurobi 추적 파일은 `/tmp/root-markshare*`에 있으며 영구 fixture는 기존 `bench/gurobi/*/log.txt`를 사용한다.
+
+검증: `cargo test --release --workspace` 통과(61개), clippy `-D warnings` 통과, 전체 pytest 71 passed·1 xfailed. 이후 추가한 네 모델까지 포함한 루트 테스트는 12 passed. `node --check tools/mip_root_trace.js`, `git diff --check` 통과.
+연속변수 Netlib Method 1도 `bench/lp_check.csv` 기준 상태·목적·반복 수 64/64 유지.
+
+
+## 9. mad 32/34 분리 검증 (2026-11-09)
+
+`SPX_K=0 tools/gurun.sh node tools/mip_root_trace.js mad /tmp/root-mad`로 새 루트 입력을 캡처했다. k=0의 cda5b는 행 40, 열 220, 새 기저, 목적 0, 반복 34다. 원본 MIP의 presolved 모델과 루트 입력을 비교하면 행렬·목적·rhs·sense·하한·열 형식이 모두 같고 상한 20개만 다르다. 열 200–219가 전부 infinity(1e30)에서 6.9639999992036으로 바뀐다.
+
+단일 변수 대조 실험(열 형식·MIP LP prm 동일, bound만 교체):
+
+| 입력 | Gurobi LP 단독 | rsolver |
+|---|---:|---:|
+| 캡처된 루트 bound | 34 | 34 |
+| presolve 직후 bound | 32 | 32 |
+
+Gurobi LP 단독은 `SPX_K=1 PATCH_VT=<vtype.bin> LP=<0.prm> SPX_TRACE=1`로 실행했다. 루트 bound에서 반복 0–26의 vstat·xB·정규화 d·DSE w는 전부 비트 동일하다. 반복 27부터 일부 w의 끝 비트가 다르지만 반복 수는 34로 같다. 끝 반복의 basis refactor까지 비트 동일하다는 뜻은 아니다.
+
+따라서 mad를 맞추기 위해 simplex를 더 바꾸면 안 된다. 루트 전 domain store/휴리스틱 bound 반영이 필요하다. 이번 단계에서는 상한을 하드코딩하거나 presolve 출력 자체를 바꾸지 않았다. 실제 `mip_root`의 전체 일치 수는 여전히 17/38이다. 다음 구현 대상은 G1의 다른 C 모델 또는 MIP의 루트 전 domain store이며, mad의 기존 원인 미분류 상태는 해결됐다.
+
+영구 fixture: `bench/oracle/mip_root/mad/{0.mps.gz,0.prm,spx_0.json,events.jsonl}`. MPS·prm·이벤트는 실제 Gurobi 캡처, spx JSON은 크기와 열 형식 필드만 남겼다. 새 도구는 Gurobi 없이 캡처 MPS에 열 형식을 복구해 실행하고 상태·목적을 참조 이벤트와 비교한다. --presolved 옵션은 행렬·비용·rhs·sense 일치를 확인한 뒤 bound만 교체해 다시 실행한다.
+
+```
+PYTHONPATH=$PWD/python ../.venv/bin/python tools/mip_root_replay.py bench/oracle/mip_root/mad --presolved ../re/bench/data/miplib/mad.mps.gz
+# captured bounds: iterations 34, Gurobi 34
+# lb 변화 없음, ub 변화 열 200–219
+# presolved bounds: status 2, iterations 32
+```
+
+`tests/test_mip_root.py::test_mad_captured_root_bounds_explain_remaining_iteration_difference`는 두 입력의 차이가 위 20개 상한뿐인지와 34/32회 재현을 함께 검사한다. 루트 테스트 전체 13 passed, git diff --check 통과. 재실행 도구는 현재 38개에서 관측한 dual simplex 경로용이며 MIP LP의 비공개 파라미터를 별도로 구현하지 않는다.

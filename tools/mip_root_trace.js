@@ -7,6 +7,7 @@
 // (<outdir>/spx_<k>.json: first 0x600 bytes as u32 words, scales, bounds, costs, vstat). LP=<x.prm>: instead of the
 // MIP, solve the .mps as an LP with those parameters (then Presolve=0, Method=1, Threads=1): the standalone reference.
 // Gurobi: one process at a time (wrap in tools/gurun.sh).
+// SPX_TRACE=1 with LP=<x.prm>: save callback workspace snapshots to spx_trace.jsonl (last callback per iteration).
 const FRIDA = process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida';
 const frida = require(FRIDA);
 const fs = require('fs');
@@ -26,14 +27,26 @@ const params = { LogToConsole: 0, Threads: 1, WorkLimit: 60, LogFile: path.join(
 for (const p of kv) { const [k, v] = p.split('='); params[k] = Number(v); }
 const pyCode = `
 import gurobipy as gp
+import sys, json
+sys.path.insert(0, ${JSON.stringify(__dirname)})
+from spx_oracle import api, L, dump
 env = gp.Env(params=${JSON.stringify(params)})
 m = gp.read(${JSON.stringify(mps)}, env)
 lp = ${JSON.stringify(process.env.LP || '')}
 if lp:
     m.read(lp); m.Params.Presolve = 0; m.Params.Method = 1; m.Params.Threads = 1; m.Params.LogFile = ${JSON.stringify(path.join(out, 'log.txt'))}
+snaps = {}
+trace = ${process.env.SPX_TRACE === '1' ? 'True' : 'False'} and bool(lp)
+ptr = api.PyCapsule_GetPointer(m._cmodel, api.PyCapsule_GetName(m._cmodel))
 def cb(mdl, where):
     if where == gp.GRB.Callback.MIPNODE: mdl.terminate()
-m.optimize(None if lp else cb)
+    if trace and where == gp.GRB.Callback.SIMPLEX and L(ptr + 0xe0):
+        it = int(mdl.cbGet(gp.GRB.Callback.SPX_ITRCNT))
+        snaps[it] = dump(L(ptr + 0xe0), it, full=it == 0)
+m.optimize(cb if trace or not lp else None)
+if trace:
+    with open(${JSON.stringify(path.join(out, 'spx_trace.jsonl'))}, 'w') as f:
+        for it in sorted(snaps): f.write(json.dumps(snaps[it]) + '\\n')
 
 print("DONE", m.Status, m.IterCount, flush=True)
 `;

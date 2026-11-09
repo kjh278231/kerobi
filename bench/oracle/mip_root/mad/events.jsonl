@@ -1,0 +1,2 @@
+{"fn": "cda5b", "ev": ">", "depth": 2, "ra": "0x4f9626", "k": 0, "n": 220, "m": 40, "env": {"presolve": -1, "method": 1}, "method": 1, "vb": false, "cb": false, "ws": false, "write": 0}
+{"fn": "cda5b", "ev": "<", "depth": 2, "ret": 0, "k": 0, "iter": 34, "obj": 0, "status": 2}
