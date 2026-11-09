@@ -1,0 +1,85 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/sc50a/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/sc50a.mps.gz
+Reading time = 0.00 seconds
+SC50A: 50 rows, 48 columns, 130 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 50 rows, 48 columns and 130 nonzeros (Min)
+Model fingerprint: 0xaa08ef90
+Model has 1 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-01, 2e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+02, 2e+02]
+
+Presolve removed 37 rows and 35 columns
+Presolve time: 0.00s
+Presolved: 13 rows, 13 columns, 62 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 6.800e+01
+ Factor NZ  : 9.100e+01
+ Factor Ops : 8.190e+02 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0  -6.64048323e+01 -3.45412303e+01  2.90e+02 1.16e-01  3.42e+01     0s
+   1  -2.74767397e+01 -1.32084908e+02  3.41e-13 8.33e-17  4.02e+00     0s
+   2  -5.53223346e+01 -8.16982794e+01  4.26e-14 8.33e-17  1.01e+00     0s
+   3  -6.17456214e+01 -6.57883646e+01  1.59e-12 8.33e-17  1.55e-01     0s
+   4  -6.44827418e+01 -6.47543739e+01  2.27e-12 6.53e-17  1.04e-02     0s
+   5  -6.45710564e+01 -6.45763780e+01  4.99e-12 3.29e-17  2.05e-04     0s
+   6  -6.45750730e+01 -6.45750783e+01  3.67e-11 2.78e-17  2.05e-07     0s
+   7  -6.45750771e+01 -6.45750771e+01  5.02e-11 4.14e-17  2.05e-10     0s
+
+Barrier solved model in 7 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -6.45750771e+01
+
+
+User-callback calls 89, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/sc50a.mps.gz
+Reading time = 0.00 seconds
+SC50A: 50 rows, 48 columns, 130 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 50 rows, 48 columns and 130 nonzeros (Min)
+Model fingerprint: 0xaa08ef90
+Model has 1 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-01, 2e+00]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+02, 2e+02]
+Presolve removed 37 rows and 35 columns

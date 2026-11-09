@@ -17,6 +17,8 @@ pub struct Lp {
     pub beg: Vec<usize>,
     pub ind: Vec<usize>,
     pub val: Vec<f64>,
+    /// B+0x648: a common coefficient per column (0 selects the ordinary value-array loop).
+    pub(crate) col_coeff: Vec<f64>,
     /// A by rows, columns ascending (the `30f5b9` row loops and `A x`).
     rbeg: Vec<usize>,
     rind: Vec<usize>,
@@ -51,6 +53,9 @@ pub struct Lp {
     pub ptol: f64,
     pub dtol: f64,
     col_scale: Vec<f64>,
+    /// row factors and the ordering position of each model row (for the dual values in the model's space)
+    row_scale: Vec<f64>,
+    perm: Vec<usize>,
 }
 
 /// Internal LP from the model, rows placed at `perm[i]` (ordering result).
@@ -61,6 +66,7 @@ pub fn lp_from_model(md: &Model, perm: &[i32], tol: f64) -> Lp {
     let sg: Vec<f64> = md.row_sense.iter().map(|&s| if s == b'>' { -1.0 } else { 1.0 }).collect();
     let p: Vec<usize> = perm.iter().map(|&k| k as usize).collect();
     let (mut beg, mut ind, mut val) = (vec![0], vec![], vec![]);
+    let (mut col_coeff, mut score) = (vec![0.0; n], 0usize);
     for j in 0..n {
         let b0 = md.col_beg[j] as usize;
         let mut e: Vec<(usize, f64)> = (b0..b0 + md.col_len[j] as usize)
@@ -69,10 +75,22 @@ pub fn lp_from_model(md: &Model, perm: &[i32], tol: f64) -> Lp {
                 (p[i], sg[i] * md.col_val[k] * sc.row[i] * sc.col[j])
             })
             .collect();
+        // `2ca086` builds B+0x648 before `2eb47b` sorts the permuted row indices. Keep the first stored
+        // coefficient even when the column's values differ within the 1e-10 common-coefficient tolerance.
+        if let Some(&(_, first)) = e.first() {
+            if e.iter().all(|&(_, v)| (v - first).abs() <= 1e-10) {
+                col_coeff[j] = first;
+                score += e.len() * e.len();
+            }
+        }
         e.sort_by_key(|x| x.0);
         ind.extend(e.iter().map(|x| x.0));
         val.extend(e.iter().map(|x| x.1));
         beg.push(ind.len());
+    }
+    // `2ca086`: keep the common-coefficient table only when Σ len_j² over qualifying columns is at least 2n.
+    if score < 2 * n {
+        col_coeff.fill(0.0);
     }
     let (mut cnt, mut rbeg) = (vec![0usize; m], vec![0usize; m + 1]);
     for &i in &ind {
@@ -110,6 +128,7 @@ pub fn lp_from_model(md: &Model, perm: &[i32], tol: f64) -> Lp {
         beg,
         ind,
         val,
+        col_coeff,
         rbeg,
         rind,
         rval,
@@ -133,6 +152,8 @@ pub fn lp_from_model(md: &Model, perm: &[i32], tol: f64) -> Lp {
         ptol: 0.0,
         dtol: 0.0,
         col_scale: sc.col,
+        row_scale: sc.row,
+        perm: p,
     };
     lp.cnorminf = lp.c.iter().fold(0.0, |a: f64, v| a.max(v.abs()));
     lp.ptol = ((m as f64 + 1.0).sqrt() + dot(&b0, &b0).sqrt()) * tol;
@@ -207,15 +228,39 @@ impl Lp {
         self.rbeg[i]
     }
 
-    /// `2d3d91`: [Aᵀy; y_i on non-'=' rows, 0 on '=' rows].
+    /// `2d4252` residual product: [Aᵀy; y_i on non-'=' rows, 0 on '=' rows]. Common-coefficient columns
+    /// accumulate even/odd entries separately, then add the odd tail; ordinary columns accumulate sequentially.
     pub fn aty(&self, y: &[f64]) -> Vec<f64> {
-        let mut v: Vec<f64> =
-            (0..self.n).map(|j| (self.beg[j]..self.beg[j + 1]).fold(0.0, |s, k| s + self.val[k] * y[self.ind[k]])).collect();
+        let mut v: Vec<f64> = (0..self.n).map(|j| {
+            let (b, e) = (self.beg[j], self.beg[j + 1]);
+            let coeff = self.col_coeff[j];
+            if coeff == 0.0 {
+                return (b..e).fold(0.0, |s, k| s + self.val[k] * y[self.ind[k]]);
+            }
+            let (mut even, mut odd) = (0.0, 0.0);
+            let end = e - (e - b) % 2;
+            for k in (b..end).step_by(2) {
+                even += y[self.ind[k]] * coeff;
+                odd += y[self.ind[k + 1]] * coeff;
+            }
+            let sum = even + odd;
+            if end < e { sum + y[self.ind[end]] * coeff } else { sum }
+        }).collect();
         v.extend((0..self.m).map(|i| if self.eq[i] { 0.0 } else { y[i] }));
         v
     }
 
     /// Internal column values back to the model's space: undo the lb shift and the column scale.
+    /// (slack, d, y) of the model rows / columns as `7a069` unscales them: slack_i/r_i, d_j/(s_j·ω), −(r_i/ω)·y_i,
+    /// with d = z − s (lower minus upper bound dual) and the slack of row i its slack column; `>` rows negated.
+    pub fn duals_orig(&self, x: &[f64], z: &[f64], s: &[f64], y: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+        let w = self.objscale;
+        let slack = (0..self.m).map(|i| if self.eq[self.perm[i]] { 0.0 } else { x[self.n + self.perm[i]] } / self.row_scale[i]).collect();
+        let d = (0..self.n).map(|j| (z[j] - s[j]) / (self.col_scale[j] * w)).collect();
+        let yo = (0..self.m).map(|i| -((self.row_scale[i] / w) * y[self.perm[i]])).collect(); // stored negated
+        (slack, d, yo)
+    }
+
     pub fn x_orig(&self, x: &[f64]) -> Vec<f64> {
         (0..self.n).map(|j| (if self.lb[j] > -BIG { x[j] + self.lb[j] } else { x[j] }) * self.col_scale[j]).collect()
     }
@@ -315,5 +360,23 @@ impl Lp {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn common_column_preserves_cancellation_in_residual_product() {
+        let md = Model {
+            obj: vec![1.0; 2], lb: vec![0.0; 2], ub: vec![BIG; 2], vtype: vec![b'C'; 2], sense: 1,
+            col_beg: vec![0, 1, 9], col_len: vec![1, 8], col_ind: (0..9).collect(), col_val: vec![1.0; 9],
+            row_sense: vec![b'='; 9], rhs: vec![0.0; 9], ..Default::default()
+        };
+        let lp = lp_from_model(&md, &(0..9).collect::<Vec<_>>(), 1e-8);
+        let y = [0.0, 1e16, 1.0, -1e16, 1.0, 0.0, 0.0, 0.0, 0.0];
+        // A sequential dot loses one of the two units. `2d4252` keeps them in its odd accumulator.
+        assert_eq!(&lp.aty(&y)[..2], &[0.0, 2.0]);
     }
 }

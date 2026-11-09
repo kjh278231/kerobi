@@ -96,7 +96,9 @@ impl State {
             mx = maxsd(mx, t);
             sq += t * t;
         }
-        let rp_inf = maxsd(maxsd(0.0, mx), 0.0);
+        // the outer maxsd(·, +0.0) of the original returns +0.0 for a zero; the compiled `maxsd` pair here can keep
+        // −0.0 (seen in the log column), so normalise the sign
+        let rp_inf = maxsd(maxsd(0.0, mx), 0.0) + 0.0;
         let rp2 = maxsd((0.0 + sq).sqrt(), 0.0);
         let pobj = dot(&v.xhat, c, d.peel_c) / d.objscale + d.objcon;
         let (mut mx, mut sq, mut acc) = (0.0f64, 0.0f64, 0.0f64);

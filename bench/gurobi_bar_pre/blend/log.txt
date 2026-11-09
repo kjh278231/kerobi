@@ -1,0 +1,85 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:10 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/blend/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/blend.mps.gz
+Reading time = 0.00 seconds
+BLEND: 74 rows, 83 columns, 491 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 74 rows, 83 columns and 491 nonzeros (Min)
+Model fingerprint: 0xde02ef32
+Model has 30 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [3e-03, 7e+01]
+  Objective range  [4e-03, 5e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e+00, 3e+01]
+
+Presolve removed 24 rows and 28 columns
+Presolve time: 0.00s
+Presolved: 50 rows, 55 columns, 389 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 5.800e+02
+ Factor NZ  : 8.250e+02
+ Factor Ops : 1.642e+04 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0  -3.60693093e+01 -4.98943680e+01  4.05e+01 5.69e-01  2.84e+01     0s
+   1  -2.33095131e+01 -1.25934893e+02  4.98e+00 6.04e-01  5.06e+00     0s
+   2  -1.98778627e+01 -6.14886154e+01  2.78e-01 3.87e-02  6.57e-01     0s
+   3  -2.77865737e+01 -3.35098414e+01  2.89e-05 2.05e-03  7.19e-02     0s
+   4  -3.05886036e+01 -3.11267465e+01  1.30e-08 1.78e-15  6.21e-03     0s
+   5  -3.08027895e+01 -3.08278086e+01  1.05e-10 0.00e+00  2.88e-04     0s
+   6  -3.08119398e+01 -3.08122259e+01  1.36e-11 0.00e+00  3.29e-06     0s
+   7  -3.08121498e+01 -3.08121499e+01  5.64e-12 1.78e-15  6.23e-10     0s
+
+Barrier solved model in 7 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -3.08121498e+01
+
+
+User-callback calls 90, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/blend.mps.gz
+Reading time = 0.00 seconds
+BLEND: 74 rows, 83 columns, 491 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 74 rows, 83 columns and 491 nonzeros (Min)
+Model fingerprint: 0xde02ef32
+Model has 30 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [3e-03, 7e+01]
+  Objective range  [4e-03, 5e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [3e+00, 3e+01]
+Presolve removed 24 rows and 28 columns

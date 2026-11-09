@@ -1,0 +1,94 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/e226/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/e226.mps.gz
+Reading time = 0.00 seconds
+E226: 223 rows, 282 columns, 2578 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 223 rows, 282 columns and 2578 nonzeros (Min)
+Model fingerprint: 0x95364535
+Model has 189 linear objective coefficients and an objective constant of 7.113
+Coefficient statistics:
+  Matrix range     [3e-04, 1e+03]
+  Objective range  [5e-04, 3e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [9e-03, 6e+01]
+
+Presolve removed 85 rows and 40 columns
+Presolve time: 0.00s
+Presolved: 138 rows, 242 columns, 2261 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 2.188e+03
+ Factor NZ  : 3.402e+03
+ Factor Ops : 9.640e+04 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0  -1.06420005e+02 -5.72609352e+02  2.48e+02 3.19e+00  5.76e+02     0s
+   1   1.53708936e+02 -2.17244284e+03  9.17e+01 1.60e+01  2.18e+02     0s
+   2   7.16845250e+01 -2.17067421e+03  1.56e+01 4.02e+00  4.65e+01     0s
+   3   3.87995855e+01 -1.05926765e+03  1.75e+00 1.41e-01  8.30e+00     0s
+   4   2.36826944e+01 -1.27939781e+02  3.49e-04 1.60e-13  7.77e-01     0s
+   5   3.85204364e+00 -3.97217495e+01  5.96e-05 2.84e-14  2.23e-01     0s
+   6  -5.95179309e+00 -1.97636743e+01  1.56e-05 6.49e-15  7.06e-02     0s
+   7  -8.15432502e+00 -1.55058522e+01  9.50e-06 3.55e-15  3.76e-02     0s
+   8  -9.66882165e+00 -1.35013225e+01  4.81e-06 7.11e-15  1.96e-02     0s
+   9  -1.09708741e+01 -1.21400555e+01  8.99e-07 3.55e-15  5.97e-03     0s
+  10  -1.13128472e+01 -1.18100713e+01  3.34e-07 1.78e-15  2.54e-03     0s
+  11  -1.14951159e+01 -1.16850870e+01  1.47e-07 2.37e-15  9.70e-04     0s
+  12  -1.16212089e+01 -1.16607973e+01  1.16e-08 1.78e-15  2.02e-04     0s
+  13  -1.16350684e+01 -1.16407472e+01  2.46e-09 7.11e-15  2.90e-05     0s
+  14  -1.16385463e+01 -1.16389826e+01  1.23e-10 7.11e-15  2.23e-06     0s
+  15  -1.16389238e+01 -1.16389342e+01  3.84e-12 7.11e-15  5.33e-08     0s
+  16  -1.16389291e+01 -1.16389291e+01  6.85e-13 3.55e-15  1.48e-10     0s
+
+Barrier solved model in 16 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -1.16389291e+01
+
+
+User-callback calls 127, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/e226.mps.gz
+Reading time = 0.00 seconds
+E226: 223 rows, 282 columns, 2578 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 223 rows, 282 columns and 2578 nonzeros (Min)
+Model fingerprint: 0x95364535
+Model has 189 linear objective coefficients and an objective constant of 7.113
+Coefficient statistics:
+  Matrix range     [3e-04, 1e+03]
+  Objective range  [5e-04, 3e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [9e-03, 6e+01]
+Presolve removed 85 rows and 40 columns

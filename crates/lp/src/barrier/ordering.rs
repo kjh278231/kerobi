@@ -39,7 +39,8 @@ pub struct Symbolic {
 pub fn analyze(m: &Model) -> Symbolic {
     let nr = m.num_constrs();
     let (cp, ri) = aat(m);
-    let pos = amd(nr, &cp, &ri, nd_labels(nr, &cp, &ri, &mut 0));
+    // the bisection draws from the model's RNG (model+0xb0): 0 for a model as read, set by presolve otherwise
+    let pos = amd(nr, &cp, &ri, nd_labels(nr, &cp, &ri, &mut { m.rng }));
     let st = col_structs(nr, &cp, &ri, &pos);
     let (sns, rows) = supernodes(nr, &st);
     let mut newpos = vec![0usize; nr];

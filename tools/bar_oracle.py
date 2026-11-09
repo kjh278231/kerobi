@@ -166,6 +166,7 @@ def dump(B, it, full, vec=False, Dm=0, chol=False, solve=False, Mp=0):
         out["B"] = arr(B, 0xa00 // 8)
         out["lb"], out["ub"], out["obj"] = arr(L(B + 0x5f8), n), arr(L(B + 0x600), n), arr(L(B + 0x608), n)
         out["rhs"] = arr(L(B + 0x610), m)
+        out["col_coeff"] = arr(L(B + 0x648), n)
         out["type"] = list((ctypes.c_ubyte * (m + n)).from_address(L(B + 0x640))) if L(B + 0x640) else None
         if Dm:
             out["D"] = snap_D(Dm)
@@ -204,8 +205,10 @@ def main():
         if want is None or it in want:
             c = mdl._callback._cbdata
             B = L(api.PyCapsule_GetPointer(c, api.PyCapsule_GetName(c)) + 0x68)
-            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L(mp + 0xe8), chol=a.chol or a.solve, solve=a.solve,
-                             Mp=mp)
+            # with presolve the barrier runs on the presolved model (model+0x1d8)
+            mb = L(mp + 0x1D8) or mp
+            snaps[it] = dump(B, it, full=not snaps, vec=a.vec, Dm=L(mb + 0xe8), chol=a.chol or a.solve, solve=a.solve,
+                             Mp=mb)
 
     model.optimize(cb)
     with (gzip.open(a.out, "wt") if a.out.endswith(".gz") else open(a.out, "w")) as f:

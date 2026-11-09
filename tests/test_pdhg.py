@@ -19,6 +19,7 @@ def test_pdhg_solves_64_lps_like_gurobi():
         g = json.load(open(f))
         m = rsolver.read(DATA / f"{f.parent.name}.mps.gz")
         m.setParam("Method", 6)
+        m.setParam("Presolve", 0)
         m.setParam("WorkLimit", 60)
         rows = []
         m.optimize(lambda model, where: rows.append(["pdhg", *(repr(model.cbGet(k)) for k in keys)]))
@@ -35,6 +36,7 @@ def test_pdhg_state_matches_oracle_afiro(tmp_path):
     try:
         m = rsolver.read(DATA / "afiro.mps.gz")
         m.setParam("Method", 6)
+        m.setParam("Presolve", 0)
         m.optimize()
     finally:
         del os.environ["PDHGDUMP"]

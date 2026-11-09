@@ -124,6 +124,8 @@ impl PyCoreModel {
     #[getter]
     fn num_nz(&self) -> usize { self.inner.num_nz() }
     fn fingerprint(&self) -> u32 { rsolver_model::fingerprint::fingerprint(&self.inner) }
+    /// The optimize header log ("Optimize a model with …" through the coefficient statistics and warnings).
+    fn header(&self, numeric_focus: i32) -> String { rsolver_driver::header::header(&self.inner, numeric_focus) }
     /// (column scales, row scales, objective scale) of the LP simplex setup (04 §3).
     /// x_B of the LP simplex workspace for a given status array (04 §4); used by M1 parity tests.
     fn basic_solution(&self, vstat: Vec<i32>) -> Vec<f64> {
@@ -351,6 +353,27 @@ impl PyCoreModel {
             (r.basis, r.x, r.dual)
         })
     }
+    /// Presolve, then simplex on the presolved model: (x, dj, status) as `363daa` reads them (debug of the driver).
+    fn presolved_spx(&self, py: Python<'_>, params: Vec<(String, f64)>) -> (Vec<f64>, Vec<f64>, Vec<i32>) {
+        let p = rsolver_lp::presolve::Params::from_pairs(&params);
+        py.allow_threads(|| {
+            let pre = rsolver_lp::presolve::run(&self.inner, &p);
+            let (_, _, _, x, dj, st) = rsolver_driver::simplex(&pre, 1, u64::MAX);
+            (x, dj, st)
+        })
+    }
+    /// Presolve, then `365159` (uncrush without a basis) of a presolved solution given as x and slack, d and y:
+    /// (x, dual) of this model, columns then rows.
+    fn uncrush_nonbasic(&self, py: Python<'_>, params: Vec<(String, f64)>, x: Vec<f64>, dj: Vec<f64>) -> (Vec<f64>, Vec<f64>) {
+        let p = rsolver_lp::presolve::Params::from_pairs(&params);
+        py.allow_threads(|| {
+            let (_, post) = rsolver_lp::presolve::run_post(&self.inner, &p);
+            let st = vec![0; x.len()];
+            let r = rsolver_lp::presolve::postsolve::uncrush_nonbasic(
+                &post, &self.inner, &rsolver_lp::presolve::postsolve::PreSol { x: &x, dj: &dj, st: &st }, None);
+            (r.x, r.dual)
+        })
+    }
     /// Record kinds (oldest first) and simulated array parities of the presolve of this model.
     fn post_records(&self, params: Vec<(String, f64)>) -> Vec<(i32, u8, u8, i64)> {
         let p = rsolver_lp::presolve::Params::from_pairs(&params);
@@ -430,7 +453,7 @@ impl PyCoreModel {
         conv_tol: f64,
         work_limit: f64,
     ) -> PyResult<(i32, f64, i64, Vec<f64>, f64)> {
-        let p = rsolver_lp::pdhg::Params { iter_limit, rel_tol, abs_tol, conv_tol, work_limit };
+        let p = rsolver_lp::pdhg::Params { iter_limit, rel_tol, abs_tol, conv_tol, work_limit, work0: 0.0 };
         let mut err = None;
         let r = rsolver_lp::pdhg::solve(&self.inner, &p, &mut |i| {
             if err.is_none() {
@@ -441,6 +464,51 @@ impl PyCoreModel {
             Some(e) => Err(e),
             None => Ok((r.status, r.obj, r.iters, r.x, r.work / 1e9)),
         }
+    }
+    /// optimize() of a continuous model through the driver (docs/m1_driver.md) with Gurobi parameter (name, value)
+    /// pairs; `bar_cb`/`pdhg_cb(iter, pobj, dobj, priminf, dualinf, compl)` run per BARRIER/PDHG callback. Returns
+    /// (status, objective, x, IterCount, BarIterCount, PDHGIterCount, work, SIMPLEX trace rows, log text, Slack, Pi,
+    /// RC).
+    #[allow(clippy::type_complexity)]
+    fn optimize(
+        &self,
+        py: Python<'_>,
+        params: Vec<(String, f64)>,
+        bar_cb: PyObject,
+        pdhg_cb: PyObject,
+    ) -> PyResult<(i32, f64, Vec<f64>, f64, usize, f64, f64, Vec<(f64, f64, f64, f64, bool)>, String, Vec<f64>, Vec<f64>, Vec<f64>)> {
+        let p = rsolver_model::params::Params::from_pairs(&params);
+        let (mut log, mut err_b, mut err_p) = (String::new(), Ok(()), Ok(()));
+        let out = {
+            let mut bar = |i: &rsolver_lp::barrier::IterInfo| {
+                if err_b.is_ok() {
+                    err_b = bar_cb.call1(py, (i.iter as f64, i.pobj, i.dobj, i.priminf, i.dualinf, i.compl)).map(|_| ());
+                }
+            };
+            let mut pd = |i: &rsolver_lp::pdhg::IterInfo| {
+                if err_p.is_ok() {
+                    err_p = pdhg_cb.call1(py, (i.iter as f64, i.pobj, i.dobj, i.priminf, i.dualinf, i.compl)).map(|_| ());
+                }
+            };
+            let mut lg = |t: &str| log.push_str(t);
+            let mut h = rsolver_driver::Hooks { log: &mut lg, barrier: &mut bar, pdhg: &mut pd };
+            rsolver_driver::optimize(&self.inner, &p, &mut h)
+        };
+        err_b?;
+        err_p?;
+        let trace = out.trace.iter().map(|&(k, z, pi, di, pt)| (k as f64, z, pi, di, pt)).collect();
+        Ok((out.status, out.obj, out.x, out.iter_count as f64, out.bar_iter_count, out.pdhg_iter_count as f64, out.work, trace, log,
+            out.slack, out.pi, out.rc))
+    }
+    /// Barrier duals for checks: (slack, d, y) in the model's space as `7a069` hands them to `365159`.
+    fn barrier_duals(&self, py: Python<'_>) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+        let r = py.allow_threads(|| rsolver_lp::barrier::solve(&self.inner, &rsolver_lp::barrier::Params::default(), &mut |_| {}));
+        (r.slack, r.d, r.y)
+    }
+    /// PDHG duals for checks: (slack, d, y) in the model's space as `7a069` hands them to `365159`.
+    fn pdhg_duals(&self, py: Python<'_>) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+        let r = py.allow_threads(|| rsolver_lp::pdhg::solve(&self.inner, &rsolver_lp::pdhg::Params::default(), &mut |_| {}));
+        (r.slack, r.d, r.y)
     }
     /// LP solve without presolve: (status, objective, x, iterations, trace rows, pivot path). `trace` false skips
     /// the per-iteration trace (no SIMPLEX callback to replay).
@@ -563,6 +631,16 @@ fn sort_desc(mut key: Vec<f64>, mut idx: Vec<i32>) -> (Vec<f64>, Vec<i32>) {
     (key, idx)
 }
 
+/// (name, type 1 int / 2 double / 3 string, min, max, default, string default) of a parameter, ignoring case.
+#[pyfunction]
+fn param_def(name: &str) -> Option<(&'static str, i32, f64, f64, f64, &'static str)> {
+    use rsolver_model::params::{default_str, find, Kind};
+    find(name).map(|d| {
+        let k = match d.kind { Kind::Int => 1, Kind::Dbl => 2, Kind::Str => 3 };
+        (d.name, k, d.min, d.max, d.default, default_str(d))
+    })
+}
+
 #[pyfunction]
 fn read_model(py: Python<'_>, path: String) -> PyResult<PyCoreModel> {
     let m = py.allow_threads(|| rsolver_model::mps::read_file(&path));
@@ -637,6 +715,7 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(read_model, m)?)?;
     m.add_function(wrap_pyfunction!(sort_desc, m)?)?;
     m.add_function(wrap_pyfunction!(mip_dump_run, m)?)?;
+    m.add_function(wrap_pyfunction!(param_def, m)?)?;
     m.add_class::<PyCoreModel>()?;
     m.add("INF", f64::INFINITY)
 }

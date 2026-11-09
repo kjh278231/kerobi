@@ -1,0 +1,118 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/forplan/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Warning: row name 1 in rhs section not defined.
+Warning: row name 100 in rhs section not defined.
+Warning: column name A in bound section not defined
+Warning: column name 1 in bound section not defined
+Warning: column name A in bound section not defined
+Warning: column name 1 in bound section not defined
+Warning: column name A in bound section not defined
+Warning: column name 2 in bound section not defined
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/forplan.mps.gz
+Reading time = 0.00 seconds
+FORPLAN: 161 rows, 422 columns, 4564 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 161 rows, 422 columns and 4564 nonzeros (Min)
+Model fingerprint: 0xf7d53044
+Model has 353 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [7e-03, 3e+03]
+  Objective range  [1e-04, 1e+00]
+  Bounds range     [1e+05, 1e+07]
+  RHS range        [1e+01, 7e+06]
+
+Presolve removed 88 rows and 70 columns
+Presolve time: 0.00s
+Presolved: 73 rows, 352 columns, 3765 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 1.327e+03
+ Factor NZ  : 1.929e+03
+ Factor Ops : 6.296e+04 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   6.43679263e+07 -4.64308390e+06  9.61e+07 3.40e-01  8.57e+05     0s
+   1   1.33815068e+07 -5.91036027e+05  2.17e+07 9.14e-02  1.90e+05     0s
+   2   3.15497597e+05 -1.30584051e+05  5.04e+05 1.67e-15  4.74e+03     0s
+   3   8.16376228e+03 -2.96805757e+04  1.35e+04 1.80e-15  1.90e+02     0s
+   4   1.01925266e+03 -7.71768278e+03  2.30e+03 1.44e-15  3.57e+01     0s
+   5  -5.33649023e+02 -2.35927802e+03  3.49e+02 1.55e-15  6.30e+00     0s
+   6  -9.81731348e+02 -1.44947433e+03  1.01e+02 1.78e-15  1.62e+00     0s
+   7  -1.09590651e+03 -1.32285263e+03  5.14e+01 8.88e-16  8.05e-01     0s
+   8  -1.15685642e+03 -1.31053517e+03  2.98e+01 1.11e-15  5.29e-01     0s
+   9  -1.20577322e+03 -1.27083270e+03  1.66e+01 3.55e-15  2.70e-01     0s
+  10  -1.21254199e+03 -1.24300427e+03  1.45e+01 3.68e-15  2.28e-01     0s
+  11  -1.21073059e+03 -1.22624886e+03  1.26e+01 1.42e-14  2.12e-01     0s
+  12  -1.21031486e+03 -1.20294586e+03  1.19e+01 2.65e-14  1.95e-01     0s
+  13  -1.19969746e+03 -1.20299548e+03  8.23e+00 2.84e-14  1.60e-01     0s
+  14  -1.19667976e+03 -1.18617703e+03  6.54e+00 5.68e-14  1.28e-01     0s
+  15  -1.18897930e+03 -1.17452566e+03  4.10e+00 1.88e-14  7.24e-02     0s
+  16  -1.18296927e+03 -1.17039001e+03  2.92e+00 2.84e-14  5.59e-02     0s
+  17  -1.17910523e+03 -1.16803776e+03  2.14e+00 2.84e-14  3.83e-02     0s
+  18  -1.17775619e+03 -1.16595090e+03  1.90e+00 3.55e-15  3.44e-02     0s
+  19  -1.17226223e+03 -1.16708323e+03  1.28e+00 2.84e-14  2.80e-02     0s
+  20  -1.16710273e+03 -1.16422428e+03  5.00e-01 5.68e-14  1.08e-02     0s
+  21  -1.16390598e+03 -1.16392381e+03  2.60e-03 5.68e-14  1.42e-04     0s
+  22  -1.16391495e+03 -1.16391637e+03  4.77e-06 5.68e-14  3.87e-06     0s
+  23  -1.16391576e+03 -1.16391577e+03  4.39e-08 5.68e-14  3.52e-08     0s
+  24  -1.16391577e+03 -1.16391577e+03  8.02e-10 1.14e-13  1.64e-13     0s
+
+Barrier solved model in 24 iterations and 0.00 seconds (0.01 work units)
+Optimal objective -1.16391577e+03
+
+
+User-callback calls 125, time in user-callback 0.00 sec
+Warning: row name 1 in rhs section not defined.
+Warning: row name 100 in rhs section not defined.
+Warning: column name A in bound section not defined
+Warning: column name 1 in bound section not defined
+Warning: column name A in bound section not defined
+Warning: column name 1 in bound section not defined
+Warning: column name A in bound section not defined
+Warning: column name 2 in bound section not defined
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/forplan.mps.gz
+Reading time = 0.00 seconds
+FORPLAN: 161 rows, 422 columns, 4564 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 161 rows, 422 columns and 4564 nonzeros (Min)
+Model fingerprint: 0xf7d53044
+Model has 353 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [7e-03, 3e+03]
+  Objective range  [1e-04, 1e+00]
+  Bounds range     [1e+05, 1e+07]
+  RHS range        [1e+01, 7e+06]
+Presolve removed 88 rows and 70 columns

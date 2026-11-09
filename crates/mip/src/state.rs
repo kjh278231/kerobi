@@ -612,6 +612,7 @@ mod tests {
         // row 0 is '>' (stored negated), column 1's 1e-14 entry is dropped
         let md = Model {
             name: "t".into(),
+            rng: 0,
             sense: 1,
             objcon: 0.0,
             obj: vec![1.0, 0.0, 2.0],

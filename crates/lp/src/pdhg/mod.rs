@@ -18,11 +18,13 @@ pub struct Params {
     pub abs_tol: f64,
     pub conv_tol: f64,
     pub work_limit: f64,
+    /// the optimize's work timer (1e-9 units) when `34c004` starts, e.g. the presolve work; WorkLimit counts it
+    pub work0: f64,
 }
 
 impl Default for Params {
     fn default() -> Self {
-        Params { iter_limit: 1e100, rel_tol: 1e-6, abs_tol: 1e-6, conv_tol: 1e-6, work_limit: 1e100 }
+        Params { iter_limit: 1e100, rel_tol: 1e-6, abs_tol: 1e-6, conv_tol: 1e-6, work_limit: 1e100, work0: 0.0 }
     }
 }
 
@@ -35,6 +37,9 @@ pub struct IterInfo {
     pub priminf: f64,
     pub dualinf: f64,
     pub compl: f64,
+    /// log columns P+0x50 / P+0x58 (∞-norm residuals)
+    pub rp_inf: f64,
+    pub rd_inf: f64,
 }
 
 #[derive(Clone, Debug)]
@@ -48,6 +53,11 @@ pub struct PdhgResult {
     pub x: Vec<f64>,
     /// work counter W[0] (1e-9 work units) at the end of `34c004`
     pub work: f64,
+    /// slack, reduced costs and row duals in the model's space (`7a069`: (b − Ax̂)/r, (c − Aᵀŷ)/(s·ω), −(r/ω)·ŷ;
+    /// rows of the model as stored, `>` rows negated)
+    pub slack: Vec<f64>,
+    pub d: Vec<f64>,
+    pub y: Vec<f64>,
 }
 
 /// `355602` (one thread): 2 optimal, 7 iteration limit, 16 work limit, 12 numeric, 1 running.
@@ -99,15 +109,38 @@ fn dump(st: &State) {
 /// Solve the LP `m` with PDHG (`34c004`); `cb` runs at every PDHG callback (every 100 PDHG iterations and after
 /// every power-iteration chunk).
 pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResult {
+    solve_logged(md, p, cb, &mut |_| {}, std::time::Instant::now(), 5.0)
+}
+
+/// `solve` with the PDHG iteration table (`355831`): after each evaluation's status test a row when the status is
+/// final or the DisplayInterval bucket of the elapsed time changed (always at the first evaluation). `start` is the
+/// optimize's start for the time column.
+pub fn solve_logged(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo), log: &mut dyn FnMut(&str),
+                    start: std::time::Instant, display_interval: f64) -> PdhgResult {
+    log("\n                       Objective                Residual\n");
+    log("     Iter       Primal          Dual         Primal    Dual     Compl    Time\n");
+    let mut last = -1.0f64; // P[0x37]: elapsed time of the last row
+    let e = |x: f64, k: usize| rsolver_model::mps_write::c_exp(x, k);
+    let mut row = |i: &IterInfo, fin: bool| {
+        let t = start.elapsed().as_secs_f64();
+        if fin || (t / display_interval).floor() != (last / display_interval).floor() {
+            log(&format!("{:9}  {:>15} {:>15}  {} {} {:>9} {:4.0}s\n", i.iter, e(i.pobj, 8), e(i.dobj, 8), e(i.rp_inf, 2),
+                         e(i.rd_inf, 2), e(i.compl, 2), t.floor()));
+            last = t;
+        }
+    };
     let d = scale::scale_flag4(md);
     let (n, m, nnz) = (d.a.n, d.a.m, d.a.nnz());
+    let sg = md.sense as f64; // callback objectives in the model's sense
     let info = |st: &State| IterInfo {
         iter: st.it,
-        pobj: st.pobj,
-        dobj: st.dobj,
+        pobj: sg * st.pobj,
+        dobj: sg * st.dobj,
         priminf: st.rp2,
         dualinf: st.rd2,
         compl: st.compl,
+        rp_inf: st.rp_inf,
+        rd_inf: st.rd_inf,
     };
     let mut st = State { tol: 1e-4, ..Default::default() };
     st.wc = d.s.iter().map(|s| 1.0 / s).collect();
@@ -126,7 +159,7 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
     st.omega = if st.bnorm > 0.0 && st.cnorm > 0.0 { st.cnorm / st.bnorm } else { 1.0 };
     st.omega0 = st.omega;
     (st.eps, st.eta) = if m == 0 || n == 0 { (0.0, 1.0) } else { (1e100, 0.0) };
-    let mut work = (nnz as f64 + m as f64 * 5.0) + n as f64 * 9.0;
+    let mut work = p.work0 + ((nnz as f64 + m as f64 * 5.0) + n as f64 * 9.0);
     // start point: x = clamp(0, l, u) (ties keep the bound), y = 0
     let x0: Vec<f64> = (0..n)
         .map(|j| {
@@ -155,7 +188,7 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
     work += nnz as f64 * 3.0;
     d.a.aty(&st.v.y, &mut st.v.aty);
     work += nnz as f64 * 3.0;
-    let mut seed = 0u64;
+    let mut seed = md.rng;
     st.pv = (0..m).map(|_| rand01(&mut seed)).collect();
 
     let eq: Vec<bool> = d.sense.iter().map(|&s| s == b'=').collect();
@@ -170,6 +203,7 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
                 dump(&st);
             }
             let s = status(&st, p, work);
+            row(&info(&st), s != 1);
             if s != 1 {
                 break s;
             }
@@ -208,5 +242,9 @@ pub fn solve(md: &Model, p: &Params, cb: &mut dyn FnMut(&IterInfo)) -> PdhgResul
     };
     st.eval(&d, true, &mut work);
     let x = (0..n).map(|j| st.v.xhat[j] * d.s[j]).collect();
-    PdhgResult { status: code, obj: st.pobj * md.sense as f64, iters: st.it, x, work }
+    let v = &st.v;
+    let slack = (0..m).map(|i| (d.b[i] - v.ax[i]) / d.r[i]).collect();
+    let dj = (0..n).map(|j| (d.c[j] - v.aty[j]) / (d.s[j] * d.objscale)).collect();
+    let y = (0..m).map(|i| -((d.r[i] / d.objscale) * v.yhat[i])).collect(); // `7a542` negates y
+    PdhgResult { status: code, obj: st.pobj * md.sense as f64, iters: st.it, x, work, slack, d: dj, y }
 }

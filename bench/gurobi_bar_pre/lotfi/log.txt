@@ -1,0 +1,93 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/lotfi/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/lotfi.mps.gz
+Reading time = 0.00 seconds
+LOTFI: 153 rows, 308 columns, 1078 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 153 rows, 308 columns and 1078 nonzeros (Min)
+Model fingerprint: 0x209e0233
+Model has 8 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-02, 1e+03]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 2e+04]
+
+Presolve removed 51 rows and 33 columns
+Presolve time: 0.00s
+Presolved: 102 rows, 275 columns, 672 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 5.450e+02
+ Factor NZ  : 1.475e+03
+ Factor Ops : 2.601e+04 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0   1.49505008e+05 -5.68653318e+01  6.24e+04 4.32e-02  9.73e+03     0s
+   1   3.49060654e+04 -3.57865354e+04  1.30e+04 8.88e-16  2.13e+03     0s
+   2   2.71387743e+03 -1.22700289e+04  8.56e+02 1.78e-15  2.37e+02     0s
+   3   8.05830164e+02 -1.72455062e+03  1.36e+02 1.33e-15  3.50e+01     0s
+   4   4.06714692e+02 -8.49464682e+02  2.15e+01 2.22e-15  1.59e+01     0s
+   5   1.38204563e+02 -4.03422290e+02  4.45e+00 9.99e-16  6.71e+00     0s
+   6   4.17157058e+01 -1.46110058e+02  1.26e+00 1.78e-15  2.32e+00     0s
+   7   4.59518823e+00 -4.70099624e+01  4.34e-01 8.88e-16  6.36e-01     0s
+   8  -1.83793191e+01 -3.37668481e+01  3.63e-02 8.88e-16  1.89e-01     0s
+   9  -2.37348018e+01 -2.88773877e+01  4.31e-03 8.88e-16  6.33e-02     0s
+  10  -2.46461539e+01 -2.64775269e+01  1.44e-03 8.88e-16  2.25e-02     0s
+  11  -2.50837304e+01 -2.55898486e+01  3.78e-04 8.88e-16  6.23e-03     0s
+  12  -2.52342627e+01 -2.52972976e+01  6.73e-05 1.78e-15  7.76e-04     0s
+  13  -2.52611433e+01 -2.52649599e+01  6.92e-06 8.88e-16  4.70e-05     0s
+  14  -2.52647025e+01 -2.52647071e+01  7.24e-11 8.41e-14  5.69e-08     0s
+  15  -2.52647061e+01 -2.52647061e+01  2.06e-10 8.88e-16  5.69e-11     0s
+
+Barrier solved model in 15 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -2.52647061e+01
+
+
+User-callback calls 106, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/lotfi.mps.gz
+Reading time = 0.00 seconds
+LOTFI: 153 rows, 308 columns, 1078 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 153 rows, 308 columns and 1078 nonzeros (Min)
+Model fingerprint: 0x209e0233
+Model has 8 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [2e-02, 1e+03]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 2e+04]
+Presolve removed 51 rows and 33 columns

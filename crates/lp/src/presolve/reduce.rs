@@ -109,6 +109,12 @@ pub struct ColTols {
     pub dual_reductions: bool,
     /// state+0x1e0 PreCrush
     pub precrush: i32,
+    /// state+0x100 (`Params::sol_mode`)
+    pub sol_mode: i32,
+    /// env+0x2438 Method, env+0x2ba0 Crossover, env+0x2b9c SolutionTarget
+    pub method: i32,
+    pub crossover: i32,
+    pub solution_target: i32,
 }
 
 impl State {
@@ -1372,14 +1378,12 @@ impl State {
     /// each free bound turns the column's reduced cost into a sign constraint. Row duals start at y <= 0 (`<`)
     /// or free (`=`) and are tightened by those constraints (`4f84ef`). A column whose reduced cost then has a
     /// strict sign goes to that bound (`4fa83a`); a `<` row whose dual is strictly negative becomes `=`.
-    /// `implied_free` is `state+0x100 == 0` (NumericFocus <= 0 at default Method/Crossover/SolutionTarget).
+    /// Implied bounds count as free only with state+0x100 == 0 and not (Method 2 with crossover and SolutionTarget <= 0).
     /// Returns 0, 3 or 5.
     pub fn dual_bound_rows(&mut self, t: &ColTols, aggressive: bool) -> i32 {
         let (n, m) = (self.n, self.m);
         let (inf, feastol, opttol) = (t.infbound, t.feastol, t.opttol);
-        // shortcut: Method, Crossover and SolutionTarget are not in Params and assumed at their defaults (-1), so
-        // state+0x100 reduces to NumericFocus > 0; add them before running with Method=2 or SolutionTarget set.
-        let implied_free = t.numeric_focus <= 0;
+        let implied_free = t.sol_mode == 0 && (t.method != 2 || t.crossover == 0 || 0 < t.solution_target);
         // the original hides special columns by shifting their counts below zero for the status steps
         let plain = |s: &State, j: usize| 0 < s.col_cnt[j] && s.col_flag[j] == 0;
         self.work += n as f64 + n as f64;
@@ -2021,9 +2025,9 @@ impl State {
             return 0;
         }
         self.bounds_tightened += tightened;
-        // Method 2, state+0x100 or a frequent prescan pattern (m * 0.05 < state+0x488) would bound only free
-        // columns; the default relaxes every implied bound by 0.001 (|b| + 1) onto columns with a finite bound.
-        if self.agg_scan as f64 > (m as f64) * 0.05 {
+        // Method 2, state+0x100 or a frequent prescan pattern (m * 0.05 < state+0x488) bound only free columns;
+        // otherwise every implied bound is relaxed by 0.001 (|b| + 1) onto columns with a finite bound.
+        if t.method == 2 || t.sol_mode != 0 || self.agg_scan as f64 > (m as f64) * 0.05 {
             for j in 0..n {
                 if 0 < self.col_cnt[j] && self.lb[j] <= -inf && inf <= self.ub[j] && self.col_flag[j] & 0x30 == 0 {
                     if 1e7 <= uc[j].abs() {

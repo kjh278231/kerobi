@@ -1,0 +1,74 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:40 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 6
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_pdhg_pre/vtpbase/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/vtpbase.mps.gz
+Reading time = 0.00 seconds
+VTP.BASE: 198 rows, 203 columns, 908 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  6
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 198 rows, 203 columns and 908 nonzeros (Min)
+Model fingerprint: 0x50481ee8
+Model has 6 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-01, 4e+03]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+03]
+  RHS range        [1e+00, 4e+03]
+
+Presolve removed 172 rows and 166 columns
+Presolve time: 0.00s
+Presolved: 26 rows, 37 columns, 119 nonzeros
+
+Start PDHG using 1 threads
+
+                       Objective                Residual
+     Iter       Primal          Dual         Primal    Dual     Compl    Time
+        0   9.76876686e+04  7.93349296e+04  3.88e+03 0.00e+00  3.90e+02    0s
+     1254   1.29831352e+05  1.29831467e+05  3.98e-03 7.03e-06  4.33e-06    0s
+
+PDHG solved model in 1254 iterations and 0.00 seconds (0.00 work units)
+Optimal objective 1.29831352e+05
+
+
+User-callback calls 89, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/vtpbase.mps.gz
+Reading time = 0.00 seconds
+VTP.BASE: 198 rows, 203 columns, 908 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  6
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 198 rows, 203 columns and 908 nonzeros (Min)
+Model fingerprint: 0x50481ee8
+Model has 6 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-01, 4e+03]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+03]
+  RHS range        [1e+00, 4e+03]
+Presolve removed 172 rows and 166 columns

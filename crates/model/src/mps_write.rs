@@ -10,7 +10,7 @@ pub fn fmt_num(x: f64) -> String {
     if x.abs() < 2e9 && x == x.floor() {
         return format!("{}", x as i32);
     }
-    let g = c_g15(x);
+    let g = c_g(x, 15);
     if g.parse::<f64>().map_or(true, |y| x - y != 0.0) {
         return c_exp(x, 16);
     }
@@ -18,25 +18,28 @@ pub fn fmt_num(x: f64) -> String {
 }
 
 /// C `%.{prec}e`: Rust prints the same correctly rounded digits but a bare exponent ("e-1" for "e-01").
-fn c_exp(x: f64, prec: usize) -> String {
+pub fn c_exp(x: f64, prec: usize) -> String {
     let s = format!("{:.*e}", prec, x);
     let (mant, exp) = s.split_once('e').unwrap();
     let e: i32 = exp.parse().unwrap();
     format!("{mant}e{}{:02}", if e < 0 { '-' } else { '+' }, e.abs())
 }
 
-/// C `%.15g`: style from the exponent of the rounded `%.14e` form, trailing zeros removed.
-fn c_g15(x: f64) -> String {
-    let s = format!("{:.14e}", x);
+/// C `%.{prec}g`: style from the exponent of the rounded `%.{prec-1}e` form, trailing zeros removed.
+pub fn c_g(x: f64, prec: usize) -> String {
+    if !x.is_finite() {
+        return if x.is_nan() { "nan".into() } else if x > 0.0 { "inf".into() } else { "-inf".into() };
+    }
+    let s = format!("{:.*e}", prec - 1, x);
     let e: i32 = s.split_once('e').unwrap().1.parse().unwrap();
     let strip = |t: &str| -> String {
         if t.contains('.') { t.trim_end_matches('0').trim_end_matches('.').to_string() } else { t.to_string() }
     };
-    if !(-4..15).contains(&e) {
+    if !(-4..prec as i32).contains(&e) {
         let (mant, _) = s.split_once('e').unwrap();
         return format!("{}e{}{:02}", strip(mant), if e < 0 { '-' } else { '+' }, e.abs());
     }
-    strip(&format!("{:.*}", (14 - e) as usize, x))
+    strip(&format!("{:.*}", (prec as i32 - 1 - e) as usize, x))
 }
 
 /// `9c9635`: one empty name or one with a space or colon (or, for variables, a duplicate) drops the whole name

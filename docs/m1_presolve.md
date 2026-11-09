@@ -26,6 +26,10 @@ LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03
 - 큰 합성 등식계(n ≤ 1990, nnz ≤ 12만) 4개에서 기본값 모델·작업량이 Gurobi와 비트 단위로 같음(예산의 약 52%).
 - 회귀(`58322e7`): Netlib P0 64/64, 작업량 64/64, postsolve 64/64, MIPLIB 완화 38/38, 합성 대칭 7/7, pytest 27, clippy 0.
 
+### G5에서 바꾼 것 (2026-11-06, `m1-lp-driver`)
+- Method·Crossover·SolutionTarget(`state+0x100`) 분기 8곳을 넣었다. Method 2·6 + Crossover 0의 presolved 모델이 8/64 → 64/64. presolved 모델 RNG 상태(`Model::rng`)도 설정한다. 표와 근거는 [m1_driver.md §5](m1_driver.md).
+- `reduce`/`finish`가 reduction이 낸 상태(3·5)를 돌려주고 `run_post`가 `390989` 끝 규칙(DualReductions, `a80155`, `a7fc52`)을 적용해 `Post::status`에 담는다([m1_driver §9](m1_driver.md)). postsolve에 기저 없는 uncrush `365159`(`uncrush_nonbasic`)를 더했다([m1_driver §8](m1_driver.md)).
+
 ### 남은 것
 - **Presolve=1 예산이 틀림(조사 중 멈춤)**: Gurobi는 Presolve=1에서 +0x1f0 = 1e100(+1e7)인데 포트는 200·nnz + 1e7이다. 그래서 Presolve=1·PreDepRow=1의 합성 b12·b14에서 포트만 `47c445`가 예산에 걸려 작업량이 다르다(모델은 같음). `3cd406` L778–790이 PrePasses 자동값을 Presolve=1이면 20으로 정하는데, 그 값이 `390989`의 `1 < PrePasses` 판정에 들어가는지(그러면 1e100) 확인해 `run_post`의 예산 식을 고치면 된다. 재현: 2차 세션 스크래치 `budget_p1.py budget b12 b14`.
 - 예산 정지가 Gurobi에서도 실제로 걸리는 사례는 아직 없다(기본값은 예산의 52%까지만 확인).

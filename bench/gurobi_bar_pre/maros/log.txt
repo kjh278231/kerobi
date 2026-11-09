@@ -1,0 +1,98 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:11 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 2
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_bar_pre/maros/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/maros.mps.gz
+Reading time = 0.00 seconds
+MAROS: 846 rows, 1443 columns, 9614 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 846 rows, 1443 columns and 9614 nonzeros (Min)
+Model fingerprint: 0xa66f295b
+Model has 392 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-04, 2e+04]
+  Objective range  [4e-05, 1e+02]
+  Bounds range     [2e+01, 7e+03]
+  RHS range        [2e+02, 4e+02]
+
+Presolve removed 390 rows and 671 columns
+Presolve time: 0.00s
+Presolved: 456 rows, 772 columns, 5517 nonzeros
+Ordering time: 0.00s
+
+Barrier statistics:
+ AA' NZ     : 6.396e+03
+ Factor NZ  : 1.180e+04 (roughly 1 MB of memory)
+ Factor Ops : 3.717e+05 (less than 1 second per iteration)
+ Threads    : 1
+
+                  Objective                Residual
+Iter       Primal          Dual         Primal    Dual     Compl     Time
+   0  -6.21454754e+06 -1.11302791e+06  1.72e+05 1.19e+01  7.99e+05     0s
+   1  -1.99796719e+06 -4.79730766e+06  5.54e+04 7.28e+01  2.88e+05     0s
+   2  -8.85520968e+05 -6.79382272e+06  2.19e+04 2.75e+01  1.18e+05     0s
+   3  -4.06341398e+05 -6.82245920e+06  9.07e+03 1.94e+00  4.55e+04     0s
+   4  -6.76197471e+04 -4.13544552e+06  8.98e+02 8.34e-02  6.99e+03     0s
+   5  -4.24220344e+04 -1.50167067e+06  2.92e+02 7.90e-03  2.04e+03     0s
+   6  -3.36441870e+04 -4.96296686e+05  5.95e+01 4.95e-13  4.89e+02     0s
+   7  -3.58957370e+04 -1.77438032e+05  2.17e+00 9.09e-04  1.26e+02     0s
+   8  -4.19245362e+04 -8.52493189e+04  1.48e-01 2.13e-14  3.83e+01     0s
+   9  -4.73389072e+04 -7.07972991e+04  4.22e-02 2.84e-14  2.07e+01     0s
+  10  -5.14865278e+04 -6.37516558e+04  2.13e-02 6.21e-14  1.08e+01     0s
+  11  -5.62516250e+04 -6.01132512e+04  3.29e-03 1.78e-14  3.42e+00     0s
+  12  -5.74759382e+04 -5.85554292e+04  8.52e-04 3.37e-13  9.55e-01     0s
+  13  -5.78464840e+04 -5.82200498e+04  2.63e-04 1.67e-13  3.30e-01     0s
+  14  -5.79498197e+04 -5.81189611e+04  1.30e-04 3.50e-13  1.50e-01     0s
+  15  -5.80310557e+04 -5.80915194e+04  3.46e-05 6.02e-13  5.35e-02     0s
+  16  -5.80614483e+04 -5.80649477e+04  1.28e-06 2.13e-14  3.09e-03     0s
+  17  -5.80635264e+04 -5.80638126e+04  1.97e-07 1.55e-14  2.53e-04     0s
+  18  -5.80637351e+04 -5.80637574e+04  1.21e-08 1.56e-12  1.97e-05     0s
+  19  -5.80637437e+04 -5.80637437e+04  3.11e-10 1.04e-11  3.13e-08     0s
+  20  -5.80637437e+04 -5.80637437e+04  2.92e-10 4.98e-12  6.09e-11     0s
+
+Barrier solved model in 20 iterations and 0.01 seconds (0.01 work units)
+Optimal objective -5.80637437e+04
+
+
+User-callback calls 138, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/maros.mps.gz
+Reading time = 0.00 seconds
+MAROS: 846 rows, 1443 columns, 9614 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  2
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 846 rows, 1443 columns and 9614 nonzeros (Min)
+Model fingerprint: 0xa66f295b
+Model has 392 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e-04, 2e+04]
+  Objective range  [4e-05, 1e+02]
+  Bounds range     [2e+01, 7e+03]
+  RHS range        [2e+02, 4e+02]
+Presolve removed 390 rows and 671 columns

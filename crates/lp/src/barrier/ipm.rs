@@ -735,6 +735,9 @@ pub fn run(lp: &Lp, sym: &Symbolic, f160: f64, f168: f64, p: &Params, cb: &mut d
             priminf: (r.rp2 * r.rp2 + r.ru2 * r.ru2).sqrt(),
             dualinf: r.rd2,
             compl: r.compl,
+            log_pinf: r.rp_rel,
+            log_dinf: r.rd_rel,
+            mu: r.mu,
         });
         hmu.push(r.mu);
         hcompl.push(r.compl);
@@ -776,7 +779,11 @@ pub fn run(lp: &Lp, sym: &Symbolic, f160: f64, f168: f64, p: &Params, cb: &mut d
         }
         it += 1;
     };
+    let (slack, d, y) = lp.duals_orig(&ipm.st.x, &ipm.st.z, &ipm.st.s, &ipm.st.y);
     BarResult {
+        slack,
+        d,
+        y,
         status,
         obj: lp.sense * r.pobj,
         bar_iters: it,

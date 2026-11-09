@@ -1,0 +1,30 @@
+{
+ "Fingerprint": 393176393,
+ "Status": 2,
+ "IterCount": 0.0,
+ "BarIterCount": 0,
+ "PDHGIterCount": 4491.0,
+ "NodeCount": 0.0,
+ "Work": 0.011978694937953045,
+ "Runtime": 0.0023529529571533203,
+ "ObjVal": 1373.0814968174384,
+ "ObjBound": Infinity,
+ "SolCount": 1,
+ "IsMIP": 0,
+ "NumVars": 315,
+ "NumConstrs": 233,
+ "NumNZs": 1429,
+ "log": {
+  "presolve_removed": [
+   200,
+   261
+  ]
+ },
+ "presolved": [
+  33,
+  54,
+  292
+ ],
+ "trace_rows": 46,
+ "errors": {}
+}

@@ -1,0 +1,74 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:23 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 6
+Set parameter Crossover to value 0
+Set parameter LogFile to value "bench/gurobi_pdhg_pre/e226/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/e226.mps.gz
+Reading time = 0.00 seconds
+E226: 223 rows, 282 columns, 2578 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  6
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Optimize a model with 223 rows, 282 columns and 2578 nonzeros (Min)
+Model fingerprint: 0x95364535
+Model has 189 linear objective coefficients and an objective constant of 7.113
+Coefficient statistics:
+  Matrix range     [3e-04, 1e+03]
+  Objective range  [5e-04, 3e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [9e-03, 6e+01]
+
+Presolve removed 85 rows and 40 columns
+Presolve time: 0.00s
+Presolved: 138 rows, 242 columns, 2261 nonzeros
+
+Start PDHG using 1 threads
+
+                       Objective                Residual
+     Iter       Primal          Dual         Primal    Dual     Compl    Time
+        0  -5.77883120e-01 -7.17890544e+01  2.06e+01 5.74e+00  3.97e-01    0s
+    18089  -1.16389457e+01 -1.16389330e+01  4.60e-05 3.47e-06  8.79e-07    0s
+
+PDHG solved model in 18089 iterations and 0.04 seconds (0.31 work units)
+Optimal objective -1.16389457e+01
+
+
+User-callback calls 272, time in user-callback 0.00 sec
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/e226.mps.gz
+Reading time = 0.00 seconds
+E226: 223 rows, 282 columns, 2578 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  6
+Crossover  0
+LogToConsole  0
+Threads  1
+
+Presolve a model with 223 rows, 282 columns and 2578 nonzeros (Min)
+Model fingerprint: 0x95364535
+Model has 189 linear objective coefficients and an objective constant of 7.113
+Coefficient statistics:
+  Matrix range     [3e-04, 1e+03]
+  Objective range  [5e-04, 3e+01]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [9e-03, 6e+01]
+Presolve removed 85 rows and 40 columns

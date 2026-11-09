@@ -1,5 +1,5 @@
 """gurobipy-shaped Python layer over the Rust core (re/notes/01: Python -> extension -> engine)."""
-from ._core import INF, build_model, read_model
+from ._core import INF, build_model, param_def, read_model
 
 
 class GRB:
@@ -215,6 +215,18 @@ class Model:
     def setObjective(self, expr, sense=GRB.MINIMIZE):
         self._obj, self.ModelSense = _lin(expr), sense
 
+    def getParamInfo(self, paramname):
+        """(name, type, current, min, max, default) as gurobipy reports it; None for an unknown name."""
+        d = param_def(paramname)
+        if d is None:
+            return None
+        name, kind, lo, hi, df, sdf = d
+        if kind == 3:
+            return (name, str, self._param(name, sdf), "", "", sdf)
+        t = int if kind == 1 else float
+        v = lambda x: t(x) if abs(x) < 1e100 else (INF if x > 0 else -INF)  # GRB_INFINITY (1e100) reads as inf
+        return (name, t, self._param(name, v(df)), v(lo), v(hi), v(df))
+
     def _param(self, name, default):
         for k, v in self.Params.items():
             if k.lower() == name.lower():
@@ -222,6 +234,8 @@ class Model:
         return default
 
     def optimize(self, callback=None):
+        if self._core is not None and self._param("Presolve", -1) != 0 and not self.IsMIP:
+            return self._driver(callback)
         if self._core is not None and not self.IsMIP and self.Params.get("Method") == 2:
             return self._barrier(callback)
         if self._core is not None and not self.IsMIP and self.Params.get("Method") == 6:
@@ -270,9 +284,52 @@ class Model:
         v = self._cbrow[k]
         return int(v) if k == 4 else v
 
+    def getAttr(self, attrname, objs=None):
+        """Array attributes of the last optimize: X, RC (columns), Slack, Pi (rows); all entries when objs is None."""
+        vals = {"x": self._x, "rc": getattr(self, "_rc", []), "slack": getattr(self, "_slack", []),
+                "pi": getattr(self, "_pi", [])}.get(attrname.lower())
+        if vals is None or not len(vals):
+            raise GurobiError(10005, f"Unable to retrieve attribute '{attrname}'")
+        return list(vals) if objs is None else [vals[o.index] for o in objs]
+
     @property
     def ObjBound(self):
         return self._objbound if self.IsMIP and hasattr(self, "_objbound") else self.ObjVal
+
+    def _driver(self, callback):
+        """Continuous model with presolve: the Rust driver (docs/m1_driver.md) runs presolve, the engine Method
+        resolves to, uncrush and the status rules, and returns the log text."""
+        import time
+
+        C = GRB.Callback
+
+        def relay(where, keys):
+            def f(*vals):
+                if callback:
+                    self._cbrow, self._cbdata = None, dict(zip(keys, vals))
+                    callback(self, where)
+            return f
+
+        bar = relay(C.BARRIER, (C.BARRIER_ITRCNT, C.BARRIER_PRIMOBJ, C.BARRIER_DUALOBJ, C.BARRIER_PRIMINF,
+                                C.BARRIER_DUALINF, C.BARRIER_COMPL))
+        pdhg = relay(C.PDHG, (C.PDHG_ITRCNT, C.PDHG_PRIMOBJ, C.PDHG_DUALOBJ, C.PDHG_PRIMINF, C.PDHG_DUALINF,
+                              C.PDHG_COMPL))
+        pairs = [(k, float(v)) for k, v in self.Params.items() if isinstance(v, (int, float))]
+        t0 = time.perf_counter()
+        (self.Status, self._objval, self._x, self.IterCount, self.BarIterCount, self.PDHGIterCount, self.Work, trace,
+         log, self._slack, self._pi, self._rc) = self._core.optimize(pairs, bar, pdhg)
+        self.Runtime, self.NodeCount = time.perf_counter() - t0, 0.0
+        self.SolCount = int(len(self._x) > 0)  # the driver hands out x only when the status has a solution
+        if self._param("LogFile", ""):
+            with open(self._param("LogFile", ""), "a") as f:
+                f.write(log)
+        if self._param("OutputFlag", 1) and self._param("LogToConsole", 1):
+            print(log, end="")
+        if callback is not None:  # SIMPLEX callbacks replayed in iteration order after the solve
+            for row in trace:
+                self._cbrow = row
+                callback(self, C.SIMPLEX)
+            self._cbrow = None
 
     def _barrier(self, callback):
         """M3 barrier (Presolve=0, Crossover=0 assumed): BARRIER callback (where = 7) once per iteration."""

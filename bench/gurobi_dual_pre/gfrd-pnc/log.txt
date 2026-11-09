@@ -1,0 +1,71 @@
+
+Gurobi 13.0.3 (linux64, Python) logging started Fri Nov  6 00:59:41 2026
+
+Set parameter LogToConsole to value 0
+Set parameter WorkLimit to value 60
+Set parameter Method to value 1
+Set parameter LogFile to value "bench/gurobi_dual_pre/gfrd-pnc/log.txt"
+Set parameter Threads to value 1
+Restricted license - for non-production use only - expires 2027-11-29
+Warning: found different names for bound vectors (P1AG and P1AF), names are ignored
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/gfrd-pnc.mps.gz
+Reading time = 0.00 seconds
+GFRD-PNC: 616 rows, 1092 columns, 2377 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  1
+LogToConsole  0
+Threads  1
+
+Optimize a model with 616 rows, 1092 columns and 2377 nonzeros (Min)
+Model fingerprint: 0xd3f05925
+Model has 1090 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+03]
+  Objective range  [2e-01, 8e+04]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [9e+02, 1e+03]
+
+Presolve removed 447 rows and 566 columns
+Presolve time: 0.00s
+Presolved: 169 rows, 526 columns, 1148 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -3.6456000e+32   3.006250e+31   3.645600e+02      0s
+
+Extra simplex iterations after uncrush: 1
+     177    6.9022360e+06   0.000000e+00   0.000000e+00      0s
+
+Solved in 177 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  6.902236000e+06
+
+User-callback calls 254, time in user-callback 0.00 sec
+Warning: found different names for bound vectors (P1AG and P1AF), names are ignored
+Read MPS format model from file /home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/gfrd-pnc.mps.gz
+Reading time = 0.00 seconds
+GFRD-PNC: 616 rows, 1092 columns, 2377 nonzeros
+Gurobi Optimizer version 13.0.3 build v13.0.3rc0 (linux64 - "Ubuntu 24.04.5 LTS")
+
+CPU model: Intel(R) Core(TM) Ultra 7 155H, instruction set [SSE2|AVX|AVX2]
+Thread count: 11 physical cores, 22 logical processors, using up to 1 threads
+
+Non-default parameters:
+WorkLimit  60
+Method  1
+LogToConsole  0
+Threads  1
+
+Presolve a model with 616 rows, 1092 columns and 2377 nonzeros (Min)
+Model fingerprint: 0xd3f05925
+Model has 1090 linear objective coefficients
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+03]
+  Objective range  [2e-01, 8e+04]
+  Bounds range     [1e+00, 1e+05]
+  RHS range        [9e+02, 1e+03]
+Presolve removed 447 rows and 566 columns
