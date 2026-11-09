@@ -2,7 +2,7 @@
 
 ## 현재 작업 상태 (2026-11-09)
 
-`m2-mip-presolve`에서 B&B, 루트 전파·휴리스틱, presolve 후 B&B 및 고정·치환 변수 복원, Python MIP `optimize()` 연결을 구현했다(`13ce2fe`까지 커밋, main 미병합). 다른 복원 레코드와 빈 축약 모델은 원래 모델을 직접 푼다. LP presolve→simplex→postsolve 연결, 나머지 MIP 복원과 MIP 콜백은 남았다. 별도 검증: G6 기본 축약 모델·postsolve 레코드·PRELIMIT 저장 변화점 및 최종 모델 각 38/38, workspace clippy 경고 0·Rust 테스트 통과·Python 테스트 498개 통과. 38개에서 실행되지 않은 하위 풀이 등은 미구현이다. 두 worktree의 진행 문서 변경은 미커밋이다.
+`m2-mip-presolve`에서 B&B, 루트 전파·휴리스틱, presolve 후 B&B 및 고정·치환 변수 복원, Python MIP `optimize()` 연결을 구현했다(`13ce2fe`, main 병합 `3e5c9d4`). 다른 복원 레코드와 빈 축약 모델은 원래 모델을 직접 푼다. LP presolve→simplex→postsolve 연결, 나머지 MIP 복원과 MIP 콜백은 남았다. 별도 검증: G6 기본 축약 모델·postsolve 레코드·PRELIMIT 저장 변화점 및 최종 모델 각 38/38, workspace clippy 경고 0·Rust 테스트 통과·Python 테스트 498개 통과. 38개에서 실행되지 않은 하위 풀이 등은 미구현이다. 이 병합 상태를 반영한 문서 변경은 두 worktree에 미커밋이다.
 
 ## 1. 운영 규칙 (2026-11-05 사용자 지시)
 
@@ -36,7 +36,7 @@
 | ~~M3 barrier~~ (완료, main 병합) | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3_barrier.md` | G3 |
 | ~~M3 PDHG~~ (완료, main 병합) | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3_pdhg.md` | G4 |
 | M1 LP 드라이버 | `rsolver-presolve` / `m1-lp-driver` | 파라미터 표, 드라이버, Presolve 켠 연속 경로 | `docs/m1_driver.md` | G5 |
-| M2 MIP presolve (에이전트 검증 완료, main 병합 대기) | `rsolver-barrier` / `m2-mip-presolve` | MIP presolve `3cd406` P0. 검증 범위·한계는 §3 | `docs/m2_presolve.md` | G6 |
+| M2 MIP presolve (별도 검증 후 main 병합) | `rsolver-barrier` / `m2-mip-presolve` | MIP presolve `3cd406` P0. 검증 범위·한계는 §3 | `docs/m2_presolve.md` | G6 |
 | ↳ MIP presolve 하위 작업 (상위 브랜치에 병합 완료) | `m2-mip-presolve`에 통합 | probing·clique·바깥 reduction·마무리 | `docs/m2_presolve.md` | G6의 일부 |
 
 ## 3. 완료 기록
@@ -109,16 +109,18 @@
 | 2026-11-06 | M2 바깥 reduction A·B | 함의 그래프 추이 축소(`5431ee`), dual bound(`374521`), 부등식→등식(`3e40d1`), 노드 아레나 압축(`36ee92`), dual 집계(`418542`). 덤프 호출 78/78 | `f280d7c`, `0ea348a`, `8624df7`, `d1d083d`, `2ebdf67` (`m2-outer-a`, `m2-outer-b`) |
 | 2026-11-06 | M1 simplex 속도 개선 | 비트는 그대로(피벗 경로 64/64 동일). BTRAN 출력 재사용, α 지지 집합만 순회, LU 평면 배열, FT 갱신에서 U 위치 역순열 유지 | `61ccd6b`, `2cb6739` |
 | 2026-11-06 | M2 round end·바깥 reduction 추가 | 지배된 singleton 열(`5a9282`), 비용 singleton mod gcd(`5ab429`), VUB lifting(`59c193`), 계수 패턴 사전(`55a779` 1부), XOR 행(`3e5363`), 함의 정수(`57627e`), 평행 행·열 MIP 분기(`3ff744`), 비영 소거(`40d2bc`), MIP 집계(`37f484`) | `dff8109`, `91c379b`, `2b791f0`, `79ae5aa`, `f001cff`, `b14499b` (`m2-*`) |
-| 2026-11-06 | M2 MIP presolve (G6) 에이전트 검증 완료 | 에이전트가 `m2-outer-b` 병합 후 재검증했다고 보고함. 기본값 presolved 모델, PRELIMIT sweep 변화점, postsolve 레코드 각각 **38/38** 일치. probing·대칭·연결 성분 탐색 포함, reduction stub 삭제. clippy 경고 0, cargo test 통과, pytest 37 passed·1 xfailed. **오케스트레이터 별도 검증·main 병합 대기** | `a683710`, 병합 `83f4fc3`, 최종 `2f28f77` (`m2-mip-presolve`) |
+| 2026-11-06 | M2 MIP presolve (G6) 에이전트 검증 완료 | 에이전트가 `m2-outer-b` 병합 후 재검증했다고 보고함. 기본값 presolved 모델, PRELIMIT sweep 변화점, postsolve 레코드 각각 **38/38** 일치. probing·대칭·연결 성분 탐색 포함, reduction stub 삭제. clippy 경고 0, cargo test 통과, pytest 37 passed·1 xfailed. 당시 별도 검증·main 병합 대기 | `a683710`, 병합 `83f4fc3`, 최종 `2f28f77` (`m2-mip-presolve`) |
 
-| 2026-11-09 | M2 풀이 경로 진행 (worktree, 미커밋) | `m2-mip-presolve`에서 B&B와 루트 전파·휴리스틱을 구현했고, 고정·치환 레코드를 역순으로 복원하는 presolve→B&B 경로와 Python MIP `optimize()`를 연결했다. 미지원 레코드, 빈 축약 모델, 복원 검증 실패는 원래 모델을 직접 푼다. 원래 제약과 목적값으로 복원 해를 검증한다. Rust MIP 60개, Python B&B·모델 405개 통과(작은 이진 MIP 200개를 완전탐색과 비교). LP presolve→simplex→postsolve, 다른 MIP 복원 레코드, MIP 콜백은 미완료. 이 작업은 main에 병합되지 않았다. | `faf357d` 이후 미커밋 변경 (`rsolver-barrier`) |
+| 2026-11-09 | M2 풀이 경로 진행 | `m2-mip-presolve`에서 B&B와 루트 전파·휴리스틱을 구현했고, 고정·치환 레코드를 역순으로 복원하는 presolve→B&B 경로와 Python MIP `optimize()`를 연결했다. 미지원 레코드, 빈 축약 모델, 복원 검증 실패는 원래 모델을 직접 푼다. 원래 제약과 목적값으로 복원 해를 검증한다. Rust MIP 60개, Python B&B·모델 405개 통과(작은 이진 MIP 200개를 완전탐색과 비교). LP presolve→simplex→postsolve, 다른 MIP 복원 레코드, MIP 콜백은 미완료. 이후 `3e5c9d4`로 main에 병합했다. | `13ce2fe`, 병합 `3e5c9d4` |
 
 ### G6 검증 범위와 남은 작업 (2026-11-06)
 
-- 위 결과는 `m2-mip-presolve`의 `2f28f77`에서 에이전트가 보고한 값이다. main에는 아직 이 구현을 병합하지 않았다. 검증 절차와 상세 결과는 해당 브랜치의 `docs/m2_presolve.md` §0에 있다. `git show 2f28f77:docs/m2_presolve.md`로 확인한다.
+- 위 결과는 `m2-mip-presolve`의 `2f28f77`에서 에이전트가 보고한 값이다. 2026-11-09 별도 검증 후 `3e5c9d4`로 main에 병합했다. 검증 절차와 상세 결과는 해당 브랜치의 `docs/m2_presolve.md` §0에 있다. `git show 2f28f77:docs/m2_presolve.md`로 확인한다.
 - 검증 범위는 miplib_small 38개다. 그 범위에서 실행되지 않은 covers 적용, type 24 레코드 바이트, Q·QC·SOS·NL, 재시작 문맥은 오라클로 확인하지 못했다.
 - 하위 풀이 `5307f4`·`522aa2`와 doubleton 등식 처리 `56b360`은 건너뛴다. 여러 연결 성분이 있어 하위 풀이가 필요한 모델에서는 Gurobi와 결과가 달라질 수 있다.
-- `cliquerows.rs`·`setpack.rs`의 노드 풀 확장 `3b85ea`는 아직 `assert!`로 막혀 있어 더 큰 모델에서 중단될 수 있다. 오케스트레이터의 별도 검증과 main 병합이 남았다.
+- `cliquerows.rs`·`setpack.rs`의 노드 풀 확장 `3b85ea`는 아직 `assert!`로 막혀 있어 더 큰 모델에서 중단될 수 있다. 이 한계는 병합 후에도 남는다.
+
+| 2026-11-09 | G6 별도 검증·main 병합 | 축약 모델·레코드·PRELIMIT 저장 변화점과 최종 모델 각 38/38, clippy 0, Rust 테스트 통과, Python 498개 통과. 검증은 병합 전 동일 코드에서 수행했다. | `13ce2fe`, 병합 `3e5c9d4` |
 
 ## 4. goal 원문
 

@@ -1,6 +1,6 @@
 # 12. 로드맵 다이어그램
 
-상태: ✅ 완료 · 🔄 진행 · 🔎 에이전트 검증 완료·병합 대기 · ⏳ 예정 (2026-11-09 기준. main과 `rsolver-barrier` worktree의 미병합 작업을 함께 표시한다. 세부 기록은 [11_progress.md](11_progress.md), 심플렉스 최신 검증은 [10_porting.md §9.2](10_porting.md))
+상태: ✅ 완료 · 🔄 진행 · 🔎 에이전트 검증 완료·병합 대기 · ⏳ 예정 (2026-11-09 기준. main에 병합된 구현과 남은 작업을 표시한다. 세부 기록은 [11_progress.md](11_progress.md), 심플렉스 최신 검증은 [10_porting.md §9.2](10_porting.md))
 
 ```mermaid
 flowchart TD
@@ -25,11 +25,11 @@ flowchart TD
     end
 
     subgraph M2["M2 MIP 엔진"]
-        MPRE["🔎 MIP presolve G6<br/>모델·sweep·레코드 별도 검증 38/38<br/>main 병합 대기"]:::pending
-        BNB["🔄 B&B 진행 중<br/>분기·노드 탐색·종료 구현<br/>worktree 검증, main 미병합"]:::doing
+        MPRE["✅ MIP presolve G6<br/>모델·sweep·레코드 별도 검증 38/38<br/>main 병합"]:::done
+        BNB["🔄 B&B 진행 중<br/>분기·노드 탐색·종료 구현<br/>검증 후 main 병합"]:::doing
         CUT["⏳ Cut separator"]:::todo
-        HEU["🔄 휴리스틱<br/>worktree 구현"]:::doing
-        PROP["🔄 전파<br/>worktree 구현"]:::doing
+        HEU["🔄 휴리스틱<br/>main 구현"]:::doing
+        PROP["🔄 전파<br/>main 구현"]:::doing
         POST["🔄 MIP 해 복원<br/>고정·치환 지원, 나머지 직접 풀이"]:::doing
         GATE2["⏳ M2 관문"]:::todo
     end
@@ -54,6 +54,6 @@ flowchart TD
 
 ## 현재 작업 범위
 
-- `rsolver-barrier`의 `m2-mip-presolve`에는 B&B, 루트 전파·휴리스틱과 Python MIP 풀이가 있다. presolve 연결과 고정·치환 해 복원은 `13ce2fe`에 커밋됐고 main에 병합되지 않았다. 진행 문서 변경은 미커밋이다.
+- `rsolver-barrier`의 `m2-mip-presolve`에는 B&B, 루트 전파·휴리스틱과 Python MIP 풀이가 있다. presolve 연결과 고정·치환 해 복원은 `13ce2fe`에 커밋됐고 `3e5c9d4`로 main에 병합됐다. 진행 문서 변경은 미커밋이다.
 - 다른 MIP 복원 레코드와 빈 축약 모델은 원래 모델 직접 풀이로 돌아간다. LP presolve→simplex→postsolve 연결, MIP 콜백과 cut separator는 남아 있다.
-- G6의 모델·레코드·PRELIMIT 저장 변화점 및 최종 모델 38/38을 2026-11-09 별도 검증했다. 38개에서 실행되지 않은 하위 풀이는 미구현이며 main 병합 대기다. 범위는 [m2_presolve.md](m2_presolve.md)에 있다.
+- G6의 모델·레코드·PRELIMIT 저장 변화점 및 최종 모델 38/38을 2026-11-09 별도 검증했다. 38개에서 실행되지 않은 하위 풀이는 미구현이며 `3e5c9d4`로 main에 병합됐다. 범위는 [m2_presolve.md](m2_presolve.md)에 있다.
