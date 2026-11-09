@@ -1,4 +1,4 @@
-//! `3ff744` parallel rows / columns, MIP linked-list branch (docs/m2_red_outer_a.md §3; the LP CSR branch is
+//! `3ff744` parallel rows / columns, MIP linked-list branch (docs/m2/m2_red_outer_a.md §3; the LP CSR branch is
 //! crates/lp/src/presolve/parallel.rs). Mode 0 rows (singleton slack columns hidden: rows 'P'/'T'), mode 1 columns,
 //! mode 3 integer columns. Candidates are grouped by a pattern hash, a value hash and an exact comparison; each
 //! class goes to the pair routine (`3ee2bb` rows, `3eaf1d` columns) in the order that decides the survivor.
@@ -1219,7 +1219,7 @@ impl State {
         self.merge_test(x, y, r, t)
     }
 
-    /// The column aggregation phase of `3ff744` (PREOBJPWLRED, docs/m2_red_outer_a.md §3.5): the live members of a
+    /// The column aggregation phase of `3ff744` (PREOBJPWLRED, docs/m2/m2_red_outer_a.md §3.5): the live members of a
     /// class of parallel columns (all in two or more rows) become one new column z with coefficient base/s_best in
     /// best's rows, and a new row `-f·z + Σ f·(s_k/base)·x_k = 0` ties them to it. Returns a status.
     fn par_col_aggregation(&mut self, list: &[i32], bounds: &[usize], scale: &[f64], t: &Tol) -> i32 {

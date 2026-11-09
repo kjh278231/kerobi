@@ -1,4 +1,4 @@
-//! `45feaa` two-row reductions with its LP `45d7ec` (docs/m2_red_outer_c.md §2–3): for a row i and each row r that
+//! `45feaa` two-row reductions with its LP `45d7ec` (docs/m2/m2_red_outer_c.md §2–3): for a row i and each row r that
 //! shares enough columns with it, bound r's activity over the shared columns by the LP "shared part of r subject to
 //! row i", then find r infeasible, redundant (removed), or use the bound to tighten the bounds of r's other columns
 //! (and, for `<` rows, the coefficients of its integer columns at lower bound 0).

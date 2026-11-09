@@ -1,6 +1,6 @@
 # M1 LP presolve 작업 노트 (`390989`)
 
-LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolve.md)로 옮긴다. 작업 방식은 [10 §9](10_porting.md)의 재구성 + 오라클 비트 검증이다.
+LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](../03_presolve.md)로 옮긴다. 작업 방식은 [10 §9](../10_porting.md)의 재구성 + 오라클 비트 검증이다.
 
 
 ## 0. 현재 상태 (2026-11-06, G2 완료)
@@ -45,7 +45,7 @@ LP presolve와 postsolve 포팅 중에 알아낸 사실. 확정된 내용은 [03
 
 ### 코드·문서 위치
 - 코드 `crates/lp/src/presolve/`: `mod.rs`(순서), `state.rs`(상태·레코드·생성자 작업량), `reduce.rs`, `parallel.rs`, `agg.rs`, `derived.rs`, `deprow.rs`, `postsolve.rs`, `tracker.rs`, `sort.rs`.
-- 해독 노트: 집계 [m1_presolve_agg.md](m1_presolve_agg.md), `5b488d` [m1_presolve_derived.md](m1_presolve_derived.md), `47c445` [m1_presolve_deprow.md](m1_presolve_deprow.md), postsolve [m1_postsolve.md](m1_postsolve.md). 요약 [03](03_presolve.md) §10.
+- 해독 노트: 집계 [m1_presolve_agg.md](m1_presolve_agg.md), `5b488d` [m1_presolve_derived.md](m1_presolve_derived.md), `47c445` [m1_presolve_deprow.md](m1_presolve_deprow.md), postsolve [m1_postsolve.md](m1_postsolve.md). 요약 [03](../03_presolve.md) §10.
 - 테스트: `tests/test_presolve.py`(`bench/gurobi_presolve/`), `tests/test_postsolve.py`(`bench/gurobi_uncrush/`).
 
 ## 1. 호출 그래프: presolve는 LP를 풀지 않는다 (2026-11-05)

@@ -1,6 +1,6 @@
 # M3 barrier ordering·symbolic 해독 기록
 
-범위: Method=2의 구조 분석 단계(`2bf1ea` 94–175줄). AAᵀ 패턴 `303e2a` → ordering 드라이버 `300f28` → 커널 `309dd0`(이분할 `30b0f2`/`30d189`, 최소 차수 `3047bb`, 개수 `302921`) → symbolic 분해 `2e4f14`. 방식은 [10 §9](10_porting.md): 의사코드·objdump로 규칙을 읽고 Python 프로토타입을 오라클과 맞춘 뒤 Rust로 옮긴다.
+범위: Method=2의 구조 분석 단계(`2bf1ea` 94–175줄). AAᵀ 패턴 `303e2a` → ordering 드라이버 `300f28` → 커널 `309dd0`(이분할 `30b0f2`/`30d189`, 최소 차수 `3047bb`, 개수 `302921`) → symbolic 분해 `2e4f14`. 방식은 [10 §9](../10_porting.md): 의사코드·objdump로 규칙을 읽고 Python 프로토타입을 오라클과 맞춘 뒤 Rust로 옮긴다.
 
 | 파일 | 내용 |
 |---|---|

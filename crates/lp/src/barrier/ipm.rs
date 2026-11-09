@@ -1,10 +1,10 @@
-//! 05 §2 Barrier iterations for LP (`2bf1ea` L455–1030), port of tools/proto/bar_ipm.py (docs/m3_ipm.md §2–§5):
+//! 05 §2 Barrier iterations for LP (`2bf1ea` L455–1030), port of tools/proto/bar_ipm.py (docs/m3/m3_ipm.md §2–§5):
 //! starting point `2d0663`/`2d252f`/`2d8838`, residuals `2d4977`, directions `2f59f1`/`2ee6c5` + refinement
 //! `2f9699`, step `2f15ba`/`2f4fe9`, correctors `2d64b4`, corrector count from the work timers, update `2f2e95`,
-//! termination `b2aecf`. Sums follow Gurobi's SSE2 lane order and x87 Kahan sums (docs/m3_chol.md §4), so the
+//! termination `b2aecf`. Sums follow Gurobi's SSE2 lane order and x87 Kahan sums (docs/m3/m3_chol.md §4), so the
 //! iterates are bit-equal to Gurobi on the oracle instances. Restart (`2bf1ea` L956–994, perold and pilot4) is ported.
 //! shortcut: no homogeneous switch (`2d35d7`, `2f8f0e`), no status-13 stall rules and no best-iterate
-//! choice (`2c4689`); the last iterate is returned. None of them fires on the 64 bench LPs (docs/m3_ipm.md §8).
+//! choice (`2c4689`); the last iterate is returned. None of them fires on the 64 bench LPs (docs/m3/m3_ipm.md §8).
 #![allow(clippy::needless_range_loop)] // index loops over parallel arrays, as in the original
 use super::chol::{vsum, Factor};
 use super::f80::{kahan_dot, F80};
@@ -683,7 +683,7 @@ pub fn run(lp: &Lp, sym: &Symbolic, f160: f64, f168: f64, p: &Params, cb: &mut d
     let fin: Vec<usize> = (0..lp.n).filter(|&j| lp.ub[j] < 1e30).collect();
     let nub = fin.last().map_or(0.0, |&l| (l + 1 - fin[0]) as f64); // B+0x634 − B+0x630
     let nnz2 = 2.0 * lp.nnz as f64; // B+0x5a8
-    // work per call, 0.75 units (docs/m3_ipm.md §4.6)
+    // work per call, 0.75 units (docs/m3/m3_ipm.md §4.6)
     let w_solve = (2.0 * nnz2 + f160 + 11.0 * m + 4.0 * n) * 0.75; // 2ee6c5 incl. 2d3b3e, 2d3d91
     let w_dir = w_solve + (5.0 * (m + n) + 9.0 * nub) * 0.75; // 2f59f1
     let w_ratio = (7.0 * (m + n) + 6.0 * nub) * 0.75; // 2f15ba, one 2f4fe9 grid point

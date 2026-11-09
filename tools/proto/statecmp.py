@@ -1,4 +1,4 @@
-"""Per-iteration bit comparison of rsolver's dual state with Gurobi's (docs/m1_notes.md §8).
+"""Per-iteration bit comparison of rsolver's dual state with Gurobi's (docs/m1/m1_notes.md §8).
 usage: python tools/proto/statecmp.py <name> <gurobi.jsonl from tools/spx_oracle.py> [--iters 0-30]
 Runs rsolver with RSOLVER_SNAP and reports, per iteration, which arrays differ (vstat, xB, d, w) and where."""
 import json, os, subprocess, sys, tempfile

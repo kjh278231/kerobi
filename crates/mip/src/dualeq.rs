@@ -1,4 +1,4 @@
-//! `3e40d1` inequalities to equalities by dual arguments (docs/m2_red_outer_b.md §2).
+//! `3e40d1` inequalities to equalities by dual arguments (docs/m2/m2_red_outer_b.md §2).
 use crate::state::{State, INF, NIL};
 use crate::Params;
 

@@ -1,5 +1,5 @@
 //! `564ce0(st, env, map, sc, of, upd, &out)`: substitute columns x_j = sc_j·x_map[j] + of_j, grouped by
-//! representative (`55e383` per group, type 2 records through `push_agg`), docs/m2_red_probe.md §3.5. Probing calls
+//! representative (`55e383` per group, type 2 records through `push_agg`), docs/m2/m2_red_probe.md §3.5. Probing calls
 //! it for its aggregations; other reductions (5466a7, 5577ba, 522aa2) share it.
 use crate::state::{State, INF, NIL};
 

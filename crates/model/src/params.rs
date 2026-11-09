@@ -1,4 +1,4 @@
-//! Parameter table (docs/m1_driver.md §2): `ac81d7` binds each name to its env slot; names, types, ranges and
+//! Parameter table (docs/m1/m1_driver.md §2): `ac81d7` binds each name to its env slot; names, types, ranges and
 //! defaults come from the static definition table, ported as `param_table::PARAMS`.
 pub use crate::param_table::PARAMS;
 

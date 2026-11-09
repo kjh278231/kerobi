@@ -1,5 +1,5 @@
 """Bit-for-bit check of the probing port (crates/mip probe.rs, probe_engine.rs, conflict.rs) against Gurobi dumps of
-tools/probe_trace.js (docs/m2_red_probe.md §4). Every pass of every 4d3a1d call is replayed from its start state:
+tools/probe_trace.js (docs/m2/m2_red_probe.md §4). Every pass of every 4d3a1d call is replayed from its start state:
 conflict-graph merge (5b9aad), probe matrix and context (4d3a1d §2.3-2.7, 396a2d, 7886b), engine (4e48f7), and the
 implication export (5b88ce) plus the final merge, each compared with the dump including the work counter.
 usage: PYTHONPATH=python python tools/probe_check.py <dump_dir> [name ...]   (dumps: <dump_dir>/<name>.json)

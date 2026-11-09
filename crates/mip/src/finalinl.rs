@@ -1,5 +1,5 @@
 //! Small pieces of 3cd406's final stage: `57999f` (tiny coefficients) and the inline blocks dual fixing of empty
-//! columns and implied-integer scaling (docs/m2_spine_d.md §5.2, §5.3; docs/m2_red_final.md).
+//! columns and implied-integer scaling (docs/m2/m2_spine_d.md §5.2, §5.3; docs/m2/m2_red_final.md).
 use crate::iint::gcd_f64;
 use crate::state::{State, INF, NIL};
 use crate::Params;

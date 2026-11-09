@@ -1,6 +1,6 @@
 //! `419ffc` (PRECOVERS, timer 23): ±1 binary `<` rows with rhs = (positive terms) − 1 say "not all of these literals
 //! are true" (literal x_j for a > 0, its complement for a < 0). A row whose literal set holds another's is dropped;
-//! one that holds another's with one literal flipped loses that literal (resolution). docs/m2_red_roundend_b.md §7.
+//! one that holds another's with one literal flipped loses that literal (resolution). docs/m2/m2_red_roundend_b.md §7.
 use crate::state::{State, NIL};
 use crate::subst::sort_asc;
 use crate::Params;

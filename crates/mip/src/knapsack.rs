@@ -1,4 +1,4 @@
-//! `578fd2` knapsack row strengthening (docs/m2_red_outer_a.md §5): each `<` row of the level-1 list goes through
+//! `578fd2` knapsack row strengthening (docs/m2/m2_red_outer_a.md §5): each `<` row of the level-1 list goes through
 //! `6aec61` (the knapsack routine shared with the cut code; mode 2, PREPOWER), which may tighten coefficients and
 //! rhs, round with Chvátal–Gomory multipliers (`6b33dd`) and drop columns. Its work goes to W unscaled.
 use crate::helpers::{maxsd, minsd};

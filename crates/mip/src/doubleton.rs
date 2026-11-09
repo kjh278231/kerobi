@@ -1,4 +1,4 @@
-//! `56c80e` doubleton equation aggregation (docs/m2_red_inner.md §7): `=` rows with two entries (`566cc5`) or
+//! `56c80e` doubleton equation aggregation (docs/m2/m2_red_inner.md §7): `=` rows with two entries (`566cc5`) or
 //! whose binary spans the activity range (`569830`) define x_s = m·x_parent + o; the substitutions are chained
 //! (path compression) and applied at the end by moving the substituted columns' nodes to their root column, then
 //! duplicate columns in the touched rows are merged. No node is created and +0xd8 / free / pending stay as they

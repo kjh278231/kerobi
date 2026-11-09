@@ -1,5 +1,5 @@
 //! x87 80-bit extended arithmetic (64-bit significand, round to nearest even) for the sums Gurobi's barrier keeps
-//! in `long double`: the Kahan dot `3439d5` (compl, docs/m3_chol.md §4). Only what those sums need: double → ext,
+//! in `long double`: the Kahan dot `3439d5` (compl, docs/m3/m3_chol.md §4). Only what those sums need: double → ext,
 //! double × double → ext, ext ± ext, ext → double.
 //! shortcut: no inf/NaN or subnormal-double results (inputs that produce them fall back to f64 arithmetic);
 //! add them if a model drives the complementarity there.

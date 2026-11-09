@@ -1,8 +1,8 @@
-//! Aggregation (`519a52` around `37f484`, docs/m1_presolve_agg.md). The CSR state becomes the linked-list matrix
+//! Aggregation (`519a52` around `37f484`, docs/m1/m1_presolve_agg.md). The CSR state becomes the linked-list matrix
 //! the MIP presolve uses, up to five aggregation rounds run on it, and it goes back to gap-free CSR in list order.
 //! Later reductions and the presolved model read that order, so nodes, the free/pending lists and the +0xd8 count
 //! are simulated as the original keeps them (node addresses are not visible; list order and counts are).
-//! Deterministic work (+0x458) is added term by term in the original order (docs/m1_presolve_agg.md §10); only
+//! Deterministic work (+0x458) is added term by term in the original order (docs/m1/m1_presolve_agg.md §10); only
 //! `519a52`'s own terms skip the +0x448 multiplier.
 use super::reduce::ColTols;
 use super::sort::sort_by_key;

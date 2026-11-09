@@ -1,4 +1,4 @@
-//! `07d3ce(m, 4)`: the PDHG preconditioning (ScaleFlag 4 branch L3836–5279 plus the shared tail), docs/m3_pdhg.md §5.
+//! `07d3ce(m, 4)`: the PDHG preconditioning (ScaleFlag 4 branch L3836–5279 plus the shared tail), docs/m3/m3_pdhg.md §5.
 //! 10 Ruiz ∞-norm steps, one Pock–Chambolle (α = 1) step, clamp to [2⁻⁴⁷, 2⁴⁷] (factors are not powers of two),
 //! then a' = (r·s)·a, l/s, u/s, b·r, c·s·ω with the power-of-two objective scale ω. Row senses are not touched by
 //! `07d3ce`; D already holds '>' rows negated (σ = −1 on a and b, sense char kept), as for the barrier.

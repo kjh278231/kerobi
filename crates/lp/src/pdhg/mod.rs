@@ -1,5 +1,5 @@
 //! 05 §4 PDHG (Method=6) body `34c004`, ported against the PDHG-state oracle `tools/pdhg_oracle.py`
-//! (docs/m3_pdhg.md). Flow: preconditioning `07d3ce(m, 4)` (`scale`) → restarted reflected Halpern PDHG (`kern`).
+//! (docs/m3/m3_pdhg.md). Flow: preconditioning `07d3ce(m, 4)` (`scale`) → restarted reflected Halpern PDHG (`kern`).
 //! shortcut: Presolve=0, Crossover=0 and one thread are assumed (no presolve, no crossover, no worker threads).
 
 pub mod eval;

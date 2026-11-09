@@ -1,4 +1,4 @@
-//! LP postsolve (uncrush) `363daa`, bit for bit (docs/m1_postsolve.md). Input: the presolve records and maps, the
+//! LP postsolve (uncrush) `363daa`, bit for bit (docs/m1/m1_postsolve.md). Input: the presolve records and maps, the
 //! presolved simplex solution (x, dj, status; x/dj of the rows are slack and dual). Output: basis, x (columns, then
 //! slack) and dual (d, then y) of the original model. Only the LP simplex path (spx and basis given) is ported.
 //!
@@ -69,7 +69,7 @@ pub fn layout(r: &PostRec) -> (i64, [i64; 2]) {
             let n = entries.len() as i64;
             (r8(4 * n) + 8 * n + 0x50, [0, 0])
         }
-        // aggregation records (docs/m1_presolve_agg.md §9); the value array of type 21 is at 0x90 + Q
+        // aggregation records (docs/m1/m1_presolve_agg.md §9); the value array of type 21 is at 0x90 + Q
         PostRec::AggBound { .. } => (0x50, [0, 0]),
         PostRec::SlackCol { .. } => (0x28, [0, 0]),
         PostRec::ColRows { rows, .. } => {

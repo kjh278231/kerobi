@@ -12,7 +12,7 @@ model::postsolve::{uncrush_primal, uncrush_dual, crush_row}
 
 - 공통 뼈대(노트 12 §0.2): **상태 구조체 + 변경 추적 worklist + reduction 함수 목록 + 진척도 기반 패스 반복**.
 - LP와 MIP는 상태의 행렬 저장이 다르다(12 §3.10): LP는 CSR+CSC 쌍, MIP는 **행·열 연결 리스트**(삭제·추가가 잦음) + 필요 시 CSR 캐시. 둘 다 `PresolveState` trait로 같은 reduction을 공유할 수 있게 한다(activity, 고정, 행 삭제, 레코드 push).
-- LP 포팅(`crates/lp/src/presolve/`, 진행 기록 [m1_presolve.md](m1_presolve.md)): 삭제는 지연 방식이다. 행 CSR 항목은 열 번호 −1로, 열 CSR 항목은 행 번호 −1로 표시하고, 지운 행·열은 살아 있는 개수(`+0x60/+0x68`)를 음수로 둔다. presolved 모델(`3b0917`)은 열 CSR 순서 그대로 살아 있는 항목만 쓰고, 행·열은 원래 순서를 지킨다. 비교 오라클은 숨은 파라미터 `GURO_PAR_PRELIMIT`(reduction 호출 횟수 상한)로 reduction 하나씩 뜬다.
+- LP 포팅(`crates/lp/src/presolve/`, 진행 기록 [m1_presolve.md](m1/m1_presolve.md)): 삭제는 지연 방식이다. 행 CSR 항목은 열 번호 −1로, 열 CSR 항목은 행 번호 −1로 표시하고, 지운 행·열은 살아 있는 개수(`+0x60/+0x68`)를 음수로 둔다. presolved 모델(`3b0917`)은 열 CSR 순서 그대로 살아 있는 항목만 쓰고, 행·열은 원래 순서를 지킨다. 비교 오라클은 숨은 파라미터 `GURO_PAR_PRELIMIT`(reduction 호출 횟수 상한)로 reduction 하나씩 뜬다.
 - 결정: **LP presolve(`390989`, CSR+CSC)와 MIP presolve(`3cd406`, 연결 리스트)를 원본대로 따로 포팅한다.** 같은 reduction이어도 두 상태의 순회 순서가 달라 결과 모델이 다르다. 하나로 합치면 P0(presolved 모델 일치)를 맞출 수 없다. LP presolve는 M1, MIP presolve는 M2다.
 
 ## 2. 상태(`PresolveState`)
@@ -120,7 +120,7 @@ pub struct PostsolveStack { recs: Vec<PostRec> /* push 순서, 역순 순회 */,
 - **crush** `crush_row(row in 원래 공간) -> Option<row in presolved 공간>`: 열마다 그 열을 없앤 레코드를 찾아 1은 상수로, 2는 대입, 9/10은 아핀, 3/16/18/24/25는 **실패**. 사용자 cut/lazy에 쓴다. `PreCrush=1`이면 실패를 일으키는 reduction(9 outer, 17, 18, 25, derived)을 끈다.
 - 재시작 presolve는 presolved 모델을 다시 presolve하므로 스택이 **계층**으로 쌓인다(`Vec<PostsolveStack>`, 바깥부터 안쪽 순).
 
-## 6. LP uncrush와 "big uncrush violation" (노트 12 §3.9, 확인 결과는 [m1_postsolve.md](m1_postsolve.md))
+## 6. LP uncrush와 "big uncrush violation" (노트 12 §3.9, 확인 결과는 [m1_postsolve.md](m1/m1_postsolve.md))
 
 기본 LP(simplex) 경로(`0c3d0d`)는 다음 순서로 진행한다.
 1. presolved 모델을 simplex로 푼다.
@@ -167,7 +167,7 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 
 ## 10. LP presolve 포팅 결과 (M1, `crates/lp/src/presolve/`)
 
-위 §3의 표는 MIP·LP 공통 설계다. LP presolve `390989`가 실제로 부르는 순서와 가드는 아래와 같다(기본 파라미터 기준, 근거와 세부는 [m1_presolve.md](m1_presolve.md), 집계는 [m1_presolve_agg.md](m1_presolve_agg.md)). 호출마다 숨은 파라미터 `GURO_PAR_PRELIMIT` 카운트가 1 늘고, 한도에 닿으면 마무리 없이 모델 생성으로 간다. 이 카운트가 reduction 하나씩 비교하는 오라클이다.
+위 §3의 표는 MIP·LP 공통 설계다. LP presolve `390989`가 실제로 부르는 순서와 가드는 아래와 같다(기본 파라미터 기준, 근거와 세부는 [m1_presolve.md](m1/m1_presolve.md), 집계는 [m1_presolve_agg.md](m1/m1_presolve_agg.md)). 호출마다 숨은 파라미터 `GURO_PAR_PRELIMIT` 카운트가 1 늘고, 한도에 닿으면 마무리 없이 모델 생성으로 간다. 이 카운트가 reduction 하나씩 비교하는 오라클이다.
 
 | 단계 | 함수 | 포트 | 가드 | 레코드 |
 |---|---|---|---|---|
@@ -190,12 +190,12 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 - 일치(Netlib 64, 기본값): presolved 모델 **64/64**, PRELIMIT 체크포인트 64개 × k = 1..100(카운트가 긴 beaconfd·ganges·scrs8은 154까지) 전부 일치. uncrush(`363daa`)는 오라클 `pre_after`를 넣은 비트 비교로 59/59(Gurobi가 uncrush를 부르지 않는 5개 제외).
 - 작업량(+0x458, μ = +0x448)과 예산: 생성자(`3a484d`/`5118e6`/`534a8b`, 문제 유형 스캔 포함)와 reduction마다 원본 순서로 더한다. 기본값 Netlib 64/64 비트 일치(PRELIMIT 단계별 증분도 전부, `m1_presolve.md` §0). 예산 = +0xd8·1000 + 1e7(Presolve 1이면 ·200, PrePasses > 1이나 Presolve 2면 1e100), 기준 0. `390989` 자신의 `3ba9de` 세 곳은 호출 동안 예산을 1e100으로 바꿔 두어 정지하지 않는다. 정지는 reduction 안의 `3ba9de`(`47c445` 100바퀴마다, `3ff744` 쌍 1만 번마다, `551cc0`)가 PRELIMIT을 −1로 바꾸고 뒤 한도 검사가 멈추는 식이다. Netlib은 예산의 34% 이하라 정지가 없다.
 - 생성자 `5118e6`의 문제 유형(+0x08): 계수가 모두 +1이고 rhs가 1(유형 6), 또는 모두 −1이고 `>= 1` 행(유형 5)이며 열이 모두 0/1 열이면 행이 함의하는 ub를 푼다(유형 6은 항목 있는 비고정 열, 유형 5는 비용 > 0.001인 열). 뒤의 `50de61`이 그 bound를 1.002로 다시 잡는다. 유형 1·4는 옮기지 않았다(assert).
-- 대칭 검출 일치: Netlib 21개 호출 local_f4·작업량 21/21, MIPLIB small 38개 LP 완화 presolved 38/38, 합성 대칭 LP 7/7([m1_presolve_symmetry.md](m1_presolve_symmetry.md)). 모든 행·열이 지워지면 Gurobi는 빈 모델을 `Presolved`라는 이름으로 낸다.
+- 대칭 검출 일치: Netlib 21개 호출 local_f4·작업량 21/21, MIPLIB small 38개 LP 완화 presolved 38/38, 합성 대칭 LP 7/7([m1_presolve_symmetry.md](m1/m1_presolve_symmetry.md)). 모든 행·열이 지워지면 Gurobi는 빈 모델을 `Presolved`라는 이름으로 낸다.
 - 포팅하지 않은 것(지름길, 코드에 `shortcut:` 주석): 문제 유형 1·4, 빈 결과 모델의 목적 상수, Presolve=2 전용 reduction(`51f5ab`, `51aba6`), 집계 prescan 특수 경로, `503985`(n ≥ 10000), Params에 없는 숨은 파라미터(PREPARALLEL, PRESPLITROWS, MarkowitzTol, GURO_PAR_ZERO, INTBASIS 등)는 기본값 가정.
 
 ## 11. MIP presolve 포팅 결과 (M2, `crates/mip/`)
 
-`3cd406`(P0 경로 `999702` → `3db19d` → `3db15a` → `3cd406`)을 원본대로 따로 옮겼다(§1의 결정). 근거와 세부는 [m2_presolve.md](m2_presolve.md)와 해독 노트 `m2_spine_b/c/d.md`(제어 흐름), `m2_red_*.md`(reduction별).
+`3cd406`(P0 경로 `999702` → `3db19d` → `3db15a` → `3cd406`)을 원본대로 따로 옮겼다(§1의 결정). 근거와 세부는 [m2_presolve.md](m2/m2_presolve.md)와 해독 노트 `m2_spine_b/c/d.md`(제어 흐름), `m2_red_*.md`(reduction별).
 
 - **LP를 풀지 않는다**: Frida coverage(`tools/presolve_cov.js`)로 38개 모델에서 simplex·barrier·LP 드라이버가 0회임을 확인했다. cut 모듈과 겹치는 것은 `838543`이 쓰는 mod-k 보조 루틴뿐이다.
 - **상태**: `3a484d`의 MIP 분기는 처음부터 행·열 연결 리스트(노드 0x20바이트, free/pending 풀)다. 추적기 목록 getter(`538f30`/`5399fc`/`53af0f`/`53a487`)는 연결 리스트 분기(죽은 노드도 세고 작업량 상수가 CSR과 다름)를 쓴다.
@@ -204,5 +204,5 @@ uncrush_dual ; QCPDual이면 KKT로 쌍대 계산
 - **모델 생성**: 살아 있는 행·열을 원래 순서로, presolve가 붙인 행·열만 `R<번호>`/`C<번호>` 이름. [0,1]에 남은 정수 열은 'B'. MPS 라이터는 `MARKER INTORG/INTEND`와 BV를 쓴다.
 - **레코드**(MIP 배치는 LP와 다르다. 예: type 1은 16바이트 {열, 값}): 1, 2, 4, 9, 10, 11, 14, 19, 24, 25. sparsify(`470936`)는 MIP에서 레코드를 남기지 않는다(type 22는 LP 전용).
 - **일치**(miplib_small 38개, 기본 파라미터, Threads=1): presolved 모델 38/38, PRELIMIT sweep 모든 변화점 일치, 레코드 바이트 38/38, 함수별 덤프 비교 전 호출 일치.
-- **도구**: `tools/prelimit_sweep.py`·`sweep_check.py`(PRELIMIT 단계 비교), `tools/mip_state_dump.js`·`mip_dump_check.py`(한 reduction 단위 상태 오라클), `mip_rec_check.py`(레코드), `presolve_cov.js`(coverage), `docs/m2_param_offsets.tsv`(파라미터 오프셋·기본값, 도구용).
+- **도구**: `tools/prelimit_sweep.py`·`sweep_check.py`(PRELIMIT 단계 비교), `tools/mip_state_dump.js`·`mip_dump_check.py`(한 reduction 단위 상태 오라클), `mip_rec_check.py`(레코드), `presolve_cov.js`(coverage), `docs/m2/m2_param_offsets.tsv`(파라미터 오프셋·기본값, 도구용).
 - **지름길**(코드에 `shortcut:` 주석, 모두 38개에서 0회): Q·QC·SOS·PWL·NL·일반 제약 블록, MIP 문맥(재시작 presolve), B&B 범위의 하위 풀이(`490ab6` 행 1개 모델, `5307f4` 성분별 sub-MIP, `522aa2` 블록 풀이: 건너뜀), 노드 풀 증설 `3b85ea`(assert), 기본값에서 꺼진 파라미터 경로(PREDUALSLACK, PRESUBSUME, PRECLIQSUB, AGEQ, PREPOWER 등). 기본값에서 지나지 않은 성공 경로 일부(covers 적용, type 24 바이트, `56b360`)는 해독대로만 넣고 오라클로 확인하지 못했다.

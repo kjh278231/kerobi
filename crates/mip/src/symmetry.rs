@@ -1,5 +1,5 @@
 //! Symmetry detection in MIP presolve: `5577ba` (linked-list state, sixth argument 1) and `551cc0` with variable
-//! types (docs/m2_red_roundend.md §7). Copied from the LP port (crates/lp/src/presolve/symmetry.rs, LP modules are
+//! types (docs/m2/m2_red_roundend.md §7). Copied from the LP port (crates/lp/src/presolve/symmetry.rs, LP modules are
 //! private) and extended with the MIP branches: the column CSR is built from the column lists, columns start split by
 //! type, integer columns and rows are split by their integer entry counts, and when the hash refinement stalls with
 //! integer columns `5507cb` may individualize them. Cell ids, queue order, sort tie order, the random stream and the

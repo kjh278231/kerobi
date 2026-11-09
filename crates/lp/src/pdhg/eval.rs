@@ -1,5 +1,5 @@
 //! PDHG evaluation `354824`, restart test `350614`, restart and primal weight `350723`, power iteration `351b1f`
-//! (docs/m3_pdhg.md §6). One thread: every cross-thread reduction is `0.0 + v` (sum) or `maxsd(0.0, v)` (max).
+//! (docs/m3/m3_pdhg.md §6). One thread: every cross-thread reduction is `0.0 + v` (sum) or `maxsd(0.0, v)` (max).
 use super::kern::{dot, red8, Mat, Vecs};
 use super::scale::Scaled;
 
@@ -18,7 +18,7 @@ fn dist2(a: &[f64], b: &[f64], peel_b: usize) -> f64 {
     })
 }
 
-/// The scalar part of the PDHG state P (offsets in docs/m3_pdhg.md §6) plus its vectors.
+/// The scalar part of the PDHG state P (offsets in docs/m3/m3_pdhg.md §6) plus its vectors.
 #[derive(Clone, Debug, Default)]
 pub struct State {
     pub it: i64,      // P[0]   all iterations incl. power iterations (PDHG_ITRCNT, PDHGIterCount)

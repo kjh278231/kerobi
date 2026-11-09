@@ -1,4 +1,4 @@
-//! `3e39a6` column pass (docs/m2_red_inner.md §2): nearly fixed columns are fixed, empty columns go to their
+//! `3e39a6` column pass (docs/m2/m2_red_inner.md §2): nearly fixed columns are fixed, empty columns go to their
 //! cost-preferred bound, singleton columns are substituted out with their row (mode 0) or turn their `=` row into
 //! an inequality (mode 1/2), and the rest get dual fixing (`3e2b99`).
 use crate::helpers::{maxsd, minsd};

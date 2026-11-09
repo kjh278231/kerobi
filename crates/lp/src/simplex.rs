@@ -1194,7 +1194,7 @@ impl<'a> Engine<'a> {
         }
     }
 
-    /// Primal simplex `0478d3` (docs/m1_primal_spec.md): composite phase 1 (basic costs c ∓ M on rows below/above
+    /// Primal simplex `0478d3` (docs/m1/m1_primal_spec.md): composite phase 1 (basic costs c ∓ M on rows below/above
     /// their bounds, M = BigM 1e6, dual tolerance τ1·M), partial-list CHUZC (mode 0, `06dfff`), Harris ratio test in
     /// phase 2 (`55f68`) and the phase-1 test `54eef`, bound flips of the entering column; with no candidate in phase 1
     /// the composite costs are dropped (pure phase 1, τ1 = 1e-9) before infeasibility is declared, and optimality is

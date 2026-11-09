@@ -1,4 +1,4 @@
-//! `57627e` implied integers and integer equations (docs/m2_red_outer_a.md §4), and `a7bea8` (gcd of doubles).
+//! `57627e` implied integers and integer equations (docs/m2/m2_red_outer_a.md §4), and `a7bea8` (gcd of doubles).
 use crate::state::{State, INF, NIL};
 use crate::Params;
 
@@ -20,7 +20,7 @@ fn igcd(a: i32, b: i32) -> i32 {
     hi
 }
 
-/// `a7bea8(n, v)`: gcd of |v| (docs/m2_red_outer_a.md §4.2); 0 when there is none within its tolerances.
+/// `a7bea8(n, v)`: gcd of |v| (docs/m2/m2_red_outer_a.md §4.2); 0 when there is none within its tolerances.
 pub(crate) fn gcd_f64(v: &[f64]) -> f64 {
     let n = v.len();
     if n == 0 {

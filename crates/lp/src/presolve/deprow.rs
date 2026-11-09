@@ -1,7 +1,7 @@
 //! `47c445` (PreDepRow): linearly dependent rows, as presolve calls it (mode 1, then mode 2), on the CSR state
 //! (state+0xe0 = 1). Mode 1 eliminates the `=` rows (`515b74` builds the matrix), mode 2 the free columns
 //! (`516cb4`) with a Markowitz LU of its own; an `=` row left empty with |rhs'| <= 10 feastol is dropped, a free
-//! column left empty with |c'| <= 10 feastol is fixed at 0. Notes: docs/m1_presolve_deprow.md.
+//! column left empty with |c'| <= 10 feastol is fixed at 0. Notes: docs/m1/m1_presolve_deprow.md.
 use super::reduce::ColTols;
 use super::state::State;
 

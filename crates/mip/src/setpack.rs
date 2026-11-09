@@ -1,4 +1,4 @@
-//! `52be10` with `5279b5`, `528f31` and `469c12` (docs/m2_red_clique.md §5): the literal graph of ±1 binary set
+//! `52be10` with `5279b5`, `528f31` and `469c12` (docs/m2/m2_red_clique.md §5): the literal graph of ±1 binary set
 //! packing rows. A two-literal row whose pair also sits in another row is removed; a triangle through such a pair
 //! grows greedily into a clique that extends the seed row (`<`) or fixes the new literals at 0 (`=`).
 use crate::state::{Node, State, NIL};

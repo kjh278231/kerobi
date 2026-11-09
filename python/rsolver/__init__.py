@@ -297,7 +297,7 @@ class Model:
         return self._objbound if self.IsMIP and hasattr(self, "_objbound") else self.ObjVal
 
     def _driver(self, callback):
-        """Continuous model with presolve: the Rust driver (docs/m1_driver.md) runs presolve, the engine Method
+        """Continuous model with presolve: the Rust driver (docs/m1/m1_driver.md) runs presolve, the engine Method
         resolves to, uncrush and the status rules, and returns the log text."""
         import time
 

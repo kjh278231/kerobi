@@ -1,5 +1,5 @@
-//! `37f484` aggregation on the MIP state (docs/m2_red_outer_b.md §6). Copied from the LP port
-//! (crates/lp/src/presolve/agg.rs, docs/m1_presolve_agg.md; LP modules are private and crates/lp stays as it is)
+//! `37f484` aggregation on the MIP state (docs/m2/m2_red_outer_b.md §6). Copied from the LP port
+//! (crates/lp/src/presolve/agg.rs, docs/m1/m1_presolve_agg.md; LP modules are private and crates/lp stays as it is)
 //! with the MIP branches: the `53af0f` candidate list, integer columns in stage A (`377cb6`/`3773aa` with the
 //! integer row cache `local_170`, the binary VUB pattern), stage B's cls-0 columns, two-term rows and slack upper
 //! bound, stage C's integer guards and pair folding, MIP records (`39b9e0` MIP branch, type 11), no stage D.

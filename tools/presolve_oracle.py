@@ -1,4 +1,4 @@
-"""Presolve oracle (docs/m1_presolve.md): Gurobi's presolved model under chosen parameters, to isolate reductions.
+"""Presolve oracle (docs/m1/m1_presolve.md): Gurobi's presolved model under chosen parameters, to isolate reductions.
 
 Turning reductions off one by one (hidden GURO_PAR_PRE* parameters are settable) gives a presolved model per stage
 that the port must reproduce byte for byte. Same base settings as tools/parity.py (Threads=1, WorkLimit 60).

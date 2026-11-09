@@ -350,7 +350,7 @@ impl Lu {
         lu
     }
 
-    /// Sparse Markowitz kernel of `036ade` (L546–2570, docs/m1_notes.md §6.7) on the rows and positions the singleton
+    /// Sparse Markowitz kernel of `036ade` (L546–2570, docs/m1/m1_notes.md §6.7) on the rows and positions the singleton
     /// phases leave: column singletons, then row singletons, then a Markowitz search over count buckets (LIFO
     /// circular lists, rotated heads), threshold `tol·max < |a|` on the searched line's max, ties to the larger
     /// |a|/max; multipliers a/v, updates a − l·u and fill −(l·u) dropped under ZERO, fill prepended to its lists.

@@ -1,5 +1,5 @@
 #!/bin/bash
-# BFRT input/output corpus (docs/m1_notes.md §8.5): first 50 calls of 1c35c5 per Netlib LP into bench/oracle/bfrt_io.
+# BFRT input/output corpus (docs/m1/m1_notes.md §8.5): first 50 calls of 1c35c5 per Netlib LP into bench/oracle/bfrt_io.
 # Gurobi runs one process at a time; retries while another process holds the license guard.
 cd "$(dirname "$0")/.."
 for d in bench/gurobi_dual_nopre/*/; do

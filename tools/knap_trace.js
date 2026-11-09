@@ -1,4 +1,4 @@
-// `6b5e11` (exact binary knapsack, docs/m2_red_outer_a.md §5.3) inputs and outputs per call, for the port's unit test.
+// `6b5e11` (exact binary knapsack, docs/m2/m2_red_outer_a.md §5.3) inputs and outputs per call, for the port's unit test.
 // Records k, ind, val, rhs, W, ac, b0 at entry and return (doubles as hex bits). Gurobi: one process (tools/gurun.sh).
 // usage: node tools/knap_trace.js <model> <out.json>
 const FRIDA = process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida';

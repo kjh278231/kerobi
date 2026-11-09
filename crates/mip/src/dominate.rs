@@ -1,4 +1,4 @@
-//! `4030c9` dominated columns (docs/m2_red_outer_b.md §7): on a column snapshot (CSR of the `53c422` columns and
+//! `4030c9` dominated columns (docs/m2/m2_red_outer_b.md §7): on a column snapshot (CSR of the `53c422` columns and
 //! its row transpose `7722f`), a column j that can move in one direction only against the rows it shares with
 //! column k fixes k (phase 1) or itself (phase 2) at a bound, checked by `40a768`.
 use crate::driver::Timer;

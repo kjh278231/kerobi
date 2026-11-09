@@ -1,4 +1,4 @@
-//! `46a62d` with `4694fe` (docs/m2_red_clique.md §6): binary rows whose entries all fill the row alone are
+//! `46a62d` with `4694fe` (docs/m2/m2_red_clique.md §6): binary rows whose entries all fill the row alone are
 //! normalized to ±1 clique rows; rows two hops away are re-linked (binaries by |a| descending first); then each short
 //! clique row is removed when another clique row holds it, or extended by the literals that conflict with all of it,
 //! and clique rows inside the extended row are removed.

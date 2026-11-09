@@ -1,4 +1,4 @@
-//! `36ee92` node arena compression (docs/m2_red_outer_b.md §4): `510953` copies the live matrix to CSR, `514031`
+//! `36ee92` node arena compression (docs/m2/m2_red_outer_b.md §4): `510953` copies the live matrix to CSR, `514031`
 //! lays the linked lists out again from it.
 use crate::state::{Node, State, NIL};
 use crate::Params;

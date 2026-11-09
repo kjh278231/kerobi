@@ -1,5 +1,5 @@
 //! 05 §2.6 Supernodal LDLᵀ of `A Θ Aᵀ + diag(θ_slack)` and the solve `2ee6c5`, bit for bit as Gurobi computes
-//! them with Threads=1 (docs/m3_chol.md; prototype tools/proto/bar_chol.py, checked against `tools/bar_oracle.py
+//! them with Threads=1 (docs/m3/m3_chol.md; prototype tools/proto/bar_chol.py, checked against `tools/bar_oracle.py
 //! --chol --solve`). Same three calls as `normal::Factor`.
 //!
 //! Factor, per block c (width w, rows R, `2d8ee5`): assembly (`32d72f` or `32e116` order) into a dense w×w buffer
@@ -460,7 +460,7 @@ mod tests {
     use crate::barrier::{normal, ordering, setup};
 
     /// The supernodal factor and the scalar LDLᵀ (normal.rs) solve the same systems (bit equality with Gurobi is
-    /// checked against the oracle: tools/proto/bar_chol.py, docs/m3_chol.md §2).
+    /// checked against the oracle: tools/proto/bar_chol.py, docs/m3/m3_chol.md §2).
     #[test]
     fn agrees_with_scalar_ldl() {
         for nm in ["afiro", "sc50a", "adlittle", "fit1p"] { // full row rank (degen2: dropped pivots, other null-space part)

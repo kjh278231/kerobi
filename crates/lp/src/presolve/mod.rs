@@ -1,5 +1,5 @@
 //! 03 LP presolve (`390989`), ported stage by stage against the presolve oracle (tools/presolve_oracle.py,
-//! docs/m1_presolve.md). Entry from `Model.presolve()` is `999702`, which names the result `<name>_pre`.
+//! docs/m1/m1_presolve.md). Entry from `Model.presolve()` is `999702`, which names the result `<name>_pre`.
 //! Every reduction call counts toward GURO_PAR_PRELIMIT; reaching it jumps straight to model generation, which
 //! is what makes each reduction checkable on its own.
 // Ported comparisons keep the original's form (`!(a < b)` differs from `a >= b` on NaN), and loops index several

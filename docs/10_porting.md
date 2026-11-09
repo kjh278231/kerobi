@@ -128,7 +128,7 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 
 ## 9. 인수인계 메모 (2026-11-06 6차 갱신, 다음 세션용)
 
-작업 방식은 **재구성 + 오라클 비트 검증**이다. 의사코드와 objdump로 함수의 규칙을 읽고, Python 프로토타입(`tools/proto/`)을 Gurobi 오라클과 비트 단위로 맞춘 뒤 Rust로 옮긴다. 의사코드를 줄 단위로 옮겨 쓰는 방식은 호출 인자 손실과 SIMD 조각 때문에 쓰지 않는다. 세부 해독 기록은 [m1_notes.md](m1_notes.md)에 있다.
+작업 방식은 **재구성 + 오라클 비트 검증**이다. 의사코드와 objdump로 함수의 규칙을 읽고, Python 프로토타입(`tools/proto/`)을 Gurobi 오라클과 비트 단위로 맞춘 뒤 Rust로 옮긴다. 의사코드를 줄 단위로 옮겨 쓰는 방식은 호출 인자 손실과 SIMD 조각 때문에 쓰지 않는다. 세부 해독 기록은 [m1_notes.md](m1/m1_notes.md)에 있다.
 
 ### 9.1 찾아낸 규칙
 
@@ -136,14 +136,14 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 - **simplex 작업 배열**: `a' = σ·a·r·s`, `b' = σ·b·r`, `c' = c·s·objscale`, bound는 `/s`다. σ는 `>` 행에서 −1이다. slack은 계수 +1이고 범위는 `<` 행 [0, 1e30], `=` 행 [0, 0]이다.
 - **스케일링**: LP·dual의 자동 경로는 ScaleFlag 3이다. 열·행 패스를 최대 10회 하고, 2의 거듭제곱으로 내리며, 한 패스에 2배까지만 바꾼다. 일찍 끝나면 bound 없는 마지막 열 패스를 한 번 더 한다. 목적 스케일은 스케일된 |c|로 위로만 키운다.
 - **초기 상태**: 구조 열은 `c_j < 0`이면 상한(−2), 아니면 하한(−1)이다. `u − l ≤ FIXTOL`이면 고정(−4)이다. slack은 기저다.
-- **시작 기저**(`1e7531` crash, [m1_notes §5.1](m1_notes.md)): `=` 행을 행 길이로 불안정 정렬(`ab6a5f`)한 순서로 1패스(행 원소가 모두 미표시·`a ≥ 0.1`인 행에 `c/a` 최소 열, 행 열들의 비용 소거) → 2패스(비용 0·자유 열, 길이 < 6) → 3패스(위반 부등식 행에 쌍대 비율 검사). 첫 분해가 기저 위치를 **구조 열은 singleton 피벗 순서, 그 뒤 slack은 행 순서**로 다시 매긴다. 비기저 자유 열은 −3.
+- **시작 기저**(`1e7531` crash, [m1_notes §5.1](m1/m1_notes.md)): `=` 행을 행 길이로 불안정 정렬(`ab6a5f`)한 순서로 1패스(행 원소가 모두 미표시·`a ≥ 0.1`인 행에 `c/a` 최소 열, 행 열들의 비용 소거) → 2패스(비용 0·자유 열, 길이 < 6) → 3패스(위반 부등식 행에 쌍대 비율 검사). 첫 분해가 기저 위치를 **구조 열은 singleton 피벗 순서, 그 뒤 slack은 행 순서**로 다시 매긴다. 비기저 자유 열은 −3.
 - **LU·FTRAN**: 반복 0 기저 64개가 모두 singleton 단계만으로 삼각화된다. L과 U 해법이 모두 열 방향이라, 비트는 피벗 순서와 승수 `a/피벗`, ZERO(1e-13) 건너뛰기로만 정해진다.
 - **BTRAN·쌍대값**: y는 c_B 전체를 조밀로 넣은 BTRAN으로 60/60 맞는다(Gurobi가 실제로 조밀로 넘기는지는 미확인). U는 singleton 분해에서 대각뿐이고, 조밀 Lᵀ는 단계 내림차순으로 `|v| > ZERO`일 때만 Lᵀ 행에 흩뿌린다(프로토타입의 열 내적 순서로도 같은 비트). `d_j = c_j − Σ a_ij·y_i`를 열 순서로 계산하고, 상한 비기저는 부호를 뒤집는다. **고정(−4) 구조 열은 `d_j = c_j` 그대로**다(행 방향 비기저 사본에 없음, 347/347 확인). 고정 slack은 계산한다.
-- **DSE 초기 가중치**: 정확한 노름 `‖e_pᵀB⁻¹‖²`이다. e_p의 BTRAN 출력은 반복 0에 항상 **희소**이고 행 번호로, Uᵀ는 단계 오름차순, Lᵀ는 단계 공간에서 LU+0x140 = −1(m < 250 등)이면 단계 내림차순 힙, 아니면 Lᵀ DAG 레벨 버킷 순서(버킷 안은 넣은 순서, Lᵀ 행 원소는 단계 내림차순)로 나온다. 제곱합(`1bae9c` L1971–2110)은 그 출력 순서로, 7개 이하면 차례로, 아니면 누산기 8개를 **((0+2)+(4+6)) + ((1+3)+(5+7))**로 합친 뒤(asm `0xc3a26`, 디컴파일러 표시는 틀림) 나머지를 차례로 더한다. 세부는 [m1_notes §6.6](m1_notes.md).
+- **DSE 초기 가중치**: 정확한 노름 `‖e_pᵀB⁻¹‖²`이다. e_p의 BTRAN 출력은 반복 0에 항상 **희소**이고 행 번호로, Uᵀ는 단계 오름차순, Lᵀ는 단계 공간에서 LU+0x140 = −1(m < 250 등)이면 단계 내림차순 힙, 아니면 Lᵀ DAG 레벨 버킷 순서(버킷 안은 넣은 순서, Lᵀ 행 원소는 단계 내림차순)로 나온다. 제곱합(`1bae9c` L1971–2110)은 그 출력 순서로, 7개 이하면 차례로, 아니면 누산기 8개를 **((0+2)+(4+6)) + ((1+3)+(5+7))**로 합친 뒤(asm `0xc3a26`, 디컴파일러 표시는 틀림) 나머지를 차례로 더한다. 세부는 [m1_notes §6.6](m1/m1_notes.md).
 - **오라클 주의**: 자유 열이 있으면 dual 초기화가 자유 열 피벗 루프 안에서 SIMPLEX 콜백을 부른다. 그래서 capri, perold, pilot4, tuff는 반복 0 스냅숏이 xB 계산 전이다. 반복 1 이후로 검증한다.
 - **Gurobi 실행**: `gurobi_guard.pth` 때문에 Gurobi는 한 프로세스만 돈다. 다른 세션이 쓰는 중이면 "Gurobi is already running" 오류가 사라질 때까지 기다렸다가 다시 시도한다(5초 간격 재시도 래퍼를 쓰면 편하다).
 
-- **dual 기본 경로(반복 단위)**: Presolve=0·Threads=1의 기본 Method는 64개 모두 dual과 반복 수가 같다(기본 = dual). 기본 ratio test는 SIMPLEXPWRATIO(spx+0x468) = 1이라 **BFRT `1c35c5`**다(Harris `1c137f`는 0일 때). 상수: PIVOTTOL 3e-8, BIGTOL 3e-6, MarkowitzTol 2⁻⁷, PerturbValue 0.0002, 재분해 주기 max(20, ⌊m^0.7⌋). 세부는 [m1_notes §8](m1_notes.md).
+- **dual 기본 경로(반복 단위)**: Presolve=0·Threads=1의 기본 Method는 64개 모두 dual과 반복 수가 같다(기본 = dual). 기본 ratio test는 SIMPLEXPWRATIO(spx+0x468) = 1이라 **BFRT `1c35c5`**다(Harris `1c137f`는 0일 때). 상수: PIVOTTOL 3e-8, BIGTOL 3e-6, MarkowitzTol 2⁻⁷, PerturbValue 0.0002, 재분해 주기 max(20, ⌊m^0.7⌋). 세부는 [m1_notes §8](m1/m1_notes.md).
 - **CHUZR은 점수 최대가 아니다**: 시작 모드(P+0x40 = 0)는 `15d2d`가 만든 순서 목록(P+0x10, 길이 P+0x3c)을 커서(spx+0x2c4)부터 걸으며 표시(spx+0x280)가 0인 첫 위치를 고른다. 목록이 소진되면 다시 만든다. 위반²/w 최대로 고르면 2/60만 맞는다.
 - **인공 bound와 BFRT**: dual은 ±1e30을 실제 bound로 쓴다. sc50a 반복 0에서 Gurobi는 비율 0인 열 15를 인공 상한 1e30으로 flip하고(기울기 2.1e30 − 1e30 > 0) 열 3을 넣는다. 1e30 규모의 보폭 뒤에는 x_B를 새로 계산해야 반올림 잔여(1e14–1e16)가 남지 않는다.
 - **가중치 폭주**: DSE 가중치가 inf/NaN이 되면 CHUZR가 위반 행을 놓쳐 실행불가능한 x를 OPTIMAL로 낸다(grow22, fit2p에서 실제로 발생). 1e30 초과·NaN이면 1로 되돌린다(Gurobi도 같은 규칙).
@@ -170,7 +170,7 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 
 ### 9.3 다음 단계 (순서대로)
 
-이번 세션(4–5차)에 한 것: 64개 피벗 경로 오라클과 첫 분기 비교, 자유 열 루프, 재분해 주기·위치 재번호, 행 사본·α 순서, SHIFT/FLIP, RNG·GLOBAL 섭동·발동 조건·COSTSCALE, BTRAN 갱신 경로 순서, FT 갱신 원본 형태, CHUZR 행 비용 갱신(`9eb18`)·flip 단계 표시만·재분해 뒤 목록 새로 만들기·P+0x48, 나가는 변수 상태(선택 방향), Markowitz 특이 오판 수정(정상 기저에 slack을 끼우던 결함), 원본식 primal과 primal↔dual 교대, 비스케일 재풀이. 세부는 [m1_notes §8.8–8.11](m1_notes.md), 명세는 §8.9(`48d5f`)·§8.10(FT·BTRAN/FTRAN)·[m1_primal_spec.md](m1_primal_spec.md).
+이번 세션(4–5차)에 한 것: 64개 피벗 경로 오라클과 첫 분기 비교, 자유 열 루프, 재분해 주기·위치 재번호, 행 사본·α 순서, SHIFT/FLIP, RNG·GLOBAL 섭동·발동 조건·COSTSCALE, BTRAN 갱신 경로 순서, FT 갱신 원본 형태, CHUZR 행 비용 갱신(`9eb18`)·flip 단계 표시만·재분해 뒤 목록 새로 만들기·P+0x48, 나가는 변수 상태(선택 방향), Markowitz 특이 오판 수정(정상 기저에 slack을 끼우던 결함), 원본식 primal과 primal↔dual 교대, 비스케일 재풀이. 세부는 [m1_notes §8.8–8.11](m1/m1_notes.md), 명세는 §8.9(`48d5f`)·§8.10(FT·BTRAN/FTRAN)·[m1_primal_spec.md](m1/m1_primal_spec.md).
 
 방법: `bench/pathcmp.txt`에서 첫 분기가 이른 모델을 골라 `tools/proto/alphacmp.py <name>`(BFRT 입력 α 순서·값)와 `tools/spx_oracle.py … --iters`+`tools/proto/statecmp.py`(x_B·d·w·CHUZR 목록·행/열 비용·LU 갱신 수·섭동 카운터를 변수 기준 비트 비교)로 원인을 좁힌다. 목록 순서 차이는 정렬 집합부터 의심한다(Gurobi 집합을 넣으면 셸 정렬이 그대로 재현됨).
 
@@ -191,7 +191,7 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 | `bench/oracle/btran0/` | Gurobi 내부 BTRAN(`9e288`)을 ctypes로 불러 뜬 e_p 출력 | `tools/proto/btran_oracle.py` |
 | `bench/oracle/path1/` | 작은 LP 12개의 반복별 진입·이탈·flip 수(dual) | `tools/path_oracle.py <dir> --method 1 name…` |
 | `bench/lp_check.csv`(만들 예정) | 91개 × Method 정확성·반복 수·시간 | `tools/lp_check.py` |
-| `docs/m1_notes.md` §5–8 | crash, LU, BTRAN·DSE, CHUZR 목록, BFRT 해독 기록 | |
+| `docs/m1/m1_notes.md` §5–8 | crash, LU, BTRAN·DSE, CHUZR 목록, BFRT 해독 기록 | |
 | `bench/oracle/path1/` | **64개 전부**의 dual 피벗 경로(반복별 진입·이탈) | `tools/path_oracle.py bench/oracle/path1 --method 1 $(ls bench/gurobi_dual_nopre)` |
 | `bench/pathcmp.txt` | 64개 첫 분기점(우리 대 Gurobi) | `tools/proto/pathcmp.py all`(m1check.sh가 만든다) |
 | `bench/lp_check_ext.csv`, `bench/lp_check_m0.csv` | 밖 27개 Method 1, 91개 Method 0 정확성 | `tools/lp_check.py --methods 1|0 --csv …` |

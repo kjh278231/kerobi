@@ -1,5 +1,5 @@
 //! 04 §5 Dual pricing state (P = spx+0x478) and CHUZR: the ordered candidate list of mode 0 (`2896a3`, rebuilt by
-//! `15d2d`), the infeasibility marks spx+0x280 and the BTRAN-cost score weights (docs/m1_notes.md §8.2–8.4).
+//! `15d2d`), the infeasibility marks spx+0x280 and the BTRAN-cost score weights (docs/m1/m1_notes.md §8.2–8.4).
 //! Mode 1 (Full pricing) keeps an unordered list of positions whose stored score P+0x18 is at least the threshold
 //! P+0x30; marks then mean bit 0 = listed, bit 1 = feasible.
 use crate::common::sort_desc;

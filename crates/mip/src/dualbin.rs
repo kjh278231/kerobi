@@ -1,4 +1,4 @@
-//! 3cd406's inline dual binarization candidate scan (PREDUALCONVTOBIN, 0x3b697d–0x3b723e, docs/m2_spine_b.md §5.4).
+//! 3cd406's inline dual binarization candidate scan (PREDUALCONVTOBIN, 0x3b697d–0x3b723e, docs/m2/m2_spine_b.md §5.4).
 use crate::state::{State, NIL};
 use crate::Params;
 

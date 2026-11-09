@@ -1,6 +1,6 @@
 # M3 PDHG 인수인계 메모
 
-목표(G4, [11 §4](11_progress.md)): Method=6, Presolve=0, Threads=1, Crossover=0에서 PDHG 본체를 Gurobi와 같게 만든다. 방식은 [10 §9](10_porting.md)의 재구성 + 오라클 비트 검증이다(barrier와 같은 방식, [m3_barrier.md](m3_barrier.md)). 함수 이름은 `PRIVATE…`의 뒤 6자리, 주소는 file offset이다.
+목표(G4, [11 §4](../11_progress.md)): Method=6, Presolve=0, Threads=1, Crossover=0에서 PDHG 본체를 Gurobi와 같게 만든다. 방식은 [10 §9](../10_porting.md)의 재구성 + 오라클 비트 검증이다(barrier와 같은 방식, [m3_barrier.md](m3_barrier.md)). 함수 이름은 `PRIVATE…`의 뒤 6자리, 주소는 file offset이다.
 
 ## 1. 호출 범위와 외부 의존 (2026-11-05, `re/decomp/callgraph.tsv`)
 

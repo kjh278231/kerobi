@@ -2,7 +2,7 @@
 
 MIP presolve 드라이버 `3cd406`의 라운드·패스·내부 루프 부분이다. 앞(L731–1696 prelude), 뒤(L4400–6450 라운드 끝, L6582–9600 마지막 단계)는 다른 노트가 맡는다. 근거는 디컴파일(`re/decomp/c/003b0530_PRIVATE00000000003cd406.c`)과, 디컴파일이 인자·분기를 놓친 곳은 `objdump`(주소는 파일 오프셋 = text vaddr)다. 런타임 근거는 기본 파라미터 38개 모델의 호출 순서(`seq/*.txt`), 호출 지점 coverage(`seq/callsites.tsv`), PRELIMIT 스윕(`sweep/<model>/sweep.tsv`)이다. 이 노트의 숫자 상수는 모두 `.rodata`에서 직접 읽었다.
 
-표기: `st` = presolve 상태(Ghidra `local_150`, rsp+0xb48), `env` = Ghidra `lVar119`(레지스터 rbp), `w` = 작업량 카운터 포인터(`param_5`, rsp+0xa80. `3a484d`의 4번째 인자로 들어가 `st+0x458`에도 같은 포인터가 들어 있다), `tr` = 추적기 `st+0x3d8`, `μ` = `st+0x448`(작업 배수). 파라미터 이름은 `docs/m2_param_offsets.tsv`를 따른다(그 표에 없는 것: env+0x2458 INFBOUND, env+0x2460 FeasibilityTol, env+0x2640 PreSOS1BigM, env+0x2648 PreSOS2BigM, env+0x26c8 GURO_PAR_AGEQ(기본 −1), env+0x2728 sub-solve 깊이(최상위 0)).
+표기: `st` = presolve 상태(Ghidra `local_150`, rsp+0xb48), `env` = Ghidra `lVar119`(레지스터 rbp), `w` = 작업량 카운터 포인터(`param_5`, rsp+0xa80. `3a484d`의 4번째 인자로 들어가 `st+0x458`에도 같은 포인터가 들어 있다), `tr` = 추적기 `st+0x3d8`, `μ` = `st+0x448`(작업 배수). 파라미터 이름은 `docs/m2/m2_param_offsets.tsv`를 따른다(그 표에 없는 것: env+0x2458 INFBOUND, env+0x2460 FeasibilityTol, env+0x2640 PreSOS1BigM, env+0x2648 PreSOS2BigM, env+0x26c8 GURO_PAR_AGEQ(기본 −1), env+0x2728 sub-solve 깊이(최상위 0)).
 
 ## 1. 개요
 

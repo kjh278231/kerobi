@@ -1,4 +1,4 @@
-// Presolve coverage oracle (docs/m2_presolve.md §1): run Gurobi Model.presolve() on each model (Threads=1, WorkLimit 60,
+// Presolve coverage oracle (docs/m2/m2_presolve.md §1): run Gurobi Model.presolve() on each model (Threads=1, WorkLimit 60,
 // as tools/parity.py) under Frida and record, per model, how often each hooked libgurobi function ran, a backtrace of
 // the first call of every non-presolve function, and the sequence of direct calls made by the entry function.
 // usage: node tools/presolve_cov.js <entry short id, e.g. 3cd406> <out.json> [name ...]   (default: the 38 MIPLIB models)

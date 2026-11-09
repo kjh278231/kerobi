@@ -1,5 +1,5 @@
 //! 04 §5 Dual ratio test with bound flipping (`1c35c5`), rules reproduced on Gurobi's own inputs/outputs
-//! (docs/m1_notes.md §8.6, `tools/proto/bfrt.py`: entering column 3094/3112, flip list 3098/3112).
+//! (docs/m1/m1_notes.md §8.6, `tools/proto/bfrt.py`: entering column 3094/3112, flip list 3098/3112).
 //! Candidates come in the original α-vector order: structural columns ("front"), then slacks ("back").
 //! shortcut: the front order is ascending column index; the original scatters the row-wise copy (`0a4109`), so
 //! exact ties can still break differently.

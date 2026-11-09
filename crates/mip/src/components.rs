@@ -1,4 +1,4 @@
-//! `52cba4` connected components and `521497` biconnected blocks (docs/m2_red_final.md §3). For linear models both
+//! `52cba4` connected components and `521497` biconnected blocks (docs/m2/m2_red_final.md §3). For linear models both
 //! searches add no work; they act only through a sub-solve (`5307f4` / `522aa2` → `98b671`), which is not ported.
 use crate::state::{State, NIL};
 use crate::Params;

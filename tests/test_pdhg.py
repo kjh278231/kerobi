@@ -1,4 +1,4 @@
-"""M3 PDHG: Method=6, Presolve=0, Crossover=0 against Gurobi (bench/gurobi_pdhg_nopre, docs/m3_pdhg.md). No Gurobi."""
+"""M3 PDHG: Method=6, Presolve=0, Crossover=0 against Gurobi (bench/gurobi_pdhg_nopre, docs/m3/m3_pdhg.md). No Gurobi."""
 import csv, gzip, json, os, subprocess, sys
 from pathlib import Path
 

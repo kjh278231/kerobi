@@ -1,4 +1,4 @@
-//! Optimize header log (`c23877` step C, docs/m1_driver.md §3): "Optimize a model with …", fingerprint, `a8aa6a`
+//! Optimize header log (`c23877` step C, docs/m1/m1_driver.md §3): "Optimize a model with …", fingerprint, `a8aa6a`
 //! ("Model has …"), `a8a3b4` ("Variable types …", MIP only) and `a9a78e` (coefficient statistics from `a71757`).
 use rsolver_model::mps_write::{c_exp, fmt_num};
 use rsolver_model::Model;

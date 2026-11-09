@@ -1,5 +1,5 @@
 //! Pass-0 symmetry detection of LP presolve: `5577ba` (state+0xe0 = 1, sixth argument 0) and `551cc0`, LP path
-//! (docs/m1_presolve_symmetry.md). For an LP only the outcome is used: local_f4 > 0, a partition of rows and
+//! (docs/m1/m1_presolve_symmetry.md). For an LP only the outcome is used: local_f4 > 0, a partition of rows and
 //! columns that `54d420` verifies as equitable, turns automatic PreDepRow off. Rows and columns are split by type
 //! and values (`549df5`), then by random hashes over the coefficient keys (`54ad3b`, `54e0c4`, `54e5eb`) until
 //! nothing changes. Cell ids, queue order, sort tie order, the random stream and the work all follow the original,

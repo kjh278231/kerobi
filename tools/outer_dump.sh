@@ -1,5 +1,5 @@
 #!/bin/bash
-# outer_dump.sh <out dir> [model ...]: dump every call of the outer-pass group A reductions (docs/m2_red_outer_a.md)
+# outer_dump.sh <out dir> [model ...]: dump every call of the outer-pass group A reductions (docs/m2/m2_red_outer_a.md)
 # with tools/mip_state_dump.js into <out dir>/<model>_<fn>.json, for tools/mip_dump_check.py. Default models: the
 # 38 MIPLIB ones (tools/parity.py). Existing non-empty files are kept. FNS overrides the function list.
 set -u

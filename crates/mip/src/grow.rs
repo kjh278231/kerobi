@@ -1,4 +1,4 @@
-//! `3bbf87` / `3bde19`: new columns / rows at the end of the state (docs/m2_red_outer_a.md §3.5), with the tracker
+//! `3bbf87` / `3bde19`: new columns / rows at the end of the state (docs/m2/m2_red_outer_a.md §3.5), with the tracker
 //! extensions `535d61` / `536369`. Used by `3ff744`'s column aggregation; `594c0c` (PRESS2MIP) calls them too.
 use crate::state::{State, INF, NIL};
 

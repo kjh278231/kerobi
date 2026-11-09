@@ -1,4 +1,4 @@
-"""Compare the Rust PDHG state with Gurobi's, callback by callback (docs/m3_pdhg.md §3).
+"""Compare the Rust PDHG state with Gurobi's, callback by callback (docs/m3/m3_pdhg.md §3).
 
 usage: python tools/pdhg_cmp.py <oracle.jsonl[.gz]> <dump.jsonl> [--all]
   oracle: tools/pdhg_oracle.py <model> <oracle.jsonl> --vec          (Gurobi, needs the license)

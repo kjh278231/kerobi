@@ -1,6 +1,6 @@
 # M2 MIP presolve 작업 노트 (`3cd406`)
 
-MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolve.md)로 옮긴다. 작업 방식은 LP presolve([m1_presolve.md](m1_presolve.md))와 같다: 재구성 + 오라클 비트 검증, 단계 오라클은 `GURO_PAR_PRELIMIT`.
+MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](../03_presolve.md)로 옮긴다. 작업 방식은 LP presolve([m1_presolve.md](../m1/m1_presolve.md))와 같다: 재구성 + 오라클 비트 검증, 단계 오라클은 `GURO_PAR_PRELIMIT`.
 
 ## 0. 현재 상태 (2026-11-06)
 
@@ -11,7 +11,7 @@ MIP presolve 포팅 중에 알아낸 사실. 확정된 내용은 [03](03_presolv
 | (3) MIP postsolve 레코드 | **충족**. `PostRec`(type 1, 2, 4, 9, 10, 11, 14, 19, 24, 25), `tools/mip_rec_check.py`로 `3b0917` 시점 레코드 목록을 Gurobi 원시 바이트와 비교 38/38 |
 | (4) clippy 0, 테스트, 문서 | **충족**. `cargo clippy --release --workspace --all-targets` 0, `cargo test --release --workspace` 통과, pytest 37 passed·1 xfailed. 03 §11, 이 메모, 해독 노트 `m2_spine_{b,c,d}`·`m2_red_*` |
 
-운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만. 크레이트 수준의 파라미터 표(이름·기본값·범위)는 G5(`m1-lp-driver`)가 만든다. `docs/m2_param_offsets.tsv`는 오라클·도구용이고, `crates/mip`에는 MIP presolve가 읽는 필드만 가진 `Params`(LP `presolve::Params`처럼 `from_pairs`)만 둔다(2026-11-06 오케스트레이터 지시). 사용량 한도 때문에 하위 에이전트는 동시에 3개 이하로 두고, 끝난 것은 병합한 뒤 worktree·브랜치를 지운다(같은 날 지시). 토큰 여유가 없어 이후 하위 에이전트는 **한 번에 하나만** 돌린다(2026-11-06 사용자 지시). roundend(대칭 끝, `594c0c` 시작 직전)와 outer-c(two_rows 등)는 일시 중지했고, 각 worktree의 커밋·작업 파일에서 이어 간다.
+운영 규칙: 이 브랜치(`m2-mip-presolve`)에만 커밋, `crates/lp` 기존 파일 수정 금지(MIP 코드는 새 크레이트 `crates/mip`), `docs/11_progress.md` 수정 금지, 공유 `.venv` 설치 금지(`tools/build_local.sh` + `PYTHONPATH=$PWD/python`), Gurobi는 한 프로세스(`tools/gurun.sh`). 하위 에이전트는 브랜치를 붙인 worktree에서만. 크레이트 수준의 파라미터 표(이름·기본값·범위)는 G5(`m1-lp-driver`)가 만든다. `docs/m2/m2_param_offsets.tsv`는 오라클·도구용이고, `crates/mip`에는 MIP presolve가 읽는 필드만 가진 `Params`(LP `presolve::Params`처럼 `from_pairs`)만 둔다(2026-11-06 오케스트레이터 지시). 사용량 한도 때문에 하위 에이전트는 동시에 3개 이하로 두고, 끝난 것은 병합한 뒤 worktree·브랜치를 지운다(같은 날 지시). 토큰 여유가 없어 이후 하위 에이전트는 **한 번에 하나만** 돌린다(2026-11-06 사용자 지시). roundend(대칭 끝, `594c0c` 시작 직전)와 outer-c(two_rows 등)는 일시 중지했고, 각 worktree의 커밋·작업 파일에서 이어 간다.
 
 ### 진행 중인 하위 작업 (2026-11-06 시작)
 | worktree / 브랜치 | 일 | 산출물 |
@@ -106,7 +106,7 @@ Frida로 38개 모델의 기본값 `Model.presolve()`(Threads=1, WorkLimit 60, `
 | `tools/prelimit_sweep.py <out> [name ...]` | 모델마다 PRELIMIT k = 0, 1, 2, …의 presolved 모델. 앞 k와 달라진 k의 MPS만 남기고 `sweep.tsv`(k, 해시, 바뀜)를 쓴다. 기본값 결과와 40번 연달아 같으면 멈춘다. 38개 약 2분 |
 | `node tools/mip_state_dump.js <model> <함수> <n번째\|all> <out.json> [Param=Value ...]` | 상태 오라클. `5b84b1(env, state+0x3f0)`에서 상태 포인터를 잡고, 지정 함수의 n번째 호출 진입·복귀 때 연결 리스트(행·열 순서 그대로 [행, 열, 값]), lb/ub/obj/vtype, rhs/sense, 개수, activity, 카운터(+0x3f8부터 14개), 작업량, 레코드 목록(state+0x370, push 순서로 [type, 원시 바이트, rec 주소, data 주소])을 JSON으로 덤프한다. MIP type 1 레코드는 16바이트 {열 i32, 패딩, 값 f64}로 LP(쌍대 정보 포함)와 다르다(glass4). reduction 하나를 따로 맞출 때 쓴다(진입 상태를 넣고 돌려 복귀 상태와 비교). glass4 `3b0917` 진입에서 행 390·열 316·nnz 1803이 presolved 모델과 같음을 확인 |
 | `PYTHONPATH=python python tools/sweep_check.py <sweep> [-v] [name ...]` | 포트를 sweep의 모든 변화점 k와 기본값 결과에 비교해, 모델마다 첫 불일치 k와 그 k가 포트 추적(`CoreModel.mip_presolve_trace`)에서 어느 reduction인지 알려 준다. Gurobi 불필요 |
-| `docs/m2_param_offsets.tsv` | `ac81d7` 등록 표의 파라미터 415개(이름, env 오프셋)와 getParamInfo 기본값·범위 |
+| `docs/m2/m2_param_offsets.tsv` | `ac81d7` 등록 표의 파라미터 415개(이름, env 오프셋)와 getParamInfo 기본값·범위 |
 | `tools/presolve_oracle.py <dir> --param GURO_PAR_PRELIMIT=k <name ...>` | LP와 같은 PRELIMIT 체크포인트. `3cd406`도 reduction 호출마다 카운터(local_68)를 올리고 state+0x1dc와 비교해 마무리(`LAB_004b2415`)로 간다(L1651) |
 
 확인(2026-11-06): `presolve_oracle.py` 기본값 출력이 `bench/gurobi/<이름>/presolved.mps.gz`와 38/38 바이트 단위로 같다. PRELIMIT k = 0, 1, 2 출력은 38/38이 Presolve=0 출력과 같고, k = 3에서 2개, 5에서 18개, 10에서 29개가 갈라진다. 기본값과 같은 것은 k = 0에서 5개(presolve가 아무것도 안 바꾸는 모델)다.

@@ -1,4 +1,4 @@
-//! Helpers shared by MIP presolve reductions (docs/m2_red_inner.md §1): tracker marks over the lists, bound changes
+//! Helpers shared by MIP presolve reductions (docs/m2/m2_red_inner.md §1): tracker marks over the lists, bound changes
 //! with incremental activities, column fixing, postsolve record pushes, implied column bounds. Other reductions
 //! (clique, probing, ...) call these instead of copying them.
 use crate::post::PostRec;

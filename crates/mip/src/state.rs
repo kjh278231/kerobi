@@ -1,5 +1,5 @@
 //! MIP presolve state: `3a484d(model, mipctx, 1, work)`, the branch with state+0xfc = 1 and state+0xe0 = 0, which
-//! keeps the matrix as linked lists of 0x20-byte nodes instead of the CSR of `5118e6` (docs/m2_presolve_state.md).
+//! keeps the matrix as linked lists of 0x20-byte nodes instead of the CSR of `5118e6` (docs/m2/m2_presolve_state.md).
 //! Field comments give the original state offset. Removal is lazy as in the LP port: a removed node stays in both
 //! lists with column -1, removed rows and columns get a negative live count. Model generation (`3b0917`) walks the
 //! column lists, so node order is what decides the presolved model's entry order.

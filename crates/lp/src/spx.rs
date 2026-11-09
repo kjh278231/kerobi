@@ -1,5 +1,5 @@
 //! 04 §3 Simplex workspace arrays (original spx at model+0xe0): scaled column-wise matrix with slack columns implied,
-//! costs, bounds and right-hand side. Conventions verified bit-for-bit on 64 LPs (docs/m1_notes.md §4).
+//! costs, bounds and right-hand side. Conventions verified bit-for-bit on 64 LPs (docs/m1/m1_notes.md §4).
 use crate::scaling::{scale_flag3, Scaling};
 use rsolver_model::{Model, INFINITY};
 

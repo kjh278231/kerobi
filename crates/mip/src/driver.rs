@@ -1,5 +1,5 @@
 //! 3cd406 after the prelude (decompiled L1696-9600): phases (at most 2) of rounds (at most 5) of passes, each pass an
-//! inner reduction loop then the outer reductions (docs/m2_spine_b.md), the round-end stage (m2_spine_c.md) and the
+//! inner reduction loop then the outer reductions (docs/m2/m2_spine_b.md), the round-end stage (m2_spine_c.md) and the
 //! final stage (m2_spine_d.md). Every PRELIMIT count sits where Gurobi has it, including the ones made without a
 //! reduction call. Blocks for Q, QC, SOS, PWL, NL and a MIP context (restart presolve) are left out: linear models
 //! from `Model.presolve()` only.

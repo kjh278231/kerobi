@@ -1,5 +1,5 @@
 //! `423e35(st, env, T10, probe mode)` (PREPROBE0): one-level probing of the [0, 1] integer columns on two bound
-//! copies (docs/m2_red_roundend_b.md §2). x = 0 and x = 1 are propagated through the column's rows only (`426093`,
+//! copies (docs/m2/m2_red_roundend_b.md §2). x = 0 and x = 1 are propagated through the column's rows only (`426093`,
 //! `427846`); an infeasible side fixes x, bounds implied by both sides are tightened, a `<` row redundant on one
 //! side gets its x coefficient strengthened (an `=` row fixes x), and columns fixed on both sides are fixed.
 use crate::driver::Timer;

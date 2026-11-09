@@ -1,4 +1,4 @@
-"""Ordering oracle (docs/m3_ordering.md): at the MESSAGE callback for "Ordering time" (printed by the ordering
+"""Ordering oracle (docs/m3/m3_ordering.md): at the MESSAGE callback for "Ordering time" (printed by the ordering
 driver 300f28 before 304736 frees the AA' pattern), dump the AA' graph B+0x110/B+0x118, the chosen permutation
 F+0x30, nnz(L) F+0x38, ops F+0x60, and the original A (model data D = model+0xe8, before 2e9086 permutes its rows).
 Then call Gurobi's ordering kernel 309dd0 directly for the baseline (mode 3) and the ND trials (mode 1, seeds 11..15)

@@ -1,4 +1,4 @@
-"""MIP root LP check (docs/m2_root.md): presolve each miplib_small model with rsolver, solve the root LP
+"""MIP root LP check (docs/m2/m2_root.md): presolve each miplib_small model with rsolver, solve the root LP
 (crates/mip root.rs) and compare with Gurobi's "Root relaxation: objective %.6e, %.0f iterations" line in
 bench/gurobi/<name>/log.txt (default parameters, Threads=1). Needs no Gurobi.
 usage: PYTHONPATH=python python tools/mip_root_check.py [--original] [name ...]

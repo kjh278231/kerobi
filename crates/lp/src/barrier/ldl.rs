@@ -1,7 +1,7 @@
 //! 05 §2.6 Normal-equation factorization `M = L D Lᵀ` on a fixed (already permuted) pattern.
 //! shortcut: up-looking scalar LDLᵀ (Davis' LDL) instead of Gurobi's supernodal kernel (`31c54b` → `2d8ee5`,
 //! `32af6a`, MKL DGEMM/DTRSM), so results agree to rounding, not bit for bit; port the supernodal kernel when a
-//! BarIterCount divergence is traced to factorization rounding (docs/m3_barrier.md §4 step 4).
+//! BarIterCount divergence is traced to factorization rounding (docs/m3/m3_barrier.md §4 step 4).
 
 /// Symbolic structure plus numeric values of `L` (unit lower triangular, column-wise) and `D`.
 #[derive(Clone, Debug)]

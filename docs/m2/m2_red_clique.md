@@ -1,6 +1,6 @@
 # M2 clique 묶음 해독 (`45885d`, `451bed`, `52be10`, `46a62d`)
 
-Gurobi 13.0.3 MIP presolve(`3cd406`) 바깥 패스의 clique 묶음. 포팅 전 해독 노트(2026-11-06). 상태 규약은 [m1_presolve.md](m1_presolve.md) §5, 연결 리스트 노드는 [m1_presolve_agg.md](m1_presolve_agg.md) §1.1(노드 0x20바이트 {f64 값, i32 행 @+8, i32 열 @+0xc(−1 = 죽음), 행 안 다음 @+0x10, 열 안 다음 @+0x18}, 행 머리 +0x178, 열 머리 +0x180)를 따른다.
+Gurobi 13.0.3 MIP presolve(`3cd406`) 바깥 패스의 clique 묶음. 포팅 전 해독 노트(2026-11-06). 상태 규약은 [m1_presolve.md](../m1/m1_presolve.md) §5, 연결 리스트 노드는 [m1_presolve_agg.md](../m1/m1_presolve_agg.md) §1.1(노드 0x20바이트 {f64 값, i32 행 @+8, i32 열 @+0xc(−1 = 죽음), 행 안 다음 @+0x10, 열 안 다음 @+0x18}, 행 머리 +0x178, 열 머리 +0x180)를 따른다.
 
 표기: `W`는 작업량 `*(state+0x458)`, `μ`는 `state+0x448`. `W += x·c·μ`는 `W = ((x as f64 · c) · μ) + W`이다(덧셈은 항목마다 따로, 적힌 순서대로). `ft` = FeasibilityTol(env+0x2460, 1e-6), `INF` = env+0x2458(1e30), `itol` = IntFeasTol(env+0x2468, 1e-5), `ZERO` = GURO_PAR_ZERO(env+0x2498, 1e-13). `T` = 100·ft. `act_max[r]` = +0x90(max activity − rhs, 유한 부분), `inf_max[r]` = +0x70, `act_min[r]` = +0x98, `inf_min[r]` = +0x78. `rc` = 행 개수 +0x60, `cc` = 열 개수 +0x68, `vt` = +0x150. 리터럴 `l ≥ 0`은 x_l, `l < 0`은 x_{−1−l}의 여(complement). `var(l)` = l ≥ 0이면 l, 아니면 −1−l.
 
@@ -738,7 +738,7 @@ Python 모델(`$S/clq/f52/m52.py`)을 `mip_state_dump.js`의 52be10 진입 상�
 | `f8`(local_f8), `best`(local_100) | m int | 확장 행 고르기 목록, 이번 행에서 고른 행 목록 |
 | state+0x1b0 | 포인터 배열 | 단계 3 정렬 scratch(쓰고 0으로 지움) |
 
-리스트 연산은 [m1_presolve_agg.md](m1_presolve_agg.md) §2.3 어휘를 쓴다: "행 압축" = 죽은 노드를 행 리스트에서 떼기(개수 변화 없음), "열 압축" = 열 리스트의 죽은 노드를 pending으로(+0x188++, +0xd8−−), "새 노드" = +0x1a0 free 목록에서(+0x198−−, +0xd8++). 이 함수의 새 노드는 **열 리스트 맨 앞, 행 리스트 맨 끝**에 붙는다(행 r의 마지막으로 훑은 노드 뒤). free가 0이면 `3b85ea(env, st, max(3000, m))`(기본값에서는 안 돎).
+리스트 연산은 [m1_presolve_agg.md](../m1/m1_presolve_agg.md) §2.3 어휘를 쓴다: "행 압축" = 죽은 노드를 행 리스트에서 떼기(개수 변화 없음), "열 압축" = 열 리스트의 죽은 노드를 pending으로(+0x188++, +0xd8−−), "새 노드" = +0x1a0 free 목록에서(+0x198−−, +0xd8++). 이 함수의 새 노드는 **열 리스트 맨 앞, 행 리스트 맨 끝**에 붙는다(행 r의 마지막으로 훑은 노드 뒤). free가 0이면 `3b85ea(env, st, max(3000, m))`(기본값에서는 안 돎).
 
 ### 6.3 알고리즘
 

@@ -1,4 +1,4 @@
-//! `5a04fc(st, env)` smart disaggregation (PRESMARTDISAGG >= 2, docs/m2_red_roundend_b.md §6): `<` rows that force
+//! `5a04fc(st, env)` smart disaggregation (PRESMARTDISAGG >= 2, docs/m2/m2_red_roundend_b.md §6): `<` rows that force
 //! one binary literal ("literal rows"), grouped by literal; a row whose big binary entries reach literals that
 //! PRESMARTDISAGG or more literal rows share would be disaggregated through a new row and column (`3bde19`, `3bea24`).
 use crate::state::{State, NIL};

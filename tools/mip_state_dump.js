@@ -1,4 +1,4 @@
-// MIP presolve state oracle (docs/m2_presolve.md §2a): run Gurobi Model.presolve() on one model under Frida and dump
+// MIP presolve state oracle (docs/m2/m2_presolve.md §2a): run Gurobi Model.presolve() on one model under Frida and dump
 // the 3cd406 presolve state (linked-list matrix, bounds, types, rows, activities, counters, work) at entry and return
 // and the postsolve record list (type + raw data bytes, push order) of the n-th call of a chosen function, so one reduction can be checked in isolation (load "before", run, compare "after").
 // usage: node tools/mip_state_dump.js <model name | .mps/.lp path> <fn short id> <call no. (1-based) | all> <out.json> [Param=Value ...]

@@ -1,4 +1,4 @@
-//! `3e5363` XOR / parity rows (docs/m2_red_outer_a.md §2): a 3- or 4-entry `<` row with rhs 2 (±1 coefficients) or
+//! `3e5363` XOR / parity rows (docs/m2/m2_red_outer_a.md §2): a 3- or 4-entry `<` row with rhs 2 (±1 coefficients) or
 //! −1 (all −1) over binaries (one continuous [0,1] column allowed) seeds a parity system; with a pivot column whose
 //! other rows all fit the pattern, the system's rows are removed (type 25 record) and the pivot goes (or, when the
 //! pivot also sits in other rows with one sign, the rows where its sign agrees go).

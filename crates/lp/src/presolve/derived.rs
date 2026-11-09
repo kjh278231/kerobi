@@ -1,5 +1,5 @@
 //! `5b488d` (GURO_PAR_PREDERIVED): a column whose rows some value of it always satisfies, whatever its
-//! neighbours do within their bounds, leaves together with those rows (docs/m1_presolve_derived.md).
+//! neighbours do within their bounds, leaves together with those rows (docs/m1/m1_presolve_derived.md).
 use super::reduce::ColTols;
 use super::state::{ColRow, PostRec, State};
 

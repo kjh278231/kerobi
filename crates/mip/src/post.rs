@@ -1,5 +1,5 @@
 //! MIP postsolve records (state+0x370, pushed newest first; `State::post` keeps push order), in the MIP layouts of
-//! docs/m2_red_inner.md §1.6, §2.2.5, §7.2.9. A record is {i32 type, data pointer, next} followed by its data in
+//! docs/m2/m2_red_inner.md §1.6, §2.2.5, §7.2.9. A record is {i32 type, data pointer, next} followed by its data in
 //! a bump arena; only the data part is compared with Gurobi (`layout`).
 
 /// One postsolve record.

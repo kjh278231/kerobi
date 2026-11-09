@@ -1,4 +1,4 @@
-//! Probing `4d3a1d` (docs/m2_red_probe.md §2): the probe matrix and context of one pass (§2.3–2.7, with the row sort
+//! Probing `4d3a1d` (docs/m2/m2_red_probe.md §2): the probe matrix and context of one pass (§2.3–2.7, with the row sort
 //! `396a2d` and the transpose `7886b`) and the implication export to the conflict graph (§2.8.5). The engine `4e48f7`
 //! is in probe_engine.rs. These read the state and only add work; writing results back (bounds, fixings,
 //! aggregation, lifting) is the caller's (part B).
@@ -314,7 +314,7 @@ impl State {
     /// the probe matrix with sorted rows, activities, column copy, budget. `t` is 4d3a1d's timer; `w` the work.
     /// Returns the context and the candidates (columns j, rows n + probe row).
     /// shortcut: default paths only — all-row selection (st+0xf8 = 0 and mode 2), no GUB (PREGUBPROBE −1 with mode
-    /// 2), no Q/QC/SOS blocks, one thread; the others never run on the 38 models (docs/m2_red_probe.md §2.4, §1.4).
+    /// 2), no Q/QC/SOS blocks, one thread; the others never run on the 38 models (docs/m2/m2_red_probe.md §2.4, §1.4).
     pub fn probe_build(&mut self, p: &Params, a: &Args, first_pass: bool, t: &TimerView)
                        -> Result<(Box<Ctx>, Vec<i32>), Stop> {
         let (n, m) = (self.n, self.m);

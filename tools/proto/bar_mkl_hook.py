@@ -1,4 +1,4 @@
-"""Log the MKL DGEMM/DTRSM calls Gurobi's barrier makes (docs/m3_chol.md §3).
+"""Log the MKL DGEMM/DTRSM calls Gurobi's barrier makes (docs/m3/m3_chol.md §3).
 
 The MKL inside libgurobi130.so is static and has only local symbols, so the entries are patched in memory with
 `movabs rax, hook; jmp rax`. The hook copies the inputs, puts the original bytes back, calls the original, re-patches

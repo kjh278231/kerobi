@@ -1,4 +1,4 @@
-// MIP root LP oracle (docs/m2_root.md): run Gurobi's MIP solve (Threads=1, defaults) on one model under Frida until the
+// MIP root LP oracle (docs/m2/m2_root.md): run Gurobi's MIP solve (Threads=1, defaults) on one model under Frida until the
 // first MIPNODE callback and log every LP solve 5ccea5 -> {cda5b simplex | c3d0d LP driver | 98b671 | 14abfb}: the
 // method argument, warm-start basis pointers, and at each cda5b/c3d0d entry the LP model written with GRBwrite
 // (<outdir>/<k>.mps) and its environment's non-default parameters (<k>.prm), plus IterCount/ObjVal/Status at return.

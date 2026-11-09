@@ -1,4 +1,4 @@
-//! Small round-end reductions of `3cd406` (docs/m2_red_roundend.md §1–3): `58d4ce` (Q diagonal; nothing for linear
+//! Small round-end reductions of `3cd406` (docs/m2/m2_red_roundend.md §1–3): `58d4ce` (Q diagonal; nothing for linear
 //! models), `5a9282` dominated singleton columns of a row, `5ab429` cost singletons in a row with a coefficient gcd.
 use crate::state::{State, INF, NIL};
 use crate::subst::sort_asc;
@@ -6,7 +6,7 @@ use crate::Params;
 
 impl State {
     /// `58d4ce(env, st, W)`: columns with a zero Q diagonal go to `3c2f36`. Without a Q objective (+0x250 NULL) it
-    /// returns 0 at once, without work (docs/m2_red_roundend.md §1).
+    /// returns 0 at once, without work (docs/m2/m2_red_roundend.md §1).
     /// shortcut: the Q branch is not ported (linear models only); port it with Q objectives.
     pub fn q_diag(&mut self, _p: &Params) -> i32 {
         0

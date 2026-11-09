@@ -1,4 +1,4 @@
-"""Prototype of the barrier ordering (docs/m3_ordering.md): AA' pattern (303e2a), stage labels (309dd0),
+"""Prototype of the barrier ordering (docs/m3/m3_ordering.md): AA' pattern (303e2a), stage labels (309dd0),
 approximate minimum degree (3047bb) and symbolic counts (302921), checked against bench/oracle/bar_order/*.json.gz
 (tools/proto/bar_order_oracle.py).
 

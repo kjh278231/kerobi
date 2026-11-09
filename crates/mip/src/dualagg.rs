@@ -1,4 +1,4 @@
-//! `418542` dual aggregation (docs/m2_red_outer_b.md §3).
+//! `418542` dual aggregation (docs/m2/m2_red_outer_b.md §3).
 use crate::helpers::minsd;
 use crate::state::{State, NIL};
 use crate::Params;

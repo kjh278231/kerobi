@@ -1,6 +1,6 @@
 """Run one ported MIP presolve reduction on Gurobi's state at the entry of a call (tools/mip_state_dump.js output) and
 compare the result with Gurobi's state at its return: bounds, rows, activities, counts, counters, work, list orders,
-free/pending counts, tracker and new postsolve records (docs/m2_red_inner.md §9). Needs no Gurobi.
+free/pending counts, tracker and new postsolve records (docs/m2/m2_red_inner.md §9). Needs no Gurobi.
 usage: PYTHONPATH=python python tools/mip_dump_check.py <fn> <dump.json ...> [--after DUMP] [--param K=V ...]
   <fn>: 3e39a6 36ddf2 37168e 36c5cf 56f793 56c80e 36e6b6 (mode 0 or 1, whichever matches) 370047 implied_bounds
   45885d 52be10 46a62d 5a9282 5ab429 59c193 55a779 374521 5431ee 3e5363 57627e 3ff744:<mode>:<flag>

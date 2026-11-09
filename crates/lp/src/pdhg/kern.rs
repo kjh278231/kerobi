@@ -1,5 +1,5 @@
 //! PDHG per-iteration kernels (`35645c`, `3565e5`, `2f9515`/`354e23`, `35207d`, `3524ec`, `352bcb`, `3528a6`),
-//! bit-exact with Gurobi 13.0.3 on one thread (docs/m3_pdhg.md §4). All SSE2, no FMA: every product and sum rounds.
+//! bit-exact with Gurobi 13.0.3 on one thread (docs/m3/m3_pdhg.md §4). All SSE2, no FMA: every product and sum rounds.
 
 /// Reduction pattern shared by both SpMVs and the dot `2f9515`: below 8 terms (or peel + 8) a plain left-to-right sum
 /// from 0.0; otherwise `peel` scalar terms (1 when the aligned operand starts at an 8-mod-16 address), an 8-wide loop
@@ -93,7 +93,7 @@ fn minsd(a: f64, b: f64) -> f64 {
     if a < b { a } else { b }
 }
 
-/// Iterate vectors of the PDHG state P (offsets in docs/m3_pdhg.md §4).
+/// Iterate vectors of the PDHG state P (offsets in docs/m3/m3_pdhg.md §4).
 #[derive(Clone, Debug, Default)]
 pub struct Vecs {
     pub x: Vec<f64>,    // P+0x28

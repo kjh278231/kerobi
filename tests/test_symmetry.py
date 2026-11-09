@@ -1,4 +1,4 @@
-"""M1 LP presolve, pass-0 symmetry detection (`5577ba`/`551cc0`, docs/m1_presolve_symmetry.md). sym_k5 is five copies
+"""M1 LP presolve, pass-0 symmetry detection (`5577ba`/`551cc0`, docs/m1/m1_presolve_symmetry.md). sym_k5 is five copies
 of one block with a dependent `=` row each (tools/symmetry_models.py); Gurobi finds the copies symmetric (local_f4 1),
 so automatic PreDepRow is off and the rows R*_11 stay. With GURO_PAR_PRESYMMPASSES=0 there is no detection and
 `47c445` drops them. Expected models: Model.presolve() written by tools/symmetry_oracle.py --presolved. The second

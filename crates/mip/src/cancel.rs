@@ -1,4 +1,4 @@
-//! `40d2bc` nonzero cancellation (docs/m2_red_outer_b.md §5): `414c03` (mode 0) adds multiples of an `=` row to
+//! `40d2bc` nonzero cancellation (docs/m2/m2_red_outer_b.md §5): `414c03` (mode 0) adds multiples of an `=` row to
 //! rows sharing most of its columns, `414c53` (mode 1) the column counterpart (an implied-free column substituted
 //! into columns sharing most of its rows). Names follow mode 0: the pivot and the rows it cancels in are "majors"
 //! (rows; columns in mode 1), their entries "minors".

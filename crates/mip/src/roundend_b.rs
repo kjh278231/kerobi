@@ -1,4 +1,4 @@
-//! Small round-end reductions of `3cd406` after the mod-k passes (docs/m2_red_roundend_b.md): `5aaaf7` dual
+//! Small round-end reductions of `3cd406` after the mod-k passes (docs/m2/m2_red_roundend_b.md): `5aaaf7` dual
 //! fixing by row dual bounds, `579e67` residues of integer `=` rows.
 use crate::iint::gcd_f64;
 use crate::knapsack::gcd_excl;

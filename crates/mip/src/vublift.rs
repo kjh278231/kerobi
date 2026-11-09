@@ -1,4 +1,4 @@
-//! `59c193` VUB lifting (docs/m2_red_roundend.md §4): two-entry `<` rows x·a + y·b <= rhs with one binary y that are
+//! `59c193` VUB lifting (docs/m2/m2_red_roundend.md §4): two-entry `<` rows x·a + y·b <= rhs with one binary y that are
 //! tight variable upper bounds of x. Two VUBs of the same x through the same binary: one goes (same sign) or x's
 //! bound moves (opposite signs). Then VUBs of x whose binaries share a clique-like row (every binary uses up the
 //! whole slack) merge into one row over all those binaries.

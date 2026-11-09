@@ -1,4 +1,4 @@
-"""Generate crates/model/src/param_table.rs from the parameter definition table in libgurobi130.so (docs/m1_driver.md §2).
+"""Generate crates/model/src/param_table.rs from the parameter definition table in libgurobi130.so (docs/m1/m1_driver.md §2).
 
 The table is an array of 40-byte records in .data: name pointer (+0, relocated), flags (+8, int), type (+12, int:
 1 int, 2 double, 3 string, -1 marker), min/max/default (+16/+24/+32, double). It starts at "Cutoff", has public

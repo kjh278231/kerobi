@@ -1,4 +1,4 @@
-"""Prototype of Gurobi's supernodal LDL^T of A Theta A^T (docs/m3_chol.md), checked bit for bit against the factor
+"""Prototype of Gurobi's supernodal LDL^T of A Theta A^T (docs/m3/m3_chol.md), checked bit for bit against the factor
 oracle (tools/bar_oracle.py --chol).
 
 Order of operations (2d8ee5 for one block c of width w, rows R = F+0xb0[c], len = |R|):

@@ -1,7 +1,7 @@
 //! Bit-exact emulation of the two MKL calls of Gurobi's barrier factor (MKL statically linked in libgurobi130.so,
 //! AVX2 code path, alpha = beta = 1): DGEMM('T','N') and DTRSM('L','U','T','U'). fma = `f64::mul_add`, every other
 //! operation rounds separately. Checked against the real MKL on all 2660 DGEMM and 746 DTRSM shapes of the 64 bench
-//! LPs (random data, any ld and alignment; docs/m3_chol.md §3). Results do not depend on ld or buffer alignment.
+//! LPs (random data, any ld and alignment; docs/m3/m3_chol.md §3). Results do not depend on ld or buffer alignment.
 //! shortcut: AVX2 kernels only; on an AVX-512 machine Gurobi's MKL takes other kernels (and the work estimate
 //! constant differs too, mod.rs `cpu_divisor`). Port the AVX-512 paths when such a machine has to match.
 #![allow(clippy::too_many_arguments, clippy::needless_range_loop, clippy::assign_op_pattern)] // kernels as written

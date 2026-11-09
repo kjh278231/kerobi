@@ -1,4 +1,4 @@
-//! 05 §2 Barrier internal LP (docs/m3_ipm.md §1): `2ca086` → `07d3ce` (scaling) → `2e9086` (row permutation) →
+//! 05 §2 Barrier internal LP (docs/m3/m3_ipm.md §1): `2ca086` → `07d3ce` (scaling) → `2e9086` (row permutation) →
 //! `30f5b9` (free-column bounds, BARLOOSE, types, boxed u = ub − lb) → `2eb47b` (rows ascending in each column) →
 //! `312a1e` (shift by lb). Port of `lp_from_model` in tools/proto/bar_ipm.py (64/64 bit-equal to the oracle there).
 #![allow(clippy::needless_range_loop)] // index loops over parallel arrays, as in the original

@@ -1,6 +1,6 @@
-"""Barrier (Method=2, LP) prototype: Gurobi 13.0.3 interior-point rules (docs/m3_ipm.md) in numpy.
+"""Barrier (Method=2, LP) prototype: Gurobi 13.0.3 interior-point rules (docs/m3/m3_ipm.md) in numpy.
 
-Internal form (barrier workspace B, docs/m3_ipm.md §1): n columns then m slacks, A x + s = b, slack of a non-'=' row
+Internal form (barrier workspace B, docs/m3/m3_ipm.md §1): n columns then m slacks, A x + s = b, slack of a non-'=' row
 has coefficient +1 and lower bound 0, '=' rows have no slack (type 0). Column type T: bit0 lower bound (x >= 0),
 bit1 finite upper bound u (boxed columns already use u = ub - lb). Linear algebra is dense numpy (no supernodal
 LDL^T), so values match Gurobi to rounding, not bit for bit.
@@ -150,7 +150,7 @@ def _loosen(rows, lb, ub, rhs, eq):
 
 
 def lp_from_model(path, perm=None):
-    """Internal LP from the MPS file alone (docs/m3_ipm.md §1): scale_flag3 scaling, ordering row permutation,
+    """Internal LP from the MPS file alone (docs/m3/m3_ipm.md §1): scale_flag3 scaling, ordering row permutation,
     '>' rows negated, 30f5b9 (free-column bounds, BARLOOSE, types, boxed u = ub - lb), 312a1e (shift by lb)."""
     sys.path.insert(0, __import__("os").path.join(__import__("os").path.dirname(__file__), "..", "..", "python"))
     import rsolver

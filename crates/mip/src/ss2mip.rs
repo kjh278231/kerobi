@@ -1,4 +1,4 @@
-//! `594c0c` PRESS2MIP (docs/m2_red_roundend.md §6): column sets that appear in many rows with one coefficient
+//! `594c0c` PRESS2MIP (docs/m2/m2_red_roundend.md §6): column sets that appear in many rows with one coefficient
 //! (up to sign) become a new continuous column s = Σ sign·x with a defining `=` row; the occurrences keep one entry
 //! on s. Work outside `self.work` is gathered in `l70` (local_70) and added where the original flushes it.
 use crate::state::{State, NIL};

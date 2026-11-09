@@ -1,4 +1,4 @@
-"""Compare the barrier prototype (bar_ipm.py) with Gurobi on the Netlib set (docs/m3_ipm.md §5).
+"""Compare the barrier prototype (bar_ipm.py) with Gurobi on the Netlib set (docs/m3/m3_ipm.md §5).
 
 For each instance: LP data and the factor work estimates (F+0x160/0x168) from the iteration-0 oracle record
 bench/oracle/bar/it0/<name>.jsonl.gz, reference trajectory and result from bench/gurobi_bar_nopre/<name>/.

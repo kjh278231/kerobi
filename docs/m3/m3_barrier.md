@@ -1,6 +1,6 @@
 # M3 barrier 인수인계 메모
 
-목표(G3, [11 §4](11_progress.md)): Method=2, Presolve=0, Threads=1, Crossover=0에서 barrier 본체를 Gurobi와 같게 만든다. 방식은 [10 §9](10_porting.md)의 재구성 + 오라클 비트 검증이다. 함수 이름은 `PRIVATE…`의 뒤 6자리, 주소는 file offset이다.
+목표(G3, [11 §4](../11_progress.md)): Method=2, Presolve=0, Threads=1, Crossover=0에서 barrier 본체를 Gurobi와 같게 만든다. 방식은 [10 §9](../10_porting.md)의 재구성 + 오라클 비트 검증이다. 함수 이름은 `PRIVATE…`의 뒤 6자리, 주소는 file offset이다.
 
 ## 1. 호출 범위와 외부 의존 (2026-11-05, `re/decomp/callgraph.tsv`)
 
@@ -26,7 +26,7 @@
 |---|---|---|
 | `bench/gurobi_bar_nopre/` | Method=2, Presolve=0, Crossover=0, Threads=1, WorkLimit 60 (LP 64개) | `tools/parity.py capture`. 64/64 OPTIMAL. BarIterCount 7(afiro 등)–130(perold). `summary.json`의 `log.barstats`에 "Barrier statistics"(Free vars, AA' NZ, Factor NZ, Factor Ops) |
 
-- **결정성**: 같은 설정으로 다시 캡처해 비교하면 64/64가 상태·BarIterCount·Barrier statistics·BARRIER 콜백 궤적(repr) 모두 같다(`bench/gurobi_bar_determinism.csv`, 2026-11-05, 다른 에이전트가 Gurobi 오라클을 돌리는 부하 중). 따라서 corrector 수 자동 조정 등은 벽시계에 기대지 않는다고 본다(코드 확인은 docs/m3_ipm.md).
+- **결정성**: 같은 설정으로 다시 캡처해 비교하면 64/64가 상태·BarIterCount·Barrier statistics·BARRIER 콜백 궤적(repr) 모두 같다(`bench/gurobi_bar_determinism.csv`, 2026-11-05, 다른 에이전트가 Gurobi 오라클을 돌리는 부하 중). 따라서 corrector 수 자동 조정 등은 벽시계에 기대지 않는다고 본다(코드 확인은 docs/m3/m3_ipm.md).
 - 64개 모두 Dense cols가 0이다(밀집 열 검출은 m ≥ 1000에서만 돈다). Free vars가 있는 것은 4개(49, 72, 1, 2).
 - BARRIER 콜백 값(`trace.csv.gz`의 `barrier` 행)의 PRIMINF는 로그의 Primal 잔차와 다른 노름이다(afiro 반복 0: 4471 대 2.27e3).
 
@@ -42,11 +42,11 @@
 |---|---|---|
 | 0 | 호출 범위·MKL 확인, 기준값, 결정성 | 완료 |
 | 1 | 오라클(`tools/bar_oracle.py`): B 스칼라·x/y/z, F(nnz(L), ops) | 동작. 필드는 해독하면서 늘린다 |
-| 2 | ordering·symbolic(AA' NZ, Factor NZ/Ops, 순열, supernode) | **완료 64/64**(AA' NZ, 최종 순열 F+0x30, supernode 블록 F+0x78, 열 길이·행 번호, Factor NZ/Ops, F+0x48). `crates/lp/src/barrier/ordering.rs` `analyze()`, 테스트 `bench_lps_match_gurobi`(기대값 `bench/oracle/bar_order/expected.tsv`). 64개 모두 최종 순열은 기준선(mode 3, AMD + 이분할)이고 ND 후보는 채택되지 않는다. 세부는 `docs/m3_ordering.md` |
-| 3 | 표준형·초기점·잔차·반복 규칙(프로토타입) | **프로토타입 완료**(`tools/proto/bar_ipm.py`, `docs/m3_ipm.md`): 내부 LP 64/64 비트, 반복 0 점 ≤4e-12, 한 반복 1e-16~1e-9, corrector 수 K·work 타이머 정확히 같음(벽시계 아님). 전체: 상태 64/64, 목적 ≤1e-6 64/64, **BarIterCount 56/64**(±5% 안 57/64). 불일치 8개(agg, agg3, maros, degen2, bnl1, fffff800, perold, pilot4)는 해법 반올림이 쌓여 갈라짐 |
-| 4 | 수치 분해(supernodal LDLᵀ, MKL DGEMM/DTRSM) | **완료**(`chol.rs`, `mkl.rs`, `docs/m3_chol.md`): L, d, 1/d, F+0xf0, F+0x100이 Gurobi와 비트 같음(7개 인스턴스 × 반복 0–2, 원소 전부). MKL AVX2 커널을 재현해 64개에서 나온 DGEMM 2660, DTRSM 746 모양 전부 비트 일치(`tools/proto/mkl/test_all.py`로 재검증). LP 피벗 규칙은 §5 |
-| 5 | Rust 본체, Python 경로(`Method=2`), `tools/parity.py capture rsolver` | **완료**(`docs/m3_rust.md`): `barrier::solve`, `CoreModel.barrier`, `Model.optimize` Method=2 분기, BARRIER 콜백·`cbGet`, LogFile에 "Barrier statistics". F+0x160/0x168(work)는 오라클과 64/64 비트 같음(CPU 상수는 CPUID, 이 머신 AVX2 → 30). 64개 약 2초 |
-| 6 | 비트 일치(분해·해법·IPM 합 순서), 재시작 | **완료**(`docs/m3_chol.md`): 해법 `2ee6c5` dx·dy 비트, compl x87 Kahan(`f80.rs`), 잔차 8레인, μ_aff 4레인, rd 결합 순서, 재시작(`2bf1ea` L956–994, perold 반복 99·pilot4 반복 57). **BarIterCount 64/64**, 콜백 궤적 비트 동일 55/64 |
+| 2 | ordering·symbolic(AA' NZ, Factor NZ/Ops, 순열, supernode) | **완료 64/64**(AA' NZ, 최종 순열 F+0x30, supernode 블록 F+0x78, 열 길이·행 번호, Factor NZ/Ops, F+0x48). `crates/lp/src/barrier/ordering.rs` `analyze()`, 테스트 `bench_lps_match_gurobi`(기대값 `bench/oracle/bar_order/expected.tsv`). 64개 모두 최종 순열은 기준선(mode 3, AMD + 이분할)이고 ND 후보는 채택되지 않는다. 세부는 `docs/m3/m3_ordering.md` |
+| 3 | 표준형·초기점·잔차·반복 규칙(프로토타입) | **프로토타입 완료**(`tools/proto/bar_ipm.py`, `docs/m3/m3_ipm.md`): 내부 LP 64/64 비트, 반복 0 점 ≤4e-12, 한 반복 1e-16~1e-9, corrector 수 K·work 타이머 정확히 같음(벽시계 아님). 전체: 상태 64/64, 목적 ≤1e-6 64/64, **BarIterCount 56/64**(±5% 안 57/64). 불일치 8개(agg, agg3, maros, degen2, bnl1, fffff800, perold, pilot4)는 해법 반올림이 쌓여 갈라짐 |
+| 4 | 수치 분해(supernodal LDLᵀ, MKL DGEMM/DTRSM) | **완료**(`chol.rs`, `mkl.rs`, `docs/m3/m3_chol.md`): L, d, 1/d, F+0xf0, F+0x100이 Gurobi와 비트 같음(7개 인스턴스 × 반복 0–2, 원소 전부). MKL AVX2 커널을 재현해 64개에서 나온 DGEMM 2660, DTRSM 746 모양 전부 비트 일치(`tools/proto/mkl/test_all.py`로 재검증). LP 피벗 규칙은 §5 |
+| 5 | Rust 본체, Python 경로(`Method=2`), `tools/parity.py capture rsolver` | **완료**(`docs/m3/m3_rust.md`): `barrier::solve`, `CoreModel.barrier`, `Model.optimize` Method=2 분기, BARRIER 콜백·`cbGet`, LogFile에 "Barrier statistics". F+0x160/0x168(work)는 오라클과 64/64 비트 같음(CPU 상수는 CPUID, 이 머신 AVX2 → 30). 64개 약 2초 |
+| 6 | 비트 일치(분해·해법·IPM 합 순서), 재시작 | **완료**(`docs/m3/m3_chol.md`): 해법 `2ee6c5` dx·dy 비트, compl x87 Kahan(`f80.rs`), 잔차 8레인, μ_aff 4레인, rd 결합 순서, 재시작(`2bf1ea` L956–994, perold 반복 99·pilot4 반복 57). **BarIterCount 64/64**, 콜백 궤적 비트 동일 55/64 |
 
 ## 5. 결과 (2026-11-06)
 
@@ -79,7 +79,7 @@
 | 기준 | 상태 |
 |---|---|
 | (1) 상태·목적 ≤1e-6 | 64/64, 64/64 (Rust, `bench/parity_bar.csv`) |
-| (2) BarIterCount 같음 ≥90% | **56/64 (87.5%)**, 목표 58/64. 불일치: agg 17(18), agg3 17(18), degen2 11(12), degen3 15(14), fffff800 83(76), maros 20(19), perold 165(130), pilot4 112(85) (괄호 Gurobi). 첫 분기점은 `docs/m3_rust.md`, `docs/m3_ipm.md` §8 |
+| (2) BarIterCount 같음 ≥90% | **56/64 (87.5%)**, 목표 58/64. 불일치: agg 17(18), agg3 17(18), degen2 11(12), degen3 15(14), fffff800 83(76), maros 20(19), perold 165(130), pilot4 112(85) (괄호 Gurobi). 첫 분기점은 `docs/m3/m3_rust.md`, `docs/m3/m3_ipm.md` §8 |
 | (3) ordering·Factor NZ | 64/64 (`tests/test_barrier.py`, parity `bar_stats`) |
 | (4) 반복별 오라클 도구 | `tools/bar_oracle.py`(`--iters all`, `--vec`, WIP `--chol`) |
 | (5) clippy·테스트·문서 | 내 파일 경고 0(남은 4개는 M1 파일), `cargo test --workspace`·pytest 통과, docs/05 갱신 |

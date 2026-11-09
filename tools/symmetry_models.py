@@ -1,4 +1,4 @@
-"""Synthetic symmetric LPs for the pass-0 symmetry detection (docs/m1_presolve_symmetry.md).
+"""Synthetic symmetric LPs for the pass-0 symmetry detection (docs/m1/m1_presolve_symmetry.md).
 
 A random block of p columns and q rows (the first qe rows `=`, the last of them the sum of the first two, so
 `47c445` would drop it; the other rows `<` with slack at a point x0) is copied k times, side by side. The copies are

@@ -41,7 +41,7 @@ def test_iteration0_basic_solution_bitwise_equal():
 
 
 def test_iteration0_reduced_costs_and_dse_weights_bitwise_equal():
-    """BTRAN (221173 paths), d = c - A^T y, and EXACTNORM weights summed in BTRAN output order (docs/m1_notes.md §6.6)."""
+    """BTRAN (221173 paths), d = c - A^T y, and EXACTNORM weights summed in BTRAN output order (docs/m1/m1_notes.md §6.6)."""
     n_checked = 0
     for f in sorted((ROOT / "bench/gurobi_spx0").glob("*.json")):
         g = json.load(open(f))

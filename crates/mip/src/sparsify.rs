@@ -1,4 +1,4 @@
-//! `470936` sparsify (docs/m2_red_final.md §2): add a multiple of an `=` row to rows that share most of its support
+//! `470936` sparsify (docs/m2/m2_red_final.md §2): add a multiple of an `=` row to rows that share most of its support
 //! when that removes at least half the row's nonzeros; inequality rows of 10+ entries get a slack column first
 //! (removed again when untouched). MIP states keep no record (`39dded` is LP only).
 use crate::driver::Timer;

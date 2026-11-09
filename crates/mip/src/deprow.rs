@@ -1,4 +1,4 @@
-//! `47c445` PreDepRow on the linked-list state (docs/m2_red_outer_c.md §4; LP port: crates/lp/src/presolve/deprow.rs).
+//! `47c445` PreDepRow on the linked-list state (docs/m2/m2_red_outer_c.md §4; LP port: crates/lp/src/presolve/deprow.rs).
 use crate::state::State;
 use crate::Params;
 

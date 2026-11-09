@@ -1,5 +1,5 @@
 """Compare rsolver's MIP presolve with a PRELIMIT sweep (tools/prelimit_sweep.py) at every saved checkpoint k and at
-the end, and name the reduction behind the first difference (docs/m2_presolve.md §2a). Needs no Gurobi.
+the end, and name the reduction behind the first difference (docs/m2/m2_presolve.md §2a). Needs no Gurobi.
 usage: PYTHONPATH=python python tools/sweep_check.py <sweep_dir> [-v] [name ...]
 One line per model: ok, or the first k whose output differs, what count k is in the port's trace and the first
 differing line; then the number of models matching the default result.

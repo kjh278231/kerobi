@@ -1,5 +1,5 @@
 //! 03 MIP presolve (`3cd406`), entered from `Model.presolve()` through `999702` -> `3db19d` with probe mode
-//! GURO_PAR_PREPROBE, no MIP context and forSolve 0 (docs/m2_presolve.md §1, docs/m2_presolve_state.md).
+//! GURO_PAR_PREPROBE, no MIP context and forSolve 0 (docs/m2/m2_presolve.md §1, docs/m2/m2_presolve_state.md).
 //! Ported so far: the state (`3a484d` MIP branch), the prelude up to the first reduction, finishing and model
 //! generation. Every reduction call counts toward GURO_PAR_PRELIMIT; reaching it jumps to finishing, which makes each
 //! reduction checkable on its own against `tools/presolve_oracle.py --param GURO_PAR_PRELIMIT=k`.

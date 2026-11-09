@@ -1,5 +1,5 @@
 //! 05 §2.3 Ordering and symbolic analysis (`300f28`, `309dd0`, `30b0f2`, `30d189`, `3047bb`, `2e4f14`),
-//! docs/m3_ordering.md. AAᵀ pattern (`303e2a`) → stage labels with one bisection of every component > 600 rows
+//! docs/m3/m3_ordering.md. AAᵀ pattern (`303e2a`) → stage labels with one bisection of every component > 600 rows
 //! (`309dd0` mode 3) → approximate minimum degree (`3047bb`, Seed = 0) → column structures, supernodes, relaxed
 //! amalgamation, postorder and block split (`2e4f14`). Matches Gurobi's permutation, supernodes and Factor NZ/Ops
 //! on all 64 bench LPs.

@@ -1,5 +1,5 @@
-"""Barrier-state oracle (docs/m3_barrier.md §3): read Gurobi's barrier workspace B (cbdata+0x68, layout in
-docs/m3_barrier.md §3) from inside BARRIER callbacks and dump it per iteration, so a port can be compared array by
+"""Barrier-state oracle (docs/m3/m3_barrier.md §3): read Gurobi's barrier workspace B (cbdata+0x68, layout in
+docs/m3/m3_barrier.md §3) from inside BARRIER callbacks and dump it per iteration, so a port can be compared array by
 array at the first divergence.
 
 usage: python tools/bar_oracle.py <model.mps.gz> <out.jsonl> [--iters 0,1,2|all] [--vec] [--chol] [--solve]
@@ -7,14 +7,14 @@ usage: python tools/bar_oracle.py <model.mps.gz> <out.jsonl> [--iters 0,1,2|all]
 Default params: Threads=1, Method=2, Presolve=0, Crossover=0. One JSON object per recorded iteration. Doubles are
 float.hex() so they compare bit for bit. The first recorded iteration also carries the raw B block (0xa00 bytes as
 doubles), the factor structure F, found on the stack frame of the main loop 2bf1ea, and the model data D as the
-barrier sees it ("D": scaled, rows permuted, docs/m3_ipm.md §1). --vec adds per iteration the raw B block, the
+barrier sees it ("D": scaled, rows permuted, docs/m3/m3_ipm.md §1). --vec adds per iteration the raw B block, the
 history arrays and the work vectors in VEC (residuals, theta, directions of the previous iteration). --chol adds per
 iteration the numeric factor in F (chol_dump: the factor of the theta recorded one iteration earlier; at iteration 0 the
 factor of the starting theta) and, in the first record, the supernode structure it lives in. --solve calls Gurobi's
 solve 2ee6c5 in the callback on test right-hand sides (rhs_x = B+0x7a8, rhs_y = B+0x7a0) with the factor in F and the
 theta in B+0x808 (not the pair Gurobi uses, which is fine for a bit test) and records rhs and (dx, dy); the B
 workspace it overwrites (B+0x6c8) and F+0x100..0x110 are restored. It implies --chol (the factor values are needed).
-Field meanings: docs/m3_ipm.md, docs/m3_chol.md.
+Field meanings: docs/m3/m3_ipm.md, docs/m3/m3_chol.md.
 """
 import argparse, ctypes, gzip, json
 
@@ -37,7 +37,7 @@ SCALARS = {"iter": (0x40, "i"), "homog": (0x2c, "i"), "pobj": (0x130, "d"), "dob
            "rp2": (0x198, "d"), "rd2": (0x1a8, "d"), "ru2": (0x1b8, "d"), "ap_cand": (0x5c0, "d"), "ad_cand": (0x5d0, "d"),
            "shift": (0x38, "d"), "freepert": (0x248, "d"), "corr_lim": (0x29c, "i"), "restart_it": (0xf8, "i"),
            "best_it": (0x88, "i"), "dobj_best": (0x1e8, "d"), "pres_inf": (0x770, "d"), "dres_inf": (0x780, "d")}
-# B vectors (docs/m3_ipm.md §1): name -> (pointer offset, length kind). mn = m+n ordered [columns, slacks].
+# B vectors (docs/m3/m3_ipm.md §1): name -> (pointer offset, length kind). mn = m+n ordered [columns, slacks].
 VEC = {"w": (0x670, "n"), "s": (0x678, "n"), "rp": (0x7a0, "m"), "rd": (0x7a8, "mn"), "ru": (0x7b0, "n"),
        "rxz": (0x7c8, "mn"), "rws": (0x7d0, "n"), "rhsx": (0x7e0, "mn"), "theta_inv": (0x800, "mn"), "theta": (0x808, "mn"),
        "dx0": (0x6a0, "mn"), "dy0": (0x6b0, "m"), "dz0": (0x6c0, "mn"), "dw0": (0x6d0, "mn"), "ds0": (0x6e0, "mn"),
@@ -121,7 +121,7 @@ def solve_probe(Mp, B, F, m, n):
 
 
 def chol_dump(F, m, static):
-    """Factor storage (docs/m3_chol.md §1): per block start c (F+0x78[c] = w > 0) the doubles at F+0xb8[c], packed lower
+    """Factor storage (docs/m3/m3_chol.md §1): per block start c (F+0x78[c] = w > 0) the doubles at F+0xb8[c], packed lower
     triangle of the w x w diagonal block by rows then the (len-w) x w rectangle by rows (len = F+0xa8[c]);
     F+0xe0 pivots d, F+0xf0 assembled diagonal, F+0x100/0x114/0x118/0x178 scalars."""
     blocks = arr(L(F + 0x78), m, "i")

@@ -1,5 +1,5 @@
-"""PDHG-state oracle (docs/m3_pdhg.md §3): read Gurobi's PDHG state P (callback cbdata+0x68 = &local_878 of 34c004,
-layout in docs/m3_pdhg.md) inside PDHG callbacks (where = 10, every 100 iterations) and dump it, so a port can be
+"""PDHG-state oracle (docs/m3/m3_pdhg.md §3): read Gurobi's PDHG state P (callback cbdata+0x68 = &local_878 of 34c004,
+layout in docs/m3/m3_pdhg.md) inside PDHG callbacks (where = 10, every 100 iterations) and dump it, so a port can be
 compared field by field and vector by vector at the first divergence.
 
 usage: python tools/pdhg_oracle.py <model.mps.gz> <out.jsonl[.gz]> [--iters 0,93|all] [--vec] [--param Name=Value ...]

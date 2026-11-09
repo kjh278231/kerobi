@@ -465,7 +465,7 @@ impl PyCoreModel {
             None => Ok((r.status, r.obj, r.iters, r.x, r.work / 1e9)),
         }
     }
-    /// optimize() of a continuous model through the driver (docs/m1_driver.md) with Gurobi parameter (name, value)
+    /// optimize() of a continuous model through the driver (docs/m1/m1_driver.md) with Gurobi parameter (name, value)
     /// pairs; `bar_cb`/`pdhg_cb(iter, pobj, dobj, priminf, dualinf, compl)` run per BARRIER/PDHG callback. Returns
     /// (status, objective, x, IterCount, BarIterCount, PDHGIterCount, work, SIMPLEX trace rows, log text, Slack, Pi,
     /// RC).

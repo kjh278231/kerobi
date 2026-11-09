@@ -1,4 +1,4 @@
-//! `55a779` repeated coefficient patterns (docs/m2_red_roundend.md §5): long rows are cut by column class (binary,
+//! `55a779` repeated coefficient patterns (docs/m2/m2_red_roundend.md §5): long rows are cut by column class (binary,
 //! integer, continuous × coefficient sign); a class part of 20 or more entries, scaled by its smallest |a|, is a
 //! pattern. Patterns met more than once would be replaced by new aggregate columns (part 2).
 use crate::state::{State, NIL};

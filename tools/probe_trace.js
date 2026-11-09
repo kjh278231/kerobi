@@ -1,4 +1,4 @@
-// Probing oracle (docs/m2_red_probe.md): run Gurobi Model.presolve() on one model under Frida and dump, for every pass
+// Probing oracle (docs/m2/m2_red_probe.md): run Gurobi Model.presolve() on one model under Frida and dump, for every pass
 // of every `4d3a1d` call, what tools/probe_check.py needs to replay the pass in the port bit for bit:
 //   pass   (`5b9aad` call at 0x458ae9, the pass start): state (bounds, types, rows, counts, activities, row lists in
 //          list order with dead nodes, work), conflict graph *(st+0x3f0), env values, 4d3a1d arguments and timer;

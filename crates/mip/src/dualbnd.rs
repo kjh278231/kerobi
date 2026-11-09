@@ -1,4 +1,4 @@
-//! `374521` dual bounds (docs/m2_red_outer_a.md §6): the MIP form of LP `505077` + `4f84ef` in one function.
+//! `374521` dual bounds (docs/m2/m2_red_outer_a.md §6): the MIP form of LP `505077` + `4f84ef` in one function.
 //! Continuous columns whose bounds are implied by their rows treat those bounds as free; each free bound gives the
 //! column's reduced cost a sign; row duals start at y <= 0 (`<`) or free (`=`) and are tightened by those signs
 //! through a circular queue. Columns whose reduced cost then has a strict sign go to that bound; `<` rows whose dual

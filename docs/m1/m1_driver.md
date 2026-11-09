@@ -1,6 +1,6 @@
 # M1 LP 드라이버 작업 노트 (`9828a1` → `c23877` → `0c3d0d`, 파라미터 `ac81d7`)
 
-G5([11 §4](11_progress.md)) 작업 중에 알아낸 사실. 확정된 내용은 [02](02_driver.md)로 옮긴다. 브랜치 `m1-lp-driver`(worktree `rsolver-presolve`).
+G5([11 §4](../11_progress.md)) 작업 중에 알아낸 사실. 확정된 내용은 [02](../02_driver.md)로 옮긴다. 브랜치 `m1-lp-driver`(worktree `rsolver-presolve`).
 
 ## 0. 현재 상태 (2026-11-06)
 
@@ -62,7 +62,7 @@ d10b1  a7aa8f  c9457 (상태 메시지 "Optimal objective …")  d10b1 ×2  10f5
 |---|---|---|
 | 파라미터 표 | `ac81d7`(이름 → env 오프셋 등록, `accc50`/`accde4`/`accefe`) + `.data` 정의 표 | §2. `ac81d7`은 값의 저장 위치만 정하고, 이름·타입·최소·최대·기본값은 `.data`의 40바이트 레코드 표에 있다 |
 | 진입 | `9828a1`: update, 최대화 부호 반전, 비볼록 재시도 | 연속 LP에서는 `c23877` 한 번 |
-| 드라이버 | `c23877` A·C·F·H·I·K·L 단계([02 §2](02_driver.md)), 분류 `a7f063`·`a7f0ad`·`a7fb80`·`a7f923`·`a7fbf4`, 결과 속성 `a6a8da`·`a6ad23`, 상태 메시지 `c9457` | 미포팅 |
+| 드라이버 | `c23877` A·C·F·H·I·K·L 단계([02 §2](../02_driver.md)), 분류 `a7f063`·`a7f0ad`·`a7fb80`·`a7f923`·`a7fbf4`, 결과 속성 `a6a8da`·`a6ad23`, 상태 메시지 `c9457` | 미포팅 |
 | 헤더 로그 | `a8c184` 지문(포팅됨, `fingerprint.rs`), `a8aa6a`, `a9a78e` | 지문만 |
 | LP 드라이버 | `0c3d0d`: 웜스타트 판정, `c31c5`(presolve), PreDual `b9b82`, `cda5b` 두 번, uncrush `363daa` | presolve `390989`·uncrush `363daa`는 포팅됨(G2). `cda5b`는 `simplex.rs` `solve_model`(main의 simplex 에이전트 소유, 이 브랜치에서 고치지 않음). 웜스타트 입력이 없어 uncrush 뒤 재풀이는 아직 못 한다 |
 | barrier·PDHG | `2bb770`/`34f033`: presolve → 본체 → `36578f` | 본체는 포팅됨(G3·G4, Presolve=0 경로). `36578f`(비기저 해 uncrush, "big uncrush violation")는 미포팅 |
@@ -75,7 +75,7 @@ d10b1  a7aa8f  c9457 (상태 메시지 "Optimal objective …")  d10b1 ×2  10f5
 - 포팅: `tools/param_table.py <libgurobi130.so>`가 이 표를 그대로 `crates/model/src/param_table.rs`(548개, 원래 순서)로 생성한다. `params.rs`는 `Def`, 대소문자 무시 `find`, 문자열 기본값 `default_str`만 둔다. 값 저장(env 오프셋 대응)은 드라이버가 쓸 때 붙인다.
 - 기준값: `tools/param_oracle.py`가 gurobipy `getParamInfo`를 548개 이름(숨은 것 포함, 모두 받아 줌)에 대해 떠서 `bench/gurobi_params.tsv`에 둔다. Python `Model.getParamInfo`와 비교해 이름·타입·최소·최대·기본값 548/548 같다.
 - gurobipy 규약: double의 ±1e100(GRB_INFINITY)은 ±inf로 보고한다(예: Cutoff -inf..inf, 기본 inf; GURO_PAR_INFBOUND 최대 inf). 문자열의 min/max는 `''`.
-- 교차 확인: M2 브랜치의 `docs/m2_param_offsets.tsv`(`5627199`, `ac81d7` 등록 순서의 env 오프셋 416개)와 이름·최소·최대·기본값 416/416 같다. 오프셋이 필요하면 그 파일을 본다.
+- 교차 확인: M2 브랜치의 `docs/m2/m2_param_offsets.tsv`(`5627199`, `ac81d7` 등록 순서의 env 오프셋 416개)와 이름·최소·최대·기본값 416/416 같다. 오프셋이 필요하면 그 파일을 본다.
 - 표 밖 기본값은 `NodefileDir = "."` 하나다(표에는 빈 문자열). 이 값을 넣는 코드는 찾지 않았다.
 - 노트 11 §5.1의 "562개 항목"은 이 표(550 레코드, 표식 2개 포함)와 다르다. 다시 센 값은 548개다.
 - 생략: docs/01 §1.2의 정적 필드 구조체(빌드 스크립트 생성)와 `setParam` 범위 검사·오류 10007/10008. 드라이버는 이름으로 값을 읽는다.

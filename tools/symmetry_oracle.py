@@ -1,4 +1,4 @@
-"""Symmetry oracle (docs/m1_presolve_symmetry.md): patch `390989`'s call to `5577ba` (pass-0 symmetry detection)
+"""Symmetry oracle (docs/m1/m1_presolve_symmetry.md): patch `390989`'s call to `5577ba` (pass-0 symmetry detection)
 and `5577ba`'s call to `551cc0` so Python thunks see what goes in and out, then run Model.presolve() at defaults.
 usage: python tools/symmetry_oracle.py <out.json> [--param Name=Value ...] [--relax DIR] [--presolved DIR]
        [model.mps(.gz) | instance name ...]

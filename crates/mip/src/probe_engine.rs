@@ -1,4 +1,4 @@
-//! Probing engine `4e48f7(st, ctx, cand, ncand, W)` and its helpers (docs/m2_red_probe.md §3.4): candidates scored
+//! Probing engine `4e48f7(st, ctx, cand, ncand, W)` and its helpers (docs/m2/m2_red_probe.md §3.4): candidates scored
 //! and sorted (`4e28ef`, first call only), each binary tried at 0 and 1 with propagation (`4eba40` column step,
 //! `4ed528` row step, `4eb08d` queue, IntSet `ac3c8b` family), then common implications, aggregations, implication
 //! groups and redundant-row records written into the context. Reads the state (objective, cutoff, counts, scale

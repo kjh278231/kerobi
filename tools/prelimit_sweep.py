@@ -1,4 +1,4 @@
-"""PRELIMIT sweep (docs/m2_presolve.md §3): for each model, Gurobi's presolved model after each reduction call k
+"""PRELIMIT sweep (docs/m2/m2_presolve.md §3): for each model, Gurobi's presolved model after each reduction call k
 (GURO_PAR_PRELIMIT = k, Threads=1, WorkLimit 60 as tools/parity.py). Keeps <out>/<name>/<k>.mps only when it differs
 from k-1 and writes <out>/<name>/sweep.tsv (k, sha256 prefix, changed). Stops after the output has equaled the
 default result for --tail consecutive k.

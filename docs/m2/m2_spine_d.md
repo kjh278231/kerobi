@@ -3,7 +3,7 @@
 [m2_presolve.md](m2_presolve.md) §2의 "라운드 후 → 마무리" 사이 구간이다. 2026-11-06에 디컴파일(`re/decomp/c/003b0530_PRIVATE00000000003cd406.c`)과 asm(`objdump`, libgurobi130.so 13.0.3)으로 읽었다. Ghidra가 변수를 합치거나(아래 §1.3) 인자를 빠뜨린 곳(`4d3a1d`, `451195`, `490ab6`, `adf1a6`)은 모두 asm으로 정했다. 주소는 file offset(= Ghidra − 0x100000)이다.
 
 - 기호: `st` = presolve 상태(local_150, rsp+0xb48), `env`(lVar119, rsp+0xa88), `model`(param_1, rsp+0xa90), `mipctx`(param_3 = local_78, rsp+0xc20. `Model.presolve()`에서는 0), `W` = 전역 work 카운터(`*param_5` = `*(st+0x458)`, 레지스터 r14), `cnt` = PRELIMIT 카운터(local_68), `lim` = st+0x1dc(GURO_PAR_PRELIMIT, 예산 초과 시 −1), `μ` = st+0x448.
-- 파라미터 이름은 `docs/m2_param_offsets.tsv`(정수)와 노트 12·m1 노트(실수: INFBOUND 0x2458 = 1e30, FeasibilityTol 0x2460, IntFeasTol 0x2468, OptimalityTol 0x2470)를 따른다.
+- 파라미터 이름은 `docs/m2/m2_param_offsets.tsv`(정수)와 노트 12·m1 노트(실수: INFBOUND 0x2458 = 1e30, FeasibilityTol 0x2460, IntFeasTol 0x2468, OptimalityTol 0x2470)를 따른다.
 - 노드(32바이트): +0 값, +8 행, +0xc 열(음수 = 죽은 노드), +0x10 행 안 다음, +0x18 열 안 다음. 행 머리 st+0x178[i], 열 머리 st+0x180[j].
 
 ## 0. 요약

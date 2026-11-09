@@ -1,4 +1,4 @@
-//! MIP root LP relaxation (docs/m2_root.md): `5bbf7f` → `5daa82` (Mip::new) → `64da9f` (root) → `69f0bd` (LP holder,
+//! MIP root LP relaxation (docs/m2/m2_root.md): `5bbf7f` → `5daa82` (Mip::new) → `64da9f` (root) → `69f0bd` (LP holder,
 //! method) → `5ce67b` → `5ccea5` → `cda5b(lp, method, no basis)`. On all 37 miplib_small models with a root the root
 //! LP is a fresh dual simplex (method 1, no workspace, no warm basis) on the presolved model with the domain store's
 //! bounds and the column types kept (spx+0xb8). Equality-based domain initialization and optional validated

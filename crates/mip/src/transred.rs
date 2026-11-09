@@ -1,4 +1,4 @@
-//! `5431ee` binary implication graph (docs/m2_red_outer_a.md §7): two-entry `<` rows over [0,1] columns are
+//! `5431ee` binary implication graph (docs/m2/m2_red_outer_a.md §7): two-entry `<` rows over [0,1] columns are
 //! implications between literals (x_k or its complement); `53fa62` finds strongly connected components (equivalent
 //! literals), `5416c3` a topological order, and `541d96` removes rows whose implication follows from a longer path
 //! (transitive reduction).

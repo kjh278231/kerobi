@@ -1,4 +1,4 @@
-//! Inner-loop row reductions of `3cd406` (docs/m2_red_inner.md §3–6, §8): `36ddf2` row cleanup, `37168e` activity
+//! Inner-loop row reductions of `3cd406` (docs/m2/m2_red_inner.md §3–6, §8): `36ddf2` row cleanup, `37168e` activity
 //! bound tightening, `36c5cf` singleton rows, `56f793` coefficient strengthening, `36e6b6` node GC, and the
 //! round's inline implied-bound block (m2_spine_b.md §5.3). Comparisons keep the original's form and operand
 //! order (bit-exact results and work).

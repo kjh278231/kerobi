@@ -1,5 +1,5 @@
 //! 05 §2 Barrier (Method=2) body, ported against the barrier-state oracle `tools/bar_oracle.py`
-//! (docs/m3_barrier.md, docs/m3_ipm.md, docs/m3_rust.md).
+//! (docs/m3/m3_barrier.md, docs/m3/m3_ipm.md, docs/m3/m3_rust.md).
 //! Flow: ordering (`analyze`) → internal LP (`setup`) → work estimates (`2e7f38`) → IPM loop (`ipm`).
 //! shortcut: Presolve=0 and Crossover=0 are assumed (no presolve, no crossover; the last iterate is the answer).
 

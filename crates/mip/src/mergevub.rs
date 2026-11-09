@@ -1,4 +1,4 @@
-//! `5466a7` VUB merging (docs/m2_red_outer_c.md §3): for each binary y, its two-entry `<` rows that are variable
+//! `5466a7` VUB merging (docs/m2/m2_red_outer_c.md §3): for each binary y, its two-entry `<` rows that are variable
 //! bounds of another column (x ≤ l + (u−l)·y and the like) are sorted into four kinds per x; then rows of y whose
 //! other entries are all such bounded columns on one side could be merged into one.
 use crate::driver::Timer;

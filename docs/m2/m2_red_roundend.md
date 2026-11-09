@@ -283,7 +283,7 @@ if dups > 0 && !adf2be(T20) { 2부 }
 
 ## 7. `5577ba` 대칭 MIP 분기 (`0059fda0`, `551cc0` 정수 모드, `5507cb`)
 
-LP 경로는 [m1_presolve_symmetry.md](m1_presolve_symmetry.md)에 있다. 아래는 MIP 호출(`3cd406` 라운드 끝, 비율 1.01, 여섯째 인자 1)에서 달라지는 것만 적는다. 포트는 `crates/mip/src/symmetry.rs`이고, LP 포트를 복사해 MIP 분기를 더했다(LP 모듈은 private이다). 함수는 `State::symmetry(p, nodes, limit, &mut f4)`이다.
+LP 경로는 [m1_presolve_symmetry.md](../m1/m1_presolve_symmetry.md)에 있다. 아래는 MIP 호출(`3cd406` 라운드 끝, 비율 1.01, 여섯째 인자 1)에서 달라지는 것만 적는다. 포트는 `crates/mip/src/symmetry.rs`이고, LP 포트를 복사해 MIP 분기를 더했다(LP 모듈은 private이다). 함수는 `State::symmetry(p, nodes, limit, &mut f4)`이다.
 
 ### 7.1 `5577ba` MIP 분기
 - 상태 +0xe0 = 0이면 열 리스트에서 새 CSR을 만든다. 열 순서대로 살아 있는 노드(col ≥ 0)만 넣는다. 크기 합은 Σ max(col_cnt, 0)이고 **작업량은 없다**. 이어서 `551cc0(1.01, limit, env, st, n, m, beg, 0, ind, val, obj, Q, lb, ub, rhs, sense, col_cnt, row_cnt, vtype, colflag, 0, nodes, 0, …, &f4, W)`를 부른다. 여섯째 인자가 1이라 출력 배열(열 셀·순서, 행 셀·순서)을 받는다.

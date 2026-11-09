@@ -1,4 +1,4 @@
-//! optimize() driver for continuous models (docs/02_driver.md, docs/m1_driver.md): `9828a1` → `c23877` → LP
+//! optimize() driver for continuous models (docs/02_driver.md, docs/m1/m1_driver.md): `9828a1` → `c23877` → LP
 //! dispatch (`0c3d0d` simplex, `2bb770` barrier, `34f033` PDHG), each with presolve → engine → uncrush.
 pub mod header;
 
@@ -574,7 +574,7 @@ fn interior(md: &Model, p: &Params, alg: Alg, h: &mut Hooks, t0: Instant) -> Out
     }
     let mut status = if pre.is_some() { interior_status(md, p, engine_status) } else { engine_status };
     // `36578f`: no solution for 3, 4, 5, 6, 12; otherwise `365159` on the presolved solution as `7a069` hands it
-    // over (x then slack, d then y, the presolved model's space; 64/64 bitwise on the oracle, docs/m1_driver.md §8)
+    // over (x then slack, d then y, the presolved model's space; 64/64 bitwise on the oracle, docs/m1/m1_driver.md §8)
     let (x, slack, pi, rc) = if matches!(status, 3..=6 | 12) {
         (vec![], vec![], vec![], vec![])
     } else {

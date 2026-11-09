@@ -1,6 +1,6 @@
 //! `5a4d8b` / `5a5eff` (PREDERIVED): the MIP versions of the LP `5b488d` (crates/lp/src/presolve/derived.rs). A
 //! column whose rows hold for every point of its neighbours' box leaves with those rows (`5a4d8b`); with binary
-//! neighbours only, the bad points become no-good rows instead (`5a5eff`). docs/m2_red_roundend_b.md §7.
+//! neighbours only, the bad points become no-good rows instead (`5a5eff`). docs/m2/m2_red_roundend_b.md §7.
 //! Work is added unscaled (no μ) except inside the shared `537da8`.
 use crate::post::PostRec;
 use crate::state::{State, NIL};

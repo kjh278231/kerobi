@@ -1,4 +1,4 @@
-//! `451bed`: the clique table built from rows (docs/m2_red_clique.md §2). `45885d` (here, §3) calls it on the `53a487`
+//! `451bed`: the clique table built from rows (docs/m2/m2_red_clique.md §2). `45885d` (here, §3) calls it on the `53a487`
 //! rows with `bin_only` false; probing (`4d3a1d`) calls it on all rows with `bin_only` true.
 use crate::state::{State, INF, NIL};
 use crate::Params;
@@ -295,7 +295,7 @@ impl Marks {
 }
 
 impl State {
-    /// `45885d(st, env, timer)` (docs/m2_red_clique.md §3): cover each row by cliques of `451bed`'s table, take the
+    /// `45885d(st, env, timer)` (docs/m2/m2_red_clique.md §3): cover each row by cliques of `451bed`'s table, take the
     /// clique-aware activity range, then tighten bounds, drop redundant `<` rows and strengthen coefficients.
     /// Returns 0 or a status (3: `bad_row` / `bad_col` infeasible).
     /// shortcut: the reduction timer (`adf2be`) is not passed in; its budget is never reached on the 38 models.

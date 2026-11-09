@@ -1,4 +1,4 @@
-//! Probing `4d3a1d`: the pass loop and the write-back after the engine (docs/m2_red_probe.md §2.2, §2.8):
+//! Probing `4d3a1d`: the pass loop and the write-back after the engine (docs/m2/m2_red_probe.md §2.2, §2.8):
 //! aggregations (`564ce0`), bounds (rounded for integers, `3df916` when fixed), rows made `=`, coefficient lifting
 //! with new nodes (`3bea24`), implications into the conflict graph and the two-pass decision.
 use crate::driver::Timer;

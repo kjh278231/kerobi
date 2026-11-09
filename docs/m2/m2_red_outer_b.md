@@ -333,7 +333,7 @@ APPLY:
 
 ## 6. `37f484` 집계, MIP 분기 (`00381f20`)
 
-LP 포트(`crates/lp/src/presolve/agg.rs`, [m1_presolve_agg.md](m1_presolve_agg.md))가 CSR을 연결 리스트로 바꿔 부르는 것과 같은 함수다. MIP는 상태 리스트에서 바로 부른다(+0xfc = 1, +0xe0 = 0). 포트는 LP 코드를 `crates/mip/src/aggregate.rs`로 복사해 아래 차이만 더했다(LP 하위 모듈은 private이고 `crates/lp`는 고치지 않는다). 리스트·free/pending은 호출 동안 상태에서 꺼내 LP의 `Mat`으로 쓰고 끝에 되돌린다.
+LP 포트(`crates/lp/src/presolve/agg.rs`, [m1_presolve_agg.md](../m1/m1_presolve_agg.md))가 CSR을 연결 리스트로 바꿔 부르는 것과 같은 함수다. MIP는 상태 리스트에서 바로 부른다(+0xfc = 1, +0xe0 = 0). 포트는 LP 코드를 `crates/mip/src/aggregate.rs`로 복사해 아래 차이만 더했다(LP 하위 모듈은 private이고 `crates/lp`는 고치지 않는다). 리스트·free/pending은 호출 동안 상태에서 꺼내 LP의 `Mat`으로 쓰고 끝에 되돌린다.
 
 ### 6.1 LP와 다른 점 (MIP, 기본값)
 | | LP (`519a52` 안) | MIP (`3cd406` 바깥 패스) |

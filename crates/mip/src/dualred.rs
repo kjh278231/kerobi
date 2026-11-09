@@ -1,4 +1,4 @@
-//! `5a1293(st, env)` (PREDUALREDUNDANT, docs/m2_red_roundend_b.md §4): a `<` row of a column with c·a > 0 that
+//! `5a1293(st, env)` (PREDUALREDUNDANT, docs/m2/m2_red_roundend_b.md §4): a `<` row of a column with c·a > 0 that
 //! is redundant when the column sits at its cheap bound, and dominated by the column's other rows of opposite sign
 //! (`a7cec0` on the scaled sum), would be dropped (`39fb6d` record + `415f4f`).
 use crate::knapsack::act_sum;

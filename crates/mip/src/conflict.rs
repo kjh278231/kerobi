@@ -1,5 +1,5 @@
 //! Conflict graph `*(state+0x3f0)` (0x48 bytes, made by `5b84b1`): literal pairs that cannot both be true, kept as a
-//! literal CSR plus a list of pending pairs (docs/m2_red_probe.md §3.5). Literal encoding: `j` = x_j, `-1-j` = ¬x_j;
+//! literal CSR plus a list of pending pairs (docs/m2/m2_red_probe.md §3.5). Literal encoding: `j` = x_j, `-1-j` = ¬x_j;
 //! CSR slot `lit(e) = 2·var(e) + (e < 0)`. Probing fills it (`5b88ce`) and merges it (`5b9aad`); `4eba40` follows it.
 
 /// `var(e)`
