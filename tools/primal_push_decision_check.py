@@ -1,7 +1,9 @@
 """M3-04b-2: primal push 한 단계의 방향·거리 flip·거부·승인·이탈 상태 판단을 원본 캡처와 대조한다.
 
-판단 모델은 134a87 asm(0x1c2164-0x1c2d7f)을 따른다. feasible basis 경로만 다룬다.
-04b-1 저장 캡처(frame 없음), 04b-2 새 캡처(frame 있음), M3-04b-3 arm LP 캡처(시작 벡터·보류 사건 step:defer)를 읽는다.
+판단 모델은 134a87 asm(0x1c2164-0x1c2d7f)을 따른다. M3-04c-2부터 위반 basis(local_1b0>0)의 방향식
+(0x1c227c-0x1c23d1)과 054eef 단계도 다루며, 056973 재시도가 붙은 단계는 범위 밖으로 거부한다.
+04b-1 저장 캡처(frame 없음), 04b-2 새 캡처(frame 있음), M3-04b-3 arm LP 캡처(시작 벡터·보류 사건 step:defer),
+M3-04c-2 위반 basis 캡처(재시도 사건 retry:*)를 읽는다.
 """
 import argparse
 import copy
@@ -19,6 +21,7 @@ import primal_push_step_check as step  # noqa: E402  M3-04b-1 자연 캡처 검�
 BASE = ROOT / 'bench/oracle/m3_push_decision'
 OLD = ROOT / 'bench/oracle/m3_primal_push_step'
 ARMS = ROOT / 'bench/oracle/m3_push_arms'
+VIOL = ROOT / 'bench/oracle/m3_push_violated'
 BINARY_SHA = step.BINARY_SHA
 TOOLS = ['tools/primal_push_decision_capture.js', 'tools/primal_push_decision_agent.js']
 FRAME = ['r', 'dL', 'dU', 'k100', 'km100', 'k2', 'e']
@@ -38,7 +41,10 @@ DEFAULT = dict(ten=10.0, e_scale=0.01, dir_strict=True, neg_rdl=True, r_pos_stri
                x_state=-4, u_nonneg_lt=True,
                # M3-04b-3 arm별 변조용. 기본값은 원본 식 그대로다.
                reject_on=(True, True), defer_on=True, flip_dir1=True, first_on=True, fixed_state=-4,
-               neg_u=-2, neg_l='formula', nonneg_u='formula')
+               neg_u=-2, neg_l='formula', nonneg_u='formula',
+               # M3-04c-2 위반 basis 방향식 변조용. 기본값은 원본 식 그대로다.
+               v_pre=(True, True), v_sigma_sign=1.0, v_clause=(True, True), v_small=True, v_small_clause=(True, True),
+               v_r_strict=True, v_sigma_strict=True, v_ten=10.0)
 
 
 class Mismatch(AssertionError):
@@ -56,6 +62,27 @@ def direction(p, r, dL, dU, e):
     second = (dL <= p['ten'] * dU or e <= dU * r) and pos
     # 방향 1을 만든 절: bound(첫 절)·cost(r>0 절)·both
     return (1 if first or second else 0), ('both' if first and second else 'bound' if first else 'cost' if second else 'none')
+
+
+def direction_violated(p, r, dL, dU, s, e, k):
+    """위반 basis 방향(asm 0x1c227c-0x1c23d1). 각 비교는 원본의 ja라 비순서 비교는 받지 않는다. s=ΣB alpha-ΣA alpha."""
+    s = s * p['v_sigma_sign']
+    ten = p['v_ten']
+    if p['v_pre'][0] and r > k and k > dL:
+        return 1, 'pre-reject1'
+    if p['v_pre'][1] and -k > r and k > dU:
+        return 0, 'pre-reject0'
+    if p['v_clause'][0] and dU > ten * dL and e > -(dL * s) and e > -(r * dL):
+        return 1, 'bound-sigma'
+    if p['v_clause'][1] and dL > ten * dU and e > dU * s and e > dU * r:
+        return 0, 'bound-sigma0'
+    if p['v_small'] and e > abs(s):
+        if p['v_small_clause'][0] and dU > ten * dL and e > -(r * dL):
+            return 1, 'small-bound'
+        if p['v_small_clause'][1] and dL > ten * dU and e > dU * r:
+            return 0, 'small-bound0'
+        return (1, 'small-r') if (r > 0 if p['v_r_strict'] else r >= 0) else (0, 'small-r0')
+    return (1, 'sigma') if (s > 0 if p['v_sigma_strict'] else s >= 0) else (0, 'sigma0')
 
 
 def leave_state(p, a, t, mark, b, w, k, width):
@@ -111,17 +138,22 @@ def decide(record, p=DEFAULT, label=''):
         pre = e['alpha']
         where = f"{label} call{e['call']} step{e['step']}"
         k = i + 1
-        ratios = []
+        ratios, retries = [], 0
         while k < len(events) and events[k]['event'] not in ('supply:enter', 'push:leave', 'step:enter', 'step:defer'):
             if events[k]['event'] == 'ratio:enter':
                 ratios.append((events[k], events[k + 1]))
+            retries += events[k]['event'] == 'retry:enter'
             k += 1
         need(len(ratios) == 1, where, 'ratio 호출 수(재호출 제외 범위)', 1, len(ratios))
+        # 056973 재시도는 M3-04c-2 범위 밖이다(사건으로 확인, 0x1c25b4·0x1c4c50).
+        need(retries == 0, where, '056973 재시도(제외 범위)', 0, retries)
         rin, rout = ratios[0]
-        need(rin['name'] == 'feasible', where, 'ratio 경로(제외 범위)', 'feasible', rin['name'])
+        violated = rin['name'] == 'infeasible'
+        need(rin['name'] in ('feasible', 'infeasible'), where, 'ratio 경로', 'feasible|infeasible', rin['name'])
         # feasible 경로는 위반 수 local_1b0==0일 때만 온다. A·B 표시는 그 수를 올리므로 있으면 안 된다(C 839·856·1688-1717·1940-1978·2199-2222·2342-2405).
+        # 같은 이유로 위반 경로(054eef)에는 A·B 표시가 적어도 하나 있어야 한다(C 1225).
         marks_ab = [i for i, mk in enumerate(rin['marks']) if mk in ('41', '42')]
-        need(not marks_ab, where, 'feasible ratio의 A·B 표시', '없음', marks_ab)
+        need(bool(marks_ab) == violated, where, f"{rin['name']} ratio의 A·B 표시", '있음' if violated else '없음', marks_ab)
         st = rin['state']
         n, m = st['n'], st['m']
         tol = {kk: f64(v) for kk, v in st['tolerances'].items()}
@@ -142,7 +174,17 @@ def decide(record, p=DEFAULT, label=''):
         for idx, v in terms:
             r = r - f64(v) * cost[st['header'][idx]]
         e_tol = h * p['e_scale']
-        d, clause = direction(p, r, dL, dU, e_tol)
+        if violated:
+            sigma = 0.0
+            for idx, v in zip(pre['indices'], pre['values']):  # C 1329-1349: B는 더하고 A는 뺀다(반전 전 alpha)
+                mk = rin['marks'][idx]
+                if mk == '42':
+                    sigma = sigma + f64(v)
+                elif mk == '41':
+                    sigma = sigma - f64(v)
+            d, clause = direction_violated(p, r, dL, dU, sigma, e_tol, p['k_reject'] * h)
+        else:
+            d, clause = direction(p, r, dL, dU, e_tol)
         need(rin['selected']['direction'] == d, where, '방향', d, rin['selected']['direction'])
         post = rin['alpha']
         need(post['indices'] == pre['indices'], where, 'alpha 인덱스', pre['indices'], post['indices'])
@@ -177,7 +219,7 @@ def decide(record, p=DEFAULT, label=''):
         # 보류는 양성 사건(step:defer, M3-04b-3 agent)으로만 인정한다. 단계 사건이 없으면 실패다.
         got = {'step:enter': nxt and nxt.get('kind'), 'step:defer': 'defer'}.get(nxt and nxt['event'], '사건 없음')
         need(got == kind, where, '단계 종류', f'{kind}({cause})', got)
-        info = dict(call=e['call'], step=e['step'], enter=j, direction=d, clause=clause, r_sign='+' if r > 0 else '-' if r < 0 else '0', kind=kind, cause=cause, r=bits(r))
+        info = dict(call=e['call'], step=e['step'], enter=j, direction=d, clause=clause, path=rin['name'], r_sign='+' if r > 0 else '-' if r < 0 else '0', kind=kind, cause=cause, r=bits(r))
         if kind == 'defer':
             need(nxt['theta'] == rout['theta'] and nxt['pivot'] == rout['pivot'], where, '보류 theta·pivot', (rout['theta'], rout['pivot']), (nxt['theta'], nxt['pivot']))
             check_frame(nxt, p, where, r, dL, dU, h, e_tol, kreject)
@@ -221,6 +263,11 @@ MUTANTS = {
     'leave-fixed-lt+X-1': dict(fixed_le=False, x_state=-1), 'leave-negU-1': dict(neg_u=-1),
     'leave-negL-always-2': dict(neg_l=-2), 'leave-negL-always-1': dict(neg_l=-1),
     'leave-nonnegU-always-1': dict(nonneg_u=-1), 'leave-nonnegU-always-2': dict(nonneg_u=-2),
+    # M3-04c-2: 위반 basis 방향식의 절마다 그 절만 바꾸는 변조
+    'v-pre1-off': dict(v_pre=(False, True)), 'v-pre0-off': dict(v_pre=(True, False)), 'v-sigma-neg': dict(v_sigma_sign=-1.0),
+    'v-clause1-off': dict(v_clause=(False, True)), 'v-clause0-off': dict(v_clause=(True, False)), 'v-small-off': dict(v_small=False),
+    'v-small1-off': dict(v_small_clause=(False, True)), 'v-small0-off': dict(v_small_clause=(True, False)),
+    'v-r-ge0': dict(v_r_strict=False), 'v-sigma-ge0': dict(v_sigma_strict=False), 'v-ten-9': dict(v_ten=9.0),
 }
 
 
