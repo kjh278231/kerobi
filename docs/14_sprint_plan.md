@@ -140,7 +140,8 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c | 구현 완료(범위 한정) | double feasible ratio `055f68` 첫 패스 | 04b·04b-1 | [자연 9입력×2·합성 29사례 비트 일치, 변조 14종 중 10 거부](m3/primal_push_ratio_rust.md). 생존 4경계·재진입·push 연결 미검증 |
 | M3-04c-6 | 구현 완료(범위 한정) | 방향식·거리 flip·pivot 승인·이탈 상태 판단의 Rust | 04b-2·04c | [저장 캡처 40단계(고유 20, +frame 보조 9) 비트 일치, 연결 ratio 49 일치, Rust 변조 24종 중 9 거부(오라클과 같은 분류)](m3/primal_push_decision_rust.md). 생존 15경계·미관측 arm·push 연결 미검증 |
 | M3-04c-2 | 오라클·구현 완료(범위 한정) | 위반 basis 방향식·infeasible ratio `054eef`(재시도 없는 단계)·`A`·`B` 이탈 arm | 04b-3 | [위반 LP 두 순서 각 3회 19단계(방향 종단 10·B→-1·A→-2), 054eef 합성 57×3, Rust 위반 38단계·연결 137·합성 55 비트 일치](m3/primal_push_violated.md). `056973`·theta=I 재호출은 04c-7로 분리 |
-| M3-04c-7 | 오라클·구현 | `056973` 재시도 ratio와 theta=I 반대 방향 재호출(위반·feasible 경로) | 04c-2 | 시작 사례 `bench/oracle/m3_push_violated/retry.lp`(054eef -1 → 056973). feasible 재호출은 방향 0·ub=I 또는 자유 열 + 차단 행 없음으로 새로 설계한다(04b-3의 `tD`·`tSL`은 거리 flip). `retry:*` 훅에 입력 배열 추가 |
+| M3-04c-7 | 오라클·구현 완료(범위 한정) | 위반 basis 재시도 ratio `056973`과 게이트, 재시도 뒤 단계 | 04c-2 | [재시도 LP 두 순서 각 3회 8단계(결과 변경·유지·theta=I flip, 보류, B→-2·A→-1), 056973 합성 74×3, Rust 합성 68·자연 16·판단 연결 153 비트 일치, 변조 056973 22종 중 21·판단 54종 중 43](m3/primal_push_retry.md). theta=I 반대 방향 재호출은 04c-8로 분리, 재진입 Rust 미이식 |
+| M3-04c-8 | 오라클·구현 | theta=I 반대 방향 재호출(위반·feasible 경로) | 04c-7 | push C 1458–1590과 `PushEntry::recall`(자유 열 또는 방향 0·ub≥I)에서 시작한다. feasible은 차단 행 없는 방향 0·ub=I 열, 위반은 054eef·056973 -1 뒤로 LP를 설계한다. 재호출 뒤 거부 arm은 `r13b`로 고르므로 `reject-arm-current`를 판별한다. feasible 재호출 -1이면 `S+0x2f8`은 이전 값(C 1549–1554). `local_1d8`=-I 해석(C 602·195)을 실행으로 확인 |
 | M3-04c-5 | 오라클·구현 | `055f68` 작은 pivot 재진입과 `12dd49` 요청 2 | 04c | 재진입·2차 상한 동률·후보 있는 I 상한의 원본 합성 사례 3회와 Rust 비교 |
 | M3-04d | 조사 | dual push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |
 | M3-04e | 구현 | 04d의 push 분기 하나 | 04d | 해당 phase 입력·출력 상태 비교 |
