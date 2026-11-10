@@ -15,7 +15,7 @@ GZ_SHA = "caad5976f259e668d473e9e992b4c1b69e44254cbce7b63eda778c7b479e48b1"  # e
 TOOL = ROOT / "tools/m1_beta_path.js"
 PARAMS = {"Threads": 1, "Method": 1, "Presolve": 0, "OutputFlag": 0}
 RUST_PIVOTS = 22  # pivots 0..21: before the pivot path splits (pathcmp: first diff at pivot 21 is the 22nd entering choice)
-FIRST = (22, "state")  # first differing snapshot after the M1-02d tau fix: pivot 21's entering choice (was (12, "w"))
+FIRST = (23, "state")  # first differing snapshot after the M1-02h alpha_q list order (M1-02d: (22, "state"), before: (12, "w"))
 
 
 def u2f(h):

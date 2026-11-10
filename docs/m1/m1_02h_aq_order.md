@@ -80,8 +80,52 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 실행: worktree `../rsolver-m1-02h`, 기준 main `577a443`, 코드 commit `84cf8b2`·`a6038e5`(+ `m1_beta_check` 기대값 갱신), x86-64 Linux(WSL2). 입력은 02a-1 캡처 3회(gz SHA-256 `64cc9dea…`)와 저장 오라클 `bench/oracle/iter0-30/kb2.jsonl.gz`(`007d5a55…`). Gurobi는 실행하지 않았다(저장 기준).
+- `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_aq_order_check.py --self-test` 종료 0:
+
+```text
+N: Rust vstat = stored oracle on snapshots 0-30, alpha_q support = capture on pivots 0-37
+F: LU+0xf0 list = capture on 33 pivots; outside the rule [1, 2, 3, 4, 5] (fill >= 2 spikes at [0, 21, 24, 34]), equal there []
+K: U kernel = capture on 38/38 pivots; sparse L, dense U [30, 32, 36, 37], 21f83a, no sparse U [34], 2126cd [5], sparse U [0, 1, 2, 3, 4, 21, 24]
+A: final alpha_q list = capture on 33 pivots (not position order: [21, 24]); outside the rule [0, 1, 2, 3, 4], equal there [1, 2, 3, 4]
+T stored oracle file sha: rejected: M kb2.jsonl.gz: sha 000000000000
+T pivot 22 list slots swapped (F): rejected: F pivot 22: …
+T pivot 21 21841f call removed (K): rejected: K pivot 21: Rust kernel 21841f != original inline …
+T pivot 21 alpha_q entries swapped (A): rejected: A pivot 21: …
+T pivot 10 dense list rotated (A): rejected: A pivot 10: …
+T no capture pivots: rejected: M: capture pivots [].. != 0-37
+T Rust aqo of pivot 21 in position order: rejected: A pivot 21: …
+T Rust list f0 of snapshot 22 reversed: rejected: F pivot 22: …
+PASS (+ self-test)
+```
+
+- 범위 밖 분류(§1 제외 범위, 실행 전 고정한 기준): 피벗 0의 spike는 희소 L 채움 원소가 셋이고(원본 `[…, 12, 10, 11]`, Rust 근사 `[…, 10, 11, 12]`), 그 뒤 목록 1–5가 붙은 행끼리의 순서만 다르다(검사기는 "그 피벗이 붙인 행끼리의 순열"일 때만 범위 밖으로 둔다. 다른 자리가 다르면 실패). A 피벗 0은 −1 행 10개의 순서가 근사로 정해져 범위 밖이고 실제로 다르다. 피벗 1–4는 범위 밖이지만 같다(입력 원소 순서 부분은 맞음). 피벗 21·24·34도 fill ≥ 2였지만 다음 목록이 원본과 같아 범위 안에 남았다.
+- 코드 변이(임시 빌드, 각각 되돌리고 재빌드): spike r 거르기(마지막 채우기 대신) → F 피벗 8 거부, α_q 피벗 제거를 거르기로 → A 피벗 24 거부, D = 3 고정 → K 피벗 34 거부(D² 항이 판정), 꼬리 오름차순 → A 피벗 21 거부, 조밀 경로 피벗 마지막 생략 → A 피벗 5 거부, 목록 삭제를 순서 보존 삭제로 → F 피벗 10 거부. 생존 0.
+- 처음 구현은 조밀 경로에서도 피벗을 마지막 원소로 채워 뺐다. A가 피벗 5·7·9… 에서 실패해, 원본은 조밀 출력 압축 때 피벗을 맨 끝에 둔다는 것(`2126cd` 경로 C:1812–1832, 인라인 경로도 실행상 같음)을 반영했다. 판정 기준은 바꾸지 않았다.
+- statecmp kb2(이 worktree 빌드): 반복 0–22 OK. 반복 23은 d 6·w 21·점수 3 끝자리 차이(02g 주입 실험과 같은 값, M1-02i). 가격 목록 차이는 반복 23 이후에도 나오지 않는다.
+- 기존 검사기: `m1_list_order_check.py --self-test` PASS, `m1_tau_check.py --self-test` PASS, `m1_urow_check.py --self-test` PASS, `m1_bfrt_rust.py --self-test` PASS. `m1_beta_check.py`는 F의 고정 첫 차이 `(22, "state")`를 `(23, "state")`로 바꾼 뒤 PASS(이번 수정으로 반복 22가 같아진 결과, 이전 값은 주석에 보존).
+- 회귀: `cargo test -p rsolver-lp` 41 통과·1 무시, `cargo test --release --workspace` 124 통과·9 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0, 이 worktree 빌드 pytest 657 passed.
+- Netlib Method=1(같은 날 main `577a443` 빌드를 별도 worktree에서 기준선으로 실행): `tools/lp_check.py --methods 1 --timeout 120` 정답 90/91 → 90/91, IterCount 일치 29/64 → 30/64(scsd6 277 → 276 = 원본). 반복 수 변화 degen2 644 → 628(원본 634), dfl001 17375 → 17532, scsd8 949 → 952, pilot 4378 → 4990(전후 모두 FAIL). `tools/proto/pathcmp.py all` 완전 일치 23/64 → 24/64(scsd6), 중앙 첫 차이 비율 0.589 그대로. 첫 차이가 바뀐 모델은 scsd6(165 → 276, 완전 일치)와 degen2(324 → 288, 앞당겨짐) 둘이다.
+- degen2 앞당겨짐(미확인): Rust 피벗 0–288에서 희소 U 경로 222회 중 129회가 fill ≥ 2(희소 L·R 출력 순서 근사)이고 첫 차이 직전 mode 1 피벗 287도 `21841f`·fill 13이다. 근사 범위의 영향일 가능성이 크지만 degen2 원본 캡처가 없어 원인은 확인하지 않았다(M1-02j).
+- 실행하지 못한 검사: 원본 재캡처(저장 기준으로 충분, Gurobi 미실행), kb2 밖 모델의 경로·순서 대조(캡처 없음).
+- 계약 변경: 없음(§3 그대로). 검사기 구현 중 범위 밖 분류를 "fill ≥ 2 피벗 뒤 전부"에서 "다음 목록이 그 피벗이 붙인 행끼리의 순열로만 다를 때"로 좁혔다. 처음 분류는 피벗 21·24까지 판정에서 빼서 A의 판별 피벗이 0이 됐고, 그 다음 분류는 F 변조(피벗 22 목록 앞 두 칸 교환)를 범위 밖으로 흘려보냈다. 둘 다 고친 뒤 위 결과를 얻었다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: **완료(구현)**.
+- 동등성: **통과**(계약 범위). kb2 피벗 0–37에서 U 경로 38/38, LU+0xf0 목록 33피벗, 최종 α_q 목록 33피벗(판별 21·24)이 원본과 순서까지 같고, statecmp 반복 0–22가 비트까지 같다. 범위 밖(희소 L·R 출력 순서 근사) 피벗은 F 1–5·A 0–4로 출력했다.
+- 남은 한계:
+  - 희소 L(`21b9de` Kahn FIFO)·R(`21f83a`) 출력 순서: 입력 원소(열 저장 순서) 뒤 나머지를 위치 오름차순으로 둔 근사. kb2 피벗 0의 채움 순서가 다르다. LU+0xf8 = −1 행 순서와 희소 spike 순서(→ 접두 목록)가 여기에 기댄다.
+  - 경로 판정의 L·R 뒤 nnz는 조밀 결과의 \|x\| > ZERO 수(희소 커널 목록 길이와 같다는 근거는 kb2 38피벗 K뿐), LU+0x128 레벨 경로 미모델, `21f83a`가 조밀로 다루는 쪽의 출력 nnz는 −1로 가정(C 미독).
+  - 옛 열 제거에서 둘 이상의 행이 동시에 목록을 떠날 때의 순서(Rust `ucol` 저장 순서를 씀, 원본 열 저장 순서와 같다는 근거 없음, kb2에서 판별 안 됨).
+  - primal(`2207de`) 쪽 갱신은 spike 순서를 위치 오름차순으로 넘긴다(희소 경로 미모델).
+  - BTRAN의 Uᵀ 희소 판정은 여전히 `3·nnz ≤ m`(LU+0x108+0x110 고정 1.5+1.5). 이번에 계산한 `dsum`을 쓰면 원본과 같아질 수 있으나 궤적에 영향을 주므로 바꾸지 않았다(M1-02k).
+  - kb2 반복 23 d·w 끝자리(M1-02i), degen2 첫 차이 앞당겨짐(M1-02j 후보).
+- 후속:
+  - **M1-02i**(조사): kb2 반복 23 d 6·w 21. 02h 뒤에도 그대로라 피벗 21 spike·목록 순서 탓은 아니다. 첫 명령 `zcat bench/oracle/iter0-30/kb2.jsonl.gz > <tmp>/kb2.jsonl; PYTHONPATH=$PWD/python ../.venv/bin/python tools/proto/statecmp.py kb2 <tmp>/kb2.jsonl`.
+  - **M1-02j**(조사, 새 행): `21b9de` 희소 L 출력 순서(Kahn FIFO)와 `21f83a` R 출력 순서. kb2 피벗 0의 채움 `[12, 10, 11]`이 첫 대조 자료다. degen2(첫 차이 288, 희소 U·fill ≥ 2 다수)가 다음 사례.
+  - **M1-02k**(구현, 새 행): BTRAN Uᵀ 희소 판정에 LU+0x108+0x110 사용.
+  - **M1-02c**(검증): Method=1 Netlib 64 재측정(출발점 30/64).
+- branch `work/m1-02h`, worktree `../rsolver-m1-02h`. 병합은 main의 `Merge M1-02h` 이력으로 확인한다.
+- 인수인계·진행: `docs/handoff/M1.md`, `docs/11_progress.md`·`docs/12_roadmap_diagram.md` 맨 위, `docs/14_sprint_plan.md` M1-02h 행과 02j·02k 새 행.
+- 교훈: `docs/lessons/original.md`(`09d112` 경로 조건, LU+0xf0 목록 유지, LU+0xdc·0x108·0x110, 조밀 경로의 피벗 맨 끝), `docs/lessons/tooling.md`(범위 밖 분류가 변조를 흘려보내는 함정).
