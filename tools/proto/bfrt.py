@@ -1,12 +1,15 @@
 """BFRT (1c35c5) prototype checked against bench/oracle/bfrt_io (Gurobi inputs/outputs per call).
-usage: python tools/proto/bfrt.py [-v] [--dir DIR] [name ...]   reports calls whose flip list or entering column differ.
+usage: python tools/proto/bfrt.py [-v] [--strict] [--dir DIR [--same-as OLD]] [name ...]   reports calls whose flip list
+or entering column differ (--strict: exit 1 then). --same-as: every row of DIR cut to the length of the OLD row equals it.
+BFRT_RESCAN=0 turns the re-scan off (the pre-M1-02e rule).
 --dir bench/oracle/m1_02e_bfrt: corpus whose entry also has spx+0x438/0x420/0x430/0x3fc/0x178/0x380 (M1-02e);
 there the flip re-scan (spx+0x3fc != 0) runs."""
 import gzip, json, os, sys
 from pathlib import Path
 D = Path(__file__).resolve().parents[2] / "bench/oracle/bfrt_io"
 OPT, PIV = 1e-6, 3e-8
-OFF = float(os.environ.get("BFRT_OFF", "0"))  # M1-02e: unknown dVar103*OptTol in the re-scan test (C:1515)
+# re-scan margin dVar103·OptTol: dVar103 holds 1000.0 there (C:1219/1278, the /1000 of the C:1335 shift); env for mutants
+OFF = float(os.environ.get("BFRT_OFF", 1000.0 * OPT))
 
 
 def lane_sum(run, xs, start, sign):
@@ -130,7 +133,7 @@ def bfrt(e, lens=None):
         # flips: passed breakpoints within the dual step θ = d_q/α_q, q excluded (L1575-1610)
         th = hmax
         flips = [c[0] for c in cand[:lo] if c[0] != q and d[c[0]] <= val[c[0]] * th]
-        if len(e) > 17 and e[17] != 0:
+        if len(e) > 17 and e[17] != 0 and os.environ.get("BFRT_RESCAN", "1") != "0":
             q, flips = rescan(q, best_s, cand[:lo], flips, d, val, idx, e[18] < 10, w)
     return (idx[q] if q is not None else None), flips
 
@@ -156,6 +159,28 @@ def rescan(q, score, passed, flips, d, val, idx, use_pow, w):
     return new, [c[0] for c in passed if idx[c[0]] != idx[new] and d[c[0]] <= val[c[0]] * th]
 
 
+def trigger(tdir):
+    """48d5f C:2106-2111 sets spx+0x3fc = -1 (NONDEGENFLIP 0) only on its full-recompute path (LU+0x18c == 0, right
+    after a factorization) when spx+0x338 > 2 or m < 3·spx+0x2a0 or spx+0x178 != 0. Rows of
+    tools/trace_specs/nondegenflip_m1_02e.json: enter [LU+0x18c, spx+0x2a0, m], leave [spx+0x3fc, spx+0x338, spx+0x178]."""
+    bad = 0
+    for p in sorted(tdir.glob("*.jsonl.gz")):
+        rows = [x for x in map(json.loads, gzip.open(p, "rt")) if x[0] == "dual"]
+        on, first = 0, None
+        for k in range(0, len(rows) - 1, 2):
+            (upd, it, m), (f, c338, c178) = rows[k][2:5], rows[k + 1][2:5]
+            want = on or (upd == 0 and (c338 > 2 or m < 3.0 * it or c178 != 0))
+            if bool(f) != bool(want):
+                bad += 1
+                print(f"{p.name}: call {k // 2} iter {it} LU+0x18c {upd}: 0x3fc {f}, rule {-1 if want else 0}")
+                break
+            if f and not on:
+                first = it
+            on = on or f
+        print(f"{p.name}: switch at iter {first}")
+    return 1 if bad else 0
+
+
 def main():
     global D
     args = sys.argv[1:]
@@ -163,8 +188,26 @@ def main():
         k = args.index("--dir")
         D = Path(args[k + 1]).resolve()
         del args[k:k + 2]
-    verbose = "-v" in args
+    if "--trigger" in args:
+        sys.exit(trigger(Path(args[args.index("--trigger") + 1])))
+    old = None
+    if "--same-as" in args:
+        k = args.index("--same-as")
+        old = Path(args[k + 1]).resolve()
+        del args[k:k + 2]
+    verbose, strict = ("-vv" in args) + ("-v" in args or "-vv" in args), "--strict" in args
     names = [a for a in args if not a.startswith("-")] or sorted(p.name[:-9] for p in D.glob("*.jsonl.gz"))
+    if old is not None:
+        bad = 0
+        for name in names:
+            a = [json.loads(x) for x in gzip.open(old / f"{name}.jsonl.gz", "rt")]
+            b = [json.loads(x) for x in gzip.open(D / f"{name}.jsonl.gz", "rt")]
+            k = next((i for i, (x, y) in enumerate(zip(a, b)) if y[:len(x)] != x), None)
+            if k is not None or len(a) != len(b):
+                bad += 1
+                print(f"{name}: rows {len(a)} vs {len(b)}, first differing row {k}")
+        print(f"projection: {len(names) - bad}/{len(names)} models equal")
+        sys.exit(1 if bad else 0)
     tot = okq = okf = 0
     for name in names:
         rows = [json.loads(x) for x in gzip.open(D / f"{name}.jsonl.gz", "rt")]
@@ -178,10 +221,12 @@ def main():
             tot += 1
             okq += q == gq
             okf += flips == gflips
-            if (q != gq or flips != gflips) and verbose and shown < 2:
+            if (q != gq or flips != gflips) and verbose and shown < (99 if verbose > 1 else 2):
                 shown += 1
                 print(f"{name} call {k // 2}: q g {gq} mine {q}; flips g {len(gflips)} {gflips[:8]} mine {len(flips)} {flips[:8]}")
     print(f"calls {tot}: q equal {okq}, flip list equal {okf}")
+    if strict and (okq != tot or okf != tot or not tot):
+        sys.exit(1)
 
 
 if __name__ == "__main__":
