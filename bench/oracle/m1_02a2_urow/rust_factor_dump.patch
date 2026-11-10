@@ -1,0 +1,33 @@
+diff --git a/crates/lp/src/lu.rs b/crates/lp/src/lu.rs
+index 4c7d273..29f1270 100644
+--- a/crates/lp/src/lu.rs
++++ b/crates/lp/src/lu.rs
+@@ -339,12 +339,28 @@ impl Lu {
+                 }
+             }
+         }
++        let dump_ku = lu.kernel_u.clone();
+         for (k, ku) in std::mem::take(&mut lu.kernel_u).into_iter().enumerate() {
+             let r = lu.steps[k].0;
+             for (p2, u) in ku {
+                 lu.ucol[ppos[p2] as usize].push((r, u));
+             }
+         }
++        if let Ok(path) = std::env::var("RSOLVER_UROWDUMP") {
++            use std::io::Write;
++            let b = |x: f64| format!("\"{:016x}\"", x.to_bits());
++            let j = |v: Vec<String>| format!("[{}]", v.join(","));
++            let line = format!(
++                "{{\"head\":{},\"ns\":{},\"steps\":{},\"ppos\":{},\"ku\":{},\"ucol\":{}}}\n",
++                j(head.iter().map(|x| x.to_string()).collect()),
++                ns,
++                j(lu.steps.iter().map(|&(r, p, d)| format!("[{r},{p},{}]", b(d))).collect()),
++                j(ppos.iter().map(|x| x.to_string()).collect()),
++                j(dump_ku.iter().map(|ku| j(ku.iter().map(|&(p, u)| format!("[{p},{}]", b(u))).collect())).collect()),
++                j(lu.ucol.iter().map(|c| j(c.iter().map(|&(i, u)| format!("[{i},{}]", b(u))).collect())).collect()),
++            );
++            std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap().write_all(line.as_bytes()).unwrap();
++        }
+ 
+         lu.finish();
+         lu
