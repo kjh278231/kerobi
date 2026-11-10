@@ -33,6 +33,7 @@ mod derived;
 mod disagg;
 pub mod dive_rows;
 pub mod node_heap;
+pub mod pseudocost;
 mod dominate;
 mod doubleton;
 mod dualbin;
