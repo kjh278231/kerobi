@@ -104,8 +104,41 @@ cargo test -p rsolver-lp --test push_decision && python3 tools/primal_push_decis
 
 ## 6. 실행 결과
 
-(캡처 뒤 작성)
+- 환경: x86-64 Linux(WSL2), node·Frida는 04b-2와 같다. 원본 ELF 해시는 §2. 도구·입력·캡처·탐색 해시는 [manifest](../../bench/oracle/m3_push_arms/manifest.json)에 있다. 대상 캡처는 계약 commit `30b85d2` 뒤에 실행했다.
+- 원본 실행: arm LP primal-first 3회(187사건), dual-first 3회(185사건), Crossover=0 대조군 3회(0사건), face5 비간섭 1회(109사건). 회당 1초 미만이다. 순서별 3회는 사건·입력·시작 벡터·결과·출력 줄 전체가 같다. 대조군은 push 사건이 없고 status 2다. 탐색은 단독 묶음·결합 LP 수십 회다(history는 일부만 보존, §4.1).
+- 비간섭: 보류 훅 agent의 face5 primal 캡처에서 `step:defer`를 빼면(face5에는 보류가 없어 0건) 04b-2 `face5-primal-1.json`과 사건·결과·출력이 같다. 결합 LP 탐색에서도 이전 agent 캡처와 `step:defer`만 다르다(`history/arms-probe-*.json`).
+- 판단 재구성: 두 순서 각 25단계, 모두 feasible ratio·batch 0·x87 없음·재호출 없음. 판단 모델이 방향·alpha 반전·단계 종류·theta·frame 7값·이탈 상태를 모두 원본과 같게 재구성했다. 04b-1·face5 40단계도 함께 다시 통과했다(`--old`·전체 검사).
+- 관측한 대상 arm(순서별 3회 모두, 단계 번호는 primal/dual):
+
+| arm | 단계·변수 | 비고 |
+|---|---|---|
+| 거부 방향 0 | 3/3 `xa` | theta=I flip, 뒤 위반 4e-7은 허용오차 안 |
+| 거부 방향 1 | 5/5 `xb` | both 절 |
+| pivot 보류 | 17·19·25 / 같음, `xh` | 양성 사건 `step:defer`. pivot 1e-7 < 1e-6. 같은 입력의 재시도라 고유 1건. `theta*pivot < -1e-5` 쪽은 미관측 |
+| 고정폭 -4 | 18/18 `pm`(등식 slack 이탈) | pivot 1e-4 |
+| `U`(a<0) -2 | 24/24 `wu` | |
+| `U`(a≥0) -1, -2 | 22 `wp`, 20 `wK` | -2는 abs(a)t=1.5e-6 |
+| `L`(a<0) -2, -1 | 23 `wl`, 21 `wK2` | -1은 abs(a)t=1.8e-6 |
+| 첫 절만의 방향 1 | 11·13 / 7·13·14 | 모두 slack 열(dU=I). 구조 열의 첫 절 참은 이번 대상에 없다 |
+| 방향 1 거리 flip | 13 / 7·13 | slack `rT`(두 순서), `rt`(dual) |
+| 진입 slack | 11·13 / 7·13·14 | 두 순서 모두 |
+
+- 설계와 달라진 점: 결합 LP에서는 C(`xc`)·T(`xT`)의 구조 열이 crash basis에 들어가 push되지 않았다. 대신 그 행 slack(`cc`·`rT`)이 진입해 첫 절 방향 1·방향 1 거리 flip·진입 slack을 primal에서도 만들었다. SD의 `rt` slack 진입은 dual에서만이다. 방향식 계수 10·`<` 경계는 T 대신 T2(`xT2`, dU=10dL)가 판별했다. 대상 arm은 모두 관측해 범위는 줄지 않았다.
+- 검사기 변조(`--self-test`, 종료 0): 04b-2 캡처 변조 11종과 판단 변조 13종에 더해 arm 캡처 변조 13종(해시·출처·설정·사건·x87·batch·frame·값·중복 실행·시작 벡터·보류 frame 누락), 대조군 사건 추가, 보류 사건 삭제·pivot·frame 변조를 모두 거부했다. 보류 사건을 지우면 "사건 없음"으로 실패한다.
+- 판단 모델 변조([기록](../../bench/oracle/m3_push_arms/model-mutation.json)): 04b-2의 20종과 새 arm별 12종, 총 32종. frame을 지운 "판단만" 실행에서 27종을 거부했다(full과 같은 수). 04b-2에서 상수 값으로만 거부되던 4종(e·거부 상수 2종·2h)도 이번엔 판단으로 거부된다(e는 E8, 10h는 K2, 1e4h는 A2, 2h는 K).
+  - 생존 5종은 모두 §2.2 분류다: `reject-arm-current`(재호출만), `leave-fixed-lt`·`leave-X-1`(서로 가림, 이중 변조 `leave-fixed-lt+X-1`은 거부), `leave-neg-default-2`(`A`·`F`만), `leave-U-le`(정확 경계 미달성).
+- Rust 재생: `tools/primal_push_decision_rust.py`에 arm 두 순서를 `arms` 역할로 더했다. 입력 `bench/oracle/m3_push_decision_rust/input.txt` 99단계(본문 SHA-256 `a507793d…`, 파일 첫 줄). `cargo test -p rsolver-lp --test push_decision && python3 tools/primal_push_decision_rust.py --compare` 종료 0. arm 50단계(고유 입력 43) 모두 방향·반전 alpha·단계 종류·theta(보류 포함)·frame·이탈 상태가 원본과 비트 일치했다. 집계는 방향 1 13, pivot 33, flip 11(거부 4 포함), 보류 6, frame 50이다. 연결 검사(Rust 반전 열의 `feasible_ratio`)도 99단계 모두 일치했다. pivot 1e-7 열도 재진입 없이 같은 위치를 골랐다. 기존 40+9단계 결과는 그대로다. `crates/lp`는 바꾸지 않았다.
+- Rust 소스 변조([기록](../../bench/oracle/m3_push_arms/rust-mutation.json)): 04c-6의 24종에 arm별 12종을 더한 36종 중 30종을 거부했다(04c-6은 24종 중 9). 생존 6종: `leave-fixed-lt`·`leave-X-1`·`leave-neg-default-2`·`leave-U-le`(위와 같음), `sign-zero-neg`(±0 pivot 없음), `recall-no-theta`(재호출 경로, 범위 밖). `reject-arm-current`는 04c-6처럼 옮기지 않았다.
+- 회귀: `primal_push_decision_check.py --old`, `push_slot_reach.py`, `primal_push_decision_rust.py --self-test`(변조 13종 거부), `cargo test -p rsolver-lp --test push_ratio && primal_push_ratio_rust.py --compare`(04c 47사례) 종료 0. `git diff --check main -- tools docs` 깨끗함.
+- 실행하지 않은 검사: `cargo test --release --workspace`·clippy·Python 확장. Rust·Python 소스를 바꾸지 않았고 바뀐 것은 재생 입력 텍스트와 Python 도구뿐이다. 재생 테스트(`push_decision`)는 위에서 돌렸다.
+- 해시: `tools/primal_push_arm_agent.js` `3a066dda…`, `tools/primal_push_arm_capture.js` `049438a5…`, `tools/push_arm_lp.py` `38081ae9…`, `arms.lp` `b05832f6…`, `arms.extra.json` `7843373b…`(전체 값은 manifest).
 
 ## 7. 판정과 인수인계
 
-(캡처 뒤 작성)
+- 작업 수행: 완료.
+- 오라클 판정: 계약 범위 **통과**. 대상 arm 전부(거부 두 arm, 양성 사건 보류, 고정폭, `U`(a<0)·`U`(a≥0) 두 결과, `L`(a<0) 두 결과, 첫 절 방향 1, 방향 1 거리 flip, 진입 slack)를 원본 순서별 독립 3회로 관측했다. 04b-2 판단 모델과 04c-6 Rust가 그 단계를 원본과 같게 재구성했다(Rust: 50단계, 고유 43).
+- 구조상 도달 불가(근거 §2.2, 실행 탐색 대상 아님): 이탈 `A`·`B` arm과 a<0 기본 arm(infeasible ratio 경로 전용), `X` arm(S+0x3b0=0에서 고정폭에 가려짐), ±0 pivot, 재호출에서만 다른 거부 arm 선택.
+- 미검증: `U`(a≥0)의 `abs(a)t == 2h` 정확 경계(`<`/`<=`), 보류의 `theta*pivot < -1e-5` 쪽, 구조 열의 첫 절 참(slack 열만 관측), `S+0x3b0`이 0이 아닌 설정, 보류 뒤 동작(보류 목록·재시도 순서). 위반 basis·infeasible ratio·재호출·batch·x87·pivot 적용·push 연결·work는 범위 밖이다.
+- 후속: infeasible ratio·위반 basis 방향식(`A`·`B` arm 포함)과 재호출 경로는 M3-04c-2(스프린트 목록에 새 행, 시작 사례는 `history/t1`·`tD`·`tSL`). M3-04c-5(재진입)는 그대로다. push 한 단계 연결은 pivot 적용 구현 뒤다.
+- branch `work/m3-04b-3`, worktree `../rsolver-m3-04b-3`. 결과·인수인계·진행·로드맵은 이 branch에서 갱신해 `--no-ff`로 병합한다.
+- 교훈: `docs/lessons/original.md`(시작값 붙임, crash와 등식 행, A·B 표시와 위반 수, X와 고정폭), `docs/lessons/tooling.md`(PStart·DStart로 push 상태 설계, LP 열 순서), `docs/lessons/process.md`(묶음 단독과 결합 LP의 crash 차이).

@@ -8,7 +8,13 @@
   "tools/primal_push_arm_capture.js": "049438a539b0ffb78b79fc4b4b065015850a10220f0f63af2caa6f2149328252",
   "tools/primal_push_arm_agent.js": "3a066ddaf8cd506743ff40447e9edfd964fecc828c3f563609c3734a5c047ccc",
   "tools/push_arm_lp.py": "38081ae9bcc91bfd6efafb348b598ad48208822c62f524c5d149747a3daf9abd",
-  "tools/primal_push_decision_check.py": "f2feeffaee265a98e3651901cceae8365a0de463335360457d27f97526167df8"
+  "tools/primal_push_decision_check.py": "f2feeffaee265a98e3651901cceae8365a0de463335360457d27f97526167df8",
+  "tools/primal_push_decision_rust.py": "e71ed3adb2b06fad1b1041bf00b9bb02699be5b0e4d703775cb84cde974f86c5"
+ },
+ "records": {
+  "bench/oracle/m3_push_arms/model-mutation.json": "9f80db82846b8a54691882aea4b26a52af115606c837db87e459a124aa86d0a6",
+  "bench/oracle/m3_push_arms/rust-mutation.json": "3a3e0cb715d125d1738593c85c52cf7c5bebfc23f87392e9ae6cc341b81cc1a1",
+  "bench/oracle/m3_push_decision_rust/input.txt": "c240f3eb7d862ea8cd24590eaaae193420fddd2fdbdf31c8ef8f092158702a79"
  },
  "sources": {
   "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb"
