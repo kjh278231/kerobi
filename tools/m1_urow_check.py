@@ -106,9 +106,10 @@ def prefactor(snaps, ev, k):
 
 def initial(d, v=None):
     """036ade/1da0b2 initial order by step. Singleton steps (step < ns): entries by ascending pre-factor position of
-    the column (1da0b2 C:530-560 walks columns in position order and appends to the pivoted row's U row). Kernel
-    steps: the active row list head first (036ade C:600-690 prepends while walking positions upward, fill is
-    prepended, C:2366-2393 copies the list), i.e. Rust kernel_u."""
+    the column (1da0b2 C:530-560 walks the still unpivoted columns in position order and appends to the pivoted row's
+    U row; kb2 has t = ns, so singleton rows with entries in singleton columns are not exercised). Kernel steps: the
+    active row list head first (036ade C:600-690 prepends while walking positions upward, fill is prepended at
+    C:2258-2265, C:2366-2393 copies the list), i.e. Rust kernel_u."""
     steps, ppos = d['steps'], d['ppos']
     rstep = {r: s for s, (r, _, _) in enumerate(steps)}
     u = [[] for _ in steps]
@@ -220,6 +221,14 @@ def tampers(data):
         p = d['dump'][1]['ppos']
         p[0], p[1] = p[1], p[0]
 
+    def carried_val(d):
+        # a value bit of an entry that pivot 13 already had (not the new column) at pivot 14
+        for ev in d['caps']:
+            r = ev[13]['r']
+            row = next(x for x in ev[14]['ft']['urow'] if any(c != r for c in x['idx']))
+            i = next(i for i, c in enumerate(row['idx']) if c != r)
+            row['val'][i] = format(int(row['val'][i], 16) ^ 1, '016x')
+
     def ku_order(d):
         # only F reads the kernel list order: reverse one multi-entry kernel row of pivot 15
         ku = next(x for x in d['dump'][0]['ku'] if len(x) >= 2)
@@ -231,6 +240,7 @@ def tampers(data):
     yield 'capture sha256', cap_sha
     yield 'update: two entries of a pivot 12 row exchanged', swap_row(12)
     yield 'update: row eta flag dropped', eta_flag
+    yield 'update: value bit of a carried entry at pivot 14', carried_val
     yield 'dump: one U value bit', dump_val
     yield 'dump: two step positions exchanged', dump_ppos
     yield 'refactor: two entries of a pivot 26 row exchanged (G 26->27 sees it first)', swap_row(26)
