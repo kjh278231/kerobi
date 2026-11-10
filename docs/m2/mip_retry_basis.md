@@ -68,7 +68,13 @@
 
 ## 5. 재실행 명령
 
-(구현 후 기록)
+- 캡처: `tools/mip_retry_basis.js natural|synth MODEL OUTPUT 'PARAMS'`. 원본 프로세스 하나를 Frida로 띄운다.
+  - `natural`: 읽기 전용이다. 03c-1 `retry` 모드의 사건을 그대로 만들고 `x:` 사건을 덧붙인다.
+  - `synth`: `natural`에 더해 재풀이 블록의 최상위 LP 호출이 반환될 때마다 원본 `113d92`를 별도 버퍼로 직접 부른다(`x:synth_export`, `synthetic: true`).
+  - 같은 함수에 리스너를 둘 붙이면 onLeave가 빠졌다(탐색 실행에서 확인). 그래서 주소마다 리스너를 하나만 둔다.
+- 전체 재실행: `tools/mip_retry_basis_runs.sh bench/oracle/mip_retry_basis`. 두 사례 × natural·synth × 3회, 총 12개 원본 프로세스를 한 번에 하나씩 돌리며 약 25분 걸린다. TimeLimit은 쓰지 않는다.
+- 판정: `python3 tools/mip_retry_basis_check.py --self-test`. controls와 acceptance를 함께 돌리고 변조를 넣어 거부되는지 확인한다. 기대 종료코드는 0이다. `controls`나 `acceptance`만 인자로 줄 수도 있다. manifest는 `python3 tools/mip_retry_basis_check.py --write-manifest`로 다시 만든다.
+- 회귀: 솔버 코드를 바꾸지 않으므로 Rust·Python 통합 검사는 대상이 아니다. 기존 03c-1 검사(`tools/mip_linear_child_retry_check.py --self-test`)는 저장 자료가 그대로이므로 계속 0이어야 한다.
 
 ## 6. 실행 결과
 
