@@ -59,7 +59,7 @@ def check(data):
     require(data["model_sha256"] == hashlib.sha256(model.read_bytes()).hexdigest(), "입력 파일 해시 불일치")
     tool = Path(__file__).resolve().parent / "crossover_entry_capture.js"
     require(data["tool_sha256"] == hashlib.sha256(tool.read_bytes()).hexdigest(), "도구 해시 불일치")
-    params = {"Threads": 1, "Seed": 0, "OutputFlag": 0, "Presolve": 0, "Method": {"pdhg": 6, "barrier": 2, "warm": 1}[kind], "Crossover": 1, "LPWarmStart": 2}
+    params = {"Threads": 1, "Seed": 0, "OutputFlag": 0, "Presolve": 0, "Method": {"pdhg": 6, "barrier": 2, "warm": 2}[kind], "Crossover": 1, "LPWarmStart": 2}
     require(data.get("params") == params, "파라미터")
     require(data.get("starts") == ({"PStart": [2, 1, 1], "DStart": [1, 0, 0]} if kind == "warm" else None) and "starts" in data, "시작 벡터 메타데이터")
     require((data.get("result") or {}).get("status") == 2 and not data.get("errors"), "정상 완료 상태")

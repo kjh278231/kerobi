@@ -9,7 +9,7 @@ const modelHash = hash(model), toolHash = hash(__filename);
 const bh = hash(binary), expected = '8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c';
 if (bh !== expected) throw Error('원본 바이너리 해시 불일치');
 const starts = kind === 'warm' ? {PStart:[2,1,1], DStart:[1,0,0]} : null;
-const params = {Threads: 1, Seed: 0, OutputFlag: 0, Presolve: 0, Method: kind === 'pdhg' ? 6 : kind === 'warm' ? 1 : 2, Crossover: kind === 'control' ? 0 : 1, LPWarmStart: 2};
+const params = {Threads: 1, Seed: 0, OutputFlag: 0, Presolve: 0, Method: kind === 'pdhg' ? 6 : 2, Crossover: kind === 'control' ? 0 : 1, LPWarmStart: 2};
 const code = `import gurobipy as gp\ne=gp.Env(params=${JSON.stringify(params)})\nm=gp.read(${JSON.stringify(path.resolve(model))},e)\n${kind === 'warm' ? "m.setAttr('PStart',m.getVars(),[2.,1.,1.]); m.setAttr('DStart',m.getConstrs(),[1.,0.,0.]); m.update()" : ''}\nm.optimize()\nimport json\ntry:\n vbasis=m.getAttr('VBasis',m.getVars()); cbasis=m.getAttr('CBasis',m.getConstrs())\nexcept gp.GurobiError:\n vbasis=None; cbasis=None\nprint('CROSSOVER_RESULT '+json.dumps({'status':m.Status,'vbasis':vbasis,'cbasis':cbasis}),flush=True)`;
 const agent = `
 Process.attachModuleObserver({onAdded(mod) { if (mod.name !== 'libgurobi130.so') return;

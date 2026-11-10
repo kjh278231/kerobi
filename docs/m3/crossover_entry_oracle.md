@@ -55,3 +55,9 @@ done
 python3 tools/crossover_entry_check.py --control bench/oracle/m3_crossover_entry/control-{1,2,3}.json
 python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/warm-{1,2,3}.json
 ```
+
+## warm 설정 변경과 재캡처
+
+첫 warm 사례의 `Method=1`은 원본 `0014acb0_PRIVATE00000000000c3d0d.c` 990–1009줄의 `env+0x2700 > 0`과 `uVar24 == 1` 분기에서 dual start만 남기고 `start+0x14`를 4로 바꾼다. 이어 1018–1024줄의 `11603b` 검사는 상태 2를 요구하므로 mode 1에 이르지 못한다. 실제 출력도 `Dual warm-start: use dual start, discard primal start`였다. 실패 세 기록은 `warm-method1-{1,2,3}.json`으로 보존한다.
+
+따라서 warm의 고정 Method를 2로 변경했다. 두 시작 벡터와 LPWarmStart=2는 그대로다. 새 도구 해시로 모든 경로를 독립 세 번 다시 실행해 `*-{1,2,3}-new.json`에 저장했다. warm은 `0c3d0d → 13f716(mode 1) → prepared` 각 1건, barrier와 PDHG는 각 mode 0 목표 1건, 대조군은 목표 0건이었다. 각 경로의 세 기록은 진단 `output`을 제외한 모든 필드에서 정확히 일치했다. 형식 검사 함수는 각 목표 1건을 반환했으며 대조군 검사 함수는 0건을 반환했다. 세 번 일치는 이 환경·입력 범위의 근거다. CLI 합격 잠금 해제와 변조 검증은 별도로 진행한다.
