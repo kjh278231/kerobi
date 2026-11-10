@@ -1,0 +1,52 @@
+{
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "cases": {
+  "markshare_4_0": {
+   "NodeLimit": 2000,
+   "Seed": 0,
+   "Threads": 1,
+   "model": "markshare_4_0.mps.gz"
+  },
+  "neos5": {
+   "NodeLimit": 2000,
+   "Seed": 0,
+   "Threads": 1,
+   "model": "neos5.mps.gz"
+  },
+  "pk1": {
+   "NodeLimit": 2000,
+   "Seed": 0,
+   "Threads": 1,
+   "model": "pk1.mps.gz"
+  },
+  "tr12-30": {
+   "NodeLimit": 2000,
+   "Seed": 0,
+   "Threads": 1,
+   "model": "tr12-30.mps.gz"
+  }
+ },
+ "files": {
+  "markshare_4_0_1.json.gz": "27035e7c7820efcd4aa54d24780c4d0da2543eae87966c2d3d775034e395ce9b",
+  "markshare_4_0_2.json.gz": "27035e7c7820efcd4aa54d24780c4d0da2543eae87966c2d3d775034e395ce9b",
+  "markshare_4_0_3.json.gz": "27035e7c7820efcd4aa54d24780c4d0da2543eae87966c2d3d775034e395ce9b",
+  "neos5_1.json.gz": "584288a81776535a2ca4d157aff9067befce8efea9b573db09cadd4b5b6c0d2f",
+  "neos5_2.json.gz": "584288a81776535a2ca4d157aff9067befce8efea9b573db09cadd4b5b6c0d2f",
+  "neos5_3.json.gz": "584288a81776535a2ca4d157aff9067befce8efea9b573db09cadd4b5b6c0d2f",
+  "pk1_1.json.gz": "13a6a7560aa6555294358be2e513d70045316a3311ae39dc0a3c3f15f0feda12",
+  "pk1_2.json.gz": "13a6a7560aa6555294358be2e513d70045316a3311ae39dc0a3c3f15f0feda12",
+  "pk1_3.json.gz": "13a6a7560aa6555294358be2e513d70045316a3311ae39dc0a3c3f15f0feda12",
+  "tr12-30_1.json.gz": "c24235721e935398b1dd98278c7d9b3179396e751fb07d967e9361eff6a619a7",
+  "tr12-30_2.json.gz": "c24235721e935398b1dd98278c7d9b3179396e751fb07d967e9361eff6a619a7",
+  "tr12-30_3.json.gz": "c24235721e935398b1dd98278c7d9b3179396e751fb07d967e9361eff6a619a7"
+ },
+ "models": {
+  "markshare_4_0.mps.gz": "1a1feb04f5637db9f69be53bd6224fcd9fe5b8d750870d9b2002b535d25f4353",
+  "neos5.mps.gz": "2888e9aeb10a4cf16d3b9ad221302fd3de815ce1454b31e660ebd060589c1072",
+  "pk1.mps.gz": "6c64530538b254a8ae648f8f8f188847366ae52da560fdec0ad290c642973ba0",
+  "tr12-30.mps.gz": "94f8cf2fd2fc920ed6ea2452b0755aeec110eb8404716554485c25e7a1e06a3d"
+ },
+ "schema": 1,
+ "task": "M2-06a",
+ "tool_sha256": "6c8f58f23d3b52b7c6d29e9d18ae3cda2b4d9c67de1230d823ee66f70c8157db"
+}
