@@ -29,7 +29,7 @@
 - **상태 12 재풀이는 실패한 LP의 마지막 basis가 아니라 노드에 저장된 시작 basis에서 다시 시작한다.** 첫 LP와 같은 `I+0x98/0xa0` 포인터를 넘긴다. method는 `param_3[3] == 0`이다(C:925; nidda에서는 0). 캡처. (M2-03c-2)
 - **재풀이 뒤의 basis export는 LP 상태에 달려 있다.** LP 6(cutoff)이면 export가 없고, LP 2이면 `5d4427`이 노드에 저장한다. 루트에서는 이어서 `68341b`("DegenMoves")가 `10acb2`로 그 basis를 `lp+0x238`에 넣고 Method 0 LP를 푼다. 캡처. (M2-03c-2)
 - **`GURO_PAR_FEASHELPER == -2`(즉시 상태 3)는 공개 파라미터 범위 밖이다.** 자연 5→12 재분류는 정확한 산술에서 일어날 수 없다. C. (M2-03c-1, [§10](../m2/mip_linear_child_trace.md))
-- **재풀이 method는 첫 LP의 실제 method가 아니라 `param_3[3]`을 다시 읽어 뒤집는다(`(param_3[3]==0)`, C:926).** 첫 LP는 노드 basis가 있으면 `param_3[3]`, 없으면 `param_3+0x10`을 쓰고, `param_7≠0`이면 적응 선택으로 바뀔 수 있다(C:353–455). C·캡처. (M2-03d-1, [§2](../m2/mip_retry_rust_boundary.md#2-원본과-상태-경계))
+- **재풀이 method는 첫 LP의 실제 method가 아니라 `param_3[3]`을 다시 읽어 뒤집는다(`(param_3[3]==0)`, C:926).** 첫 LP는 노드 basis가 있으면 `param_3[3]`, 없으면 `param_3+0x10`을 쓰고, `param_7≠0`이면 적응 선택으로 바뀔 수 있다(C:351–455). C(캡처는 nidda 한 점, 첫 1→재풀이 0과 모순 없음). (M2-03d-1, [§2](../m2/mip_retry_rust_boundary.md#2-원본과-상태-경계))
 - **재풀이 뒤에도 상태 12이면 노드 basis(`I+0xb0`·`I+0x98`)를 해제하고 `600d25`로 노드 3을 만든다(C:2244–2257).** 다음 LP는 basis 없이 시작한다. C. (M2-03d-1, [§2](../m2/mip_retry_rust_boundary.md#2-원본과-상태-경계))
 - **03c 재풀이 오라클의 두 사례는 본 모델의 일반 B&B 노드가 아니다.** nidda 노드 LP는 모델(402행)보다 62행 많은 464행이고 `8e4682`가 만든 부모 없는 노드다. gmu "루트"는 53×110으로 모델 1919×435와 다르다(sub-MIP 추정). 캡처 크기를 모델 크기와 비교해 확인했다. (M2-03d-1, [§2](../m2/mip_retry_rust_boundary.md#2-원본과-상태-경계))
 

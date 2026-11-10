@@ -59,7 +59,7 @@ M2-01의 G6 완료 범위는 유지한다. 실제 실행되지 않은 presolve �
 | M2-03c-2 | 오라클 완료 | 재풀이 후 VBasis·CBasis, 재풀이 입력 basis의 출처, factor·norm 동작 | 03c-1 | [완료](m2/mip_retry_basis.md). 입력은 노드 저장 basis(첫 LP와 같음). 재풀이 뒤 export는 nidda 없음, gmu `5d4427`. 적재·상태 재설정·분해 횟수·norm 입력 null을 사례별 원본 3회 확인. LU·가중치 내용 미검증, Rust 미변경 |
 | M2-03d | 구현 | 03c로 검증 가능한 선형 분기 하나 | 03c | 원본 노드·MIP 상태 대조와 회귀 |
 | M2-03d-1 | 조사 완료 | Rust 자연 상태 12 재풀이의 비교 경계와 계측 지점 | 03c-1·03c-2 | [완료](m2/mip_retry_rust_boundary.md). 원본 두 사례는 Rust 자연 실행으로 도달 불가(nidda 464행·부모 없는 `8e4682` 노드, gmu 53×110 sub-MIP 루트 추정). 경계 L1: 원본 LP 결과 주입 재풀이 제어 재생. 사건 형식 `rsolver.mip_retry.v1`, 기준 자료 `bench/oracle/mip_retry_rust/nidda_stress.json`, 변조 18종 거부. Rust 미변경 |
-| M2-03d-2 | 구현 | 03d-1 L1 경계의 nidda 분기(`node_basis_direct`) 재풀이 제어 | 03d-1. 실제 경로의 primal warm start·LP cutoff는 M1 선행 | 노드 basis 저장·상속, 첫 LP warm start, 재풀이 method 규칙, 재풀이 뒤 처리. Rust trace가 `python3 tools/mip_retry_rust_expect.py --compare <trace>` PASS, 회귀. L1 통과로만 보고 |
+| M2-03d-2 | 구현 (사용자 확인 대기) | 03d-1 L1 경계의 nidda 분기(`node_basis_direct`) 재풀이 제어. basis가 있는 노드에서 첫 LP·재풀이에 노드 basis를 넘기고 method `param_3[3]` 규칙과 주입 LP 6 처리를 구현 | 03d-1, "자연" 전제 변경과 진행 순서의 사용자 확인. 실제 경로는 M2-10b(basis 저장·상속)와 M1 primal warm·cutoff(번호 없음) 선행 | Rust trace가 `python3 tools/mip_retry_rust_expect.py --compare <trace>` PASS, 회귀. L1 통과로만 보고. 상속·LP 2 뒤 저장·전 자식 warm start는 제외. 선행 전 실제 경로는 `bnb.rs:176` 유지, dual·cold 대체 금지 |
 | M2-03d-3 | 오라클 | 재풀이 시점 노드 LP(행·bound·목적·cutoff) 원본 캡처와 Rust LP 포함 재생(L2) | 03d-2, M1 primal warm·cutoff | 재풀이 LP 상태·basis 원본 대조. gmu 분기(sub-MIP 여부)는 번호 미배정 |
 | M2-04a | 조사 | presolve 긴 패스 하나의 중단 지점 | 5초 기준표 | 원본 확인 위치와 중단 시 유효 상태 |
 | M2-04b | 구현 | 04a의 패스에서 마감 전파 | 04a | 만료·미만료 결과와 부분 모델 처리 검사 |
