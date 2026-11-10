@@ -114,7 +114,7 @@ python3 tools/primal_push_decision_check.py --probe $D/history/<이름>-<kind>-1
   - 중간값 비트로 거부 1종: r 합산 역순(frame r).
   - 상수 값으로 거부 4종: e·거부 상수 2종·2h. 검사기가 변조 상수로 기대 frame을 만들기 때문이며 기본 frame 대조와 같은 정보다. 그 상수를 읽는 판단이 갈렸다는 뜻이 아니다.
 - 살아남은 12종은 저장 자료가 판별하지 못하는 경계다. 방향식 계수 10과 `<`·`-(r*dL)` 부호, 거리 flip의 `1e-10`·`<=`, 거부 arm 선택 두 종, pivot `1e-6`, 고정폭 `<=`, a<0 기본 -1, `X`→-4, `U`의 `<`.
-- 회귀: 04b-1 `step.check`(primal·dual 3회)는 `--old`·전체 검사 안에서 실행돼 통과했다. `node --check` 두 JS, `py_compile`, `git diff --check` 통과. 04b-1·04c 도구와 저장 자료는 바꾸지 않았다.
+- 회귀: 04b-1 `step.check`(primal·dual 3회)는 `--old`·전체 검사 안에서 실행돼 통과했다. `node --check` 두 JS, `py_compile` 통과. `git diff --check main`은 탐색·대상 LP 6개 목적 줄의 끝 공백만 보고한다. 캡처 모델 해시에 고정된 입력이라 고치지 않았다. 04b-1·04c 도구와 저장 자료는 바꾸지 않았다.
 - 실행하지 않은 검사: Cargo·clippy·Python 확장. Rust·Python 코드 변경이 없다.
 
 ## 7. 판정과 인수인계
