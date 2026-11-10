@@ -89,8 +89,22 @@ def check_case(case, caps, old):
     need(len(dh) >= 1, f'{case}: no top-level cda5b on the node LP')
     need(all(e['hash'] == lp['dhash']['hash'] for e in dh), f'{case}: D hash changed between the LP calls and the API dump')
     need(lp['dhash']['rows'] == lp['rows'] and lp['dhash']['cols'] == lp['cols'], f'{case}: D dims vs API dims')
-    out = {'rows': lp['rows'], 'cols': lp['cols'], 'nnz': lp['cbeg'][-1], 'node_lp_cda5b': len(dh)}
+    # GRBXgetvars returns the stored values unchanged only without D scale arrays
+    need(lp['dhash']['null_D3d8'] and lp['dhash']['null_D3e0'], f'{case}: D is scaled at the API dump')
+    need(lp['k'] == min(e['k'] for e in dh if e['k'] > 1), f'{case}: API dump not at the first node-LP cda5b after the decision')
+    out = {'rows': lp['rows'], 'cols': lp['cols'], 'nnz': lp['cbeg'][-1], 'node_lp_cda5b': [e['k'] for e in dh], 'dump_k': lp['k']}
     env = lp['env_params']
+    # C3: ws cutoff of every node-LP call comes from the LP env (02f7e1 C:247-259)
+    cut, extra = env['Cutoff'], env['env+0x24b8']
+    need(lp['lp_f0_null'], f'{case}: lp+0xf0 is set, cutoff would be 1e100')
+    node_k = {e['k'] for e in dh}
+    wsn = [e for e in ye if e['event'] == 'y:ws' and e['k'] in node_k]
+    need(wsn, f'{case}: no ws of a node-LP call')
+    for w in wsn:
+        need(w['cutoff_3b8'] == cut, f'{case}: ws k={w["k"]} cutoff {w["cutoff_3b8"]} vs env Cutoff {cut}')
+        need(w['cutoff2_3c0'] == (cut if f(cut) >= f(extra) else extra), f'{case}: ws k={w["k"]} +0x3c0')
+    out['cutoff'] = f(cut)
+    out['retry_ws_status'] = [(e['k'], e['status_f0'], f(e['obj_118'])) for e in ye if e['event'] == 'y:ws_leave']
     if cfg['ws']:
         # C2: the simplex work arrays of the retry LP equal the API dump (unscaled, '>' rows negated as in GRBXgetvars)
         need(len(dh) == 2, f'{case}: expected the first LP and the retry on the node LP, got {len(dh)}')
@@ -117,11 +131,6 @@ def check_case(case, caps, old):
             need(ws['sense'][i] == ('<' if flip[i] else lp['sense'][i]), f'{case}: ws sense[{i}]')
         out['slack_bounds'] = sorted({(ws['sense'][i], ws['l'][n + i], ws['u'][n + i]) for i in range(m)})
         out['slack_c_zero'] = all(f(x) == 0.0 for x in ws['c'][n:])
-        # C3: ws cutoff from the LP env (02f7e1 C:247-259)
-        cut, extra = env['Cutoff'], env['env+0x24b8']
-        need(lp['lp_f0_null'], f'{case}: lp+0xf0 is set, cutoff would be 1e100')
-        need(ws['cutoff_3b8'] == cut, f'{case}: ws cutoff {ws["cutoff_3b8"]} vs env Cutoff {cut}')
-        need(ws['cutoff2_3c0'] == (cut if f(cut) >= f(extra) else extra), f'{case}: ws+0x3c0')
         # C4: retry status as in 03c-2, cutoff consistent
         wl = [e for e in ye if e['event'] == 'y:ws_leave']
         need(len(wl) == 1, f'{case}: expected one retry ws_leave')
@@ -129,19 +138,26 @@ def check_case(case, caps, old):
         need(len(old_st) == 1 and wl[0]['status_f0'] == old_st[0]['lp']['lp_status'], f'{case}: retry status vs 03c-2')
         if wl[0]['status_f0'] == 6:
             need(f(wl[0]['obj_118']) >= f(cut), f'{case}: status 6 with objective below cutoff')
-        out.update(cutoff=f(cut), retry_status=wl[0]['status_f0'], retry_obj=f(wl[0]['obj_118']))
+        out.update(retry_status=wl[0]['status_f0'], retry_obj=f(wl[0]['obj_118']))
     if cfg['model']:
         # E: the node LP is the model plus extra rows; columns, objective and the model rows unchanged
         md = d['model_dump']
         need(md['cols'] == lp['cols'] and lp['rows'] >= md['rows'], f'{case}: model {md["cols"]}x{md["rows"]} vs LP')
-        need(md['obj'] == lp['obj'] and md['vtype'] == lp['vtype'] and md['model_sense'] == lp['model_sense'] and md['obj_con'] == lp['obj_con'],
-             f'{case}: objective, vtype or sense differ from the model')
+        need(md['obj'] == lp['obj'] and md['model_sense'] == lp['model_sense'] and md['obj_con'] == lp['obj_con'],
+             f'{case}: objective or sense differ from the model')
+        # vtype: equal, except a model 'I' column with bounds [0, 1] is 'B' in the node LP (observed; contract section 6)
+        for j, (a, c) in enumerate(zip(md['vtype'], lp['vtype'])):
+            need(a == c or (a, c) == ('I', 'B') and f(md['lb'][j]) == 0.0 and f(md['ub'][j]) == 1.0, f'{case}: vtype col {j} {a} vs {c}')
+        out['vtype_I_to_B'] = sum(a != c for a, c in zip(md['vtype'], lp['vtype']))
         lr = rows_of(lp)
         for i in range(md['rows']):
             need(dict(zip(*md['row_major'][i])) == lr[i], f'{case}: LP row {i} differs from model row {i}')
             need(md['rhs'][i] == lp['rhs'][i] and md['sense'][i] == lp['sense'][i], f'{case}: LP row {i} rhs/sense')
         out['extra_rows'] = lp['rows'] - md['rows']
         out['bound_diffs'] = sum(md['lb'][j] != lp['lb'][j] or md['ub'][j] != lp['ub'][j] for j in range(md['cols']))
+        ints = [j for j in range(md['cols']) if lp['vtype'][j] != 'C']
+        out['int_fixed'] = {v: sum(lp['lb'][j] == lp['ub'][j] == v for j in ints) for v in sorted({lp['lb'][j] for j in ints})}
+        out['int_cols'] = len(ints)
         out['extra_row_senses'] = ''.join(sorted(set(lp['sense'][md['rows']:])))
     return out
 
@@ -151,9 +167,23 @@ def summary(case, d):
     w = one(ye, 'y:where')
     mains = [e for e in d['events'] if e['event'] == 'y:mipmain']
     rest = [e for e in d['events'] if e['event'] == 'y:restart']
-    return {'where': {k: w[k] for k in ('depth', 'mip', 'root_mip', 'self_628', 'restarts', 'lp_is_mip_lp', 'mip_lp')},
-            'mipmain_enters': [(e['call'], e['depth'], e['model_rows'], e['model_cols']) for e in mains if e['phase'] == 'enter'],
-            'restarts': [(e['phase'], e['call'], e['mip']) for e in rest]}
+    dd = one(ye, 'y:decision_dhash')
+    return {'where': {k: w[k] for k in ('depth', 'mipmain', 'root_is_self', 'self_628', 'restarts', 'lp_is_mip_lp', 'mip_lp', 'lp_env_2728')},
+            'decision_D': {k: dd[k] for k in ('hash', 'D3c', 'null_D3d8', 'null_D3e0')},
+            'enclosing_mipmain': enclosing(d),
+            'mipmain_depth_counts': {str(k): sum(e['phase'] == 'enter' and e['depth'] == k for e in mains) for k in sorted({e['depth'] for e in mains})},
+            'restarts': [(e['phase'], e['call'], e['mipmain'], e['restarts']) for e in rest]}
+
+
+def enclosing(d):
+    """5bbf7f calls active at the retry solve: (call, depth, model rows x cols, presolved, env+0x2728)."""
+    call = [e for e in d['events'] if e['event'] == 'retry_solve'][0]['events'][0]['call']
+    stack = []
+    for e in d['events']:
+        if e['event'] != 'y:mipmain' or e['call'] > call:
+            continue
+        stack.append(e) if e['phase'] == 'enter' else stack.pop()
+    return [(e['call'], e['depth'], [e['model_rows'], e['model_cols']], e['presolved'], e['env_2728']) for e in stack]
 
 
 def load_all():

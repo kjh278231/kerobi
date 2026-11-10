@@ -132,21 +132,25 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
    for (const [t, name, o] of ENV_PARAMS) params[name] = t === 'int' ? env.add(o).readS32() : dbl1(env.add(o));
    return {cols: n, rows: m, model_sense: sense, obj_con: dbl1(oc), obj: da('Obj', n), lb: da('LB', n), ub: da('UB', n), vtype: ca('VType', n),
      rhs: da('RHS', m), sense: ca('Sense', m), cbeg, ind: ints(vi, e), val: dbls(vv, e), lp_f0_null: lp.add(0xf0).readPointer().isNull(), env_params: params, api_rc: rcs}; }
- const mipIndex = new Map(); let lastDims = null;
- const mipIdx = mm => { const k = mm.toString(); if (!mipIndex.has(k)) mipIndex.set(k, mipIndex.size); return mipIndex.get(k); };
+ let lastDims = null;
  const inLib = p => p.compare(b) >= 0 && p.compare(b.add(m.size)) < 0;
- const bt = (c, kind) => Thread.backtrace(c, kind).slice(0, 16).map(p => inLib(p) ? off(p) : null);
- // MIP identity: M+0x620 root(master) MIP, M+0x628 == M at top level (5daa82); root M+0x808 restart count
+ // only frames inside libgurobi; FUZZY also scans stale stack slots, ACCURATE stops early without unwind info
+ const bt = (c, kind) => Thread.backtrace(c, kind).filter(inLib).slice(0, 16).map(off);
+ // MIP identity without pointer labels (heap reuse made them differ between runs): the active 5bbf7f call (serial, depth),
+ // M+0x620 root(master) MIP == M, M+0x628 == M (5daa82: top level), root M+0x808 restart count
+ const mains = [];
+ let mainSerial = 0, mipDepth = 0, callNow = () => nextCall;
  const mipId = mm => { const r = mm.add(0x620).readPointer();
-   return {mip: mipIdx(mm), mips_seen: mipIndex.size, root_mip: mipIdx(r), self_628: mm.add(0x628).readPointer().equals(mm), restarts: r.add(0x808).readS32()}; };
+   return {mipmain: mains.length ? mains[mains.length - 1] : null, root_is_self: r.equals(mm), self_628: mm.add(0x628).readPointer().equals(mm), restarts: r.add(0x808).readS32()}; };
  // 5bbf7f(model) MIP main: nesting depth tells top-level search from a MIP solved inside another one
- let mipDepth = 0, callNow = () => nextCall;
- Interceptor.attach(b.add(0x4e36e0), {onEnter(a) { this.p = a[0].add(0x1d8).readPointer(); this.dp = ++mipDepth; const d = a[0].add(0xe8).readPointer();
+ Interceptor.attach(b.add(0x4e36e0), {onEnter(a) { this.p = a[0].add(0x1d8).readPointer(); this.dp = ++mipDepth; this.serial = mainSerial++; mains.push(this.serial);
+   const d = a[0].add(0xe8).readPointer();
    const pd = this.p.isNull() ? null : dims(this.p);
-   send({event: 'y:mipmain', phase: 'enter', call: callNow(), depth: this.dp, ret: off(this.returnAddress), bt: bt(this.context, Backtracer.FUZZY),
+   send({event: 'y:mipmain', phase: 'enter', call: callNow(), serial: this.serial, depth: this.dp, ret: off(this.returnAddress),
      model_rows: d.add(8).readS32(), model_cols: d.add(0xc).readS32(), presolved: pd, env_2728: a[0].add(0x100).readPointer().add(0x2728).readS32()}); },
   onLeave(r) { const mm = this.p.isNull() ? NULL : this.p.add(0x2b8).readPointer();
-   send({event: 'y:mipmain', phase: 'leave', call: callNow(), depth: this.dp, rc: r.toInt32(), mip: mm.isNull() ? null : mipIdx(mm)}); mipDepth--; }});
+   send({event: 'y:mipmain', phase: 'leave', call: callNow(), serial: this.serial, depth: this.dp, rc: r.toInt32(), mip_set: !mm.isNull()});
+   if (mains.pop() !== this.serial) throw Error('mipmain nesting'); mipDepth--; }});
  Interceptor.attach(b.add(0x5805a0), {onEnter(a) { this.mm = a[0]; send(Object.assign({event: 'y:restart', phase: 'enter', call: callNow(), depth: mipDepth}, mipId(a[0]))); },
   onLeave(r) { send(Object.assign({event: 'y:restart', phase: 'leave', call: callNow(), rc: r.toInt32()}, mipId(this.mm))); }});
  // ---- provenance of I+0xb0 across the whole run ----
@@ -190,9 +194,9 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
    rec({event: 'solve:enter', call: this.call, node: node(this.n), lp: lpstate(this.lp)});
    const I = this.n.add(0x18).readPointer();
    rec({event: 'x:solve_basis', node_basis: nodeBasis(I), provenance: trim(validPack(I), 8), lp: wsinfo(this.lp)});
-   const mm = I.readPointer(), d = dims(this.lp), key = [mipIdx(mm), d.rows, d.cols].join();
+   const mm = I.readPointer(), d = dims(this.lp), id = mipId(mm), key = [id.mipmain, id.root_is_self, id.restarts, d.rows, d.cols].join();
    if (key !== lastDims) { lastDims = key;
-    send(Object.assign({event: 'y:dims', call: this.call, depth: mipDepth}, mipId(mm), {rows: d.rows, cols: d.cols, root: node(this.n).root,
+    send(Object.assign({event: 'y:dims', call: this.call, depth: mipDepth}, id, {rows: d.rows, cols: d.cols, root: node(this.n).root,
      lp_is_mip_lp: this.lp.equals(mm.add(8).readPointer()), env_2728: this.lp.add(0x100).readPointer().add(0x2728).readS32()})); } },
   onLeave(r) { const after = this.h.readPointer(), s = solves.pop();
    if (!s || s.call !== this.call) throw Error('solve nesting mismatch');
