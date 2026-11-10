@@ -32,7 +32,9 @@ CASES = {'nidda_stress': {'old': f'{OLD}/nidda_stress_natural_1.json', 'ws': Tru
          # model 'report': E fails as written (sense change); the sense differences are recorded, every other E rule still fails
          'nidda_bnb_H_s1': {'old': f'{DATA}/nidda_bnb_H_s1_natural.json', 'ws': True, 'model': 'report',
                             'node': {'call': 19901, 'id': 16948.0, 'parent': 16946.0, 'depth': 30, 'root': False, 'I94': 488,
-                                     'where': {'depth': 1, 'restarts': 1, 'root_is_self': False}, 'frame': '5fb8ec'}}}
+                                     'where': {'depth': 1, 'restarts': 1, 'root_is_self': False}, 'frame': '5fb8ec',
+                                     # ws rows emptied at 02f7e1 return, pinned from the capture: not a bound-redundancy rule (contract section 6)
+                                     'blanked': [125, 147, 150, 175, 197, 200, 205, 212, 213, 214, 219, 228, 235, 237, 238, 275, 297, 300, 325, 347, 350, 355, 362, 363, 364, 369, 378, 385, 387, 388, 397, 400, 405, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 428, 430, 431, 432, 433, 434, 435, 436, 437, 438, 440, 441, 442, 443, 444, 445, 446, 447, 452, 453, 454, 455, 456, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 475, 480, 481, 482, 483, 484, 485, 486, 487]}}}
 BASIS_TOOL = 'tools/mip_retry_basis.js'
 need, Fail = B.need, B.Fail
 
@@ -164,7 +166,7 @@ def check_case(case, caps, old):
         # blanked rows R: rows with no ws entry. 03d-6 contract change: the B&B node LP's ws at 02f7e1 return is the API LP with the
         # rows R emptied and b=0 (origin not identified); the 03d-3 cases must have R empty (then this is the original strict rule)
         R = blanked_rows(ws)
-        need(not R or 'node' in cfg, f'{case}: ws has {len(R)} empty rows, first {R[:5]}')
+        need(R == cfg.get('node', {}).get('blanked', []), f'{case}: ws empty rows {len(R)}, first {R[:5]}, differ from the pinned set')
         for j in range(n):
             need(ws['c'][j] == (lp['obj'][j] if sgn == 1 else neg(lp['obj'][j])), f'{case}: ws c[{j}] {ws["c"][j]} vs obj {lp["obj"][j]}')
             need(ws['l'][j] == lp['lb'][j] and ws['u'][j] == lp['ub'][j], f'{case}: ws bound col {j}: '
@@ -380,7 +382,7 @@ def run(caps, olds):
 
 def tampers(caps):
     def nidda(fn):
-        def t(c):
+        def t(c, o):
             fn(c['nidda_stress'])
         return t
 
@@ -429,14 +431,53 @@ def tampers(caps):
         rs['events'] = [e for e in rs['events'] if e['event'] != 'y:ws']
 
     def gmu(fn):
-        def t(c):
+        def t(c, o):
             fn(c['gmu-35-50_default'])
         return t
 
     def bnb(fn):
-        def t(c):
+        def t(c, o):
             fn(c['nidda_bnb_H_s1'])
         return t
+
+    def bnb_ref(fn, ref=True):
+        """F/G tampers: also applied to the reference capture so that check A passes and F/G must reject."""
+        def t(c, o):
+            for r in RUNS:
+                fn(c['nidda_bnb_H_s1'][r])
+            if ref:
+                fn(o['nidda_bnb_H_s1'])
+        return t
+
+    def rs(d):
+        return [e for e in d['events'] if e['event'] == 'retry_solve'][0]['events']
+
+    def ev(d, name):
+        return [e for e in rs(d) if e['event'] == name][0]
+
+    def parent(d):
+        rs(d)[0]['node']['parent'] = None
+
+    def call(d):
+        rs(d)[0]['call'] += 1
+
+    def i94(d):
+        ev(d, 'x:retry_basis')['node_basis']['I94'] = 464
+
+    def frame(d):
+        w = ev(d, 'y:where'); w['bt_accurate'] = []; w['bt_fuzzy'] = [x for x in w['bt_fuzzy'] if not 0x5101d0 <= x < 0x5101d0 + 21510]
+
+    def restarts(d):
+        ev(d, 'y:where')['restarts'] = 0
+
+    def dec_len(d):
+        ev(d, 'x:decode:leave')['cbasis'].pop()
+
+    def extra_blank(d):
+        # empty one more ws row (entries removed, b=0) consistently in every run
+        w = ev(d, 'y:ws'); i = w['ind'][0]; keep = [k for k in range(len(w['ind'])) if w['ind'][k] != i]
+        cb = [sum(1 for k in keep if k < w['cbeg'][j]) for j in range(w['cols'] + 1)]
+        w['ind'] = [w['ind'][k] for k in keep]; w['val'] = [w['val'][k] for k in keep]; w['cbeg'] = cb; w['b'][i] = '0' * 16
 
     def zero_bin(d):
         d['binary_sha256'] = '0' * 64
@@ -457,6 +498,9 @@ def tampers(caps):
         ('node id', all_runs(node_id)), ('nnz value', all_runs(set_val)), ('cutoff', all_runs(set_cut)), ('dhash', all_runs(dhash)),
         ('non-y event', all_runs(non_y)), ('run differs', lambda cs: set_ub(cs[3])), ('ws array', all_runs(ws_l)),
         ('model row', all_runs(model_row)), ('cda5b basis', all_runs(basis_entry))]]
+    bnb_t += [('bnb F/G ' + n, bnb_ref(fn, ref)) for n, fn, ref in [
+        ('node id', node_id, True), ('parent', parent, True), ('call', call, True), ('I94', i94, True), ('5fb8ec frame', frame, False),
+        ('restarts', restarts, False), ('cda5b basis', basis_entry, True), ('decoded basis length', dec_len, True), ('extra blanked row', extra_blank, False)]]
     return bnb_t + [('gmu cutoff', gmu(all_runs(set_cut))), ('gmu dhash', gmu(all_runs(dhash))), ('nnz value', nidda(all_runs(set_val))), ('bound', nidda(all_runs(set_ub))), ('cutoff', nidda(all_runs(set_cut))),
             ('retry solve removed', nidda(all_runs(drop_retry))), ('run differs', nidda(lambda cs: set_ub(cs[2]))),
             ('non-y event', nidda(all_runs(non_y))), ('dhash', nidda(all_runs(dhash))), ('ws array', nidda(all_runs(ws_l))),
@@ -481,10 +525,10 @@ def main():
         print('  ', json.dumps(summary(case, caps[case][1])))
     if selftest:
         for name, fn in tampers(caps):
-            c = copy.deepcopy(caps)
-            fn(c)
+            c, o = copy.deepcopy(caps), copy.deepcopy(olds)
+            fn(c, o)
             try:
-                run(c, olds)
+                run(c, o)
             except Fail as e:
                 print('rejected', name, '-', e); continue
             print('FAIL tamper accepted:', name); return 1
