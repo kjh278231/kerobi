@@ -30,7 +30,7 @@
 | 필드·사건 | 비교 규칙 | 방법 |
 |---|---|---|
 | C1 진입 열·flip 목록(순서 포함) | 정확 일치. 원본과 다른 호출은 tuff 31·33·36·37이어야 하고, 프로토타입 출력과는 3112/3112 같아야 한다 | 새 `tools/m1_bfrt_rust.py`가 코퍼스를 텍스트로 바꿔 무시 테스트 `crates/lp/tests/bfrt_corpus.rs`에 넣고 출력 비교 |
-| C1 판별력 | 재훑기 끔(NONDEGENFLIP을 0으로 넣음)이면 kb2 호출 21이 원본과 달라야 하고, pow 항 제거·보정 0 변이도 진입 일치 수가 줄어야 한다 | 같은 도구 `--self-test`(입력 변조로 변이) |
+| C1 판별력 | 재훑기 끔(NONDEGENFLIP을 0으로 넣음)이면 kb2 호출 21이 원본과 달라야 하고, pow 항 제거·보정 0 변이도 진입 일치 수가 줄어야 한다 | 같은 도구 `--self-test`(입력 변조로 변이). pow·보정 변이는 입력으로 만들 수 없어 소스 임시 변이로 돌렸다(§6, 계약 변경) |
 | C2 켜짐 반복 | kb2: Rust가 켜는 첫 반복 = 원본 켜짐 캡처의 반복 | `RSOLVER_DEBUG` 출력 또는 스냅숏 |
 | C3 경로·상태 | pathcmp 첫 차이 > 21, statecmp 반복 22 OK | 기존 도구 |
 | 회귀 | `lp_check --methods 1` 정답 90/91 유지, IterCount 일치 수와 모델별 반복 변화 기록 | 기존 도구 |
@@ -53,8 +53,30 @@
 
 ## 6. 실행 결과
 
-(실행 뒤 작성)
+- 실행 commit: `9a712fe`(코드), 이어 main `96f6a95`(M2-06e, docs·tools·bench만, `git diff --stat e5c3eb8 96f6a95 -- crates python tools/proto` 빈 출력)을 병합. 환경: WSL2 x86-64 Linux, 이 worktree 빌드(`tools/build_local.sh`, `rsolver.__file__`가 worktree 안). Gurobi는 실행하지 않았다.
+- C1 `python3 tools/m1_bfrt_rust.py`: `calls 3112: entering equal 3108, flip list equal 3112; vs prototype 3112 equal; differs from the original at [('tuff', 31), ('tuff', 33), ('tuff', 36), ('tuff', 37)]`, `ACCEPTANCE PASS`. 코퍼스 64파일은 `SHA256SUMS`와 같다. 코퍼스의 `spx+0x178`은 3112호출 모두 10 미만이다(검사기가 확인).
+- C1 `--self-test` 종료 0:
+  - M1 NONDEGENFLIP 0 입력: 원본과 18호출 다름(kb2 21 포함), `BFRT_RESCAN=0` 프로토타입과 0호출 다름(02e의 수정 전 3094·3098과 같은 규칙).
+  - T1 기대 flip 목록 한 원소 제거, T2 입력 끝 표시 제거(Rust 테스트 panic), T3 코퍼스 해시 0: 모두 거부.
+- C1 소스 임시 변이(계약 변경: §3의 "입력 변조로 변이"는 NONDEGENFLIP에만 가능해서, pow·보정은 `bfrt.rs`를 바꿔 검사기를 돌리고 되돌렸다. 변이 뒤 `git diff`는 빈 출력):
+  - R1 pow 항 제거, R2 보정 0, R3 보정 1e-6: 모두 프로토타입과 달라 거부(첫 차이 blend 33·29·35).
+  - R4 `d_t ≥ 0` 거르기 제거: 생존. 코퍼스에서 판별 안 됨(C:1500대 조건, 근거는 02e C 읽기).
+- C2 켜짐 반복(`RSOLVER_DEBUG=1`, Method=1 Presolve=0): kb2 15, adlittle 26, fit1d 18, sc50a 20, grow7 21, tuff 27. `python3 tools/proto/bfrt.py --trigger bench/oracle/m1_02e_bfrt_trigger`의 원본 켜짐 반복과 6모델 모두 같다. adlittle은 m 조건, grow7·tuff는 `pt_lvl`(`0x338`) 조건 단독으로 켜지는 모델이다(02e §6). kb2 외 모델은 켜지기 전 Rust 경로가 원본과 같은지 확인하지 않았다(같은 반복에서 켜진다는 결과만).
+- C3 kb2:
+  - `tools/proto/pathcmp.py kb2`: 수정 전 `first diff at pivot 21: g ((25,), (78,)) mine ((4,), (78,))` → 수정 뒤 `gurobi 38 pivots 38 mine 38 pivots 38 first diff at pivot 38`(진입·이탈 38피벗 전부 같음).
+  - `tools/proto/statecmp.py kb2`(저장 오라클 반복 0–30): 수정 전 반복 22 vstat 2개 [4, 25]부터 다름 → 수정 뒤 반복 0–21 OK, 반복 22는 vstat·xB·d·w가 같고 가격 목록(mode 1, 길이 13) 순서만 위치 8부터 다르다(g `[17, 19, 64, 24]`, Rust `[19, 24, 64, 66]`). 반복 23부터 d·w의 끝자리 차이(반복 23 d 6개, w 21개). 계약대로 새 첫 차이는 기록만 한다(후속 M1-02g).
+- 회귀:
+  - `tools/lp_check.py --methods 1 --timeout 120`(수정 전은 수정 전 빌드 사본): 정답 90/91 그대로, 상태 변화 없음. IterCount 일치 24/64 → 29/64. 새로 일치: etamacro 494→490, fit1d 67→66, ganges 833→859, grow7 376→316, stocfor1 83→85. 잃은 모델 없음. 반복이 바뀐 나머지(일치 아님): bandm 386→381(원본 372), boeing1 780→626(651), e226 415→414(410), fit1p 566→562(568), grow15 1116→1066(1033), grow22 2265→2031(1145), maros 1825→1739(1975), perold 1288→1341(1273), pilot4 654→642(691), stair 381→393(356). 원본 기준 없는 모델: 80bau3b, fit2d, fit2p, greenbea, greenbeb, nesm, pilot, pilot87, pilotnov, stocfor2.
+  - `cargo test -p rsolver-lp` 통과, `cargo test --release --workspace` 124 통과·무시 8(새 `bfrt_corpus` 포함), `cargo clippy --workspace --all-targets -- -D warnings` 0, worktree 빌드 pytest 657 passed.
+- 실행하지 못한 검사: `spx+0x178 ≥ 10`·`0x178 ≠ 0`(대응 상태 없음, 캡처 0회), FLIP(reason 4) 경로의 켜짐 검사 원본 대조, Method 0/−1·MIP 노드 LP 궤적(pytest만), 정수 열(fac 1.5)의 재훑기 가중(Netlib 코퍼스에 정수 열 없음).
 
 ## 7. 판정과 인수인계
 
-(작성 전)
+- 작업 수행 상태: 완료(구현).
+- 동등성: C1 통과(02e 코퍼스 범위: 진입 3108/3112·flip 3112/3112, 남은 4건은 02e가 설명한 tuff 비용 이동, 프로토타입과 3112/3112 같음). C2 통과(6모델 켜짐 반복). C3 통과(kb2 pathcmp 38/38, statecmp 반복 22의 vstat·xB·d·w). 새 첫 차이 kb2 반복 22 가격 목록 순서는 미해결.
+- 남은 한계: `spx+0x178` 미구현(pow 항 항상 더함, 켜짐 조건 하나 생략), NONDEGENFLIP 0 초기화 위치·FLIP 경로, R4 생존, tuff RNG 비용 이동, 정수 열 가중.
+- 후속:
+  - **M1-02g**(조사, 새 행 제안): kb2 반복 22 가격 목록(mode 1) 순서 차이. 첫 명령 `zcat bench/oracle/iter0-30/kb2.jsonl.gz > <tmp>/kb2.jsonl; PYTHONPATH=$PWD/python ../.venv/bin/python tools/proto/statecmp.py kb2 <tmp>/kb2.jsonl`.
+  - **M1-02c**(검증): Method=1 Netlib 64 재측정(출발점 29/64).
+- branch: `work/m1-02f`, worktree `../rsolver-m1-02f`. 병합 상태는 main 이력으로 확인한다.
+- 교훈: `docs/lessons/tooling.md`(코퍼스 flip은 열 번호가 아니라 α 위치).

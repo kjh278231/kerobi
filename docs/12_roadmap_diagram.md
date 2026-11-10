@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M1-02f BFRT 재훑기·NONDEGENFLIP을 Rust에 넣었다(구현, 통과). 02e 코퍼스 3112호출에서 Rust `bfrt` 진입 3108·flip 3112가 원본과 같고, 켜짐 반복 6모델 일치, kb2 피벗 경로 38/38 일치. 새 첫 차이는 kb2 반복 22 가격 목록 순서(M1-02g). Netlib Method=1 정답 90/91, IterCount 일치 24/64 → 29/64. [계약과 결과](m1/m1_02f_bfrt_rust.md).
+
 M2-06e pseudocost 초기화·노드 갱신·감쇠·대칭 전파를 원본 캡처로 확정했다(조사·오라클). 노드 갱신(`5fb8ec`→`6edfcf`, 깊이 가중 w)·조상 감쇠(`6ee1d3`)·루트 끝 대칭 orbit 전파(`6ef22e`, watchpoint로 발견)·M 재생성 때의 시드 초기화가 6사례×3회의 표 A 전이를 비트까지 재현하고 해제 직전 스냅숏으로 사슬이 닫힌다. 연속 변수 분기·병렬·SB 입력은 미검증. 다음은 M2-06f(Rust 이식)·06c·06e-2. [계약과 결과](m2/mip_pseudocost.md).
 
 M1-02e kb2 피벗 21 진입 차이의 원인을 특정했다(조사). 원본 BFRT는 NONDEGENFLIP(`spx+0x3fc`, 재분해 직후 조건부로 켜짐)이 켜지면 진입을 고른 뒤 flip 구간을 다시 훑어 |α|/w′가 더 큰 flip 후보로 바꾼다. 수정 프로토타입이 Netlib 64 코퍼스에서 flip 3112/3112·진입 3108/3112다(남은 tuff 4건은 비용 이동). Rust 반영은 M1-02f. [계약과 결과](m1/m1_02e_bfrt.md).
@@ -101,7 +103,7 @@ flowchart TD
 
     subgraph M1["M1 LP 엔진"]
         PRE["✅ LP presolve·postsolve<br/>64/64"]:::done
-        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 24/64(presolve 전 측정)<br/>kb2 β 원본 합산(02b) · BFRT 재훑기 원인(02e)"]:::doing
+        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 29/64(02f 뒤 lp_check)<br/>kb2 β 원본 합산(02b) · BFRT 재훑기(02e 원인, 02f Rust)"]:::doing
         DRV["🔄 LP 드라이버 G5<br/>main 병합 · 수치 차이 확인 남음"]:::doing
         GATE1["⏳ M1 관문<br/>병합 + 속도 비교표"]:::todo
     end
