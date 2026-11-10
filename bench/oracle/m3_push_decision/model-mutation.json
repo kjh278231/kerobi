@@ -1,0 +1,22 @@
+{
+  "dir-ten-9": "survived",
+  "dir-le": "survived",
+  "dir-e-0.1h": "rejected: face5-primal call1 step1 frame e: 기대 48afbc9af2d77a3e 실제 3a8c30e28e79453e",
+  "dir-no-neg": "survived",
+  "dir-r-ge0": "rejected: 04b-1/primal call1 step1 방향: 기대 1 실제 0",
+  "r-reverse-order": "rejected: face5-primal call1 step4 frame r: 기대 0000000000000000 실제 000000000000a0bc",
+  "flip-no-eps": "survived",
+  "flip-lt": "survived",
+  "reject-10h": "rejected: face5-primal call1 step1 frame k100: 기대 f068e388b5f8e43e 실제 2c431cebe2361a3f",
+  "reject-1e4h": "rejected: face5-primal call1 step1 frame k100: 기대 7b14ae47e17a843f 실제 2c431cebe2361a3f",
+  "reject-arm-current": "survived",
+  "reject-arm-swap": "survived",
+  "accept-pivot-1e-3": "survived",
+  "accept-prod-0": "rejected: face5-primal call1 step1 단계 종류: 기대 defer(accept-fail) 실제 pivot",
+  "leave-k-h": "rejected: face5-primal call1 step1 frame k2: 기대 8dedb5a0f7c6b03e 실제 8dedb5a0f7c6c03e",
+  "leave-fixed-lt": "survived",
+  "leave-L-nonneg-2": "rejected: face5-primal call1 step1 이탈 상태 leave=19: 기대 -2(nonneg-L) 실제 -1",
+  "leave-neg-default-2": "survived",
+  "leave-X-1": "survived",
+  "leave-U-le": "survived"
+}
