@@ -1,0 +1,1 @@
+{"model": "MODEL", "params": {"Method": 1}, "max": 600, "fns": [{"name": "dual", "off": "0xe45c0", "enter": ["Li:0x18c", "d:0x2a0", "i:100"], "leave": ["i:0x3fc", "i:0x338", "i:0x178"]}]}
