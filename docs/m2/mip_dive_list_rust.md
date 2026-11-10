@@ -77,8 +77,8 @@
 
 ## 6. 실행 결과
 
-- 실행: worktree `../rsolver-m2-03d-10`, 코드 commit `f05b596`(계약 `8147630`), x86-64 Linux(WSL2), `cargo test --release`. 입력은 03d-8 run 1 세 개, 03d-7 run 1, 03d-6 API LP·run 1(SHA-256 §4, manifest 일치)이다. 원본은 다시 실행하지 않았다(저장 기준 재생).
-- `python3 tools/mip_dive_list_rust.py --self-test` 종료 0:
+- 실행: worktree `../rsolver-m2-03d-10`, 최종 트리 = 이식 `f05b596` + 행 삭제 가드 수정 `0c44b26` + main `a5d68f4`(M3-04c-7) 병합 `416d913` + 드라이버 변이 처리(이 기록과 같은 commit)(계약 `8147630`), x86-64 Linux(WSL2), `cargo test --release`. 입력은 03d-8 run 1 세 개, 03d-7 run 1, 03d-6 API LP·run 1(SHA-256 §4, manifest 일치)이다. 원본은 다시 실행하지 않았다(저장 기준 재생).
+- `python3 tools/mip_dive_list_rust.py --self-test` 종료 0(최종 트리, 파이프 없이 종료 코드 확인):
 
 ```text
 M: captures match the M2-03d-7/03d-8 manifests (4 cases, API LP, y:ws)
@@ -94,7 +94,7 @@ rejected: update deleted: K nidda_H_s1: 2396 list updates in the trace, capture 
 rejected: capture sha256: T gmu-35-40_default: trace is for gmu-35-40_default e1e4…7d00, capture e1e4…7d0c
 rejected: swapped ind: S k=1: reduced ind != y:ws, first diff at 0
 mutant rejected: rows in decreasing order: P nidda_H_s1: lp 1 call 74 node 1: rust 7 rows != capture 7; ...
-mutant rejected: react_all ignored: P nidda_H_s1: lp 1 call 185 node 3: rust 7 rows != capture 0; ...
+mutant rejected: react_all ignored: replay panicked: thread 'dive_list_replay' … panicked at crates/mip/src/dive_rows.rs:181:13: row deletion with a non-empty dive list
 mutant rejected: rhs of listed rows kept: S k=1: rhs != y:ws b, first diff row 125
 mutant rejected: reduced length = full length: S k=1: reduced nnz 4955
 mutant passes (not discriminated by the captures, section 1): already listed row appended again
@@ -106,8 +106,9 @@ PASS
 - P: 03d-8 세 사례의 모든 `b:xlist` 2,929건에서 Rust 목록이 개수·순서까지 캡처와 같다. 03d-7 캡처(2,397건)는 03d-8 nidda와 같은 연산 열이라 독립 증거가 아니고, S 입력 목록을 잇는 데 쓴다. 건너뛴 단계는 없다. 행 수 감소는 모두 빈 목록일 때였다(03d-7 P는 감소 뒤 15단계를 건너뛰었지만 이번 재생은 전부 비교했다). skip·xfail 없음.
 - S: 대상 k=1에서 Rust가 사본을 만들고(만듦 표시 0→1) k=2는 재사용했다. 원본은 k=1 진입 때 이미 사본이 있었다(`built_before` 1, call 19865 이후 만들어짐). 교체 뒤 D는 03d-6 `y:ws`와 비트 단위로 같다. 이 비교는 사본을 만든 시점과 무관하다. 대상까지 D 계수가 바뀌지 않았다는 전제는 03d-7 L(진입 D 해시 = 03d-6)이 받친다.
 - 판별되지 않은 변이 3종은 계약대로 통과했다(§1 미검증 항목의 근거).
+- 행 삭제 가드: 처음 작성은 "목록 행 번호 ≥ 새 행 수"일 때만 panic이라, 앞 번호 행이 지워지는 경우를 놓쳤다(검토에서 지적). 직전 행 수보다 줄면 목록이 비어 있어야 하도록 고쳤고 재생에서 오탐은 없다. 그 뒤 react_all 무시 변이는 목록이 남은 채 행이 줄어 이 가드로 거부된다(처음에는 P 목록 비교로 거부). 드라이버는 `dive_rows.rs`의 panic을 변이 거부로 세고, 빌드 오류는 자기검사 실패로 둔다.
 - 첫 실행에서 드라이버 오류 두 건을 고쳤다. 이식 코드는 고치지 않았다. (1) 03d-8 nidda 캡처에도 대상 사건이 있어 S를 두 nidda 사례에 적용했고, 대상 노드·D 해시 확인을 넣었다. (2) 합격 조건에서도 실패 메시지의 `next()`가 먼저 평가돼 StopIteration이 났다.
-- 관련 회귀: `cargo test -p rsolver-mip` 종료 0(단위 `dive_rows::tests::row_list` 포함, L1 테스트 2개는 ignored), `cargo test --release --workspace` 종료 0, `cargo clippy --workspace --all-targets -- -D warnings` 종료 0, `python3 tools/mip_dive_rows_rust.py` PASS(03d-9 재생 불변).
+- 관련 회귀(main `a5d68f4` 병합 뒤 트리): `cargo test -p rsolver-mip` 종료 0(단위 `dive_rows::tests::row_list` 포함, L1 테스트 2개는 ignored), `cargo test --release --workspace` 종료 0(테스트 바이너리 15개 ok), `cargo clippy --workspace --all-targets -- -D warnings` 종료 0, `python3 tools/mip_dive_rows_rust.py` 종료 0(03d-9 재생 불변).
 - 실행하지 않은 검사: pytest(`crates/py`·`python/rsolver` 미변경), Gurobi(원본 재캡처 불필요).
 - 계약 변경: "이미 있는 행 중복 붙이기" 변이를 거부 대상에서 판별되지 않음으로 옮겼다(§3, 첫 자기검사 뒤·판정 전, 실행 0회를 캡처로 셈).
 

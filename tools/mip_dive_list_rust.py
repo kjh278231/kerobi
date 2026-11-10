@@ -272,12 +272,23 @@ def mutants(data, api, ws, din):
         with open(os.path.join(wsp, SRC), 'w') as f:
             f.write(s)
         dout = os.path.join(base, 'out')
-        cargo(wsp, os.path.join(base, 'target'), din, dout)
+        why = None
         try:
-            compare_all(data, api, ws, traces(dout))
+            cargo(wsp, os.path.join(base, 'target'), din, dout)
         except Fail as x:
-            need(discriminated, f'mutant {name} was rejected but section 1 lists it as not discriminated: {x}')
-            print(f'mutant rejected: {name}: {x}')
+            # a replay assertion (the row deletion guard) rejects the mutant; a build error fails the self-test
+            t = str(x).split('\n')
+            k = next((i for i, ln in enumerate(t) if 'panicked at crates/mip/src/dive_rows.rs' in ln), None)
+            need(k is not None, f'mutant {name}: {x}')
+            why = 'replay panicked: ' + ' '.join(t[k:k + 2]).strip()
+        if why is None:
+            try:
+                compare_all(data, api, ws, traces(dout))
+            except Fail as x:
+                why = str(x)
+        if why is not None:
+            need(discriminated, f'mutant {name} was rejected but section 1 lists it as not discriminated: {why}')
+            print(f'mutant rejected: {name}: {why}')
             continue
         need(not discriminated, f'mutant not rejected: {name}')
         print(f'mutant passes (not discriminated by the captures, section 1): {name}')
