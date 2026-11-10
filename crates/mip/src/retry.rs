@@ -39,27 +39,33 @@ pub struct LpCall<'a> {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Outcome {
-    /// Solved once without a re-solve; the caller handles `lp_status` as before.
+    /// The node LP ended in 12 and is not re-solved (not the root, root cache not 2; C:769-770).
     Solved { lp_status: i32 },
     /// Re-solved; node status and whether the node basis is stored again (`5d4427`).
     Retried { node_status: i32, lp_status: i32, basis_saved: bool },
-    /// The re-solve ended on a path that is not ported; the caller keeps its previous handling.
+    /// A path that is not ported; the caller keeps its previous handling. Covers any first status other than 12
+    /// (the normalization before the re-solve test, C:678-760, is not ported: e.g. 5 with cache 2 becomes 12 and is
+    /// re-solved), the root (C:921 also resets the MIP status 5 to 1 there) and re-solve results other than 6.
     Unported { lp_status: i32 },
 }
 
 /// `5ce67b` with a stored node basis, no dual norms, no adaptive method choice (`param_7 == 0`) and `a7f923 == 0`.
 pub fn process_node_lp(ctx: &Ctx, basis: &NodeBasis, mut solve: impl FnMut(LpCall) -> i32) -> Outcome {
-    // C:351-361: a node basis selects the warm method param_3[3]
-    let status = solve(LpCall { method: ctx.warm_method, basis });
-    // C:769-770: numerical trouble is re-solved when the root cache is 2 or at the root
-    if status != NUMERIC || !(ctx.cache == OPTIMAL || ctx.root) {
+    // C:351-364: a node basis selects the warm method param_3[3]; above 2 it is 1 away from the root
+    let method = if ctx.warm_method > 2 && !ctx.root { 1 } else { ctx.warm_method };
+    let status = solve(LpCall { method, basis });
+    if status != NUMERIC || ctx.root {
+        return Outcome::Unported { lp_status: status };
+    }
+    // C:769-770: away from the root, numerical trouble is re-solved only when the root cache is 2
+    if ctx.cache != OPTIMAL {
         return Outcome::Solved { lp_status: status };
     }
-    // C:924-933: same node basis, the other simplex (param_3[3] == 0 picks dual)
+    // C:924-933: same node basis, the other simplex from the unclamped param_3[3] (0 picks dual)
     let status = solve(LpCall { method: i32::from(ctx.warm_method == 0), basis });
     // C:944-1035 with cache 2 leaves CUTOFF as is (no bound improvement: local_b8 is 1e101 on this path), then
     // 600d25 prunes the node; only LP status 2 stores the basis (C:1358)
-    if status == CUTOFF && ctx.cache == OPTIMAL {
+    if status == CUTOFF {
         return Outcome::Retried { node_status: NODE_CUTOFF, lp_status: status, basis_saved: false };
     }
     Outcome::Unported { lp_status: status }
@@ -84,12 +90,15 @@ mod tests {
     #[test]
     fn retry_rules() {
         let child = Ctx { root: false, cache: 2, warm_method: 1 };
-        assert_eq!(run(child, &[2]), (Outcome::Solved { lp_status: 2 }, vec![1]));
+        assert_eq!(run(child, &[2]), (Outcome::Unported { lp_status: 2 }, vec![1]));
+        assert_eq!(run(child, &[5]), (Outcome::Unported { lp_status: 5 }, vec![1]));
+        assert_eq!(run(Ctx { warm_method: 3, ..child }, &[12, 6]).1, vec![1, 0]);
         assert_eq!(run(child, &[12, 6]), (Outcome::Retried { node_status: 5, lp_status: 6, basis_saved: false }, vec![1, 0]));
         assert_eq!(run(Ctx { warm_method: 0, ..child }, &[12, 6]).1, vec![0, 1]);
         assert_eq!(run(child, &[12, 2]).0, Outcome::Unported { lp_status: 2 });
         assert_eq!(run(child, &[12, 12]).0, Outcome::Unported { lp_status: 12 });
         assert_eq!(run(Ctx { cache: -1, ..child }, &[12]), (Outcome::Solved { lp_status: 12 }, vec![1]));
-        assert_eq!(run(Ctx { root: true, cache: -1, ..child }, &[12, 6]), (Outcome::Unported { lp_status: 6 }, vec![1, 0]));
+        assert_eq!(run(Ctx { root: true, ..child }, &[12]), (Outcome::Unported { lp_status: 12 }, vec![1]));
+        assert_eq!(run(Ctx { root: true, warm_method: 3, ..child }, &[2]).1, vec![3]);
     }
 }
