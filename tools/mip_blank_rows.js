@@ -1,17 +1,21 @@
-// M2-03d-7: where the empty rows of the B&B node LP simplex ws (M2-03d-6 C2) come from. Read-only hooks.
-// For every top-level cda5b inside a depth-1 5ce67b solve after the first restart, at 02f7e1 return:
-//  ws created here (lp+0xe0 null at entry), D (lp+0xe8) and ws dimensions/nnz, pointer aliases ws CSC/b <-> D fields,
-//  08b2fe source field. A 'b:state' event is sent when that state changes; every call in the target window is sent.
-// At the target solve (TARGET call) also the 03d-6 hashes (dhash, wsHash) and the owner scan of ws+0x78/ws+0xa0.
-// Usage: tools/gurun.sh node tools/mip_blank_rows.js MODEL OUTPUT 'JSON_PARAMS' [TARGET_CALL] [WINDOW]
+// M2-03d-7: provenance of the empty rows of the B&B node LP simplex ws (M2-03d-6 C2). Read-only hooks.
+// Mechanism (C, docs/m2/mip_blank_rows.md §2): 10e5fc/10e62f/10e662 flag rows in (lp+0x230)+0xb0 (0x1000 off / 0x2000 on),
+// edd71 (model update) folds the flags into X = D+0x140 (+0 count, +0x08 list, +0x10 row->position or -1),
+// cda5b C:120 10f448(D) swaps D+0x100/D+0x380 with X's reduced length / rhs arrays, C:2110 10f5ae(D) swaps them back.
+// Events (top-level MIP, 5bbf7f depth 1, only; nested MIP ops are counted):
+//  b:lpnew  first time an LP with an X is seen (lp id = order of appearance; no addresses)
+//  b:op     every 10e5fc / 10e62f / 10e662 call: rows, return offset, last 5ce67b call/node, D rows, env+0x2b48
+//  b:xlist  at edd71 return when the X list (count, rows) of an LP changed
+//  b:t:*    inside the TARGET 5ce67b call: X at top-level cda5b entry, D hash before the swap, 10f448/10f5ae swap, ws at 02f7e1 return
+// Usage: tools/gurun.sh node tools/mip_blank_rows.js MODEL OUTPUT 'JSON_PARAMS' TARGET_CALL
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const frida = require(process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida');
-const [model, output, extra, targetArg, windowArg] = process.argv.slice(2);
-if (!model || !output) throw Error('usage: MODEL OUTPUT [JSON_PARAMS] [TARGET_CALL] [WINDOW]');
+const [model, output, extra, targetArg] = process.argv.slice(2);
+if (!model || !output || !targetArg) throw Error('usage: MODEL OUTPUT JSON_PARAMS TARGET_CALL');
 if (fs.existsSync(output)) throw Error('output exists: ' + output);
-const target = parseInt(targetArg || '19901'), win = parseInt(windowArg || '60');
+const target = parseInt(targetArg);
 const root = path.resolve(__dirname, '../..');
 const py = path.join(root, '.venv/bin/python');
 const binary = path.join(root, '.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so');
@@ -21,7 +25,7 @@ if (hash(binary) !== expected) throw Error('wrong Gurobi binary');
 const params = Object.assign({Threads: 1, Seed: 0, LogToConsole: 0}, JSON.parse(extra || '{}'));
 const code = `import gurobipy as gp\ne=gp.Env(params=${JSON.stringify(params)})\nm=gp.read(${JSON.stringify(path.resolve(model))}, e)\nm.optimize()\nprint('DONE',m.Status,int(m.NodeCount),flush=True)`;
 const agent = `
-const TARGET = ${target}, WIN = ${win};
+const TARGET = ${target};
 Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') return;
  const b = m.base, off = p => p.sub(b).toUInt32();
  // ---- 03d-6 hash helpers, unchanged (tools/mip_retry_node_lp.js) ----
@@ -46,59 +50,83 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
    for (const o of [0x98, 0xa8, 0xb0]) H(st, ws.add(o).readPointer(), 8 * (w.n + w.m));
    H(st, ws.add(0xa0).readPointer(), 8 * w.m); H(st, ws.add(0x3b8), 16);
    return {rows: w.m, cols: w.n, hash: hs(st)}; }
- // ---- new ----
- const sumLen = (len, n) => { if (len.isNull() || n <= 0) return null; const a = new Int32Array(len.readByteArray(4 * n)); let s = 0; for (const x of a) s += x; return s; };
- function fnvBytes(p, bytes) { if (p.isNull() || bytes <= 0) return null; const u = new Uint8Array(p.readByteArray(bytes)); let h = 0x811c9dc5;
-   for (const x of u) h = Math.imul(h ^ x, 0x01000193) >>> 0; return h.toString(16).padStart(8, '0'); }
- // per-row entry counts of a CSC view (beg, len, ind) with n columns and m rows
- function rowCounts(beg, len, ind, n, m) { const c = new Int32Array(m), L = new Int32Array(len.readByteArray(4 * n));
-   for (let j = 0; j < n; j++) { if (L[j] <= 0) continue; const s = beg.add(8 * j).readS64().toNumber(), I = new Int32Array(ind.add(4 * s).readByteArray(4 * L[j]));
-     for (const i of I) if (i >= 0 && i < m) c[i]++; } return c; }
- // name a pointer by the D / lp / ws slots that hold it (first 0x480 bytes of D, 0x300 of lp, 0x600 of ws)
- function owners(p, lp) { if (p.isNull()) return null; const r = [], D = lp.add(0xe8).readPointer(), ws = lp.add(0xe0).readPointer();
-   for (const [name, base, size] of [['D', D, 0x480], ['lp', lp, 0x300], ['ws', ws, 0x600]]) { if (base.isNull()) continue;
-     for (let o = 0; o < size; o += 8) if (base.add(o).readPointer().equals(p)) r.push(name + '+0x' + o.toString(16)); }
-   // inside D arrays (pointer into the middle of a D block) is reported as an offset from the D field
-   return r; }
- const mains = []; let mipDepth = 0;
- Interceptor.attach(b.add(0x4e36e0), {onEnter() { mains.push(++mipDepth); }, onLeave() { mains.pop(); mipDepth--; }});
- const solves = []; let nextCall = 0, lastKey = null, lastDiv = null;
+ // ---- helpers ----
+ const ints = (p, n) => (p.isNull() || n <= 0) ? [] : Array.from(new Int32Array(p.readByteArray(4 * n)));
+ const sum = a => a.reduce((s, x) => s + x, 0);
+ const hx = (dv, k) => dv.getUint32(k + 4, true).toString(16).padStart(8, '0') + dv.getUint32(k, true).toString(16).padStart(8, '0');
+ function dbls(p, n) { if (p.isNull() || n <= 0) return []; const dv = new DataView(p.readByteArray(8 * n)), v = []; for (let k = 0; k < n; k++) v.push(hx(dv, 8 * k)); return v; }
+ const Dof = lp => lp.add(0xe8).readPointer();
+ const Xof = lp => { const D = Dof(lp); return D.isNull() ? NULL : D.add(0x140).readPointer(); };
+ function xlist(lp) { const X = Xof(lp); if (X.isNull()) return null; const n = X.readS32(); return {count: n, rows: ints(X.add(8).readPointer(), n)}; }
+ // ---- context: MIP nesting, 5ce67b call counter (same numbering as tools/mip_retry_node_lp.js before its retry), last node ----
+ let mipDepth = 0;
+ const nested = {};
+ // one listener per address (docs/lessons/tooling.md); the end-of-run summary of nested-MIP ops (not replayed) is sent here
+ Interceptor.attach(b.add(0x4e36e0), {onEnter() { mipDepth++; }, onLeave() { mipDepth--; if (mipDepth === 0) send({event: 'b:nested_ops', counts: nested}); }});
+ const solves = []; let nextCall = 0, last = null;
  const top = () => solves.length ? solves[solves.length - 1] : null;
  Interceptor.attach(b.add(0x4f0e10), {
-  onEnter(a) { const n = a[0].readPointer(), I = n.add(0x18).readPointer(), mm = I.readPointer(), r = mm.add(0x620).readPointer();
-   solves.push({call: ++nextCall, lp: a[2].add(8).readPointer(), node: n.readDouble(), depth: mipDepth, restarts: r.add(0x808).readS32(),
-     self: r.equals(mm), cda: 0, k: 0}); },
+  onEnter(a) { const n = a[0].readPointer(), I = n.add(0x18).readPointer(), mm = I.readPointer();
+   const s = {call: ++nextCall, lp: a[2].add(8).readPointer(), node: n.readDouble(), node_depth: I.add(0x2c).readS32(), depth: mipDepth,
+     restarts: mm.add(0x620).readPointer().add(0x808).readS32(), cda: 0, k: 0};
+   solves.push(s); if (mipDepth === 1) last = s; },
   onLeave() { solves.pop(); }});
- const on = s => s && s.depth === 1 && s.restarts >= 1 && s.cda === 1;
- Interceptor.attach(b.add(0x153cc0), {onEnter(a) { const s = top(); this.s = s; if (s) { s.cda++; if (s.cda === 1) s.k++; } },
+ // ---- LP identity (no addresses): new id when an LP pointer is first seen with an X, or its X pointer changes ----
+ const lps = new Map(); let lpSerial = 0;
+ function lpId(lp) { const X = Xof(lp), key = lp.toString(), r = lps.get(key);
+   if (r && (X.equals(r.x) || r.x.isNull())) { r.x = X; return r.id; }
+   const id = ++lpSerial; lps.set(key, {id, x: X, last: null});
+   const D = Dof(lp);
+   send({event: 'b:lpnew', lp: id, call: nextCall, mip_depth: mipDepth, x_null: X.isNull(), D_rows: D.add(8).readS32(), D_cols: D.add(0xc).readS32(),
+     is_node_lp: !!(last && last.lp.equals(lp))}); return id; }
+ const ctx = () => last ? {call: last.call, node: last.node, node_depth: last.node_depth, restarts: last.restarts} : {call: nextCall};
+ for (const [name, o, hasRows] of [['deact', 0x1a2c20, true], ['react', 0x1a2df0, true], ['react_all', 0x1a2fc0, false]]) {
+  Interceptor.attach(b.add(o), {
+   onEnter(a) { this.on = mipDepth === 1; if (!this.on) { nested[name] = (nested[name] || 0) + 1; return; }
+    this.lp = a[0]; const D = Dof(a[0]), xl = xlist(a[0]);
+    this.e = Object.assign({event: 'b:op', op: name, ret: off(this.returnAddress), lp: lpId(a[0])}, ctx(), {
+      D_rows: D.add(8).readS32(), dynamic_rows: a[0].add(0x100).readPointer().add(0x2b48).readS32(),
+      rows: hasRows ? ints(a[2], a[1].toInt32()) : null, x_count_before: xl ? xl.count : null}); send(this.e); },
+   // sent at entry: react_all runs edd71 itself, so its b:xlist follows this event
+   onLeave(r) { if (this.on && r.toInt32() !== 0) send({event: 'b:op_fail', op: name, rc: r.toInt32()}); }});
+ }
+ Interceptor.attach(b.add(0x184e60), {onEnter(a) { this.on = mipDepth === 1; this.lp = a[0]; },
+  onLeave(r) { if (!this.on || Xof(this.lp).isNull()) return; const id = lpId(this.lp), rec = lps.get(this.lp.toString()), xl = xlist(this.lp);
+   const D = Dof(this.lp), key = D.add(8).readS32() + ':' + xl.count + ':' + xl.rows.join(',');
+   if (key === rec.last) return; rec.last = key;
+   send(Object.assign({event: 'b:xlist', lp: id, rc: r.toInt32()}, ctx(), {D_rows: D.add(8).readS32(), count: xl.count, rows: xl.rows})); }});
+ // ---- target solve ----
+ const inT = () => { const s = top(); return s && s.call === TARGET ? s : null; };
+ Interceptor.attach(b.add(0x153cc0), {
+  onEnter(a) { const s = inT(); this.s = s; if (!s) return; s.cda++; if (s.cda !== 1) return; s.k++;
+   const lp = a[0], D = Dof(lp), X = Xof(lp), m = D.add(8).readS32(), xl = xlist(lp);
+   const e = {event: 'b:t:cda5b', k: s.k, lp: lpId(lp), is_node_lp: lp.equals(s.lp), node: s.node, method: a[1].toInt32(), dhash: dhash(lp), x_null: X.isNull(),
+     dynamic_rows: lp.add(0x100).readPointer().add(0x2b48).readS32()};
+   if (!X.isNull()) { const pos = ints(X.add(0x10).readPointer(), m), marked = [];
+     for (let i = 0; i < m; i++) if (pos[i] >= 0) marked.push([i, pos[i]]);
+     Object.assign(e, {x_count: xl.count, x_rows: xl.rows, x_marked: marked, x_built: X.add(0x18).readS32(), x_ref: X.add(0x1c).readS32()}); }
+   send(e); },
   onLeave() { if (this.s) this.s.cda--; }});
- let src = null;
- Interceptor.attach(b.add(0x11f530), {onLeave(r) { const s = top(); if (!on(s) || !s.in2f) return;
-   const lp = s.lp2f; src = r.isNull() ? 'null' : r.equals(lp.add(0xf8).readPointer()) ? 'lp+0xf8' : r.equals(lp.add(0xf0).readPointer()) ? 'lp+0xf0' : r.equals(lp.add(0xe8).readPointer()) ? 'lp+0xe8' : 'other'; }});
- Interceptor.attach(b.add(0xd06f0), {
-  onEnter(a) { const s = top(); this.on = on(s); if (!this.on) return; this.lp = a[0]; s.in2f = true; s.lp2f = a[0]; src = null;
-   this.wsNew = a[0].add(0xe0).readPointer().isNull(); this.ws0 = a[0].add(0xe0).readPointer(); },
-  onLeave(r) { if (!this.on) return; const s = top(); s.in2f = false; const lp = this.lp, D = lp.add(0xe8).readPointer(), ws = lp.add(0xe0).readPointer();
-   const m = D.add(8).readS32(), n = D.add(0xc).readS32(), Dlen = D.add(0x100).readPointer();
-   const st = {lp_is_node_lp: lp.equals(s.lp), ws_new: this.wsNew, ws_same: !this.wsNew && ws.equals(this.ws0), src, lpf8_null: lp.add(0xf8).readPointer().isNull(),
-     lpf0_null: lp.add(0xf0).readPointer().isNull(), D_rows: m, D_cols: n, D_nnz: sumLen(Dlen, n), D_len_h: fnvBytes(Dlen, 4 * n)};
-   if (!ws.isNull()) { const wm = ws.add(0x64).readS32(), wn = ws.add(0x68).readS32(), wl = ws.add(0x78).readPointer();
-     Object.assign(st, {ws_rows: wm, ws_cols: wn, ws_nnz: sumLen(wl, wn), ws_len_h: fnvBytes(wl, 4 * wn),
-       alias: [[0x70, 0xf8], [0x78, 0x100], [0x80, 0x108], [0x88, 0x110], [0xa0, 0x380]].map(([x, y]) => ws.add(x).readPointer().equals(D.add(y).readPointer()) ? 1 : 0).join('')}); }
-   const div = st.ws_nnz !== undefined && st.ws_nnz !== st.D_nnz;
-   const key = JSON.stringify(st), inWin = s.call > TARGET - WIN && s.call <= TARGET;
-   if (key !== lastKey || div !== lastDiv || inWin || st.ws_new) {
-     const e = Object.assign({event: 'b:state', call: s.call, k: s.k, node: s.node, rc: r.toInt32(), changed: key !== lastKey}, st);
-     if ((div || s.call === TARGET) && !ws.isNull()) {
-       const wm = ws.add(0x64).readS32(), wn = ws.add(0x68).readS32();
-       const cD = rowCounts(D.add(0xf8).readPointer(), Dlen, D.add(0x108).readPointer(), n, m), cW = rowCounts(ws.add(0x70).readPointer(), ws.add(0x78).readPointer(), ws.add(0x80).readPointer(), wn, wm);
-       const blank = []; for (let i = 0; i < Math.min(m, wm); i++) if (cW[i] === 0 && cD[i] > 0) blank.push(i);
-       const bW = new Float64Array(ws.add(0xa0).readPointer().readByteArray(8 * wm)), bD = new Float64Array(D.add(0x380).readPointer().readByteArray(8 * m));
-       let bdiff = 0; for (let i = 0; i < Math.min(m, wm); i++) if (bW[i] !== bD[i]) bdiff++;
-       Object.assign(e, {blank_n: blank.length, blank_h: fnvBytes(Memory.alloc(4 * Math.max(1, blank.length)).writeByteArray(new Int32Array(blank).buffer), 4 * blank.length),
-         b_diff: bdiff, len_owner: owners(ws.add(0x78).readPointer(), lp), b_owner: owners(ws.add(0xa0).readPointer(), lp), beg_owner: owners(ws.add(0x70).readPointer(), lp)});
-       if (s.call === TARGET) Object.assign(e, {blank, dhash: dhash(lp), ws_hash: wsHash(lp)}); }
-     send(e); lastKey = key; lastDiv = div; } }});
+ const swap = (name, o) => Interceptor.attach(b.add(o), {
+  onEnter(a) { const s = inT(); this.on = !!(s && s.cda === 1); if (!this.on) return; this.D = a[0]; const X = a[0].add(0x140).readPointer(); this.X = X;
+   this.before = {len: a[0].add(0x100).readPointer(), rhs: a[0].add(0x380).readPointer(), xlen: X.isNull() ? NULL : X.add(0x28).readPointer(), xrhs: X.isNull() ? NULL : X.add(0x20).readPointer()};
+   this.e = {event: 'b:t:' + name, k: s.k, x_null: X.isNull(), built_before: X.isNull() ? null : X.add(0x18).readS32(), ref_before: X.isNull() ? null : X.add(0x1c).readS32()}; },
+  onLeave() { if (!this.on) return; const D = this.D, X = this.X, bf = this.before, n = D.add(0xc).readS32(), m = D.add(8).readS32();
+   if (!X.isNull()) { const len = D.add(0x100).readPointer(), rhs = D.add(0x380).readPointer();
+     Object.assign(this.e, {built_after: X.add(0x18).readS32(), ref_after: X.add(0x1c).readS32(),
+       D_len_was_xlen: len.equals(bf.xlen), D_rhs_was_xrhs: rhs.equals(bf.xrhs), xlen_was_D_len: X.add(0x28).readPointer().equals(bf.len), xrhs_was_D_rhs: X.add(0x20).readPointer().equals(bf.rhs),
+       D_len_unchanged: len.equals(bf.len), D_nnz: sum(ints(len, n)), was_nnz: sum(ints(bf.len, n)),
+       // rows whose rhs bits differ between the two arrays, and the values now in D at those rows
+       rhs_diff: (() => { const A = new Uint32Array(rhs.readByteArray(8 * m)), B = new Uint32Array(bf.rhs.readByteArray(8 * m)), z = [];
+         for (let i = 0; i < m; i++) if (A[2 * i] !== B[2 * i] || A[2 * i + 1] !== B[2 * i + 1]) z.push(i); return z; })(),
+       rhs_now: null}); this.e.rhs_now = dbls(rhs.add(0), m).filter((v, i) => this.e.rhs_diff.includes(i)); }
+   send(this.e); }});
+ swap('swap_in', 0x1a31c0); swap('swap_out', 0x1a33d0);
+ Interceptor.attach(b.add(0xd06f0), {onEnter(a) { const s = inT(); this.on = !!(s && s.cda === 1); this.lp = a[0]; },
+  onLeave(r) { if (!this.on) return; const s = inT(), lp = this.lp, ws = lp.add(0xe0).readPointer(), D = Dof(lp);
+   const w = ws.isNull() ? null : wsArrays(ws);
+   send({event: 'b:t:2f7e1', k: s.k, rc: r.toInt32(), ws_null: ws.isNull(), ws_hash: ws.isNull() ? null : wsHash(lp), ws_nnz: w ? sum(ints(w.len, w.n)) : null,
+     ws_len_is_D_len: w ? w.len.equals(D.add(0x100).readPointer()) : null, ws_b_is_D_rhs: ws.isNull() ? null : ws.add(0xa0).readPointer().equals(D.add(0x380).readPointer())}); }});
 }});
 `;
 (async () => {
@@ -110,8 +138,8 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
  device.output.connect((p, fd, data) => { if (p === pid) outputText += data.toString(); });
  session.detached.connect(reason => {
    const ok = outputText.includes('DONE') && !errors.length;
-   fs.writeFileSync(output, JSON.stringify({schema: 1, kind: 'blank_rows_probe', model: path.basename(model), model_sha256: hash(model),
-     binary_sha256: expected, tool_sha256: hash(__filename), params, target, window: win, output: outputText.trim(), errors, ok, detach_reason: reason, events}) + '\n');
+   fs.writeFileSync(output, JSON.stringify({schema: 1, kind: 'blank_rows', model: path.basename(model), model_sha256: hash(model),
+     binary_sha256: expected, tool_sha256: hash(__filename), params, target, output: outputText.trim(), errors, ok, detach_reason: reason, events}) + '\n');
    console.log(path.basename(model), outputText.trim(), 'events', events.length, 'ok', ok, errors.join(' ')); process.exit(ok ? 0 : 1); });
  await script.load(); await device.resume(pid);
 })().catch(e => { console.error(e); process.exit(1); });
