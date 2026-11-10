@@ -24,9 +24,10 @@
 - `../re/decomp/c/`: 원본 디컴파일 결과. 저장소 밖에 있다.
 - `../re/decomp/asm/`, `../re/decomp/index.tsv`, `../re/decomp/callgraph.tsv`: 어셈블리, 함수 인덱스, 호출 그래프.
 - `../re/notes/`: 원본 함수와 구조를 찾는 지도.
+- `tools/dc.py <이름|접미사|0x주소>`: 원본 함수의 크기·호출관계·노트 참조를 먼저 보고, `--grep`·`--range`·`--asm`으로 필요한 부분만 읽는다. 디컴파일 파일 전체를 `cat`·`sed`로 컨텍스트에 넣지 않는다.
 - `docs/lessons/`: 이전 작업의 교훈. 원본 사실, 도구 함정과 실패한 접근, 절차를 담는다. 원본 함수·Frida 훅·Herdr·검사기를 다루기 전에 함수 이름이나 도구 이름으로 grep한다.
 - `docs/port_map.tsv`, `docs/00_overview.md` §4: 원본 함수와 모듈의 대응. 영역별 설계는 `docs/01_*.md`–`docs/08_*.md` 참조.
-- 기존 오라클과 비교기는 `tools/`, 기준 데이터는 `bench/`, 테스트는 `tests/`와 각 크레이트에 있다. LP 상태·경로는 `tools/spx_oracle.py`, `tools/path_oracle.py`, presolve·복원은 `tools/presolve_check.py`, `tools/mip_rec_check.py`, `tools/mip_postsolve_oracle.py` 등을 작업에 맞게 확인한다. 오라클의 적용 범위와 실행법은 관련 작업 기록에서 확인한다.
+- 기존 오라클과 비교기는 `tools/`, 기준 데이터는 `bench/`, 테스트는 `tests/`와 각 크레이트에 있다. LP 상태·경로는 `tools/spx_oracle.py`, `tools/path_oracle.py`, presolve·복원은 `tools/presolve_check.py`, `tools/mip_rec_check.py`, `tools/mip_postsolve_oracle.py` 등을 작업에 맞게 확인한다. 오라클의 적용 범위와 실행법은 관련 작업 기록에서 확인한다. 새 원본 캡처 오라클은 [oracle-capture 스킬](.agents/skills/oracle-capture/SKILL.md)을 먼저 읽는다. Herdr에서 끝나는 긴 명령은 `tools/hrun.sh -- '<명령>'`으로 실행한다(대기·tail·pane 닫기·종료 코드 전달).
 
 # 구현 기준
 
