@@ -136,7 +136,8 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04b-3 | 오라클 구축 완료(범위 한정) | 거부 판정·pivot 보류·미관측 이탈 arm과 생존 변조 경계 | 04b-2 | [arm LP(PStart·DStart) 두 순서 각 3회 50단계, 보류 양성 사건, 판단 모델·Rust 일치(고유 43), 모델 변조 32종 중 27·Rust 36종 중 30 거부](m3/primal_push_arms_oracle.md). `A`·`B`·`X`·기본 arm은 feasible 경로에서 도달 불가로 분류, `U`(a≥0) 정확 경계 미검증 |
 | M3-04c | 구현 완료(범위 한정) | double feasible ratio `055f68` 첫 패스 | 04b·04b-1 | [자연 9입력×2·합성 29사례 비트 일치, 변조 14종 중 10 거부](m3/primal_push_ratio_rust.md). 생존 4경계·재진입·push 연결 미검증 |
 | M3-04c-6 | 구현 완료(범위 한정) | 방향식·거리 flip·pivot 승인·이탈 상태 판단의 Rust | 04b-2·04c | [저장 캡처 40단계(고유 20, +frame 보조 9) 비트 일치, 연결 ratio 49 일치, Rust 변조 24종 중 9 거부(오라클과 같은 분류)](m3/primal_push_decision_rust.md). 생존 15경계·미관측 arm·push 연결 미검증 |
-| M3-04c-2 | 오라클·구현 | 위반 basis 방향식(C 1333–1454줄)·infeasible ratio `054eef`·`056973`·`A`·`B` 이탈 arm·theta=I 반대 방향 재호출 | 04b-3 | [04b 분할표](m3/primal_push_branches.md)의 후보. 시작 사례는 `bench/oracle/m3_push_arms/history/t1`(위반)·`tD`·`tSL`(재호출). 1주를 넘으면 위반 basis와 재호출로 나눈다 |
+| M3-04c-2 | 오라클·구현 완료(범위 한정) | 위반 basis 방향식·infeasible ratio `054eef`(재시도 없는 단계)·`A`·`B` 이탈 arm | 04b-3 | [위반 LP 두 순서 각 3회 19단계(방향 종단 10·B→-1·A→-2), 054eef 합성 57×3, Rust 위반 38단계·연결 137·합성 55 비트 일치](m3/primal_push_violated.md). `056973`·theta=I 재호출은 04c-7로 분리 |
+| M3-04c-7 | 오라클·구현 | `056973` 재시도 ratio와 theta=I 반대 방향 재호출(위반·feasible 경로) | 04c-2 | 시작 사례 `bench/oracle/m3_push_violated/retry.lp`(054eef -1 → 056973). feasible 재호출은 방향 0·ub=I 또는 자유 열 + 차단 행 없음으로 새로 설계한다(04b-3의 `tD`·`tSL`은 거리 flip). `retry:*` 훅에 입력 배열 추가 |
 | M3-04c-5 | 오라클·구현 | `055f68` 작은 pivot 재진입과 `12dd49` 요청 2 | 04c | 재진입·2차 상한 동률·후보 있는 I 상한의 원본 합성 사례 3회와 Rust 비교 |
 | M3-04d | 조사 | dual push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |
 | M3-04e | 구현 | 04d의 push 분기 하나 | 04d | 해당 phase 입력·출력 상태 비교 |
