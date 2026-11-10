@@ -90,7 +90,7 @@ Rust 쪽 자료는 `RSOLVER_SNAP` 스냅숏에 새 필드로 낸다. τ 계산 �
 
 ### 6.2 판정
 
-- 실행: worktree `../rsolver-m1-02d`, 기준 main `e46e1a5`, 계약 `c784f39`, 구현·검사기 `e8f3458`(뒤에 clippy·단위 테스트 수정). x86-64 Linux(WSL2). Gurobi는 실행하지 않았다(고정 캡처 사용).
+- 실행: worktree `../rsolver-m1-02d`, 기준 main `e46e1a5`, 계약 `c784f39`, 구현·검사기 `e8f3458`, 최종 `4e391eb`(clippy·단위 테스트·β 검사기 재조준). x86-64 Linux(WSL2). Gurobi는 실행하지 않았다(고정 캡처 사용).
 - 오류 검출 증거(수정 전 코드 + 스냅숏 필드만 더한 빌드, 경계 수정 전 검사기): 종료 1. O가 피벗 14 위치 9(`[6, 15]` 대 원본 `[15, 6]`, 갱신 13→14 안정 삭제)와 피벗 15 위치 32(`[39, 41, 42]` 대 원본 `[41, 42, 39]`, 재분해 초기 순서)에서, R이 피벗 1·11–14·18–21에서, F가 스냅숏 12(w 위치 [20, 22])에서 실패했다.
 - 수정 뒤 `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_tau_check.py --self-test` 종료 0(P 줄 생략):
 
@@ -117,7 +117,9 @@ PASS
   - O의 "같은 경로" 조건을 스냅숏 0..k+1에서 0..k로 고쳤다. 피벗 k의 τ 지점 LU는 피벗 k−1 뒤 상태라 스냅숏 k+1(피벗 k의 출력)에 의존하지 않는다. 처음 조건으로는 피벗 21이 빠져 "최소 0–21" 요구를 못 채웠다.
   - F를 "스냅숏 0–22"에서 "0–21"로 고쳤다. 스냅숏 22는 피벗 21의 출력이고, 피벗 21의 진입 변수는 수정 전부터 원본과 다르다(원본 25, Rust 4, τ와 무관한 분기). §3의 "0–22"는 한 칸 어긋난 오기다.
   - `tools/m1_beta_check.py` F의 고정 첫 차이 `(12, 'w')`를 `(22, 'state')`로 바꿨다(β 판정 R·D는 그대로). 수정 뒤 첫 실행에서 이 고정값 때문에 종료 1이었다.
-- 회귀: (최종 재실행 결과로 갱신)
+- 회귀(최종 코드 `4e391eb`에서 다시 실행, 아래 값 모두 이 실행):
+  - `cargo test -p rsolver-lp` 41 통과, `cargo test --release --workspace` 122 통과·무시 5(새 `gather_lane_order` 포함), `cargo clippy --workspace --all-targets -- -D warnings` 종료 0. 이 worktree 빌드(`rsolver.__file__`가 worktree 안) pytest 657 passed.
+  - `tools/m1_tau_check.py --self-test`·`m1_beta_check.py --self-test`·`m1_urow_check.py --self-test` 모두 PASS.
   - `tools/proto/statecmp.py kb2`: 수정 전 반복 12부터 w 차이(반복 12 w 2개·score 2개 …). 수정 뒤 반복 0–21 모두 OK, 첫 차이는 반복 22(vstat 2개 [4, 25], 피벗 21 진입 선택).
   - `tools/proto/pathcmp.py kb2`: 수정 전후 모두 첫 피벗 분기 21(원본 진입 25, Rust 4, 이탈 78).
   - `tools/lp_check.py --methods 1 --timeout 120`: 수정 전후 정답 90/91, IterCount 일치 24/64 그대로. 상태 변화 없음. 반복 수가 바뀐 모델 4개: degen2 639→644(원본 634), maros 1769→1825(원본 1975), fit2p 7326→8234, greenbeb 5946→5835(둘 다 원본 기준 없음).
