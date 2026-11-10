@@ -96,7 +96,7 @@ def validate(r, manifest, control=False):
         return {'pivot':0,'flip':0,'push':0}
     assert r['kind'] in ('primal','dual') and events, '목표 0회'
     counts=dict(pivot=0,flip=0,push=0)
-    active=False; pending=None; supply=False; ratio=None; factor=False; step=0; candidate=None; chosen=None
+    active=False; pending=None; applied=None; supply=False; ratio=None; factor=False; step=0; candidate=None; chosen=None
     for e in events:
         name=e['event']
         if name == 'push:enter':
@@ -121,6 +121,8 @@ def validate(r, manifest, control=False):
                 assert all(0 <= i < n+m for i in e['candidates'])
                 assert 0 <= e['position'] <= len(e['candidates'])
                 array(e['failures'],n+m,'int')
+                if e['support'] > 0:array(e['support_marks'],m,'int')
+                else:assert e['support_marks'] is None
                 assert e['batch'] == 0, 'batch는 후속 범위'
             elif name == 'supply:leave':
                 assert supply;supply=False;candidate=e['candidate'];chosen=None
@@ -151,8 +153,8 @@ def validate(r, manifest, control=False):
                     assert e['selected']['leave'] == chosen['chosen'] >= 0
                     assert number(e['pivot']) >= 1e-6
                 else:assert e['selected']['leave'] == -1 and e['pivot'] is None
-            elif name == 'step:leave':
-                assert pending and e['kind'] == pending['kind'] and e['selected']['enter'] == candidate
+            elif name == 'step:applied':
+                assert not applied and pending and e['kind'] == pending['kind'] and e['selected']['enter'] == candidate
                 before,after=pending['state'],e['state'];enter=candidate
                 assert number(after['counters']['iterations']) == number(before['counters']['iterations'])+1
                 if e['kind']=='pivot':
@@ -161,7 +163,13 @@ def validate(r, manifest, control=False):
                     assert after['header'] == expected and after['vstat'][enter] == row and after['vstat'][leave] in (-1,-2,-4)
                 else:
                     assert before['header'] == after['header'] and after['vstat'][enter] in (-1,-2,-3)
-                counts[e['kind']]+=1;pending=None
+                applied=e
+            elif name == 'step:leave':
+                assert pending and applied and e['kind']==pending['kind']
+                assert e['selected']['enter']==candidate
+                assert set(e['state']['header'])==set(applied['state']['header']), 'factor 후 basis 집합'
+                assert e['state']['counters']['iterations']==applied['state']['counters']['iterations']
+                counts[e['kind']]+=1;pending=None;applied=None
             elif name == 'factor:enter':
                 assert not factor;factor=True
                 array(e['header'],m,'int')
