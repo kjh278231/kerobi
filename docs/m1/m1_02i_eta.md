@@ -4,7 +4,7 @@
 
 ## 1. 범위와 주장
 
-- 작업 종류: 조사(착수 때). 원인 규칙을 저장 자료 재생으로 확정한 뒤 같은 branch에서 Rust 수정을 둘째 커밋으로 더했다(§8, 범위 확대 기록).
+- 작업 종류: 조사·구현. 착수 때는 조사였고, 원인 규칙을 저장 자료 재생으로 확정한 뒤 같은 branch에서 Rust 수정을 둘째 커밋으로 더했다(§8, 범위 확대 기록).
 - 조사 질문: kb2(Method=1, Presolve=0, Threads=1) 스냅숏 23에서 d 6·w 21·점수 3개가 끝자리만 다르다(02h 뒤에도 같은 값). 피벗 22에서 처음 다른 입력은 무엇이고 원본은 어떤 규칙으로 계산하는가.
 - 포함 분기: dual DSE 피벗의 BTRAN `ρ_r = e_rᵀB⁻¹`(`9e376` → `221173`)에서 행 eta(LU+0x180 > 0)가 있는 경우. kb2 피벗 0–30(Rust U가 원본과 같은 범위).
 - 제외 범위와 후속:
@@ -86,3 +86,26 @@ T 변조 4종 거부, 규칙 변이 rust·sparse·fma 거부, dense 생존(기�
 - 작업 수행: 완료. 동등성: 원인 규칙이 kb2 eta 피벗 17/17에서 캡처 ρ를 비트 재현(저장 기준). 희소 eta·조밀 eta 뒤 Lᵀ 강제는 C만.
 - 후속: Rust 수정(§8), **M1-02l**(조사, 새 행): 피벗 30 spike 행 17·36 끝자리(FTRAN R 단계 내적 선처리 정렬 후보). 첫 명령 `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_eta_check.py`(U 첫 차이 31 출력), 그다음 `09d112` R 단계(인라인, C:700–1372)의 8레인 내적 정렬 조건을 C로 읽는다.
 - 교훈: [docs/lessons/tooling.md](../lessons/tooling.md)·[original.md](../lessons/original.md)에 추가(§8 뒤 기록).
+
+## 8. Rust 수정(범위 확대)
+
+- 이유: §6이 규칙을 C와 저장 자료 재생으로 확정했고 수정이 M1 파일 한 곳(`crates/lp/src/lu.rs` `btran_updated`)에 머문다. 같은 오라클(§3 F·S)로 바로 판정할 수 있어 같은 branch 둘째 커밋으로 넣었다. 조사 커밋 `e8c9de8`은 수정 없이도 병합 가능한 상태로 먼저 만들었다.
+- 변경: 행 eta가 있고 `m < LU+0x104·nnz(Uᵀ 출력)`이면 조밀 eta(`|v| ≤ ZERO`면 `w_r = 0`, 건너뜀)와 조밀 Lᵀ(작은 값 포함 전체를 넘김, 출력 조밀), 아니면 기존 희소 규칙. 낡은 "교과서 FT 승수" shortcut 주석을 지우고 남은 근사(Uᵀ 조밀 계산, C:89 Uᵀ 경로 판정 미반영 → M1-02k)를 `shortcut:`에 적었다. 공유 코드라 모든 BTRAN 호출자(dual ρ, 쌍대값·primal의 c_B, 초기 DSE 가중치)에 적용된다. 초기 가중치는 재분해 직후라 eta가 없어 영향이 없다.
+- `tools/m1_beta_check.py`: 고정 첫 차이 `FIRST`를 `(23, "state")` → `None`(스냅숏 0–30 전부 같음, 이전 값은 주석에 보존).
+
+### 8.1 실행 결과(worktree `../rsolver-m1-02i`, `tools/build_local.sh` 빌드)
+
+- `tools/m1_eta_check.py --self-test --fresh` 종료 0: §6 줄에 더해 `F: fresh Rust beta = capture on pivots 0..30 (31/31); differing after: [31, 33, 34, 35, 36, 37]`, `S: statecmp kb2 31/31 snapshots OK`(전: 반복 23부터 차이).
+- ρ 직접 대조(일회, 덤프 패치의 `simplex.rs` 부분만 수정 빌드에 임시 적용 뒤 되돌림): 피벗 0–30 ρ가 캡처와 집합·순서·비트 모두 같다. 31·33–37은 다르다(§6의 U 차이), 32는 같다.
+- 기존 검사기 `--self-test`: `m1_beta_check`(위 고정값 변경 뒤) `m1_tau_check` `m1_urow_check` `m1_list_order_check` `m1_aq_order_check` `m1_bfrt_rust` 모두 PASS.
+- `cargo test -p rsolver-lp` 41(무시 1), `cargo test --release --workspace` 124 통과·10 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0, worktree 빌드 `pytest` 657 passed.
+- Netlib(기준선 = 같은 날 main `63ec7ab`을 `../rsolver-m1-02i-base`에 따로 빌드, 둘 다 `tools/lp_check.py --methods 1,0,-1 --timeout 120`·`tools/proto/pathcmp.py all`):
+  - 정답 Method 1·0·−1 모두 90/91 → 90/91(pilot FAIL 그대로). IterCount 일치 30/64·0/64·30/64 그대로.
+  - pathcmp 완전 일치 24 → 25/64(beaconfd 첫 차이 80 → 완전 일치), 중앙 첫 차이 비율 0.589 → 0.624. 첫 차이 위치가 바뀐 다른 모델은 없다.
+  - 반복 수가 바뀐 모델(Method=1, 원본): 25fv47 2461 → 2328(2552), bnl1 978 → 981(1050), boeing1 626 → 632(651), degen2 628 → 621(634), degen3 2343 → 2303(2212), israel 145 → 146(150), maros 1739 → 1738(1975), perold 1341 → 1287(1273), 기준 없음 d2q06c 5317 → 5161, greenbea 3843 → 3805, greenbeb 6134 → 5776, maros-r7 5872 → 7511, nesm 1963 → 1909, pilot 4990 → 4545, pilot87 11806 → 11214. Method=0은 bnl1·boeing2·ganges·greenbea·perold·wood1p·woodw가 바뀌었다(IterCount 일치 0/64 그대로). 모두 첫 차이 뒤의 변화라 일치·불일치 판정 근거가 아니다.
+- Gurobi는 실행하지 않았다(저장 기준).
+
+### 8.2 판정
+
+- 구현: 통과(계약 범위). kb2 dual 피벗 0–30의 ρ·β와 스냅숏 0–30(vstat·x_B·d·w·가격 상태)이 원본과 비트 일치. 영향 회귀 통과.
+- 남은 한계: 희소 eta 경로와 조밀 eta 뒤 Lᵀ 강제의 판별 사례 없음(kb2 희소 eta 0회, dense 변이 생존). 피벗 31 이후 U 차이(M1-02l). e_r 밖 입력의 Uᵀ 경로(M1-02k). kb2 밖 모델은 첫 차이 위치 변화(beaconfd)만 확인.

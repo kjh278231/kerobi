@@ -780,10 +780,12 @@ impl Lu {
         out
     }
 
-    /// BTRAN with Forrest–Tomlin updates (m1_notes §8.10): Uᵀ in U order, row etas newest first, then Lᵀ — sparse
-    /// (`lt_sparse`, so the output order is the original's) when 0x104·nnz ≤ m, else dense in row order.
-    /// shortcut: the etas are textbook FT multipliers, not the original η = Uᵀ⁻¹e_r, so values can differ in the last
-    /// bits; the Uᵀ phase is computed densely.
+    /// BTRAN with Forrest–Tomlin updates (m1_notes §8.10): Uᵀ in U order, row etas newest first, then Lᵀ. With etas
+    /// and m < 0x104·nnz(Uᵀ output) the etas are dense (`221173` C:1237–1572: |v| ≤ ZERO clears w_r and skips the
+    /// eta) and so is Lᵀ (C:1573–1766); else sparse etas (v = 0.0 skips, |w| ≥ ZERO kept) and a sparse Lᵀ
+    /// (`lt_sparse`, the original's output order) when 0x104·nnz ≤ m, else dense in row order.
+    /// shortcut: the Uᵀ phase is computed densely and C:89's dense/sparse Uᵀ choice is not modelled (the eta path
+    /// follows the Uᵀ output count; differs only for inputs with (int)(0x108 + 0x110)·nnz > m, M1-02k).
     fn btran_updated(&self, x: &[(usize, f64)]) -> (Vec<(usize, f64)>, bool) {
         let m = self.head.len();
         let mut w = vec![0.0; m]; // by step
@@ -806,10 +808,13 @@ impl Lu {
                 w[j] -= u * t;
             }
         }
+        let dense_eta = !self.retas.is_empty() && m < self.sparse_mult * list.len();
         for (r, eta) in self.retas.iter().rev() {
             // 221173 eta phase (newest first): v = w_r; w_r = η_r·v, w_i = η_i·v + w_i
             let v = y[*r];
-            if v != 0.0 {
+            if dense_eta && v.abs() <= ZERO {
+                y[*r] = 0.0;
+            } else if v != 0.0 {
                 for &(i, e) in eta {
                     y[i] = if i == *r { e * v } else { e * v + y[i] };
                     if !seen[i] {
@@ -821,12 +826,19 @@ impl Lu {
         }
         let xs: Vec<(usize, f64)> =
             list.iter().filter(|&&r| y[r].abs() >= ZERO).map(|&r| (self.prow[r] as usize, y[r])).collect();
-        if self.sparse_mult * xs.len() <= m {
+        if !dense_eta && self.sparse_mult * xs.len() <= m {
             return (self.lt_sparse(&xs), false);
         }
         let mut dense = vec![0.0; m]; // by step
-        for &(k, v) in &xs {
-            dense[k] = v;
+        if dense_eta {
+            // the dense eta output goes to Lᵀ whole, values below ZERO included
+            for (r, &v) in y.iter().enumerate() {
+                dense[self.prow[r] as usize] = v;
+            }
+        } else {
+            for &(k, v) in &xs {
+                dense[k] = v;
+            }
         }
         for k in (0..m).rev() {
             let v = dense[k];

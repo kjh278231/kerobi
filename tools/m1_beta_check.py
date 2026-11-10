@@ -15,7 +15,7 @@ GZ_SHA = "caad5976f259e668d473e9e992b4c1b69e44254cbce7b63eda778c7b479e48b1"  # e
 TOOL = ROOT / "tools/m1_beta_path.js"
 PARAMS = {"Threads": 1, "Method": 1, "Presolve": 0, "OutputFlag": 0}
 RUST_PIVOTS = 22  # pivots 0..21: before the pivot path splits (pathcmp: first diff at pivot 21 is the 22nd entering choice)
-FIRST = (23, "state")  # first differing snapshot after the M1-02h alpha_q list order (M1-02d: (22, "state"), before: (12, "w"))
+FIRST = None  # no differing snapshot in 0..30 after the M1-02i dense eta rule (M1-02h: (23, "state"), M1-02d: (22, "state"), before: (12, "w"))
 
 
 def u2f(h):
@@ -194,7 +194,8 @@ def check(runs, oracle, mine):
             bad.append(f"F: beta at snapshot {it}: oracle {a['beta']} Rust {s['beta']}")
         if fh(a["ar"]) != fh(s["ar"]):
             bad.append(f"F: alpha_r at snapshot {it}: oracle {a['ar']} Rust {s['ar']}")
-    rep.append(f"F: snapshots 0-{FIRST[0] - 1} equal (vstat, x_B, d, w), first difference at {FIRST}; beta and alpha_r equal 1-12")
+    last = FIRST[0] - 1 if FIRST else max(oracle)
+    rep.append(f"F: snapshots 0-{last} equal (vstat, x_B, d, w), first difference at {FIRST}; beta and alpha_r equal 1-12")
     return bad, rep
 
 
