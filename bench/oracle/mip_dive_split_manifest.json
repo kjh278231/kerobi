@@ -1,0 +1,33 @@
+{
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "captures": {
+  "bench/oracle/mip_dive_split/assign1-5-8_default_1.json.gz": "fd929600fb703ba7e86ebb62ebe6205f37ca48bd9aff91db8529299ce162ba65",
+  "bench/oracle/mip_dive_split/assign1-5-8_default_2.json.gz": "fd929600fb703ba7e86ebb62ebe6205f37ca48bd9aff91db8529299ce162ba65",
+  "bench/oracle/mip_dive_split/assign1-5-8_default_3.json.gz": "fd929600fb703ba7e86ebb62ebe6205f37ca48bd9aff91db8529299ce162ba65",
+  "bench/oracle/mip_dive_split/gmu-35-40_default_1.json.gz": "7424c30f3965343b131299f7bec85254968299560cecdbe5e8f2361418fd1b16",
+  "bench/oracle/mip_dive_split/gmu-35-40_default_2.json.gz": "7424c30f3965343b131299f7bec85254968299560cecdbe5e8f2361418fd1b16",
+  "bench/oracle/mip_dive_split/gmu-35-40_default_3.json.gz": "7424c30f3965343b131299f7bec85254968299560cecdbe5e8f2361418fd1b16",
+  "bench/oracle/mip_dive_split/nidda_H_s1_1.json.gz": "28b8a86beb67f0504dae61d96133adb0dd62943f409a20981f726e379d9aa3b7",
+  "bench/oracle/mip_dive_split/nidda_H_s1_2.json.gz": "28b8a86beb67f0504dae61d96133adb0dd62943f409a20981f726e379d9aa3b7",
+  "bench/oracle/mip_dive_split/nidda_H_s1_3.json.gz": "28b8a86beb67f0504dae61d96133adb0dd62943f409a20981f726e379d9aa3b7",
+  "bench/oracle/mip_dive_split/nidda_H_s1_dr0_1.json.gz": "f2e305fe18bf4fb36399f0315b0ff8875ac4cf5a7677dc438b8b7294878c54a9",
+  "bench/oracle/mip_dive_split/nidda_H_s1_dr0_2.json.gz": "f2e305fe18bf4fb36399f0315b0ff8875ac4cf5a7677dc438b8b7294878c54a9",
+  "bench/oracle/mip_dive_split/nidda_H_s1_dr0_3.json.gz": "f2e305fe18bf4fb36399f0315b0ff8875ac4cf5a7677dc438b8b7294878c54a9"
+ },
+ "models": {
+  "assign1-5-8": "305c26c9eee8da7242f2f42504cb0988c9503f65972859ad5f26d9615086cde3",
+  "gmu-35-40": "0c91e71117164becea8109a414127a2223be82215498f243767a7f5f51b1f11d",
+  "neos-3754480-nidda": "63f322dd9be49acf31f7579d8f04e3bb578bdd7ca7d3525683384190c9a8bf7f"
+ },
+ "refs": {
+  "bench/oracle/mip_dive_gate/assign1-5-8_default_1.json.gz": "55ce82fde99a2a325bae33f00c5c8f82d18435f4ccb19b5c185d4f15e46502ea",
+  "bench/oracle/mip_dive_gate/gmu-35-40_default_1.json.gz": "1d00371bf97aed5a5290f4551c75387d47298d5b2353c3236c196a9969bfd61c",
+  "bench/oracle/mip_dive_gate/nidda_H_s1_1.json.gz": "d241e3c0e2ed4de42723ac01b0b731e20f614ac0893107f2f2b6ceea0425ff4a",
+  "bench/oracle/mip_dive_gate/nidda_H_s1_dr0_1.json.gz": "0242b49349dc4b198b29eeee69fcbf0c4b77fea3d5aaa7601093c09969884092"
+ },
+ "task": "M2-03d-13",
+ "tools": {
+  "tools/mip_dive_split.js": "f7a1181881619c5be8be3122bb7caa460e30f1cde1cebf1bca45aba839a1a51f",
+  "tools/mip_dive_split_runs.sh": "47fca9fc9f56ffaecef6c8a88387bee9244367273ebe33f4fd6ca89c4e6ee9e9"
+ }
+}
