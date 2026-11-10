@@ -26,3 +26,7 @@ def test_name_exact_then_suffix_then_substring():
     assert dc.find(ROWS, '3a484d', False)[0] == [ROWS[1]]
     assert dc.find(ROWS, 'optimizeb', False)[0] == [ROWS[2]]
     assert dc.short(ROWS[1][1]) == '3a484d'
+
+
+def test_bare_hex_without_name_match_is_an_address():
+    assert dc.find(ROWS, '00000210', False)[0] == [ROWS[1]]

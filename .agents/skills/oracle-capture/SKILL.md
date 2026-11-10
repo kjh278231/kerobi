@@ -30,7 +30,7 @@ description: Gurobi 13.0.3 원본을 Frida로 훅해 함수 경계의 상태·�
    - Node Frida를 쓴다. venv Python에는 frida가 없다.
    - 캡처기는 바이너리·모델·도구 sha256을 기록하고 기존 출력 덮어쓰기를 거부한다.
    - 궤적 비교에는 TimeLimit 대신 NodeLimit을 쓴다.
-5. **실행.** Gurobi는 한 프로세스만 쓴다. 그래서 `tools/gurun.sh`를 거쳐, 독립 프로세스로 3회 돌린다. 한 회에 약 2분이 걸리므로 `tools/hrun.sh -- 'tools/<x>_runs.sh <OUT>'`로 돌린다. 기본 580초 안에 안 끝나 종료 코드 124가 나오면 `tools/hrun.sh --wait <pane>`으로 이어서 기다린다. 멈출 때는 자신이 띄운 PID를 kill한다.
+5. **실행.** Gurobi는 한 프로세스만 쓴다. 그래서 `tools/gurun.sh`를 거쳐, 독립 프로세스로 3회 돌린다. 한 회에 약 2분이 걸리므로 `tools/hrun.sh --timeout 580000 -- 'tools/<x>_runs.sh <OUT>'`로 돌리고 Bash 도구 timeout은 600000으로 준다. 그 안에 안 끝나 종료 코드 124가 나오면 `tools/hrun.sh --wait <pane>`으로 이어서 기다린다. 멈출 때는 자신이 띄운 PID를 kill한다.
 6. **검사기**
    - `controls`: manifest 해시, 3회 사건 일치, 입력·파라미터·출력 줄. 훅을 추가했으면 새 캡처를 이전 캡처 필드로 투영해 JSON 전체가 같은지 비교한다(비간섭 증거).
    - `acceptance`: 결과를 보기 전에 고정한 판정 규칙. 양쪽이 모두 null이면 실패다.

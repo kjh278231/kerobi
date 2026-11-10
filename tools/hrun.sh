@@ -3,9 +3,11 @@
 #   tools/hrun.sh [--keep] [--down] [--lines N] [--timeout MS] -- <command string>
 #   tools/hrun.sh --wait <pane-id> [--lines N] [--timeout MS]     # resume waiting after a timeout
 # Exit code = the command's exit code; 124 = still running (pane kept, resume with --wait).
+# Default wait (100 s) fits the Bash tool's default 120 s limit; for long batches pass
+# --timeout 580000 and give the Bash tool call timeout 600000.
 # Outside Herdr (HERDR_ENV!=1) the command runs here directly.
 set -u
-keep=0 dir=right lines=60 timeout=580000 pane=
+keep=0 dir=right lines=60 timeout=100000 pane=
 while [ $# -gt 0 ]; do
   case $1 in
     --keep) keep=1 ;;

@@ -40,6 +40,8 @@ def find(rows, key, dec):
         near = rows[i][1] if i >= 0 else '-'
         sys.exit(f'{hex(a)}: not inside an indexed function (nearest preceding: {near})')
     hits = [r for r in rows if r[1] == key] or [r for r in rows if r[1].endswith(key)] or [r for r in rows if key in r[1]]
+    if not hits and re.fullmatch(r'[0-9a-fA-F]+', key):
+        return find(rows, '0x' + key, False)  # file-name prefix / hook offset such as 003959f0
     if not hits:
         sys.exit(f'{key}: no function in index.tsv')
     return hits, None
