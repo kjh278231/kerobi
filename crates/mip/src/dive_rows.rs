@@ -1,4 +1,4 @@
-//! DynamicRows dive row selection of `5fb8ec` (C:1625–1842, after the gate at `0x513078` up to `0x513951`): the rows the
+//! DynamicRows dive row selection of `5fb8ec` (C:1620–1842, after the gate at `0x513078` up to `0x513951`): the rows the
 //! dive node deactivates through `10e5fc` (docs/m2/mip_dive_rows.md, docs/m2/mip_dive_rows_rust.md).
 //! shortcut: selection only. The gate (DynamicRows, dive depth, node state, `a7f0ad`/`a7f923`) and the deactivated list
 //! (`10e5fc`/`edd71`/`10e662`) are not ported and nothing calls this from the B&B yet; upgrade with M2-03d-4.

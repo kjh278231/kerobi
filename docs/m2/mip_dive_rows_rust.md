@@ -21,9 +21,9 @@
 
 | 위치 | 이식 내용 |
 |---|---|
-| `5fb8ec` C:1625–1628 | cutoff′ = `5e7204()`, 1e100 미만이면 `I+0x10`을 뺀다 |
-| C:1629–1680 | 모델 행 루프. `I+0xa0`[i]=0이고 `7889a5`=0일 때 maxact=−`a7cec0(−1)`. `0.1·FeasTol + rhs < maxact`이면 cutoff 경로, 아니면 '='은 minact=`a7cec0(+1)`, 그 밖은 1e100으로 `minact < rhs − 0.1·FeasTol`이면 cutoff 경로. cutoff 경로는 DualReductions(env+0x2430)≠0, cutoff′<1e100, sense≠'=', `66661c`≠0이면 선택. 루프 뒤 work += nrows+nrows |
-| C:1681–1842 | cut 루프(16개 단위 펼침과 나머지). `I+0xa0`[nrows+j]=0, cut `+0x2c`≠0x14, `+0x40`=0, slack `(I+8)->+0x20`[nrows+j] > 1e-5이면 nrows+j. 뒤 work += 3·ncuts |
+| `5fb8ec` C:1620–1623, asm `0x513203` | cutoff′ = `5e7204()`, 1e100 미만이면 `I+0x10`을 뺀다 |
+| C:1624–1688, asm `0x513273`–`0x513413` | 모델 행 루프. `I+0xa0`[i]=0이고 `7889a5`=0일 때 maxact=−`a7cec0(−1)`. `0.1·FeasTol + rhs < maxact`이면 cutoff 경로, 아니면 '='은 minact=`a7cec0(+1)`, 그 밖은 1e100으로 `minact < rhs − 0.1·FeasTol`이면 cutoff 경로. cutoff 경로는 DualReductions(env+0x2430)≠0, cutoff′<1e100, sense≠'=', `66661c`≠0이면 선택. 루프 뒤 work += nrows+nrows |
+| C:1689–1841 | cut 루프(16개 단위 펼침과 나머지). `I+0xa0`[nrows+j]=0, cut `+0x2c`≠0x14, `+0x40`=0, slack `(I+8)->+0x20`[nrows+j] > 1e-5이면 nrows+j. 뒤 work += 3·ncuts |
 | `66661c` `0x554a30` C 전체 | 고정 열(ub−lb ≤ 1e-10)은 (a·0.5)·(l+u), 정수성(열 'C' 아님·a 정수), |a|≤1e-6·무한 bound 조기 0, rc 부호로 bound 쪽 합산, 나머지는 |rc/a| 오름차순 상위 5개 삽입. 정수 행이면 rhs=floor(rhs+9.999999999999999e-05)+1. loc < rhs−1e-6이면 비용을 쌓고(마지막 전 단계는 폭으로 자름) gap < cost이면 1. work += 14·항목, 4·단계 |
 | `a7cec0` | 기존 `knapsack::act_sum` 재사용(M2 presolve에서 이미 이식) |
 
@@ -107,7 +107,7 @@ PASS
 - 남은 한계:
   - 실행으로 판별되지 않은 절(cut 플래그, `7889a5`, '=' 최소 활동값, cutoff′<1e100, cut 0x14·`+0x40`)은 C 근거로 옮겼고 미검증이다. 원본 사례에서 참이 된 적이 없다.
   - work 증가는 C로 옮겼고 미검증이다(캡처 없음).
-  - NaN 입력: 비교식은 asm 분기 형태(비순서 포함)를 따랐다. `66661c`의 asm(`0x554bee`–`0x554c34` rc 부호 분기, `0x554dde` 폭 자르기 `minsd`)은 디컴파일 C 표현(`!(a<=0 || 1e-10<r)`, `W <= step`)과 NaN에서만 다르다. 처음 작성은 C 표현이었고 asm 확인 뒤 고쳐 다시 재생했다(결과 동일). NaN 분기는 캡처에 없어 미검증이다.
+  - NaN 입력: 비교식은 asm 분기 형태(비순서 포함)를 따랐다. 선택 블록은 `0x513203`(cutoff′), `0x513324`(maxact, `jb`), `0x51334f`(minact, '=' 경로도 `0x514272`에서 합류), `0x513370`(cutoff′<1e100, `jbe`)을 읽어 Rust 형태와 같음을 확인했다. `7889a5`는 C(객체 non-null, i<`+0xc`, 값 > −1)를 읽었다. `66661c`의 asm(`0x554bee`–`0x554c34` rc 부호 분기, `0x554dde` 폭 자르기 `minsd`)은 디컴파일 C 표현(`!(a<=0 || 1e-10<r)`, `W <= step`)과 NaN에서만 다르다. 처음 작성은 C 표현이었고 asm 확인 뒤 고쳐 다시 재생했다(결과 동일). NaN 분기는 캡처에 없어 미검증이다.
   - 관문·목록 유지(`10e5fc`·`edd71`·`10e662`)와 `bnb.rs` 연결은 하지 않았다. Rust B&B에는 다이브 깊이, 행 플래그 배열, cut 속성, 노드 LP slack·rc를 이 함수에 넘길 구조가 아직 없다.
 - 후속:
   - 목록 유지·관문 이식(번호 미배정, 제안): `10e5fc`/`10e662`/`edd71`의 X 목록과 D 교체(03d-7 `10f448`/`10f5ae`)를 옮긴다. 03d-7 X 목록 633단계 재생이 비교 기준이다.
