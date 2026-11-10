@@ -80,8 +80,66 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+### 6.1 도구 문제와 탐색 sweep(판정 근거 아님)
+
+- 첫 smoke(nidda H, NodeLimit 3000)는 첫 선택 직후 프로세스가 죽었다. 새 훅을 하나씩만 켠 실행(NodeLimit 200)에서 `0x510940`·`0x510961`·`0x51305f`는 정상이었고 `0x51319d`·`0x5131af`·`0x5131b7`·`0x5131c2`는 하나만 켜도 죽었다. 예외 처리기로 잡은 지점은 `5e7204`+7(`0x509c97`)의 주소 0x3220 읽기였다. `5e7204`의 인자는 `0x5131ef`에서 읽는 `(%rsp)`(`0x5130b0`에서 저장한 mip 포인터)다. Frida 객체형 `Interceptor.attach(addr, {onEnter})`는 대상을 함수 진입으로 보고 `[rsp]`(반환 주소 자리)를 바꾸는 것으로 보인다(관측: 이 칸이 살아 있는 구간에서만 죽음). 새 중간 훅을 함수형(probe) `Interceptor.attach(addr, function () {...})`로 바꾸자 정상 종료했고, NodeLimit 200에서 `b:*`·`d:*` 투영이 03d-8 도구 출력과 같았다. 03d-8 객체형 훅(`0x512468`·`0x513078`·`0x513951`)은 그대로 두었다.
+- 첫 sweep에서 I의 노드 칸 검사가 많이 실패했다. `0x130(%rsp)` 노드를 `5fb8ec` 진입 때의 `*param_1`과 비교했기 때문이다. C:1577이 `local_68 = *local_58`로 다시 읽듯이 호출 중 `*param_1`이 바뀐다. 검사를 관문 시점의 `*param_1`과 비교하도록 고쳤다(판정 전, 도구 commit `f9c7349`).
+- sweep: 도구 sha256 앞 16자리 `22af8e0e7a1d6120`(commit `f9c7349`)으로 `../re/bench/data/miplib` 38모델을 `{"NodeLimit":3000,"TimeLimit":30}`(Threads 1, Seed 0)로 1회씩 돌렸다. 판정은 `python3 tools/mip_dive_gate_check.py --sweep OUT`이다. 결과 파일은 저장소에 넣지 않았다(1회 실행, TimeLimit 사용).
+  - 관문 평가가 있는 36모델에서 C:526 157,757회, C:1581 157,732회가 모두 I·R·P를 통과했다. enlight_hard(노드 0)·sp150x300d(노드 1)는 관문 평가가 0회다. 03d-8에서 이 두 모델의 선택이 0회였던 이유다.
+  - env+0x2b48은 모든 평가에서 −1, `param_3+0x18`은 모두 1, `a7f0ad`·`a7f923` 반환은 모두 0이다.
+  - C:1581 첫 실패 절은 깊이 145,381, 상태 3,989, 통과 8,362다. 깊이 절이 참인 평가의 상태 값은 2가 8,362, 4가 2,352, 5가 1,634, 1이 3(neos-4954672-berkel·neos-860300)이다. `I+0xa0` null 24,208회·`I+8` null 13,586회는 모두 앞 절이 이미 거짓인 평가였다. 통과 8,362회는 모두 `0x5131c2`까지 갔다.
+  - 고정 사례가 상태 4·5 실패(gmu·assign)를 이미 덮는다. 상태 1은 '=2' 규칙에서 새 판별이 없으므로 사례를 더하지 않았다(§4 그대로).
+
+### 6.2 고정 캡처
+
+- 실행 도구 sha256 `1f2fb99be8490456…`(manifest `tools`). 위치는 worktree `../rsolver-m2-03d-11`이다.
+- 첫 고정 캡처에서 대조군 run 1만 run 2·3과 달랐다. 차이는 5,224개 사건의 `node_is_entry`(관문 노드 포인터가 진입 노드 포인터와 같은지) 하나였다. 바뀐 노드 객체가 이전 주소를 재사용하는지에 달린 주소 비교라 판정 입력이 아니다. 이 필드를 빼고 12회를 모두 다시 돌렸다(판정 규칙 변경 없음).
+- 네 사례 모두 3회가 바이트 단위로 같다(gz SHA-256 동일). nidda·대조군은 `DONE 8 32898`, gmu·assign은 `DONE 8 3000`, 오류 없음.
+- 판정 출력(`--self-test`, 종료 0):
+
+```text
+M: 4 cases x 3 runs, binary/model/tool/params/output
+B: 3 runs identical: nidda_H_s1 82822, nidda_H_s1_dr0 66373, gmu-35-40_default 28788, assign1-5-8_default 7304
+N: b:/d: projection without pointer-derived LP numbering = M2-03d-8 capture (9783 events over 4 cases, 3 runs each); byte-equal including LP numbering: nidda_H_s1, nidda_H_s1_dr0, assign1-5-8_default
+I/R/P: 160353 gate evaluations: identity, rule = positive hooks, C:526/C:1581 pairing, M2-03d-8 d:gate/d:sel/d:blocked/gate_counts
+D: top-level C:526 true = 10e662 at 5fb8ec+0x79e: nidda_H_s1 1146, nidda_H_s1_dr0 0, gmu-35-40_default 74, assign1-5-8_default 69
+C: DynamicRows=0 x3: dyn 0 at every gate evaluation, no positive hook
+```
+
+- 절별 횟수(run 1, C:1581): nidda 평가 33,118(깊이 실패 31,798, 통과 1,320, null `I+0xa0` 3,482·`I+8` 45는 모두 앞 절 거짓), gmu 10,787(깊이 9,615, 상태 483 = 4가 468·5가 15, 통과 689), assign 3,088(깊이 2,997, 상태 7 = 4가 4·5가 3, 통과 84), 대조군 33,182(모두 dyn 0). 관문 평가가 있는 `5fb8ec` 호출마다 C:526이 한 번 있고(C:526 없이 C:1581만 있는 호출 0), 같은 호출의 C:1581과 노드·dyn·`I+0x2c`·`W+0x34`가 모두 같았다(P).
+- V(절 변종, 첫 차이):
+
+| 변종 | 결과 | 첫 차이·이유 |
+|---|---|---|
+| dyn 무시 | 거부 | 대조군 fb 1 C:526: 규칙 `510961`, 실제 없음 |
+| C:526 깊이 무시 | 거부 | nidda fb 2(노드 2) |
+| C:1581 깊이 무시 | 거부 | nidda fb 2 |
+| 상태 2 무시 | 거부 | gmu fb 6(노드 5, 중첩 MIP) |
+| `+0x18` 임계 1 | 거부 | nidda fb 1(값 1) |
+| `I+0xa0`·`I+8` null 무시 | 생존 | null은 앞 절이 거짓인 평가에서만 나옴 |
+| `a7f0ad`·`a7f923` 무시 | 생존 | 반환이 모두 0(선형 MIP) |
+| `+0x18` 무시·임계 3 | 생존 | 값이 언제나 1 |
+
+- 자기검사 변조 31종을 모두 거부했다. 대상은 바이너리·도구·모델 해시, 파라미터, 출력 줄, 회차 차이, 빈 사건, 03d-8 투영(선택 목록 한 행, 기준 사건 삭제), 통과 평가의 dyn·깊이·상태·null·`+0x18`(관문과 `5131b7`을 같이 바꿔 I를 통과시킨 뒤 R이 거부), 실패 평가의 상태→2·깊이 일치, 참인 C:526의 `W+0x34`, `a7f0ad`·`a7f923` eax, r15 식별·r15+0x18, 노드 칸·rbx 식별, C:1581 노드≠C:526 노드, 양성 훅 삭제·추가, 대조군 양성 훅 추가·dyn −1이다. 디스크 캡처 1바이트 변조 시 manifest 검사가 실패한다.
+- 관련 회귀: `python3 tools/mip_dive_rows_check.py --self-test` 종료 0(03d-8 자료 불변).
+
+### 6.3 관찰과 계약 변경
+
+- 계약 변경(결과 확인 뒤): N은 처음 `b:*`·`d:*` 사건 전체의 바이트 일치였다. gmu에서 call 951에 `b:lpnew`가 하나 더 나왔고(LP 3개 대 2개) 이후 `lp` 번호가 1씩 밀렸다. 이 번호는 03d-7 `lpId`가 LP 포인터를 키로 매기는 값이라, 새 LP 객체가 이전 주소를 재사용했는지에 달렸다. 03d-8 도구를 같은 세션에 gmu로 1회 다시 돌리면 저장본과 바이트 단위로 같았다. 그래서 새 도구가 heap 배치를 바꾼 것으로 보지만, 주소 이외 사건은 모두 같다. N을 "`b:lpnew`와 `lp` 필드를 뺀 투영이 같다"로 바꾸고, 바이트 일치 사례(nidda·대조군·assign)를 따로 출력한다. 다른 규칙은 바꾸지 않았다.
+- `W+0x34`는 C로 `6e8eb3`이 노드를 꺼낼 때 쓴 그 노드의 깊이다. 관문의 `I+0x2c`=`W+0x34`는 "지금 노드가 방금 꺼낸 노드와 같은 깊이"이고, 실행에서는 다이브 첫 노드에서 참이었다(03d-7). 쓰는 쪽은 실행으로 대조하지 않았다.
+- top-level C:526 참 횟수는 03d-8 §6.3의 횟수 대조(nidda 1146, gmu 74, assign 66+3)와 같고, 이번에는 호출별로 맞췄다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: **완료(오라클 구축)**.
+- 동등성: 해당 없음(Rust 미변경). Python 규칙은 원본 대조 도구다.
+- 통과 범위: 네 사례(실제 실행 3회씩)에서 C:526·C:1581의 모든 평가 160,353회의 절 입력 원시 값과 양성 훅 결과가 §2 규칙과 정확히 맞는다. 실행으로 판별된 절은 DynamicRows≠0, 두 관문의 깊이 절, 상태=2, `param_3+0x18`<2의 '값 1 통과' 쪽이다. 탐색 sweep 36모델도 모두 맞았다.
+- 남은 한계:
+  - C만(실행에서 판별되지 않음): `I+0xa0`·`I+8` null 절, `a7f0ad`·`a7f923`(QP·QCP, 선형 MIP에서 언제나 0), `param_3+0x18`≥2 쪽(값이 언제나 1).
+  - 미확인: `param_3+0x18`의 의미, DynamicRows=−1을 바꾸는 쪽(38모델 모두 env 값 −1), `W+0x34` 쓰기의 실행 대조, `*param_1`을 바꾸는 쪽.
+  - 비간섭: nidda·대조군·assign은 03d-8 사건과 바이트 단위로 같다. gmu는 포인터 유래 LP 번호만 다르다(§6.3).
+- Rust 이식에 주는 뜻: 관문은 `dyn≠0 && node.depth == W.dive_start_depth`(C:526, 재활성)와 여기에 `node.lp_state == 2 && flags·sol 있음 && 선형 && param_3+0x18 < 2`(C:1581, 선택)다. Rust 쪽에는 노드 선택 때의 깊이(`W+0x34`)와 노드 LP 상태가 필요하다.
+- 후속(제안, 번호 미배정): 관문 Rust 이식(`g:*` 사건 재생으로 L1 대조). 분할 순서 오라클(03d-10 제안)은 그대로다. M2-03d-4(L2)의 남은 선행은 M2-10b, M1 요청, 관문 이식이다.
+- 재실행: `tools/hrun.sh --timeout 580000 -- 'tools/mip_dive_gate_runs.sh bench/oracle/mip_dive_gate'`(Gurobi 12회, 약 3분) 뒤 `python3 tools/mip_dive_gate_check.py --self-test`(약 1분).
+- 작업 branch: `work/m2-03d-11`. 검사 통과 뒤 main에 `--no-ff`로 병합한다.
+- 교훈: [도구](../lessons/tooling.md)(Frida 객체형 중간 훅의 `[rsp]` 덮어쓰기, 포인터 동일성 필드의 실행별 변동), [원본 사실](../lessons/original.md)(관문 절 분포, `*param_1` 교체)에 추가했다.
