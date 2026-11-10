@@ -2,9 +2,45 @@
 //! dive node deactivates through `10e5fc` (docs/m2/mip_dive_rows.md, docs/m2/mip_dive_rows_rust.md).
 //! `RowList` keeps the deactivated list X = `D+0x140` (`10e5fc`, `10e662`, `edd71`) and swaps the reduced columns into D
 //! (`10f448`/`10f5ae`) (docs/m2/mip_dive_list_rust.md).
-//! shortcut: the gate (DynamicRows, dive depth, node state, `a7f0ad`/`a7f923`) is not ported and nothing calls this from
-//! the B&B yet; upgrade with M2-03d-4.
+//! `Gate` holds the two DynamicRows gates of `5fb8ec` (C:526, C:1581–1610) (docs/m2/mip_dive_gate_rust.md).
+//! shortcut: nothing calls this from the B&B yet and the gate takes raw original fields (DynamicRows, `W+0x34`, LP
+//! status 2); upgrade with M2-03d-4.
 use crate::knapsack::act_sum;
+
+/// What the DynamicRows gates read (docs/m2/mip_dive_gate.md).
+pub struct Gate {
+    /// DynamicRows env+0x2b48 (−1 in every capture).
+    pub dyn_rows: i32,
+    /// Node depth `I+0x2c` and `W+0x34`, the depth of the node `6e8eb3` last took.
+    pub depth: i32,
+    pub dive_depth: i32,
+    /// Node LP status `I+0x28`; whether the node has row flags `I+0xa0` and an LP solution `I+8`.
+    pub lp_status: i32,
+    pub has_flags: bool,
+    pub has_sol: bool,
+    /// `*(param_3+0x18)` (meaning unknown, 1 in every capture).
+    pub p3_18: i32,
+}
+
+impl Gate {
+    /// C:526: at the first node of a dive every listed row is reactivated (`RowList::reactivate_all`).
+    pub fn react(&self) -> bool {
+        self.dyn_rows != 0 && self.depth == self.dive_depth
+    }
+
+    /// C:1581–1610: whether `select` runs on this node. `qp`/`qcp` are `a7f0ad`/`a7f923` on the node LP, called only
+    /// after the earlier clauses pass.
+    pub fn select(&self, qp: impl FnOnce() -> bool, qcp: impl FnOnce() -> bool) -> bool {
+        self.dyn_rows != 0
+            && self.depth == self.dive_depth
+            && self.lp_status == 2
+            && self.has_flags
+            && self.has_sol
+            && !qp()
+            && !qcp()
+            && self.p3_18 < 2
+    }
+}
 
 /// What the selection reads. Model rows are the cut-free MIP LP `(mip+8)->D` in row-major form; cut j is row nrows+j.
 pub struct Sel<'a> {
