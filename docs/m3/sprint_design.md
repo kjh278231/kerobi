@@ -18,6 +18,8 @@
 
 04c·04e는 조사에서 특정한 push 분기 하나만 구현한다. 전체 push phase를 완료하려면 조사 결과에서 필요한 분기별 번호를 모두 추가한다. cleanup 연결은 필요한 분기가 검증된 다음 수행한다. Netlib 최종 목적 일치만으로 내부 basis 패리티를 판정하지 않는다.
 
+04b의 [primal push 조사](primal_push_branches.md)는 double·x87 정밀도, 후보·방향·ratio·이동·basis·재분해·signed remaining 경계를 특정했다. 합성 ratio 29사례×3회는 helper 경계만 검증했다. 04b-1에서 정상 실행의 필수 상태와 실제 pivot·flip을 캡처한 뒤 04c의 구현 분기 하나를 고른다. 나머지 초기화·infeasible ratio·batch·재분해·x87은 조사 §4의 분할 후보에서 계약을 별도로 확정한다.
+
 ## 2. Method 선택과 Concurrent
 
 자동 선택은 입력 분류→Method 결정→실행 경로를 추적한다. M3-05a는 명시 Method, 자동 Method, 모델 분류, 관련 파라미터에 대한 원본 결정표를 만든다. 선택 분기를 고치는 작업과 concurrent 엔진을 만드는 작업은 독립 번호다.

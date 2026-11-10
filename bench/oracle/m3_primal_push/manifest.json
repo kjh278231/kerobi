@@ -1,0 +1,32 @@
+{
+  "task": "M3-04b",
+  "kind": "static-investigation-with-original-synthetic-ratio",
+  "baseline": "51cd515",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "cases_per_process": 29,
+  "processes": 3,
+  "natural_push_events": 0,
+  "files": {
+    "../re/decomp/c/001bc5d0_PRIVATE000000000013f716.c": "0a631de8d82d656807bc6232ad85ffa162c6812fe3cebeed6ff737d0b9f7a8e4",
+    "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb",
+    "../re/decomp/c/002937b0_PRIVATE0000000000256781.c": "dfec3be061727825fb12fba4b2fed8897853686c7970b42354f9ec13f0033420",
+    "../re/decomp/c/001c5310_PRIVATE000000000025615c.c": "acbf6b5539de8967b02005efd5bb3581e1487d56b2881508ad4309a4305793bd",
+    "../re/decomp/c/00298ea0_PRIVATE000000000025615c.c": "c8f91b6ad31ece5351b9da3948a69dd410af4dda70db2e02ea9af529cecb7c92",
+    "../re/decomp/c/000ef960_PRIVATE0000000000055f68.c": "bebc9eec4c74cd5abaec3454c3495a23aedeab276c0ccf03710dd517c4360649",
+    "../re/decomp/c/000eefa0_PRIVATE0000000000054eef.c": "6bd16a64442cf643ce92869e82d815963fdae0e16f8582db6ef9d710cc0068f0",
+    "../re/decomp/c/000f0120_PRIVATE0000000000056973.c": "cb7946343603608ec265492ef35060d7e24e64fbe315456b60596645924181ef",
+    "../re/decomp/c/002428f0_PRIVATE00000000001ef3c1.c": "231062353f4bad787ff71be461a269be71a37a6b397926e1c75e4031bee9f8ee",
+    "../re/decomp/c/00241da0_PRIVATE00000000001ee42f.c": "5c4fe721eec7864131c2ab7d139b21e328994f799ba51c500977ecb31d795923",
+    "../re/decomp/c/00243150_PRIVATE00000000001efda1.c": "bf29f28607fad58de9d5f6443e3c97ef0cc2129a4f5e8ab35fb3e3ebce8b54be",
+    "../re/decomp/c/008bccb0_PRIVATE0000000000aabbe3.c": "2294d7d5d0852815fb974a7a42e7371b0e5d04da396410c59b3b55ede26fccfe",
+    "../re/decomp/c/000f15c0_PRIVATE000000000005b257.c": "f4bc6293c44b0374816f05a8b09318a046fccef96db8e0b81c7ae2ced0e77183",
+    "../re/decomp/c/00244cd0_PRIVATE00000000001f4140.c": "268649067b94fd2290a752933f28902528b0b09f249a31968f901d4f19525d44",
+    "../re/decomp/c/001bb6f0_PRIVATE000000000012dd49.c": "968b6176ccbb47922dd75d6887b770851d8690c7edee0312479c099992fbea4d",
+    "../re/decomp/c/001bbf80_PRIVATE000000000012f282.c": "a875e3c3a0669636e5e6a99a9aab2c34f6cc0e8fe38cd1eabe336ac4f62dfd86",
+    "tools/primal_push_ratio_oracle.py": "fd2c6fa3be599d9355d5feeb3353325c54eb1a45997c6bddfcf6e609907e0fb0",
+    "bench/oracle/m3_primal_push/ratio-1.json": "a4120adf99d88f5b672b0862c5a0c0f0fee821d64b885aa036804e16cf322ef8",
+    "bench/oracle/m3_primal_push/ratio-2.json": "a4120adf99d88f5b672b0862c5a0c0f0fee821d64b885aa036804e16cf322ef8",
+    "bench/oracle/m3_primal_push/ratio-3.json": "a4120adf99d88f5b672b0862c5a0c0f0fee821d64b885aa036804e16cf322ef8",
+    "bench/oracle/m3_primal_push/verification.json": "7b87761a06e375a6a79f3e1261f246d05ba251168c88596f6d5b04be0b91f151"
+  }
+}

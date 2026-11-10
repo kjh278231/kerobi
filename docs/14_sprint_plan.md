@@ -124,8 +124,9 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04a | 조사 완료 | crossover 입력·출력·진입 상태의 정적 계약 | 노트14·simplex warm-start | [배열·스케일·부분 실패·설치 경계 근거](m3/crossover_entry_contract.md). 정적 조사이며 구현 동등성은 미검증 |
 | M3-04a-1 | 오라클 구축 완료(범위 한정) | 실제 LP 하나의 PDHG·barrier·시작 벡터 정상 진입 | 04a | [각 3회 비트 비교·독립 재캡처·변조 검출](m3/crossover_entry_oracle.md). Rust 동등성은 미검증 |
 | M3-04a-2 | 조사 | 실패·중단·고급 presolve 매핑의 원본 조건과 후속 분할 | 04a·04a-1 | 조건별 함수·필수 상태·독립 오라클 번호를 확정. 세 가족 전체 구현은 제외 |
-| M3-04b | 조사 | primal push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |
-| M3-04c | 구현 | 04b의 push 분기 하나 | 04b | 해당 phase 입력·출력 상태 비교 |
+| M3-04b | 조사 완료 | primal push의 원본 분기 분할 | 04a | [double·x87·상태 분기와 합성 ratio 29사례×3회](m3/primal_push_branches.md). 전체 push·Rust 동등성은 미검증 |
+| M3-04b-1 | 오라클 구축 | 정상 push 한 단계의 후보·ratio·flip·basis 교환 | 04b·04a-1 | primal-first·dual-first 각 독립 3회. 목표 0회·핵심 상태 누락·합성만 존재하면 합격 거부 |
+| M3-04c | 구현 | 04b의 double push 분기 하나 | 04b·04b-1 | 원본 같은 입력의 방향·ratio·이동 또는 단일 pivot 중 한 경계만 비교. 분할 후보는 [조사 §4](m3/primal_push_branches.md#4-후속-분할과-미확인-범위) |
 | M3-04d | 조사 | dual push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |
 | M3-04e | 구현 | 04d의 push 분기 하나 | 04d | 해당 phase 입력·출력 상태 비교 |
 | M3-04f | 조사·구현 | cleanup 진입과 basis 설치 한 경로 | 필요한 push 분기 완료 | 설치 basis·단일 모델 최종 해 비교 |

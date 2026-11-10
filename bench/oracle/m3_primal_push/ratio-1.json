@@ -1,0 +1,337 @@
+{
+  "schema": "M3-04b-ratio-v1",
+  "provenance": "original-synthetic",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "source_sha256": "bebc9eec4c74cd5abaec3454c3495a23aedeab276c0ccf03710dd517c4360649",
+  "tool_sha256": "fd2c6fa3be599d9355d5feeb3353325c54eb1a45997c6bddfcf6e609907e0fb0",
+  "inputs_sha256": "062a4100d9d948f6855bd9d629254fdc3ca8b4bfc2700335cd545cd944d5bd02",
+  "environment": {
+    "machine": "x86_64",
+    "system": "Linux",
+    "libc": [
+      "glibc",
+      "2.39"
+    ]
+  },
+  "events": [
+    {
+      "name": "lower-sparse",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000000040",
+      "pivot": "000000000000f03f",
+      "work": "000000000000fc3f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "lower-dense",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000000040",
+      "pivot": "000000000000f03f",
+      "work": "000000000000f83f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "upper-sparse",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000001040",
+      "pivot": "0000000000000040",
+      "work": "000000000000fc3f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "upper-dense",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000001040",
+      "pivot": "0000000000000040",
+      "work": "000000000000f83f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "tie-sparse",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000000040",
+      "pivot": "000000000000f03f",
+      "work": "0000000000000c40",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "tie-dense",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000000040",
+      "pivot": "000000000000f03f",
+      "work": "0000000000000840",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "tie-reversed-sparse",
+      "chosen": 0,
+      "row": 1,
+      "theta": "0000000000000040",
+      "pivot": "000000000000f03f",
+      "work": "0000000000000c40",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "larger-pivot-sparse",
+      "chosen": 1,
+      "row": 1,
+      "theta": "0000000000000040",
+      "pivot": "0000000000000040",
+      "work": "0000000000000c40",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "larger-pivot-dense",
+      "chosen": 1,
+      "row": 1,
+      "theta": "0000000000000040",
+      "pivot": "0000000000000040",
+      "work": "0000000000000840",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "free-sparse",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000f03f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "free-dense",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000d03f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "upper-infinite-sparse",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000f03f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "upper-infinite-dense",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000d03f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "pivot-at-tol-sparse",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000f03f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "pivot-at-tol-dense",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000d03f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "pivot-above-tol-sparse",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000000000",
+      "pivot": "96d626e80b2e113e",
+      "work": "000000000000fc3f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "pivot-above-tol-dense",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000000000",
+      "pivot": "96d626e80b2e113e",
+      "work": "000000000000f83f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "negative-zero-sparse",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000000080",
+      "pivot": "000000000000f03f",
+      "work": "000000000000fc3f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "negative-zero-dense",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000000080",
+      "pivot": "000000000000f03f",
+      "work": "000000000000f83f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "empty-sparse",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "0000000000000000",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "empty-dense",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "0000000000000000",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "finite-flip-sparse",
+      "chosen": -1,
+      "row": -1,
+      "theta": "000000000000f03f",
+      "pivot": "0000000000000000",
+      "work": "000000000000f03f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "finite-flip-dense",
+      "chosen": -1,
+      "row": -1,
+      "theta": "000000000000f03f",
+      "pivot": "0000000000000000",
+      "work": "000000000000e83f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "flip-tie-sparse",
+      "chosen": -1,
+      "row": -1,
+      "theta": "0000000000000040",
+      "pivot": "0000000000000000",
+      "work": "000000000000fc3f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "flip-tie-dense",
+      "chosen": -1,
+      "row": -1,
+      "theta": "0000000000000040",
+      "pivot": "0000000000000000",
+      "work": "000000000000f83f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "flip-relaxed-tie-sparse",
+      "chosen": -1,
+      "row": -1,
+      "theta": "83de1b4300000040",
+      "pivot": "0000000000000000",
+      "work": "000000000000fc3f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "flip-relaxed-tie-dense",
+      "chosen": -1,
+      "row": -1,
+      "theta": "83de1b4300000040",
+      "pivot": "0000000000000000",
+      "work": "000000000000f83f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "zero-alpha-sparse",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000f03f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    },
+    {
+      "name": "zero-alpha-dense",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000d03f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 0
+    }
+  ]
+}
