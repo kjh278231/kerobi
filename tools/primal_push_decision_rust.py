@@ -274,7 +274,12 @@ MUTANTS.update({
     # Rust 전용: 위반 경로를 feasible 방향식·ratio로 돌리는 오류
     'v-as-feasible': [('let decrease = match violated {', 'let decrease = match None::<&[u8]> {')],
 })
-NOT_PORTED = {}
+NOT_PORTED = {
+    # M3-04c-8 오라클 변조 중 crossover.rs에 대상이 없는 것
+    'recall-alpha-keep': '재호출 전 열 재반전(0x1c49e2)은 호출자(재생 테스트) 몫이고 crossover.rs에 없다. 재생은 재반전 뒤 alpha를 원본 두 번째 ratio:enter와 비교한다.',
+    'recall-no-gate': '재호출도 같은 violated_ratio(054eef→게이트→056973)를 부르므로 재호출에서만 게이트를 끄는 대상이 없다. 게이트 자체는 gate-off·gate-pivot-1e-4가 연결 검사로 검출한다.',
+    'recall-stale-leave': 'S+0x2f8(진입 leave 기록)은 Rust 단계 판단의 입력·출력이 아니다. 오라클 판단 모델만 검사한다.',
+}
 
 
 def mutate_rust(cases, text):

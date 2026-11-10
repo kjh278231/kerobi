@@ -35,7 +35,7 @@ new = f'{N}/retry-primal-recallagent.json'
 cases['recall-retry-primal-recallagent'] = dict(role='noninterference', kind='primal', model_sha256=sha(f'{R}/retry.lp'), new=new,
                                          old=f'{R}/retry-primal-1.json', capture_sha256=[sha(new)])
 hist = sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / D / 'history').iterdir())
-records = [p for p in (f'{D}/model-mutation.json', f'{D}/rust-mutation.json',
+records = [p for p in (f'{D}/model-mutation.json', f'{D}/rust-mutation.json', f'{D}/rust-mutation-v2.json',
                        'bench/oracle/m3_push_decision_rust/input.txt') if (ROOT / p).exists()]
 m = dict(task='M3-04c-8', schema_version=1,
          float_encoding='IEEE-754 binary64 little-endian hex; exact bits including signed zero',
