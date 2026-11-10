@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mip_retry_basis_check as B  # noqa: E402
 
 FIXTURE = 'bench/oracle/mip_retry_rust/nidda_stress.json'
+RUST_INPUT = 'bench/oracle/mip_retry_rust/nidda_stress.input.txt'
 SCHEMA = 'rsolver.mip_retry.v1'
 CASE = 'nidda_stress'
 need, Fail = B.need, B.Fail
@@ -84,10 +85,20 @@ def compare(exp, got):
     return None
 
 
+def rust_input(f):
+    """Plain-text replay input for tests/retry_l1.rs (no JSON parser in the crate)."""
+    i, j = f['input'], f['injected']
+    head = [i['cols'], i['rows'], int(i['root']), i['cache'], i['warm_method'], j['first_lp_status'], j['retry_lp_status']]
+    return '\n'.join(' '.join(map(str, v)) for v in (head, i['node_basis']['vbasis'], i['node_basis']['cbasis'])) + '\n'
+
+
 def check(caps, stored):
     B.check_manifest(B.load(B.MANIFEST))
-    diff = compare(derive(caps), stored)
+    derived = derive(caps)
+    diff = compare(derived, stored)
     need(diff is None, f'stored fixture differs from captures: {diff}')
+    with open(os.path.join(B.ROOT, RUST_INPUT)) as fh:
+        need(fh.read() == rust_input(derived), f'{RUST_INPUT} differs from the fixture')
     return len(stored['events'])
 
 
@@ -125,10 +136,13 @@ def main(argv):
     caps = {k: B.load(p) for k, p in B.files().items() if k[1] == 'natural'}
     if '--write' in argv:
         B.check_manifest(B.load(B.MANIFEST))
+        fixture = derive(caps)
         with open(os.path.join(B.ROOT, FIXTURE), 'w') as f:
-            json.dump(derive(caps), f, indent=1)
+            json.dump(fixture, f, indent=1)
             f.write('\n')
-        print('wrote', FIXTURE)
+        with open(os.path.join(B.ROOT, RUST_INPUT), 'w') as f:
+            f.write(rust_input(fixture))
+        print('wrote', FIXTURE, RUST_INPUT)
         return 0
     stored = B.load(FIXTURE)
     rc = 0
