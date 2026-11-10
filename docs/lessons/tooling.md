@@ -23,6 +23,7 @@
 
 - **`pane wait-output --match`는 화면에 다시 찍힌 명령줄에도 맞는다.** 끝 표시는 `--regex "EXIT=[0-9]"`처럼 숫자까지 넣어 기다린다. (M2-03c-2)
 - **`pane wait-output --regex`에 끝 앵커 `$`를 넣었더니 즉시 종료코드 1로 끝났다(실패한 접근).** 시작 앵커를 쓴 `--regex "^ALL_DONE_RC=[0-9]"`는 화면에 다시 찍힌 명령줄과 구분되고 정상으로 기다렸다. (M2-03d-2)
+- **같은 pane을 재사용하면 `clear` 뒤에도 `wait-output`·`read`가 이전 실행의 끝 표시에 맞는다(실패한 접근).** 실행마다 다른 끝 표시를 쓰거나 표시 개수를 세며 기다린다. (M3-04b-2)
 - **Bash 도구 timeout은 최대 600초다.** 긴 배치는 `wait-output --timeout 580000`을 여러 번 부른다. (M2-03c-2)
 - **`tools/gurun.sh`는 출력을 `$()`로 받기 때문에 pane에 ctrl+c를 보내도 멈추지 않는다.** 자신이 띄운 PID(runs.sh, gurun, node, frida로 띄운 python)를 kill한다. (M2-03c-2)
 - **원본 캡처는 약 2분/회(nidda 6000노드, gmu 20000노드)다.** 다른 세션이 Gurobi를 쓰면 `gurun.sh`가 대기하므로 더 걸린다. (M2-03c-2)

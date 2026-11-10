@@ -42,7 +42,7 @@
 | M3-01 | Barrier 본체 | 완료(범위 한정). Presolve=0, Crossover=0, Threads=1의 Netlib 64에서 상태·목적과 반복 수를 검증했다. | [barrier 기록](m3/m3_barrier.md) |
 | M3-02 | Ordering·분해·해법 | 완료(범위 한정). Netlib 64에서 ordering과 Factor NZ를 확인했다. 분해·해법의 비트 비교는 기록된 사례에 한정한다. | [분해 기록](m3/m3_chol.md) |
 | M3-03 | PDHG 본체 | 완료(범위 한정). Presolve=0, Crossover=0, Threads=1의 Netlib 64에서 반복 수를 검증했다. 미실행 전처리 분기는 별도 범위다. | [PDHG 기록](m3/m3_pdhg.md) |
-| M3-04 | Crossover | 정상 진입 정적 조사·원본 오라클은 범위 한정 완료. primal push 분기 조사, 합성 ratio 29사례×3회, push 한 단계 자연 오라클도 완료했다. Rust는 feasible ratio `055f68` 첫 패스만 범위 한정 통과했다(04c). 나머지 push 분기·cleanup·재시작과 전체 모델 검증은 예정이다. | [진입 오라클](m3/crossover_entry_oracle.md), [primal push 조사](m3/primal_push_branches.md), [ratio Rust](m3/primal_push_ratio_rust.md), [기존 로드맵](09_roadmap.md#1-마일스톤) |
+| M3-04 | Crossover | 정상 진입 정적 조사·원본 오라클은 범위 한정 완료. primal push 분기 조사, 합성 ratio 29사례×3회, push 한 단계 자연 오라클과 방향·거부·이탈 상태 판단 오라클(04b-2)도 완료했다. Rust는 feasible ratio `055f68` 첫 패스만 범위 한정 통과했다(04c). 나머지 push 분기·cleanup·재시작과 전체 모델 검증은 예정이다. | [진입 오라클](m3/crossover_entry_oracle.md), [primal push 조사](m3/primal_push_branches.md), [ratio Rust](m3/primal_push_ratio_rust.md), [판단 오라클](m3/primal_push_decision_oracle.md), [기존 로드맵](09_roadmap.md#1-마일스톤) |
 | M3-05 | Concurrent와 Method 자동 선택 | 예정. concurrent 경로와 Method 선택을 원본과 비교하고 Method=4 결정성을 검증한다. | [기존 로드맵](09_roadmap.md#1-마일스톤) |
 | M3-06 | PreDual·network simplex·sifting | 예정. 각 경로의 원본 호출 조건과 구현 범위를 확인하고 독립 검증 사례를 만든다. | [기존 로드맵](09_roadmap.md#1-마일스톤) |
 | M3-07 | 전체 관문과 속도 | 예정. Netlib 91에서 지정 Method의 상태·목적, 반복 수, Factor NZ와 속도를 기존 M3 기준으로 평가한다. | [M3 완료 기준](09_roadmap.md#1-마일스톤) |

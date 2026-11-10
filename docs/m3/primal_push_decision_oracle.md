@@ -71,12 +71,52 @@ NaN은 허용하지 않는다. I(`1e30`)와 ±0은 비트 그대로 둔다. 시�
 
 ## 5. 재실행 명령
 
-결과 작성 때 채운다.
+worktree 루트에서 실행한다. Gurobi는 한 번에 한 프로세스만 실행하며 캡처 도구는 기존 파일을 덮어쓰지 않는다.
+
+```bash
+D=bench/oracle/m3_push_decision
+python3 tools/push_slot_reach.py                       # 슬롯 쓰기→읽기 도달, 종료 0
+python3 tools/primal_push_decision_check.py --old      # 04b-1 저장 캡처만 재생(Gurobi 불필요)
+tools/gurun.sh node tools/primal_push_decision_capture.js primal $D/interior.lp $D/<새>.json
+python3 tools/primal_push_decision_check.py --noninterference $D/<새>.json bench/oracle/m3_primal_push_step/primal-1.json
+for k in primal dual; do for i in 1 2 3; do
+  tools/gurun.sh node tools/primal_push_decision_capture.js $k $D/face5.lp $D/face5-$k-$i.json
+done; done
+python3 tools/primal_push_decision_check.py --self-test --mutation <새 경로>.json
+python3 tools/primal_push_decision_check.py --probe $D/history/<이름>-<kind>-1.json   # 탐색 캡처, 합격 근거 아님
+```
+
+캡처 도구의 넷째 인자는 추가 파라미터 JSON이다. 이번 캡처에서는 쓰지 않았다.
 
 ## 6. 실행 결과
 
-결과 작성 때 채운다.
+- 환경: x86-64 Linux(WSL2), node·Frida는 04b-1과 같다. 원본 ELF 해시는 §2. 도구·C·캡처·탐색 해시는 [manifest](../../bench/oracle/m3_push_decision/manifest.json)에 있다.
+- 슬롯: `push_slot_reach.py` 종료 0. §2.1 표와 같다. 간접 jmp 0, 진입에서 쓰기 없이 닿는 읽기 0, 이동 구간 쓰기는 frame `-0x30…-0x10`(인자)과 `0x1ed0/0x1ed8`뿐이다.
+- 04b-1 저장 재생(`--old`): primal·dual 각 9단계 모두 일치. 방향 0×9, 거리 flip 2, 승인 pivot 7, 이탈 arm `N`(a≥0 5·a<0 2). r은 9단계 모두 +0이다.
+- 비간섭: `interior-primal-noninterference.json` 87사건에서 `frame`을 빼면 04b-1 `primal-1.json` 사건 JSON 전체와 같다. 9단계의 frame r·dL·dU와 100h·-100h·2h·0.01h가 모델 계산과 비트 일치했다. 세 슬롯 값의 실행 확인이다. 잠금 대기로 7분 46초 걸렸다.
+- 목적 LP 탐색(합격 근거 아님, `history/`): 9개 LP×primal-first 1회, 일부 dual-first 1회. 모두 판단 모델과 일치했다.
+
+| LP | 목적 | 결과 |
+|---|---|---|
+| obj2·obj2b·obj3 | 2–3개 변수 | 단계 6–10, r=0(목적 변수가 최적에서 bound nonbasic) |
+| objall | 12개 변수 무작위 | push 단계 0 |
+| face1·face3·face5 | 제약 c1·c3·c5 행 최대화 | 방향 1 6·2·3건, r≠0 9·6·7건 |
+| narrow5·fixed5 | face5+좁은 bound·고정 변수 | 방향 1 2·3건. 거부·고정폭·`X` 미발동 |
+
+  face5를 골랐다. 변조 거부 수(8)가 가장 많고 `L` arm과 음수 theta의 `-1e-5` 승인 경계가 있다.
+- face5 원본 독립 3회: primal-first(Crossover=3) 109사건, dual-first(Crossover=1) 107사건. 순서별 사건 JSON이 3회 같다. 두 순서 모두 11단계, 방향 0×8·방향 1×3, r≠0 7건, 승인 pivot 11, flip 0, 이탈 arm `N`(a≥0 5·a<0 5)·`L`(a≥0 1). frame 7개 값이 11단계 모두 모델과 비트 일치. 첫 단계 theta는 음수(`bd64300000000000`)이고 `-1e-5 <= theta*pivot`로 승인됐다.
+- 판정 집계(`--self-test --mutation`, 종료 0): 04b-1 2사례와 face5 2사례, 총 40단계 불일치 0.
+- 캡처 변조 11종(바이너리·agent·모델 해시, 합성 표시, 파라미터, 사건 비움, x87 사건, batch, frame 누락, 사건 값, run 중복)과 판단 변조 13종(방향, alpha 부호, 단계 종류, theta, cost, 이탈 상태, frame 7종)을 모두 거부했다. 첫 차이의 사례·단계·필드·기대·실제값을 출력한다.
+- 모델 변조 20종([기록](../../bench/oracle/m3_push_decision/model-mutation.json)) 중 8종 거부: `0<r`→`<=`(04b-1), r 합산 역순·e·거부 상수 2종·2h(frame 비트), `-1e-5`→0, `L`(a≥0)→-2.
+- 살아남은 12종은 저장 자료가 판별하지 못하는 경계다. 방향식 계수 10과 `<`·`-(r*dL)` 부호, 거리 flip의 `1e-10`·`<=`, 거부 arm 선택 두 종, pivot `1e-6`, 고정폭 `<=`, a<0 기본 -1, `X`→-4, `U`의 `<`.
+- 회귀: 04b-1 `step.check`(primal·dual 3회)는 `--old`·전체 검사 안에서 실행돼 통과했다. `node --check` 두 JS, `py_compile`, `git diff --check` 통과. 04b-1·04c 도구와 저장 자료는 바꾸지 않았다.
+- 실행하지 않은 검사: Cargo·clippy·Python 확장. Rust·Python 코드 변경이 없다.
 
 ## 7. 판정과 인수인계
 
-결과 작성 때 채운다.
+- 작업 수행: 완료.
+- 오라클 판정: 계약 범위 **통과**. 세 슬롯은 h의 상수배이고(asm·CFG·frame 비트), 판단 모델이 실제 LP 2개×2순서×3회의 40단계에서 방향·alpha 반전·단계 종류·theta·이탈 상태를 원본과 같게 재구성했다. 방향 1과 r≠0 절은 실행 관측했다.
+- 미관측·미검증: 거부 판정 발동(9개 LP 0건), 거리 flip의 방향 1, pivot 보류, 이탈 상태 `A`·`U`·`B`·`X`·고정폭 arm, 위 생존 변조 12경계. theta=I 재호출에서 거부 arm이 `r13b`를 쓰는 것은 asm만이다. 위반 basis·infeasible ratio·batch·x87은 범위 밖이다.
+- 후속: M3-04c-6(Rust 방향식·거리 flip·승인·이탈 상태, 이 오라클 재생)은 착수 가능하다. 거부·보류·미관측 arm은 퇴화 basic을 강제한 합성 사례나 다른 LP 탐색으로 M3-04b-3에 둔다. M3-04c-5(재진입)는 그대로다.
+- branch `work/m3-04b-2`, worktree `../rsolver-m3-04b-2`. 결과·인수인계·진행·로드맵은 이 branch에서 갱신해 `--no-ff`로 병합한다.
+- 교훈: `docs/lessons/original.md`(목적과 r, 세 슬롯·거부 arm), `tooling.md`(재사용 pane의 이전 끝 표시).

@@ -130,8 +130,10 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04a-2 | 조사 | 실패·중단·고급 presolve 매핑의 원본 조건과 후속 분할 | 04a·04a-1 | 조건별 함수·필수 상태·독립 오라클 번호를 확정. 세 가족 전체 구현은 제외 |
 | M3-04b | 조사 완료 | primal push의 원본 분기 분할 | 04a | [double·x87·상태 분기와 합성 ratio 29사례×3회](m3/primal_push_branches.md). 전체 push·Rust 동등성은 미검증 |
 | M3-04b-1 | 오라클 구축 완료(범위 한정) | 정상 push 한 단계의 후보·ratio·flip·basis 교환 | 04b·04a-1 | [interior.lp 두 순서 각 3회, pivot 7·flip 2](m3/primal_push_step_oracle.md). 방향 1·`0x1ec8(%rsp)`·`local_250`은 미캡처 |
-| M3-04b-2 | 오라클 구축 | 목적이 있는 LP의 방향 1·ratio 뒤 거부·pivot 이탈 상태 입력 | 04b-1 | 먼저 asm에서 `0x1ec8(%rsp)`·`local_228`·`local_250`의 저장 출처를 찾는다. 상수나 기존 필드면 방향 0 판정은 04b-1의 `step:enter`로 대조하고, 아니면 방향 0·1 각 사건을 독립 3회 캡처 |
+| M3-04b-2 | 오라클 구축 완료(범위 한정) | 목적이 있는 LP의 방향 1·ratio 뒤 거부·pivot 이탈 상태 입력 | 04b-1 | [세 슬롯은 h의 상수배, face5 두 순서 각 3회·04b-1 재생 40단계 일치](m3/primal_push_decision_oracle.md). 거부·보류·`A`·`U`·`B`·`X`·고정폭 arm 미관측 |
+| M3-04b-3 | 오라클 | 거부 판정·pivot 보류·미관측 이탈 arm과 생존 변조 경계 | 04b-2 | 퇴화 basic·좁은 bound를 강제한 LP 또는 합성 경계에서 각 사건을 독립 3회 캡처하고 `primal_push_decision_check.py`로 대조 |
 | M3-04c | 구현 완료(범위 한정) | double feasible ratio `055f68` 첫 패스 | 04b·04b-1 | [자연 9입력×2·합성 29사례 비트 일치, 변조 14종 중 10 거부](m3/primal_push_ratio_rust.md). 생존 4경계·재진입·push 연결 미검증 |
+| M3-04c-6 | 구현 | 방향식·거리 flip·pivot 승인·이탈 상태 판단의 Rust | 04b-2·04c | 04b-2 저장 캡처 40단계 재생 비트 비교, 생존 변조 경계는 미검증으로 유지 |
 | M3-04c-5 | 오라클·구현 | `055f68` 작은 pivot 재진입과 `12dd49` 요청 2 | 04c | 재진입·2차 상한 동률·후보 있는 I 상한의 원본 합성 사례 3회와 Rust 비교 |
 | M3-04d | 조사 | dual push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |
 | M3-04e | 구현 | 04d의 push 분기 하나 | 04d | 해당 phase 입력·출력 상태 비교 |
