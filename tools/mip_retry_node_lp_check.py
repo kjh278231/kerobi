@@ -161,8 +161,8 @@ def check_case(case, caps, old):
         flip = [s == '>' for s in lp['sense']]
         sgn = lp['model_sense']
         need(sgn in (1, -1), f'{case}: ModelSense')
-        # blanked rows R: rows with no ws entry. 03d-6 contract change: the simplex data of the B&B node LP (08b2fe: lp+0xf8 before D)
-        # is D with the rows R emptied and b=0; the 03d-3 cases must have R empty (then this is the original strict rule)
+        # blanked rows R: rows with no ws entry. 03d-6 contract change: the B&B node LP's ws at 02f7e1 return is the API LP with the
+        # rows R emptied and b=0 (origin not identified); the 03d-3 cases must have R empty (then this is the original strict rule)
         R = blanked_rows(ws)
         need(not R or 'node' in cfg, f'{case}: ws has {len(R)} empty rows, first {R[:5]}')
         for j in range(n):
@@ -319,7 +319,7 @@ def node_lp(case, d):
     extra = {}
     if 'node' in CASES[case]:
         extra['simplex_blanked_rows'] = blanked_rows(one(ye, 'y:ws'))
-        extra['simplex_note'] = 'simplex data (08b2fe) = this LP with rows simplex_blanked_rows emptied and rhs 0 (check C2)'
+        extra['simplex_note'] = 'simplex ws at 02f7e1 return = this LP with rows simplex_blanked_rows emptied and rhs 0 (check C2; origin not identified)'
     return dict({'schema': 'rsolver.node_lp.v1', 'case': case, 'doubles': 'u64 bit pattern, 16 hex digits',
                  'source': f'{DATA}/{case}_1.json (run 1 of 3, y:lp at cda5b k={lp["k"]})',
                  'env_params_note': 'raw reads at the offsets of re/notes/env_param_offsets.tsv; only Cutoff is cross-checked (C3)'},
