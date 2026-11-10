@@ -66,6 +66,8 @@ M2-03d-7·03d-8은 노드 LP 빈 행이 DynamicRows 다이브 행 비활성임�
 
 pseudocost 작업은 방향별 표와 갱신 사건을 입력으로 받는다. strong branching은 임시 bound·LP basis 변경 후 부모 상태를 복구해야 한다. reliability 작업은 그 평가 결과를 소비한다. 세 기능의 초기화·수명·갱신 순서는 06e~06g의 원본 조사에서 확정한다. 12개 노드 선택 규칙은 한 구현 작업에 묶지 않고 규칙별 후속 번호를 만든다.
 
+M2-06a가 노드 용기의 순서 규칙과 [추적 형식](mip_node_select_spec.md)을 원본 추적 재생으로 확인했다. M2-06b가 전역 힙을 [Rust로 이식](mip_node_heap_rust.md)했다(`node_heap::NodeHeap`, L1 통과, `bnb.rs` 미연결, 키는 캡처 비트).
+
 ## 6. M2-07 cut 설계
 
 설계 순서는 실행 범위 확인, 공통 수명 설계, pool과 LP 연결, 생성기별 조사·구현이다. presolve의 clique·mod-k 구현이 있다는 사실만으로 런타임 cut 생성기가 구현됐다고 간주하지 않는다.
