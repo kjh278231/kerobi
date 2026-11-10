@@ -59,6 +59,8 @@
 
 ## 검사기
 
+- **BFRT 코퍼스(`bench/oracle/bfrt_io`, `m1_02e_bfrt`)의 반환 flip 목록은 열 번호가 아니라 α 벡터 위치(진입의 `idx` 순번)다.** 진입 열은 열 번호(`idx[q]`)다. Rust `bfrt`의 열 번호 flip을 그대로 비교했더니 flip 일치가 2444/3112로 나왔다(실패한 접근). 위치로 바꾸면 3112/3112다. `tools/m1_bfrt_rust.py` `positions()`. (M1-02f, [§6](../m1/m1_02f_bfrt_rust.md#6-실행-결과))
+
 - **셸 스크립트에 출력 경로 인자를 더할 때 루프 안에서 이미 쓰는 변수 이름(`out=$(…)`)과 겹치지 않게 한다.** `tools/bfrt_corpus.sh` 첫 수정은 `out`을 출력 디렉터리와 명령 출력에 함께 써서 두 번째 모델부터 경로가 깨질 뻔했다. 기존 corpus 스크립트는 `SPEC OUTDIR` 인자로 재사용한다. (M1-02e)
 - **새 필드를 더한 재캡처는 옛 행 길이로 잘라 옛 코퍼스와 비교하면 비간섭과 재현성을 한 번에 확인할 수 있다**(`bfrt.py --same-as`). 필드는 진입·반환 목록의 끝에만 붙인다. (M1-02e)
 - **검사기는 `controls`와 `acceptance`로 나누고, `--self-test`와 `--write-manifest`를 둔다.**

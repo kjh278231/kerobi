@@ -59,6 +59,8 @@ pub struct Engine<'a> {
     pub trace_on: bool,
     lu_interval: usize,
     perturbed: bool,
+    /// NONDEGENFLIP spx+0x3fc: once on, the BFRT re-scans its passed breakpoints (M1-02e).
+    nondeg_flip: bool,
     /// Perturbation size spx+0x348 (PerturbValue 2e-4 at the start).
     pert_size: f64,
     /// 48d5f trigger state: level 0x338 (2 shifted, 3 perturbed), refactor count 0x2c0, degenerate pivots 0x330 and
@@ -135,6 +137,7 @@ impl<'a> Engine<'a> {
             trace_on: true,
             lu_interval: interval,
             perturbed: false,
+            nondeg_flip: false,
             pert_size: 2e-4,
             pt_lvl: 0,
             pt_rc: 0,
@@ -251,6 +254,14 @@ impl<'a> Engine<'a> {
             }
             self.pt_rc += 1;
             self.perturb_trigger();
+            // 48d5f C:2106-2111, after the perturbation; it stays on
+            // shortcut: the spx+0x178 != 0 disjunct is left out (no spx+0x178 here; 0 in every M1-02e capture)
+            if !self.nondeg_flip && (self.pt_lvl > 2 || (self.m as u64) < 3 * self.iter) {
+                self.nondeg_flip = true;
+                if std::env::var("RSOLVER_DEBUG").is_ok() {
+                    eprintln!("nondegflip on at it {}", self.iter);
+                }
+            }
             self.price_full();
         }
     }
@@ -1022,11 +1033,11 @@ impl<'a> Engine<'a> {
                 if ag >= -1e-10 {
                     continue; // bfrt skips it first thing
                 }
-                let w = if j < self.n { self.spx.len[j] as f64 * (self.spx.var_factor(j) * 0.3 + 0.7) } else { 0.5 };
-                cands.push(Cand { j, a: ag, d: dg, range: self.spx.u[j] - self.spx.l[j], back: j >= self.n, w });
+                let (cnt, fac) = if j < self.n { (self.spx.len[j] as f64, self.spx.var_factor(j) * 0.3 + 0.7) } else { (0.5, 1.0) };
+                cands.push(Cand { j, a: ag, d: dg, range: self.spx.u[j] - self.spx.l[j], back: j >= self.n, cnt, fac });
             }
             let feas = if self.big_m { BIG_M_TOL } else { FEAS_TOL };
-            let (qq, flips) = bfrt(&cands, -delta.abs(), feas);
+            let (qq, flips) = bfrt(&cands, -delta.abs(), feas, self.nondeg_flip);
             let q = qq.unwrap_or(usize::MAX);
 
             if q == usize::MAX && flips.is_empty() {

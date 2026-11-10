@@ -1,5 +1,5 @@
 //! 04 §5 Dual ratio test with bound flipping (`1c35c5`), rules reproduced on Gurobi's own inputs/outputs
-//! (docs/m1/m1_notes.md §8.6, `tools/proto/bfrt.py`: entering column 3094/3112, flip list 3098/3112).
+//! (docs/m1/m1_notes.md §8.6, docs/m1/m1_02e_bfrt.md: entering column 3108/3112, flip list 3112/3112).
 //! Candidates come in the original α-vector order: structural columns ("front"), then slacks ("back").
 //! shortcut: the front order is ascending column index; the original scatters the row-wise copy (`0a4109`), so
 //! exact ties can still break differently.
@@ -16,8 +16,17 @@ pub struct Cand {
     pub d: f64,
     pub range: f64,
     pub back: bool,
-    /// Selection weight: column count (structural) or 0.5 (slack).
-    pub w: f64,
+    /// Column count (structural) or 0.5 (slack).
+    pub cnt: f64,
+    /// 0.3·f + 0.7 (f = 1.5 for integer columns).
+    pub fac: f64,
+}
+
+impl Cand {
+    /// Selection weight of the main pass.
+    fn w(&self) -> f64 {
+        self.cnt * self.fac
+    }
 }
 
 /// run ± Σxs in the original order (asm 0xcba7f): one element first when the start index is odd (16-byte aligned
@@ -83,8 +92,9 @@ fn quickselect(c: &mut [(usize, f64, f64)], mut run: f64) -> usize {
 }
 
 /// BFRT for primal infeasibility `delta` (< 0) of the leaving row. Returns the entering column (None if no
-/// candidate passes the pivot tolerances) and the columns to flip, in the original order.
-pub fn bfrt(cands: &[Cand], delta: f64, feas_tol: f64) -> (Option<usize>, Vec<usize>) {
+/// candidate passes the pivot tolerances) and the columns to flip, in the original order. `nondeg_flip`:
+/// NONDEGENFLIP (spx+0x3fc) is on, so the passed breakpoints are re-scanned after the choice.
+pub fn bfrt(cands: &[Cand], delta: f64, feas_tol: f64, nondeg_flip: bool) -> (Option<usize>, Vec<usize>) {
     let mut bound = -1e100;
     // (index into cands, contribution, ratio)
     let mut c: Vec<(usize, f64, f64)> = Vec::new();
@@ -150,9 +160,36 @@ pub fn bfrt(cands: &[Cand], delta: f64, feas_tol: f64) -> (Option<usize>, Vec<us
     let mut best_s = 0.0;
     for &t in &rec {
         let x = &cands[t];
-        if x.d <= hmax * x.a && x.a < best_s * x.w {
-            best_s = x.a / x.w;
+        if x.d <= hmax * x.a && x.a < best_s * x.w() {
+            best_s = x.a / x.w();
             q = Some(t);
+        }
+    }
+    if let (Some(qt), true) = (q, nondeg_flip) {
+        // C:1500-1610: a passed breakpoint t with 0 <= d_t <= θ_q·α_t − 1000·OptTol and a larger |α|/w' enters,
+        // w' = (count + ((θ_q·α_t − d_t)/OptTol)^0.25)·(0.3f + 0.7); the flips are then re-filtered with θ_t.
+        // shortcut: the pow term is added only while spx+0x178 < 10; Rust keeps no spx+0x178, taken as 0.
+        let thq = cands[qt].d / cands[qt].a;
+        let mut score = best_s;
+        let mut new = None;
+        for &(t, _, _) in &c[..lo] {
+            let x = &cands[t];
+            if x.d < 0.0 {
+                continue;
+            }
+            let dv = thq * x.a;
+            if x.d <= dv - 1000.0 * OPT_TOL {
+                let w = (x.cnt + ((dv - x.d) / OPT_TOL).powf(0.25)) * x.fac;
+                if x.a < score * w {
+                    score = x.a / w;
+                    new = Some(t);
+                }
+            }
+        }
+        if let Some(nt) = new {
+            let th = cands[nt].d / cands[nt].a;
+            let flips = c[..lo].iter().filter(|&&(t, _, _)| t != nt && cands[t].d <= cands[t].a * th).map(|&(t, _, _)| cands[t].j);
+            return (Some(cands[nt].j), flips.collect());
         }
     }
     let flips = match q {
@@ -170,20 +207,20 @@ pub fn bfrt(cands: &[Cand], delta: f64, feas_tol: f64) -> (Option<usize>, Vec<us
 mod tests {
     use super::*;
     fn cand(j: usize, a: f64, d: f64, range: f64) -> Cand {
-        Cand { j, a, d, range, back: false, w: 1.0 }
+        Cand { j, a, d, range, back: false, cnt: 1.0, fac: 1.0 }
     }
     #[test]
     fn passes_cheap_breakpoints_then_enters() {
         // slope 10: column 0 (ratio -1, cost 2) and 1 (ratio -2, cost 3) are passed, column 2 (cost 20) enters
         let c = [cand(0, -1.0, 1.0, 2.0), cand(1, -1.0, 2.0, 3.0), cand(2, -2.0, 6.0, 10.0), cand(3, -1.0, 9.0, 1.0)];
-        let (q, flips) = bfrt(&c, -10.0, 1e-6);
+        let (q, flips) = bfrt(&c, -10.0, 1e-6, false);
         assert_eq!(q, Some(2));
         assert_eq!(flips, vec![0, 1]);
     }
     #[test]
     fn sparse_column_wins_harris_tie() {
         let mut c = [cand(0, -2.0, 0.0, 1e30), cand(1, -1.5, 0.0, 1e30)];
-        c[0].w = 4.0;
-        assert_eq!(bfrt(&c, -1.0, 1e-6).0, Some(1));
+        c[0].cnt = 4.0;
+        assert_eq!(bfrt(&c, -1.0, 1e-6, false).0, Some(1));
     }
 }
