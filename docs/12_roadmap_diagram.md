@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M1-02b DSE β 합산을 원본대로 고쳤다(구현, L1 통과). 조밀 BTRAN 출력은 \|ρ\|>1e-13 원소만 행 순서로 모아 더하고(`28c93`·`8b473`), 조밀 판정은 BTRAN 조밀 경로 표시(`Lu::btran_dense`)다. kb2 피벗 0–21에서 조밀 표시가 원본 nnz 부호와, β가 원본과 비트까지 같다. 반복 12 w 차이는 10개에서 2개로 줄었고 피벗 분기는 21 그대로다(남은 원인은 M1-02a-1). Method=1 Netlib 정답 90/91·반복 일치 24/64는 수정 전과 같다. [계약과 결과](m1/m1_02b_beta.md).
+
 M1-02a kb2 Method=1 최초 분기를 특정했다(조사). 피벗 11의 DSE β: 원본은 조밀 BTRAN 출력을 압축(`28c93`)한 뒤 8레인 합산(`8b473`), Rust는 압축 전 m개를 합산한다. 원본 3회 동일, 변조 10종 거부. M1 비교 도구에 Presolve=0을 넣었고 기존 24/64는 presolve 전 측정이다. 다음은 M1-02b(구현)와 M1-02a-1(남은 w 차이). [계약과 결과](m1/m1_02a_beta.md).
 
 M2-03d-12 DynamicRows 관문을 Rust로 이식했다(L1). `dive_rows::Gate`가 03d-11 캡처의 관문 평가 160,353회에서 원본 결정과 `a7f0ad`·`a7f923` 호출 위치를 정확히 재현한다. null·QP·QCP·`+0x18`≥2 절은 C·asm만이다. 선택·목록 유지·관문 모두 `bnb.rs` 미연결이며 M2-03d-4의 남은 선행은 M2-10b와 M1 요청이다. [계약과 결과](m2/mip_dive_gate_rust.md).
@@ -75,7 +77,7 @@ flowchart TD
 
     subgraph M1["M1 LP 엔진"]
         PRE["✅ LP presolve·postsolve<br/>64/64"]:::done
-        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 24/64(presolve 전 측정)<br/>kb2 최초 분기 β 특정"]:::doing
+        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 24/64(presolve 전 측정)<br/>kb2 β 원본 합산(02b)"]:::doing
         DRV["🔄 LP 드라이버 G5<br/>main 병합 · 수치 차이 확인 남음"]:::doing
         GATE1["⏳ M1 관문<br/>병합 + 속도 비교표"]:::todo
     end

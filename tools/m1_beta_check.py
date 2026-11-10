@@ -1,4 +1,4 @@
-"""M1-02a check (docs/m1/m1_02a_beta.md section 3): the DSE beta of the original vs rsolver on kb2.
+"""M1-02a/02b check (docs/m1/m1_02a_beta.md, docs/m1/m1_02b_beta.md section 3): the DSE beta of the original vs rsolver on kb2.
 Reads the three captures of tools/m1_beta_path.js, the stored spx_oracle file and a fresh RSOLVER_SNAP run of the
 rsolver on PYTHONPATH (build it first with tools/build_local.sh). Exit 1 on any failure.
 usage: PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_beta_check.py [--self-test]"""
@@ -15,6 +15,7 @@ GZ_SHA = "caad5976f259e668d473e9e992b4c1b69e44254cbce7b63eda778c7b479e48b1"  # e
 TOOL = ROOT / "tools/m1_beta_path.js"
 PARAMS = {"Threads": 1, "Method": 1, "Presolve": 0, "OutputFlag": 0}
 RUST_PIVOTS = 22  # pivots 0..21: before the pivot path splits (pathcmp: first diff at pivot 21 is the 22nd entering choice)
+W12 = (2, 58)  # snapshot 12 w differences left after the beta fix (count, first variable): M1-02a-1
 
 
 def u2f(h):
@@ -151,27 +152,27 @@ def check(runs, oracle, mine):
     nsimd = sum(e["path"] == "simd" for e in ev)
     rep.append(f"O: stored beta = sum in captured order for {len(ev)} pivots; paths {sorted(paths.items())}; "
                f"chain combine also equal on {chain_same}/{nsimd} simd pivots")
-    # R: Rust operation on the same input, pivots 0..21 (snapshot j holds pivot j-1)
-    diff = []
+    # D, R: Rust dense flag and beta on the same input, pivots 0..21 (snapshot j holds pivot j-1)
+    nd = 0
     for e in ev[:RUST_PIVOTS]:
         s = mine.get(e["k"] + 1)
         if s is None:
             bad.append(f"R pivot {e['k']}: no Rust snapshot {e['k'] + 1}")
             continue
         b = e["bt"]
+        dense = b["nnz"] < 0
+        nd += dense
+        if s.get("bt_dense") is not dense:
+            bad.append(f"D pivot {e['k']}: Rust bt_dense {s.get('bt_dense')} != original output nnz {b['nnz']} < 0")
         raw = [u2f(x) for x in b["val"]]
+        want = rust_sum_squares([x for x in raw if abs(x) > u2f(e["thr"])] if dense else raw)
         rb = fh(s["beta"])
-        if rb != rust_sum_squares(raw):
-            bad.append(f"R pivot {e['k']}: Rust beta {rb.hex()} != sum_squares(BTRAN output, {'dense' if b['nnz'] < 0 else 'sparse'}) "
-                       f"{rust_sum_squares(raw).hex()}")
+        if rb != want:
+            bad.append(f"R pivot {e['k']}: Rust beta {rb.hex()} != sum_squares({'compacted dense' if dense else 'sparse'} BTRAN output) {want.hex()}")
         if rb != u2f(e["beta"]):
-            diff.append(e["k"])
-            if b["nnz"] >= 0:
-                bad.append(f"R pivot {e['k']}: Rust beta differs on a sparse output")
-    if not diff:
-        bad.append("R: no pivot with a Rust beta difference")
-    rep.append(f"R: Rust beta = sum_squares(uncompacted BTRAN output) on pivots 0-{RUST_PIVOTS - 1}; differs from the original on "
-               f"pivots {diff} (all dense outputs, compacted sum equals the original there)")
+            bad.append(f"R pivot {e['k']}: Rust beta {rb.hex()} != original beta {u2f(e['beta']).hex()}")
+    rep.append(f"D: Rust bt_dense = original BTRAN output nnz < 0 on pivots 0-{RUST_PIVOTS - 1} ({nd} dense)")
+    rep.append(f"R: Rust beta = sum_squares(dense output compacted to |x| > spx+0x3a8, sparse as is) = original beta on pivots 0-{RUST_PIVOTS - 1}")
     # F: first divergence in the stored oracle vs the Rust snapshot
     first = None
     for it in sorted(oracle):
@@ -187,13 +188,19 @@ def check(runs, oracle, mine):
             break
     if first != (12, "w"):
         bad.append(f"F: first differing snapshot {first}, want (12, 'w')")
+    else:
+        a, s = oracle[12], mine[12]
+        wa, wb = [fh(x) for x in a["w"]], [fh(x) for x in s["w"]]
+        wd = [j for j in range(len(a["vstat"])) if a["vstat"][j] >= 0 and wa[a["vstat"][j]] != wb[s["vstat"][j]]]
+        if len(wd) != W12[0] or wd[0] != W12[1]:
+            bad.append(f"F: snapshot 12 w differs at variables {wd}, want {W12[0]} starting at {W12[1]}")
     for it in range(1, 13):
         a, s = oracle[it], mine[it]
-        if (fh(a["beta"]) == fh(s["beta"])) != (it < 12):
+        if fh(a["beta"]) != fh(s["beta"]):
             bad.append(f"F: beta at snapshot {it}: oracle {a['beta']} Rust {s['beta']}")
         if fh(a["ar"]) != fh(s["ar"]):
             bad.append(f"F: alpha_r at snapshot {it}: oracle {a['ar']} Rust {s['ar']}")
-    rep.append(f"F: snapshots 0-11 equal (vstat, x_B, d, w), first w difference at 12; beta equal at 1-11, differs at 12; alpha_r equal 1-12")
+    rep.append(f"F: snapshots 0-11 equal (vstat, x_B, d, w), first difference at 12 is w on {W12[0]} variables from {W12[1]}; beta and alpha_r equal 1-12")
     return bad, rep
 
 
@@ -234,9 +241,18 @@ def self_test(runs, oracle, mine):
         bad, _ = check(rr, oracle, mine)
         out.append((name, bool(bad), bad[:1]))
     m2 = copy.deepcopy(mine)
-    m2[12]["beta"] = u2f(runs[0][1]["events"][11]["beta"]).hex()
+    m2[12]["beta"] = flip_fh(m2[12]["beta"])
     bad, _ = check(runs, oracle, m2)
-    out.append(("Rust beta replaced by original beta", bool(bad), bad[:1]))
+    out.append(("Rust beta bit at snapshot 12", bool(bad), bad[:1]))
+    m2 = copy.deepcopy(mine)
+    m2[12]["bt_dense"] = not m2[12]["bt_dense"]
+    bad, _ = check(runs, oracle, m2)
+    out.append(("Rust dense flag at pivot 11", bool(bad), bad[:1]))
+    m2 = copy.deepcopy(mine)
+    for v in m2.values():
+        v.pop("bt_dense", None)
+    bad, _ = check(runs, oracle, m2)
+    out.append(("Rust snapshots without the dense flag", bool(bad), bad[:1]))
     o2 = copy.deepcopy(oracle)
     p0 = next(p for p in o2[5]["vstat"] if p >= 0)  # position of the first basic variable
     o2[5]["w"][p0] = flip_fh(o2[5]["w"][p0])
