@@ -35,7 +35,7 @@ F5FB8EC = (0x5101d0, 21510)
 DEACT_RET = 0x513999          # 5fb8ec+0x37c9, the C:1856 10e5fc call
 RESTART_REACT = 0x5807b1      # 6a6563+0x211, restart path 10e662 (C:123-124, no DynamicRows gate)
 NIDDA_DEACT = 1145            # M2-03d-7: top-level deact 10 (before the restart) + 1135
-VARIANTS = ['no_flag', 'no_b7', 'tol0', 'tol_sign', 'no_maxact', 'no_eq_min', 'eq_cut', 'no_dual', 'f666_0', 'f666_1',
+VARIANTS = ['no_flag_model', 'no_flag_cut', 'no_b7', 'tol0', 'tol_sign', 'no_maxact', 'no_eq_min', 'eq_cut', 'no_dual', 'cutoff_inf', 'f666_0', 'f666_1',
             'f666_noround', 'f666_nocap', 'no_t14', 'no_40', 'slack0', 'cuts_first']
 
 
@@ -166,17 +166,16 @@ def check_deact(data):
     return 'D: top-level selection list = 10e5fc rows (5fb8ec+0x37c9): ' + ', '.join(out)
 
 
-def check_rule(data, variant=None, stats=None):
+def check_rule(data, stats=None):
     """R and A over run 1 of every non-control case; returns (events, rows selected, 66661c calls)."""
     n = rows = calls = 0
     for c, spec in CASES.items():
         if spec.get('control'):
             continue
         for e, m, lb, ub in selections(data[c][RUNS[0]]['events']):
-            got, cl = select(e, m, lb, ub, variant, stats)
-            if variant is None:
-                need(cl == e['calls_66661c'], f'A {c}: sel call {e["call"]} node {e["node"]}: 66661c calls differ, first '
-                     f'{next(((a, b) for a, b in zip(cl, e["calls_66661c"]) if a != b), (len(cl), len(e["calls_66661c"])))} (port, capture)')
+            got, cl = select(e, m, lb, ub, None, stats)
+            need(cl == e['calls_66661c'], f'A {c}: sel call {e["call"]} node {e["node"]}: 66661c calls differ, first '
+                 f'{next(((a, b) for a, b in zip(cl, e["calls_66661c"]) if a != b), (len(cl), len(e["calls_66661c"])))} (port, capture)')
             need(got == e['list'], f'R {c}: sel call {e["call"]} node {e["node"]}: rule {len(got)} rows != capture {e["count"]}; '
                  f'extra {[x for x in got if x not in e["list"]][:5]} missing {[x for x in e["list"] if x not in got][:5]}')
             n += 1
@@ -205,13 +204,24 @@ def check_control(data):
 
 
 def discrimination(data):
+    """For each clause variant: first selection whose list (R) and first whose 66661c call rows/results (A) differ from the capture."""
     rep = []
     for v in VARIANTS:
+        first = {'R': None, 'A': None}
         try:
-            check_rule(data, v)
-            rep.append((v, 'survives (C only)'))
-        except Fail as e:
-            rep.append((v, 'rejected: ' + str(e)[:90]))
+            for c, spec in CASES.items():
+                if spec.get('control'):
+                    continue
+                for e, m, lb, ub in selections(data[c][RUNS[0]]['events']):
+                    got, cl = select(e, m, lb, ub, v)
+                    if first['R'] is None and got != e['list']:
+                        first['R'] = f'{c} call {e["call"]}: {len(got)} rows vs {e["count"]}'
+                    if first['A'] is None and cl != e['calls_66661c']:
+                        first['A'] = f'{c} call {e["call"]}: {len(cl)} 66661c calls vs {len(e["calls_66661c"])}'
+        except ValueError as x:
+            first['A'] = first['A'] or f'not evaluable: {x}'
+        hit = [f'{k} {first[k]}' for k in ('R', 'A') if first[k]]
+        rep.append((v, ('rejected: ' + '; '.join(hit)) if hit else 'survives (C only)'))
     return rep
 
 
@@ -241,7 +251,7 @@ def write_manifest():
 
 def run_checks(data, ref, man, stats=None):
     lines = [check_inputs(data, man), check_repro(data), check_projection(data, ref), check_gate(data), check_deact(data)]
-    n, rows, calls = check_rule(data, None, stats)
+    n, rows, calls = check_rule(data, stats)
     lines.append(f'A/R: {n} selections, {rows} rows, {calls} 66661c calls reproduced exactly (list order, 66661c row and result)')
     lines.append(check_control(data))
     return lines
@@ -309,6 +319,10 @@ def tampers():
         o = nth(evs, 'b:op', 0, lambda e: e['op'] == 'deact')
         o['rows'] = o['rows'][:-1]
 
+    def deact_rows(evs):     # gmu: no M2-03d-7 projection, so only D compares the 10e5fc rows
+        o = nth(evs, 'b:op', 0, lambda e: e['op'] == 'deact' and len(e['rows']) > 1)
+        o['rows'] = o['rows'][::-1]
+
     def ctrl(evs):
         evs.insert(1, {'event': 'd:gate', 'mip_depth': 1, 'call': 1, 'node': 0, 'node_depth': 0, 'p34': 0, 'dyn': -1, 'rbx_is_param2': True})
 
@@ -340,6 +354,7 @@ def tampers():
         ('run difference', run_diff),
         ('empty events', lambda d, ref, man: [d['assign1-5-8_default'][r].__setitem__('events', []) for r in RUNS]),
         ('M2-03d-7 projection', every('nidda_H_s1', proj)),
+        ('10e5fc rows', every('gmu-35-40_default', deact_rows)),
         ('gate node', every('gmu-35-40_default', gate_node)),
         ('blocked selection', every('assign1-5-8_default', blocked)),
         ('sel DynamicRows 0', every('nidda_H_s1', dyn)),

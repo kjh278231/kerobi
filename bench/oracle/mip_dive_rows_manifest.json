@@ -25,7 +25,7 @@
  "task": "M2-03d-8",
  "tools": {
   "tools/mip_dive_rows.js": "fa0ac5c08d9f6c99adcc8ca1ba368ac667f003160c78050054b1cb273100143d",
-  "tools/mip_dive_rows_rule.py": "c6eea4b4579c48cb3f83046fb0b70f496834046fc35db64189304ea1a587fd49",
+  "tools/mip_dive_rows_rule.py": "57c17f7cd5d1c15ee5678a6116e4db8cbe838513a583c3c7f582e026fac1a36d",
   "tools/mip_dive_rows_runs.sh": "558063a5f32d895c4b320c107c9b09240bc9dc80224adb29b5ddb3d8f1ce9a9b"
  }
 }

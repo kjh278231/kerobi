@@ -162,7 +162,7 @@ def select(e, m, lb, ub, variant=None, stats=None):
     for i in range(nrows):
         if flags.get(i, 0) != 0:
             inc('model_flag')
-            if variant != 'no_flag':
+            if variant != 'no_flag_model':
                 continue
         if i in b7rows:
             inc('b7889a5')
@@ -189,7 +189,7 @@ def select(e, m, lb, ub, variant=None, stats=None):
             inc('cutoff_path')
             if e['dual'] == 0 and variant != 'no_dual':
                 continue
-            if not (INF100 > co):
+            if not (INF100 > co) and variant != 'cutoff_inf':
                 continue
             if eq and variant != 'eq_cut':
                 inc('cutoff_path_eq')
@@ -215,7 +215,7 @@ def select(e, m, lb, ub, variant=None, stats=None):
     for j in range(e['ncuts']):
         if flags.get(nrows + j, 0) != 0:
             inc('cut_flag')
-            if variant != 'no_flag':
+            if variant != 'no_flag_cut':
                 continue
         if e['cut_type'][j] == 0x14:
             inc('cut_type_14')
