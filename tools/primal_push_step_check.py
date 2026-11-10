@@ -152,6 +152,7 @@ def validate(r, manifest, control=False):
                 if e['kind']=='pivot':
                     assert e['selected']['leave'] == chosen['chosen'] >= 0
                     assert number(e['pivot']) >= 1e-6
+                    assert e['theta'] == chosen['theta'] and e['pivot'] == chosen['pivot']
                 else:assert e['selected']['leave'] == -1 and e['pivot'] is None
             elif name == 'step:applied':
                 assert not applied and pending and e['kind'] == pending['kind'] and e['selected']['enter'] == candidate
@@ -159,9 +160,11 @@ def validate(r, manifest, control=False):
                 assert number(after['counters']['iterations']) == number(before['counters']['iterations'])+1
                 if e['kind']=='pivot':
                     row=chosen['row'];leave=before['header'][row]
+                    assert e['selected']['leave'] == row
                     expected=before['header'].copy();expected[row]=enter
                     assert after['header'] == expected and after['vstat'][enter] == row and after['vstat'][leave] in (-1,-2,-4)
                 else:
+                    assert e['selected']['leave'] == -1
                     assert before['header'] == after['header'] and after['vstat'][enter] in (-1,-2,-3)
                 applied=e
             elif name == 'step:leave':
