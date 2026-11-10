@@ -8,6 +8,8 @@ M2-03d-8 DynamicRows 다이브 행 선택 규칙 오라클을 완료했다. `5fb
 
 M2-03d-7 B&B 노드 LP 빈 행의 출처를 확인했다. 다이브 첫 노드에서 행을 비활성하고(관문은 C로 읽은 숨은 DynamicRows)(`5fb8ec`→`10e5fc`→`edd71`), 매 `cda5b` 동안 `10f448`이 D 길이·rhs를 줄인 사본과 바꾼다. 원본 3회 동일, X 목록=R, 633단계 순서 재생, 변조 22종 거부. 선택 조건은 M2-03d-8에서 대조했다.
 
+M3-04c-7 위반 basis 재시도 ratio `056973`을 오라클·Rust로 범위 한정 완료했다. 재시도 LP 두 순서 각 원본 3회 8단계에서 재시도 결과 변경·유지·theta=I 거리 flip, 승인·보류, 이탈 `B`→-2·`A`→-1을 관측했고, 합성 74호출×3회로 내부 분기를 고정했다. Rust `retry_ratio`·`violated_ratio`가 합성 68·자연 16호출, 판단·게이트 연결 153단계에서 비트 일치했다. theta=I 반대 방향 재호출은 M3-04c-8로 나눴다. [계약과 결과](m3/primal_push_retry.md).
+
 M3-04c-2 위반 basis primal push를 오라클·Rust로 범위 한정 완료했다. 위반 LP 두 순서 각 원본 3회 19단계에서 σ 방향식 10종단·`054eef`·이탈 `B`→-1·`A`→-2를 관측했고, Rust 방향식·`infeasible_ratio`가 위반 38단계·연결 137·합성 55호출에서 비트 일치했다. `056973` 재시도와 theta=I 재호출은 M3-04c-7이다. [계약과 결과](m3/primal_push_violated.md).
 
 M2-03d-6 일반 B&B 노드 재풀이의 노드 LP 오라클을 완료했다. 03d-5 적중 노드(nidda seed 1 노드 16948)의 LP(253×488)·basis·Cutoff·재풀이 결과(primal → 2)·노드 처리를 원본 기준 1회와 계측 3회로 캡처했다. simplex ws는 API LP에서 96행을 비운 LP이고 출처는 미확인이다. M2-03d-4 L2의 일반 노드 재생 사례가 생겼다. [계약과 결과](m2/mip_retry_bnb_node_lp.md).
@@ -75,7 +77,7 @@ flowchart TD
     subgraph M3["M3 내부점·1차법"]
         BAR["✅ Barrier<br/>반복 수 64/64"]:::done
         PDHG["✅ PDHG<br/>반복 수 64/64"]:::done
-        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm·위반 basis 오라클 완료<br/>feasible·infeasible ratio·단계 판단 Rust 범위 한정 통과"]:::doing
+        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm·위반 basis·재시도 오라클 완료<br/>feasible·infeasible·재시도 ratio·단계 판단 Rust 범위 한정 통과"]:::doing
     end
 
     subgraph M2["M2 MIP 엔진"]
