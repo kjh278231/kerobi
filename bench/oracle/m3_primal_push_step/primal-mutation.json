@@ -1,0 +1,62 @@
+{
+  "binary_sha256": {
+    "returncode": 1,
+    "error": "불합격:"
+  },
+  "model_sha256": {
+    "returncode": 1,
+    "error": "불합격:"
+  },
+  "tool_sha256": {
+    "returncode": 1,
+    "error": "불합격: tool_sha256"
+  },
+  "agent_sha256": {
+    "returncode": 1,
+    "error": "불합격: agent_sha256"
+  },
+  "events-empty": {
+    "returncode": 1,
+    "error": "불합격: 목표 0회"
+  },
+  "synthetic": {
+    "returncode": 1,
+    "error": "불합격:"
+  },
+  "state-missing": {
+    "returncode": 1,
+    "error": "불합격: 필수 상태 누락"
+  },
+  "pivot-zero": {
+    "returncode": 1,
+    "error": "불합격: ('목표 부족', {'pivot': 0, 'flip': 2, 'push': 1})"
+  },
+  "flip-zero": {
+    "returncode": 1,
+    "error": "불합격: ('목표 부족', {'pivot': 7, 'flip': 0, 'push': 1})"
+  },
+  "ratio-theta": {
+    "returncode": 1,
+    "error": "불합격:"
+  },
+  "basis": {
+    "returncode": 1,
+    "error": "불합격: basis header·vstat 불일치"
+  },
+  "remaining": {
+    "returncode": 1,
+    "error": "불합격:"
+  },
+  "applied-missing": {
+    "returncode": 1,
+    "error": "불합격:"
+  },
+  "source-kind": {
+    "returncode": 1,
+    "error": "불합격:"
+  },
+  "duplicate-run": {
+    "returncode": 1,
+    "error": "불합격: 서로 다른 독립 캡처 3회 필요"
+  }
+}

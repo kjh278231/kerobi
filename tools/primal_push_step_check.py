@@ -221,6 +221,7 @@ def mutation(paths):
     put('ratio-theta',lambda x:next(e for e in x['events'] if e['event']=='ratio:leave').__setitem__('theta','0'*16))
     put('basis',lambda x:next(e for e in x['events'] if e['event']=='step:leave')['state']['header'].__setitem__(0,-1))
     put('remaining',lambda x:next(e for e in x['events'] if e['event']=='push:leave').__setitem__('remaining',-1))
+    put('applied-missing',lambda x:x.__setitem__('events',[e for e in x['events'] if e['event']!='step:applied']))
     put('source-kind',lambda x:x.__setitem__('kind','control'))
     results={}
     with tempfile.TemporaryDirectory() as tmp:

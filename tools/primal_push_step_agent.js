@@ -27,7 +27,7 @@ Process.attachModuleObserver({onAdded(mod) {
   function emit(event, fields={}) {send({event,call:active.call,step:active.step,...fields});}
   function selected() {const s=active.s; return {enter:s.add(0x2fc).readS32(),leave:s.add(0x2f8).readS32(),direction:s.add(0x328).readS32()};}
   function finish() {
-    if(active.pending) {emit('step:leave',{kind:active.pending,state:snap(true),selected:selected()});active.pending=null;}
+    if(active.pending) {emit('step:leave',{kind:active.pending,state:snap(true),selected:selected()});active.pending=null;active.applied=false;}
   }
   Interceptor.attach(b.add(0x1c0070),{
     onEnter(a) {
@@ -77,6 +77,15 @@ Process.attachModuleObserver({onAdded(mod) {
       if(!this.context.r14.equals(active.s))throw Error('workspace ABI 불일치');
       if(active.pending)throw Error('겹친 단계');
       active.pending=kind;emit('step:enter',{kind,selected:selected(),theta:hex(this.context.rsp.add(0x1eb8),8),pivot:kind==='pivot'?hex(this.context.rsp.add(0x1ef8),8):null,state:snap(true)});
+    }
+  });
+  // flip·pivot 경로가 합류하는 교환 직후·rhs 보정 전 지점이다.
+  Interceptor.attach(b.add(0x1c3004),{
+    onEnter() {
+      if(!active||!active.pending)throw Error('적용 단계 연결 오류');
+      if(!this.context.r14.equals(active.s))throw Error('workspace ABI 불일치');
+      if(active.applied)throw Error('겹친 적용');
+      active.applied=true;emit('step:applied',{kind:active.pending,selected:selected(),state:snap(true)});
     }
   });
   Interceptor.attach(b.add(0xf15c0),{

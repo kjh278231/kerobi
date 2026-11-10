@@ -1,0 +1,37 @@
+{
+ "task": "M3-04b-1",
+ "schema_version": 1,
+ "float_encoding": "IEEE-754 binary64 little-endian hex; exact bits including signed zero",
+ "original_version": "13.0.3",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tools": {
+  "tools/primal_push_step_capture.js": "3e2ed3c80bd971df64de582b7e0adf29591e239f027ec0abd66b762aeb12c458",
+  "tools/primal_push_step_agent.js": "9dd25ce04d140527b10dfc97a35ed961e7569565e9de01eb830e3c7b8ba8b71e",
+  "tools/primal_push_step_check.py": "21546d10a4de9a703f9181ad28356ea745b2530683da0813748e033884cedab9"
+ },
+ "sources": {
+  "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb",
+  "../re/decomp/c/001c5310_PRIVATE000000000025615c.c": "acbf6b5539de8967b02005efd5bb3581e1487d56b2881508ad4309a4305793bd",
+  "../re/decomp/c/000ef960_PRIVATE0000000000055f68.c": "bebc9eec4c74cd5abaec3454c3495a23aedeab276c0ccf03710dd517c4360649",
+  "../re/decomp/c/000eefa0_PRIVATE0000000000054eef.c": "6bd16a64442cf643ce92869e82d815963fdae0e16f8582db6ef9d710cc0068f0",
+  "../re/decomp/c/000f15c0_PRIVATE000000000005b257.c": "f4bc6293c44b0374816f05a8b09318a046fccef96db8e0b81c7ae2ced0e77183",
+  "../re/decomp/c/001bc5d0_PRIVATE000000000013f716.c": "0a631de8d82d656807bc6232ad85ffa162c6812fe3cebeed6ff737d0b9f7a8e4"
+ },
+ "cases": {
+  "primal": {
+   "model": "bench/oracle/m3_primal_push_step/interior.lp",
+   "model_sha256": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0",
+   "events_sha256": "2ee39db48b375aa64d4846bc2f5c8e3d48dca0e7e30a2cacb4a653144af20039"
+  },
+  "dual": {
+   "model": "bench/oracle/m3_primal_push_step/interior.lp",
+   "model_sha256": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0",
+   "events_sha256": "32a35bed6d3080d660b0a874ef734881ae2b3c2145078bd444c80cdd9c14ead9"
+  },
+  "control": {
+   "model": "bench/oracle/m3_primal_push_step/interior.lp",
+   "model_sha256": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0",
+   "events_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+ }
+}
