@@ -45,6 +45,7 @@ mod modk;
 mod parallel;
 pub mod post;
 pub mod probe;
+pub mod retry;
 mod probe0;
 mod probe_apply;
 pub mod probe_engine;

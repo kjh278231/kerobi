@@ -1,0 +1,23 @@
+{
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "files": {
+    "bench/oracle/mip_retry_basis/gmu-35-50_default_natural_1.json": "1b8f2fc84fd6dfbc091f2c952fe6b0b360b85ea286b56540d11b46bed5497b13",
+    "bench/oracle/mip_retry_basis/gmu-35-50_default_natural_2.json": "1b8f2fc84fd6dfbc091f2c952fe6b0b360b85ea286b56540d11b46bed5497b13",
+    "bench/oracle/mip_retry_basis/gmu-35-50_default_natural_3.json": "1b8f2fc84fd6dfbc091f2c952fe6b0b360b85ea286b56540d11b46bed5497b13",
+    "bench/oracle/mip_retry_basis/gmu-35-50_default_synth_1.json": "e019f3d128312774be22c8c07ae48b7121d1b5f4ced089f3ebfae7aeaaf3ee72",
+    "bench/oracle/mip_retry_basis/gmu-35-50_default_synth_2.json": "e019f3d128312774be22c8c07ae48b7121d1b5f4ced089f3ebfae7aeaaf3ee72",
+    "bench/oracle/mip_retry_basis/gmu-35-50_default_synth_3.json": "e019f3d128312774be22c8c07ae48b7121d1b5f4ced089f3ebfae7aeaaf3ee72",
+    "bench/oracle/mip_retry_basis/nidda_stress_natural_1.json": "9664ce84d0864c69a065663da3de084c2c2fb505d45fdcd774e5ba1cb606342f",
+    "bench/oracle/mip_retry_basis/nidda_stress_natural_2.json": "9664ce84d0864c69a065663da3de084c2c2fb505d45fdcd774e5ba1cb606342f",
+    "bench/oracle/mip_retry_basis/nidda_stress_natural_3.json": "9664ce84d0864c69a065663da3de084c2c2fb505d45fdcd774e5ba1cb606342f",
+    "bench/oracle/mip_retry_basis/nidda_stress_synth_1.json": "546eabcb5fa5f1cd8f19433c8fc9ab727f7b5e90d514b09783a0b530f6d5cdbd",
+    "bench/oracle/mip_retry_basis/nidda_stress_synth_2.json": "546eabcb5fa5f1cd8f19433c8fc9ab727f7b5e90d514b09783a0b530f6d5cdbd",
+    "bench/oracle/mip_retry_basis/nidda_stress_synth_3.json": "546eabcb5fa5f1cd8f19433c8fc9ab727f7b5e90d514b09783a0b530f6d5cdbd",
+    "tools/mip_retry_basis.js": "a054ad44945210927442992f7fd2d52f85ced6103ac8a600e8612060a75380c2",
+    "tools/mip_retry_basis_runs.sh": "7d8fa77adfb7e3b1844f8e376329de4e3a624d61dbaa261a9344cd94266484f7"
+  },
+  "external_models": {
+    "re/bench/data/miplib/neos-3754480-nidda.mps.gz": "63f322dd9be49acf31f7579d8f04e3bb578bdd7ca7d3525683384190c9a8bf7f",
+    "re/bench/data/miplib/gmu-35-50.mps.gz": "5652e6ad8889e874bc88356d3f717677793457dc6afe76c934b3603bc3adb8d1"
+  }
+}
