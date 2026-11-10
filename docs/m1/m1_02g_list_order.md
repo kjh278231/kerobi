@@ -56,7 +56,7 @@
 
 | 사례 | 실제 / 합성 | 노리는 분기 | 입력 | 원본 출력 |
 |---|---|---|---|---|
-| kb2 Method=1 Presolve=0 Threads=1 | 원본 실제 실행 저장 자료 | mode 1 피벗 6–29, 희소 U 피벗 21·24, CHUZR 문턱 낮춤 스캔(피벗 14·25 추정) | `kb2.mps.gz` | `bench/oracle/iter0-30/kb2.jsonl.gz`, `bench/oracle/m1_02a1_tau/kb2_{1,2,3}.json.gz` |
+| kb2 Method=1 Presolve=0 Threads=1 | 원본 실제 실행 저장 자료 | mode 1 피벗 6–29, 희소 U 피벗 21·24(착수 때 피벗 14·25를 문턱 낮춤 스캔으로 추정했으나 재분해 피벗이었다, §6.1) | `kb2.mps.gz` | `bench/oracle/iter0-30/kb2.jsonl.gz`, `bench/oracle/m1_02a1_tau/kb2_{1,2,3}.json.gz` |
 
 - 적용하지 않은 범주: devex·모드 3, 비용 모드 1·2(kb2는 0), 인공 bound 단계 허용오차(spx+0x2c8 ≠ 0), 재분해 직후 mode 1 `full_init`. kb2 저장 구간에 없으면 C만으로 남긴다.
 
@@ -65,3 +65,42 @@
 - 판정: `python3 tools/m1_list_order_check.py --self-test`.
 - statecmp: `tools/build_local.sh && zcat bench/oracle/iter0-30/kb2.jsonl.gz > <tmp>/kb2.jsonl; PYTHONPATH=$PWD/python ../.venv/bin/python tools/proto/statecmp.py kb2 <tmp>/kb2.jsonl`.
 - 회귀: Rust·Python 패키지를 바꾸지 않으므로 cargo·pytest는 해당 없음.
+
+## 6. 실행 결과
+
+- 실행: worktree `../rsolver-m1-02g`, 기준 main `49c622d`, 검사기 commit `5ab6b26`, x86-64 Linux(WSL2). 입력은 저장 오라클 `bench/oracle/iter0-30/kb2.jsonl.gz`(SHA-256 `007d5a55…`)와 M1-02a-1 캡처 3회(gz SHA-256 `64cc9dea…`, 3회 같음)다. 원본은 다시 실행하지 않았다(저장 기준 재생).
+- `python3 tools/m1_list_order_check.py --self-test` 종료 0:
+
+```text
+L: 22 mode-1 pivots (6-29) replayed, list and marks equal; scan 0, x1.1 3, flip pivots 0; refactor pivots [14, 25] not replayed; discriminating pivots [21]
+P2: 21b9de iff LU+0x104*nnz(a_q) <= m on 38 pivots; P3: sparse-U output order rule on 7 pivots, discriminating [1, 3, 4, 21, 24]
+V tail-asc / prefix-upos / index: rejected (P3 pivot 21 / 1 / 0)
+V position order: rejected at L pivot 21 (snapshot 22 [20, 5, 17, 13, 19], replay [5, 13, 17, 19, 20])
+T aq order, list order, mark, 02a-1 run: rejected
+PASS (+ self-test)
+```
+
+- 답:
+  - **처음 다른 입력**: 피벗 21의 최종 α_q 목록(spx+0x210) 순서다. 원본 `[28, 18, 12, 20, 5, 31, 14, 3, 4, 29, 9, 10, 11, 15, 16, 17, 13, 19, 26, 23, 25]`, Rust는 같은 집합을 위치 오름차순(`simplex.rs` `supp`)으로 쓴다. 값·집합·vstat·x_B·d·w는 같다.
+  - **그 순서를 쓰는 원본 연산**: `1bae9c` C:544–700 mode 1 갱신 루프가 spx+0x210을 저장 순서로 돌며 새로 위반된(표시 bit 0 = 0, 점수 ≥ 문턱) 위치를 목록 끝에 붙인다. 이 규칙만으로 mode 1 갱신 피벗 22개(6–29, 재분해 피벗 14·25 제외)의 다음 목록·표시를 순서까지 맞혔다. 위치 오름차순 변이는 피벗 21에서만 거부된다(다른 피벗은 붙는 위치가 0–1개거나 α_q가 오름차순).
+  - **그 순서를 만드는 원본 연산**: `09d112`의 희소 U 경로 출력 순서다. 피벗 21·24는 `21b9de → 214344 → 21f83a → 21841f`, 피벗 0–4는 `21b9de ×2 → 21686f`를 탔다. 7피벗 모두 출력이 [LU+0xf8 = −1인 접두 행] + [꼬리 행(U 위치 ≥ LU+0x100), U 위치 내림차순] + [LU+0xf8 ≥ 0인 접두 행, LU+0xf8 오름차순]이다(m1_notes §8.10의 `21686f` 서술과 같고, `21841f`도 같음을 처음 확인). 조밀 경로(그 밖의 31피벗)는 인덱스 오름차순이라 Rust와 같다. kb2 mode 1 구간에서 희소 U 경로는 피벗 21·24뿐이고, 24는 붙는 위치 `[28, 30]`이 오름차순이라 판별되지 않는다.
+  - **02f 재훑기와의 관계**: 재훑기가 피벗 21 진입을 25로 바꾸었고, 열 25의 a_q는 원소 1개(행 3)라 `LU+0x104·nnz = 37 ≤ 43`으로 희소 L 경로를 탔다. 그래서 02f가 처음 희소 U 출력을 mode 1 갱신에 노출했을 뿐 재훑기 자체의 부수 효과가 아니다(아래 주입 실험).
+- 경로 선택(P2): `21b9de`(희소 L) 진입은 38피벗 모두 `LU+0x104 · nnz(a_q) ≤ m`과 같다(LU+0x128 = −1). 희소 U(`21841f`) 진입 조건은 미확인이다. 피벗 30·32·34·36·37은 희소 L로 들어갔지만 U 커널 훅이 없고 출력이 인덱스 오름차순이다.
+- 미검증: LU+0xf8 = −1 행끼리의 순서(입력 순서로 추정, P3는 출력 그대로 둠)와 −1 행이 꼬리·접두 행과 섞인 경우, CHUZR 문턱 낮춤 스캔(kb2 0회), flip 패스(`1c8477`) touch 순서(flip 피벗 0회), 재분해 직후 `full_init`, 인공 bound 단계 허용오차, 비용 모드 1·2, 슬랙 점수 계수 0.9375(원본 점수를 그대로 써서 재계산하지 않음).
+
+### 6.1 탐색(판정 아님)
+
+- 충분성 주입: Rust dual 갱신 분기의 `changed`를 원본 피벗 21 순서로 바꾸는 임시 패치(`RSOLVER_AQORDER`, 반복 22에만 적용) 빌드로 statecmp를 돌렸다. 반복 21·22 OK, 반복 23의 가격 목록 차이도 사라졌다. 반복 23의 d 6개(첫 0번 `…664` 대 `…6617`)·w 21개(첫 var 8)·점수 3개 끝자리 차이는 주입 전후 같다. 즉 이 차이는 목록 순서와 별개의 첫 차이다(피벗 22는 조밀 경로). 패치는 되돌리고 다시 빌드해 반복 22 차이가 돌아온 것을 확인했다.
+- 처음 쓴 휴리스틱(`order.py`)은 피벗 14·25를 "α_q 밖 추가"로 보였는데, 실제로는 그 피벗 뒤 재분해로 위치 번호가 바뀐 것이었다(lu k → 0, 스냅숏 r도 다름). 재생기는 재분해 피벗을 따로 센다.
+
+## 7. 판정과 인수인계
+
+- 작업 수행 상태: **완료(조사)**.
+- 동등성: 조사라 구현 일치 판정 없음. 원본 규칙(소비: `1bae9c` mode 1 갱신 루프의 α_q 목록 순서, 생산: `09d112` 희소 U 출력 순서)이 kb2 저장 자료를 위 범위에서 재현한다.
+- 계약 변경: §3 P를 P(비정렬 ⇒ 희소 U), P2(희소 L 조건), P3(희소 U 출력 순서 규칙)로 나눴고 P3 변이 3종을 더했다(완료 기준 (3)의 "한 번 시도"가 재현에 성공해서 넣음). X의 r 비교와 L 재생은 재분해 피벗(다음 스냅숏 lu k = 0)을 뺀다. 넓힌 것 외에 줄인 판정은 없다.
+- 후속:
+  - **M1-02h**(구현, 새 행 제안): Rust FTRAN이 α_q 목록 순서를 원본처럼 내고(희소 L·U 경로 선택과 P3 순서), dual 갱신의 mode 1 touch가 그 순서를 쓴다. 희소 U 진입 조건(`09d112` 내부)을 먼저 C로 확인해야 한다. 판정: statecmp kb2 반복 22 OK, `m1_list_order_check.py` 그대로, Netlib Method=1 회귀.
+  - **M1-02i**(조사, 새 행 제안): kb2 반복 23(피벗 22)의 d 6·w 21 끝자리 차이. 첫 명령 `zcat bench/oracle/iter0-30/kb2.jsonl.gz > <tmp>/kb2.jsonl; PYTHONPATH=$PWD/python ../.venv/bin/python tools/proto/statecmp.py kb2 <tmp>/kb2.jsonl`.
+  - **M1-02c**(검증): Method=1 Netlib 64 재측정(출발점 29/64).
+- branch `work/m1-02g`, worktree `../rsolver-m1-02g`. Rust·Python 패키지는 바꾸지 않았다.
+- 교훈: `docs/lessons/original.md`(mode 1 목록 추가 순서 = α_q 목록 순서, `09d112` 희소 U 출력 순서), `docs/lessons/tooling.md`(재분해 뒤 스냅숏 위치 번호).
