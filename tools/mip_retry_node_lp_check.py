@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """M2-03d-3 checker: retry node LP captures (tools/mip_retry_node_lp.js), contract docs/m2/mip_retry_node_lp.md section 3.
 
-(default)    checks A, B, C1-C4, E on the stored captures and prints the findings
---self-test  also requires every in-memory tamper to be rejected
+(default)         manifest hashes (this and the M2-03c-2 one), then checks A, B, C1-C4, E and prints the findings
+--self-test       also requires every in-memory tamper to be rejected
+--write-manifest  record the capture, tool and model hashes
 Exit code 0 only when every requested check passes.
 """
-import copy, json, math, os, struct, sys
+import copy, hashlib, json, os, struct, sys
+from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mip_retry_basis_check as B  # noqa: E402
@@ -13,6 +15,9 @@ import mip_retry_basis_check as B  # noqa: E402
 ROOT = B.ROOT
 DATA = 'bench/oracle/mip_retry_node_lp'
 OLD = 'bench/oracle/mip_retry_basis'
+MANIFEST = 'bench/oracle/mip_retry_node_lp_manifest.json'
+TOOLS = ['tools/mip_retry_node_lp.js', 'tools/mip_retry_node_lp_runs.sh']
+MODELS = {'nidda_stress': 're/bench/data/miplib/neos-3754480-nidda.mps.gz', 'gmu-35-50_default': 're/bench/data/miplib/gmu-35-50.mps.gz'}
 RUNS = (1, 2, 3)
 # old: M2-03c-2 natural capture; ws: C2 applies (ScaleFlag 0); model: E applies (node LP keeps the model columns)
 CASES = {'nidda_stress': {'old': 'nidda_stress_natural', 'ws': True, 'model': True},
@@ -149,10 +154,22 @@ def check_case(case, caps, old):
         for j, (a, c) in enumerate(zip(md['vtype'], lp['vtype'])):
             need(a == c or (a, c) == ('I', 'B') and f(md['lb'][j]) == 0.0 and f(md['ub'][j]) == 1.0, f'{case}: vtype col {j} {a} vs {c}')
         out['vtype_I_to_B'] = sum(a != c for a, c in zip(md['vtype'], lp['vtype']))
-        lr = rows_of(lp)
+        # rows: same pattern; LP row = lam * model row exactly (as rationals), rhs too; lam < 0 turns '>' into '<' (contract section 6)
+        lr, lams = rows_of(lp), []
         for i in range(md['rows']):
-            need(dict(zip(*md['row_major'][i])) == lr[i], f'{case}: LP row {i} differs from model row {i}')
-            need(md['rhs'][i] == lp['rhs'][i] and md['sense'][i] == lp['sense'][i], f'{case}: LP row {i} rhs/sense')
+            a = dict(zip(*md['row_major'][i]))
+            need(sorted(a) == sorted(lr[i]) and a, f'{case}: LP row {i} pattern differs from model row {i}')
+            j0 = min(a)
+            lam = Fraction(f(lr[i][j0])) / Fraction(f(a[j0]))
+            for j in a:
+                need(Fraction(f(lr[i][j])) == lam * Fraction(f(a[j])), f'{case}: LP row {i} col {j} not lam * model ({f(lr[i][j])} vs {f(a[j])}, lam {lam})')
+            need(Fraction(f(lp['rhs'][i])) == lam * Fraction(f(md['rhs'][i])), f'{case}: LP row {i} rhs not lam * model rhs')
+            ms, ls = md['sense'][i], lp['sense'][i]
+            need(ms == ls == '=' or (lam > 0 and ms == ls) or (lam < 0 and {ms, ls} == {'<', '>'}), f'{case}: LP row {i} sense {ls} vs model {ms}, lam {lam}')
+            lams.append(lam)
+        out['rows_negated'] = sum(l < 0 for l in lams)
+        out['rows_rescaled'] = sum(abs(l) != 1 for l in lams)
+        out['row_lams'] = sorted({str(l) for l in lams})[:12]
         out['extra_rows'] = lp['rows'] - md['rows']
         out['bound_diffs'] = sum(md['lb'][j] != lp['lb'][j] or md['ub'][j] != lp['ub'][j] for j in range(md['cols']))
         ints = [j for j in range(md['cols']) if lp['vtype'][j] != 'C']
@@ -184,6 +201,34 @@ def enclosing(d):
             continue
         stack.append(e) if e['phase'] == 'enter' else stack.pop()
     return [(e['call'], e['depth'], [e['model_rows'], e['model_cols']], e['presolved'], e['env_2728']) for e in stack]
+
+
+def sha(p):
+    return hashlib.sha256(open(os.path.join(ROOT, p), 'rb').read()).hexdigest()
+
+
+def write_manifest():
+    caps = [f'{DATA}/{c}_{r}.json' for c in CASES for r in RUNS]
+    m = {'binary_sha256': B.BINARY, 'files': {p: sha(p) for p in caps + TOOLS},
+         'external_models': {p: sha(os.path.join('..', p)) for p in MODELS.values()}}
+    with open(os.path.join(ROOT, MANIFEST), 'w') as fh:
+        json.dump(m, fh, indent=2)
+        fh.write('\n')
+
+
+def check_manifests(caps):
+    m = B.load(MANIFEST)
+    need(m['binary_sha256'] == B.BINARY, 'manifest binary hash')
+    need({f'{DATA}/{c}_{r}.json' for c in CASES for r in RUNS} | set(TOOLS) <= set(m['files']), 'manifest misses a file')
+    for p, h in m['files'].items():
+        need(sha(p) == h, f'hash mismatch {p}')
+    for p, h in m['external_models'].items():
+        need(sha(os.path.join('..', p)) == h, f'model hash mismatch {p}')
+    B.check_manifest(B.load(B.MANIFEST))  # the M2-03c-2 captures used by check A
+    for case, cs in caps.items():
+        for r, d in cs.items():
+            need(d['tool_sha256'] == m['files']['tools/mip_retry_node_lp.js'], f'{case} run {r}: captured with another tool version')
+            need(d['model_sha256'] == m['external_models'][MODELS[case]], f'{case} run {r}: model hash')
 
 
 def load_all():
@@ -255,9 +300,13 @@ def tampers(caps):
 
 
 def main():
+    if '--write-manifest' in sys.argv[1:]:
+        write_manifest(); print('manifest written'); return 0
     selftest = '--self-test' in sys.argv[1:]
     caps, olds = load_all()
     try:
+        check_manifests(caps)
+        print('manifest PASS')
         res = run(caps, olds)
     except Fail as e:
         print('FAIL', e); return 1

@@ -1,0 +1,17 @@
+{
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "files": {
+    "bench/oracle/mip_retry_node_lp/nidda_stress_1.json": "3840088c3323570759d58101551afcdf47195b537085e68f9892a47881aab774",
+    "bench/oracle/mip_retry_node_lp/nidda_stress_2.json": "3840088c3323570759d58101551afcdf47195b537085e68f9892a47881aab774",
+    "bench/oracle/mip_retry_node_lp/nidda_stress_3.json": "3840088c3323570759d58101551afcdf47195b537085e68f9892a47881aab774",
+    "bench/oracle/mip_retry_node_lp/gmu-35-50_default_1.json": "fe864d84facd3e2fc314149a92abdb7eda6e4024acec1ec7e8f384a6ddeba050",
+    "bench/oracle/mip_retry_node_lp/gmu-35-50_default_2.json": "fe864d84facd3e2fc314149a92abdb7eda6e4024acec1ec7e8f384a6ddeba050",
+    "bench/oracle/mip_retry_node_lp/gmu-35-50_default_3.json": "fe864d84facd3e2fc314149a92abdb7eda6e4024acec1ec7e8f384a6ddeba050",
+    "tools/mip_retry_node_lp.js": "37880eb20e3a958240e01c7d883f56a45116362125b59726c621fbc5874bf250",
+    "tools/mip_retry_node_lp_runs.sh": "1b1f48408de4a9eecb46a304099c77e647adf139d457eaf306cc11cc6ba77bb0"
+  },
+  "external_models": {
+    "re/bench/data/miplib/neos-3754480-nidda.mps.gz": "63f322dd9be49acf31f7579d8f04e3bb578bdd7ca7d3525683384190c9a8bf7f",
+    "re/bench/data/miplib/gmu-35-50.mps.gz": "5652e6ad8889e874bc88356d3f717677793457dc6afe76c934b3603bc3adb8d1"
+  }
+}
