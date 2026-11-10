@@ -176,9 +176,9 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 
 방법: `bench/pathcmp.txt`에서 첫 분기가 이른 모델을 골라 `tools/proto/alphacmp.py <name>`(BFRT 입력 α 순서·값)와 `tools/spx_oracle.py … --iters`+`tools/proto/statecmp.py`(x_B·d·w·CHUZR 목록·행/열 비용·LU 갱신 수·섭동 카운터를 변수 기준 비트 비교)로 원인을 좁힌다. 목록 순서 차이는 정렬 집합부터 의심한다(Gurobi 집합을 넣으면 셸 정렬이 그대로 재현됨).
 
-1. **DSE의 두 RHS FTRAN `09d112`**: 새 kb2 오라클(`bench/oracle/iter0-30/kb2.jsonl.gz`, §9.8)과 반복 0–11은 비교 항목 전체 일치. 반복 12부터 w·score가 마지막 비트에서 갈리고, 피벗은 21번까지 일치(다음 피벗에서 분기). α_q와 τ를 따로 푸는 현재 경로와 원본 두 RHS 경로의 연산 순서부터 확인한다. 원인은 아직 확정하지 않았다.
+1. **DSE의 두 RHS FTRAN `09d112`**(M1-02d에서 해결: τ U 단계와 행 U 저장 순서를 원본대로, kb2 반복 0–21 상태 전부 일치. 다음 분기는 피벗 21 진입 선택, M1-02e. 아래는 당시 기록): 새 kb2 오라클(`bench/oracle/iter0-30/kb2.jsonl.gz`, §9.8)과 반복 0–11은 비교 항목 전체 일치. 반복 12부터 w·score가 마지막 비트에서 갈리고, 피벗은 21번까지 일치(다음 피벗에서 분기). α_q와 τ를 따로 푸는 현재 경로와 원본 두 RHS 경로의 연산 순서부터 확인한다. 원인은 아직 확정하지 않았다.
 2. **CHUZR·Markowitz 나머지**: 희소 Markowitz 커널과 모드 1 문턱은 이미 이식됨(`f513cd2`, `5b21c30`). 옛 scratch/kb2.jsonl의 반복 7·17 목록 차이는 Gurobi 목록이 잘려 저장된 계측 오류였다(§9.8). 이 증상을 근거로 pricing을 바꾸지 않는다. adlittle 등 다른 모델은 최신 오라클로 다시 확인하고, 실제 분기점에서 커널의 2×2·dense 전환·순열·띠와 pricing 규칙을 대조한다.
-3. **FT 갱신 나머지**: 순열 루프(`5b257` L1101–1218)의 조기 종료, 접두 t 관리, FT 회계(L+0x184 = η 길이 합, L+0x190 += nnz(α_q)+1)로 재분해 시점 맞추기, 두 RHS FTRAN `09d112`(α_q와 τ를 한 번에; kb2 반복 12부터 DSE w 마지막 비트), FTRAN 출력 순서(α_q 순서 = U 단계 순서).
+3. **FT 갱신 나머지**: 순열 루프(`5b257` L1101–1218)의 조기 종료, 접두 t 관리, FT 회계(L+0x184 = η 길이 합, L+0x190 += nnz(α_q)+1)로 재분해 시점 맞추기, 두 RHS FTRAN `09d112`(α_q와 τ를 한 번에; τ는 M1-02d에서 해결), FTRAN 출력 순서(α_q 순서 = U 단계 순서).
 4. **`48d5f` 나머지**(§8.9): 0x110 플래그, 인공 bound 수 조건, 첫 분해 뒤 RANDSMALL, RESID, UNPERTURB(섭동 단계 하향)·dual 끝 −1004.
 5. **primal**(명세): (b) piecewise phase 1 `56973`(기본값), (d) x_B 하한 오프셋 저장·devex/SE(`06ff79`)·bucket CHUZC·`0b2fc2` 전환, b3a19 최적 검사. Method 0 재검증 실패는 pilot만(§9.8), Gurobi Method 0 경로 대조(`tools/path_oracle.py <dir> --method 0`, 기준 `bench/gurobi_primal_nopre`).
 6. BFRT 나머지(코퍼스 불일치 18건 fit1d 등, 후보 없음 경로), 행 사본의 같은 |a| 분할(`9edd1`), P2 work 누적, P3 속도(희소 FTRAN/BTRAN, 반복마다의 O(n+m) 제거, 콜백 없을 때 로그 생략), Quad(F80).

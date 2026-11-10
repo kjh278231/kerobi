@@ -91,7 +91,7 @@ Rust 쪽 자료는 `RSOLVER_SNAP` 스냅숏에 새 필드로 낸다. τ 계산 �
 ### 6.2 판정
 
 - 실행: worktree `../rsolver-m1-02d`, 기준 main `e46e1a5`, 계약 `c784f39`, 구현·검사기 `e8f3458`, 최종 `4e391eb`(clippy·단위 테스트·β 검사기 재조준). x86-64 Linux(WSL2). Gurobi는 실행하지 않았다(고정 캡처 사용).
-- 오류 검출 증거(수정 전 코드 + 스냅숏 필드만 더한 빌드, 경계 수정 전 검사기): 종료 1. O가 피벗 14 위치 9(`[6, 15]` 대 원본 `[15, 6]`, 갱신 13→14 안정 삭제)와 피벗 15 위치 32(`[39, 41, 42]` 대 원본 `[41, 42, 39]`, 재분해 초기 순서)에서, R이 피벗 1·11–14·18–21에서, F가 스냅숏 12(w 위치 [20, 22])에서 실패했다.
+- 오류 검출 증거(수정 전 코드 + 스냅숏 필드만 더한 빌드, 아래 경계 수정 전 검사기, 출력 `bench/oracle/m1_02d_tau/tau_check_before_fix.txt`): 종료 1. O가 피벗 14 위치 9(`[6, 15]` 대 원본 `[15, 6]`, 갱신 13→14 안정 삭제)와 피벗 15 위치 32(`[39, 41, 42]` 대 원본 `[41, 42, 39]`, 재분해 초기 순서)에서, R이 피벗 1·11–14·18–21에서, F가 스냅숏 12(w 위치 [20, 22])에서 실패했다. T는 R이 먼저 실패해 해당 피벗을 건너뛰므로 (11, [20, 22])를 직접 보고하지 않았다(F가 같은 위치를 보였다).
 - 수정 뒤 `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_tau_check.py --self-test` 종료 0(P 줄 생략):
 
 ```text
@@ -111,20 +111,22 @@ self-test: 19 tampers rejected (아래 목록)
 PASS
 ```
 
-- 자기검사 변조 19종: 기존 원본 쪽 12종(해시·3회·도구·덤프 해시·빈 사건·τ 비트·α_q 원소·ρ 비트·w 비트·캡처 U 행 순서·덤프 L 값·캡처 U 값·a_q 입력 비트 중 유지분), 재조준 2종(Rust τ 피벗 11을 수정 전 규칙 값으로 → R, 원본 τ 피벗 11을 수정 전 규칙 값으로 → W), 새 3종(Rust τ 피벗 13 한 ulp → R, Rust 행 U 피벗 15 두 원소 교환 → O, Rust 접두 t 피벗 14 → O)이 모두 거부됐다.
+- 자기검사 변조 19종: 기존 유지 14종(binary·3회·파일·도구·덤프 해시, 빈 사건, 원본 τ 비트, α_q 원소, ρ 비트, w 비트, 캡처 U 행 순서, 덤프 L 값, 캡처 U 값, a_q 입력 비트), 재조준 2종(Rust τ 피벗 11을 수정 전 규칙 값으로 → R, 원본 τ 피벗 11을 수정 전 규칙 값으로 → W), 새 3종(Rust τ 피벗 13 한 ulp → R, Rust 행 U 피벗 15 두 원소 교환 → O, Rust 접두 t 피벗 14 → O)이 모두 거부됐다.
 - O 범위: 피벗 0–21(갱신 20회, 재분해 피벗 15 포함). 피벗 21의 진입 선택이 원본과 달라(아래 pathcmp) 스냅숏 22부터 기저가 갈리므로 재분해 피벗 26과 피벗 22 이후 갱신은 Rust 경로로 대조할 수 없다.
 - 계약 변경(결과 확인 뒤, 넓히거나 줄인 판정 대상 없음, 경계 수정):
   - O의 "같은 경로" 조건을 스냅숏 0..k+1에서 0..k로 고쳤다. 피벗 k의 τ 지점 LU는 피벗 k−1 뒤 상태라 스냅숏 k+1(피벗 k의 출력)에 의존하지 않는다. 처음 조건으로는 피벗 21이 빠져 "최소 0–21" 요구를 못 채웠다.
   - F를 "스냅숏 0–22"에서 "0–21"로 고쳤다. 스냅숏 22는 피벗 21의 출력이고, 피벗 21의 진입 변수는 수정 전부터 원본과 다르다(원본 25, Rust 4, τ와 무관한 분기). §3의 "0–22"는 한 칸 어긋난 오기다.
   - `tools/m1_beta_check.py` F의 고정 첫 차이 `(12, 'w')`를 `(22, 'state')`로 바꿨다(β 판정 R·D는 그대로). 수정 뒤 첫 실행에서 이 고정값 때문에 종료 1이었다.
-- 회귀(최종 코드 `4e391eb`에서 다시 실행, 아래 값 모두 이 실행):
-  - `cargo test -p rsolver-lp` 41 통과, `cargo test --release --workspace` 122 통과·무시 5(새 `gather_lane_order` 포함), `cargo clippy --workspace --all-targets -- -D warnings` 종료 0. 이 worktree 빌드(`rsolver.__file__`가 worktree 안) pytest 657 passed.
-  - `tools/m1_tau_check.py --self-test`·`m1_beta_check.py --self-test`·`m1_urow_check.py --self-test` 모두 PASS.
+- 회귀(실행 commit을 구분한다):
+  - `63d192f` 빌드(최종과 솔버 코드 동일, 이후 차이는 테스트 모듈 import뿐): `tools/m1_tau_check.py --self-test`·`m1_beta_check.py --self-test`·`m1_urow_check.py --self-test` PASS, statecmp·pathcmp·`lp_check`(아래 값), 이 worktree 빌드(`rsolver.__file__`가 worktree 안) pytest 657 passed.
+  - `4e391eb`: `cargo test -p rsolver-lp` 41 통과, `cargo test --release --workspace` 122 통과·무시 5(새 `gather_lane_order` 포함), `cargo clippy --workspace --all-targets -- -D warnings` 종료 0.
+  - main `35818ce`(M2-06a, docs·tools·bench만) 병합 뒤에는 다시 실행하지 않았다(Rust·Python 패키지 변경 없음).
   - `tools/proto/statecmp.py kb2`: 수정 전 반복 12부터 w 차이(반복 12 w 2개·score 2개 …). 수정 뒤 반복 0–21 모두 OK, 첫 차이는 반복 22(vstat 2개 [4, 25], 피벗 21 진입 선택).
   - `tools/proto/pathcmp.py kb2`: 수정 전후 모두 첫 피벗 분기 21(원본 진입 25, Rust 4, 이탈 78).
   - `tools/lp_check.py --methods 1 --timeout 120`: 수정 전후 정답 90/91, IterCount 일치 24/64 그대로. 상태 변화 없음. 반복 수가 바뀐 모델 4개: degen2 639→644(원본 634), maros 1769→1825(원본 1975), fit2p 7326→8234, greenbeb 5946→5835(둘 다 원본 기준 없음).
   - `tools/m1_urow_check.py --self-test` 종료 0(고정 자료, Rust 미사용 부분), `tools/m1_beta_check.py --self-test` 종료 0(F 재조준 뒤, 변조 12종 거부).
-- 실행하지 못한 검사: 8항 이상 모으기·첫 원소 떼기(kb2 없음, asm만), fill 있는 kernel 행, 다른 모델의 τ·행 U(원본 캡처 없음).
+- 실행하지 못한 검사: 8항 이상 모으기·첫 원소 떼기(kb2 없음, asm만), fill 있는 kernel 행, 다른 모델의 τ·행 U(원본 캡처 없음), Method 0/−1 Netlib과 MIP 노드 LP 궤적(같은 dual DSE 경로, pytest만 덮음).
+- 고정 덤프 패치(`bench/oracle/m1_02a1_tau/rust_lu_dump.patch`, `m1_02a2_urow/rust_factor_dump.patch`)는 이 코드에 `git apply --check`가 실패한다. 02a-1·02a-2 문서의 덤프 재생성 명령은 각 기준 commit(`79d1d5c`, `7924343`)에서만 쓸 수 있다. 검사기는 고정 덤프 해시로 읽으므로 판정에는 영향 없다.
 
 ## 7. 판정과 인수인계
 
@@ -134,7 +136,7 @@ PASS
   - τ 모으기 규칙을 모든 피벗에 쓴다. 원본의 희소·커널 경로와 같다는 근거는 kb2 피벗 0–21뿐이다(shortcut 주석).
   - 8항 이상 모으기 레인 결합은 asm 근거만, 첫 원소 떼기는 모델링하지 않았다(shortcut 주석).
   - 행 U 순서: 재분해 피벗 26과 피벗 22 이후 갱신, fill 있는 kernel 행, singleton 열 원소를 가진 singleton 행(C 규칙은 같음)은 실행 대조가 없다.
-  - `row_cost_estimate`(`9e60b`)는 행 U를 저장 순서로 접는데, 이번에 순서가 바뀌었다. 원본 P+0x68과의 비교는 하지 않았다(kb2 statecmp 반복 0–21 pricing 상태는 같음).
+  - `row_cost_estimate`(`9e60b`)는 행 U를 저장 순서로 접는데, 이번에 순서가 바뀌었다. kb2 statecmp는 `row_cost`를 비교하지만 수정 전후 모두 반복 0–21에서 차이가 없어 접는 순서를 판별하지 못한다(판별 안 됨).
 - 후속:
   - **M1-02e**(조사, 새 행 제안): kb2 피벗 21의 진입 선택 차이(원본 25, Rust 4, 이탈 78). 반복 21까지 저장 오라클 상태가 모두 같으므로 dual ratio test(`48d5f` 계열) 입력부터 본다.
   - **M1-02c**(검증): Method=1 Netlib 64 재측정(이번 회귀 24/64가 그대로 출발점).
