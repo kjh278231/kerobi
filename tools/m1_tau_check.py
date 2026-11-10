@@ -1,4 +1,5 @@
-"""M1-02a-1 check (docs/m1/m1_02a1_tau.md section 3): the DSE tau = B^-1 rho of the original 09d112 vs rsolver on kb2.
+"""M1-02a-1 check (docs/m1/m1_02a1_tau.md section 3), retargeted by M1-02d (docs/m1/m1_02d_tau.md section 3): the DSE
+tau = B^-1 rho of the original 09d112 vs rsolver on kb2, and rsolver's row-wise U order (snapshot urow/t) vs the capture.
 Reads the three captures of tools/m1_tau_path.js, the M1-02a beta capture, the stored spx_oracle file, the pinned
 Rust LU dump (bench/oracle/m1_02a1_tau/rust_lu_kb2.jsonl.gz, made with rust_lu_dump.patch) and a fresh RSOLVER_SNAP
 run of the rsolver on PYTHONPATH (build it first with tools/build_local.sh). Exit 1 on any failure.
@@ -18,7 +19,8 @@ DUMP_SHA = "e7ba87485cacadd05574a8280398bb3f221531e7dc801d9ce32a02123e7cda30"  #
 PATCH_SHA = "c698cc8d0ccf247da8da40417f76ed59df8d6aafb37a241837e69d2b79680978"  # rust_lu_dump.patch
 ZERO = 1e-13  # crates/lp/src/lu.rs ZERO = LU+0x10 drop tolerance
 NP = 22  # pivots 0..21: same input in both (the pivot path splits at 21)
-FIRST = (11, [20, 22])  # first pivot whose tau differs and the positions (section 1)
+FIRST = (11, [20, 22])  # first pivot where the pre-M1-02d Rust rule (upper_rust) differs from the original tau
+NO = 30  # last snapshot of the stored oracle (iter0-30)
 
 bits = lambda x: struct.pack("<d", x)
 same = lambda a, b: bits(a) == bits(b)
@@ -249,6 +251,7 @@ def check(runs, beta, oracle, dump, mine, dump_sha=None):
     # U, I, R, T, G on pivots 0..21
     nu = nrows = 0
     t_diff, z_diff, n_tau, n_gather2, long_rows = [], [], 0, 0, 0  # value differences / signed-zero-only differences
+    old_rule = []  # value differences of the pre-M1-02d Rust rule (all-row scatter) from the original rule
     for k in range(NP):
         e, d = ev[k], dump[k]
         lu, ft = d["lu"], e.get("ft")
@@ -294,15 +297,16 @@ def check(runs, beta, oracle, dump, mine, dump_sha=None):
         ao = dict(zip(ft["aq_out"]["idx"], ft["aq_out"]["val"]))
         if any(not same(col[p], u2f(ao[p])) if p in ao else col[p] != 0.0 for p in range(m)):
             bad.append(f"I pivot {k}: Rust FTRAN of the original a_q != original alpha_q output")
-        # R: the dump reproduces the current Rust tau
+        # R: the dump with the original rule (captured U row order) reproduces the current Rust tau
+        idx, _, tau = finals[k]
         x = lower(lu, d["rho"])
         rt = upper_rust(lu, x)
+        og, lr = tau_original(lu, x, ft, idx)
         s = mine.get(k + 1)
-        if s is None or [bits(v) for v in rt] != [bits(fh(h)) for h in s["tau"]]:
-            bad.append(f"R pivot {k}: Rust rule on the dump != Rust snapshot {k + 1} tau")
+        if s is None or any(not same(og[p], fh(s["tau"][p])) for p in idx):
+            bad.append(f"R pivot {k}: original rule on the dump != Rust snapshot {k + 1} tau")
             continue
         # T: Rust tau vs original tau
-        idx, _, tau = finals[k]
         diff = [p for p, tv in zip(idx, tau) if not same(fh(s["tau"][p]), u2f(tv))]
         val = [p for p, tv in zip(idx, tau) if fh(s['tau'][p]) != u2f(tv)]
         if val:
@@ -310,33 +314,57 @@ def check(runs, beta, oracle, dump, mine, dump_sha=None):
         if len(val) < len(diff):
             z_diff.append((k, [p for p in diff if p not in val]))
         # G: the original rule on the same dump
-        og, lr = tau_original(lu, x, ft, idx)
         long_rows += lr
         n_tau += len(idx)
         n_gather2 += sum(1 for p in idx if ft["f8"][p] >= 0 and len(ft["urow"][p]["idx"]) >= 2)
         gd = [p for p, tv in zip(idx, tau) if not same(og[p], u2f(tv))]
         if gd:
             bad.append(f"G pivot {k}: original rule != original tau at positions {gd} (first {og[gd[0]].hex()} vs {u2f(tau[idx.index(gd[0])]).hex()})")
-        rd = [p for p in idx if not same(rt[p], og[p])]
-        if rd != diff:
-            bad.append(f"G pivot {k}: Rust rule vs original rule differ at {rd}, T lists {diff}")
+        rd = [p for p in idx if rt[p] != og[p]]
+        if rd:
+            old_rule.append((k, rd))
     rep.append(f"U: Rust LU dump = original U rows (sets, values), diagonal, U order and prefix t on {nu} pivots ({nrows} rows); LU+0xf8 = -2 tail, -1 empty prefix row, >=0 prefix row")
     rep.append(f"I: Rust rho = original 09d112 rho input; Rust FTRAN of the original a_q = original alpha_q output (pivots 0-{NP - 1})")
-    rep.append(f"R: Rust rule on the dump = current Rust snapshot tau (pivots 0-{NP - 1}, all positions)")
-    if not t_diff or t_diff[0] != FIRST:
-        bad.append(f"T: first tau difference {t_diff[:1]}, want {FIRST}")
-    rep.append(f"T: Rust tau != original tau at {sum(len(v) for _, v in t_diff)} of {n_tau} alpha_q positions on pivots {[k for k, _ in t_diff]}; first {t_diff[:1]}; "
-               f"signed zero only (+0 vs -0, no effect on w): {z_diff}")
+    rep.append(f"R: original rule on the dump (captured U row order) = current Rust snapshot tau (pivots 0-{NP - 1}, final alpha_q positions)")
+    if t_diff or z_diff:
+        bad.append(f"T: Rust tau != original tau: values {t_diff[:3]}, signed zero only {z_diff[:3]}")
+    if not old_rule or old_rule[0] != FIRST:
+        bad.append(f"T: the pre-M1-02d rule's first difference {old_rule[:1]}, want {FIRST}")
+    rep.append(f"T: Rust tau = original tau on all {n_tau} alpha_q positions of pivots 0-{NP - 1} (bits, signed zeros included); "
+               f"the pre-M1-02d all-row scatter would differ at {sum(len(v) for _, v in old_rule)} positions, first {old_rule[:1]}")
     if n_gather2 == 0:
         bad.append("G: no gathered prefix row with 2+ terms")
     rep.append(f"G: original rule (tail scatter to tail rows, prefix gather over the stored U row order) = original tau on all {n_tau} positions; "
                f"{n_gather2} gathered rows with 2+ terms, {long_rows} with 8+ (C only)")
-    # F
-    s12, o12 = mine[12], oracle[12]
-    wd = [p for p in range(len(o12["w"])) if not same(fh(o12["w"][p]), fh(s12["w"][p]))]
-    if t_diff and wd != sorted(t_diff[0][1]):
-        bad.append(f"F: snapshot 12 w differs at positions {wd}, T pivot 11 at {t_diff[0][1]}")
-    rep.append(f"F: Rust snapshot 12 w differs from the stored oracle exactly at positions {wd}")
+    # F: the weights entering the same-input pivots (snapshot NP is the output of pivot NP - 1, whose entering choice
+    # differs: tools/proto/pathcmp.py kb2)
+    wbad = []
+    for j in range(NP):
+        wd = [p for p in range(len(oracle[j]["w"])) if not same(fh(oracle[j]["w"][p]), fh(mine[j]["w"][p]))]
+        if wd:
+            wbad.append((j, wd[:5]))
+    if wbad:
+        bad.append(f"F: Rust w != stored oracle at snapshots {wbad[:3]}")
+    rep.append(f"F: Rust snapshots 0-{NP - 1} w = stored oracle")
+    # O: Rust row-wise U order and prefix t at the tau point = captured LU (pivots on the original's path)
+    no = 0
+    for e in ev:
+        k, ft = e["k"], e.get("ft")
+        # pivot k's LU at tau is the one after pivot k - 1: the same input while snapshots 0..k equal
+        if k + 1 > NO or k + 1 not in mine or any(mine.get(j, {}).get("vstat") != oracle[j]["vstat"] for j in range(k + 1)):
+            break
+        s = mine[k + 1]
+        if s.get("t") != ft["t"]:
+            bad.append(f"O pivot {k}: Rust prefix t {s.get('t')} != original {ft['t']}")
+        for pos, row in enumerate(ft["urow"]):
+            got = s["urow"][pos]
+            if [c for c, _ in got] != row["idx"] or any(not same(fh(h), u2f(v)) for (_, h), v in zip(got, row["val"])):
+                bad.append(f"O pivot {k} position {pos}: Rust U row {[c for c, _ in got]} != original {row['idx']}")
+                break
+        no += 1
+    if no < NP:
+        bad.append(f"O: Rust path equals the original on {no} pivots, want at least {NP}")
+    rep.append(f"O: Rust row-wise U (column order, value bits) and prefix t = capture on pivots 0-{no - 1} (same basis as the stored oracle through snapshot {no - 1})")
     # P (report only)
     rows = []
     for e in ev[:NP]:
@@ -390,21 +418,30 @@ def self_test(runs, beta, oracle, dump, mine):
         row = d["events"][11]["ft"]["urow"][20]
         row["idx"].reverse(); row["val"].reverse()
     tampers["pivot 11 U row order swapped"] = (each(urow_swap), dump, mine, None)
+    old = upper_rust(dump[11]["lu"], lower(dump[11]["lu"], dump[11]["rho"]))  # pre-M1-02d rule at pivot 11
     m2 = copy.deepcopy(mine)
-    for k in range(NP):
-        e = runs[0][1]["events"][k]
-        idx, _, tau = final_list(e)
-        for p, tv in zip(idx, tau):
-            m2[k + 1]["tau"][p] = u2f(tv).hex()
-    tampers["Rust tau replaced by original tau"] = (runs, dump, m2, None)
+    for p in (20, 22):
+        m2[12]["tau"][p] = old[p].hex()
+    tampers["Rust tau at pivot 11 replaced by the pre-M1-02d rule"] = (runs, dump, m2, None)
 
-    def orig_is_rust(d):
+    def orig_is_old(d):
         e = d["events"][11]
         for p in (20, 22):
-            v = format(struct.unpack("<Q", struct.pack("<d", fh(mine[12]["tau"][p])))[0], "016x")
+            v = format(struct.unpack("<Q", struct.pack("<d", old[p]))[0], "016x")
             e["tau"][e["aq"]["idx"].index(p)] = v
             e["ft"]["tau_out"]["val"][e["ft"]["aq_out"]["idx"].index(p)] = v
-    tampers["original tau at pivot 11 replaced by Rust tau"] = (each(orig_is_rust), dump, mine, None)
+    tampers["original tau at pivot 11 replaced by the pre-M1-02d rule"] = (each(orig_is_old), dump, mine, None)
+    m3 = copy.deepcopy(mine)
+    p13 = final_list(runs[0][1]["events"][13])[0][0]
+    m3[14]["tau"][p13] = (fh(m3[14]["tau"][p13]) * (1 + 2 ** -52)).hex()
+    tampers["Rust tau value at pivot 13"] = (runs, dump, m3, None)
+    m4 = copy.deepcopy(mine)
+    row = next(r for r in m4[16]["urow"] if len(r) >= 3 and r[0][0] != r[1][0])
+    row[0], row[1] = row[1], row[0]
+    tampers["Rust U row order at pivot 15 (refactor)"] = (runs, dump, m4, None)
+    m5 = copy.deepcopy(mine)
+    m5[15]["t"] += 1
+    tampers["Rust prefix t at pivot 14"] = (runs, dump, m5, None)
     # the Rust LU dump bridge (U, I, R): one bit of a dump L value, of a captured U value, of the original a_q input
     d2 = copy.deepcopy(dump)
     lc = d2[11]["lu"]["lcol"]

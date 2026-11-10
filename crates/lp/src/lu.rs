@@ -155,6 +155,13 @@ impl Lu {
         }
     }
 
+    /// Row-wise U by basis position as (column position, u) in storage order, and the prefix t (LU+0x100), for
+    /// snapshots.
+    pub fn u_rows(&self) -> (Vec<Vec<(usize, f64)>>, usize) {
+        let rows = self.kpos.iter().map(|&k| self.urow[k].iter().map(|&(k2, u)| (self.steps[k2].1, u)).collect()).collect();
+        (rows, self.prefix)
+    }
+
     pub fn complete(&self) -> bool {
         self.steps.len() == self.head.len()
     }
@@ -339,10 +346,23 @@ impl Lu {
                 }
             }
         }
+        // row-wise U in the original's storage order (LU+0xb0/0xd0/0xc8): singleton rows by column position
+        // (1da0b2 C:530–560, C:657–677), kernel rows in their list order (036ade C:600–690, C:2366–2393)
+        lu.urow = vec![Vec::new(); m];
+        for pos in 0..m {
+            let k = ppos[pos] as usize;
+            for (i, a) in spx.col(head[pos]) {
+                let ki = lu.prow[i] as usize;
+                if ki < k && ki < ns {
+                    lu.urow[ki].push((k, a));
+                }
+            }
+        }
         for (k, ku) in std::mem::take(&mut lu.kernel_u).into_iter().enumerate() {
             let r = lu.steps[k].0;
             for (p2, u) in ku {
                 lu.ucol[ppos[p2] as usize].push((r, u));
+                lu.urow[k].push((ppos[p2] as usize, u));
             }
         }
 
@@ -598,7 +618,7 @@ impl Lu {
         true
     }
 
-    /// Positions, U by row, Lᵀ rows, LU+0x104 and the Lᵀ levels (036ade L5700-5912).
+    /// Positions, Lᵀ rows, LU+0x104 and the Lᵀ levels (036ade L5700-5912).
     fn finish(&mut self) {
         let m = self.head.len();
         self.kpos = vec![0; m];
@@ -612,12 +632,6 @@ impl Lu {
         self.e8 = m.saturating_sub(1);
         while self.e8 > self.prefix && !self.ucol[self.e8].is_empty() {
             self.e8 -= 1;
-        }
-        self.urow = vec![Vec::new(); m];
-        for k in 0..m {
-            for &(i, u) in &self.ucol[k] {
-                self.urow[self.prow[i] as usize].push((k, u));
-            }
         }
         self.general = self.ucol.iter().any(|c| !c.is_empty());
         self.lrow = vec![Vec::new(); m];
@@ -838,6 +852,38 @@ impl Lu {
         }
     }
 
+    /// U phase of the DSE τ = B⁻¹ρ as `09d112` computes it (two-RHS path C:2086–2402), x by row after
+    /// `ftran_lower`: tail steps (U position ≥ LU+0x100) divide in descending U order and scatter into tail rows only;
+    /// each basis position of `need` (the α_q support) in the prefix then gathers its U row in storage order,
+    /// (x_i − Σ u·τ_j)/d_i, or x_i/d_i for an empty row, with no drop test. Returns τ by basis position on `need`, 0
+    /// elsewhere.
+    /// shortcut: the gather rule runs on every pivot; the original also has sparse and kernel-call paths, and the rule
+    /// reproduced all of them only on kb2 pivots 0–21 (M1-02a-1). Upgrade when another capture disagrees.
+    pub fn ftran_tau(&self, mut x: Vec<f64>, need: &[usize]) -> Vec<f64> {
+        let t = self.prefix;
+        for &k in self.order[t..].iter().rev() {
+            let (r, _, d) = self.steps[k];
+            if x[r].abs() <= ZERO || (x[r] / d).abs() <= ZERO {
+                x[r] = 0.0;
+                continue;
+            }
+            x[r] /= d;
+            let xr = x[r];
+            for &(i, u) in &self.ucol[k] {
+                if self.upos[self.prow[i] as usize] >= t {
+                    x[i] -= u * xr;
+                }
+            }
+        }
+        let mut tau = vec![0.0; self.head.len()];
+        for &p in need {
+            let k = self.kpos[p];
+            let (r, _, d) = self.steps[k];
+            tau[p] = if self.upos[k] >= t { x[r] } else { gather(x[r], &self.urow[k], |j| x[self.steps[j].0]) / d };
+        }
+        tau
+    }
+
     /// Dense FTRAN: x (indexed by row) := B⁻¹x, returned by basis position.
     pub fn ftran_dense(&self, mut x: Vec<f64>) -> Vec<f64> {
         assert!(self.complete(), "singular basis");
@@ -870,8 +916,10 @@ impl Lu {
         let l = others.iter().map(|&i| at[self.prow[i] as usize]).fold(p0, usize::max);
         // old column kp out of U
         for &(i, _) in &std::mem::take(&mut self.ucol[kp]) {
+            // 05b257 C:556–567: the row's last entry takes the removed one's place
             let ki = self.prow[i] as usize;
-            self.urow[ki].retain(|e| e.0 != kp);
+            let at_kp = self.urow[ki].iter().position(|e| e.0 == kp).expect("U row entry");
+            self.urow[ki].swap_remove(at_kp);
         }
         let mut diag = spike[rp];
         if l != p0 && !self.urow[kp].is_empty() {
@@ -984,6 +1032,26 @@ impl Lu {
         self.n_updates += 1;
         diag.abs() > ZERO
     }
+}
+
+/// `09d112` gather v − Σ u·x_j over a U row in storage order (asm 0x12925f–0x129465): in sequence below 8 terms;
+/// else lane 0 starts at v, eight lanes subtract and combine as ((l0+l2)+(l4+l6)) + ((l1+l3)+(l5+l7)), the tail in
+/// sequence.
+/// shortcut: no one-element peel when the row's value array is 8- but not 16-byte aligned (the original's row storage
+/// offsets are not modelled; kb2 has no 8+ term row).
+fn gather(v: f64, row: &[(usize, f64)], x: impl Fn(usize) -> f64) -> f64 {
+    if row.len() < 8 {
+        return row.iter().fold(v, |a, &(j, u)| a - u * x(j));
+    }
+    let n8 = row.len() / 8 * 8;
+    let mut a = [v, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    for c in row[..n8].chunks_exact(8) {
+        for (q, &(j, u)) in c.iter().enumerate() {
+            a[q] -= u * x(j);
+        }
+    }
+    let w = ((a[0] + a[2]) + (a[4] + a[6])) + ((a[1] + a[3]) + (a[5] + a[7]));
+    row[n8..].iter().fold(w, |a, &(j, u)| a - u * x(j))
 }
 
 /// Basic solution x_B = B⁻¹(b − N·x_N) with nonbasic values from the status array
