@@ -1,5 +1,6 @@
-//! Crossover primal push pieces on a feasible basis: the ratio test (docs/m3/primal_push_ratio_rust.md) and the step
-//! decisions around it (docs/m3/primal_push_decision_rust.md). No push loop calls them yet.
+//! Crossover primal push pieces: the ratio tests on a feasible (docs/m3/primal_push_ratio_rust.md) and a violated basis
+//! (docs/m3/primal_push_violated.md), and the step decisions around them (docs/m3/primal_push_decision_rust.md). No push
+//! loop calls them yet.
 
 /// The small-pivot second pass with a tightened pivot tolerance was never observed in the original; it is refused
 /// instead of guessed.
@@ -49,6 +50,61 @@ pub fn feasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option
         count as f64 * 4.0 + cands.len() as f64 * 3.0
     };
     *work += units * work_coef;
+    ratio_tail(piv_tol, inf, cap, &val[..count], bound, &ratios, &cands, chosen, theta, pivot)
+}
+
+/// Violated-basis ratio test (`054eef`): like [`feasible_ratio`] but each basic row's class decides which bound it
+/// hits, so `B` rows block a decreasing and `A` rows an increasing basic value. The dense form tests `U`/`X` rows on a
+/// negative entry with a strict `<`, as the original does; the sparse form uses `<=` there like everywhere else.
+/// shortcut: the push sends a result with position < 0 or |pivot| < 0.001 to the `056973` retry ratio before any step
+/// decision; that retry is not ported (M3-04c-7), so a caller must not feed such a result to [`push_step`].
+#[allow(clippy::too_many_arguments)]
+pub fn infeasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option<&[i32]>, val: &[f64], x: &[f64],
+                        width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64)
+                        -> Result<i32, Reentry> {
+    let count = idx.map_or(x.len(), |i| i.len());
+    let row = |k: usize| idx.map_or(k, |i| i[k] as usize);
+    let (mut ratios, mut cands) = (Vec::new(), Vec::new());
+    let mut chosen = -1i32;
+    let mut tested = 0i32;
+    let mut bound = cap;
+    for k in 0..count {
+        let (a, r) = (val[k], row(k));
+        let (up, down) = (a > piv_tol, a < -piv_tol);
+        if !up && !down {
+            continue;
+        }
+        tested += 1;
+        let (v, w) = (x[r], width[r]);
+        let num = match (up, marks[r]) {
+            (true, b'N' | b'U' | b'L' | b'X') | (false, b'B') => v,
+            (true, b'A') | (false, b'U' | b'X') => v - w,
+            (false, b'L' | b'N') if inf > w => v - w,
+            _ => continue,
+        };
+        let ratio = num / a;
+        let strict = idx.is_none() && !up && matches!(marks[r], b'U' | b'X');
+        if if strict { ratio < bound } else { ratio <= bound } {
+            ratios.push(ratio);
+            cands.push(k);
+            chosen = k as i32;
+            let relaxed = (if up { num + harris } else { num - harris }) / a;
+            if relaxed < bound {
+                bound = relaxed;
+            }
+        }
+    }
+    let (c, t, n) = (cands.len() as f64, tested as f64, count as f64);
+    let units = if idx.is_none() { c + c + t + t + n } else { c + c + n * 4.0 };
+    *work += units * work_coef;
+    ratio_tail(piv_tol, inf, cap, &val[..count], bound, &ratios, &cands, chosen, theta, pivot)
+}
+
+/// Shared end of both ratio tests: the finite cap, no candidate, the largest-pivot pick among ratios within `bound`,
+/// and the small-pivot check that would re-run the first pass with a tightened tolerance.
+#[allow(clippy::too_many_arguments)]
+fn ratio_tail(piv_tol: f64, inf: f64, cap: f64, val: &[f64], bound: f64, ratios: &[f64], cands: &[usize],
+              mut chosen: i32, theta: &mut f64, pivot: &mut f64) -> Result<i32, Reentry> {
     if cap < inf && cap <= bound {
         *pivot = 0.0;
         *theta = cap;
@@ -60,7 +116,7 @@ pub fn feasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option
         return Ok(-1);
     }
     let mut best = 0.0;
-    for (&ratio, &k) in ratios.iter().zip(&cands) {
+    for (&ratio, &k) in ratios.iter().zip(cands) {
         if ratio <= bound && best < val[k].abs() {
             *theta = ratio;
             chosen = k as i32;
@@ -71,7 +127,7 @@ pub fn feasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option
     if *pivot >= 0.1 {
         return Ok(chosen);
     }
-    let big = val[..count].iter().fold(0.0f64, |m, v| m.max(v.abs()));
+    let big = val.iter().fold(0.0f64, |m, v| m.max(v.abs()));
     let scale = match big {
         b if b < 10.0 => 0.1,
         b if b < 1e4 => 0.01,
@@ -122,12 +178,13 @@ pub enum PushStep {
     Defer,
 }
 
-/// Direction of entering column `j` on a feasible basis. `x` holds the n structural values and `slack` the row slacks;
-/// `cost`/`lb`/`ub` span all n+m columns. `(idx, val)` is the sparse FTRAN column; its signs are flipped when the
-/// column decreases, as the ratio test then expects.
+/// Direction of entering column `j`. `x` holds the n structural values and `slack` the row slacks; `cost`/`lb`/`ub`
+/// span all n+m columns. `(idx, val)` is the sparse FTRAN column; its signs are flipped when the column decreases, as
+/// the ratio test then expects. `violated` carries the basic row classes when some basic value is out of its bounds;
+/// the original then weighs the column's pull on the `B`/`A` rows too.
 #[allow(clippy::too_many_arguments)]
 pub fn push_direction(j: usize, x: &[f64], slack: &[f64], lb: &[f64], ub: &[f64], cost: &[f64], header: &[i32],
-                      idx: &[i32], val: &mut [f64], tol: &PushTol, inf: f64) -> PushEntry {
+                      idx: &[i32], val: &mut [f64], tol: &PushTol, inf: f64, violated: Option<&[u8]>) -> PushEntry {
     let n = x.len();
     let (dl, du) = if j < n { (x[j] - lb[j], ub[j] - x[j]) } else { (slack[j - n], inf) };
     let mut r = cost[j];
@@ -135,15 +192,57 @@ pub fn push_direction(j: usize, x: &[f64], slack: &[f64], lb: &[f64], ub: &[f64]
         r -= a * cost[header[i as usize] as usize];
     }
     let e = tol.e;
-    // The second clause is branched as `!(..)` in the original, so an unordered compare falls through to `0 < r`.
-    let decrease = (10.0 * dl < du && -(r * dl) < e) || (!(dl > 10.0 * du && e > du * r) && 0.0 < r);
+    let decrease = match violated {
+        // The second clause is branched as `!(..)` in the original, so an unordered compare falls through to `0 < r`.
+        None => (10.0 * dl < du && -(r * dl) < e) || (!(dl > 10.0 * du && e > du * r) && 0.0 < r),
+        Some(marks) => {
+            let mut s = 0.0;
+            for (&i, &a) in idx.iter().zip(&*val) {
+                match marks[i as usize] {
+                    b'B' => s += a,
+                    b'A' => s -= a,
+                    _ => {}
+                }
+            }
+            violated_decrease(r, dl, du, s, tol)
+        }
+    };
     if decrease {
         val.iter_mut().for_each(|v| *v = -*v);
     }
     PushEntry { r, dl, du, decrease }
 }
 
-/// Step kind after the feasible ratio test returned position `pos` with `theta` and `|pivot|`. A rejection writes
+/// Violated-basis direction with `s` the sum of the column over `B` rows minus over `A` rows. Each test is a taken
+/// `ja` in the original, so an unordered compare never takes it.
+fn violated_decrease(r: f64, dl: f64, du: f64, s: f64, tol: &PushTol) -> bool {
+    let (k, e) = (tol.reject, tol.e);
+    let (tl, tu) = (10.0 * dl, 10.0 * du); // computed once into xmm0/xmm6 at 0x1c22c1/0x1c2311
+    if r > k && k > dl {
+        return true;
+    }
+    if tol.reject_neg > r && k > du {
+        return false;
+    }
+    if du > tl && e > -(dl * s) && e > -(r * dl) {
+        return true;
+    }
+    if dl > tu && e > du * s && e > du * r {
+        return false;
+    }
+    if e > s.abs() {
+        if du > tl && e > -(r * dl) {
+            return true;
+        }
+        if dl > tu && e > du * r {
+            return false;
+        }
+        return r > 0.0;
+    }
+    s > 0.0
+}
+
+/// Step kind after the ratio test returned position `pos` with `theta` and `|pivot|`. A rejection writes
 /// `theta = inf`.
 pub fn push_step(entry: &PushEntry, tol: &PushTol, inf: f64, pos: i32, theta: &mut f64, pivot: f64)
                  -> Result<PushStep, Recall> {

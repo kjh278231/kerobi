@@ -1,6 +1,7 @@
 //! M3-04c-6 replay: runs the push step decisions on raw fields projected from original captures and writes a trace.
 //! The comparison is `tools/primal_push_decision_rust.py --compare`; this test only produces the trace.
-use rsolver_lp::crossover::{feasible_ratio, push_direction, push_leave_state, push_step, PushStep, PushTol};
+use rsolver_lp::crossover::{feasible_ratio, infeasible_ratio, push_direction, push_leave_state, push_step, PushStep,
+                            PushTol};
 
 fn f(token: &str) -> f64 {
     f64::from_bits(u64::from_str_radix(token, 16).unwrap().swap_bytes()) // captures store little-endian bytes
@@ -20,6 +21,7 @@ fn decision_trace() {
         let mut t = line.split_whitespace();
         let mut next = || t.next().unwrap();
         let name = next().to_string();
+        let violated = next() == "V"; // the original takes the violated path while some basic row is marked B or A
         let [n, m, j]: [usize; 3] = [(); 3].map(|_| next().parse().unwrap());
         let [h, piv_tol, inf, fixed] = [(); 4].map(|_| f(next()));
         let pos: i32 = next().parse().unwrap();
@@ -34,11 +36,13 @@ fn decision_trace() {
         let marks: Vec<u8> = (0..m).map(|_| u8::from_str_radix(next(), 16).unwrap()).collect();
 
         let tol = PushTol::new(h);
-        let entry = push_direction(j, &x, &slack, &lb, &ub, &cost, &header, &idx, &mut val, &tol, inf);
+        let entry = push_direction(j, &x, &slack, &lb, &ub, &cost, &header, &idx, &mut val, &tol, inf,
+                                   violated.then_some(&marks[..]));
         // Link check: the ratio test on the Rust-flipped column, compared against the captured ratio output.
         let (mut work, mut ltheta, mut lpivot) = (0.0, f64::NAN, f64::NAN);
-        let link = match feasible_ratio(h, piv_tol, inf, inf, Some(&idx), &val, &basic, &width, &marks, 0.0, &mut work,
-                                        &mut ltheta, &mut lpivot) {
+        let ratio = if violated { infeasible_ratio } else { feasible_ratio };
+        let link = match ratio(h, piv_tol, inf, inf, Some(&idx), &val, &basic, &width, &marks, 0.0, &mut work, &mut ltheta,
+                               &mut lpivot) {
             Ok(p) => format!("{p} {} {}", hex(ltheta), hex(lpivot)),
             Err(_) => "reentry x x".to_string(),
         };

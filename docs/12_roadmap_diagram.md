@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M3-04c-2 위반 basis primal push를 오라클·Rust로 범위 한정 완료했다. 위반 LP 두 순서 각 원본 3회 19단계에서 σ 방향식 10종단·`054eef`·이탈 `B`→-1·`A`→-2를 관측했고, Rust 방향식·`infeasible_ratio`가 위반 38단계·연결 137·합성 55호출에서 비트 일치했다. `056973` 재시도와 theta=I 재호출은 M3-04c-7이다. [계약과 결과](m3/primal_push_violated.md).
+
 M2-03d-6 일반 B&B 노드 재풀이의 노드 LP 오라클을 완료했다. 03d-5 적중 노드(nidda seed 1 노드 16948)의 LP(253×488)·basis·Cutoff·재풀이 결과(primal → 2)·노드 처리를 원본 기준 1회와 계측 3회로 캡처했다. simplex ws는 API LP에서 96행을 비운 LP이고 출처는 미확인이다. M2-03d-4 L2의 일반 노드 재생 사례가 생겼다. [계약과 결과](m2/mip_retry_bnb_node_lp.md).
 
 M2-03d-5 일반 B&B 노드 자연 재풀이 스캔을 완료했다. 228회 고정 매트릭스에서 재시작 없는 본 탐색 노드(tier A) 재풀이는 0건, 재시작 뒤 본 탐색 노드(tier B) 1건(nidda seed 1 노드 16948, 3회 재현)이다. Rust가 같은 노드에 자연 도달할 수는 없다. 다음 제안은 이 노드의 LP 캡처(M2-03d-6)다. [계약과 결과](m2/mip_retry_bnb_scan.md).
@@ -65,7 +67,7 @@ flowchart TD
     subgraph M3["M3 내부점·1차법"]
         BAR["✅ Barrier<br/>반복 수 64/64"]:::done
         PDHG["✅ PDHG<br/>반복 수 64/64"]:::done
-        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm 오라클 완료<br/>feasible ratio·단계 판단 Rust 범위 한정 통과"]:::doing
+        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm·위반 basis 오라클 완료<br/>feasible·infeasible ratio·단계 판단 Rust 범위 한정 통과"]:::doing
     end
 
     subgraph M2["M2 MIP 엔진"]
