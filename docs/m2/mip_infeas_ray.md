@@ -1,0 +1,132 @@
+# M2-06f-4 검증 계약과 결과: infeasible 노드 벡터 `95da98`
+
+작성 기준은 [스프린트 검증 기준](../15_sprint_verification.md)이다. 앞선 작업은 [M2-06f-2](mip_node_life.md)(벡터 출처, 기준 자료 `bench/oracle/m2_06f2`)와 [M2-06f-3](mip_node_life_rust.md)(Rust `NodeLife`)이다. M2 인수인계의 첫 다음 작업이고, 사용자의 "다음 스프린트 진행" 지시로 착수했다(2026-11-11).
+
+## 1. 범위와 주장
+
+- 작업 종류: 조사·오라클(읽기 전용 원본 캡처와 규칙 재생). Rust·Python 패키지는 바꾸지 않는다.
+- 조사 질문:
+  1. **계산.** 노드 LP가 infeasible(상태 3)일 때 `5ce67b`가 부르는 `95da98`은 `L+0x70`(길이 n+m)과 `L+0x58`·`L+0x54`, 그리고 같이 쓰는 `L+0x60`·`L+0x5c`·`L+0x68`·`L+0x78`을 어떻게 계산하는가?
+  2. **실패 조건.** 어떤 조건에서 실패 코드(`local_354`)가 0이 아니거나 반환값이 0이 아니고, 그때 출력은 무엇인가?
+  3. **감쇠 입력과의 관계.** `6ee1d3` 감쇠가 읽는 `L+0x70`·`+0x54`·`+0x58`이 `95da98` 반환 때 값과 같은가(그 사이 `5d80d8` 등이 바꾸지 않는가)?
+- 완료 후 주장할 것:
+  - Q1·Q2: §2.3 규칙(C·asm 근거)을 Python으로 재생하면, §4 사례의 모든 `95da98` 호출(5ce67b 지점)에서 캡처한 입력(표 행 = `12ea3f` 출력, 기저 변수 값, bound·스케일·상태·rhs·cut 정보)으로부터 저장 출력 전부(§3 표)가 원본과 비트까지 같다. 관측한 실패 코드는 같은 코드·같은 지점에서 재현된다. 실행 0회인 실패 분기는 "C 근거, 실행 0회"로 남긴다.
+  - Q3: 같은 L에서 감쇠가 읽은 벡터 내용 해시·`+0x54`·`+0x58`이 `95da98` 반환 때 값과 같다(캡처).
+  - 조사이므로 Rust 구현 일치 판정은 없다.
+- 제외 범위와 후속:
+  - 표 행 계산 `12ea3f`(= `GRBBinvRowi` 내부, `1247c7`/`2480ba`) 자체, 재시도 때의 `cda5b` dual simplex: 입력 경계로만 다룬다(M1 경계).
+  - quad 정밀도 경로(`spx+0x28 ≠ 0`, `2480ba`·long double 변환): 관측되면 검사기가 범위 밖으로 실패한다.
+  - 다른 호출자 `687f96`의 호출: 호출 수만 센다.
+  - `L+0x60`·`+0x5c`·`+0x68`·`+0x78`의 소비자(감쇠 밖, 예: `5d80d8`): 값은 비교하되 용도 해독은 후속.
+  - 병렬(Threads=1만), node file.
+- 선행: main `63ec7ab`(M2-06f-3 병합 포함). 미커밋 선행 변경 없음.
+
+## 2. 원본과 상태 경계
+
+- Gurobi 13.0.3 `libgurobi130.so` SHA-256 `8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c`. 주소는 file offset이다.
+- `95da98` = `0x781170`(C `re/decomp/c/00781170_PRIVATE000000000095da98.c` 1,503줄 전문, asm 2,121줄 중 `0x78250c`–`0x782733` 확인). 호출자 `5ce67b`(`0x4f46c6`, 반환 주소 `0x4f46cb`)·`687f96`.
+
+### 2.1 호출 지점 `5ce67b` C:1183–1250
+
+LP 상태 3(infeasible), 루트 밖(`local_128 != piVar21+0x1e4`), `lp+100 == 3`, `M+0x346c ≠ 0`, `S+0xe0 ≠ 0`, `a7f0ad`·`a7f923` 0일 때 `L+0x70`·`L+0x78`(n+m 칸, 이미 있으면 재사용)을 할당하고 `L+0x3c = m`을 둔 뒤 부른다.
+
+```text
+rc = 95da98(xmm0 = 1e-10, S, M, ctx, M+0x32e8, &L+0x58, &L+0x54, &L+0x60, &L+0x5c, &L+0x68,
+            L+0x70, L+0x78, 2, &fail, work)
+rc == 0 && fail == 0 && env+0x2a40 ≠ 0 이면 5d80d8(ctx, …)
+fail ≠ 0 || rc ≠ 0 이면 L+0x70·L+0x78 해제, L+0x58 = -1
+```
+
+Frida 인자: xmm0가 첫 인자라 `a[i]` = C `param_(i+2)`. `a[4]` = &L+0x58, `a[5]` = &L+0x54, `a[6]` = &L+0x60, `a[7]` = &L+0x5c, `a[8]` = &L+0x68, `a[9]` = ray, `a[10]` = bnd, `a[11]` = 2, `a[12]` = &fail, `a[13]` = work.
+
+### 2.2 기호
+
+`lp = S+0xe8`: m = `lp+8`, n = `lp+0xc`, rhs `lp+0x380`(m), lb `lp+0x390`, ub `lp+0x398`(n), 행 스케일 R `lp+0x3d8`(m, null 가능), 열 스케일 C `lp+0x3e0`(n, null 가능), flip 방식 `lp+0x3c`, flip 표시 `lp+0x408`(n 바이트). `spx = S+0xe0`: 행 r = `spx+0x2f8`, 기저 값 x_B `spx+0x1e8`, 상태 `spx+0x168`(n+m; 음수 = 비기저 −1/−4 하한, −2/−5 상한, −3/−6 자유·초기저), head = `12dcea(spx)`. tol = 1e-10(xmm0), δ = `S+0x100+0x2460`, ∞ = `S+0x100+0x2458`. 표 행 α = `12ea3f(S, r, vec, …)`의 희소(개수 ≥ 0) 또는 조밀(개수 < 0) 벡터, 첨자 k < n은 열, k ≥ n은 행 k−n의 슬랙.
+
+### 2.3 규칙(C 해석, Q1·Q2의 예측)
+
+```text
+*L58 = -1; f = +1 (local_60)
+for try in 0..2:
+  st = S+100
+  st ∈ {2,5}          → fail 1
+  st == 6             → fail 3 (break)
+  st == 3 and spx:
+    q = spx+0xf4; q ≥ 0 and spx+0xb0[q] + δ ≤ spx+0xa8[q] → fail 3 (break)
+    (spx+0x4a0 or spx+0x478) and r ≥ 0:
+      α = 12ea3f(r)               (rc ≠ 0 → 반환 rc)
+      j = head[r]; *L58 = j; x = x_B[r]
+      x ≥ ub[j]+δ → s = -1;  x ≤ lb[j]-δ → s = +1;  그 밖 → fail 1
+      j < n, lp+0x3c > 0, flip[j] → f = -1, s = -s
+      *L54 = s
+      bnd (C 있으면): j < n: x·C[j] (C[j] > 1e7 → fail 3), j ≥ n: x / R[j-n] (R < 1e-7 → fail 3)
+                     k < n: 상태 −1/−4 → lb·C, −2/−5 → ub·C, 그 밖 0; 슬랙 0; bnd[j] = x(스케일);
+                     flip[k]이면 bnd[k] 부호 반전
+      ray: 전부 0, α의 각 k에 대해 d = |α_k| / min(1, C[k] 또는 R[k-n]) (ctx null이면 |α_k|)
+           d ≠ 0 슬랙이고 7889ec(X, ctx, k-n) ≠ 0 → fail 4
+           d > 1e7 → fail 3
+           d > tol: 상태 < 0 → ray_k = f·α_k, 상태 −3/−6이면 fail 2
+                    k == j → ray_k = 1, |α_k − f| > tol 이면 fail 2
+                    그 밖(다른 기저) → fail 2
+           그 밖 ray_k = 0
+      ρ = Σ_{i<m} rhs_i·ray_{n+i} (/R_i), |ray_{n+i}| > 1000 → fail 6
+      bnd 있으면 |(ρ − Σ_k bnd_k·ray_k)/100| > tol → fail 2   (값은 저장 안 됨)
+      ν² = (lp+0x3c == 2 ? 1e-200 : 0) + Σ_{k<n} ray_k²;   ν² < 1e-4 → fail 5
+      a = Σ_{k<n} ray_k·b_k,  s·ray_k ≤ 0: b = ub·C (ub ≥ ∞ → 1e100; flip 방식 1·flip이면 −lb·C)
+                              s·ray_k > 0: b = lb·C (lb ≤ −∞ 또는 flip 방식 1·flip이면 −1e100)
+      ν = sqrt(ν²); *L68 = s·(a − ρ)/ν; ray /= ν (n+m 칸); *L60 = ρ/ν
+      *L5c = max_{t: |ray_{n+m0+t}| > 1e-10} cut[t]+0x38   (cut = (M+0x3240)+0x78, m0 = 원래 행 수, 시작 0)
+      성공(fail 0)
+    그 밖: cda5b(S, 1, …) 다시 풀기, try += 1
+실패: *L58 = -1, *L54 = 0, *L60 = 0, *L5c = 0, *L68 = 0;  *fail = 코드
+```
+
+work(`a[13]`)는 각 고리 뒤 정해진 배수로 더한다(C의 `*param_15 += …`).
+
+## 3. 비교 계약
+
+| 필드·사건 | 의미 | 비교 규칙 | 캡처·재구성 |
+|---|---|---|---|
+| 실패 코드·반환값 | `a[12]`, rc | 정확 | 반환 때 |
+| `L+0x58`·`+0x54`·`+0x5c` | 기저 변수 j, 부호 s, 최대 cut 값 | 정확 | 반환 때 |
+| `L+0x60`·`+0x68` | ρ/ν, s(a−ρ)/ν | 비트 | 반환 때 |
+| ray `L+0x70` | n+m 칸 | 비트(0 = +0.0 비트) | 반환 때, 0이 아닌 칸만 저장 |
+| bnd `L+0x78` | n+m 칸 | 비트 | 반환 때 |
+| work | `12ea3f` 반환 뒤부터 `95da98` 반환까지 더한 값 | 비트(같은 순서로 더함) | `12ea3f` 반환·`95da98` 반환 때 |
+| 잔차 검사 | Σ bnd·ray, 8칸 부분합·정렬 peel | 분기 결과만, 문턱 여유를 출력 | 재생 계산(값은 저장 안 됨) |
+| 감쇠 입력 | 같은 L에서 `6ee1d3`이 읽는 `+0x70` 내용·`+0x54`·`+0x58` | `95da98` 반환 때 해시·값과 정확 | `6ee1d3` 진입 |
+
+- 입력(재생에 쓰는 값)은 `12ea3f` 반환 때 읽는다. `cda5b` 재시도가 basis·r·x_B를 바꿀 수 있기 때문이다. `95da98` 진입 때 읽은 `lp` 배열 포인터와 같아야 한다(다르면 검사기 실패).
+- NaN·∞: 재생은 C의 비교 방향을 그대로 쓴다. NaN 입력이 나오면 검사기가 범위 밖으로 실패한다.
+- 시간·병렬: Threads=1, NodeLimit 2000(06f-2와 같은 파라미터). 타이머 분기 없음.
+- 재현성: 사례마다 독립 프로세스 3회, 캡처 gz 바이트 동일. 비간섭: 새 캡처를 06f-2의 `fk`·`fk_` 필드로 투영해 `bench/oracle/m2_06f2` run 1과 열이 같고, 출력 줄(`DONE status nodes`)이 같다.
+
+## 4. 사례와 원본 자료
+
+| 사례 | 실제 / 합성 | 노리는 분기 | 입력 |
+|---|---|---|---|
+| markshare_4_0 | 실제 | 성공 다수(06f-2: 58회) | `../re/bench/data/miplib/markshare_4_0.mps.gz` |
+| pk1 | 실제 | 성공(37회) | `…/pk1.mps.gz` |
+| neos-860300 | 실제 | 성공 26·fail 6 1회 | `…/neos-860300.mps.gz` |
+| tr12-30 | 실제 | 성공 7·fail 6 1회 | `…/tr12-30.mps.gz` |
+| fhnw-binpack4-4 | 실제 | 성공 1회 | `…/fhnw-binpack4-4.mps.gz` |
+| neos5 | 실제 | 호출 0회(대조) | `…/neos5.mps.gz` |
+
+- 분기 태그(사건마다 기록, 검사기가 집계): 희소/조밀 α, quad, 열 스케일 유무, ctx null, flip 방식(`lp+0x3c`)·flip된 j·k, 슬랙 j, 슬랙 비0 칸, `7889ec` 호출, cut 행 비0, 재시도(`cda5b`) 수, 실패 코드와 지점.
+- 실패 코드 1–5와 그 밖 분기는 6사례에서 실행 0회일 수 있다. 탐색 sweep(다른 모델, NodeLimit 500, scratch, 기준 자료 아님)에서 나오면 결과에 적고, 안 나오면 "C 근거, 실행 0회"로 둔다.
+- 변이(재생 규칙에 오류를 넣어 검사기 거부 확인)는 실행 전에 기대를 정한다: 해당 분기 태그가 0인 변이는 생존 기대, 그 밖은 거부 기대.
+
+## 5. 재실행 명령
+
+- 캡처(Herdr, 회당 수십 초): `for m in markshare_4_0 pk1 neos-860300 tr12-30 fhnw-binpack4-4 neos5; do for r in 1 2 3; do tools/gurun.sh node tools/mip_infeas_ray.js ../re/bench/data/miplib/$m.mps.gz bench/oracle/m2_06f4/${m}_$r.json.gz '{"NodeLimit":2000}'; done; done` 뒤 `python3 tools/mip_infeas_ray_check.py --write-manifest`.
+- 판정: `python3 tools/mip_infeas_ray_check.py --self-test`(controls·acceptance·변조·변이, 종료 0이어야 함).
+- 탐색: `python3 tools/mip_infeas_ray_check.py --sweep FILE...`(분기 수·재생 일치, 기준 아님).
+- 회귀: Rust·Python 미변경이라 cargo·pytest는 해당 없음. 06f-2 검사기 `python3 tools/mip_node_life_check.py --self-test`는 기준 자료가 그대로이므로 다시 돌려 통과를 확인한다.
+
+## 6. 실행 결과
+
+(실행 후 작성)
+
+## 7. 판정과 인수인계
+
+(실행 후 작성)
