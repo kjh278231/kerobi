@@ -1186,6 +1186,11 @@ impl Lu {
         self.head[pos] = var;
         self.general = true;
         self.n_updates += 1;
+        // the LU+0xf0 list stays in step with U: listed rows in the prefix at their slot, −2 exactly in the tail, −1
+        // only on empty U rows (all three hold in the kb2 capture)
+        debug_assert!(self.f0.iter().enumerate().all(|(i, &k)| self.f8[k] == i as i64 && self.upos[k] < self.prefix));
+        debug_assert!((0..self.f8.len()).all(|k| (self.f8[k] == -2) == (self.upos[k] >= self.prefix)));
+        debug_assert!((0..self.f8.len()).all(|k| self.f8[k] != -1 || self.urow[k].is_empty()));
         diag.abs() > ZERO
     }
 }

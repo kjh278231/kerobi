@@ -106,9 +106,11 @@ PASS (+ self-test)
 - 기존 검사기: `m1_list_order_check.py --self-test` PASS, `m1_tau_check.py --self-test` PASS, `m1_urow_check.py --self-test` PASS, `m1_bfrt_rust.py --self-test` PASS. `m1_beta_check.py`는 F의 고정 첫 차이 `(22, "state")`를 `(23, "state")`로 바꾼 뒤 PASS(이번 수정으로 반복 22가 같아진 결과, 이전 값은 주석에 보존).
 - 회귀: `cargo test -p rsolver-lp` 41 통과·1 무시, `cargo test --release --workspace` 124 통과·9 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0, 이 worktree 빌드 pytest 657 passed.
 - Netlib Method=1(같은 날 main `577a443` 빌드를 별도 worktree에서 기준선으로 실행): `tools/lp_check.py --methods 1 --timeout 120` 정답 90/91 → 90/91, IterCount 일치 29/64 → 30/64(scsd6 277 → 276 = 원본). 반복 수 변화 degen2 644 → 628(원본 634), dfl001 17375 → 17532, scsd8 949 → 952, pilot 4378 → 4990(전후 모두 FAIL). `tools/proto/pathcmp.py all` 완전 일치 23/64 → 24/64(scsd6), 중앙 첫 차이 비율 0.589 그대로. 첫 차이가 바뀐 모델은 scsd6(165 → 276, 완전 일치)와 degen2(324 → 288, 앞당겨짐) 둘이다.
-- degen2 앞당겨짐(미확인): Rust 피벗 0–288에서 희소 U 경로 222회 중 129회가 fill ≥ 2(희소 L·R 출력 순서 근사)이고 첫 차이 직전 mode 1 피벗 287도 `21841f`·fill 13이다. 근사 범위의 영향일 가능성이 크지만 degen2 원본 캡처가 없어 원인은 확인하지 않았다(M1-02j).
+- degen2 앞당겨짐(원인 미확인): `pathcmp degen2` 첫 차이 피벗 288, 원본 `((509,), (164,))` 대 Rust `((509,), (738,))`(같은 진입, 다른 이탈). Rust 피벗 0–288에서 희소 U 경로 222회 중 129회가 fill ≥ 2이고, 첫 차이 앞 mode 1 희소 U 피벗은 277·278·281·286(Rust 번호, `21841f`)이다. 수정 전 위치순은 이 피벗들을 지나 324까지 원본과 같았다. fill 순서를 뒤집은 임시 빌드에서도 첫 차이가 같은 피벗 288·같은 이탈·IterCount 628이라 fill 근사가 원인은 아니다. 남은 후보는 degen2(m = 444)에서의 경로 판정, −1 행 입력 순서, P3 규칙 자체다(원본 캡처 없음, M1-02j). 바뀌는 것은 mode 1 `changed` 순서뿐이다(mode 0 `touch`는 순서 무관, 값 계산 불변).
+- 목록 불변식(검토 뒤 추가): `update` 끝에 debug assert 셋(목록 원소는 접두에서 제 자리, −2 ⇔ 꼬리, −1 ⇒ 빈 U 행)을 넣고 `CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=true tools/build_local.sh` 빌드로 `lp_check --methods 1,0,-1 --timeout 120`(91모델 × 3)과 pytest를 돌렸다. assert 위반·panic 0, 정답 Method 1·0·−1 각 90/91(pilot만 실패, 전과 같음), IterCount 일치 30·0·30/64, pytest 657 passed. 즉 `ftran2`의 희소 U 출력이 지지를 빠뜨리는 경우는 이 범위에서 없다.
+- `p != p0`(local_148 = 1, C:1040–1059) 경로: kb2에서 1회(피벗 27 갱신, t = 27) 발생했고, 그 뒤 목록 F 피벗 28이 원본과 같다(임시 계측, 되돌림). Netlib 발생 수는 세지 않았다.
 - 실행하지 못한 검사: 원본 재캡처(저장 기준으로 충분, Gurobi 미실행), kb2 밖 모델의 경로·순서 대조(캡처 없음).
-- 계약 변경: 없음(§3 그대로). 검사기 구현 중 범위 밖 분류를 "fill ≥ 2 피벗 뒤 전부"에서 "다음 목록이 그 피벗이 붙인 행끼리의 순열로만 다를 때"로 좁혔다. 처음 분류는 피벗 21·24까지 판정에서 빼서 A의 판별 피벗이 0이 됐고, 그 다음 분류는 F 변조(피벗 22 목록 앞 두 칸 교환)를 범위 밖으로 흘려보냈다. 둘 다 고친 뒤 위 결과를 얻었다.
+- 계약 변경: §3 F 행은 피벗 0–37 전부 비교로 적었으나 §1의 범위 밖 규정을 F에도 적용했다(목록 1–5). 범위 밖 판정 규칙은 결과를 본 뒤 정했고 두 번 고쳤다. 검사기 구현 중 범위 밖 분류를 "fill ≥ 2 피벗 뒤 전부"에서 "다음 목록이 그 피벗이 붙인 행끼리의 순열로만 다를 때"로 좁혔다. 처음 분류는 피벗 21·24까지 판정에서 빼서 A의 판별 피벗이 0이 됐고, 그 다음 분류는 F 변조(피벗 22 목록 앞 두 칸 교환)를 범위 밖으로 흘려보냈다. 둘 다 고친 뒤 위 결과를 얻었다.
 
 ## 7. 판정과 인수인계
 
@@ -120,10 +122,10 @@ PASS (+ self-test)
   - 옛 열 제거에서 둘 이상의 행이 동시에 목록을 떠날 때의 순서(Rust `ucol` 저장 순서를 씀, 원본 열 저장 순서와 같다는 근거 없음, kb2에서 판별 안 됨).
   - primal(`2207de`) 쪽 갱신은 spike 순서를 위치 오름차순으로 넘긴다(희소 경로 미모델).
   - BTRAN의 Uᵀ 희소 판정은 여전히 `3·nnz ≤ m`(LU+0x108+0x110 고정 1.5+1.5). 이번에 계산한 `dsum`을 쓰면 원본과 같아질 수 있으나 궤적에 영향을 주므로 바꾸지 않았다(M1-02k).
-  - kb2 반복 23 d·w 끝자리(M1-02i), degen2 첫 차이 앞당겨짐(M1-02j 후보).
+  - kb2 반복 23 d·w 끝자리(M1-02i), degen2 첫 차이 앞당겨짐(fill 근사는 아님, M1-02j).
 - 후속:
   - **M1-02i**(조사): kb2 반복 23 d 6·w 21. 02h 뒤에도 그대로라 피벗 21 spike·목록 순서 탓은 아니다. 첫 명령 `zcat bench/oracle/iter0-30/kb2.jsonl.gz > <tmp>/kb2.jsonl; PYTHONPATH=$PWD/python ../.venv/bin/python tools/proto/statecmp.py kb2 <tmp>/kb2.jsonl`.
-  - **M1-02j**(조사, 새 행): `21b9de` 희소 L 출력 순서(Kahn FIFO)와 `21f83a` R 출력 순서. kb2 피벗 0의 채움 `[12, 10, 11]`이 첫 대조 자료다. degen2(첫 차이 288, 희소 U·fill ≥ 2 다수)가 다음 사례.
+  - **M1-02j**(조사, 새 행): degen2 피벗 288 차이의 원인(피벗 277·278·281·286 중 어느 α_q 순서가 원본과 다른지, 경로 판정·−1 행 입력 순서·P3 규칙)과 `21b9de` 희소 L(Kahn FIFO)·`21f83a` R 출력 순서. 원본 캡처가 필요하다(02a-1 `tools/m1_tau_path.js`를 degen2에). 첫 대조 자료는 kb2 피벗 0의 채움 `[12, 10, 11]`.
   - **M1-02k**(구현, 새 행): BTRAN Uᵀ 희소 판정에 LU+0x108+0x110 사용.
   - **M1-02c**(검증): Method=1 Netlib 64 재측정(출발점 30/64).
 - branch `work/m1-02h`, worktree `../rsolver-m1-02h`. 병합은 main의 `Merge M1-02h` 이력으로 확인한다.
