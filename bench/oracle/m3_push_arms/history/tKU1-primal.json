@@ -1,0 +1,1274 @@
+{
+  "pid": 1733008,
+  "run_id": "8b2089b6-412d-45aa-bc7b-e82dc01af4d4",
+  "schema": "M3-04b-3-v1",
+  "origin": "natural",
+  "kind": "primal",
+  "agent_sha256": "9a8b37f25d05cc09bdf0b62243a20c779c1c875124e72a1b19344a8dacc2ffb1",
+  "model_sha256": "f68c8cf4dedf3a06e3e7d39f2857f2d47188e3cbc84ec46f3223dd9cab327244",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "57093c7c51b4142d57f517a21c7b4e8dd989849872cb22c6411b7117d37cdf11",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 3,
+    "LPWarmStart": 2,
+    "ScaleFlag": 0
+  },
+  "starts": {
+    "PStart": [
+      0.00000125,
+      0.000002,
+      0
+    ],
+    "DStart": [
+      0,
+      0
+    ]
+  },
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.23.4"
+  },
+  "output": "CROSSOVER_RESULT {\"status\": 2, \"vbasis\": [-1, 0, -1], \"cbasis\": [-1, 0]}\n",
+  "result": {
+    "status": 2,
+    "vbasis": [
+      -1,
+      0,
+      -1
+    ],
+    "cbasis": [
+      -1,
+      0
+    ]
+  },
+  "reason": "process-terminated",
+  "errors": [],
+  "events": [
+    {
+      "event": "push:enter",
+      "call": 1,
+      "step": 0,
+      "first": 1,
+      "model_status": 1,
+      "attempt": 0,
+      "alias_contiguous": true,
+      "model": {
+        "starts": [
+          "0000000000000000",
+          "0100000000000000",
+          "0300000000000000"
+        ],
+        "lengths": [
+          1,
+          2,
+          1
+        ],
+        "rows": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "values": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "000000000000f03f",
+          "000000000000f03f"
+        ],
+        "cost": [
+          "0000000000000000",
+          "000000000000f0bf",
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "rhs": [
+          "8cedb5a0f7c6d03e",
+          "0000000000408f40"
+        ],
+        "lb": [
+          "0000000000000000",
+          "00000000000059c0",
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "ub": [
+          "f168e388b5f8c43e",
+          "0000000000005940",
+          "0000000000002440",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ]
+      },
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -3,
+          -3,
+          -1,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 1,
+          "iterations": "0000000000000000"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        }
+      }
+    },
+    {
+      "event": "factor:enter",
+      "call": 1,
+      "step": 0,
+      "request": 10,
+      "header": [
+        4,
+        3
+      ]
+    },
+    {
+      "event": "factor:leave",
+      "call": 1,
+      "step": 0,
+      "ret": 0,
+      "request": 10,
+      "header": [
+        4,
+        3
+      ]
+    },
+    {
+      "event": "supply:enter",
+      "call": 1,
+      "step": 0,
+      "candidates": [
+        0,
+        1
+      ],
+      "position": 0,
+      "failures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "support": 1,
+      "support_marks": [
+        0,
+        0
+      ],
+      "batch": 0,
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -3,
+          -3,
+          -1,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "000000000000f03f"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "8690f3feff3f8f40",
+          "4ce41071732aa93e"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "4c"
+        ],
+        "rhs": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "supply:leave",
+      "call": 1,
+      "step": 1,
+      "candidate": 0,
+      "position": 1,
+      "alpha": {
+        "count": 1,
+        "indices": [
+          1
+        ],
+        "values": [
+          "000000000000f03f"
+        ]
+      }
+    },
+    {
+      "event": "ratio:enter",
+      "call": 1,
+      "step": 1,
+      "name": "feasible",
+      "selected": {
+        "enter": 0,
+        "leave": 0,
+        "direction": 0
+      },
+      "alpha": {
+        "count": 1,
+        "indices": [
+          1
+        ],
+        "values": [
+          "000000000000f03f"
+        ]
+      },
+      "basic": [
+        "8690f3feff3f8f40",
+        "4ce41071732aa93e"
+      ],
+      "width": [
+        "ea8ca039593e2946",
+        "ea8ca039593e2946"
+      ],
+      "marks": [
+        "4e",
+        "4c"
+      ],
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -3,
+          -3,
+          -1,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "000000000000f03f"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "8690f3feff3f8f40",
+          "4ce41071732aa93e"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "4c"
+        ],
+        "rhs": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "ratio:leave",
+      "call": 1,
+      "step": 1,
+      "name": "feasible",
+      "chosen": 0,
+      "row": 1,
+      "theta": "4ce41071732aa93e",
+      "pivot": "000000000000f03f",
+      "work": "cbcccccccc7c7d40"
+    },
+    {
+      "event": "step:enter",
+      "call": 1,
+      "step": 1,
+      "kind": "pivot",
+      "selected": {
+        "enter": 0,
+        "leave": 0,
+        "direction": 0
+      },
+      "theta": "4ce41071732aa93e",
+      "pivot": "000000000000f03f",
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -3,
+          -3,
+          -1,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "000000000000f03f"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "8690f3feff3f8f40",
+          "4ce41071732aa93e"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "4c"
+        ],
+        "rhs": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "pinf": "0000000000000000"
+      },
+      "frame": {
+        "r": "0000000000000000",
+        "dL": "f168e388b5f8b43e",
+        "dU": "f168e388b5f8b43e",
+        "k100": "2c431cebe2361a3f",
+        "km100": "2c431cebe2361abf",
+        "k2": "8dedb5a0f7c6c03e",
+        "e": "3a8c30e28e79453e"
+      }
+    },
+    {
+      "event": "step:applied",
+      "call": 1,
+      "step": 1,
+      "kind": "pivot",
+      "selected": {
+        "enter": 0,
+        "leave": 1,
+        "direction": 0
+      },
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          1,
+          -3,
+          -1,
+          -1,
+          0
+        ],
+        "header": [
+          4,
+          0
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "8690f3feff3f8f40",
+          "8cedb5a0f7c6c03e"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "f168e388b5f8c43e"
+        ],
+        "marks": [
+          "4e",
+          "55"
+        ],
+        "rhs": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "factor:enter",
+      "call": 1,
+      "step": 1,
+      "request": 10,
+      "header": [
+        4,
+        0
+      ]
+    },
+    {
+      "event": "factor:leave",
+      "call": 1,
+      "step": 1,
+      "ret": 0,
+      "request": 10,
+      "header": [
+        0,
+        4
+      ]
+    },
+    {
+      "event": "step:leave",
+      "call": 1,
+      "step": 1,
+      "kind": "pivot",
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          0,
+          -3,
+          -1,
+          -1,
+          1
+        ],
+        "header": [
+          0,
+          4
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "8cedb5a0f7c6c03e",
+          "8690f3feff3f8f40"
+        ],
+        "width": [
+          "f168e388b5f8c43e",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "55",
+          "4e"
+        ],
+        "rhs": [
+          "8cedb5a0f7c6c03e",
+          "8690f3feff3f8f40"
+        ],
+        "pinf": "0000000000000000"
+      },
+      "selected": {
+        "enter": 0,
+        "leave": 0,
+        "direction": 0
+      }
+    },
+    {
+      "event": "supply:enter",
+      "call": 1,
+      "step": 1,
+      "candidates": [
+        1
+      ],
+      "position": 0,
+      "failures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "support": 0,
+      "support_marks": null,
+      "batch": 0,
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          0,
+          -3,
+          -1,
+          -1,
+          1
+        ],
+        "header": [
+          0,
+          4
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "8cedb5a0f7c6c03e",
+          "8690f3feff3f8f40"
+        ],
+        "width": [
+          "f168e388b5f8c43e",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "55",
+          "4e"
+        ],
+        "rhs": [
+          "8cedb5a0f7c6c03e",
+          "8690f3feff3f8f40"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "supply:leave",
+      "call": 1,
+      "step": 2,
+      "candidate": 1,
+      "position": 1,
+      "alpha": {
+        "count": 2,
+        "indices": [
+          0,
+          1
+        ],
+        "values": [
+          "000000000000f03f",
+          "000000000000f03f"
+        ]
+      }
+    },
+    {
+      "event": "ratio:enter",
+      "call": 1,
+      "step": 2,
+      "name": "feasible",
+      "selected": {
+        "enter": 1,
+        "leave": 0,
+        "direction": 0
+      },
+      "alpha": {
+        "count": 2,
+        "indices": [
+          0,
+          1
+        ],
+        "values": [
+          "000000000000f03f",
+          "000000000000f03f"
+        ]
+      },
+      "basic": [
+        "8cedb5a0f7c6c03e",
+        "8690f3feff3f8f40"
+      ],
+      "width": [
+        "f168e388b5f8c43e",
+        "ea8ca039593e2946"
+      ],
+      "marks": [
+        "55",
+        "4e"
+      ],
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          0,
+          -3,
+          -1,
+          -1,
+          1
+        ],
+        "header": [
+          0,
+          4
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "8cedb5a0f7c6c03e",
+          "8690f3feff3f8f40"
+        ],
+        "width": [
+          "f168e388b5f8c43e",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "55",
+          "4e"
+        ],
+        "rhs": [
+          "8cedb5a0f7c6c03e",
+          "8690f3feff3f8f40"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "ratio:leave",
+      "call": 1,
+      "step": 2,
+      "name": "feasible",
+      "chosen": 0,
+      "row": 0,
+      "theta": "8cedb5a0f7c6c03e",
+      "pivot": "000000000000f03f",
+      "work": "feffffffff6f8740"
+    },
+    {
+      "event": "step:enter",
+      "call": 1,
+      "step": 2,
+      "kind": "pivot",
+      "selected": {
+        "enter": 1,
+        "leave": 0,
+        "direction": 0
+      },
+      "theta": "8cedb5a0f7c6c03e",
+      "pivot": "000000000000f03f",
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          0,
+          -3,
+          -1,
+          -1,
+          1
+        ],
+        "header": [
+          0,
+          4
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "8cedb5a0f7c6c03e",
+          "8690f3feff3f8f40"
+        ],
+        "width": [
+          "f168e388b5f8c43e",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "55",
+          "4e"
+        ],
+        "rhs": [
+          "8cedb5a0f7c6c03e",
+          "8690f3feff3f8f40"
+        ],
+        "pinf": "0000000000000000"
+      },
+      "frame": {
+        "r": "000000000000f0bf",
+        "dL": "d07b630800005940",
+        "dU": "30849cf7ffff5840",
+        "k100": "2c431cebe2361a3f",
+        "km100": "2c431cebe2361abf",
+        "k2": "8dedb5a0f7c6c03e",
+        "e": "3a8c30e28e79453e"
+      }
+    },
+    {
+      "event": "step:applied",
+      "call": 1,
+      "step": 2,
+      "kind": "pivot",
+      "selected": {
+        "enter": 1,
+        "leave": 0,
+        "direction": 0
+      },
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          1
+        ],
+        "header": [
+          1,
+          4
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000840"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "dc9c4a0600005940",
+          "8690f3feff3f8f40"
+        ],
+        "width": [
+          "0000000000006940",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "4e"
+        ],
+        "rhs": [
+          "8cedb5a0f7c6c03e",
+          "8690f3feff3f8f40"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "factor:enter",
+      "call": 1,
+      "step": 2,
+      "request": 0,
+      "header": [
+        1,
+        4
+      ]
+    },
+    {
+      "event": "factor:leave",
+      "call": 1,
+      "step": 2,
+      "ret": 0,
+      "request": 0,
+      "header": [
+        1,
+        4
+      ]
+    },
+    {
+      "event": "step:leave",
+      "call": 1,
+      "step": 2,
+      "kind": "pivot",
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          1
+        ],
+        "header": [
+          1,
+          4
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 1,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000840"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "dc9c4a0600005940",
+          "65ac36ffff3f8f40"
+        ],
+        "width": [
+          "0000000000006940",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "4e"
+        ],
+        "rhs": [
+          "4ee41071732ab93e",
+          "0000000000408f40"
+        ],
+        "pinf": "0000000000000000"
+      },
+      "selected": {
+        "enter": 1,
+        "leave": 0,
+        "direction": 0
+      }
+    },
+    {
+      "event": "supply:enter",
+      "call": 1,
+      "step": 2,
+      "candidates": [
+        1
+      ],
+      "position": 1,
+      "failures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "support": 0,
+      "support_marks": null,
+      "batch": 0,
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          1
+        ],
+        "header": [
+          1,
+          4
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "8dedb5a0f7c6c03e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "8690f3feff3f8f40"
+        ],
+        "factor": {
+          "updates": 1,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000840"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "dc9c4a0600005940",
+          "65ac36ffff3f8f40"
+        ],
+        "width": [
+          "0000000000006940",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "4e"
+        ],
+        "rhs": [
+          "4ee41071732ab93e",
+          "0000000000408f40"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "supply:leave",
+      "call": 1,
+      "step": 2,
+      "candidate": -1,
+      "position": 1,
+      "alpha": null
+    },
+    {
+      "event": "factor:enter",
+      "call": 1,
+      "step": 2,
+      "request": 10,
+      "header": [
+        1,
+        4
+      ]
+    },
+    {
+      "event": "factor:leave",
+      "call": 1,
+      "step": 2,
+      "ret": 0,
+      "request": 10,
+      "header": [
+        1,
+        4
+      ]
+    },
+    {
+      "event": "push:leave",
+      "call": 1,
+      "step": 2,
+      "ret": 0,
+      "condition": "0000000000000040",
+      "retry": 0,
+      "remaining": 0,
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          1
+        ],
+        "header": [
+          1,
+          4
+        ],
+        "x": [
+          "f168e388b5f8b43e",
+          "00000070732ab93e",
+          "0000000000000000"
+        ],
+        "slack": [
+          "4ce41071732aa93e",
+          "64ac36ffff3f8f40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0300000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000840"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "dc9c4a0600005940",
+          "64ac36ffff3f8f40"
+        ],
+        "width": [
+          "0000000000006940",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "4e"
+        ],
+        "rhs": [
+          "4ee41071732ab93e",
+          "0000000000408f40"
+        ],
+        "pinf": "0000000000000000"
+      }
+    }
+  ]
+}

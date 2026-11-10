@@ -1,0 +1,1096 @@
+{
+  "pid": 1709882,
+  "run_id": "4cb04e95-38c7-4ba4-b297-77e4a5eafe03",
+  "schema": "M3-04b-3-v1",
+  "origin": "natural",
+  "kind": "primal",
+  "agent_sha256": "9a8b37f25d05cc09bdf0b62243a20c779c1c875124e72a1b19344a8dacc2ffb1",
+  "model_sha256": "12655d5135afa10f8bed22eb4307c8aa68fa86af0dbebde6c709de2462fcdbcd",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "57093c7c51b4142d57f517a21c7b4e8dd989849872cb22c6411b7117d37cdf11",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 3,
+    "LPWarmStart": 2
+  },
+  "starts": {
+    "PStart": [
+      9.99995,
+      0.00005
+    ],
+    "DStart": [
+      0,
+      0
+    ]
+  },
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.23.4"
+  },
+  "output": "CROSSOVER_RESULT {\"status\": 2, \"vbasis\": [0, 0], \"cbasis\": [-1, -1]}\n",
+  "result": {
+    "status": 2,
+    "vbasis": [
+      0,
+      0
+    ],
+    "cbasis": [
+      -1,
+      -1
+    ]
+  },
+  "reason": "process-terminated",
+  "errors": [],
+  "events": [
+    {
+      "event": "push:enter",
+      "call": 1,
+      "step": 0,
+      "first": 1,
+      "model_status": 1,
+      "attempt": 0,
+      "alias_contiguous": true,
+      "model": {
+        "starts": [
+          "0000000000000000",
+          "0200000000000000"
+        ],
+        "lengths": [
+          2,
+          2
+        ],
+        "rows": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "values": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "000000000000f03f",
+          "000000000000f0bf"
+        ],
+        "cost": [
+          "00000000000000c0",
+          "000000000000f0bf",
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "rhs": [
+          "0000000000001440",
+          "728a8ee4f2ff1340"
+        ],
+        "lb": [
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "ub": [
+          "0000000000001440",
+          "0000000000001440",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ]
+      },
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -3,
+          -3,
+          0,
+          1
+        ],
+        "header": [
+          2,
+          3
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 1,
+          "iterations": "0000000000000000"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        }
+      }
+    },
+    {
+      "event": "factor:enter",
+      "call": 1,
+      "step": 0,
+      "request": 10,
+      "header": [
+        2,
+        3
+      ]
+    },
+    {
+      "event": "factor:leave",
+      "call": 1,
+      "step": 0,
+      "ret": 0,
+      "request": 10,
+      "header": [
+        2,
+        3
+      ]
+    },
+    {
+      "event": "supply:enter",
+      "call": 1,
+      "step": 0,
+      "candidates": [
+        0,
+        1
+      ],
+      "position": 0,
+      "failures": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "support": 1,
+      "support_marks": [
+        0,
+        0
+      ],
+      "batch": 0,
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -3,
+          -3,
+          0,
+          1
+        ],
+        "header": [
+          2,
+          3
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "000000000000f03f"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4c",
+          "4c"
+        ],
+        "rhs": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "supply:leave",
+      "call": 1,
+      "step": 1,
+      "candidate": 0,
+      "position": 1,
+      "alpha": {
+        "count": 2,
+        "indices": [
+          0,
+          1
+        ],
+        "values": [
+          "000000000000f03f",
+          "000000000000f03f"
+        ]
+      }
+    },
+    {
+      "event": "ratio:enter",
+      "call": 1,
+      "step": 1,
+      "name": "feasible",
+      "selected": {
+        "enter": 0,
+        "leave": 0,
+        "direction": 0
+      },
+      "alpha": {
+        "count": 2,
+        "indices": [
+          0,
+          1
+        ],
+        "values": [
+          "000000000000f03f",
+          "000000000000f03f"
+        ]
+      },
+      "basic": [
+        "0000000000000000",
+        "0000000000000000"
+      ],
+      "width": [
+        "ea8ca039593e2946",
+        "ea8ca039593e2946"
+      ],
+      "marks": [
+        "4c",
+        "4c"
+      ],
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -3,
+          -3,
+          0,
+          1
+        ],
+        "header": [
+          2,
+          3
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "000000000000f03f"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4c",
+          "4c"
+        ],
+        "rhs": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "ratio:leave",
+      "call": 1,
+      "step": 1,
+      "name": "feasible",
+      "chosen": 0,
+      "row": 0,
+      "theta": "0000000000000000",
+      "pivot": "000000000000f03f",
+      "work": "3033333333537b40"
+    },
+    {
+      "event": "step:enter",
+      "call": 1,
+      "step": 1,
+      "kind": "flip",
+      "selected": {
+        "enter": 0,
+        "leave": -1,
+        "direction": 0
+      },
+      "theta": "ea8ca039593e2946",
+      "pivot": null,
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -3,
+          -3,
+          0,
+          1
+        ],
+        "header": [
+          2,
+          3
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "000000000000f03f"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4c",
+          "4c"
+        ],
+        "rhs": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "pinf": "0000000000000000"
+      },
+      "frame": {
+        "r": "00000000000000c0",
+        "dL": "39454772f9ff1340",
+        "dU": "00001cebe236fa3e",
+        "k100": "2c431cebe2361a3f",
+        "km100": "2c431cebe2361abf",
+        "k2": "8dedb5a0f7c6c03e",
+        "e": "3a8c30e28e79453e"
+      }
+    },
+    {
+      "event": "step:applied",
+      "call": 1,
+      "step": 1,
+      "kind": "flip",
+      "selected": {
+        "enter": 0,
+        "leave": -1,
+        "direction": 0
+      },
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -3,
+          0,
+          1
+        ],
+        "header": [
+          2,
+          3
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4c",
+          "4c"
+        ],
+        "rhs": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "step:leave",
+      "call": 1,
+      "step": 1,
+      "kind": "flip",
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -3,
+          0,
+          1
+        ],
+        "header": [
+          2,
+          3
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "00001cebe236fabe",
+          "00001cebe236fabe"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "42",
+          "42"
+        ],
+        "rhs": [
+          "2d431cebe236fabe",
+          "d3bc1bebe236fabe"
+        ],
+        "pinf": "0000000000000000"
+      },
+      "selected": {
+        "enter": 0,
+        "leave": -1,
+        "direction": 0
+      }
+    },
+    {
+      "event": "supply:enter",
+      "call": 1,
+      "step": 1,
+      "candidates": [
+        0,
+        1
+      ],
+      "position": 1,
+      "failures": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "support": 1,
+      "support_marks": [
+        0,
+        0
+      ],
+      "batch": 0,
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -3,
+          0,
+          1
+        ],
+        "header": [
+          2,
+          3
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "00001cebe236fabe",
+          "00001cebe236fabe"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "42",
+          "42"
+        ],
+        "rhs": [
+          "2d431cebe236fabe",
+          "d3bc1bebe236fabe"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "supply:leave",
+      "call": 1,
+      "step": 2,
+      "candidate": 1,
+      "position": 2,
+      "alpha": {
+        "count": 2,
+        "indices": [
+          0,
+          1
+        ],
+        "values": [
+          "000000000000f03f",
+          "000000000000f0bf"
+        ]
+      }
+    },
+    {
+      "event": "ratio:enter",
+      "call": 1,
+      "step": 2,
+      "name": "infeasible",
+      "selected": {
+        "enter": 1,
+        "leave": -1,
+        "direction": 0
+      },
+      "alpha": {
+        "count": 2,
+        "indices": [
+          0,
+          1
+        ],
+        "values": [
+          "000000000000f03f",
+          "000000000000f0bf"
+        ]
+      },
+      "basic": [
+        "00001cebe236fabe",
+        "00001cebe236fabe"
+      ],
+      "width": [
+        "ea8ca039593e2946",
+        "ea8ca039593e2946"
+      ],
+      "marks": [
+        "42",
+        "42"
+      ],
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -3,
+          0,
+          1
+        ],
+        "header": [
+          2,
+          3
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "00001cebe236fabe",
+          "00001cebe236fabe"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "42",
+          "42"
+        ],
+        "rhs": [
+          "2d431cebe236fabe",
+          "d3bc1bebe236fabe"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "ratio:leave",
+      "call": 1,
+      "step": 2,
+      "name": "infeasible",
+      "chosen": 1,
+      "row": 1,
+      "theta": "00001cebe236fa3e",
+      "pivot": "000000000000f03f",
+      "work": "6366666666de7c40"
+    },
+    {
+      "event": "step:enter",
+      "call": 1,
+      "step": 2,
+      "kind": "pivot",
+      "selected": {
+        "enter": 1,
+        "leave": 1,
+        "direction": 0
+      },
+      "theta": "00001cebe236fa3e",
+      "pivot": "000000000000f03f",
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -3,
+          0,
+          1
+        ],
+        "header": [
+          2,
+          3
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "00001cebe236fabe",
+          "00001cebe236fabe"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "42",
+          "42"
+        ],
+        "rhs": [
+          "2d431cebe236fabe",
+          "d3bc1bebe236fabe"
+        ],
+        "pinf": "0000000000000000"
+      },
+      "frame": {
+        "r": "000000000000f0bf",
+        "dL": "2d431cebe236fa3e",
+        "dU": "39454772f9ff1340",
+        "k100": "2c431cebe2361a3f",
+        "km100": "2c431cebe2361abf",
+        "k2": "8dedb5a0f7c6c03e",
+        "e": "3a8c30e28e79453e"
+      }
+    },
+    {
+      "event": "step:applied",
+      "call": 1,
+      "step": 2,
+      "kind": "pivot",
+      "selected": {
+        "enter": 1,
+        "leave": 1,
+        "direction": 0
+      },
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          1,
+          0,
+          -1
+        ],
+        "header": [
+          2,
+          1
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "2d431cebe236fa3e"
+        ],
+        "slack": [
+          "0000000040cb90bc",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000840"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "00001cebe236fabe",
+          "96211cebe2360a3f"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "0000000000001440"
+        ],
+        "marks": [
+          "42",
+          "4e"
+        ],
+        "rhs": [
+          "2d431cebe236fabe",
+          "d3bc1bebe236fabe"
+        ],
+        "pinf": "0000000000000000"
+      }
+    },
+    {
+      "event": "step:leave",
+      "call": 1,
+      "step": 2,
+      "kind": "pivot",
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          1,
+          0,
+          -1
+        ],
+        "header": [
+          2,
+          1
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "96211cebe2360a3f"
+        ],
+        "slack": [
+          "00001cebe2360abf",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000840"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "00001cebe2360abf",
+          "96211cebe2360a3f"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "0000000000001440"
+        ],
+        "marks": [
+          "42",
+          "4e"
+        ],
+        "rhs": [
+          "0000000000000000",
+          "00001cebe2360abf"
+        ],
+        "pinf": "00001cebe2360a3f"
+      },
+      "selected": {
+        "enter": 1,
+        "leave": 1,
+        "direction": 0
+      }
+    },
+    {
+      "event": "push:leave",
+      "call": 1,
+      "step": 2,
+      "ret": 0,
+      "condition": "0000000000000040",
+      "retry": 0,
+      "remaining": 0,
+      "state": {
+        "m": 2,
+        "n": 2,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          1,
+          0,
+          -1
+        ],
+        "header": [
+          2,
+          1
+        ],
+        "x": [
+          "39454772f9ff1340",
+          "96211cebe2360a3f"
+        ],
+        "slack": [
+          "00001cebe2360abf",
+          "0000000040cb903c"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000840"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "00001cebe2360abf",
+          "96211cebe2360a3f"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "0000000000001440"
+        ],
+        "marks": [
+          "42",
+          "4e"
+        ],
+        "rhs": [
+          "0000000000000000",
+          "00001cebe2360abf"
+        ],
+        "pinf": "00001cebe2360a3f"
+      }
+    }
+  ]
+}

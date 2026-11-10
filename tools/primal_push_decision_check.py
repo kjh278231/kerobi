@@ -1,7 +1,7 @@
 """M3-04b-2: primal push 한 단계의 방향·거리 flip·거부·승인·이탈 상태 판단을 원본 캡처와 대조한다.
 
 판단 모델은 134a87 asm(0x1c2164-0x1c2d7f)을 따른다. feasible basis 경로만 다룬다.
-04b-1 저장 캡처(frame 없음)와 04b-2 새 캡처(frame 있음)를 모두 읽는다.
+04b-1 저장 캡처(frame 없음), 04b-2 새 캡처(frame 있음), M3-04b-3 arm LP 캡처(시작 벡터·보류 사건 step:defer)를 읽는다.
 """
 import argparse
 import copy
@@ -18,6 +18,7 @@ import primal_push_step_check as step  # noqa: E402  M3-04b-1 자연 캡처 검�
 
 BASE = ROOT / 'bench/oracle/m3_push_decision'
 OLD = ROOT / 'bench/oracle/m3_primal_push_step'
+ARMS = ROOT / 'bench/oracle/m3_push_arms'
 BINARY_SHA = step.BINARY_SHA
 TOOLS = ['tools/primal_push_decision_capture.js', 'tools/primal_push_decision_agent.js']
 FRAME = ['r', 'dL', 'dU', 'k100', 'km100', 'k2', 'e']
@@ -34,7 +35,10 @@ def bits(value):
 DEFAULT = dict(ten=10.0, e_scale=0.01, dir_strict=True, neg_rdl=True, r_pos_strict=True, r_reverse=False,
                flip_eps=1e-10, flip_le=True, k_reject=100.0, reject_arm='formula', reject_swap=False,
                acc_pivot=1e-6, acc_prod=-1e-5, k_leave=2.0, fixed_le=True, l_nonneg=-1, neg_default=-1,
-               x_state=-4, u_nonneg_lt=True)
+               x_state=-4, u_nonneg_lt=True,
+               # M3-04b-3 arm별 변조용. 기본값은 원본 식 그대로다.
+               reject_on=(True, True), defer_on=True, flip_dir1=True, first_on=True, fixed_state=-4,
+               neg_u=-2, neg_l='formula', nonneg_u='formula')
 
 
 class Mismatch(AssertionError):
@@ -47,7 +51,7 @@ def need(cond, where, field, expected, actual):
 
 
 def direction(p, r, dL, dU, e):
-    first = (p['ten'] * dL < dU if p['dir_strict'] else p['ten'] * dL <= dU) and ((-(r * dL) if p['neg_rdl'] else r * dL) < e)
+    first = p['first_on'] and (p['ten'] * dL < dU if p['dir_strict'] else p['ten'] * dL <= dU) and ((-(r * dL) if p['neg_rdl'] else r * dL) < e)
     pos = 0 < r if p['r_pos_strict'] else 0 <= r
     second = (dL <= p['ten'] * dU or e <= dU * r) and pos
     # 방향 1을 만든 절: bound(첫 절)·cost(r>0 절)·both
@@ -56,7 +60,7 @@ def direction(p, r, dL, dU, e):
 
 def leave_state(p, a, t, mark, b, w, k, width):
     if (width <= p['fixed']) if p['fixed_le'] else (width < p['fixed']):
-        return -4, 'fixed'
+        return p['fixed_state'], 'fixed'
     if 0 <= a:
         if mark in 'LN':
             return (p['l_nonneg'] if mark == 'L' else -1), 'nonneg-' + mark
@@ -66,17 +70,28 @@ def leave_state(p, a, t, mark, b, w, k, width):
             return (-2 if abs((b - w) / a - t) < (t + 1.0) * k else -1), 'nonneg-A'
         if mark == 'U':
             hit = abs(a) * t < k if p['u_nonneg_lt'] else abs(a) * t <= k
-            return (-2 if hit else -1), 'nonneg-U'
+            return (-2 if hit else -1) if p['nonneg_u'] == 'formula' else p['nonneg_u'], 'nonneg-U'
         return -1, 'nonneg-' + mark
     if mark in 'NU':
-        return -2, 'neg-' + mark
+        return (p['neg_u'] if mark == 'U' else -2), 'neg-' + mark
     if mark == 'B':
         return (-2 if (t + 1.0) * k <= abs(b / a - t) else -1), 'neg-B'
     if mark == 'X':
         return p['x_state'], 'neg-X'
     if mark == 'L':
-        return (-2 if k <= abs(a) * t else -1), 'neg-L'
+        return (-2 if k <= abs(a) * t else -1) if p['neg_l'] == 'formula' else p['neg_l'], 'neg-L'
     return p['neg_default'], 'neg-' + mark
+
+
+def check_frame(se, p, where, r, dL, dU, h, e_tol, kreject):
+    if 'frame' not in se:
+        return
+    fr = se['frame']
+    want = dict(r=bits(r), dL=bits(dL), dU=bits(dU), k100=bits(100.0 * h), km100=bits(-100.0 * h), k2=bits(h + h), e=bits(h * 0.01))
+    if p is not DEFAULT:
+        want.update(r=bits(r), e=bits(e_tol), k100=bits(kreject), km100=bits(-kreject), k2=bits(p['k_leave'] * h))
+    for name in FRAME:
+        need(fr[name] == want[name], where, 'frame ' + name, want[name], fr[name])
 
 
 def decide(record, p=DEFAULT, label=''):
@@ -97,13 +112,16 @@ def decide(record, p=DEFAULT, label=''):
         where = f"{label} call{e['call']} step{e['step']}"
         k = i + 1
         ratios = []
-        while k < len(events) and events[k]['event'] not in ('supply:enter', 'push:leave', 'step:enter'):
+        while k < len(events) and events[k]['event'] not in ('supply:enter', 'push:leave', 'step:enter', 'step:defer'):
             if events[k]['event'] == 'ratio:enter':
                 ratios.append((events[k], events[k + 1]))
             k += 1
         need(len(ratios) == 1, where, 'ratio 호출 수(재호출 제외 범위)', 1, len(ratios))
         rin, rout = ratios[0]
         need(rin['name'] == 'feasible', where, 'ratio 경로(제외 범위)', 'feasible', rin['name'])
+        # feasible 경로는 위반 수 local_1b0==0일 때만 온다. A·B 표시는 그 수를 올리므로 있으면 안 된다(C 839·856·1688-1717·1940-1978·2199-2222·2342-2405).
+        marks_ab = [i for i, mk in enumerate(rin['marks']) if mk in ('41', '42')]
+        need(not marks_ab, where, 'feasible ratio의 A·B 표시', '없음', marks_ab)
         st = rin['state']
         n, m = st['n'], st['m']
         tol = {kk: f64(v) for kk, v in st['tolerances'].items()}
@@ -138,7 +156,7 @@ def decide(record, p=DEFAULT, label=''):
         if d == 0:
             dist = (dU - p['flip_eps'] <= theta) if p['flip_le'] else (dU - p['flip_eps'] < theta)
         else:
-            dist = not (theta < dL - p['flip_eps'])
+            dist = p['flip_dir1'] and not (theta < dL - p['flip_eps'])
         arm = d if p['reject_arm'] == 'formula' else rin['selected']['direction']
         if p['reject_swap']:
             arm = 1 - arm
@@ -146,30 +164,29 @@ def decide(record, p=DEFAULT, label=''):
             reject = r > kreject and dL < kreject
         else:
             reject = r < -kreject and dU < kreject
+        reject = reject and p['reject_on'][arm]
         if dist:
             kind, cause = 'flip', 'distance'
         elif reject:
             kind, cause = 'flip', 'reject'
-        elif p['acc_pivot'] <= piv and p['acc_prod'] <= theta * piv:
+        elif not p['defer_on'] or (p['acc_pivot'] <= piv and p['acc_prod'] <= theta * piv):
             kind, cause = 'pivot', 'accept'
         else:
             kind, cause = 'defer', 'accept-fail'
         nxt = events[k] if k < len(events) else None
-        got = nxt['event'] == 'step:enter' and nxt['kind'] or 'defer'
+        # 보류는 양성 사건(step:defer, M3-04b-3 agent)으로만 인정한다. 단계 사건이 없으면 실패다.
+        got = {'step:enter': nxt and nxt.get('kind'), 'step:defer': 'defer'}.get(nxt and nxt['event'], '사건 없음')
         need(got == kind, where, '단계 종류', f'{kind}({cause})', got)
         info = dict(call=e['call'], step=e['step'], enter=j, direction=d, clause=clause, r_sign='+' if r > 0 else '-' if r < 0 else '0', kind=kind, cause=cause, r=bits(r))
-        if kind != 'defer':
+        if kind == 'defer':
+            need(nxt['theta'] == rout['theta'] and nxt['pivot'] == rout['pivot'], where, '보류 theta·pivot', (rout['theta'], rout['pivot']), (nxt['theta'], nxt['pivot']))
+            check_frame(nxt, p, where, r, dL, dU, h, e_tol, kreject)
+        else:
             se = nxt
             need(se['selected']['direction'] == rin['selected']['direction'], where, '방향 보존', rin['selected']['direction'], se['selected']['direction'])
             want_theta = bits(inf) if cause == 'reject' else rout['theta']
             need(se['theta'] == want_theta, where, 'step theta', want_theta, se['theta'])
-            if 'frame' in se:
-                fr = se['frame']
-                want = dict(r=bits(r), dL=bits(dL), dU=bits(dU), k100=bits(100.0 * h), km100=bits(-100.0 * h), k2=bits(h + h), e=bits(h * 0.01))
-                if p is not DEFAULT:
-                    want.update(r=bits(r), e=bits(e_tol), k100=bits(kreject), km100=bits(-kreject), k2=bits(p['k_leave'] * h))
-                for name in FRAME:
-                    need(fr[name] == want[name], where, 'frame ' + name, want[name], fr[name])
+            check_frame(se, p, where, r, dL, dU, h, e_tol, kreject)
             applied = events[k + 1]
             need(applied['event'] == 'step:applied', where, '적용 사건', 'step:applied', applied['event'])
             if kind == 'pivot':
@@ -198,11 +215,20 @@ MUTANTS = {
     'accept-pivot-1e-3': dict(acc_pivot=1e-3), 'accept-prod-0': dict(acc_prod=0.0), 'leave-k-h': dict(k_leave=1.0),
     'leave-fixed-lt': dict(fixed_le=False), 'leave-L-nonneg-2': dict(l_nonneg=-2), 'leave-neg-default-2': dict(neg_default=-2),
     'leave-X-1': dict(x_state=-1), 'leave-U-le': dict(u_nonneg_lt=False),
+    # M3-04b-3: 새로 관측한 arm마다 그 arm만 바꾸는 변조
+    'reject-off-0': dict(reject_on=(False, True)), 'reject-off-1': dict(reject_on=(True, False)), 'defer-off': dict(defer_on=False),
+    'flip-dir1-off': dict(flip_dir1=False), 'dir-first-off': dict(first_on=False), 'leave-fixed-1': dict(fixed_state=-1),
+    'leave-fixed-lt+X-1': dict(fixed_le=False, x_state=-1), 'leave-negU-1': dict(neg_u=-1),
+    'leave-negL-always-2': dict(neg_l=-2), 'leave-negL-always-1': dict(neg_l=-1),
+    'leave-nonnegU-always-1': dict(nonneg_u=-1), 'leave-nonnegU-always-2': dict(nonneg_u=-2),
 }
 
 
-def mutate(datasets):
-    """모델 변조별로 저장 자료가 거부하는지 기록한다. 첫 거부 위치를 남긴다."""
+def mutate(datasets, decision_only=False):
+    """모델 변조별로 저장 자료가 거부하는지 기록한다. 첫 거부 위치를 남긴다.
+    decision_only면 frame을 지운 사본으로 돌려 상수 값 대조가 아닌 판단으로만 거부되는지 본다."""
+    if decision_only:
+        datasets = [(label, dict(rec, events=strip(rec['events']))) for label, rec in datasets]
     res = {}
     for name, change in MUTANTS.items():
         p = dict(DEFAULT, **change)
@@ -233,14 +259,19 @@ def validate_new(paths, manifest, case):
     recs = [json.loads(p.read_text()) for p in paths]
     assert len({r['run_id'] for r in recs}) == len(recs) and len({r['pid'] for r in recs}) == len(recs), '독립 실행 중복'
     c = manifest['cases'][case]
+    tool, agent = c.get('tool', TOOLS[0]), c.get('agent', TOOLS[1])  # M3-04b-3 사례는 시작 벡터 도구·보류 훅 agent
     for r in recs:
-        assert r['schema'] == 'M3-04b-2-v1' and r['origin'] == 'natural', '출처'
+        assert r['schema'] == c.get('schema', 'M3-04b-2-v1') and r['origin'] == 'natural', '출처'
         assert r['binary_sha256'] == BINARY_SHA, 'binary_sha256'
-        assert r['tool_sha256'] == manifest['tools'][TOOLS[0]] == sha(ROOT / TOOLS[0]), 'tool_sha256'
-        assert r['agent_sha256'] == manifest['tools'][TOOLS[1]] == sha(ROOT / TOOLS[1]), 'agent_sha256'
+        assert r['tool_sha256'] == manifest['tools'][tool] == sha(ROOT / tool), 'tool_sha256'
+        assert r['agent_sha256'] == manifest['tools'][agent] == sha(ROOT / agent), 'agent_sha256'
         assert r['model_sha256'] == c['model_sha256'] == sha(ROOT / c['model']), 'model_sha256'
         assert r['kind'] == c['kind'] and r['params'] == c['params'], '설정'
+        assert r.get('starts') == c.get('starts'), '시작 벡터'
         assert r['errors'] == [] and r['reason'] == 'process-terminated', '실행 오류'
+        if c.get('role') == 'control':
+            assert r['events'] == [], '대조군에 push 사건'
+            continue
         assert r['events'], '목표 0회'
         for e in r['events']:
             assert 'call' in e, '알 수 없는 사건(x87 등): ' + e.get('event', '?')
@@ -248,11 +279,11 @@ def validate_new(paths, manifest, case):
                 step.state(e['state'], e['event'] != 'push:enter')
             if e['event'] == 'supply:enter':
                 assert e['batch'] == 0, 'batch는 범위 밖'
-            if e['event'] == 'step:enter':
+            if e['event'] in ('step:enter', 'step:defer'):
                 assert set(e['frame']) == set(FRAME), 'frame 누락'
                 for v in e['frame'].values():
                     step.number(v)
-    fields = ['kind', 'model_sha256', 'binary_sha256', 'tool_sha256', 'agent_sha256', 'params', 'environment', 'result', 'reason', 'errors', 'events']
+    fields = ['kind', 'model_sha256', 'binary_sha256', 'tool_sha256', 'agent_sha256', 'params', 'starts', 'environment', 'output', 'result', 'reason', 'errors', 'events']
     for r in recs[1:]:
         for f in fields:
             assert r[f] == recs[0][f], '독립 실행 불일치: ' + f
@@ -277,8 +308,9 @@ def summary(steps):
     return dict(sorted(out.items()))
 
 
-def load_all(manifest):
-    """04b-1 저장 캡처(검사 통과 후)와 04b-2 사례들을 (이름, 레코드) 목록으로 돌려준다."""
+def load_all(manifest, arms=False):
+    """04b-1 저장 캡처(검사 통과 후)와 04b-2 사례들을 (이름, 레코드) 목록으로 돌려준다.
+    arms면 M3-04b-3 대상 사례도 더한다(대조군·비간섭도 함께 검사)."""
     data = []
     for kind in ('primal', 'dual'):
         paths = [OLD / f'{kind}-{i}.json' for i in (1, 2, 3)]
@@ -289,7 +321,45 @@ def load_all(manifest):
             continue
         recs = validate_new([ROOT / x for x in c['captures']], manifest, case)
         data.append((case, recs[0]))
+    if arms:
+        am = json.loads((ARMS / 'manifest.json').read_text())
+        for case, c in am['cases'].items():
+            if c['role'] == 'noninterference':
+                noninterference_arm(am, c)
+                continue
+            if c['role'] == 'noninterference-old-agent':
+                noninterference_old_agent(manifest, am, c)
+                continue
+            recs = validate_new([ROOT / x for x in c['captures']], am, case)
+            if c['role'] == 'target':
+                data.append((case, recs[0]))
     return data
+
+
+def noninterference_old_agent(manifest, am, c):
+    """보류 훅이 실제로 발동하는 arm LP에서: 새 agent 대상 캡처에서 step:defer를 빼면 04b-2 agent 탐색 캡처와 같아야 한다."""
+    old = json.loads((ROOT / c['captures'][0]).read_text())
+    new = json.loads((ROOT / c['compare']).read_text())
+    assert old['agent_sha256'] == manifest['tools'][TOOLS[1]] == sha(ROOT / TOOLS[1]), '탐색 캡처 agent가 04b-2 agent가 아님'
+    assert new['agent_sha256'] == am['tools'][c['agent']], '대상 agent'
+    assert old['binary_sha256'] == new['binary_sha256'] == BINARY_SHA and old['model_sha256'] == new['model_sha256'] == c['model_sha256'], '비간섭 출처'
+    assert old['params'] == new['params'] and old['starts'] == new['starts'] and old['kind'] == new['kind'], '비간섭 설정'
+    assert any(e['event'] == 'step:defer' for e in new['events']), '보류 훅이 발동하지 않음'
+    assert [e for e in new['events'] if e['event'] != 'step:defer'] == old['events'], '보류 훅을 뺀 사건이 이전 agent와 다름'
+    assert new['result'] == old['result'] and new['output'] == old['output'], '비간섭 결과'
+
+
+def noninterference_arm(am, c):
+    """보류 훅 agent의 face5 primal 캡처에서 step:defer를 빼면 04b-2 저장 캡처와 사건이 같아야 한다."""
+    new = json.loads((ROOT / c['captures'][0]).read_text())
+    old = json.loads((ROOT / c['compare']).read_text())
+    assert new['agent_sha256'] == am['tools'][c['agent']] == sha(ROOT / c['agent']), '비간섭 agent'
+    assert new['tool_sha256'] == am['tools'][c['tool']] == sha(ROOT / c['tool']), '비간섭 도구'
+    assert new['binary_sha256'] == BINARY_SHA and new['model_sha256'] == old['model_sha256'] == c['model_sha256'], '비간섭 출처'
+    assert new['params'] == old['params'] and new['starts'] is None, '비간섭 설정'
+    assert [e for e in new['events'] if e['event'] != 'step:defer'] == old['events'], '보류 훅을 뺀 사건이 04b-2와 다름'
+    assert new['result'] == old['result'] and new['output'] == old['output'], '비간섭 결과'
+    return len(new['events'])
 
 
 def main():
@@ -327,16 +397,17 @@ def main():
                 data.append((f'04b-1/{kind}', json.loads(paths[0].read_text())))
         else:
             manifest = json.loads((BASE / 'manifest.json').read_text())
-            data = load_all(manifest)
+            data = load_all(manifest, arms=True)
         report = {}
         for label, rec in data:
             st = decide(rec, label=label)
             report[label] = {'steps': len(st), 'summary': summary(st)}
         if a.mutation:
             assert not a.mutation.exists(), '기록 덮어쓰기 거부'
-            res = mutate(data)
+            res = {'full': mutate(data), 'decision_only': mutate(data, decision_only=True)}
             a.mutation.write_text(json.dumps(res, ensure_ascii=False, indent=2) + '\n')
-            report['mutants'] = {'rejected': sum(v != 'survived' for v in res.values()), 'survived': [k for k, v in res.items() if v == 'survived']}
+            report['mutants'] = {k: {'rejected': sum(v != 'survived' for v in r.values()), 'survived': [m for m, v in r.items() if v == 'survived']}
+                                 for k, r in res.items()}
         if a.self_test:
             report['self_test'] = self_test(data)
         print(json.dumps(report, ensure_ascii=False, indent=1))
@@ -345,10 +416,10 @@ def main():
         sys.exit(1)
 
 
-def capture_tamper():
+def capture_tamper(base=BASE, extra=None):
     """첫 대상 사례 캡처 하나를 변조해 validate_new가 거부하는지 확인한다."""
     import tempfile
-    manifest = json.loads((BASE / 'manifest.json').read_text())
+    manifest = json.loads((base / 'manifest.json').read_text())
     case, c = next((k, v) for k, v in manifest['cases'].items() if v.get('role') == 'target')
     paths = [ROOT / x for x in c['captures']]
     rec = json.loads(paths[0].read_text())
@@ -364,6 +435,7 @@ def capture_tamper():
         'frame-missing': lambda x: next(e for e in x['events'] if e['event'] == 'step:enter').pop('frame'),
         'event-value': lambda x: next(e for e in x['events'] if e['event'] == 'ratio:leave').__setitem__('theta', '0' * 16),
         'run-duplicate': lambda x: x.__setitem__('run_id', json.loads(paths[1].read_text())['run_id']),
+        **(extra or {}),
     }
     out = {}
     with tempfile.TemporaryDirectory() as tmp:
@@ -393,6 +465,7 @@ def self_test(data):
     edits['alpha-sign'] = lambda x: first(x, 'ratio:enter')['alpha']['values'].__setitem__(0, bits(-f64(first(x, 'ratio:enter')['alpha']['values'][0])))
     edits['kind'] = lambda x: first(x, 'step:enter').__setitem__('kind', 'pivot' if first(x, 'step:enter')['kind'] == 'flip' else 'flip')
     edits['theta'] = lambda x: first(x, 'step:enter').__setitem__('theta', bits(f64(first(x, 'step:enter')['theta']) * 2 + 1))
+    edits['marks-B'] = lambda x: first(x, 'ratio:enter')['marks'].__setitem__(0, '42')
     edits['cost'] = lambda x: first(x, 'push:enter')['model']['cost'].__setitem__(first(x, 'supply:leave', lambda e: e['candidate'] >= 0)['candidate'], bits(7.25))
     def leave_state_edit(x):
         ev = x['events']
@@ -404,6 +477,47 @@ def self_test(data):
         for name in FRAME:
             edits['frame-' + name] = lambda x, nm=name: first(x, 'step:enter')['frame'].__setitem__(nm, bits(f64(first(x, 'step:enter')['frame'][nm]) + 1.0))
     out = capture_tamper()
+    def pstart(x):
+        x['starts']['PStart'][0] = x['starts']['PStart'][0] + 1.0
+    arm_edits = {'starts': pstart, 'defer-frame-missing': lambda x: next(e for e in x['events'] if e['event'] == 'step:defer').pop('frame')}
+    out.update({'arms-' + k: v for k, v in capture_tamper(ARMS, arm_edits).items()})
+    am = json.loads((ARMS / 'manifest.json').read_text())
+    case, c = next((k, v) for k, v in am['cases'].items() if v['role'] == 'control')
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        x = json.loads((ROOT / c['captures'][0]).read_text())
+        x['events'] = [{'event': 'push:enter', 'call': 1}]
+        q = Path(tmp) / 'control.json'
+        q.write_text(json.dumps(x))
+        try:
+            validate_new([q, *[ROOT / y for y in c['captures'][1:]]], am, case)
+        except AssertionError as err:
+            out['control-events'] = str(err)
+        else:
+            raise Mismatch('캡처 변조 허용: control-events')
+    manifest = json.loads((BASE / 'manifest.json').read_text())
+    case, c = next((k, v) for k, v in am['cases'].items() if v['role'] == 'noninterference-old-agent')
+    with tempfile.TemporaryDirectory() as tmp:
+        x = json.loads((ROOT / c['compare']).read_text())
+        k = next(i for i, e in enumerate(x['events']) if e['event'] == 'step:enter')
+        x['events'][k]['theta'] = '0' * 16
+        q = Path(tmp) / 'new.json'
+        q.write_text(json.dumps(x))
+        try:
+            noninterference_old_agent(manifest, am, dict(c, compare=str(q)))
+        except AssertionError as err:
+            out['old-agent-noninterference'] = str(err)
+        else:
+            raise Mismatch('캡처 변조 허용: old-agent-noninterference')
+    if any(e['event'] == 'step:defer' for e in rec['events']):
+        def drop_defer(x):
+            x['events'] = [e for e in x['events'] if e['event'] != 'step:defer']
+        def defer_pivot(x):
+            d = first(x, 'step:defer')
+            d['pivot'] = bits(f64(d['pivot']) * 2)
+        edits['defer-drop'] = drop_defer
+        edits['defer-pivot'] = defer_pivot
+        edits['defer-frame-r'] = lambda x: first(x, 'step:defer')['frame'].__setitem__('r', bits(f64(first(x, 'step:defer')['frame']['r']) + 1.0))
     for name, edit in edits.items():
         x = copy.deepcopy(rec)
         edit(x)
