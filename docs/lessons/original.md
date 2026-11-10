@@ -78,6 +78,9 @@
 - **`056973`의 스택 인자는 theta*, pivot*, 정수 scratch, 실수 scratch, work* 순이라 `054eef`(scratch가 먼저)와 다르고, A(a>0)·B(a<0)는 행마다 breakpoint 둘을 넣어 scratch가 2m 필요하다.** sparse N/U(a>0)만 cap 검사 없이 넣는다(dense는 거른다). 8개 이상 구간의 |a| 합은 네 개의 2차선 누적을 (A+B)+(C+D)로 합친 뒤 차선끼리 더한다(C는 ((A+B)+C)+D로 보인다). 순차 합이면 t가 달라지는 사례가 있다. asm·합성 캡처. (M3-04c-7, [§2.2](../m3/primal_push_retry.md#22-제어-흐름))
 - **`056973` 재진입 패스에서 후보 없이 기울기<0이면 theta·pivot을 쓰지 않고 1차 선택을 돌려주며, factor 갱신 수(`12dd49`)가 16을 넘을 때만 `S+0x294=2`·`S+0x2f8=-1`·-1이다.** 재진입 허용오차는 tol·(big·scale)이다. asm·합성 캡처. (M3-04c-7)
 - **`054eef`가 -1이면 pivot도 항상 0이라 게이트의 위치<0 절은 |pivot|<0.001 절에 포함된다.** 그 경우 `056973` 후보도 없어 -1이다. 자연 실행에서 `056973`이 실제 행을 고르게 하려면 열 계수를 pivot 허용오차와 1e-3 사이로 두어 작은 pivot 게이트를 쓴다. 등식 행에서 내부 시작값의 구조 변수는 crash가 basic으로 골라 유한 폭 B·A 행이 된다(bound에서 시작하면 폭 0 slack). C·캡처. (M3-04c-7, [§4](../m3/primal_push_retry.md#4-사례와-원본-자료))
+- **theta=I 재호출은 ratio 뒤 `0x1c28ee`에서 theta==I이고 자유 열(`lb<=local_1d8`·`ub>=I`) 또는 방향 0·`ub>=I`일 때만 간다.** `local_1d8`은 `0x1f00(%rsp)`의 -I(-1e30)이고 LP 파일의 ±1e30 bound는 workspace에 ±1e30으로 들어온다. 재호출 뒤 거리 검사는 새 방향(`S+0x328`)의 gap, 거부 arm은 방향식 직후 `r13b`다. 재호출 단계에서는 두 거부 arm이 모두 거짓이라 거부 arm 선택은 판별되지 않는다. asm·캡처. (M3-04c-8, [§2](../m3/primal_push_recall.md#2-원본과-상태-경계))
+- **feasible `055f68`이 -1이면 push는 `S+0x2f8`에 쓰지 않는다(위반 경로는 `0x1c2655`에서 쓴다).** 그래서 재호출 `ratio:enter`의 `selected.leave`는 이전 단계 값이다. flip 상태는 `local_1d8<lb` 또는 `ub<I`이면 현재 방향 0→-2·1→-1, 둘 다 무한이면 -3(superbasic 유지)이다. 빈 자유 열이 -3으로 남는 것을 캡처로 봤다. asm·캡처. (M3-04c-8, [§6](../m3/primal_push_recall.md#6-실행-결과))
+- **ub=I 열을 방향 0으로 보내려면 feasible은 r<0과 허용오차(3e-8) 미만 계수의 유계 행, 위반은 자기 B 행의 ∓2e-8 계수(σ 부호 절)를 쓴다.** r=0이면 feasible 방향식 첫 절이 방향 1을 낸다. 자유 열은 r=0이면 두 경로 모두 방향 0이고, 위반 경로에서 σ=+2e-8이면 방향 1(자유 절 단독 판별)이다. 캡처. (M3-04c-8, [§4](../m3/primal_push_recall.md#4-사례와-원본-자료))
 
 ## dual simplex DSE β (`28c93`·`8b473`)
 

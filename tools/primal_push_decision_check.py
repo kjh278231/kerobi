@@ -2,7 +2,8 @@
 
 판단 모델은 134a87 asm(0x1c2164-0x1c2d7f)을 따른다. M3-04c-2부터 위반 basis(local_1b0>0)의 방향식
 (0x1c227c-0x1c23d1)과 054eef 단계도 다룬다. M3-04c-7부터 056973 재시도 게이트(054eef 위치<0 또는 |pivot|<0.001)와
-재시도 결과로 가는 단계도 다루며, theta=I 반대 방향 재호출은 범위 밖으로 거부한다.
+재시도 결과로 가는 단계도 다룬다. M3-04c-8부터 theta=I 반대 방향 재호출(asm 0x1c497e-0x1c4db2)과 flip 상태(C 1596-1612)를
+다룬다.
 04b-1 저장 캡처(frame 없음), 04b-2 새 캡처(frame 있음), M3-04b-3 arm LP 캡처(시작 벡터·보류 사건 step:defer),
 M3-04c-2 위반 basis 캡처(재시도 사건 retry:*)를 읽는다.
 """
@@ -29,6 +30,11 @@ TOOLS = ['tools/primal_push_decision_capture.js', 'tools/primal_push_decision_ag
 VTOOLS = ['tools/primal_push_violated_capture.js', 'tools/primal_push_violated_agent.js']
 ATOOLS = ['tools/primal_push_arm_capture.js', 'tools/primal_push_arm_agent.js']
 RTOOLS = ['tools/primal_push_retry_capture.js', 'tools/primal_push_retry_agent.js']
+RECALL = ROOT / 'bench/oracle/m3_push_recall'
+CTOOLS = ['tools/primal_push_recall_capture.js', 'tools/primal_push_recall_agent.js']
+# M3-04c-8 계약 §3: LP별 두 순서 합집합에서 반드시 나와야 하는 재호출 태그(<조건>-<결과>)
+REQUIRED_RECALL = {'feasible': {'free0-pivot', 'free0-none', 'up0-pivot', 'none-up1'},
+                   'violated': {'free0-pivot', 'free0-none', 'up0-pivot', 'up0-distance', 'free1-pivot', 'none-up1'}}
 # M3-04c-7 계약 §3: 재시도 대상 두 순서 합집합에서 반드시 나와야 하는 arm
 REQUIRED_RETRY = {'retry': {'changed', 'same', 'theta-I'}, 'cause': {'distance', 'accept', 'accept-fail'},
                   'leave_arm': {'neg-B-2', 'nonneg-A-1'}}
@@ -62,7 +68,10 @@ DEFAULT = dict(ten=10.0, e_scale=0.01, dir_strict=True, neg_rdl=True, r_pos_stri
                v_pre=(True, True), v_sigma_sign=1.0, v_clause=(True, True), v_small=True, v_small_clause=(True, True),
                v_r_strict=True, v_sigma_strict=True, v_ten=10.0,
                # M3-04c-7 재시도 게이트 변조용(asm 0x1c258e-0x1c25ae)
-               gate_pivot=0.001, gate_neg=True, retry_use=True)
+               gate_pivot=0.001, gate_neg=True, retry_use=True,
+               # M3-04c-8 재호출·flip 상태 변조용(asm 0x1c497e-0x1c4db2, 0x1c29cd-0x1c2a2b)
+               recall_up=True, recall_up_dir0=True, free_le=True, recall_gap_new=True, recall_gate=True,
+               recall_reflip=True, recall_stale=True, flip_free=True, flip_dir_swap=False)
 
 
 class Mismatch(AssertionError):
@@ -128,7 +137,7 @@ def leave_state(p, a, t, mark, b, w, k, width):
     return p['neg_default'], 'neg-' + mark
 
 
-def check_frame(se, p, where, r, dL, dU, h, e_tol, kreject):
+def check_frame(se, p, where, r, dL, dU, h, e_tol, kreject, inf):
     if 'frame' not in se:
         return
     fr = se['frame']
@@ -137,6 +146,23 @@ def check_frame(se, p, where, r, dL, dU, h, e_tol, kreject):
         want.update(r=bits(r), e=bits(e_tol), k100=bits(kreject), km100=bits(-kreject), k2=bits(p['k_leave'] * h))
     for name in FRAME:
         need(fr[name] == want[name], where, 'frame ' + name, want[name], fr[name])
+    if 'ninf' in fr:  # M3-04c-8 agent: local_1d8 = -local_110 = -S+0x370(C 602·195)
+        need(fr['ninf'] == bits(-inf), where, 'frame ninf(local_1d8)', bits(-inf), fr['ninf'])
+
+
+def gated(p, where, rin, rout, retries, gate):
+    """재시도 게이트(C 1447-1452, asm 0x1c258e-0x1c25ae·0x1c4ba4-0x1c4bc4) 검사 뒤 단계가 쓸 ratio 결과."""
+    need(len(retries) == int(gate), where, '056973 재시도 횟수', int(gate), len(retries))
+    if not retries:
+        return rout
+    qin, qout = retries[0]
+    need(qout.get('event') == 'retry:leave', where, '재시도 반환 사건', 'retry:leave', qout.get('event'))
+    # 재시도 입력은 054eef와 같은 배열이고 theta·pivot 슬롯에는 054eef 결과가 들어 있다(04c-7 agent만 배열을 기록)
+    for f in ('alpha', 'basic', 'width', 'marks'):
+        if f in qin:
+            need(qin[f] == rin[f], where, '재시도 입력 ' + f, '054eef 입력과 같음', '다름')
+    need((qin['theta'], qin['pivot']) == (rout['theta'], rout['pivot']), where, '재시도 진입 theta·pivot', (rout['theta'], rout['pivot']), (qin['theta'], qin['pivot']))
+    return qout if p['retry_use'] else rout
 
 
 def decide(record, p=DEFAULT, label=''):
@@ -156,15 +182,16 @@ def decide(record, p=DEFAULT, label=''):
         pre = e['alpha']
         where = f"{label} call{e['call']} step{e['step']}"
         k = i + 1
-        ratios, retries = [], []
+        calls = []  # ratio 호출마다 (enter, leave, 그 호출 뒤 재시도 목록). 재호출이면 두 개다.
         while k < len(events) and events[k]['event'] not in ('supply:enter', 'push:leave', 'step:enter', 'step:defer'):
             if events[k]['event'] == 'ratio:enter':
-                ratios.append((events[k], events[k + 1]))
+                calls.append((events[k], events[k + 1], []))
             if events[k]['event'] == 'retry:enter':
-                retries.append((events[k], events[k + 1] if k + 1 < len(events) else {}))
+                need(bool(calls), where, '재시도 앞 ratio', '있음', '없음')
+                calls[-1][2].append((events[k], events[k + 1] if k + 1 < len(events) else {}))
             k += 1
-        need(len(ratios) == 1, where, 'ratio 호출 수(재호출 제외 범위)', 1, len(ratios))
-        rin, rout = ratios[0]
+        need(1 <= len(calls) <= 2, where, 'ratio 호출 수', '1 또는 2', len(calls))
+        rin, rout, retries = calls[0]
         violated = rin['name'] == 'infeasible'
         need(rin['name'] in ('feasible', 'infeasible'), where, 'ratio 경로', 'feasible|infeasible', rin['name'])
         # feasible 경로는 위반 수 local_1b0==0일 때만 온다. A·B 표시는 그 수를 올리므로 있으면 안 된다(C 839·856·1688-1717·1940-1978·2199-2222·2342-2405).
@@ -205,37 +232,60 @@ def decide(record, p=DEFAULT, label=''):
         need(rin['selected']['direction'] == d, where, '방향', d, rin['selected']['direction'])
         # 재시도 게이트(C 1447-1452, asm 0x1c258e-0x1c25ae): 위반 경로에서 054eef가 위치<0 또는 |pivot|<0.001이면 056973
         gate = violated and ((p['gate_neg'] and rout['chosen'] < 0) or abs(f64(rout['pivot'])) < p['gate_pivot'])
-        need(len(retries) == int(gate), where, '056973 재시도 횟수', int(gate), len(retries))
         first = rout
-        if retries:
-            qin, qout = retries[0]
-            need(qout.get('event') == 'retry:leave', where, '재시도 반환 사건', 'retry:leave', qout.get('event'))
-            # 재시도 입력은 054eef와 같은 배열이고 theta·pivot 슬롯에는 054eef 결과가 들어 있다(04c-7 agent만 배열을 기록)
-            for f in ('alpha', 'basic', 'width', 'marks'):
-                if f in qin:
-                    need(qin[f] == rin[f], where, '재시도 입력 ' + f, '054eef 입력과 같음', '다름')
-            need((qin['theta'], qin['pivot']) == (rout['theta'], rout['pivot']), where, '재시도 진입 theta·pivot', (rout['theta'], rout['pivot']), (qin['theta'], qin['pivot']))
-            if p['retry_use']:
-                rout = qout
+        rout = gated(p, where, rin, rout, retries, gate)
         post = rin['alpha']
         need(post['indices'] == pre['indices'], where, 'alpha 인덱스', pre['indices'], post['indices'])
         for a0, a1 in zip(pre['values'], post['values'], strict=True):
             want = bits(-f64(a0)) if d else a0
             need(a1 == want, where, 'alpha 부호 반전', want, a1)
         chosen, theta, piv = rout['chosen'], f64(rout['theta']), f64(rout['pivot'])
-        if rout['theta'] == bits(inf):
-            # C 1458-1586: theta=I이면 자유 열 또는 방향 0·ub>=I일 때 반대 방향 재호출(범위 밖). 그 밖은 아래 거리 flip이다.
-            recall = (lb[j] <= -inf and inf <= ub[j]) or (d == 0 and inf <= ub[j])
-            need(not recall, where, 'theta=I 반대 방향 재호출(범위 밖)', '재호출 조건 거짓', '참')
-        else:
+        # asm 0x1c497e: 자유는 lb<=local_1d8(-I)·ub>=I. theta=I이면 자유 열 또는 방향 0·ub>=I일 때 반대 방향 재호출
+        free = ((lb[j] <= -inf) if p['free_le'] else (lb[j] < -inf)) and inf <= ub[j]
+        recall = rout['theta'] == bits(inf) and (free or (p['recall_up'] and inf <= ub[j] and (d == 0 or not p['recall_up_dir0'])))
+        need(len(calls) == 1 + recall, where, 'ratio 호출 수(재호출 포함)', 1 + recall, len(calls))
+        cur, recall_tag, recall_retry, stale_leave = d, 'no', False, False
+        if rout['theta'] == bits(inf) and not recall and d == 1 and inf <= ub[j]:
+            recall_tag = 'none-up1'
+        if recall:
+            cur = 1 - d
+            rin2, rout2, retries2 = calls[1]
+            need(rin2['name'] == rin['name'], where, '재호출 경로', rin['name'], rin2['name'])
+            need(rin2['selected']['direction'] == cur, where, '재호출 방향(S+0x328=1-d)', cur, rin2['selected']['direction'])
+            # feasible 055f68 -1은 S+0x2f8에 쓰지 않고(C 1327-1328), 위반 경로는 0x1c2655에서 첫 호출의 최종 위치를 쓴다
+            stale = rin['name'] == 'feasible' and p['recall_stale']
+            want_leave = rin['selected']['leave'] if stale else rout['chosen']
+            stale_leave = stale and rout['chosen'] == -1 and want_leave != -1
+            need(rin2['selected']['leave'] == want_leave, where, '재호출 진입 S+0x2f8', want_leave, rin2['selected']['leave'])
+            need(rin2['alpha']['indices'] == post['indices'], where, '재호출 alpha 인덱스', post['indices'], rin2['alpha']['indices'])
+            for a1, a2 in zip(post['values'], rin2['alpha']['values'], strict=True):
+                want = bits(-f64(a1)) if p['recall_reflip'] else a1
+                need(a2 == want, where, '재호출 alpha 부호 반전', want, a2)
+            for f in ('basic', 'width', 'marks'):
+                need(rin2[f] == rin[f], where, '재호출 입력 ' + f, '첫 호출과 같음', '다름')
+            gate2 = violated and p['recall_gate'] and ((p['gate_neg'] and rout2['chosen'] < 0) or abs(f64(rout2['pivot'])) < p['gate_pivot'])
+            rout2 = gated(p, where + ' 재호출', rin2, rout2, retries2, gate2)
+            recall_retry = bool(retries2)
+            rin, post = rin2, rin2['alpha']
+            chosen, theta, piv = rout2['chosen'], f64(rout2['theta']), f64(rout2['pivot'])
+            if rin2['name'] == 'feasible' and chosen == -1:
+                theta = inf  # 0x1c4d99
+            if theta == inf and free:
+                chosen = -1  # 0x1c4d7d
+            rout = dict(rout2, chosen=chosen, theta=bits(theta))
+            cond = ('free0' if d == 0 else 'free1') if free else 'up0'
+            recall_tag = cond + '-?'
+        elif rout['theta'] != bits(inf):
             # 위치<0·유한 theta는 056973 재진입의 요청 2 반환뿐이며 관측하지 않았다
             need(chosen >= 0, where, 'ratio 반환(위치<0·유한 theta, 미관측)', '>=0', chosen)
         kreject = p['k_reject'] * h
-        if d == 0:
+        gd = cur if p['recall_gap_new'] else d  # 0x1c290d: 재호출 뒤에는 새 방향(ecx=S+0x328)의 gap
+        if gd == 0:
             dist = (dU - p['flip_eps'] <= theta) if p['flip_le'] else (dU - p['flip_eps'] < theta)
         else:
             dist = p['flip_dir1'] and not (theta < dL - p['flip_eps'])
-        arm = d if p['reject_arm'] == 'formula' else rin['selected']['direction']
+        dist = dist or chosen < 0  # 0x1c2948: 위치<0이면 flip(재호출 뒤 theta=I·자유)
+        arm = d if p['reject_arm'] == 'formula' else cur
         if p['reject_swap']:
             arm = 1 - arm
         if arm == 1:
@@ -255,18 +305,23 @@ def decide(record, p=DEFAULT, label=''):
         # 보류는 양성 사건(step:defer, M3-04b-3 agent)으로만 인정한다. 단계 사건이 없으면 실패다.
         got = {'step:enter': nxt and nxt.get('kind'), 'step:defer': 'defer'}.get(nxt and nxt['event'], '사건 없음')
         need(got == kind, where, '단계 종류', f'{kind}({cause})', got)
+        if recall:
+            recall_tag = recall_tag[:-1] + ('pivot' if kind == 'pivot' else 'none' if chosen < 0 else
+                                            'distance' if cause == 'distance' else cause)
+        r1 = first if not retries else retries[0][1]
         info = dict(call=e['call'], step=e['step'], enter=j, direction=d, clause=clause, path=rin['name'], r_sign='+' if r > 0 else '-' if r < 0 else '0', kind=kind, cause=cause, r=bits(r),
-                    retry=('none' if not retries else 'theta-I' if rout['theta'] == bits(inf) else
-                           'changed' if (rout['chosen'], rout['theta']) != (first['chosen'], first['theta']) else 'same'))
+                    retry=('none' if not retries else 'theta-I' if r1['theta'] == bits(inf) else
+                           'changed' if (r1['chosen'], r1['theta']) != (first['chosen'], first['theta']) else 'same'),
+                    recall=recall_tag, recall_retry=recall_retry, stale_leave=stale_leave)
         if kind == 'defer':
             need(nxt['theta'] == rout['theta'] and nxt['pivot'] == rout['pivot'], where, '보류 theta·pivot', (rout['theta'], rout['pivot']), (nxt['theta'], nxt['pivot']))
-            check_frame(nxt, p, where, r, dL, dU, h, e_tol, kreject)
+            check_frame(nxt, p, where, r, dL, dU, h, e_tol, kreject, inf)
         else:
             se = nxt
-            need(se['selected']['direction'] == rin['selected']['direction'], where, '방향 보존', rin['selected']['direction'], se['selected']['direction'])
+            need(se['selected']['direction'] == cur, where, '단계 방향(재호출이면 1-d)', cur, se['selected']['direction'])
             want_theta = bits(inf) if cause == 'reject' else rout['theta']
             need(se['theta'] == want_theta, where, 'step theta', want_theta, se['theta'])
-            check_frame(se, p, where, r, dL, dU, h, e_tol, kreject)
+            check_frame(se, p, where, r, dL, dU, h, e_tol, kreject, inf)
             applied = events[k + 1]
             need(applied['event'] == 'step:applied', where, '적용 사건', 'step:applied', applied['event'])
             if kind == 'pivot':
@@ -283,6 +338,13 @@ def decide(record, p=DEFAULT, label=''):
                             leave_arm=f'{arm_name}{want_state}')
             else:
                 need(se['selected']['leave'] == -1, where, 'flip leave', -1, se['selected']['leave'])
+                # C 1596-1612: local_1d8<lb 또는 ub<I면 현재 방향 0→-2, 1→-1, 아니면 -3(자유 열은 superbasic으로 남음)
+                bounded = (-inf < lb[j] or ub[j] < inf) or not p['flip_free']
+                fd = 1 - cur if p['flip_dir_swap'] else cur
+                want_state = (-2 if fd == 0 else -1) if bounded else -3
+                got_state = applied['state']['vstat'][j]
+                need(got_state == want_state, where, f'flip 상태 enter={j}', want_state, got_state)
+                info['flip_state'] = want_state
         out.append(info)
         i = k
     return out
@@ -309,6 +371,11 @@ MUTANTS = {
     'v-r-ge0': dict(v_r_strict=False), 'v-sigma-ge0': dict(v_sigma_strict=False), 'v-ten-9': dict(v_ten=9.0),
     # M3-04c-7: 재시도 게이트와 결과 사용
     'gate-pivot-1e-4': dict(gate_pivot=1e-4), 'gate-no-neg': dict(gate_neg=False), 'retry-ignore': dict(retry_use=False),
+    # M3-04c-8: theta=I 재호출과 flip 상태
+    'recall-free-only': dict(recall_up=False), 'recall-up-any-dir': dict(recall_up_dir0=False), 'recall-free-lt': dict(free_le=False),
+    'recall-gap-original': dict(recall_gap_new=False), 'recall-no-gate': dict(recall_gate=False),
+    'recall-alpha-keep': dict(recall_reflip=False), 'recall-stale-leave': dict(recall_stale=False),
+    'flip-free-state': dict(flip_free=False), 'flip-dir-swap': dict(flip_dir_swap=True),
 }
 
 
@@ -368,7 +435,7 @@ def validate_new(paths, manifest, case):
             if e['event'] == 'supply:enter':
                 assert e['batch'] == 0, 'batch는 범위 밖'
             if e['event'] in ('step:enter', 'step:defer'):
-                assert set(e['frame']) == set(FRAME), 'frame 누락'
+                assert set(e['frame']) == set(c.get('frame', FRAME)), 'frame 누락'
                 for v in e['frame'].values():
                     step.number(v)
     fields = ['kind', 'model_sha256', 'binary_sha256', 'tool_sha256', 'agent_sha256', 'params', 'starts', 'environment', 'output', 'result', 'reason', 'errors', 'events']
@@ -381,7 +448,7 @@ def validate_new(paths, manifest, case):
 
 def summary(steps):
     steps_tags = {}
-    keys = ['direction', 'kind', 'cause', 'arm', 'retry']
+    keys = ['direction', 'kind', 'cause', 'arm', 'retry', 'recall', 'flip_state']
     for s in steps:
         tag = f"dir{s['direction']}-{s['clause']}-r{s['r_sign']}" + (f"-{s['cause']}" if s['kind'] == 'flip' else '')
         out_tag = 'step:' + tag
@@ -400,7 +467,7 @@ def summary(steps):
     return dict(sorted(out.items()))
 
 
-def load_all(manifest, arms=False, violated=False, retry=False):
+def load_all(manifest, arms=False, violated=False, retry=False, recall=False):
     """04b-1 저장 캡처(검사 통과 후)와 04b-2 사례들을 (이름, 레코드) 목록으로 돌려준다.
     arms면 M3-04b-3 대상 사례도 더한다(대조군·비간섭도 함께 검사). violated면 M3-04c-2 위반 basis 사례도 더하고
     필수 arm(REQUIRED_VIOLATED)을 확인한다."""
@@ -450,7 +517,58 @@ def load_all(manifest, arms=False, violated=False, retry=False):
                 data.append((case, recs[0]))
                 steps[case] = decide(recs[0], label=case)
         required_retry(steps)
+    if recall:
+        cm = json.loads((RECALL / 'manifest.json').read_text())
+        steps = {}
+        for case, c in cm['cases'].items():
+            if c['role'] == 'noninterference':
+                noninterference_ninf(cm, c)
+                continue
+            recs = validate_new([ROOT / x for x in c['captures']], cm, case)
+            if c['role'] == 'target':
+                data.append((case, recs[0]))
+                steps[case] = decide(recs[0], label=case)
+        required_recall(steps)
     return data
+
+
+def required_recall(steps):
+    """M3-04c-8: LP별 두 순서 합집합이 필수 재호출 태그·재호출 안 재시도·flip 상태 -3·-1(재호출)·feasible 이전 leave를 덮는지 확인한다."""
+    assert set(steps) == {f'recall-{lp}-{k}' for lp in REQUIRED_RECALL for k in ('primal', 'dual')}, '재호출 대상 두 LP × 두 순서 필요'
+    flips = {s.get('flip_state') for st in steps.values() for s in st if s['recall'] not in ('no', 'none-up1')}
+    assert {-3, -1} <= flips, f'재호출 flip 상태 -3·-1 누락(두 LP 합집합): {flips}'
+    for lp, want in REQUIRED_RECALL.items():
+        st = [s for k in ('primal', 'dual') for s in steps[f'recall-{lp}-{k}']]
+        assert st and all(s['path'] == ('feasible' if lp == 'feasible' else 'infeasible') for s in st), f'{lp}: 경로가 섞임'
+        seen = {s['recall'] for s in st}
+        assert want <= seen, f'{lp} 재호출 필수 태그 누락: {sorted(want - seen)}'
+        if lp == 'violated':
+            assert any(s['recall_retry'] for s in st), '위반 재호출 안 056973 재시도 없음'
+        else:
+            assert any(s.get('stale_leave') for s in st), 'feasible 재호출 진입 S+0x2f8 이전 값 사례 없음'
+
+
+def noninterference_ninf(cm, c):
+    """M3-04c-8 agent: frame.ninf를 빼면 04c-7 agent 캡처와 사건·결과·출력이 같아야 한다(모든 frame에 ninf가 있어야 한다)."""
+    new, old = (json.loads((ROOT / c[k]).read_text()) for k in ('new', 'old'))
+    rm = json.loads((RETRY / 'manifest.json').read_text())
+    for rec, tools in ((new, CTOOLS), (old, RTOOLS)):
+        assert rec['tool_sha256'] == cm['tools'][tools[0]] == sha(ROOT / tools[0]), '비간섭 도구'
+        assert rec['agent_sha256'] == cm['tools'][tools[1]] == sha(ROOT / tools[1]), '비간섭 agent'
+    assert old['agent_sha256'] == rm['tools'][RTOOLS[1]], '04c-7 agent 해시'
+    assert new['binary_sha256'] == old['binary_sha256'] == BINARY_SHA, '비간섭 바이너리'
+    assert new['model_sha256'] == old['model_sha256'] == c['model_sha256'], '비간섭 모델'
+    assert new['params'] == old['params'] and new['starts'] == old['starts'] and new['kind'] == old['kind'] == c['kind'], '비간섭 설정'
+    assert new['errors'] == old['errors'] == [] and new['reason'] == old['reason'] == 'process-terminated', '비간섭 실행 오류'
+    frames = [e['frame'] for e in new['events'] if 'frame' in e]
+    assert frames and all('ninf' in fr for fr in frames), 'ninf frame 누락'
+    proj = copy.deepcopy(new['events'])
+    for e in proj:
+        if 'frame' in e:
+            e['frame'].pop('ninf')
+    assert proj == old['events'], 'ninf를 뺀 사건이 04c-7 agent와 다름'
+    assert new['result'] == old['result'] and new['output'] == old['output'], '비간섭 결과'
+    return len(frames)
 
 
 def required_retry(steps):
@@ -584,7 +702,7 @@ def main():
                 data.append((f'04b-1/{kind}', json.loads(paths[0].read_text())))
         else:
             manifest = json.loads((BASE / 'manifest.json').read_text())
-            data = load_all(manifest, arms=True, violated=True, retry=True)
+            data = load_all(manifest, arms=True, violated=True, retry=True, recall=True)
         report = {}
         for label, rec in data:
             st = decide(rec, label=label)
@@ -715,6 +833,7 @@ def self_test(data):
             out[name] = str(err)
     out.update(self_test_violated(data))
     out.update(self_test_retry(data))
+    out.update(self_test_recall(data))
     return out
 
 
@@ -887,6 +1006,111 @@ def self_test_retry(data):
             out[f'required-{key}-{value}'] = str(err)
         else:
             raise Mismatch(f'필수 arm 누락 허용: {key}={value}')
+    return out
+
+
+def self_test_recall(data):
+    """M3-04c-8: 재호출 호출 수·방향·재반전·진입 S+0x2f8·게이트·자유 판정·flip 상태·ninf·비간섭·필수 태그 변조가 거부되는지 확인한다."""
+    import tempfile
+    recs = {lb: r for lb, r in data if lb.startswith('recall-')}
+    steps = {lb: decide(r, label=lb) for lb, r in recs.items()}
+    out = {}
+
+    def window(x, label, pick):
+        s = next(s for s in steps[label] if pick(s))
+        ev = x['events']
+        ks = [i for i, e in enumerate(ev) if e['event'] == 'ratio:enter' and (e['call'], e['step']) == (s['call'], s['step'])]
+        return ev, ks, s
+
+    V, F = 'recall-violated-primal', 'recall-feasible-primal'
+
+    def drop_recall(x):  # 재호출 호출을 지운다(free0-pivot)
+        ev, ks, _ = window(x, V, lambda s: s['recall'] == 'free0-pivot')
+        end = next(i for i in range(ks[1], len(ev)) if ev[i]['event'] in ('step:enter', 'step:defer'))
+        del ev[ks[1]:end]
+
+    def recall_dir(x):
+        ev, ks, _ = window(x, V, lambda s: s['recall'] == 'up0-pivot')
+        ev[ks[1]]['selected']['direction'] = 1 - ev[ks[1]]['selected']['direction']
+
+    def recall_alpha(x):
+        ev, ks, _ = window(x, F, lambda s: s['recall'] == 'up0-pivot')
+        ev[ks[1]]['alpha']['values'] = list(ev[ks[0]]['alpha']['values'])
+
+    def recall_leave(x):  # feasible 055f68 -1 뒤 재호출 진입 S+0x2f8을 -1로(쓴 것처럼)
+        ev, ks, _ = window(x, F, lambda s: s['stale_leave'])
+        ev[ks[1]]['selected']['leave'] = -1
+
+    def step_dir(x):
+        ev, ks, _ = window(x, V, lambda s: s['recall'] == 'free1-pivot')
+        nxt = next(e for e in ev[ks[1]:] if e['event'] == 'step:enter')
+        nxt['selected']['direction'] = 1 - nxt['selected']['direction']
+
+    def flip_state(x):
+        ev, ks, s = window(x, V, lambda s: s['recall'] == 'free0-none')
+        k = next(i for i in range(ks[1], len(ev)) if ev[i]['event'] == 'step:applied')
+        ev[k]['state']['vstat'][s['enter']] = -1
+
+    def gate_drop(x):  # 재호출 안의 056973을 지운다
+        ev, ks, _ = window(x, V, lambda s: s['recall_retry'])
+        k = next(i for i in range(ks[1], len(ev)) if ev[i]['event'] == 'retry:enter')
+        del ev[k:k + 2]
+
+    def free_bound(x):  # 방향 1 자유 열(free1)의 lb를 유한으로: 재호출 조건이 거짓이 되어 호출 수가 달라야 한다
+        ev, ks, s = window(x, V, lambda s: s['recall'] == 'free1-pivot')
+        next(e for e in ev if e['event'] == 'push:enter')['model']['lb'][s['enter']] = bits(-1e29)
+
+    def gap_distance(x):  # up0-distance의 시작값을 10으로: 새 방향 gap(dL)이 재호출 theta보다 커져 flip이 아니어야 한다
+        ev, ks, s = window(x, V, lambda s: s['recall'] == 'up0-distance')
+        ev[ks[0]]['state']['x'][s['enter']] = bits(10.0)
+
+    def ninf(x):
+        ev, ks, _ = window(x, V, lambda s: s['recall'] == 'up0-pivot')
+        nxt = next(e for e in ev[ks[1]:] if e['event'] == 'step:enter')
+        nxt['frame']['ninf'] = bits(-1e29)
+
+    for name, (label, edit) in {'c-drop-recall': (V, drop_recall), 'c-recall-direction': (V, recall_dir),
+                                'c-recall-alpha': (F, recall_alpha), 'c-recall-leave': (F, recall_leave),
+                                'c-step-direction': (V, step_dir), 'c-flip-state': (V, flip_state), 'c-gate-drop': (V, gate_drop),
+                                'c-free-bound': (V, free_bound), 'c-gap-distance': (V, gap_distance), 'c-ninf': (V, ninf)}.items():
+        x = copy.deepcopy(recs[label])
+        edit(x)
+        try:
+            decide(x, label=label)
+            raise AssertionError('변조 허용: ' + name)
+        except (Mismatch, StopIteration) as err:
+            out[name] = str(err)
+    out.update({'recall-' + k: v for k, v in capture_tamper(RECALL, {'ninf-missing': lambda x: next(
+        e for e in x['events'] if e['event'] == 'step:enter')['frame'].pop('ninf')}).items()})
+    cm = json.loads((RECALL / 'manifest.json').read_text())
+    for case, edit in (('recall-feasible-primal-retryagent', lambda x: next(e for e in x['events'] if e['event'] == 'step:enter').__setitem__('theta', '0' * 16)),
+                       ('recall-violated-dual-retryagent', lambda x: next(e for e in x['events'] if e['event'] == 'step:enter')['frame'].pop('ninf')),
+                       ('recall-retry-primal-recallagent', lambda x: next(e for e in x['events'] if e['event'] == 'retry:leave').__setitem__('chosen', 9))):
+        c = cm['cases'][case]
+        with tempfile.TemporaryDirectory() as tmp:
+            x = json.loads((ROOT / c['new']).read_text())
+            edit(x)
+            q = Path(tmp) / 'new.json'
+            q.write_text(json.dumps(x))
+            try:
+                noninterference_ninf(cm, dict(c, new=str(q)))
+            except AssertionError as err:
+                out['noninterference-' + case] = str(err)
+            else:
+                raise Mismatch('비간섭 변조 허용: ' + case)
+    required_recall(steps)
+    for name, change in (('free1-pivot', lambda st: [s for s in st if s['recall'] != 'free1-pivot']),
+                         ('up0-distance', lambda st: [s for s in st if s['recall'] != 'up0-distance']),
+                         ('none-up1', lambda st: [s for s in st if s['recall'] != 'none-up1']),
+                         ('flip-3', lambda st: [dict(s, flip_state=-1) if s.get('flip_state') == -3 else s for s in st]),
+                         ('recall-retry', lambda st: [dict(s, recall_retry=False) for s in st]),
+                         ('stale-leave', lambda st: [dict(s, stale_leave=False) for s in st])):
+        try:
+            required_recall({lb: change(st) for lb, st in steps.items()})
+        except AssertionError as err:
+            out['required-recall-' + name] = str(err)
+        else:
+            raise Mismatch('필수 재호출 태그 누락 허용: ' + name)
     return out
 
 

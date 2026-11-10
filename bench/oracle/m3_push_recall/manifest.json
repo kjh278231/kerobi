@@ -1,0 +1,496 @@
+{
+ "task": "M3-04c-8",
+ "schema_version": 1,
+ "float_encoding": "IEEE-754 binary64 little-endian hex; exact bits including signed zero",
+ "original_version": "13.0.3",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tools": {
+  "tools/primal_push_recall_capture.js": "3c4255853c2018963be65f0e6739304ba914111dae1a16ffc39357e38d7e7bf0",
+  "tools/primal_push_recall_agent.js": "5c78432949450fc67ac9d8db09a0b8040b05a632331a0a3057563242706d83cf",
+  "tools/primal_push_retry_capture.js": "6340a494db21c818b414fc3283db188a5175040239736b4bc78336fe1739a9e1",
+  "tools/primal_push_retry_agent.js": "03bd70943e04b09faddda4b8d97d3c0102c109e54a2e16b2ffa2874fd13067f8",
+  "tools/push_recall_lp.py": "6bba39d1c3fa59cf872cec4cd214c7f47a7e4fd03c0f7b445a1c4f2f2cb681b9",
+  "tools/push_violated_lp.py": "071c3eba19a443a986b9ed25b5e0bf2eba846af80c7d2cd6510046f4de30e3dc",
+  "tools/primal_push_decision_check.py": "1934fe1f7a8dd1eba984bd93cfb40a8b7c7b919658fda4442d3eb3d68038c3b1",
+  "tools/primal_push_decision_rust.py": "b6a67bdff68003424c86e2dcce4f822611d38ae2ee3e533c470a666405818162",
+  "tools/push_recall_runs.sh": "0fbbb0032cee5fb970477fb0539b6f4d839c641079ffbc9de6acc384834974e5",
+  "tools/push_recall_manifest.py": "7a47b1e778d61b2f2194ffe66993c4420078e06c519d5904d6a40d0a7dcf2dd5"
+ },
+ "records": {
+  "bench/oracle/m3_push_recall/model-mutation.json": "e10d932ed81af65fdd21fe39ab0309a6e1a15f5edf769d38d4949964cde46a46",
+  "bench/oracle/m3_push_recall/rust-mutation.json": "aeb3463aff148d48e596cd1d7f1a37e9cb54246e9a5e6a5571dbb189f257cbef",
+  "bench/oracle/m3_push_recall/rust-mutation-v2.json": "36606791bb84b99fd8dea97da3fee938e03ec31f4c48cac9eb9e0e20953236f1",
+  "bench/oracle/m3_push_decision_rust/input.txt": "5eccb886f607db19d3221920b15323d41e13b27d7fee608d7f4c0e0b7aab7cb0"
+ },
+ "sources": {
+  "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb",
+  "../re/decomp/c/000ef960_PRIVATE0000000000055f68.c": "bebc9eec4c74cd5abaec3454c3495a23aedeab276c0ccf03710dd517c4360649",
+  "../re/decomp/c/000eefa0_PRIVATE0000000000054eef.c": "6bd16a64442cf643ce92869e82d815963fdae0e16f8582db6ef9d710cc0068f0",
+  "../re/decomp/c/000f0120_PRIVATE0000000000056973.c": "cb7946343603608ec265492ef35060d7e24e64fbe315456b60596645924181ef"
+ },
+ "inputs": {
+  "bench/oracle/m3_push_recall/feasible.lp": "846969a51b4dd7341fe5ef3aba398f1c60bc708318dce59ae16af80bffca8576",
+  "bench/oracle/m3_push_recall/feasible.extra.json": "4f75f14408833b14f3a272de5f7d0faa4dc652dedebc0ee48207c674ecf8b8bd",
+  "bench/oracle/m3_push_recall/violated.lp": "806ede7f7117055ed5820ca705823fe4642dcd776a861a1559d155942005223a",
+  "bench/oracle/m3_push_recall/violated.extra.json": "13e69744933e175e10ff900bbb7e255e456565717d94060e572fd01df6b074a3"
+ },
+ "history": {
+  "bench/oracle/m3_push_recall/history/eF-dual.json": "2ff17c3082d8990bedb31dcb80e1132ed3c480b2ed04b2fecd415c6a51e2097a",
+  "bench/oracle/m3_push_recall/history/eF-primal.json": "729d4f520b3ee43d862b8f261be57748c98feac197e9251db61b7579fd3f927a",
+  "bench/oracle/m3_push_recall/history/eF.extra.json": "4f75f14408833b14f3a272de5f7d0faa4dc652dedebc0ee48207c674ecf8b8bd",
+  "bench/oracle/m3_push_recall/history/eF.lp": "846969a51b4dd7341fe5ef3aba398f1c60bc708318dce59ae16af80bffca8576",
+  "bench/oracle/m3_push_recall/history/eV-dual.json": "70b9f52f2ac6d65a1e135988bbdfcb72d7bc2372d7e8ee05d8d0027a2a8e3bb1",
+  "bench/oracle/m3_push_recall/history/eV-primal-recallagent.json": "de174331b9f17054c1243cd506b3772c9f7c884090678babfdff7ac2b765d429",
+  "bench/oracle/m3_push_recall/history/eV-primal.json": "be190b7a941eee7ca1020858f045836369b7153636304e54434f95c3e47085b7",
+  "bench/oracle/m3_push_recall/history/eV.extra.json": "13e69744933e175e10ff900bbb7e255e456565717d94060e572fd01df6b074a3",
+  "bench/oracle/m3_push_recall/history/eV.lp": "806ede7f7117055ed5820ca705823fe4642dcd776a861a1559d155942005223a"
+ },
+ "cases": {
+  "recall-feasible-primal": {
+   "role": "target",
+   "kind": "primal",
+   "model": "bench/oracle/m3_push_recall/feasible.lp",
+   "model_sha256": "846969a51b4dd7341fe5ef3aba398f1c60bc708318dce59ae16af80bffca8576",
+   "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 3,
+    "LPWarmStart": 2,
+    "ScaleFlag": 0
+   },
+   "starts": {
+    "PStart": [
+     2,
+     0,
+     3,
+     3,
+     0,
+     3,
+     0,
+     0
+    ],
+    "DStart": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "frame": [
+    "r",
+    "dL",
+    "dU",
+    "k100",
+    "km100",
+    "k2",
+    "e",
+    "ninf"
+   ],
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_recall/feasible-primal-1.json",
+    "bench/oracle/m3_push_recall/feasible-primal-2.json",
+    "bench/oracle/m3_push_recall/feasible-primal-3.json"
+   ],
+   "events_sha256": "ce840acc08ec18f3a81258e84f7f8a6d3b228d7dffe4af057903d469204294b5",
+   "capture_sha256": [
+    "847d1b199a58160f8b3a2c202972131f75ada05afa4f95ff7782ca07610f4a0b",
+    "b77ac8547199be669a78d9fd6a186d046e751774539a58c3339a9e79c2927ea9",
+    "468b6ce749c874b4644d1ccaebc458839a7d7ba5035f0f25e6a1b5550d95402f"
+   ]
+  },
+  "recall-feasible-dual": {
+   "role": "target",
+   "kind": "dual",
+   "model": "bench/oracle/m3_push_recall/feasible.lp",
+   "model_sha256": "846969a51b4dd7341fe5ef3aba398f1c60bc708318dce59ae16af80bffca8576",
+   "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 1,
+    "LPWarmStart": 2,
+    "ScaleFlag": 0
+   },
+   "starts": {
+    "PStart": [
+     2,
+     0,
+     3,
+     3,
+     0,
+     3,
+     0,
+     0
+    ],
+    "DStart": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "frame": [
+    "r",
+    "dL",
+    "dU",
+    "k100",
+    "km100",
+    "k2",
+    "e",
+    "ninf"
+   ],
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_recall/feasible-dual-1.json",
+    "bench/oracle/m3_push_recall/feasible-dual-2.json",
+    "bench/oracle/m3_push_recall/feasible-dual-3.json"
+   ],
+   "events_sha256": "34dc0768de2f8b109e52fbfc59c8f95131d1f9b36ee65e0fe458bdcb306ca805",
+   "capture_sha256": [
+    "5d646c35fce0af273a9d8fc3a57d88f5e68521ad5e88b0695cca686bf2fe54d8",
+    "72746a47f40dd4d88d9585d576587968d1d976ab9af4b19ad6384741f4b087f8",
+    "0c22f9a720e7ddcb896f217f439af299f0a740358899a8764726d0a86fa2a185"
+   ]
+  },
+  "recall-feasible-control": {
+   "role": "control",
+   "kind": "control",
+   "model": "bench/oracle/m3_push_recall/feasible.lp",
+   "model_sha256": "846969a51b4dd7341fe5ef3aba398f1c60bc708318dce59ae16af80bffca8576",
+   "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 0,
+    "LPWarmStart": 2,
+    "ScaleFlag": 0
+   },
+   "starts": {
+    "PStart": [
+     2,
+     0,
+     3,
+     3,
+     0,
+     3,
+     0,
+     0
+    ],
+    "DStart": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "frame": [
+    "r",
+    "dL",
+    "dU",
+    "k100",
+    "km100",
+    "k2",
+    "e",
+    "ninf"
+   ],
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_recall/feasible-control-1.json",
+    "bench/oracle/m3_push_recall/feasible-control-2.json",
+    "bench/oracle/m3_push_recall/feasible-control-3.json"
+   ],
+   "events_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "capture_sha256": [
+    "4ce5cc3777c98882cb7df2b6064aeced17f8b12062cd1c38bcb7a66b1f114c34",
+    "e5efe63bebaafd193f412a7f4e1811e1564bccbf688b81d71744f4a285fe1912",
+    "5e1d99100dd3a27e1eb747f22e462c9142c2f88d75981c1157fc63905ed505d3"
+   ]
+  },
+  "recall-feasible-primal-retryagent": {
+   "role": "noninterference",
+   "kind": "primal",
+   "model_sha256": "846969a51b4dd7341fe5ef3aba398f1c60bc708318dce59ae16af80bffca8576",
+   "new": "bench/oracle/m3_push_recall/feasible-primal-1.json",
+   "old": "bench/oracle/m3_push_recall/noninterference/feasible-primal-retryagent.json",
+   "capture_sha256": [
+    "dd04b4e4ee5557aa4c8aec5840353b070a311115780bb0c81412563b399c715c"
+   ]
+  },
+  "recall-feasible-dual-retryagent": {
+   "role": "noninterference",
+   "kind": "dual",
+   "model_sha256": "846969a51b4dd7341fe5ef3aba398f1c60bc708318dce59ae16af80bffca8576",
+   "new": "bench/oracle/m3_push_recall/feasible-dual-1.json",
+   "old": "bench/oracle/m3_push_recall/noninterference/feasible-dual-retryagent.json",
+   "capture_sha256": [
+    "9db150cf90b5c36a9f2d1f224cb40e2a992034c2cea869b75fcc98ee38463a97"
+   ]
+  },
+  "recall-violated-primal": {
+   "role": "target",
+   "kind": "primal",
+   "model": "bench/oracle/m3_push_recall/violated.lp",
+   "model_sha256": "806ede7f7117055ed5820ca705823fe4642dcd776a861a1559d155942005223a",
+   "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 3,
+    "LPWarmStart": 2,
+    "ScaleFlag": 0
+   },
+   "starts": {
+    "PStart": [
+     1,
+     1,
+     2,
+     0,
+     3,
+     3,
+     0,
+     3,
+     0,
+     1,
+     0.5,
+     0,
+     1,
+     2,
+     0,
+     1,
+     2,
+     0
+    ],
+    "DStart": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "frame": [
+    "r",
+    "dL",
+    "dU",
+    "k100",
+    "km100",
+    "k2",
+    "e",
+    "ninf"
+   ],
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_recall/violated-primal-1.json",
+    "bench/oracle/m3_push_recall/violated-primal-2.json",
+    "bench/oracle/m3_push_recall/violated-primal-3.json"
+   ],
+   "events_sha256": "bc96d8116ed14758f58a0bc621a26d8cb91fb63c599712ba276e90bb3840634a",
+   "capture_sha256": [
+    "c738cfde4bd01cdd19ab4ba0be62b63da202832deba91b3b2edbbcbfeb662229",
+    "6deffb539e52becf0ae91222437825b83e95a7b5f05512957600938242c63d34",
+    "dc8f2ff4b0f450747fc60eddfb7d59ad3c1ddff5890852a4afa1d36b729be952"
+   ]
+  },
+  "recall-violated-dual": {
+   "role": "target",
+   "kind": "dual",
+   "model": "bench/oracle/m3_push_recall/violated.lp",
+   "model_sha256": "806ede7f7117055ed5820ca705823fe4642dcd776a861a1559d155942005223a",
+   "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 1,
+    "LPWarmStart": 2,
+    "ScaleFlag": 0
+   },
+   "starts": {
+    "PStart": [
+     1,
+     1,
+     2,
+     0,
+     3,
+     3,
+     0,
+     3,
+     0,
+     1,
+     0.5,
+     0,
+     1,
+     2,
+     0,
+     1,
+     2,
+     0
+    ],
+    "DStart": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "frame": [
+    "r",
+    "dL",
+    "dU",
+    "k100",
+    "km100",
+    "k2",
+    "e",
+    "ninf"
+   ],
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_recall/violated-dual-1.json",
+    "bench/oracle/m3_push_recall/violated-dual-2.json",
+    "bench/oracle/m3_push_recall/violated-dual-3.json"
+   ],
+   "events_sha256": "dccb2675a54f50a5bf4aa684653e5f01aaaa314cacf7b139c13e23d543d057fb",
+   "capture_sha256": [
+    "530e7d1c9404597a2559c958af2ff1bea60347d1f6b58805032f1a0797b17bc0",
+    "0792ac59fea30350bddfdc9471e7c041abc4a7dcd626da5569d9838cc59e3f4d",
+    "0d24f1e60cc4e7ee0ba2197af4b795dc9af86f2927caa75e6ba716f9b19e969b"
+   ]
+  },
+  "recall-violated-control": {
+   "role": "control",
+   "kind": "control",
+   "model": "bench/oracle/m3_push_recall/violated.lp",
+   "model_sha256": "806ede7f7117055ed5820ca705823fe4642dcd776a861a1559d155942005223a",
+   "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 0,
+    "LPWarmStart": 2,
+    "ScaleFlag": 0
+   },
+   "starts": {
+    "PStart": [
+     1,
+     1,
+     2,
+     0,
+     3,
+     3,
+     0,
+     3,
+     0,
+     1,
+     0.5,
+     0,
+     1,
+     2,
+     0,
+     1,
+     2,
+     0
+    ],
+    "DStart": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "frame": [
+    "r",
+    "dL",
+    "dU",
+    "k100",
+    "km100",
+    "k2",
+    "e",
+    "ninf"
+   ],
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_recall/violated-control-1.json",
+    "bench/oracle/m3_push_recall/violated-control-2.json",
+    "bench/oracle/m3_push_recall/violated-control-3.json"
+   ],
+   "events_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "capture_sha256": [
+    "da761dcbd5a3c741e92c13654d01935d29b31306c29681a31b5a20d4d08237e8",
+    "18ee68b036aee2f0ebf0a891693a26569fba06be3510c13ab765a3c6c4ebceee",
+    "7de51f4ed6b609e535e7f37b3487c00e5731eefcf486d109691e7f6f19be9fb7"
+   ]
+  },
+  "recall-violated-primal-retryagent": {
+   "role": "noninterference",
+   "kind": "primal",
+   "model_sha256": "806ede7f7117055ed5820ca705823fe4642dcd776a861a1559d155942005223a",
+   "new": "bench/oracle/m3_push_recall/violated-primal-1.json",
+   "old": "bench/oracle/m3_push_recall/noninterference/violated-primal-retryagent.json",
+   "capture_sha256": [
+    "f2cb2fce3f8ea944adc208b979f0cc035ed2670f289cad0dbfe09eb7394056ad"
+   ]
+  },
+  "recall-violated-dual-retryagent": {
+   "role": "noninterference",
+   "kind": "dual",
+   "model_sha256": "806ede7f7117055ed5820ca705823fe4642dcd776a861a1559d155942005223a",
+   "new": "bench/oracle/m3_push_recall/violated-dual-1.json",
+   "old": "bench/oracle/m3_push_recall/noninterference/violated-dual-retryagent.json",
+   "capture_sha256": [
+    "ff8194b3f2b1f81d4ffaa7f71978ccd571aad2fbd3585271b53e17106e2da5a2"
+   ]
+  },
+  "recall-retry-primal-recallagent": {
+   "role": "noninterference",
+   "kind": "primal",
+   "model_sha256": "2be78262e14b9c8482ce0c96fe0ab10d68246bc11eae184dc2bdb9c2f8516986",
+   "new": "bench/oracle/m3_push_recall/noninterference/retry-primal-recallagent.json",
+   "old": "bench/oracle/m3_push_retry/retry-primal-1.json",
+   "capture_sha256": [
+    "0c8b347910f04fb45eca19200c8eb4c82a3f7ea27b78210192e8a1573e76e7e8"
+   ]
+  }
+ }
+}
