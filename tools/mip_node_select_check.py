@@ -6,7 +6,7 @@ A2 the global heaps (one per tree) replayed with the C rules equal every heap sn
    bits) at 6e8eb3 calls that pop and at 6e460c returns: 6e5802 insert (sift-up), 6e8eb3 pop (sift-down), 6e460c prune
    (stable removal of the nodes it frees, then sift-down from the last index to 0). Popped nodes are the deferred adds of that call followed by the selected node.
 A3 tie variants V1-V4 replayed the same way, reported per case as rejected (first difference) or surviving, at the pop
-   level (which node is taken) and at the array level (heap layout).
+   level (which node is taken) and at the array level (heap layout); P1-P2 the same for the 6e460c rebuild.
 A4 plunge list after a selection: the chosen entry is swap-removed with the last one, the kept entries keep that order,
    and the removed ones that are re-inserted reach 6e5802 in that order.
 A5 tie counts: pops with another heap entry of the same key bits.
@@ -30,7 +30,7 @@ CASES = {  # name -> (model file, NodeLimit); fixed in docs/m2/mip_node_select_s
     'tr12-30': ('tr12-30.mps.gz', 2000),
 }
 RUNS = (1, 2, 3)
-RULES = ('C', 'V1', 'V2', 'V3', 'V4')
+RULES = ('C', 'V1', 'V2', 'V3', 'V4', 'P1', 'P2')
 
 
 class Fail(Exception):
@@ -83,7 +83,8 @@ def sift_down(h, i, left=False, down_eq=False):
 
 
 class Heap:
-    """rule 'C' (original), heap variants 'V1'-'V3', or 'V4' (stable sort by key, then insertion order)."""
+    """rule 'C' (original), heap variants 'V1'-'V3', 'V4' (stable sort by key, then insertion order), prune variants
+    'P1' (rebuild the kept nodes by sequential 6e5802 inserts) and 'P2' (remove by moving the last entry into the hole)."""
     def __init__(self, rule):
         self.rule, self.h, self.seq = rule, [], 0
         self.left, self.down_eq, self.tie_up = rule == 'V1', rule == 'V3', rule == 'V2'
@@ -121,7 +122,19 @@ class Heap:
         if self.rule == 'V4':
             self.h = [t for t in self.h if t[2][0] not in drop]
             return
-        self.h = [e for e in self.h if e[0] not in drop]
+        if self.rule == 'P1':
+            kept, self.h = [e for e in self.h if e[0] not in drop], []
+            for e in kept:
+                self.push(e)
+            return
+        if self.rule == 'P2':
+            for d in drop:
+                j = next((j for j, e in enumerate(self.h) if e[0] == d), None)
+                if j is not None:
+                    self.h[j] = self.h[-1]
+                    self.h.pop()
+        else:
+            self.h = [e for e in self.h if e[0] not in drop]
         for i in range(len(self.h) - 1, -1, -1):
             sift_down(self.h, i, self.left, self.down_eq)
 
