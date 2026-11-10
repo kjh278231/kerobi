@@ -23,7 +23,7 @@ K = {'markshare_4_0': (2005, 2003, 2005, 914, 42, 610, 0), 'pk1': (2285, 2273, 2
      'fhnw-binpack4-4': (2859, 1652, 2859, 1196, 72, 10244, 2), 'neos-860300': (882, 839, 883, 840, 30, 10907, 0)}
 ALL = set(CASES)
 FOUR = {'markshare_4_0', 'pk1', 'neos5', 'fhnw-binpack4-4'}
-# (name, [(old, new)], cases where the mutant must be rejected); section 3.1
+# (name, [(old, new)], cases where the mutant must be rejected, or None = report only); section 3.1
 MUTANTS = [
     ('P1 exponent 0.1 <-> 0.2', [('{ 0.1 } else { 0.2 }', '{ 0.2 } else { 0.1 }')], ALL),
     ('P2 depth + 1 -> depth', [('(depth as f64 + 1.0)', '(depth as f64)')], ALL),
@@ -45,6 +45,8 @@ MUTANTS = [
      set()),
     ('Z2 seed sum instead of average', [('src.sum[d][m as usize] / c as f64', 'src.sum[d][m as usize]')],
      {'pk1', 'neos5', 'tr12-30', 'fhnw-binpack4-4'}),
+    # added after the first run (section 6): the vector selection is not in the 06e variants
+    ('R1 decay reads the other LP vector', [('{ l.vec } else { l.alt }', '{ l.alt } else { l.vec }')], None),
 ]
 
 
@@ -292,8 +294,9 @@ def mutants(heads, exps, din):
         for c in CASES:
             tag = 'rejected' if res[c] else 'passes'
             print(f'V: {name}: {c}: {tag}' + (f': {res[c][:160]}' if res[c] else ''))
-            need(bool(res[c]) == (c in want), f'V: mutant {name} on {c}: {tag}, section 3.1 expects '
-                 f'{"rejected" if c in want else "passes"}')
+            if want is not None:
+                need(bool(res[c]) == (c in want), f'V: mutant {name} on {c}: {tag}, section 3.1 expects '
+                     f'{"rejected" if c in want else "passes"}')
     shutil.rmtree(wsp)
 
 
