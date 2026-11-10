@@ -54,6 +54,9 @@
 - **새 기준 자료 투영기는 기존 검사기를 import해 manifest·3회 일치를 재사용한다.** `tools/mip_retry_rust_expect.py`가 `mip_retry_basis_check`의 `load`·`first`·`check_manifest`를 쓴다. trace 비교는 첫 차이(사건·필드·기준값·실제값)를 출력하고 추가 필드·사건도 실패로 본다. (M2-03d-1)
 - **Rust 소스 변조를 돌리기 전에 `cargo clippy -D warnings`를 먼저 통과시킨다.** clippy 수정(`assign_op_pattern`, `collapsible_match`)도 소스를 바꾸므로 그 전에 만든 변조 기록은 무효가 되고, 변조 대상 문자열도 바뀐다. M3-04c-6에서 이 때문에 변조를 두 번 다시 돌렸다. (M3-04c-6)
 
+- **앞 단계 검사가 표적 변조를 먼저 거부하면 새 검사의 판별력은 증명되지 않는다.** M2-03d-6에서 노드 id·basis 변조는 무영향 검사 A가 먼저 잡았다. 기준 실행에도 같은 변조를 넣어 A를 통과시킨 뒤 F·G가 거부하는지 따로 확인했다. (M2-03d-6)
+- **`08b2fe`의 `lp+0xf8` 후보만 보고 "simplex가 다른 자료를 푼다"고 결론내지 않는다.** 쓰는 곳은 QP 드라이버뿐이다. ws와 API LP를 직접 비교한 결과만 근거로 쓴다. (M2-03d-6)
+
 ## git worktree
 
 - **`session.py claim … && claim shared && git worktree add …` 한 줄은 shared 점유 실패에서 멈춰 worktree가 생기지 않는다.** 그 뒤 Write 도구로 worktree 경로에 파일을 쓰면 git 저장소가 아닌 일반 디렉터리가 생긴다. 점유와 worktree 생성을 나눠 실행하고 `git -C <worktree> status`로 확인한다. (M2-03d-5)

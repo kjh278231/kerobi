@@ -63,7 +63,7 @@ M2-01의 G6 완료 범위는 유지한다. 실제 실행되지 않은 presolve �
 | M2-03d-3 | 오라클 완료 | 재풀이 시점 노드 LP(행·bound·목적·cutoff) 원본 캡처. nidda의 추가 62행 정체와 gmu sub-MIP 가능성 조사 포함 | 03d-2 | [완료](m2/mip_retry_node_lp.md). 노드 LP 기준 파일 `bench/oracle/mip_retry_node_lp/*.node_lp.json`, 원본 3회 재현, 계측 무영향(재풀이 solve까지), 변조 12종 거부. nidda는 RINS 고정 연속부 LP(62행은 '<' 행, cut 추정), gmu는 sub-MIP 루트. 두 사례 모두 일반 B&B 노드가 아니다 |
 | M2-03d-4 | 구현·검증 | 재풀이 실제 경로 연결과 LP 포함 동등성(L2) | M2-10b(노드 basis 저장·상속), M1 요청(primal warm start·LP cutoff, [M1 인수인계](handoff/M1.md)), 03d-3 | L2(제안): 03d-3 노드 LP 파일로 Rust LP를 재생한다. nidda는 노드 basis·method 0·cutoff → 6, gmu는 `0c3d0d` 안의 k=3(given basis, method 1 → 2)만 단일 LP로 대조할 수 있다. `bnb.rs` 실제 경로는 두 사례(RINS LP, sub-MIP 루트)로 검증할 수 없다. 일반 B&B 노드의 자연 재풀이 사례가 따로 필요하다. 그 전까지 Numeric 종료 유지 |
 | M2-03d-5 | 조사 완료 | 일반 B&B 노드(`5fb8ec`·깊이 1)의 자연 상태 12 재풀이 스캔과 호출 문맥 분류 | 03d-3, 사용자 결정(2026-11-10) | [완료](m2/mip_retry_bnb_scan.md). 228회 tier A 0건, tier B 1건(nidda H seed 1 노드 16948, 재시작 뒤, 3회 재현) |
-| M2-03d-6 | 오라클(제안) | 03d-5 적중 노드(solve 19900)의 노드 LP·basis·cutoff·재풀이 결과 캡처 | 03d-5 | 독립 3회 일치와 Rust용 노드 LP 파일. M2-03d-4 L2에 일반 노드 사례 추가 |
+| M2-03d-6 | 오라클 완료 | 03d-5 적중 노드(solve 19900)의 노드 LP·basis·cutoff·재풀이 결과 캡처 | 03d-5 | [완료](m2/mip_retry_bnb_node_lp.md). 기준 1회 + 계측 3회(바이트 동일), 동일 노드 F, 변조 24종 + F·G 8종 거부. 노드 LP 253×488, 재풀이 primal → 2. simplex ws는 96행을 비운 LP(`simplex_blanked_rows`, 출처 미확인), 모델 2행 '<'→'=' |
 | M2-04a | 조사 | presolve 긴 패스 하나의 중단 지점 | 5초 기준표 | 원본 확인 위치와 중단 시 유효 상태 |
 | M2-04b | 구현 | 04a의 패스에서 마감 전파 | 04a | 만료·미만료 결과와 부분 모델 처리 검사 |
 | M2-04c | 조사·구현 | 전파 루프의 원본 중단 지점 하나 | 전파 함수 확인 | 중단 상태·후속 소비자와 제한 재현 |
