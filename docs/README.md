@@ -16,6 +16,7 @@ M1·M2·M3의 번호별 범위와 완료 확인 방법은 [작업 단위 목록]
 - [09 로드맵](09_roadmap.md): 마일스톤 계획. 현재 상태는 진행 기록과 다이어그램을 기준으로 한다.
 - [port_map.tsv](port_map.tsv): 원본 함수와 모듈의 대응표. `tools/port_map.py`가 생성한다.
 - [m1/](m1/): LP simplex, presolve·postsolve와 드라이버 작업 기록.
+- [lessons/](lessons/README.md): 작업 단위마다 남기는 교훈. 원본 사실, 도구 함정과 실패한 접근, 절차를 담는다.
 - [m2/](m2/): MIP presolve, 루트·B&B, 해 복원과 측정 기록. 파라미터 오프셋 표도 여기에 있다.
 - [m3/](m3/): barrier, ordering, Cholesky와 PDHG 작업 기록.
 

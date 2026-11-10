@@ -150,4 +150,5 @@
   - 상태 10, 자연 5→12, `682037` 진입 predicate(M2-03c에 남김).
   - Rust 재풀이를 원본과 맞추는 구현. 현재 Rust는 자식 Numeric을 그대로 둔다.
 - 후속 후보: Rust 재풀이 구현이다. 입력은 노드 저장 basis(`I+0x98/0xa0`), method는 `param_3[3]` 규칙, 재풀이 뒤 상태 2이면 basis를 저장한다. 구현 전 이 오라클의 nidda·gmu 사건을 Rust 계측과 맞출 비교 경계를 먼저 정한다.
+- 교훈 기록: [원본 사실](../lessons/original.md)의 노드 basis·export·재풀이, [도구](../lessons/tooling.md)의 Frida·Herdr·검사기, [절차](../lessons/process.md).
 - 다음 실행 명령: `python3 tools/mip_retry_basis_check.py --self-test`(저장 기준). 원본 재캡처는 `tools/mip_retry_basis_runs.sh <출력>` 후 같은 검사기를 쓰거나 저장본과 비교한다.
