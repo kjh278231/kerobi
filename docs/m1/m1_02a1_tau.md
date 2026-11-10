@@ -61,7 +61,7 @@
 - 처음 계약에서 바뀐 점: A는 τ val이 α_q 출력 목록에 맞춰 정렬된 형식임을 반영했다(처음에는 출력 형식 미정). U·I·R·G를 더했다. 원본 τ를 같은 입력에서 재현하려면 L·R 단계 값이 필요한데, 원본 캡처에는 없어서 Rust LU 덤프(임시 계측, §5 패치)를 기준 자료로 고정하고 U·I·R로 원본·현재 코드와 묶었다. 판정 규칙을 넓힌 것은 없다.
 - 비교는 모두 비트(u64) 정확 비교다. 허용오차 없음.
 - 목표 사건이 없으면 실패: `09d112` 사건 0개, T의 차이 0개(또는 피벗 11에 없음), W·G 대상 0개, 모으기 대상 중 2항 이상 행 0개.
-- 자기검사(`--self-test`): 바이너리 해시, 회차 차이, 빈 사건, 캡처 파일 해시, 도구 해시, 덤프 해시, 피벗 11 원본 τ 한 비트(A·W·G), 피벗 11 α_q 한 원소 누락(A·W), `09d112` ρ 한 비트(X·I), w 한 비트(W), 원본 U 행 하나의 두 원소 순서 교환(G), Rust τ를 원본 τ로 대체(T)를 모두 거부해야 한다.
+- 자기검사(`--self-test`): 바이너리 해시, 회차 차이, 빈 사건, 캡처 파일 해시, 도구 해시, 덤프 해시, 피벗 11 원본 τ 한 비트(A·W·G), 피벗 11 α_q 한 원소 누락(A·W), `09d112` ρ 한 비트(X·I), w 한 비트(W), 원본 U 행 하나의 두 원소 순서 교환(G), Rust τ를 원본 τ로 대체(T), 원본 피벗 11 τ를 Rust τ로 대체(T·W)를 모두 거부해야 한다.
 - C만으로 남길 것: 8항 이상 U 행 내적의 레인 결합(캡처에 없음), 재분해 직후 U 행 초기 순서의 생성 규칙(원본 캡처 순서를 그대로 씀).
 
 ## 4. 사례와 원본 자료
@@ -87,6 +87,64 @@
 - worktree 빌드에서 `tools/m1_beta_check.py` PASS, `statecmp kb2` 반복 12 w 2개(첫 var 58)를 재현했다.
 - 저장 오라클 스냅숏 12의 `aq`(13원소)·`beta`·`ar`와 스냅숏 11의 w에 Rust 스냅숏 τ를 넣어 §1 식을 계산했다(스크래치). 13개 중 11개 위치가 원본 w와 비트까지 같고, 위치 20·22만 다르다. 원본 w를 내는 τ는 Rust τ에서 위치 20이 −1~−2 ulp, 위치 22가 +12~+16 ulp 떨어진 값이다(역산). 스냅숏 13에서는 위치 19(−2~−21 ulp)·35(+1 ulp)가 같은 방식으로 다르다. Rust τ의 두 값은 가수 끝이 0으로 끝나 상쇄가 있었던 값이다.
 
+- 반복 11 상태로 원본 `09d112`의 τ를 직접 읽었다(탐색 캡처 2회, 스크래치). 피벗 11의 α_q 13개 위치 중 20·22만 Rust와 다르다(역산과 같은 결론). 피벗 10부터 τ 출력 nnz가 −1인데, 이는 조밀이 아니라 τ val을 α_q 출력 목록 순서로 모았다는 표시다. 희소 경로(피벗 0–9·15–17)에서도 val은 같은 순서로 정렬돼 있고 τ의 nnz 필드는 그 개수가 아니다.
+- R 단계(row eta 내적)는 두 RHS가 같은 8레인 구조로 보였다(C:1135–1355). Rust 덤프(임시 계측, 커밋 안 함)를 Python으로 재현해 R 결합 순서·순차 합·L drop 변형을 시험했지만 원본 차이는 바뀌지 않았다.
+- 피벗 11 행 17·19(위치 20·22)는 L 기여 3개, U 기여 2개(꼬리 단계 18·21)를 받는다. 원본은 U 기여를 21 → 18 순서로, Rust는 18 → 21(U 위치 내림차순)로 뺀다. 순서만 바꾸면 두 값이 원본과 비트까지 같다.
+- `09d112` C:1888–2430(두 RHS 조밀 경로)을 읽었다. α_q는 꼬리 열(U 위치 ≥ LU+0x100)을 열 방향으로 모든 행에 흩뿌린다. τ는 꼬리 열 원소 중 접두 행 구간(LU+0x98..0x90)을 건너뛴다(C:2205–2263). 그 대신 출력 단계(C:2279–2402)에서 α_q가 비영인 접두 행마다 LU+0xf8 ≥ 0이면 U 행(LU+0xb0..0xb8, idx LU+0xd0, val LU+0xc8)을 내적해 `(τ_i − Σ u·τ_j)/d_i`로 모은다. −1이면 `τ_i/d_i`, −2(꼬리)면 이미 나눈 값을 쓴다.
+- U 행 저장 순서를 "열 삽입 순서, 열 삭제 때 마지막 원소로 채움"으로 모의하면 피벗 0–21의 τ 269개가 모두 같았다. 삭제를 안정 삭제로 바꾸면 피벗 14(위치 17·35)가, 새 열을 앞에 넣으면 피벗 11–21이 틀린다. 재분해 직후 초기 순서(오름차순·내림차순)는 판별되지 않았다. 이 모의는 검사 근거로 쓰지 않고, 고정 캡처에 원본 U 행 저장 자체를 넣었다(§3 G).
+
+### 6.2 고정 캡처와 판정
+
+- 실행: worktree `../rsolver-m1-02a-1`, 기준 main `79d1d5c`. 계약 `c6075f1`, 도구·덤프 `dccb13a`, 캡처 `7c69502`, 검사기 `e3839eb`(이 기록과 같은 branch). x86-64 Linux(WSL2). Rust는 main 그대로다(임시 계측은 `bench/oracle/m1_02a1_tau/rust_lu_dump.patch`로 남기고 되돌렸다. `git diff crates/` 비어 있음).
+- 원본 캡처: `tools/m1_tau_path.js`(sha256 앞 16자리 `b41afe7503934821`) 3회 모두 `DONE 2 38`, 사건 38개, 오류 없음. gz SHA-256이 세 회 모두 `64cc9dea89f809b601f7cb2e11636cc632f382318ceeaec0273a599687bdf393`로 같다.
+- Rust LU 덤프 `rust_lu_kb2.jsonl.gz` SHA-256 `e7ba8748…`, 패치 SHA-256 `c698cc8d…`. 덤프는 main `79d1d5c`에 패치를 적용한 빌드에서 만들었다.
+- 판정(`PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_tau_check.py --self-test`, 종료 0):
+
+```text
+M: 3 runs, binary/model/params/output, pinned file sha, tool = current file b41afe7503934821, Rust LU dump and patch pinned
+B: 38 pivots, 3 runs equal
+X: one 09d112 call per pivot; its rho input = M1-02a compacted rho, beta = M1-02a, alpha_r/beta = stored oracle
+A: alpha_q list and aligned tau at the 8b473 return = 09d112 outputs with the pivot swapped out (38 pivots)
+W: 1bae9c DSE update from the captured alpha_q, tau, beta, alpha_r = next weights on 34 pivots (3 refactor boundaries not checked)
+U: Rust LU dump = original U rows (sets, values), diagonal, U order and prefix t on 22 pivots (946 rows); LU+0xf8 = -2 tail, -1 empty prefix row, >=0 prefix row
+I: Rust rho = original 09d112 rho input; Rust FTRAN of the original a_q = original alpha_q output (pivots 0-21)
+R: Rust rule on the dump = current Rust snapshot tau (pivots 0-21, all positions)
+T: Rust tau != original tau at 34 of 269 alpha_q positions on pivots [11, 12, 13, 14, 18, 19, 20, 21]; first [(11, [20, 22])]; signed zero only (+0 vs -0, no effect on w): [(1, [0, 1])]
+G: original rule (tail scatter to tail rows, prefix gather over the stored U row order) = original tau on all 269 positions; 90 gathered rows with 2+ terms, 0 with 8+ (C only)
+F: Rust snapshot 12 w differs from the stored oracle exactly at positions [20, 22]
+P: (피벗별 경로, 아래 요약)
+self-test: 13 tampers rejected
+PASS
+```
+
+- P 요약: 피벗 0–5는 `09d112`가 커널(`21b9de` L, `21686f`·`2126cd` U, `21574d`)을 부르고 τ 출력은 희소다. 피벗 6–20은 피호출 없이 인라인이다. 그중 τ 출력 −1(모은 형식)은 피벗 10–14·18–20이다. 피벗 21은 `21b9de`·`214344`·`21f83a`·`21841f`를 부르고 τ 출력은 −1이다. T의 값 차이 피벗은 모두 τ 출력 −1 피벗이다. 피벗 10도 τ 출력 −1이지만 값 차이가 없다.
+- 계약 변경(결과 확인 뒤): T를 값 차이와 부호 있는 0 차이로 나눠 보고하게 했다. 처음 실행에서 피벗 1의 위치 0·1이 +0(Rust) 대 −0(원본)으로 비트가 달라 T의 첫 차이가 피벗 1로 나왔다. 이 차이는 갱신식에서 w를 바꾸지 않는다(W 통과). G 규칙은 −0까지 비트로 재현한다(G는 비트 비교 그대로). 바뀐 것은 T의 "첫 차이"를 값 기준으로 정의한 것 하나이고, 부호 있는 0 차이도 출력에 남긴다. 원본 피벗 11 τ를 Rust τ로 바꾸는 변조를 더해 변조가 13종이 됐다.
+- 규칙 판별력(기록만, 검사기 임시 사본 2개): 모으기 항을 원본 저장 순서 대신 U 위치 오름차순으로 더하면 G가 피벗 14·20에서, 내림차순(Rust와 같은 결과)이면 피벗 11부터 실패했다. 저장 순서 자체가 판별된다.
+- 회귀: Rust 미변경. 같은 빌드에서 `tools/m1_beta_check.py --self-test` PASS(종료 0).
+- 실행하지 못한 검사: 피벗 22–37의 Rust 대조(경로가 갈려 같은 입력이 아님), 다른 모델, `cargo test`·clippy(Rust 미변경).
+
 ## 7. 판정과 인수인계
 
-(실행 뒤 작성)
+- 작업 수행 상태: **완료(조사)**.
+- 답:
+  - 처음 다른 입력은 DSE 갱신식의 τ(=B⁻¹ρ)다. 피벗 11(스냅숏 12)의 위치 20·22이며, 원본 캡처로 직접 확인했다. α_q·ρ·β·α_r·이전 w와 U 인자(행·값·대각·순서·접두 t)는 원본과 비트까지 같다.
+  - 그 τ를 쓴 원본 연산은 `8b473` C:419의 `09d112` 두 RHS FTRAN이다. 해당 피벗은 인라인 조밀 경로(C:1888–2430)를 탄다.
+  - τ의 U 단계 규칙: 꼬리 열(U 위치 ≥ LU+0x100)은 U 위치 내림차순으로 나누고 꼬리 행에만 흩뿌린다. α_q 목록의 접두 행은 U 행을 저장 순서대로 내적해 `(x_i − Σ u·τ_j)/d_i`로 모은다(LU+0xf8 ≥ 0. −1이면 `x_i/d_i`).
+  - Rust `ftran_upper`는 모든 꼬리 열을 모든 행에 U 위치 내림차순으로 흩뿌린다. 그래서 둘 이상의 꼬리 열 원소를 가진 접두 행에서 빼는 순서가 달라진다.
+  - 실행 근거: 이 규칙을 원본 U 행 저장 순서와 Rust L·R 결과에 적용하면 피벗 0–21의 τ 269개가 모두 원본과 비트까지 같다. 같은 입력에 Rust 규칙을 적용하면 정확히 34개(피벗 11–14·18–21)가 다르다.
+- 동등성: 해당 없음(조사). Rust 구현은 **불일치**로 남는다(T).
+- 통과 범위: kb2 한 모델, 피벗 0–21(Rust 같은 입력)과 W·A·X의 피벗 0–37(원본만). 모으기 행 90개(2항 이상)가 판별에 쓰였다.
+- 남은 한계:
+  - C만: 8항 이상 U 행 모으기의 레인 결합(C:2343–2387, 캡처 0회, 디컴파일 결합 순서는 asm 미확인), 피벗 21의 `21841f`·`21f83a` 경로 내부(실행으로는 같은 규칙이 재현, C 미독).
+  - 미확인:
+    - U 행 저장 순서의 생성 규칙. 갱신에서 "뒤에 추가, 삭제는 마지막 원소로 채움"은 캡처와 모순이 없지만 `05b257`·`09e47c` C를 읽지 않았다. 재분해 직후 초기 순서는 U 위치 오름차순이 아니다(피벗 15 뒤 행: 원본 [41, 42, 39]). 이번 판정은 캡처한 원본 순서를 그대로 쓴다.
+    - 피벗 1의 τ 부호 있는 0(원본 −0, Rust +0). 희소 커널 경로이고 w에는 영향이 없으며, 원인은 확인하지 않았다.
+    - 피벗 22 이후와 다른 모델에서의 규칙.
+    - 재분해 경계 3곳의 w(1bae9c 전체 경로).
+- 후속:
+  - **M1-02a-2**(조사): U 행 저장 순서의 생성 규칙. 인수분해(`036ade`) 직후 초기 순서와 FT 갱신(`05b257`·`09e47c`)의 원소 삭제·추가를 C와 이번 캡처(`urow`)로 대조한다. 첫 명령은 `python3 tools/dc.py 05b257 --grep '0xb0|0xb8|0xd0|0xc8'`이다.
+  - **M1-02d**(구현): DSE τ를 원본 규칙으로 계산한다. 꼬리 열 흩뿌림은 꼬리 행으로 한정하고, α_q 지지의 접두 행은 원본 U 행 저장 순서로 모은다. M1-02a-2가 선행이다. 판정은 `tools/m1_tau_check.py`의 T를 "차이 없음"으로 바꾼 검사와 `statecmp kb2` 반복 12 이후다.
+  - **M1-02c**(검증)는 그대로 남는다.
+- 작업 branch·commit: `work/m1-02a-1`, worktree `../rsolver-m1-02a-1`. 미커밋 없음(이 기록 커밋 기준). 병합 상태는 [M1 인수인계](../handoff/M1.md)와 main 이력으로 확인한다.
+- 갱신 위치: [M1 인수인계](../handoff/M1.md), [스프린트 목록](../14_sprint_plan.md) M1-02a-1 행과 새 행, [작업 단위](../13_work_units.md) M1-02, [진행 기록](../11_progress.md)·[로드맵](../12_roadmap_diagram.md) 맨 위.
+- 교훈 기록: [원본 사실](../lessons/original.md) "DSE τ의 U 단계 모으기", [도구](../lessons/tooling.md) "τ val 정렬 형식", "Rust LU 덤프를 기준 자료로 고정".
