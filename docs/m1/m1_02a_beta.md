@@ -7,7 +7,7 @@
 - 작업 종류: 조사. 산출물은 [M1 설계](sprint_design.md) §2대로 최초로 달라지는 반복, 필드, 그 필드를 마지막으로 쓴 원본 함수, 같은 입력의 Rust 연산이다. Rust 솔버 코드는 바꾸지 않는다.
 - 질문: kb2(Netlib, Method=1, Presolve=0, Threads=1, Seed 0)에서 Rust dual simplex가 원본과 처음 다른 값을 내는 반복과 필드는 무엇이고, 원본의 어느 연산과 Rust의 어느 연산이 다른가.
 - 완료 후 주장할 것(§6.1 탐색에서 정한 가설, §3 검사로 판정):
-  - 반복 0–11의 비교 필드(vstat·x_B·d·w·가격 상태)는 같고, 처음 다른 값은 피벗 11(스냅숏 12)의 β=‖ρ_r‖²(spx+0x310) 마지막 비트다. 같은 피벗의 α_r(spx+0x300)과 ρ_r 원소 값은 같다.
+  - 반복 0–11의 비교 필드(vstat·x_B·d·w, 가격 상태는 `statecmp`)는 같고, 처음 다른 값은 피벗 11(스냅숏 12)의 β=‖ρ_r‖²(spx+0x310) 마지막 비트다. 같은 피벗의 α_r(spx+0x300)과 ρ_r 원소 값은 같다.
   - 원본: `28c93` C:139–163이 BTRAN `09e376`의 출력이 조밀(nnz<0)이면 인덱스 오름차순으로 \|ρ_i\| > spx+0x3a8인 원소만 앞으로 모아 희소로 바꾼다. 희소 출력이면 그대로 둔다. `8b473` C:105–222(asm `0x11f7be`–`0x11fa4c`)가 그 벡터를 저장 순서대로 8레인 합산해 spx+0x310에 쓴다.
   - Rust: `crates/lp/src/simplex.rs:980`이 `lu.btran` 출력(조밀이면 0을 포함한 m개)을 거르기 전에 `sum_squares`로 더한다. 조밀 출력에서 8레인 묶음이 달라 마지막 비트가 갈린다.
 - 제외 범위와 후속:
@@ -77,12 +77,45 @@
 - 반복 11 콜백에서 원본 BTRAN `9e288`을 직접 불러(`tools/proto/btran_oracle.py` 변형, 스크래치) e_6의 출력을 얻었다. 조밀(nnz=−1)이고 비영 11개다. Rust `lu.btran` 출력(임시 계측, 커밋 안 함)과 값이 비트까지 같다. 이 조밀 배열 43개를 8레인으로 더하면 `…d34`(Rust), 비영 11개만 더하면 `…d33`(원본)이다.
 - Frida 탐색(스크래치 `beta_path.js`, 1회): 실제 반복의 `8b473`은 피벗 11에서 n=11 희소 벡터를 SIMD 경로(정렬 0 mod 16)로 더했다. 38피벗 모두 val&0xf=0이었고, n≤6 피벗은 순차 경로, n>6은 모두 SIMD였다(별칭 경로 0회). Rust ρ를 ZERO(1e-13 또는 0)로 거른 뒤 같은 합산을 하면 피벗 0–21의 β 22개가 개수·비트까지 원본과 같았다. Rust β가 원본과 다른 피벗은 11·12·16·18·20이다.
 - `28c93` C:139–163에서 압축 코드를 확인했다(§2). 반복별 β는 `8b473`이 쓴다. Rust 주석이 가리키던 `1bae9c` L1971–2110은 초기 정확 노름(EXACTNORM) 루프다.
+- 스냅숏 1–13의 spx+0x308(행 α_rq)과 Rust `alpha[q]`(`last_aq_row`)는 절댓값 비트가 모두 같다. 부호는 스냅숏 1부터 저장 관례가 다르다(이 실행에서 원본 값은 항상 음수, Rust는 α 부호 그대로). 최초 분기와 무관하고 원본 부호 규칙은 확인하지 않았다.
 - 임시 실험(커밋 안 함): Rust β를 "조밀이면 거른 뒤 합산"으로 바꾸면 반복 12의 w 차이가 10개에서 2개(첫 차이 var 58)로 줄지만 피벗 분기는 21 그대로다. 남은 차이의 원인은 특정하지 않았다.
 
 ### 6.2 고정 캡처
 
-(실행 후 작성)
+- 실행: worktree `../rsolver-m1-02a`, 계약 커밋 `3bdf88b` 뒤의 `tools/m1_beta_path.js`(sha256 앞 16자리 `ab414034c3e2f007`, 캡처 파일에 기록). 세 회 모두 `DONE 2 38`, 오류 없음. gz 파일 SHA-256이 세 회 모두 `caad5976f259e668d473e9e992b4c1b69e44254cbce7b63eda778c7b479e48b1`로 같다.
+- 첫 시도에서 다른 세션이 Gurobi를 쓰고 있어 잠금 오류 출력으로 파일이 먼저 써졌고, `gurun.sh` 재시도가 덮어쓰기 금지에 걸렸다. 잠금 메시지면 파일을 쓰지 않고 끝내도록 도구를 고친 뒤 고정 캡처를 돌렸다(탐색 probe는 스크래치).
+- Rust 쪽: 같은 worktree에서 `tools/build_local.sh`로 빌드한 main `2bc84de` Rust(임시 계측·실험 되돌림, `git diff crates/` 비어 있음).
+- 판정 출력(`PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_beta_check.py --self-test`, 종료 0):
+
+```text
+M: 3 runs, binary/model/params/output, pinned file sha, tool = current file ab414034c3e2f007
+B: 38 pivots, 3 runs equal
+C: dense outputs compacted in index order with |x| > spx+0x3a8 (28 dense, 10 sparse)
+O: stored beta = sum in captured order for 38 pivots; paths [(('scalar', 0, False), 13), (('simd', 0, False), 25)]; chain combine also equal on 22/25 simd pivots
+R: Rust beta = sum_squares(uncompacted BTRAN output) on pivots 0-21; differs from the original on pivots [11, 12, 16, 18, 20] (all dense outputs, compacted sum equals the original there)
+F: snapshots 0-11 equal (vstat, x_B, d, w), first w difference at 12; beta equal at 1-11, differs at 12; alpha_r equal 1-12
+self-test: 10 tampers rejected (binary sha, run 3 differs, file sha, tool sha (all runs), empty events, pivot 11 rho
+  value bit, pivot 11 beta bit, dense compaction drops one element, Rust beta replaced by original beta,
+  stored oracle w bit at iteration 5)
+PASS
+```
+
+- 판별력: spx+0x3a8은 세 회 모두 1e-13이다. 문턱 0과 1e-13은 이 실행에서 같은 결과다(\|x\|≤1e-13인 비영 원소 없음). 모든 피벗의 val이 16바이트 정렬이라 첫 원소 떼기는 실행되지 않았다. n>6 피벗 25개는 모두 SIMD였고 별칭 순차 경로는 0회다. 사슬 묶음은 SIMD 25피벗 중 3피벗에서 저장된 β와 달라 짝 묶음이 실행으로 판별됐다.
+- 희소 출력 30원소 중 \|x\|≤spx+0x3a8인 원소는 0개다. "희소 출력은 거르지 않는다"(C:164–167)는 실행으로 판별되지 않아 C만이다.
+- 계약 변경(결과 확인 뒤, 기록만): (1) 짝 대 사슬 묶음은 §3에서 C만 후보로 적었지만 실행에서 판별됐다(위). (2) 독립 검토 뒤 M을 강화했다. 캡처 gz SHA-256 고정과 캡처의 도구 해시 = 현재 파일 검사를 더했고, 변조가 8종에서 10종(file sha, tool sha 추가)이 됐다. 판정 규칙 C·O·R·F는 바꾸지 않았다.
+- 실행 확인: Presolve=0을 넣은 `tools/proto/alphacmp.py kb2 25`(호출 0–21 α 순서·값 같음, 22에서 이탈 행 다름)와 `tools/lp_check.py --methods 1 kb2`(OK, 반복 38/38)를 돌렸다.
+- 실행하지 못한 검사: 다른 모델, `cargo test`·clippy(Rust 미변경), `tools/lp_check.py` Presolve=0 수정의 재측정(M1-02c 범위).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: 완료(조사).
+- 답: kb2 Method=1의 최초 분기는 피벗 11(스냅숏 12)의 DSE β(spx+0x310)다. 원본 `28c93` C:149–163은 조밀 BTRAN 출력을 \|x_i\|>spx+0x3a8 원소만 인덱스 순으로 압축하고, `8b473` C:105–222가 그 희소 벡터를 8레인으로 더한다. Rust `simplex.rs:980`은 압축 전 조밀 출력 m개를 같은 8레인으로 더해 묶음이 달라진다. ρ_r 값과 α_r은 같다(캡처·C).
+- 통과 범위: kb2 한 모델, 피벗 0–37(원본 규칙), 피벗 0–21(Rust 연산 대조). 그 뒤는 피벗 경로가 갈려 같은 입력이 아니다.
+- 남은 한계: 문턱 값(0 대 1e-13)·첫 원소 떼기·별칭 경로·희소 출력 무필터는 C만이다. Rust `lu.btran`이 피벗마다 조밀·희소를 원본 nnz 부호와 같게 고르는지는 비교하지 않았다(β만 비교). β만 원본 규칙으로 바꾸어도 반복 12에 w 2개 차이가 남고 피벗 분기 21은 그대로다(§6.1 임시 실험). 그 원인은 미확인이다.
+- 후속:
+  - **M1-02b**(구현): 조밀 판정은 출력 길이(`len == m`)가 아니라 원본처럼 BTRAN 경로의 조밀 표시로 해야 하고, 그 판정이 원본 nnz 부호와 같은지 먼저 대조한다. Rust β를 "조밀 출력이면 \|ρ_i\|>ZERO 원소만 인덱스 순으로 모아 `sum_squares`, 희소면 그대로"로 바꾼다. 검증은 `tools/m1_beta_check.py`의 R을 "Rust β = 원본 β(피벗 0–21)"로 바꾼 판정과 `statecmp` 반복 12 차이 감소다. `simplex.rs:979` 주석의 `1bae9c` L1971–2110 출처도 `8b473`·`28c93`으로 고친다. 행 work(`a171f`)와 `pivot_row`가 받는 ρ가 원본과 같은지(희소 출력은 거르지 않음)도 함께 확인한다.
+  - **M1-02a-1**(조사, 새 행): β를 고친 상태에서 kb2 반복 12의 남은 DSE w 차이 2개(첫 var 58)의 원인. 콜백 시점 spx+0x218은 섞인 버퍼라 쓰지 않는다. `8b473`의 DSE 갱신 지점에서 α·τ를 훅으로 캡처한다.
+  - Method=1 Netlib 64 재측정(M1-02c)은 Presolve=0을 넣은 `tools/lp_check.py`·`pathcmp.py`로 한다. `bench/pathcmp.txt`와 24/64는 presolve 도입 전 측정이다.
+- 작업 branch·commit: `work/m1-02a`, worktree `../rsolver-m1-02a`. 미커밋 없음(이 기록 커밋 기준). 병합 상태는 [M1 인수인계](../handoff/M1.md)와 main 이력으로 확인한다.
+- 갱신 위치: [M1 인수인계](../handoff/M1.md), [스프린트 목록](../14_sprint_plan.md) M1-02a·M1-02a-1 행, [작업 단위](../13_work_units.md) M1-02, [진행 기록](../11_progress.md)·[로드맵](../12_roadmap_diagram.md) 맨 위.
+- 교훈 기록: [원본 교훈](../lessons/original.md) "simplex DSE β", [도구 교훈](../lessons/tooling.md) "M1 비교 도구 Presolve=0", "콜백 시점 spx+0x218", "gurun 재시도와 덮어쓰기 금지".
