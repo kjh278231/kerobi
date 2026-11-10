@@ -1,0 +1,19 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "fractional_branch.lp",
+ "model_sha256": "2c5655e554ecce10a772b57e279577be507224847381399a22d305af47d9ec41",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0
+ },
+ "output": "DONE 2 0",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {},
+ "events": []
+}

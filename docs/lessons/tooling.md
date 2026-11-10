@@ -14,6 +14,7 @@
 - **실행 간 비교 사건에 heap 포인터로 만든 번호(첫 등장 순번)를 넣지 않는다.** 같은 도구·설정에서도 gmu 1·2회차의 MIP 구조체 번호가 달라 사건 수가 달라졌다. 함수 진입 순번·중첩 깊이·구조체 안의 자기참조 비교처럼 실행 순서에서 나오는 값을 쓴다. (M2-03d-3)
 - **원본 내부 LP 객체는 공개 API(`GRBgetvars`·`GRBgetdblattrarray` 등)로 읽을 수 있다.** `5ce67b` 자신도 노드 LP에 `GRBgetintattr`를 부른다. `GRBcheckmodel`이 env 오류 버퍼를 지우므로 계측 사건으로 표시한다. 계측 없는 이전 캡처와 비계측 사건을 비교해 무영향을 보인다. 예: `tools/mip_retry_node_lp.js`. (M2-03d-3)
 - **부동소수 기준 자료는 u64 비트 패턴 16진수로 저장한다.** 노드 LP bound에 −0.0이 있었다. JSON 숫자는 −0을 잃는다. (M2-03d-3)
+- **노드 LP의 호출 문맥(본 탐색 노드·휴리스틱·루트·sub-MIP)은 backtrace 대신 `5ce67b` 진입의 반환 주소와 `5bbf7f` 중첩 깊이로 판별한다.** 반환 주소를 `../re/decomp/index.tsv` 함수 범위로 이름화하고 `5ce67b` 중첩 스택을 둔다. `5fb8ec`(노드)·`8e4682`·`8f39d7`·`8faaa4`(휴리스틱)·`654502`·`6dec7d`(루트)가 바로 갈린다. FUZZY backtrace는 오래된 스택 칸도 읽는다. 예: `tools/mip_retry_bnb_scan.js`. (M2-03d-5)
 - **Python venv에는 frida 모듈이 없다.** Node Frida(`tools/mip_retry_basis.js`의 require 경로)를 쓴다. (M2-03b-1)
 
 - **함수 중간 지점 훅은 objdump로 명령 경계, 그 지점으로 가는 jmp 전부의 출처, 레지스터 쓰기를 확인한 뒤 붙인다.** `0x1c3004`는 jmp 9개가 모두 단계 구간 안에서 왔고 r14 쓰기가 없었다. 새 훅의 사건만 빼서 이전 캡처와 같으면 비간섭 증거가 된다. (M3-04b-1, [§3](../m3/primal_push_step_oracle.md#3-캡처-경계-보완))
@@ -55,4 +56,5 @@
 
 ## git worktree
 
+- **`session.py claim … && claim shared && git worktree add …` 한 줄은 shared 점유 실패에서 멈춰 worktree가 생기지 않는다.** 그 뒤 Write 도구로 worktree 경로에 파일을 쓰면 git 저장소가 아닌 일반 디렉터리가 생긴다. 점유와 worktree 생성을 나눠 실행하고 `git -C <worktree> status`로 확인한다. (M2-03d-5)
 - **ignore된 `target/`(재생성할 수 있는 탐색 출력)이 남아 있으면 `git worktree remove`에 `--force`가 필요하다.** 미커밋·미추적 파일이 그것뿐인지 먼저 확인한다. (M2-03c-2)

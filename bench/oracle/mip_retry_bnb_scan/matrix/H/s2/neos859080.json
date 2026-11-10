@@ -1,0 +1,225 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "neos859080.mps.gz",
+ "model_sha256": "bace2c785ab613cdd997b74197a44eca35b7b7871b18e4d958a9e83fa5ee205b",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 2,
+  "LogToConsole": 0,
+  "TimeLimit": 20,
+  "NodeLimit": 50000,
+  "Presolve": 0,
+  "ScaleFlag": 0,
+  "Quad": 0,
+  "NumericFocus": 0,
+  "MarkowitzTol": 0.0001,
+  "Heuristics": 0,
+  "RINS": 0
+ },
+ "output": "DONE 3 10206",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {
+  "n:before:654502:1:1:0:-1:2": 3,
+  "n:after:654502:1:1:0:2:2": 17,
+  "n:before:654502:1:1:0:2:2": 14,
+  "n:before:6dec7d:1:1:0:2:2": 5,
+  "n:after:6dec7d:1:1:0:2:2": 5,
+  "n:before:64da9f:1:1:0:2:2": 2,
+  "n:after:64da9f:1:1:0:2:2": 2,
+  "set:0": 14,
+  "n:before:5fb8ec:1:1:0:2:2": 3,
+  "n:after:5fb8ec:1:1:0:2:2": 3,
+  "n:before:5fb8ec:1:0:1:2:2": 11655,
+  "n:after:5fb8ec:1:0:1:2:2": 11655,
+  "n:before:5fb8ec:1:0:1:2:3": 113,
+  "n:after:5fb8ec:1:0:1:2:3": 113,
+  "set:4": 2617,
+  "n:before:6a6563:1:1:0:2:2": 2,
+  "n:after:6a6563:1:1:0:2:2": 2,
+  "n:before:7aef0b:1:0:0:2:2": 3,
+  "n:after:7aef0b:1:0:0:2:2": 3,
+  "n:before:654502:2:1:0:-1:2": 2,
+  "n:after:654502:2:1:0:2:2": 15,
+  "n:before:654502:2:1:0:2:2": 13,
+  "n:before:654502:3:1:0:-1:2": 9,
+  "n:after:654502:3:1:0:2:2": 25,
+  "n:before:654502:3:1:0:2:2": 16,
+  "n:before:6dec7d:3:1:0:2:2": 7,
+  "n:after:6dec7d:3:1:0:2:2": 7,
+  "n:before:6dec7d:2:1:0:2:2": 5,
+  "n:after:6dec7d:2:1:0:2:2": 5,
+  "n:before:8e4682:3:0:0:2:3": 1,
+  "n:after:8e4682:3:0:0:2:3": 1,
+  "n:before:64da9f:2:1:0:2:2": 1,
+  "n:after:64da9f:2:1:0:2:2": 1,
+  "n:before:5fb8ec:2:1:0:2:2": 2,
+  "n:after:5fb8ec:2:1:0:2:2": 2,
+  "n:before:5fb8ec:2:0:1:2:2": 215,
+  "n:after:5fb8ec:2:0:1:2:2": 215,
+  "n:before:5fb8ec:2:0:1:2:3": 91,
+  "n:after:5fb8ec:2:0:1:2:3": 91
+ },
+ "events": [
+  {
+   "event": "mipmain",
+   "serial": 0,
+   "depth": 1,
+   "ret": "c23877",
+   "model_rows": 164,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 160,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 1,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 160,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 128,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 2,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 128,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 128,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 3,
+   "depth": 3,
+   "ret": "c23877",
+   "model_rows": 64,
+   "model_cols": 104,
+   "presolved": {
+    "rows": 32,
+    "cols": 43
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 4,
+   "depth": 3,
+   "ret": "c23877",
+   "model_rows": 64,
+   "model_cols": 104,
+   "presolved": {
+    "rows": 32,
+    "cols": 43
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 5,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 128,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 128,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 6,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 128,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 128,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 7,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 128,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 128,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 8,
+   "depth": 3,
+   "ret": "c23877",
+   "model_rows": 25,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 25,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 9,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 128,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 128,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 10,
+   "depth": 3,
+   "ret": "c23877",
+   "model_rows": 25,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 25,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 11,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 128,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 128,
+    "cols": 160
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 12,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 128,
+   "model_cols": 160,
+   "presolved": {
+    "rows": 128,
+    "cols": 160
+   }
+  }
+ ]
+}

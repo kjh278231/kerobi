@@ -1,0 +1,216 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "mad.mps.gz",
+ "model_sha256": "0109c5aefd23dbe6d46dd84ab4ad451eab329904249b7acaa38e9a0c94a6bc7a",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 1,
+  "LogToConsole": 0,
+  "TimeLimit": 20,
+  "NodeLimit": 50000,
+  "Presolve": 0,
+  "ScaleFlag": 0,
+  "Quad": 0,
+  "NumericFocus": 0,
+  "MarkowitzTol": 0.0001,
+  "Heuristics": 0,
+  "RINS": 0
+ },
+ "output": "DONE 8 50000",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {
+  "n:before:654502:1:1:0:-1:2": 2,
+  "n:after:654502:1:1:0:2:2": 47,
+  "n:before:654502:1:1:0:2:2": 45,
+  "n:before:6dec7d:1:1:0:2:2": 22,
+  "n:after:6dec7d:1:1:0:2:2": 22,
+  "n:before:64da9f:1:1:0:2:2": 2,
+  "n:after:64da9f:1:1:0:2:2": 2,
+  "set:0": 14,
+  "n:before:5fb8ec:1:1:0:2:2": 3,
+  "n:after:5fb8ec:1:1:0:2:2": 3,
+  "n:before:5fb8ec:1:0:1:2:2": 53088,
+  "n:after:5fb8ec:1:0:1:2:2": 53088,
+  "set:5": 10,
+  "n:before:5fb8ec:1:0:1:2:3": 4084,
+  "n:after:5fb8ec:1:0:1:2:3": 4084,
+  "n:before:5fb8ec:1:0:1:2:6": 4554,
+  "n:after:5fb8ec:1:0:1:2:6": 4554,
+  "set:4": 6518,
+  "n:before:6a6563:1:1:0:2:2": 1,
+  "n:after:6a6563:1:1:0:2:2": 1,
+  "n:before:654502:2:1:0:-1:2": 1,
+  "n:after:654502:2:1:0:2:2": 23,
+  "n:before:654502:2:1:0:2:2": 22,
+  "n:before:6dec7d:2:1:0:2:2": 13,
+  "n:after:6dec7d:2:1:0:2:2": 13,
+  "n:before:654502:3:1:0:-1:2": 11,
+  "n:after:654502:3:1:0:2:2": 36,
+  "n:before:654502:3:1:0:2:2": 25,
+  "n:before:6dec7d:3:1:0:2:2": 23,
+  "n:after:6dec7d:3:1:0:2:2": 23
+ },
+ "events": [
+  {
+   "event": "mipmain",
+   "serial": 0,
+   "depth": 1,
+   "ret": "c23877",
+   "model_rows": 51,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 51,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 1,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 2,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 3,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 4,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 5,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 6,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 7,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 8,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 9,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 10,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 11,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 12,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 38,
+   "model_cols": 220,
+   "presolved": {
+    "rows": 38,
+    "cols": 220
+   }
+  }
+ ]
+}

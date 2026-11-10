@@ -1,0 +1,115 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "neos17.mps.gz",
+ "model_sha256": "1d50d129c3cbee9e409399314e5a77626811a46c301a2cf2fa2a2e64f65a8ba9",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "TimeLimit": 20,
+  "NodeLimit": 50000,
+  "Presolve": 0,
+  "ScaleFlag": 0,
+  "Quad": 0,
+  "NumericFocus": 0,
+  "MarkowitzTol": 0.0001,
+  "Heuristics": 0,
+  "RINS": 0
+ },
+ "output": "DONE 2 1686",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {
+  "n:before:654502:1:1:0:-1:2": 2,
+  "n:after:654502:1:1:0:2:2": 140,
+  "n:before:654502:1:1:0:2:2": 138,
+  "n:before:6dec7d:1:1:0:2:2": 56,
+  "n:after:6dec7d:1:1:0:2:2": 56,
+  "n:before:64da9f:1:1:0:2:2": 2,
+  "n:after:64da9f:1:1:0:2:2": 2,
+  "set:0": 6,
+  "n:before:5fb8ec:1:1:0:2:2": 3,
+  "n:after:5fb8ec:1:1:0:2:2": 3,
+  "n:before:5fb8ec:1:0:1:2:2": 2279,
+  "n:after:5fb8ec:1:0:1:2:2": 2279,
+  "n:before:5fb8ec:1:0:1:2:3": 89,
+  "n:after:5fb8ec:1:0:1:2:3": 89,
+  "set:4": 3,
+  "n:before:5fb8ec:1:0:1:2:6": 255,
+  "n:after:5fb8ec:1:0:1:2:6": 255,
+  "set:5": 6,
+  "n:before:6a6563:1:1:0:2:2": 1,
+  "n:after:6a6563:1:1:0:2:2": 1,
+  "n:before:654502:2:1:0:-1:2": 4,
+  "n:after:654502:2:1:0:2:2": 16,
+  "n:before:654502:2:1:0:2:2": 12,
+  "n:before:6dec7d:2:1:0:2:2": 9,
+  "n:after:6dec7d:2:1:0:2:2": 9
+ },
+ "events": [
+  {
+   "event": "mipmain",
+   "serial": 0,
+   "depth": 1,
+   "ret": "c23877",
+   "model_rows": 486,
+   "model_cols": 535,
+   "presolved": {
+    "rows": 486,
+    "cols": 535
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 1,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 313,
+   "model_cols": 535,
+   "presolved": {
+    "rows": 313,
+    "cols": 535
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 2,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 308,
+   "model_cols": 535,
+   "presolved": {
+    "rows": 308,
+    "cols": 535
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 3,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 305,
+   "model_cols": 535,
+   "presolved": {
+    "rows": 305,
+    "cols": 535
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 4,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 302,
+   "model_cols": 535,
+   "presolved": {
+    "rows": 302,
+    "cols": 535
+   }
+  }
+ ]
+}

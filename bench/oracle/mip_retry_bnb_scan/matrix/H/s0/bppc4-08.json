@@ -1,0 +1,91 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "bppc4-08.mps.gz",
+ "model_sha256": "f7441940af00d8a1a68b889f95dcabbe0185b68f53598cb70595fab23eca1cec",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "TimeLimit": 20,
+  "NodeLimit": 50000,
+  "Presolve": 0,
+  "ScaleFlag": 0,
+  "Quad": 0,
+  "NumericFocus": 0,
+  "MarkowitzTol": 0.0001,
+  "Heuristics": 0,
+  "RINS": 0
+ },
+ "output": "DONE 9 5329",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {
+  "n:before:654502:1:1:0:-1:2": 2,
+  "n:after:654502:1:1:0:2:2": 100,
+  "n:before:654502:1:1:0:2:2": 98,
+  "n:before:6dec7d:1:1:0:2:2": 62,
+  "n:after:6dec7d:1:1:0:2:2": 62,
+  "n:before:64da9f:1:1:0:2:2": 2,
+  "n:after:64da9f:1:1:0:2:2": 2,
+  "set:0": 4,
+  "n:before:5fb8ec:1:1:0:2:2": 2,
+  "n:after:5fb8ec:1:1:0:2:2": 2,
+  "n:before:5fb8ec:1:0:1:2:2": 7035,
+  "n:after:5fb8ec:1:0:1:2:2": 7035,
+  "set:5": 13,
+  "n:before:5fb8ec:1:0:1:2:6": 249,
+  "n:after:5fb8ec:1:0:1:2:6": 249,
+  "set:4": 66,
+  "n:before:6a6563:1:1:0:2:2": 1,
+  "n:after:6a6563:1:1:0:2:2": 1,
+  "n:before:654502:2:1:0:-1:2": 2,
+  "n:after:654502:2:1:0:2:2": 10,
+  "n:before:654502:2:1:0:2:2": 8,
+  "n:before:6dec7d:2:1:0:2:2": 8,
+  "n:after:6dec7d:2:1:0:2:2": 8,
+  "n:before:5fb8ec:1:0:1:2:3": 39,
+  "n:after:5fb8ec:1:0:1:2:3": 39
+ },
+ "events": [
+  {
+   "event": "mipmain",
+   "serial": 0,
+   "depth": 1,
+   "ret": "c23877",
+   "model_rows": 111,
+   "model_cols": 1456,
+   "presolved": {
+    "rows": 111,
+    "cols": 1456
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 1,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 111,
+   "model_cols": 1456,
+   "presolved": {
+    "rows": 111,
+    "cols": 1456
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 2,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 111,
+   "model_cols": 1456,
+   "presolved": {
+    "rows": 111,
+    "cols": 1456
+   }
+  }
+ ]
+}

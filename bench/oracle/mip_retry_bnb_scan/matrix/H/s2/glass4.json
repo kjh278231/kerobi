@@ -1,0 +1,352 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "glass4.mps.gz",
+ "model_sha256": "0d6e6ceaf921e5d5489b9926fdfed2ce0aa25fd9acfa9deb6794669b56b59591",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 2,
+  "LogToConsole": 0,
+  "TimeLimit": 20,
+  "NodeLimit": 50000,
+  "Presolve": 0,
+  "ScaleFlag": 0,
+  "Quad": 0,
+  "NumericFocus": 0,
+  "MarkowitzTol": 0.0001,
+  "Heuristics": 0,
+  "RINS": 0
+ },
+ "output": "DONE 9 44984",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {
+  "n:before:654502:1:1:0:-1:2": 3,
+  "n:after:654502:1:1:0:2:2": 46,
+  "n:before:654502:1:1:0:2:2": 43,
+  "n:before:6dec7d:1:1:0:2:2": 37,
+  "n:after:6dec7d:1:1:0:2:2": 37,
+  "n:before:64da9f:1:1:0:2:2": 3,
+  "n:after:64da9f:1:1:0:2:2": 3,
+  "set:0": 26,
+  "n:before:5fb8ec:1:1:0:2:2": 5,
+  "n:after:5fb8ec:1:1:0:2:2": 5,
+  "n:before:5fb8ec:1:0:1:2:2": 58689,
+  "n:after:5fb8ec:1:0:1:2:2": 58689,
+  "n:before:5fb8ec:1:0:1:2:3": 267,
+  "n:after:5fb8ec:1:0:1:2:3": 267,
+  "set:5": 28,
+  "set:4": 4161,
+  "n:before:6a6563:1:1:0:2:2": 2,
+  "n:after:6a6563:1:1:0:2:2": 2,
+  "n:before:7aef0b:1:0:0:2:2": 2,
+  "n:after:7aef0b:1:0:0:2:2": 2,
+  "n:before:5fb8ec:1:0:1:2:6": 256,
+  "n:after:5fb8ec:1:0:1:2:6": 256,
+  "n:before:654502:2:1:0:-1:2": 13,
+  "n:after:654502:2:1:0:2:2": 79,
+  "n:before:654502:2:1:0:2:2": 66,
+  "n:before:6dec7d:2:1:0:2:2": 66,
+  "n:after:6dec7d:2:1:0:2:2": 66,
+  "n:before:654502:3:1:0:-1:2": 10,
+  "n:after:654502:3:1:0:2:2": 43,
+  "n:before:654502:3:1:0:2:2": 33,
+  "n:before:6dec7d:3:1:0:2:2": 32,
+  "n:after:6dec7d:3:1:0:2:2": 32,
+  "n:before:5fb8ec:1:0:1:2:9": 1,
+  "n:after:5fb8ec:1:0:1:2:9": 1
+ },
+ "events": [
+  {
+   "event": "mipmain",
+   "serial": 0,
+   "depth": 1,
+   "ret": "c23877",
+   "model_rows": 396,
+   "model_cols": 322,
+   "presolved": {
+    "rows": 396,
+    "cols": 322
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 1,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 400,
+   "model_cols": 322,
+   "presolved": {
+    "rows": 400,
+    "cols": 322
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 2,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 326,
+   "presolved": {
+    "rows": 400,
+    "cols": 326
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 3,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 325,
+   "presolved": {
+    "rows": 400,
+    "cols": 325
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 4,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 323,
+   "presolved": {
+    "rows": 400,
+    "cols": 323
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 5,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 325,
+   "presolved": {
+    "rows": 400,
+    "cols": 325
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 6,
+   "depth": 3,
+   "ret": "c23877",
+   "model_rows": 81,
+   "model_cols": 322,
+   "presolved": {
+    "rows": 81,
+    "cols": 322
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 7,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 323,
+   "presolved": {
+    "rows": 400,
+    "cols": 323
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 8,
+   "depth": 3,
+   "ret": "c23877",
+   "model_rows": 76,
+   "model_cols": 322,
+   "presolved": {
+    "rows": 76,
+    "cols": 322
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 9,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 324,
+   "presolved": {
+    "rows": 400,
+    "cols": 324
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 10,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 324,
+   "presolved": {
+    "rows": 400,
+    "cols": 324
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 11,
+   "depth": 3,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 325,
+   "presolved": {
+    "rows": 400,
+    "cols": 325
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 12,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 328,
+   "presolved": {
+    "rows": 400,
+    "cols": 328
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 13,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 324,
+   "presolved": {
+    "rows": 400,
+    "cols": 324
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 14,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 325,
+   "presolved": {
+    "rows": 400,
+    "cols": 325
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 15,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 326,
+   "presolved": {
+    "rows": 400,
+    "cols": 326
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 16,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 324,
+   "presolved": {
+    "rows": 400,
+    "cols": 324
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 17,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 324,
+   "presolved": {
+    "rows": 400,
+    "cols": 324
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 18,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 325,
+   "presolved": {
+    "rows": 400,
+    "cols": 325
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 19,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 323,
+   "presolved": {
+    "rows": 400,
+    "cols": 323
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 20,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 323,
+   "presolved": {
+    "rows": 400,
+    "cols": 323
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 21,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 325,
+   "presolved": {
+    "rows": 400,
+    "cols": 325
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 22,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 325,
+   "presolved": {
+    "rows": 400,
+    "cols": 325
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 23,
+   "depth": 2,
+   "ret": "823e29",
+   "model_rows": 400,
+   "model_cols": 325,
+   "presolved": {
+    "rows": 400,
+    "cols": 325
+   }
+  }
+ ]
+}
