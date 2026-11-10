@@ -145,7 +145,7 @@ ABI는 double 4개와 정수·포인터 14개다. `xmm0=1e-6`, `xmm1=1e-9`, `xmm
 | lower·upper | 양수 alpha의 하한, 음수 alpha의 상한 ratio | 4 |
 | tie·tie-reversed·larger-pivot | 같은 크기 첫 후보 유지, sparse 순서 반전, 더 큰 pivot 선택 | 5 |
 | free·upper-infinite | free 양수 alpha 또는 무한 상한 음수 alpha에서 선택 없음 | 4 |
-| pivot-at-tol·pivot-above-tol | strict 피벗 임계값과 작은 pivot 재시도 | 4 |
+| pivot-at-tol·pivot-above-tol | strict 피벗 임계값과 작은 pivot의 최대 계수 검사 | 4 |
 | negative-zero | theta=-0 비트 보존 | 2 |
 | empty·zero-alpha | 빈 벡터 또는 alpha=0에서 theta=I·pivot=0 | 4 |
 | finite-flip·flip-tie·flip-relaxed-tie | 유한 초기 상한·정확 동률·Harris 허용폭 안에서 flip | 6 |
@@ -168,7 +168,7 @@ ABI는 double 4개와 정수·포인터 14개다. `xmm0=1e-6`, `xmm1=1e-9`, `xmm
 
 `04c-1` 이후는 이번 조사에서 찾은 분할 후보이며 구현 완료 번호가 아니다. M3-04d의 dual push와 M3-04f의 cleanup은 기존 범위로 유지한다. 재시작 전체·고급 매핑·실패 상위 처리도 04a-2·04g와 연결해야 한다.
 
-전체 push의 자연 입력에는 S·factor·후보 batch와 지원 집합 문맥이 필요하다. 입력 LP 파일만 고정해서는 충분하지 않다. 원본 allocator·factor를 합성해 전체 push를 직접 호출하는 방법은 이번에 검증하지 않았다. 우선 자연 훅에서 상태를 수집한 뒤 독립 재생 가능한 경계를 정한다. 이 조사에서 만든 29사례를 전체 push 캡처 29건으로 세면 안 된다.
+전체 push의 자연 입력에는 S·factor·후보 batch와 지원 집합 문맥이 필요하다. 입력 LP 파일만 고정해서는 충분하지 않다. 원본 allocator·factor를 합성해 전체 push를 직접 호출하는 방법은 이번에 검증하지 않았다. helper의 작은 pivot 사례도 강화 임계값으로 다시 ratio를 계산하는 루프에는 들어가지 않는다. 그 재시도와 LU 갱신 횟수>16의 요청 2는 미검증이다. 우선 자연 훅에서 상태를 수집한 뒤 독립 재생 가능한 경계를 정한다. 이 조사에서 만든 29사례를 전체 push 캡처 29건으로 세면 안 된다.
 
 ## 5. 재실행과 판정
 
