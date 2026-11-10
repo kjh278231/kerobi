@@ -1144,7 +1144,7 @@ pub fn sum_squares(v: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{sum_squares, Lu};
+    use super::{gather, sum_squares, Lu};
     use crate::scaling::Scaling;
     use crate::spx::Spx;
 
