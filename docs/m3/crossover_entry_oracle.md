@@ -17,3 +17,9 @@
 ## 훅 초안과 잠금 대기
 
 `tools/crossover_entry_capture.js`는 실제 Python 프로세스를 Frida로 시작하고 읽기 훅으로 호출과 상태를 수집하는 초안이다. `small.lp`는 실제 LP다. 첫 barrier 실행은 다른 M2 원본 프로세스의 잠금 때문에 `tools/gurun.sh`에서 대기 중이며 아직 훅 동작과 필드 안전성은 검증되지 않았다. `mode 1`은 R이 없는 것이 정상일 수 있으므로 시작 벡터와 후속 작업 배열을 필수로 하고 R은 선택적으로 기록해야 한다. 스케일 포인터 null은 원본 변환 생략과 구분해서 기록한다. 이 초안은 합격 검사기가 아니다.
+
+## 검사기 초안
+
+`python3 tools/crossover_entry_selftest.py`는 합성 형식 fixture에 해시·사건·배열·순서 변조 10건을 주입해 거부를 확인한다. 이 fixture는 실제 실행이 아니다. `tools/crossover_entry_check.py`는 아직 복사·변환 식과 경로별 중첩을 충분히 확인하지 못하므로 명령은 의도적으로 항상 실패한다. 목표 합격으로 사용할 수 없다. 입력 파일 해시를 실제 `small.lp`에 연결하고 환경·스케일·준비 배열의 길이와 원시 비트 형식을 검사한다.
+
+준비 훅 `0x1bd281`의 배열 위치는 ELF `0x1bcb31`, `0x1bcb55`, `0x1bcb7d–0x1bcb8d` 및 mode 1의 `0x1bcd77–0x1bcdc3`에서 확인했다. 두 경로의 `rbx`와 `r12`가 열 x와 reduced cost이고 `rsp+0x238`, `rsp+0x240`이 행 slack과 y다. 합류 지점의 `rbp`는 모델이다. 실제 훅 실행과 필드 내용은 아직 확인하지 않았다.
