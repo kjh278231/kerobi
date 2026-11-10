@@ -17,6 +17,7 @@
   - Rust 이식은 M2-03d-4(또는 새 하위 번호)다.
   - `66661c` 내부: 호출 단위(행별 반환값)로 Python 포팅을 맞춘다. 맞지 않으면 캡처 반환값을 규칙에 넣지 않고 `66661c`를 미검증으로 분리한다.
 - 선행: main `c383966`. 미커밋 선행 변경 없음.
+- 계약 변경(탐색 probe 뒤, 고정 캡처 전): §6.1 probe에서 nidda H 설정은 실행 중 DualReductions(env+0x2430)가 0이라 `66661c` 경로가 꺼지고 모든 행이 '<'였다. 그래서 기본 설정의 두 사례(gmu-35-40: `66661c` 1 반환, assign1-5-8: '=' 행 선택)를 §4에 더했다. `7889a5`·cut `+0x40`·cut 종류 0x14는 probe 37모델에서 한 번도 참이 아니었으므로 V에서 C만으로 남을 것으로 예상한다. 검사 목록(§3)의 규칙은 바꾸지 않았고, N·D의 03d-7 대조는 nidda에만 적용한다.
 
 ## 2. 원본과 상태 경계
 
@@ -47,11 +48,11 @@
 
 | 검사 | 규칙 |
 |---|---|
-| M 입력 | 각 회차가 정상 종료했고(nidda `DONE 8 32898`, 오류 없음) 바이너리·모델·도구 해시, 파라미터가 맞다. manifest 파일 해시가 같다 |
+| M 입력 | 각 회차가 정상 종료했고(nidda `DONE 8 32898`, gmu·assign `DONE 8 3000`, 오류 없음) 바이너리·모델·도구 해시, 파라미터가 맞다. manifest 파일 해시가 같다 |
 | B 재현 | 사례마다 독립 3회의 사건 전체가 정확히 같다 |
 | N 비간섭 | nidda 3회 각각의 03d-7 사건 종류 투영이 03d-7 캡처(`bench/oracle/mip_blank_rows/nidda_bnb_H_s1_1.json`)의 사건 목록과 같다 |
 | G 관문 | 선택 사건마다 직전 관문 기록이 통과 예측이고 노드가 같다. 통과 예측 수 = `0x513078` 수. `0x513078` 수와 `0x513951` 수의 차이는 `a7f0ad`·`a7f923`·`+0x18` 절이 막은 횟수로 보고한다. rbx=`param_2`. 스택 포인터 칸이 I 유도 포인터와 같다 |
-| D 결과 | 선택 사건의 목록이 같은 호출의 `10e5fc` 인자(03d-7 `b:op` deact의 rows)와 같다. 목록이 비면 `10e5fc` 호출이 없다. top-level deact 수는 03d-7 통계와 같다(재시작 전 10, 뒤 1135) |
+| D 결과 | top-level 선택 사건의 목록이 같은 호출의 `10e5fc` 인자(`b:op` deact의 rows, 반환 `5fb8ec+0x37c9`)와 같다(모든 사례). 목록이 비면 그 선택 뒤 `10e5fc` 호출이 없다. nidda top-level deact 수는 03d-7 통계와 같다(재시작 전 10, 뒤 1135) |
 | A `a7cec0`·`66661c` | Python 포팅으로 cutoff 경로에 들어가는 행 집합이 캡처한 `66661c` 호출 행 집합과 순서까지 같고, 호출별 반환값이 같다 |
 | R 규칙 | 모든 선택 사건에서 §2 규칙의 Python 재구성 목록이 캡처 목록과 개수·순서까지 정확히 같다 |
 | C 대조군 | DynamicRows=0 3회: env+0x2b48=0, 관문 통과 0, 선택 사건 0, `10e5fc`·`10e662` 0회. 정상 종료 |
@@ -66,6 +67,8 @@
 | 사례 | 실제 / 합성 | 노리는 분기 | 입력 | 원본 증거 |
 |---|---|---|---|---|
 | nidda H seed 1, NodeLimit 32898 | 원본 실제 실행(읽기 전용 훅) | 03d-7의 deact 전부(재시작 전·후, 중첩 MIP 포함) | `neos-3754480-nidda.mps.gz`(03d-6과 같은 해시) | `bench/oracle/mip_dive_rows/nidda_H_s1_{1,2,3}.json.gz` |
+| gmu-35-40 기본 설정(Threads 1, Seed 0), NodeLimit 3000 | 원본 실제 실행 | '=' 없음, DualReductions 1, `66661c` 호출·1 반환, 중첩 MIP(깊이 2·3) | `gmu-35-40.mps.gz` | `bench/oracle/mip_dive_rows/gmu-35-40_default_{1,2,3}.json.gz` |
+| assign1-5-8 기본 설정, NodeLimit 3000 | 원본 실제 실행 | '=' 행의 최소 활동값 절로 선택, '=' cutoff 경로 건너뜀 | `assign1-5-8.mps.gz` | `bench/oracle/mip_dive_rows/assign1-5-8_default_{1,2,3}.json.gz` |
 | 같은 설정 + DynamicRows=0 | 원본 실제 실행(공개 숨은 파라미터) | 관문 첫 절 거짓 | 같음 | `bench/oracle/mip_dive_rows/nidda_H_s1_dr0_{1,2,3}.json.gz` |
 
 - 적용하지 않은 범주: 허용오차 경계는 실제 실행에서 나온 만큼만 본다(합성 없음). 실행에서 결과를 바꾸지 않는 절은 V에서 C만으로 표시한다.
@@ -74,6 +77,7 @@
 
 - 원본 캡처(작업 worktree 루트, Gurobi 한 프로세스씩): `tools/hrun.sh --timeout 580000 -- 'tools/mip_dive_rows_runs.sh bench/oracle/mip_dive_rows'`.
 - 판정: `python3 tools/mip_dive_rows_check.py --self-test`. manifest 재작성은 `--write-manifest`.
+- 탐색 sweep(판정 아님, 1회씩): `--sweep DIR`가 DIR의 모든 캡처에 R·A만 적용해 표로 낸다. probe 명령은 §6.1에 적는다.
 - 관련 회귀: `python3 tools/mip_blank_rows_check.py --self-test`(03d-7 자료 불변).
 
 ## 6. 실행 결과
