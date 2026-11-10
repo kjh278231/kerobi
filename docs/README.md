@@ -2,6 +2,8 @@
 
 새 세션·동시 세션·컴퓨터 이동은 [세션 시작과 이동](handoff/README.md)에서 시작한다. 영역별 인수인계에는 다음 하위 작업과 실제 검증 상태가 있다.
 
+브랜치 생성·검증·병합과 선행 변경 정리는 [브랜치 운영 스킬](../.agents/skills/verified-task-branches/SKILL.md)을 따른다. 기존 dirty main을 정리한 이력과 검증은 [기준선 정리 기록](m2/baseline_reconciliation.md)에 있다.
+
 현재 상태와 남은 한계는 [진행 기록](11_progress.md)과 [로드맵 다이어그램](12_roadmap_diagram.md)부터 확인한다. 포팅 절차와 패리티 기준은 [포팅 가이드](10_porting.md), 설계와 출처 정책은 [전체 설계 개요](00_overview.md)에 있다.
 
 M1·M2·M3의 번호별 범위와 완료 확인 방법은 [작업 단위 목록](13_work_units.md)에서 찾는다.
