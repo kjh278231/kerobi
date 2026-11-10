@@ -1,4 +1,4 @@
-const fs = require('fs'), path = require('path'), crypto = require('crypto');
+const fs = require('fs'), path = require('path'), crypto = require('crypto'), os = require('os');
 const frida = require('/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida');
 const [kind, model, output] = process.argv.slice(2);
 if (!['pdhg', 'barrier', 'warm', 'control'].includes(kind) || !model || !output) throw Error('사용법: KIND MODEL OUTPUT');
@@ -37,6 +37,6 @@ Process.attachModuleObserver({onAdded(mod) { if (mod.name !== 'libgurobi130.so')
  const pid=await device.spawn([py,'-c',code],{stdio:'pipe'}), session=await device.attach(pid), script=await session.createScript(agent);
  script.message.connect(msg=>{if(msg.type==='send') events.push(msg.payload); else errors.push(msg.stack||JSON.stringify(msg));});
  device.output.connect((p,fd,data)=>{if(p===pid) out+=data.toString()});
- session.detached.connect(reason=>{const markers=out.split('\n').filter(x=>x.startsWith('CROSSOVER_RESULT ')); let result=null; try { if(markers.length===1) result=JSON.parse(markers[0].slice(17)); } catch(e) { errors.push(String(e)); } if(hash(model)!==modelHash || hash(__filename)!==toolHash || hash(binary)!==bh) errors.push('실행 중 입력 또는 도구 해시 변경'); const ok=!!result && Number.isInteger(result.status) && !errors.length && reason==='process-terminated'; fs.writeFileSync(ok?output:output+'.failed',JSON.stringify({origin:'natural',kind,model_sha256:modelHash,binary_sha256:bh,tool_sha256:toolHash,params,starts,output:out,result,reason,errors,events},null,2)+'\n'); console.log(kind,'사건',events.length,'성공',ok,errors.join(' '),out.trim()); process.exit(ok?0:1)});
+ session.detached.connect(reason=>{const markers=out.split('\n').filter(x=>x.startsWith('CROSSOVER_RESULT ')); let result=null; try { if(markers.length===1) result=JSON.parse(markers[0].slice(17)); } catch(e) { errors.push(String(e)); } if(hash(model)!==modelHash || hash(__filename)!==toolHash || hash(binary)!==bh) errors.push('실행 중 입력 또는 도구 해시 변경'); const ok=!!result && Number.isInteger(result.status) && !errors.length && reason==='process-terminated'; fs.writeFileSync(ok?output:output+'.failed',JSON.stringify({origin:'natural',kind,model_sha256:modelHash,binary_sha256:bh,tool_sha256:toolHash,params,starts,environment:{platform:os.platform(),arch:os.arch(),release:os.release(),node:process.version},output:out,result,reason,errors,events},null,2)+'\n'); console.log(kind,'사건',events.length,'성공',ok,errors.join(' '),out.trim()); process.exit(ok?0:1)});
  await script.load(); await device.resume(pid);
 })().catch(e=>{console.error(e);process.exit(1)});
