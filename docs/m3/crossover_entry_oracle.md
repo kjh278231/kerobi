@@ -39,3 +39,19 @@ python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/barrier-1
 `python3 tools/crossover_entry_check.py --control <대조군1> <대조군2> <대조군3>`은 `Crossover=0`의 정상 barrier 사건과 목표 진입 부재를 별도로 검사한다. 이 명령도 실제 대조군을 아직 실행하지 않았으므로 기능과 재현성은 미검증이다. 변환 결과가 다르면 첫 배열 인덱스와 기준·실제 비트를 출력하도록 했다. 현재 합성 오류 주입은 15건이다.
 
 캡처 완료 마커는 public `VBasis`·`CBasis`도 기록한다. API가 제공하지 않으면 둘 다 null로 남긴다. 공개 basis와 내부 workspace vstat는 별도 필드다. 이 추가도 원본에서 아직 미실행이다.
+
+## 첫 실제 원본 실행
+
+`barrier-{1,2,3}.json`과 `pdhg-{1,2,3}.json`은 각각 독립 프로세스에서 mode 0 목표 1건씩 관측했다. `check()` 형식 검사와 `output` 로그를 제외한 전체 상태의 세 실행 간 정확 비교에서 차이가 없었다. `control-{1,2,3}.json`은 barrier 진입과 목표 0건을 관측했고 `--control` 비교가 종료 0이었다. 세 사례의 공개 basis는 barrier/PDHG에서 열 `[0,-1,-1]`, 행 `[-1,0,0]`, 대조군은 null이다.
+
+`warm-{1,2,3}.json`은 PStart/DStart가 설치된 정상 status 2 실제 입력이지만 목표 mode 1은 0건이었다. 세 실행 기록은 서로 일치한다. 목표 검사 명령은 종료 1로 거부한다. warm 목표를 합성으로 대체하지 않으며 추가 원본 분기 추적이 필요하다. 목표 검사 CLI는 여전히 미완성으로 잠겨 있다. 실행 설정·해시·사건과 상태는 각 JSON에 있다.
+
+```bash
+for kind in barrier pdhg warm control; do
+  for i in 1 2 3; do
+    tools/gurun.sh node tools/crossover_entry_capture.js "$kind" bench/oracle/m3_crossover_entry/small.lp "bench/oracle/m3_crossover_entry/$kind-$i.json"
+  done
+done
+python3 tools/crossover_entry_check.py --control bench/oracle/m3_crossover_entry/control-{1,2,3}.json
+python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/warm-{1,2,3}.json
+```
