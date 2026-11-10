@@ -390,8 +390,7 @@ def load_all(manifest, arms=False, violated=False):
                 data.append((case, recs[0]))
     if violated:
         vm = json.loads((VIOL / 'manifest.json').read_text())
-        seen = {k: set() for k in REQUIRED_VIOLATED}
-        targets = 0
+        steps = {}
         for case, c in vm['cases'].items():
             if c['role'] == 'noninterference':
                 noninterference_retry(vm, c)
@@ -399,15 +398,22 @@ def load_all(manifest, arms=False, violated=False):
             recs = validate_new([ROOT / x for x in c['captures']], vm, case)
             if c['role'] == 'target':
                 data.append((case, recs[0]))
-                targets += 1
-                for s in decide(recs[0], label=case):
-                    assert s['path'] == 'infeasible', f"{case} call{s['call']} step{s['step']}: 위반 LP의 feasible 단계"
-                    for k in seen:
-                        seen[k].add(s.get(k))
-        assert targets == 2, '위반 대상 두 순서 필요'
-        for k, want in REQUIRED_VIOLATED.items():
-            assert want <= seen[k], f'위반 경로 필수 {k} 누락: {sorted(want - seen[k])}'
+                steps[case] = decide(recs[0], label=case)
+        required_violated(steps)
     return data
+
+
+def required_violated(steps):
+    """위반 대상 두 순서의 단계가 모두 위반 경로이고 필수 arm(REQUIRED_VIOLATED)을 합집합으로 다 덮는지 확인한다."""
+    assert len(steps) == 2, '위반 대상 두 순서 필요'
+    seen = {k: set() for k in REQUIRED_VIOLATED}
+    for case, st in steps.items():
+        for s in st:
+            assert s['path'] == 'infeasible', f"{case} call{s['call']} step{s['step']}: 위반 LP의 feasible 단계"
+            for k in seen:
+                seen[k].add(s.get(k))
+    for k, want in REQUIRED_VIOLATED.items():
+        assert want <= seen[k], f'위반 경로 필수 {k} 누락: {sorted(want - seen[k])}'
 
 
 def noninterference_retry(vm, c):
@@ -683,10 +689,20 @@ def self_test_violated(data):
                 out['noninterference-' + case] = str(err)
             else:
                 raise Mismatch('비간섭 변조 허용: ' + case)
-    # 필수 arm: 한 종단을 빼면(그 단계의 방향 결과를 다른 종단으로 바꿀 수 없으므로 모델 변조로) 부족을 잡아야 한다
-    seen = {s['clause'] for _, r in data if _.startswith('violated-') for s in decide(r)}
-    out['required-clause-check'] = f'{len(seen & REQUIRED_VIOLATED["clause"])}/10 관측'
-    assert REQUIRED_VIOLATED['clause'] <= seen
+    # 필수 arm: 실제 단계에서 종단·원인·이탈 arm 하나씩을 지우면 required_violated가 거부해야 한다
+    steps = {lb: decide(r, label=lb) for lb, r in data if lb.startswith('violated-')}
+    required_violated(steps)
+    for key, value in (('clause', 'small-bound'), ('cause', 'reject'), ('arm', 'nonneg-A'), ('path', 'feasible')):
+        if key == 'path':
+            changed = {lb: [dict(s, path=value) if i == 0 else s for i, s in enumerate(st)] for lb, st in steps.items()}
+        else:
+            changed = {lb: [s for s in st if s.get(key) != value] for lb, st in steps.items()}
+        try:
+            required_violated(changed)
+        except AssertionError as err:
+            out[f'required-{key}-{value}'] = str(err)
+        else:
+            raise Mismatch(f'필수 arm 누락 허용: {key}={value}')
     return out
 
 

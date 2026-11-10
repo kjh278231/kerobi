@@ -56,6 +56,8 @@ pub fn feasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option
 /// Violated-basis ratio test (`054eef`): like [`feasible_ratio`] but each basic row's class decides which bound it
 /// hits, so `B` rows block a decreasing and `A` rows an increasing basic value. The dense form tests `U`/`X` rows on a
 /// negative entry with a strict `<`, as the original does; the sparse form uses `<=` there like everywhere else.
+/// shortcut: the push sends a result with position < 0 or |pivot| < 0.001 to the `056973` retry ratio before any step
+/// decision; that retry is not ported (M3-04c-7), so a caller must not feed such a result to [`push_step`].
 #[allow(clippy::too_many_arguments)]
 pub fn infeasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option<&[i32]>, val: &[f64], x: &[f64],
                         width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64)

@@ -34,6 +34,7 @@ cases['retry-primal'] = dict(role='noninterference', firing=True, kind='primal',
                              capture_sha256=[sha(f'{N}/retry-primal-new.json'), sha(f'{N}/retry-primal-armagent.json')])
 hist = sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / D / 'history').iterdir())
 records = [p for p in (f'{D}/model-mutation.json', f'{D}/rust-mutation.json', f'{D}/ratio-rust-mutation.json',
+                       f'{D}/ratio04c-rust-mutation-rerun.json',
                        f'{D}/ratio_input.txt', 'bench/oracle/m3_push_decision_rust/input.txt') if (ROOT / p).exists()]
 m = dict(task='M3-04c-2', schema_version=1,
          float_encoding='IEEE-754 binary64 little-endian hex; exact bits including signed zero',

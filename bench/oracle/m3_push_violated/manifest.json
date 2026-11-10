@@ -12,15 +12,16 @@
   "tools/push_violated_lp.py": "071c3eba19a443a986b9ed25b5e0bf2eba846af80c7d2cd6510046f4de30e3dc",
   "tools/push_infeasible_ratio_oracle.py": "953af3373bbdbc4a93af4926425b9c2a2ee2e33383f341d4ffaa6edc5022d256",
   "tools/push_violated_rust.py": "878e323b007d90441863ccc33955215865008c615819e8a05a0d9360ab55d2b1",
-  "tools/primal_push_decision_check.py": "539df83163f162229e19f1709efe731de57c9e06472dfa14bcb6a23ec7f3e764",
+  "tools/primal_push_decision_check.py": "51f75d3dc26aa6763f67218fa3877a80fb86db0cc43eb044be27b1777df19fb5",
   "tools/primal_push_decision_rust.py": "5d37050caeda4021787577e75dd23ab108150be01859a89873907d729c86c250",
   "tools/push_violated_runs.sh": "5c21d1399f8f82a13530cdd11d273858e2984dd2690d3bc4274f85e91488fbe1",
-  "tools/push_violated_manifest.py": "a754f98bd966c46aa3ecfc5272a70117bdc5d0c904a08326a94827730b5bfa8d"
+  "tools/push_violated_manifest.py": "5c2d93a29d35257e133aab851c0764c51bd1d27b9ccb4e985f69d635968aec19"
  },
  "records": {
   "bench/oracle/m3_push_violated/model-mutation.json": "d4ba322a9f9bd5c5406991029da89d2e7a067322ce8a6426165c43c3d41d9911",
   "bench/oracle/m3_push_violated/rust-mutation.json": "bd2163eb9491e2a9fdda44ad9c79a099213671d95d55f0fa59061d97eea3bfd4",
   "bench/oracle/m3_push_violated/ratio-rust-mutation.json": "85de601a6264830ce8b494364022b60338277813f9b750d67264724fb1898446",
+  "bench/oracle/m3_push_violated/ratio04c-rust-mutation-rerun.json": "1d0afc917cdd9174bfdcf1bb6f868f7f9dea30398ac7125e1070e514eaea1747",
   "bench/oracle/m3_push_violated/ratio_input.txt": "ffce7e3447404bffc0575cf6a2d958c6770da2f71fc127d4ac68c94e298384ea",
   "bench/oracle/m3_push_decision_rust/input.txt": "c71f89fd403c3836c3089b39e8c9169d9cacdb87b0fcd956eb72fbb178a6e440"
  },

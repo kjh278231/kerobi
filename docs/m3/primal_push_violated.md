@@ -18,6 +18,7 @@
   - `B`→-2, `A`→-1, a<0 기본 arm(`A`·`F`): `054eef`만 거친 pivot에서는 나오지 않는다.
 - 제외와 후속:
   - `056973` 재시도, 위반 basis 재시도 뒤 재호출 → M3-04c-7(새 행).
+  - feasible 경로의 theta=I 재호출: `055f68`이 -1이면 theta=I이고, 진입 열이 자유이거나 방향 0·ub≥I이면 방향을 뒤집어 `055f68`을 다시 부른다(C 1463–1578, `056973` 없음). 스프린트 행의 "theta=I 반대 방향 재호출"은 이 경로까지 M3-04c-7로 넘긴다.
   - `054eef` 작은 pivot 재진입 2차 패스 → Rust는 `Reentry`로 거부한다(feasible과 같음). 원본 합성 출력만 기록한다.
   - batch, x87, 이탈 뒤 basic 값·rhs 보정·factor, push 연결, 자연 work는 범위 밖이다.
 
@@ -165,18 +166,18 @@ cargo test -p rsolver-lp --test push_decision --test push_ratio && python3 tools
 | `small-r` · `small-r0` | 1 · 2 | S7 · S7n, xD7(r=0) |
 | `sigma` · `sigma0` | 1 · 2 | VB · S8n, SA |
 
-- 검사기 변조(`--self-test`, 종료 0, 62종): 기존 43종에 위반 경로 판단 변조 4종(재시도 사건 삽입, 경로 이름 바꾸기, σ 행 표시 바꾸기, 5e-9 σ를 5e-6으로), 위반 캡처 변조 12종(해시·출처·설정·사건·x87·batch·frame·값·중복 실행·재시도 사건 추가), 비간섭 변조 2종(발동 사건 삭제, 비발동 사건 값)을 더해 모두 거부했다. 필수 arm이 빠지면 `load_all`이 실패한다.
+- 검사기 변조(`--self-test`, 종료 0, 65종): 기존 43종에 위반 경로 판단 변조 4종(재시도 사건 삽입 → 재시도 수, 경로 이름 바꾸기 → A·B 표시, σ 행 표시 바꾸기·5e-9 σ를 5e-6으로 → 방향), 위반 캡처 변조 12종(해시·출처·설정·사건·x87·batch·frame·값·중복 실행·재시도 사건 추가), 비간섭 변조 2종(발동 사건 삭제, 비발동 사건 값), 필수 arm 누락 4종(종단 `small-bound`·원인 `reject`·이탈 `nonneg-A`를 지우거나 한 단계를 feasible로 표시)을 더해 모두 거부했다.
 - 판단 모델 변조([기록](../../bench/oracle/m3_push_violated/model-mutation.json)): 04b-3의 32종과 위반 절 11종, 총 43종. frame을 지운 "판단만" 실행에서도 37종을 거부했다. 위반 절 11종 중 10종이 첫 차이가 방향이다. 생존 6종은 04b-3의 5종(`reject-arm-current`, `leave-fixed-lt`, `leave-X-1`, `leave-neg-default-2`, `leave-U-le`)과 `v-sigma-ge0`다. 마지막은 \|σ\|>=e 가지에서만 쓰이는 `σ>0`을 `σ>=0`으로 바꾼 것이라 σ=0이 그 가지에 올 수 없어 구조상 생존이다.
 - `054eef` 합성: 57호출×3회 일치. 모든 사례가 설계 행에 들어갔다. dense의 at-bound 음수 `U`·`X`만 첫 후보(행 0)를 고르고 sparse는 같은 ratio의 행 1(|a|=2)을 골라 `<`·`<=` 차이를 원본이 확인했다. at-bound 음수 `B`는 둘 다 행 1이다. 재진입 사례는 두 형식 모두 행 1·theta 1000·pivot 1e14를 돌려줬다(강화 허용오차 0.1로 행 0을 건너뜀). 첫 캡처 3회는 도구 자체 변조의 NaN 표기(빅엔디언 문자열) 오류로 self-test가 실패해 `history/ratio-toolv1-*`로 옮기고, 도구를 고쳐 다시 3회 캡처했다. 두 판의 사건은 같다.
 - Rust 재생(구현):
   - 판단: `tools/primal_push_decision_rust.py`에 위반 두 순서를 `violated` 역할로 더했다. 입력 `bench/oracle/m3_push_decision_rust/input.txt` 137단계(본문 SHA-256 `216945e5…`, 줄마다 경로 토큰 F·V). `cargo test -p rsolver-lp --test push_decision && python3 tools/primal_push_decision_rust.py --compare` 종료 0. 위반 38단계(고유 19) 모두 방향·반전 alpha·단계 종류·theta·frame·이탈 상태가 원본과 비트 일치했다. 집계는 방향 1 20, pivot 20, flip 18(거부 2 포함)이다. 연결 검사(Rust 반전 열에 `infeasible_ratio`·`feasible_ratio`)도 137단계 모두 `ratio:leave`와 같았다. 기존 99단계 결과는 그대로다.
   - `054eef`: `python3 tools/push_violated_rust.py --compare` 종료 0. 55호출이 위치·행·theta·pivot·work 비트 일치, 재진입 2호출은 Rust가 설계대로 `Reentry`로 거부했다(입력 `ratio_input.txt` 본문 `2f21b246…`). `--self-test` 종료 0(7종 거부).
 - Rust 소스 변조:
-  - 판단([기록](../../bench/oracle/m3_push_violated/rust-mutation.json)): 04b-3의 36종에 위반 절 11종과 Rust 전용 `v-as-feasible`(위반 경로를 feasible 식으로)을 더한 48종, 그리고 미적용 1종. 41종을 거부했다. 위반 절 변조는 오라클 모델과 분류가 같다(10 거부, `v-sigma-ge0` 생존). 그 밖의 생존은 04b-3과 같은 6종이다.
+  - 판단([기록](../../bench/oracle/m3_push_violated/rust-mutation.json)): 04b-3의 36종에 위반 절 11종과 Rust 전용 `v-as-feasible`(위반 경로를 feasible 식으로)을 더한 48종을 적용해 41종을 거부했다(미적용 `reject-arm-current` 1종은 04b-3과 같다). 위반 절 변조는 오라클 모델과 분류가 같다(10 거부, `v-sigma-ge0` 생존). 그 밖의 생존은 04b-3과 같은 6종이다.
   - `054eef`([기록](../../bench/oracle/m3_push_violated/ratio-rust-mutation.json)): 첫 패스 분기 13종과 공유 꼬리 6종, 총 19종 중 17종을 거부했다. 생존 `tail-no-candidate`(후보가 있는데 상한이 I)와 `tail-small-scale`(최대 |alpha|<10의 배율 0.1)은 04c와 같은 경계다. 뒤의 것은 첫 패스 pivot이 허용오차보다 커서 `piv_tol*big*0.1`보다 항상 크므로 재진입에 쓰이지 않는다. 04c 생존이던 2차 상한 동률과 pivot 0.1 임계값은 이번 위반 합성 사례(`negU-at-bound`, `reentry`)가 거부했다.
-- 회귀: 꼬리를 `ratio_tail`로 나눈 뒤에도 `primal_push_ratio_rust.py --compare`(47사례)·`--self-test` 종료 0, `--mutate-rust` 14종 분류가 04c 기록과 같다(10 거부·4 생존). `primal_push_decision_check.py --old`, `push_slot_reach.py`, `primal_push_ratio_oracle.py --check … --selftest` 종료 0. `cargo test --release --workspace` 통과(118개), `cargo clippy --workspace --all-targets -- -D warnings` 종료 0. `git diff --check` 깨끗함.
+- 회귀: 꼬리를 `ratio_tail`로 나눈 뒤에도 `primal_push_ratio_rust.py --compare`(47사례)·`--self-test` 종료 0, `--mutate-rust` 14종 분류가 04c 기록과 같다(10 거부·4 생존, [재실행 기록](../../bench/oracle/m3_push_violated/ratio04c-rust-mutation-rerun.json)). `primal_push_decision_check.py --old`, `push_slot_reach.py`, `primal_push_ratio_oracle.py --check … --selftest` 종료 0. `cargo test --release --workspace` 통과(118개), `cargo clippy --workspace --all-targets -- -D warnings` 종료 0. `git diff --check` 깨끗함.
 - 실행하지 않은 검사: Python 확장·pytest. Rust 변경은 호출자가 없는 `crossover` 모듈과 그 테스트뿐이고 Python 경계를 바꾸지 않았다.
-- 기준 자료 갱신: manifest는 `python3 tools/push_violated_manifest.py`로 다시 쓴다(캡처·변조 기록 뒤, 검사 전). 04b-3 manifest의 검사기·재생 도구·`input.txt` 해시는 이번 변경 전 값이다(캡처 도구·agent 해시만 검사에 쓰이며 그대로다).
+- 기준 자료 갱신 순서: `tools/push_violated_runs.sh` → `python3 tools/primal_push_decision_rust.py --write`·`python3 tools/push_violated_rust.py --write` → 변조 기록 → `python3 tools/push_violated_manifest.py`(검사 전). 04b-3 manifest의 검사기·재생 도구·`input.txt` 해시는 이번 변경 전 값이다(캡처 도구·agent 해시만 검사에 쓰이며 그대로다).
 
 ## 7. 판정과 인수인계
 
@@ -184,7 +185,7 @@ cargo test -p rsolver-lp --test push_decision --test push_ratio && python3 tools
 - 오라클 판정: 계약 범위 **통과**. 위반 basis 방향식의 종단 10개, `054eef` 단계, 거부·거리 flip·승인, 이탈 `B`→-1·`A`→-2를 원본 순서별 독립 3회로 관측했고 재시도 0을 양성 훅으로 확인했다. `054eef` 첫 패스 표시별 분기·dense `<`·Harris·2차 패스·cap·재진입을 합성 직접 호출 3회로 고정했다.
 - 구현 판정: 계약 범위 **통과**. Rust `push_direction`(위반 표시 인자)과 `infeasible_ratio`가 자연 38단계(고유 19)·연결 137단계·합성 55호출에서 원본과 비트 일치했다. 재진입 2호출은 설계대로 거부한다.
 - 구조상 이번 범위 밖(근거 §2.3): 위반 경로 재호출, `B`→-2, `A`→-1, a<0 기본 arm. 보류는 위반 경로에서 `056973`보다 먼저 올 수 없다.
-- 미검증: `v-sigma-ge0`(구조상), 보류의 `theta*pivot<-1e-5` 쪽, `054eef` dense의 자연 실행(자연 ratio 호출은 모두 sparse, 기존 475건 포함), 재진입 2차 패스의 Rust, `S+0x3b0`≠0 설정. `056973`·재시도 뒤 재호출·batch·x87·pivot 적용·push 연결·work는 범위 밖이다.
-- 후속: M3-04c-7(새 행) `056973` 재시도 ratio와 위반 경로 재호출. 시작 사례는 `retry.lp`(W+SR, 054eef -1 → 056973 -1). M3-04c-5(재진입)는 그대로이고, 이번 합성 `reentry` 사례가 원본 2차 패스 출력을 이미 갖고 있다.
+- 미검증: Rust에는 `056973` 게이트가 없다. `infeasible_ratio`가 위치<0 또는 \|pivot\|<0.001을 돌려주면 원본은 판단 전에 `056973`을 부르지만 Rust `push_step`은 그대로 판단한다(호출자가 없어 지금은 경로가 없음, 코드에 shortcut 주석). `v-sigma-ge0`(구조상), 보류의 `theta*pivot<-1e-5` 쪽, `054eef` dense의 자연 실행(자연 ratio 호출은 모두 sparse, 기존 475건 포함), 재진입 2차 패스의 Rust, `S+0x3b0`≠0 설정. `056973`·재시도 뒤 재호출·batch·x87·pivot 적용·push 연결·work는 범위 밖이다.
+- 후속: M3-04c-7(새 행) `056973` 재시도 ratio와 theta=I 재호출(위반·feasible 경로). 시작 사례는 `retry.lp`(W+SR, 054eef -1 → 056973 -1)다. 04b-3이 재호출 시작 사례로 남긴 `history/tD`·`tSL`은 ratio 1회 뒤 방향 1 거리 flip이라 재호출 사례가 아니다(탐색 캡처). feasible 재호출은 방향 0·ub=I(행 slack 등) 또는 자유 열에서 차단 행이 없는 LP로 새로 만들어야 한다. M3-04c-5(재진입)는 그대로이고, 이번 합성 `reentry` 사례가 원본 2차 패스 출력을 이미 갖고 있다.
 - branch `work/m3-04c-2`, worktree `../rsolver-m3-04c-2`. 결과·인수인계·진행·로드맵은 이 branch에서 갱신해 `--no-ff`로 병합한다.
 - 교훈: `docs/lessons/original.md`(위반 방향식 절 가림과 판별 묶음, `054eef` dense `<`, 위반 경로 보류 불가), `docs/lessons/tooling.md`(LE hex NaN, 도구 해시와 self-test), `docs/lessons/process.md`(종단 관측과 판별 설계는 다르다).
