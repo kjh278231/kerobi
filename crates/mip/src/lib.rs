@@ -32,6 +32,7 @@ mod deprow;
 mod derived;
 mod disagg;
 pub mod dive_rows;
+pub mod node_heap;
 mod dominate;
 mod doubleton;
 mod dualbin;
