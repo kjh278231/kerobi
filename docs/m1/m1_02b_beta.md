@@ -68,8 +68,46 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 실행: worktree `../rsolver-m1-02b`, 기준 main `c87c4fe` + 계약 `85536e9` + 이 기록과 같은 commit의 Rust·검사기 변경, x86-64 Linux(WSL2). 입력은 M1-02a 캡처 3회(gz SHA-256 `caad5976…`, M에서 고정값 확인)와 저장 오라클이다. 원본은 다시 실행하지 않았다(저장 기준 재생).
+- Rust 변경:
+  - `Lu::btran_dense`가 출력과 조밀 표시를 함께 돌려준다. 조밀 Lᵀ 경로 두 곳이 참이고 `lt_sparse` 경로는 거짓이다. 기존 `btran`은 출력만 넘기는 얇은 함수로 남겨 다른 호출자는 그대로다.
+  - `simplex.rs` dual 반복은 조밀이면 \|ρ_i\|>ZERO 원소만 더하도록 β 식을 바꿨다. 스냅숏에 `bt_dense`를 더했다(β와 같은 시점에 저장).
+  - 잘못된 출처 주석(`1bae9c` L1971–2110)을 `8b473`·`28c93`으로 고쳤다.
+- 수정 전 코드 거부(같은 검사기, 수정 전 main 빌드): 종료 1. 실패 35줄이다. R은 피벗 11·12·16·18·20에서 Rust β가 압축 합산·원본 β와 달랐다(예: 피벗 11 `…d34p+2` 대 `…d33p+2`). D는 `bt_dense` 없음으로 실패했다. F는 반복 12의 w 10개 차이와 β 차이로 실패했다.
+- 판정(`PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_beta_check.py --self-test`, 수정 빌드, 종료 0):
+
+```text
+M: 3 runs, binary/model/params/output, pinned file sha, tool = current file ab414034c3e2f007
+B: 38 pivots, 3 runs equal
+C: dense outputs compacted in index order with |x| > spx+0x3a8 (28 dense, 10 sparse)
+O: stored beta = sum in captured order for 38 pivots; paths [(('scalar', 0, False), 13), (('simd', 0, False), 25)]; chain combine also equal on 22/25 simd pivots
+D: Rust bt_dense = original BTRAN output nnz < 0 on pivots 0-21 (12 dense)
+R: Rust beta = sum_squares(dense output compacted to |x| > spx+0x3a8, sparse as is) = original beta on pivots 0-21
+F: snapshots 0-11 equal (vstat, x_B, d, w), first difference at 12 is w on 2 variables from 58; beta and alpha_r equal 1-12
+self-test: 12 tampers rejected (원본 쪽 8종 + Rust β 비트, Rust 조밀 표시, 조밀 표시 없음, 저장 오라클 w 비트)
+PASS
+```
+
+- statecmp kb2(저장 오라클 반복 0–30):
+  - 수정 전: 반복 12에 w 10개(첫 var 0)·score 5개가 다르고 반복 13도 같다.
+  - 수정 후: 반복 0–11은 같고, 반복 12에 w 2개(첫 var 58)·score 2개, 반복 13에 w 4·score 3, 반복 14에 w 5·score 2, 반복 15에 w 6·score 1이 다르다.
+  - pathcmp kb2: 수정 전후 모두 첫 피벗 분기 21이다(원본 진입 25, Rust 4, 이탈 78). §1 예상과 같다.
+- 회귀:
+  - `cargo test --release --workspace` 종료 0이다(16개 test result 줄 모두 ok, 실패 0).
+  - `cargo clippy --workspace --all-targets -- -D warnings` 종료 0이다.
+  - `tools/lp_check.py --methods 1 --timeout 120` Netlib 91개를 수정 전·후 같은 worktree 빌드로 비교했다. 정답은 90/91, IterCount 일치는 24/64로 둘 다 그대로다. 상태·정답 여부가 바뀐 모델은 없다.
+  - 반복 수가 바뀐 모델은 3개다. degen2 694→639(원본 634), degen3 2184→2343(원본 2212, 목적값 마지막 자리만 바뀌고 정답 판정 그대로), greenbeb 5920→5946(원본 기준 없음)이다. 동작 판정이 아니며 M1-02c 재측정에서 첫 분기로 다룬다.
+- 실행하지 못한 검사: 다른 모델의 β 원본 대조(원본 캡처가 kb2뿐), `pivot_row` 입력과 초기 정확 노름의 원본 대조(§1 제외), Python 통합 `pytest`(Python 경계를 바꾸지 않았다).
+- 계약 변경: 없음. 수정 전 코드 거부를 §3 "기록만"대로 1회 실행했다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: **완료(구현)**.
+- 동등성: **통과**(구간 L1, 비트 정확). kb2 피벗 0–21에서 Rust BTRAN 조밀 표시가 원본 nnz 부호와 같고 Rust β가 원본 β와 비트까지 같다. 반복 12의 남은 w 2개 차이는 β 밖의 원인이며 M1-02a-1 범위다.
+- 남은 한계:
+  - C만: 희소 출력 무필터(Rust `pivot_row`는 여전히 \|ρ\|>ZERO로 거른 ρ를 받는다), 문턱 0 대 1e-13, 첫 원소 떼기, 별칭 순차 경로.
+  - 미검증: 초기 정확 노름(`dual_start`·`exact_weights`)이 조밀 출력을 압축하는지(원본 EXACTNORM 루프 미독), kb2 밖 모델의 β.
+- 후속: **M1-02a-1**(조사)은 kb2 반복 12 w 2개(첫 var 58)다. `8b473` DSE 갱신 지점의 α·τ 캡처부터 시작한다. **M1-02c**(검증)는 Method=1 Netlib 64 재측정이며, 이번 회귀의 24/64가 Presolve=0 도구 기준 새 출발점이다.
+- 작업 branch: `work/m1-02b`. 검증 뒤 main에 `--no-ff`로 병합한다.
+- 갱신 위치: [M1 인수인계](../handoff/M1.md), [스프린트 목록](../14_sprint_plan.md) M1-02b 행, [작업 단위](../13_work_units.md) M1-02, [진행 기록](../11_progress.md)·[로드맵](../12_roadmap_diagram.md) 맨 위.
+- 교훈: [원본 사실](../lessons/original.md) "dual simplex DSE β" 항목에 조밀 판정 근거를 더했다. [절차](../lessons/process.md)에는 두 세션이 한 점유·worktree를 같이 쓴 사례를 적었다.
