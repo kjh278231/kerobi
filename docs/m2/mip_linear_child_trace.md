@@ -96,3 +96,29 @@ python3 tools/mip_linear_child_check.py --self-test        # 0
 원본 재캡처: `for mode in natural inject_reclass inject_branch; do for run in 1 2 3; do ./tools/gurun.sh timeout 30s node tools/mip_linear_child_experiment.js "$mode" bench/mip_linear_child/continuous_candidate.lp "<출력>/${mode}_${run}.json"; done; done`. 한 번에 한 프로세스만 실행한다.
 
 판정: **미완료**. 정확한 산술에서 유한 루트의 자식 LP는 무계가 될 수 없으므로, 다음 작업은 자연 입력 탐색을 반복하기 전에 원본에서 자식 LP 상태 5가 나오는 수치 경로(ray 판정·허용오차·relaxation 변경)가 있는지부터 C·asm으로 답한다. 경로가 없으면 M2-03c-1 목표를 합성 경계 오라클로 재정의할지 사용자에게 확인한다.
+
+## 10. 도달 가능성 판정과 자연 경로 스캔 (2026-11-10, owner `claude-m2-03c1-takeover-20261110`)
+
+[위임 절차](../handoff/README.md) §5에 따라 자연 입력을 더 찾기 전에 목표에 도달할 수 있는지부터 판정했다.
+
+**정적 판정 (`5ce67b` C:735–780)**
+- 5→12 재분류는 루트 캐시 `M+0xa8==2`일 때만 일어난다. 캐시는 현재 노드가 루트일 때만 갱신된다. 첫 루트 LP가 상태 5이면 캐시 5가 되고, D+0x18·0x1c·0x258·0x1a8가 모두 0이면 `M+0=5`로 종료한다. 이 네 값은 2차·쌍선형·비선형 요소 개수라서 선형 MIP에서는 모두 0이다.
+- 선형 MIP의 자식 LP는 루트 LP 행에 bound를 더한 부분 문제다. 따라서 루트 LP가 최적(2)이면 정확한 산술에서 자식 LP는 무계가 될 수 없다. 자식 상태 5와 캐시 2의 조합은 수치 오류일 때만 생기고, 원본이 이를 12(수치)로 바꾸는 것은 그 판단과 맞는다. **자연 입력으로 5→12 재분류를 재현한다는 목표는 근거가 없다.**
+- 재풀이 블록(`0x4f53a8`, C:767–773)은 재분류와 별개로 LP가 원래 반환한 상태 12에서도 들어간다. 조건은 캐시 2이거나 현재 노드가 루트인 경우다. 즉시 상태 3으로 가는 조건 `GURO_PAR_FEASHELPER==-2`는 공개 파라미터 범위(-1..1, `docs/m2/m2_param_offsets.tsv:274`) 밖이라 사용자 설정으로 만들 수 없다.
+
+**자연 스캔 (읽기 전용, 주입 없음)**
+- 도구: `tools/mip_linear_child_scan.js`. 정규화 전후(`0x4f1a98`·`0x4f1aca`)의 (루트 여부, 캐시, LP 상태), 재풀이 진입 `0x4f53a8`, 노드 상태 setter `0x5180f0`의 값을 센다. 대조군 `fractional_branch`·`root_unbounded`에서 기존 캡처와 같은 상태 흐름을 확인했다.
+- 입력: `../re/bench/data/miplib` 38개 × 2개 설정(`tools/mip_linear_child_scan.sh`). default는 `Threads=1 Seed=0 TimeLimit=20 NodeLimit=20000`이고, stress는 여기에 `Presolve=0 ScaleFlag=0 Quad=0 NumericFocus=0 MarkowitzTol=1e-4`를 더했다. 76회 모두 정상 종료했다. 결과는 `bench/oracle/mip_linear_child_scan/{default,stress}/`, 해시는 `bench/oracle/mip_linear_child_scan_manifest.json`이다.
+- 비루트 + 캐시 2 + LP 상태 5: **0회**(76회 실행, 약 160만 노드 LP). 상태 10 setter도 0회다.
+- 재현 3회(`tools/mip_linear_child_scan_repro.sh`, `.../repro/`):
+
+| 입력·설정 | 관측 | 스캔 1회 + 독립 재실행 3회 |
+|---|---|---|
+| `neos-3754480-nidda` stress | **비루트 자식 LP가 원래부터 상태 12**(캐시 2), 정규화 뒤 12, 재풀이 1회. 상태 3 setter 없음 | 4회 모두 전체 카운트 동일(NodeLimit 종료) |
+| `gmu-35-50` default | 루트 첫 LP 상태 12(캐시 -1→12), 재풀이 1회 | 4회 모두 전체 카운트 동일(NodeLimit 종료) |
+| `neos-4338804-snowy` default | 노드 상태 3 setter 1회, 재풀이와 상태 12는 없음 | 4회 모두 1회. TimeLimit 종료라 노드 수는 다름. 3을 쓰는 호출자는 미확인 |
+
+**판정과 남은 일**
+- 자연 경로로 재풀이 블록 진입은 성립한다(자식 1건, 루트 1건, 각 4회 재현). 재분류 5→12와 상태 3→새 자식 10은 자연 실행에서 미관측이다. 재분류는 정확한 산술에서 도달할 수 없다.
+- 이 스캔은 횟수만 센다. 재풀이 입출력·파라미터 복구·basis 내용은 캡처하지 않았다. 따라서 `mip_linear_child_accept.py acceptance`는 그대로 종료코드 1이다.
+- 다음: (1) nidda/stress 자식 사례에 상세 훅(`mip_linear_child_experiment.js`의 natural 모드를 파라미터 인자로 확장)을 붙여 재풀이 입력·출력·복구를 3회 캡처한다. (2) snowy의 상태 3 setter 호출자를 반환 주소로 특정한다. (3) acceptance 계약의 "자연 5→12"를 "자연 12 재풀이 + 합성 5→12 경계"로 바꿀지 사용자가 결정한다.

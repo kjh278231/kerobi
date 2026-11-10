@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "kind": "natural_scan",
+  "model": "sp150x300d.mps.gz",
+  "model_sha256": "47051527397e27d1a62d0462ded35042d5eb5f4c4a3b5e3257c82279b97f1e42",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000
+  },
+  "output": "DONE 2 1",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "counts": {
+    "n:before:0:-1:2": 3,
+    "n:after:0:-1:2": 3,
+    "n:before:1:-1:2": 3,
+    "n:after:1:2:2": 9,
+    "set:0": 4,
+    "n:before:1:2:2": 6,
+    "n:before:1:2:6": 1,
+    "n:after:1:2:6": 1
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "kind": "natural_scan",
+  "model": "markshare2.mps.gz",
+  "model_sha256": "8b1ea0bee5d89f3247cfbf6fd5fbd1234ea48e1d7081a8b7fbd827602b4b8914",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000,
+    "Presolve": 0,
+    "ScaleFlag": 0,
+    "Quad": 0,
+    "NumericFocus": 0,
+    "MarkowitzTol": 0.0001
+  },
+  "output": "DONE 8 20000",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "counts": {
+    "n:before:1:-1:2": 66,
+    "n:after:1:2:2": 2028,
+    "n:before:0:2:2": 24855,
+    "n:after:0:2:2": 24855,
+    "set:0": 70,
+    "n:before:1:2:2": 1962,
+    "n:before:0:2:6": 1245,
+    "n:after:0:2:6": 1245,
+    "n:before:0:2:3": 300,
+    "n:after:0:2:3": 300,
+    "n:before:1:2:6": 15,
+    "n:after:1:2:6": 15,
+    "set:4": 3625,
+    "n:before:1:-1:6": 3,
+    "n:after:1:6:6": 3,
+    "n:before:1:2:3": 1,
+    "n:after:1:2:3": 1
+  }
+}

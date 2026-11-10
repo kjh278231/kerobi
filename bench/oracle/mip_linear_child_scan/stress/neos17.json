@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "kind": "natural_scan",
+  "model": "neos17.mps.gz",
+  "model_sha256": "1d50d129c3cbee9e409399314e5a77626811a46c301a2cf2fa2a2e64f65a8ba9",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000,
+    "Presolve": 0,
+    "ScaleFlag": 0,
+    "Quad": 0,
+    "NumericFocus": 0,
+    "MarkowitzTol": 0.0001
+  },
+  "output": "DONE 2 1390",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "counts": {
+    "n:before:1:-1:2": 8,
+    "n:after:1:2:2": 153,
+    "n:before:0:2:3": 136,
+    "n:after:0:2:3": 136,
+    "n:before:1:2:2": 145,
+    "n:before:0:2:6": 185,
+    "n:after:0:2:6": 185,
+    "n:before:0:2:2": 2017,
+    "n:after:0:2:2": 2017,
+    "set:0": 9,
+    "set:4": 26,
+    "set:5": 2,
+    "n:before:1:2:9": 1,
+    "n:after:1:2:9": 1,
+    "n:before:0:2:9": 1,
+    "n:after:0:2:9": 1,
+    "n:before:1:-1:3": 1,
+    "n:after:1:3:3": 1
+  }
+}

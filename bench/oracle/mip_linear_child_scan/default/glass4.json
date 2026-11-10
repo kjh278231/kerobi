@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "kind": "natural_scan",
+  "model": "glass4.mps.gz",
+  "model_sha256": "0d6e6ceaf921e5d5489b9926fdfed2ce0aa25fd9acfa9deb6794669b56b59591",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000
+  },
+  "output": "DONE 9 10420",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "counts": {
+    "n:before:0:-1:3": 2,
+    "n:after:0:-1:3": 2,
+    "n:before:0:-1:2": 1,
+    "n:after:0:-1:2": 1,
+    "n:before:1:-1:2": 218,
+    "n:after:1:2:2": 4310,
+    "n:before:1:2:2": 4092,
+    "n:before:0:2:3": 121,
+    "n:after:0:2:3": 121,
+    "n:before:1:-1:11": 1,
+    "n:after:1:11:11": 1,
+    "set:0": 241,
+    "n:before:0:2:2": 16830,
+    "n:after:0:2:2": 16830,
+    "n:before:0:2:6": 418,
+    "n:after:0:2:6": 418,
+    "set:4": 1899,
+    "set:5": 2,
+    "n:before:0:2:9": 1,
+    "n:after:0:2:9": 1,
+    "n:before:1:2:6": 1,
+    "n:after:1:2:6": 1
+  }
+}
