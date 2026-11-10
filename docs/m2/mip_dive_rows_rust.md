@@ -71,8 +71,47 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 실행: worktree `../rsolver-m2-03d-9`, 코드 commit `7af3089`·`00e2893`(asm 비교 형태, 계약 `f0424d0`), x86-64 Linux(WSL2), `cargo test --release`. 입력은 03d-8 run 1 캡처 세 개(SHA-256 §4, manifest 일치)다. 원본은 다시 실행하지 않았다(저장 기준 재생).
+- `python3 tools/mip_dive_rows_rust.py --self-test` 종료 0:
+
+```text
+M: run 1 captures match the M2-03d-8 manifest (3 cases)
+X: replay inputs in target/mip_dive_rows_rust/in
+R/A/K: nidda_H_s1 1320 sel 157545 rows 0 calls (0 =1)
+R/A/K: gmu-35-40_default 689 sel 9248 rows 19434 calls (328 =1)
+R/A/K: assign1-5-8_default 84 sel 5342 rows 6844 calls (0 =1)
+T/R/A/K: every selection list (order) and 66661c call (row, result) = capture
+rejected: list row dropped: R nidda_H_s1: sel call 74 node 1: rust 6 rows != capture 7; ...
+rejected: list order: R assign1-5-8_default: sel call 135 node 0: rust 2 rows != capture 2; ...
+rejected: 66661c result: A gmu-35-40_default: sel call 72 node 0: 66661c calls differ, first ([3, 1], [3, 0]) (rust, capture)
+rejected: selection deleted: K gmu-35-40_default: 688 selections in the trace, capture 689
+rejected: capture sha256: T assign1-5-8_default: trace is for assign1-5-8_default ...
+mutant rejected: 0.1*FeasTol -> 0: R nidda_H_s1: sel call 186 node 3: rust 8 rows != capture 10; ...
+mutant rejected: slack 1e-5 -> 0: R nidda_H_s1: sel call 2173 node 1067: rust 42 rows != capture 41; ...
+mutant rejected: 66661c no integral rounding: A gmu-35-40_default: sel call 117 node 3: 66661c calls differ, first ([27, 0], [27, 1]) (rust, capture)
+mutant rejected: DualReductions ignored: A nidda_H_s1: sel call 74 node 1: 66661c calls differ, first (302, 0) (rust, capture)
+mutant rejected: cuts before model rows: R nidda_H_s1: sel call 74 node 1: rust 7 rows != capture 7; ...
+PASS
+```
+
+- 통과 2,093/2,093 선택, 행 172,135개, `66661c` 호출 26,278건(1 반환 328)이 캡처와 정확히 같다. skip·xfail 없음. 첫 실행부터 일치했고 이식 코드를 결과에 맞춰 고친 일은 없다.
+- 변이 5종의 첫 차이는 03d-8 V의 Python 변종 첫 차이(nidda call 186·2173·74, gmu call 117)와 같은 사건이다. DualReductions 변이는 목록이 아니라 호출 열(A)로만 잡혔다.
+- 관련 회귀: `cargo test -p rsolver-mip` 종료 0(단위 `dive_rows::tests::clauses` 포함, L1 테스트는 ignored 1로 표시), `cargo test --release --workspace` 종료 0, `cargo clippy --workspace --all-targets -- -D warnings` 종료 0. `python3 tools/mip_dive_rows_check.py --self-test`는 착수 시 이 worktree에서 종료 0이었고 이후 03d-8 파일은 바꾸지 않았다.
+- 실행하지 않은 검사: pytest(`crates/py`·`python/rsolver` 미변경), Gurobi(원본 재캡처 불필요).
+- 계약 변경: 없음.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: **완료(구현 L1)**.
+- 동등성: **통과(L1, 저장 기준 재생)**. 03d-8 세 사례의 모든 선택 사건에서 목록·순서와 `66661c` 호출 열이 원본 캡처와 정확히 같다. 부동소수 입력은 비트로 넘겼고 허용오차는 없다.
+- 남은 한계:
+  - 실행으로 판별되지 않은 절(cut 플래그, `7889a5`, '=' 최소 활동값, cutoff′<1e100, cut 0x14·`+0x40`)은 C 근거로 옮겼고 미검증이다. 원본 사례에서 참이 된 적이 없다.
+  - work 증가는 C로 옮겼고 미검증이다(캡처 없음).
+  - NaN 입력: 비교식은 asm 분기 형태(비순서 포함)를 따랐다. `66661c`의 asm(`0x554bee`–`0x554c34` rc 부호 분기, `0x554dde` 폭 자르기 `minsd`)은 디컴파일 C 표현(`!(a<=0 || 1e-10<r)`, `W <= step`)과 NaN에서만 다르다. 처음 작성은 C 표현이었고 asm 확인 뒤 고쳐 다시 재생했다(결과 동일). NaN 분기는 캡처에 없어 미검증이다.
+  - 관문·목록 유지(`10e5fc`·`edd71`·`10e662`)와 `bnb.rs` 연결은 하지 않았다. Rust B&B에는 다이브 깊이, 행 플래그 배열, cut 속성, 노드 LP slack·rc를 이 함수에 넘길 구조가 아직 없다.
+- 후속:
+  - 목록 유지·관문 이식(번호 미배정, 제안): `10e5fc`/`10e662`/`edd71`의 X 목록과 D 교체(03d-7 `10f448`/`10f5ae`)를 옮긴다. 03d-7 X 목록 633단계 재생이 비교 기준이다.
+  - M2-03d-4(L2)의 다이브 선택 선행은 이 작업으로 채워졌다. 남은 선행은 M2-10b, M1 요청(primal warm start·LP cutoff), 위 목록 유지다.
+- 재실행: `python3 tools/mip_dive_rows_rust.py --self-test`(release 빌드 포함 수 분, 변이는 `target/mip_dive_rows_rust/mutant/`의 작업 공간 사본에서 빌드).
+- 작업 branch: `work/m2-03d-9`. 검사 통과 뒤 main에 `--no-ff`로 병합한다.
+- 교훈: [도구](../lessons/tooling.md)(생성 입력을 쓰는 Rust 재생 테스트는 `#[ignore]` + 드라이버, 사본 작업 공간 코드 변이), [원본 사실](../lessons/original.md)(`66661c` C와 asm의 NaN 분기 차이)에 추가했다.
