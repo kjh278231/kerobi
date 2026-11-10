@@ -54,7 +54,7 @@ MIP 해 복원·B&B 동기화를 시작했다. Gurobi 13.0.3 `363164`의 type 9 
 
 `m2-mip-presolve`에서 B&B, 루트 전파·휴리스틱, presolve 후 B&B 및 고정·치환 변수 복원, Python MIP `optimize()` 연결을 구현했다(`13ce2fe`, main 병합 `3e5c9d4`). 다른 복원 레코드와 빈 축약 모델은 원래 모델을 직접 푼다. 나머지 MIP 복원과 MIP 콜백은 남았다. 별도 검증: G6 기본 축약 모델·postsolve 레코드·PRELIMIT 저장 변화점 및 최종 모델 각 38/38, workspace clippy 경고 0·Rust 테스트 통과·Python 테스트 498개 통과. 38개에서 실행되지 않은 하위 풀이 등은 미구현이다.
 
-사용자 요청에 따라 `main` worktree 하나만 남겼다. 제거한 `rsolver-barrier`의 미커밋 진행 문서와 미추적 파일은 `worktree-backups/rsolver-barrier/`에 복사했다. 이 백업과 현재 worktree의 상태 기록은 미커밋이다.
+사용자 요청에 따라 `main` worktree 하나만 남겼다. 제거한 `rsolver-barrier`의 미커밋 진행 문서와 미추적 파일은 `worktree-backups/rsolver-barrier/`에 복사했다. 이 백업과 현재 worktree의 상태 기록은 미커밋이다. 2026-11-10 사용자 요청으로 이 백업을 삭제했다. 내용은 2026-11-09 시점의 옛 문서 경로·상태이고 현재 문서로 대체됐다. 원본은 `git show 42ab9d0:worktree-backups/rsolver-barrier/<파일>`로 복구한다.
 
 `m1-lp-driver`를 `87ad61e`로 main에 병합했다. LP·MIP 경로의 네 파일 충돌과 MIP 테스트 모델의 RNG 초기화를 해결했다. 병합 결과를 임시 복제본에서 검증하여 Rust workspace 테스트, Clippy 경고 0, Python 테스트 650개가 통과했다. `m2-root`와 `m2-mip-presolve`를 포함해 남은 로컬 브랜치는 모두 main에 병합된 상태다. G5의 etamacro 요약 목적값과 simplex 추가 반복의 수치 차이는 남는다(`docs/m1/m1_driver.md` §11).
 
