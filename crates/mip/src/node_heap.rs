@@ -101,12 +101,43 @@ fn sift_down<T>(h: &mut [(f64, f64, T)], mut i: usize) {
     }
 }
 
+/// Heap key of a branching child before the depth term (docs/m2/mip_node_key.md section 2.1): `bound` is the child's
+/// `I+0x18`, `nfrac` the parent LP's fractional count, `root_nfrac` `M+0xa4` (root LP fractional count) and
+/// `obj_step` `M+0x40` (-1e100 when the objective has no step, then the key is the fractional count alone).
+pub fn child_key(bound: f64, nfrac: i32, root_nfrac: i32, obj_step: f64) -> f64 {
+    let n = f64::from(nfrac);
+    if obj_step == -1e100 {
+        return n;
+    }
+    let t = (n / f64::from(root_nfrac.max(1))).min(1.0) * 2f64.powi(-48) * bound.abs().max(1.0);
+    t + bound
+}
+
+/// Depth term of the key: a parent deeper than 100 times the column count adds `max(|key|, 1) * 2^-45`.
+pub fn deep_key(key: f64, parent_depth: i32, ncols: i32) -> f64 {
+    if f64::from(parent_depth) > f64::from(ncols) * 100.0 {
+        key + key.abs().max(1.0) * 2f64.powi(-45)
+    } else {
+        key
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::NodeHeap;
+    use super::{child_key, deep_key, NodeHeap};
 
     fn ids(h: &NodeHeap<u32>) -> Vec<u32> {
         h.iter().map(|e| *e.2).collect()
+    }
+
+    #[test]
+    fn keys() {
+        // ratio capped at 1, |b| < 1 counts as 1, -1e100 step keys on the count; values from the M2-06b-2 captures
+        assert_eq!(child_key(0.0, 9, 6, 0.0).to_bits(), 0x3cf0000000000000);
+        assert_eq!(child_key(0.0, 2, 6, 0.0), 2f64.powi(-48) * (2.0 / 6.0));
+        assert_eq!(child_key(0.0, 2, 4, -1e100), 2.0);
+        assert_eq!(deep_key(2.0, 101, 1), 2.0 + 2.0 * 2f64.powi(-45));
+        assert_eq!(deep_key(2.0, 100, 1), 2.0);
     }
 
     #[test]
