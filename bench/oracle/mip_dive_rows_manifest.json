@@ -1,0 +1,31 @@
+{
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "captures": {
+  "bench/oracle/mip_dive_rows/assign1-5-8_default_1.json.gz": "bc45f03890ad2f6aa894883ebc0ca134472b3979389eaa21387ac4d8b4e1ac52",
+  "bench/oracle/mip_dive_rows/assign1-5-8_default_2.json.gz": "bc45f03890ad2f6aa894883ebc0ca134472b3979389eaa21387ac4d8b4e1ac52",
+  "bench/oracle/mip_dive_rows/assign1-5-8_default_3.json.gz": "bc45f03890ad2f6aa894883ebc0ca134472b3979389eaa21387ac4d8b4e1ac52",
+  "bench/oracle/mip_dive_rows/gmu-35-40_default_1.json.gz": "e1e4ccee799f6aa0b5cc38502ba7cd99e1bd0afa47535a9d2325353fbab57d0c",
+  "bench/oracle/mip_dive_rows/gmu-35-40_default_2.json.gz": "e1e4ccee799f6aa0b5cc38502ba7cd99e1bd0afa47535a9d2325353fbab57d0c",
+  "bench/oracle/mip_dive_rows/gmu-35-40_default_3.json.gz": "e1e4ccee799f6aa0b5cc38502ba7cd99e1bd0afa47535a9d2325353fbab57d0c",
+  "bench/oracle/mip_dive_rows/nidda_H_s1_1.json.gz": "6defab9ce854999a43dae997f5c1a3623b93d68dbfc31f5cade559ae3db5331e",
+  "bench/oracle/mip_dive_rows/nidda_H_s1_2.json.gz": "6defab9ce854999a43dae997f5c1a3623b93d68dbfc31f5cade559ae3db5331e",
+  "bench/oracle/mip_dive_rows/nidda_H_s1_3.json.gz": "6defab9ce854999a43dae997f5c1a3623b93d68dbfc31f5cade559ae3db5331e",
+  "bench/oracle/mip_dive_rows/nidda_H_s1_dr0_1.json.gz": "b7f7bfc24e5ef871a2459b7710b87da18af275dade89dd94134688c12dafd82c",
+  "bench/oracle/mip_dive_rows/nidda_H_s1_dr0_2.json.gz": "b7f7bfc24e5ef871a2459b7710b87da18af275dade89dd94134688c12dafd82c",
+  "bench/oracle/mip_dive_rows/nidda_H_s1_dr0_3.json.gz": "b7f7bfc24e5ef871a2459b7710b87da18af275dade89dd94134688c12dafd82c"
+ },
+ "models": {
+  "assign1-5-8": "305c26c9eee8da7242f2f42504cb0988c9503f65972859ad5f26d9615086cde3",
+  "gmu-35-40": "0c91e71117164becea8109a414127a2223be82215498f243767a7f5f51b1f11d",
+  "neos-3754480-nidda": "63f322dd9be49acf31f7579d8f04e3bb578bdd7ca7d3525683384190c9a8bf7f"
+ },
+ "refs": {
+  "bench/oracle/mip_blank_rows/nidda_bnb_H_s1_1.json": "43f768a44081da9dcc9175458dfcfa244b9fb48aaedca4ca141dd02a39621429"
+ },
+ "task": "M2-03d-8",
+ "tools": {
+  "tools/mip_dive_rows.js": "fa0ac5c08d9f6c99adcc8ca1ba368ac667f003160c78050054b1cb273100143d",
+  "tools/mip_dive_rows_rule.py": "c6eea4b4579c48cb3f83046fb0b70f496834046fc35db64189304ea1a587fd49",
+  "tools/mip_dive_rows_runs.sh": "558063a5f32d895c4b320c107c9b09240bc9dc80224adb29b5ddb3d8f1ce9a9b"
+ }
+}

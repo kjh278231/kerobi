@@ -4,7 +4,7 @@
 //  d:gate_counts first failing gate clause per MIP depth (sent at the end of each top-level MIP)
 //  d:model       first time a model row set (content hash of D row CSR, rhs, sense, vtype) is seen
 //  d:sel         at 0x513951 (selection end): inputs (bounds as diffs to the previous event of the same model, flags, 7889a5 array,
-//                cut attributes and slack, rc, tolerances, cutoff) and the selected list (0x48(%rsp), count 0x30(%rsp)); 66661c calls
+//                cut attributes and slack, rc (always, also when DualReductions is 0), tolerances, cutoff) and the selected list (0x48(%rsp), count 0x30(%rsp)); 66661c calls
 //  d:blocked     a 0x513078 pass that did not reach 0x513951 (a7f0ad / a7f923 / +0x18 clause)
 // The M2-03d-7 hooks of tools/mip_blank_rows.js are kept unchanged below (b:* events; their projection must equal the M2-03d-7 capture):
 // Mechanism (C, docs/m2/mip_blank_rows.md §2): 10e5fc/10e62f/10e662 flag rows in (lp+0x230)+0xb0 (0x1000 off / 0x2000 on),
@@ -212,7 +212,7 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
      nrows, ncols, ncuts, dyn: env.add(0x2b48).readS32(), dual, feastol: bits(env.add(0x2460)),
      cutoff_raw: cutRaw, i10: bits(I.add(0x10)), cutoff_stack: nrows > 0 ? bits(sp.add(0x10)) : null,
      lb_diff: lbd, ub_diff: ubd, flags, b7889a5: b7, cut_type: cutType, cut_40: cut40, cut_slack: hexs(P.slack.add(8 * nrows), ncuts),
-     rc: dual !== 0 && cutRaw !== null ? hexs(P.rc, ncols) : null, count: cnt, list}); }});
+     rc: hexs(P.rc, ncols), count: cnt, list}); }});
 }});
 `;
 (async () => {

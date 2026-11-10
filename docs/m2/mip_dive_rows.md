@@ -55,7 +55,7 @@
 | D 결과 | top-level 선택 사건의 목록이 같은 호출의 `10e5fc` 인자(`b:op` deact의 rows, 반환 `5fb8ec+0x37c9`)와 같다(모든 사례). 목록이 비면 그 선택 뒤 `10e5fc` 호출이 없다. nidda top-level deact 수는 03d-7 통계와 같다(재시작 전 10, 뒤 1135) |
 | A `a7cec0`·`66661c` | Python 포팅으로 cutoff 경로에 들어가는 행 집합이 캡처한 `66661c` 호출 행 집합과 순서까지 같고, 호출별 반환값이 같다 |
 | R 규칙 | 모든 선택 사건에서 §2 규칙의 Python 재구성 목록이 캡처 목록과 개수·순서까지 정확히 같다 |
-| C 대조군 | DynamicRows=0 3회: env+0x2b48=0, 관문 통과 0, 선택 사건 0, `10e5fc`·`10e662` 0회. 정상 종료 |
+| C 대조군 | DynamicRows=0 3회: env+0x2b48=0, 모든 관문 기록의 첫 실패 절이 DynamicRows, 선택 사건 0, `10e5fc` 0회, X 목록 생성 0회. `10e662`는 재시작 경로 `6a6563+0x211`(C:123–124, DynamicRows 관문 없음)에서 X 없이 부른 호출만 허용한다(처음 계약은 `10e662` 0회였다. 계약 변경 §6.3). 정상 종료 |
 | V 판별력 | 규칙 절을 하나씩 바꾼 변종(플래그 무시, `7889a5` 무시, 0.1 계수 0, maxact 비교 방향, '=' 반대쪽 생략, DualReductions 무시, `66661c` 항상 0·1, cut 0x14 무시, `+0x40` 무시, slack 1e-5 → 0, 순서 cut 먼저 등)마다 R이 실패하는지 본다. 실패하지 않은 절은 "실행에서 결과를 바꾸지 않음 → C만"으로 보고하며 이 경우도 판정 실패로 치지 않는다. 절별 실행 횟수(플래그≠0, `7889a5` 참, '=' 행, cutoff 경로·`66661c` 1 반환, cut 0x14, `+0x40`≠0, slack 경계)를 함께 낸다 |
 
 - 정수·목록은 순서까지 정확 비교, 부동소수는 u64 비트로 저장하고 Python에서 같은 연산 순서로 계산한 값을 그대로 비교한다(허용오차 없음).
@@ -69,7 +69,7 @@
 | nidda H seed 1, NodeLimit 32898 | 원본 실제 실행(읽기 전용 훅) | 03d-7의 deact 전부(재시작 전·후, 중첩 MIP 포함) | `neos-3754480-nidda.mps.gz`(03d-6과 같은 해시) | `bench/oracle/mip_dive_rows/nidda_H_s1_{1,2,3}.json.gz` |
 | gmu-35-40 기본 설정(Threads 1, Seed 0), NodeLimit 3000 | 원본 실제 실행 | '=' 없음, DualReductions 1, `66661c` 호출·1 반환, 중첩 MIP(깊이 2·3) | `gmu-35-40.mps.gz` | `bench/oracle/mip_dive_rows/gmu-35-40_default_{1,2,3}.json.gz` |
 | assign1-5-8 기본 설정, NodeLimit 3000 | 원본 실제 실행 | '=' 행의 최소 활동값 절로 선택, '=' cutoff 경로 건너뜀 | `assign1-5-8.mps.gz` | `bench/oracle/mip_dive_rows/assign1-5-8_default_{1,2,3}.json.gz` |
-| 같은 설정 + DynamicRows=0 | 원본 실제 실행(공개 숨은 파라미터) | 관문 첫 절 거짓 | 같음 | `bench/oracle/mip_dive_rows/nidda_H_s1_dr0_{1,2,3}.json.gz` |
+| nidda H 설정 + DynamicRows=0 | 원본 실제 실행(공개 숨은 파라미터 `GURO_PAR_DYNAMICROWS`) | 관문 첫 절 거짓 | 같음 | `bench/oracle/mip_dive_rows/nidda_H_s1_dr0_{1,2,3}.json.gz` |
 
 - 적용하지 않은 범주: 허용오차 경계는 실제 실행에서 나온 만큼만 본다(합성 없음). 실행에서 결과를 바꾸지 않는 절은 V에서 C만으로 표시한다.
 
@@ -82,8 +82,68 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+### 6.1 탐색 probe(계약 확정 전, 판정 근거 아님)
+
+- smoke: nidda H, NodeLimit 3000, 1회. 훅이 모두 실행됐고 스택 칸 대조(`bad_slots`)가 비었다. 실행 중 env+0x2430(DualReductions, `ac81d7` C:146에서 이름 확인)이 0이고 모든 행이 '<'이었다. 그래서 nidda H에서는 `66661c` 경로와 '=' 절이 실행되지 않는다.
+- sweep: 커밋 `df81c27`의 도구(sha256 앞 16자리 `b2830515833fedec`)로 `../re/bench/data/miplib`의 38모델을 `{"NodeLimit":3000,"TimeLimit":30}`(Threads 1, Seed 0)로 1회씩 돌렸다. 명령은 `for f in ../re/bench/data/miplib/*.mps.gz; do ./tools/gurun.sh timeout 120s node tools/mip_dive_rows.js $f OUT/$(basename $f .mps.gz).json.gz '{"NodeLimit":3000,"TimeLimit":30}' 0; done`이고 판정은 `python3 tools/mip_dive_rows_check.py --sweep OUT`이다. 결과 파일은 저장소에 넣지 않았다(15MB, 1회 실행, TimeLimit 사용).
+  - 36모델에서 선택이 일어났다(enlight_hard·sp150x300d는 0회). 선택 8,365건(행 629,391개)과 `66661c` 호출 661,664건(1 반환 1,593건)이 R·A로 모두 정확히 맞았다(`SWEEP MATCH`).
+  - 절 실행 횟수: 플래그≠0 모델 행 511,491·cut 173,049, cutoff 경로 736,649, '=' cutoff 경로 417, maxact 절을 통과한 '=' 행 17, maxact가 (rhs, rhs+0.1·tol]에 든 행 2,825, slack∈(0, 1e-5]인 cut 5,629. `7889a5` 참·cut `+0x40`≠0·cut 종류 0x14는 0회다.
+  - 이 결과로 기본 설정 두 사례를 §4에 더했다(§1 계약 변경).
+
+### 6.2 고정 캡처
+
+- 실행 도구는 manifest의 `tools` 해시로 고정한 현재 파일이다. 위치는 worktree `../rsolver-m2-03d-8`이다. 첫 고정 캡처는 rc를 DualReductions≠0일 때만 저장해서 V의 `no_dual` 변종을 nidda에서 평가할 수 없었다. 도구가 rc를 항상 저장하도록 고치고 12회를 모두 다시 돌렸다(판정 전, 판정 규칙 변경 없음).
+- 네 사례 모두 3회가 바이트 단위로 같다(gz 파일 SHA-256 동일). nidda·대조군은 각 회차 `DONE 8 32898`, gmu·assign은 `DONE 8 3000`이고 오류는 없다.
+- 판정 출력(`--self-test`, 종료 0):
+
+```text
+M: 4 cases x 3 runs, binary/model/tool/params/output
+B: 3 runs identical: nidda_H_s1 7344, nidda_H_s1_dr0 9, gmu-35-40_default 1905, assign1-5-8_default 533
+N: nidda b:* projection = M2-03d-7 capture (4700 events, 3 runs)
+G: every selection follows its gate (rbx = param_2, stack slots = I/mip/D pointers, cutoff): nidda_H_s1 1320 gates, blocked 0, gmu-35-40_default 689 gates, blocked 0, assign1-5-8_default 84 gates, blocked 0
+D: top-level selection list = 10e5fc rows (5fb8ec+0x37c9): nidda_H_s1 1145, gmu-35-40_default 74, assign1-5-8_default 64
+A/R: 2093 selections, 172135 rows, 26278 66661c calls reproduced exactly (list order, 66661c row and result)
+C: DynamicRows=0 x3: env+0x2b48 = 0, gate first clause false at every pass, 0 selections, 0 deact, 1 restart react_all (6a6563+0x211, no X)
+clause counts: {"66661c": 26278, "66661c_1": 328, "cut_flag": 38671, "cutoff_path": 387462, "cutoff_path_eq": 73, "eq_redundant_side": 11, "maxact_in_tol": 19507, "model_flag": 140906, "slack_le_1e-5": 928}
+```
+
+- V(절 변종, 첫 차이):
+
+| 변종 | 결과 | 첫 차이·이유 |
+|---|---|---|
+| 플래그 무시 | 거부 | nidda call 808: 행 235 추가 |
+| 0.1·FeasTol → 0 | 거부 | nidda call 186: 238·388 누락 |
+| maxact 비교를 rhs−t로 | 거부 | nidda call 74 |
+| maxact 절 제거 | 거부 | nidda call 11(루트): 306행 추가 |
+| `66661c` 항상 0 / 항상 1 | 거부 | gmu call 117 / call 72 |
+| `66661c` 정수 반올림 제거 / 폭 상한 제거 | 거부 | gmu call 117 |
+| slack 임계 1e-5 → 0 | 거부 | nidda call 2173: 행 435 추가 |
+| cut을 모델 행보다 먼저 | 거부 | nidda call 74(순서) |
+| `7889a5` 무시 | 생존 | `7889a5` 객체가 모든 사건에서 null |
+| '=' 최소 활동값 절 제거 | 생존 | maxact 절을 통과한 '=' 11행이 모두 최소 활동값 절도 통과 |
+| '=' 행도 `66661c` 호출 | 생존 | '=' cutoff 경로 73행에서 `66661c`가 모두 0 |
+| DualReductions 무시 | 생존 | nidda에서 대신 부른 `66661c` 360,492회가 모두 0 |
+| cut 0x14 무시 / `+0x40` 무시 | 생존 | 해당 cut 0개 |
+
+- 자기검사 변조 20종을 모두 거부했다. 대상은 바이너리·도구·모델 해시, 파라미터, 회차 차이, 빈 사건, 03d-7 투영, 관문 노드, 선택을 blocked로 대체, 선택의 DynamicRows 0, cutoff 칸, 목록 한 행·순서(순서는 중첩 MIP 사건이라 D가 아닌 R이 거부), 선택된 행의 bound·rhs, 선택된 cut의 slack을 1e-5로, cut 종류 0x14, `66661c` 반환값, 대조군 관문 사건·op 지점이다. bound·rhs·slack 변조는 처음에 결과와 무관한 칸을 바꿔 통과했다. 선택된 행을 직접 노리도록 고친 뒤 거부됐다. 디스크의 캡처 1바이트 변조 시 종료 1이다.
+- 관련 회귀: `python3 tools/mip_blank_rows_check.py --self-test` 종료 0(03d-7 자료 불변).
+
+### 6.3 관찰과 계약 변경
+
+- 관문 노드 조건(`I+0x2c`=`param_2+0x34`)이 참인 top-level 횟수는 C:526 `10e662`(`5fb8ec+0x79e`) 호출 수와 맞는다. nidda 1146=1146, gmu 74=74이고, assign은 통과 66 + `I+0x28`≠2 실패 3 = 69다. 두 지점이 같은 노드 조건을 쓰고 선택은 그중 상태 2인 노드에서만 일어난다. 횟수만 맞췄고 노드별 대조는 하지 않았다.
+- 선택 2,093건 중 빈 목록은 nidda 2, gmu 98, assign 4건이다. 빈 목록 뒤에는 `10e5fc`가 없다(D). `a7f0ad`·`a7f923`·`+0x18` 절로 막힌 선택은 0건이다.
+- 모델 행 자료 `(mip+8)->D`는 노드 LP가 아니라 cut이 없는 MIP 모델 LP다(`mlp_is_node_lp` 거짓, nidda 402행, cut은 최대 177개). cut 행 번호는 nrows+j다.
+- 계약 변경(결과 확인 뒤): 대조군에서 `10e662`가 1회 나왔다. 반환 주소 `0x5807b1`은 재시작 `6a6563+0x211`이고, C:123–124는 DynamicRows를 보지 않고 부른다. X가 없어 목록은 바뀌지 않는다. 처음 계약의 "`10e662` 0회"는 이 C를 읽지 않은 기대였다. 판정을 "`5fb8ec` 지점 0회, 재시작 지점은 X 없이만 허용"으로 고쳤고 다른 규칙은 바꾸지 않았다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: **완료(오라클 구축)**.
+- 동등성: 해당 없음(Rust 미변경). Python 재구성은 원본 대조 도구이고 Rust 구현이 아니다.
+- 통과 범위: 네 사례(실제 실행 3회씩)에서 선택 블록의 관문, 입력, 결과 목록(개수·순서), `66661c` 호출 행과 반환값이 정확히 재현됐다. 실행에서 결과를 바꾼 절은 플래그, maxact ≤ rhs+0.1·FeasTol, cutoff 경로의 `66661c`(정수 반올림·폭 상한 포함), cut slack>1e-5, 모델 행→cut 순서다. 탐색 sweep 38모델(1회씩)도 모두 맞았다.
+- 남은 한계:
+  - C만: `7889a5` 비트, '=' 행 최소 활동값 절, '=' 행의 cutoff 경로 제외, DualReductions 절, cut 종류 0x14·`+0x40` 절, `a7f0ad`·`a7f923`·`+0x18` 관문 절. 실행에서 결과를 바꾼 적이 없다.
+  - 미확인: `param_2+0x34`의 의미(다이브 시작 깊이로 보이지만 쓰는 쪽을 읽지 않았다), C:526 재활성의 노드별 대조, DynamicRows=−1의 자동 판정, `edd71` 빼기 순서와 행 삭제 재번호, nidda H 설정에서 DualReductions가 0인 이유.
+- M2-03d-4에 주는 뜻: 다이브 행 선택은 노드 bound, 행 플래그, cut 속성·slack, rc, cutoff로 정해진다. Python 재구성이 원본 입력에서 같은 목록을 낸다. Rust 실제 경로에는 플래그 배열(`I+0xa0`), cut 속성, 노드 LP 해의 slack·rc가 필요하다.
+- 후속(제안, 번호 미배정): Rust 이식. `d:sel` 입력을 그대로 재생하면 L1 수준 대조가 가능하다. M2-03d-4의 선행이다.
+- 작업 branch: `work/m2-03d-8`. 검사 통과 뒤 main에 `--no-ff`로 병합한다.
+- 교훈: [원본 사실](../lessons/original.md)(선택 규칙, nidda H의 DualReductions 0, 재시작 경로 `10e662`), [도구](../lessons/tooling.md)(변조는 결과를 바꾸는 칸을 노릴 것)에 추가했다.
