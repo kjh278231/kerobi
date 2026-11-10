@@ -96,15 +96,15 @@ impl NodeLife {
         }
     }
 
-    /// `5fa560(env, X, s)`: stage 0 frees N (and everything); otherwise the root keeps all, and other nodes lose L at
-    /// stage <= 5 and I at stage <= 2.
+    /// `5fa560(env, X, s)`: stage 0 frees N (and everything); otherwise the root keeps all at stage > 0, and other
+    /// nodes (the root too at stage < 0) lose L at stage <= 5 and I at stage <= 2.
     fn free(&mut self, x: usize, s: i32) {
         if s == 0 {
             self.nodes[x] = None;
             return;
         }
         let n = self.node_mut(x);
-        if n.root && n.info {
+        if n.root && n.info && s > 0 {
             return;
         }
         if s <= 5 {

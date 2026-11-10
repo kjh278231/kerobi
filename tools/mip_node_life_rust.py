@@ -26,7 +26,7 @@ MUTANTS = [
     ('W3 no child count cascade', [('if pn.children == 0 {', 'if false {')], ALL),
     ('W4 s > 4 stop as s > 3', [('if !pn.info || s > 4 {', 'if !pn.info || s > 3 {')], ALL),
     ('W5 parent I freed at stage 0', [('(x, s) = (p, 1);', '(x, s) = (p, 0);')], ALL),
-    ('W6 no root exception', [('if n.root && n.info {', 'if false && n.info {')], ALL),
+    ('W6 no root exception', [('if n.root && n.info && s > 0 {', 'if false && n.info && s > 0 {')], ALL),
 ]
 
 
@@ -188,6 +188,23 @@ def tampers(heads, exps, tr):
         print(f'T: rejected: {name}: {why}')
 
 
+def truncated(heads, exps, din):
+    """Input tamper: one case without its closing `end` line must end in `panic` (caught per case) and be rejected."""
+    tin, tout = os.path.join(WORK, 'trunc_in'), os.path.join(WORK, 'trunc_out')
+    shutil.rmtree(tin, ignore_errors=True)
+    shutil.copytree(din, tin)
+    p = os.path.join(tin, 'neos-860300.input.txt')
+    s = open(p).read()
+    need(s.endswith('\nend\n'), 'T: input does not end with end')
+    open(p, 'w').write(s[:-len('end\n')])
+    cargo(ROOT, os.path.join(ROOT, 'target'), tin, tout)
+    tr = traces(tout)
+    res = outcomes(heads, exps, tr)
+    need(tr['neos-860300'].endswith('\npanic\n') and res['neos-860300'], 'T: input without end not rejected by a caught panic')
+    need(all(res[c] is None for c in CASES if c != 'neos-860300'), f'T: input without end changed other cases {res}')
+    print(f'T: rejected: input without end (panic caught, other cases pass): {res["neos-860300"]}')
+
+
 def mutants(heads, exps, din):
     base = os.path.join(WORK, 'mutant')
     wsp = os.path.join(base, 'ws')
@@ -241,6 +258,7 @@ def main():
         print(f'C/R/D: {c}: {len(exps[c])} lines: rust = original')
     if self_test:
         tampers(heads, exps, tr)
+        truncated(heads, exps, din)
         mutants(heads, exps, din)
     print('PASS' + (' (+ self-test)' if self_test else ''))
 
