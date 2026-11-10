@@ -18,6 +18,8 @@ OLD = 'bench/oracle/mip_retry_basis'
 MANIFEST = 'bench/oracle/mip_retry_node_lp_manifest.json'
 TOOLS = ['tools/mip_retry_node_lp.js', 'tools/mip_retry_node_lp_runs.sh']
 LPFILE = DATA + '/{}.node_lp.json'
+# call-site labels for x:cda5b:enter.ret (file offset, size from ../re/decomp/index.tsv)
+FUNCS = {'5ccea5': (0x4f92d0, 4320), '5ce67b': (0x4f0e10, 22107), '0c3d0d': (0x14acb0, 24529)}
 LP_KEYS = ('cols', 'rows', 'model_sense', 'obj_con', 'obj', 'lb', 'ub', 'vtype', 'rhs', 'sense', 'cbeg', 'ind', 'val', 'env_params')
 MODELS = {'nidda_stress': 're/bench/data/miplib/neos-3754480-nidda.mps.gz', 'gmu-35-50_default': 're/bench/data/miplib/gmu-35-50.mps.gz'}
 RUNS = (1, 2, 3)
@@ -29,6 +31,13 @@ need, Fail = B.need, B.Fail
 
 def f(h):
     return struct.unpack('>d', bytes.fromhex(h))[0]
+
+
+def site(ret):
+    for name, (o, n) in FUNCS.items():
+        if o <= ret < o + n:
+            return f'{name}+{ret - o:#x}'
+    return f'{ret:#x}'
 
 
 def strip_y(events):
@@ -99,6 +108,8 @@ def check_case(case, caps, old):
     # GRBXgetvars returns the stored values unchanged only without D scale arrays
     need(lp['dhash']['null_D3d8'] and lp['dhash']['null_D3e0'], f'{case}: D is scaled at the API dump')
     need(lp['k'] == min(e['k'] for e in dh if e['k'] > 1), f'{case}: API dump not at the first node-LP cda5b after the decision')
+    # GRBXgetvars negates flagged columns when D+0x3c != 0; nidda is cross-checked by C2 and E, the others must have it 0
+    need(cfg['ws'] or lp['dhash']['D3c'] == 0, f'{case}: D+0x3c is {lp["dhash"]["D3c"]} at the API dump and nothing cross-checks the columns')
     out = {'rows': lp['rows'], 'cols': lp['cols'], 'nnz': lp['cbeg'][-1], 'node_lp_cda5b': [e['k'] for e in dh], 'dump_k': lp['k']}
     env = lp['env_params']
     # C3: ws cutoff of every node-LP call comes from the LP env (02f7e1 C:247-259)
@@ -111,7 +122,17 @@ def check_case(case, caps, old):
         need(w['cutoff_3b8'] == cut, f'{case}: ws k={w["k"]} cutoff {w["cutoff_3b8"]} vs env Cutoff {cut}')
         need(w['cutoff2_3c0'] == (cut if f(cut) >= f(extra) else extra), f'{case}: ws k={w["k"]} +0x3c0')
     out['cutoff'] = f(cut)
-    out['retry_ws_status'] = [(e['k'], e['status_f0'], f(e['obj_118'])) for e in ye if e['event'] == 'y:ws_leave']
+    # C4: retry LP results as in 03c-2 (es equals the 03c-2 events by A); node-LP results consistent with the cutoff
+    leaves = {e['k']: e for e in es if e['event'] == 'x:cda5b:leave'}
+    wl = [e for e in ye if e['event'] == 'y:ws_leave']
+    need(wl, f'{case}: no retry ws_leave')
+    need(lp['model_sense'] == 1, f'{case}: cutoff rule written for minimisation')
+    for e in wl:
+        need(e['status_f0'] == leaves[e['k']]['lp']['lp_status'], f'{case}: ws status k={e["k"]} vs cda5b leave')
+        if e['k'] in node_k:
+            need(e['status_f0'] in (2, 6), f'{case}: node-LP retry status {e["status_f0"]}')
+            need((f(e['obj_118']) >= f(cut)) == (e['status_f0'] == 6), f'{case}: k={e["k"]} status {e["status_f0"]} objective {f(e["obj_118"])} vs cutoff {f(cut)}')
+    out['retry_ws_status'] = [(e['k'], e['status_f0'], f(e['obj_118'])) for e in wl]
     if cfg['ws']:
         # C2: the simplex work arrays of the retry LP equal the API dump (unscaled, '>' rows negated as in GRBXgetvars)
         need(len(dh) == 2, f'{case}: expected the first LP and the retry on the node LP, got {len(dh)}')
@@ -138,14 +159,6 @@ def check_case(case, caps, old):
             need(ws['sense'][i] == ('<' if flip[i] else lp['sense'][i]), f'{case}: ws sense[{i}]')
         out['slack_bounds'] = sorted({(ws['sense'][i], ws['l'][n + i], ws['u'][n + i]) for i in range(m)})
         out['slack_c_zero'] = all(f(x) == 0.0 for x in ws['c'][n:])
-        # C4: retry status as in 03c-2, cutoff consistent
-        wl = [e for e in ye if e['event'] == 'y:ws_leave']
-        need(len(wl) == 1, f'{case}: expected one retry ws_leave')
-        old_st = [e for e in es if e['event'] == 'x:cda5b:leave' and e['k'] == 2]
-        need(len(old_st) == 1 and wl[0]['status_f0'] == old_st[0]['lp']['lp_status'], f'{case}: retry status vs 03c-2')
-        if wl[0]['status_f0'] == 6:
-            need(f(wl[0]['obj_118']) >= f(cut), f'{case}: status 6 with objective below cutoff')
-        out.update(retry_status=wl[0]['status_f0'], retry_obj=f(wl[0]['obj_118']))
     if cfg['model']:
         # E: the node LP is the model plus extra rows; columns, objective and the model rows unchanged
         md = d['model_dump']
@@ -209,16 +222,25 @@ def node_lp(case, d):
     """Rust-readable node LP (schema rsolver.node_lp.v1): the API dump, the LP calls on the node LP, the node basis if any."""
     ye, es = retry_y(d)
     lp = one(ye, 'y:lp')
-    node_k = [e['k'] for e in ye if e['event'] == 'y:dhash' and e['lp_is_node_lp']]
-    enters = {e['k']: e for e in es if e['event'] == 'x:cda5b:enter'}
+    on_node = {e['k']: e['lp_is_node_lp'] for e in ye if e['event'] == 'y:dhash'}
+    enters = {e['k']: e for e in es if e['event'] == 'x:cda5b:enter' and e['depth'] == 1}
     leaves = {e['k']: e for e in es if e['event'] == 'x:cda5b:leave'}
-    calls = [{'k': k, 'retry': enters[k]['retry'], 'method': enters[k]['method'], 'node_basis': enters[k]['vb_rel'] == 'I98' and enters[k]['cb_rel'] == 'Ia0',
-              'status': leaves[k]['lp']['lp_status']} for k in node_k]
+    kind = lambda e: 'node' if (e['vb_rel'], e['cb_rel']) == ('I98', 'Ia0') else 'none' if (e['vb_rel'], e['cb_rel']) == ('null', 'null') else 'given'
+    calls = []
+    for k, e in sorted(enters.items()):
+        c = {'k': k, 'site': site(e['ret']), 'on_node_lp': on_node[k], 'retry': e['retry'], 'method': e['method'], 'basis': kind(e),
+             'warm_lp238': not e['lp']['lp238_null'], 'status': leaves[k]['lp']['lp_status']}
+        if c['basis'] == 'given':  # start basis passed by the caller (content captured, origin not traced)
+            c.update(vbasis=e['vbasis'], cbasis=e['cbasis'])
+        calls.append(c)
+    first_retry = next(c for c in calls if c['retry'])
+    branch = {'5ce67b': 'node_basis_direct', '0c3d0d': '0c3d0d'}[first_retry['site'].split('+')[0]]
     dec = [e for e in es if e['event'] == 'x:decode:leave']
     basis = {'vbasis': dec[0]['vbasis'], 'cbasis': dec[0]['cbasis']} if dec else None
     return dict({'schema': 'rsolver.node_lp.v1', 'case': case, 'doubles': 'u64 bit pattern, 16 hex digits',
-                 'source': f'{DATA}/{case}_1.json (run 1 of 3, y:lp at cda5b k={lp["k"]})'},
-                **{k: lp[k] for k in LP_KEYS}, node_lp_calls=calls, node_basis=basis)
+                 'source': f'{DATA}/{case}_1.json (run 1 of 3, y:lp at cda5b k={lp["k"]})',
+                 'env_params_note': 'raw reads at the offsets of re/notes/env_param_offsets.tsv; only Cutoff is cross-checked (C3)'},
+                **{k: lp[k] for k in LP_KEYS}, branch=branch, lp_calls=calls, node_basis=basis)
 
 
 def check_lpfiles(caps):
@@ -322,7 +344,12 @@ def tampers(caps):
         rs = [e for e in d['events'] if e['event'] == 'retry_solve'][0]
         rs['events'] = [e for e in rs['events'] if e['event'] != 'y:ws']
 
-    return [('nnz value', nidda(all_runs(set_val))), ('bound', nidda(all_runs(set_ub))), ('cutoff', nidda(all_runs(set_cut))),
+    def gmu(fn):
+        def t(c):
+            fn(c['gmu-35-50_default'])
+        return t
+
+    return [('gmu cutoff', gmu(all_runs(set_cut))), ('gmu dhash', gmu(all_runs(dhash))), ('nnz value', nidda(all_runs(set_val))), ('bound', nidda(all_runs(set_ub))), ('cutoff', nidda(all_runs(set_cut))),
             ('retry solve removed', nidda(all_runs(drop_retry))), ('run differs', nidda(lambda cs: set_ub(cs[2]))),
             ('non-y event', nidda(all_runs(non_y))), ('dhash', nidda(all_runs(dhash))), ('ws array', nidda(all_runs(ws_l))),
             ('model row', nidda(all_runs(model_row))), ('ws missing', nidda(all_runs(drop_ws)))]

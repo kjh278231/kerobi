@@ -10,7 +10,7 @@
 - **새 훅이 실행을 바꾸지 않았음을 보이려면, 새 캡처를 이전 저장 캡처의 필드만 남기게 투영해 JSON 전체를 비교한다.** 출력 줄(`DONE status nodes`)도 비교한다. 예: `project()` in `tools/mip_retry_basis_check.py`. (M2-03c-2)
 - **궤적 비교에는 TimeLimit 대신 NodeLimit을 쓴다.** TimeLimit은 훅 부하 때문에 궤적이 바뀐다. (M2-03c-1)
 - **훅 오프셋은 objdump로 함수 진입점인지 확인한다.** 진입점은 보통 `push %r12`로 시작한다. 디컴파일 파일 이름의 앞 숫자가 그대로 훅 오프셋이다. (M2-03c-2)
-- **Frida InvocationContext의 `this.depth`는 읽기 전용이다.** 써 넣으면 `TypeError: no setter for property`가 난다. `this.dp`처럼 다른 이름을 쓴다. `returnAddress`·`context`·`threadId`도 예약돼 있다. (M2-03d-3)
+- **Frida InvocationContext의 `this.depth`는 읽기 전용이다.** 써 넣으면 `TypeError: no setter for property`가 난다. `this.dp`처럼 다른 이름을 쓴다. Frida 문서상 `returnAddress`·`context`·`threadId`·`errno`도 InvocationContext 속성이다(이번에 실패를 본 것은 `depth`뿐). (M2-03d-3)
 - **실행 간 비교 사건에 heap 포인터로 만든 번호(첫 등장 순번)를 넣지 않는다.** 같은 도구·설정에서도 gmu 1·2회차의 MIP 구조체 번호가 달라 사건 수가 달라졌다. 함수 진입 순번·중첩 깊이·구조체 안의 자기참조 비교처럼 실행 순서에서 나오는 값을 쓴다. (M2-03d-3)
 - **원본 내부 LP 객체는 공개 API(`GRBgetvars`·`GRBgetdblattrarray` 등)로 읽을 수 있다.** `5ce67b` 자신도 노드 LP에 `GRBgetintattr`를 부른다. `GRBcheckmodel`이 env 오류 버퍼를 지우므로 계측 사건으로 표시한다. 계측 없는 이전 캡처와 비계측 사건을 비교해 무영향을 보인다. 예: `tools/mip_retry_node_lp.js`. (M2-03d-3)
 - **부동소수 기준 자료는 u64 비트 패턴 16진수로 저장한다.** 노드 LP bound에 −0.0이 있었다. JSON 숫자는 −0을 잃는다. (M2-03d-3)

@@ -83,29 +83,48 @@
 
 ## 5. 재실행 명령
 
-- 원본 캡처: `tools/mip_retry_node_lp_runs.sh bench/oracle/mip_retry_node_lp`. Gurobi를 6회, 한 프로세스씩 실행한다.
+- 원본 캡처: `tools/mip_retry_node_lp_runs.sh bench/oracle/mip_retry_node_lp`. Gurobi를 6회, 한 프로세스씩 실행한다(약 50분).
+- 기준 파일·manifest 생성: `python3 tools/mip_retry_node_lp_check.py --write-manifest`. 1회차 캡처에서 `*.node_lp.json`을 만들고, 캡처·기준 파일·도구·모델의 해시를 기록한다.
 - 저장 검사: `python3 tools/mip_retry_node_lp_check.py --self-test`. 기대 종료코드는 0이다.
 - 회귀: 솔버 코드를 바꾸지 않는다. `python3 tools/mip_retry_basis_check.py --self-test`와 `python3 tools/mip_retry_rust_expect.py --self-test`가 계속 0이어야 한다.
 
 ## 6. 실행 결과
 
-- 실행: worktree `../rsolver-m2-03d-3`, 캡처 도구 commit `77e1cf2`, 검사기와 기준 파일 commit `b625068`. x86-64 WSL2 Linux, Gurobi 13.0.3(위 SHA-256), Threads 1.
+- 실행: worktree `../rsolver-m2-03d-3`, 캡처 도구 commit `77e1cf2`. 검사기·기준 파일의 최종본은 이 문서와 같은 commit이다(main `7038dd5` 병합 뒤 재검사). x86-64 WSL2 Linux, Gurobi 13.0.3(위 SHA-256), Threads 1.
 - 원본 캡처: `tools/mip_retry_node_lp_runs.sh bench/oracle/mip_retry_node_lp`. Gurobi를 한 프로세스씩 6회 돌렸고 약 50분 걸렸다. 6회 모두 `ok`이고 출력 줄은 03c-2와 같다(nidda `DONE 8 6000`, gmu `DONE 8 20000`).
 - 검사: `python3 tools/mip_retry_node_lp_check.py --self-test` 종료코드 0.
   - manifest(`bench/oracle/mip_retry_node_lp_manifest.json`, 03c-2 manifest 포함)를 통과했다.
-  - 두 사례 모두 A·B·C1·C3를 통과했다. nidda는 C2·C4·E도 통과했다.
+  - 두 사례 모두 A·B·C1·C3·C4를 통과했다. nidda는 C2·E도 통과했다(gmu는 ws가 scale돼 있고 모델이 sub-MIP라 계약대로 제외).
   - 노드 LP 기준 파일 2개가 캡처에서 다시 만든 것과 같다.
-  - 메모리 변조 10종을 모두 거부했다.
+  - 메모리 변조 12종을 모두 거부했다(nidda 10, gmu 2).
+- A의 범위: 저장되는 사건은 재풀이 solve 하나의 사건뿐이다. `DONE` 줄은 NodeLimit에 걸려 끝난 값이라 그 뒤 궤적을 판별하지 못한다. 그래서 A가 보이는 것은 "재풀이 solve가 반환할 때까지 계측 영향 없음"이다. API 호출은 그 solve 안에서 한 번 일어난다.
   - 디스크에서 캡처 1바이트(Cutoff 16진수 한 자리)를 바꾸면 종료코드 1(`hash mismatch`)이고, 되돌리면 0이다.
 - 회귀: `python3 tools/mip_retry_basis_check.py --self-test`와 `python3 tools/mip_retry_rust_expect.py --self-test`는 0이다. 솔버 코드를 바꾸지 않아 Rust·Python 검사는 실행하지 않았다.
 - 실행하지 않은 것: Rust LP 재생(L2, M2-03d-4).
 
 **Rust용 기준 파일** `bench/oracle/mip_retry_node_lp/<case>.node_lp.json`(schema `rsolver.node_lp.v1`)
 
-- 내용: 노드 LP(열 우선 행렬·obj·lb·ub·vtype·rhs·sense·ModelSense·ObjCon), LP env 파라미터 184개, 노드 basis(nidda만), 노드 LP에 대한 LP 호출 목록(method, 노드 basis 사용 여부, 상태).
+- 내용: 노드 LP(열 우선 행렬·obj·lb·ub·vtype·rhs·sense·ModelSense·ObjCon), LP env 파라미터 184개, 노드 basis(nidda만), 재풀이 solve의 top-level LP 호출 목록, branch.
+- LP 호출 항목은 호출 위치, 노드 LP 여부, retry 여부, method, basis 종류(node·none·given), `lp+0x238` warm 여부, 상태다. given이면 시작 basis 배열도 담는다.
+- env 파라미터는 `../re/notes/env_param_offsets.tsv` 오프셋에서 그대로 읽은 값이다. 오프셋을 실행으로 대조한 것은 Cutoff(C3)뿐이다.
 - 부동소수는 u64 비트 패턴의 16진수다. nidda bound에는 −0.0(`8000000000000000`)이 31개 있다.
-- nidda 호출: k=1 method 1·노드 basis·상태 12, k=2 재풀이 method 0·노드 basis·상태 6.
-- gmu 호출: k=1 method 1·basis 없음·상태 12, k=3 method 1·basis 없음·상태 2. k=2는 `0c3d0d`가 만든 복사 LP(원시 자료 해시는 같음)이고, k=4는 다른 LP(비영 645개)다. 둘 다 노드 LP 호출 목록에서 뺐다.
+- nidda(`node_basis_direct`):
+
+| k | 호출 위치 | LP | method | basis | 상태 |
+|---|---|---|---|---|---|
+| 1 | `5ccea5+0x356` | 노드 | 1 | 노드 | 12 |
+| 2 | `5ce67b+0x4cf8` | 노드 | 0 | 노드 | 6 |
+
+- gmu(`0c3d0d`):
+
+| k | 호출 위치 | LP | method | basis | 상태 |
+|---|---|---|---|---|---|
+| 1 | `5ccea5+0x356` | 노드 | 1 | 없음 | 12 |
+| 2 | `0c3d0d+0x14e2` | 복사본(원시 자료 해시 같음) | 1 | 없음 | 2 |
+| 3 | `0c3d0d+0x51bd` | 노드 | 1 | 호출자가 준 basis(given) | 2 |
+| 4 | `0c3d0d+0x5626` | 다른 LP(비영 645) | 0 | `lp+0x238` warm(`68341b` setbasis 뒤) | 2 |
+
+- gmu 재풀이는 LP 하나가 아니다. k=3의 시작 basis 내용은 캡처했지만, `0c3d0d`가 k=2 결과에서 그 basis를 만드는 과정은 추적하지 않았다.
 
 **Q1. nidda 노드 LP와 62행** (캡처, 해석은 표시)
 
@@ -151,15 +170,19 @@
 1. `y:lp` 덤프 지점을 "재풀이 `cda5b` 진입"에서 "재풀이 판단 뒤 노드 LP 자체를 받는 첫 top-level `cda5b` 진입"으로 바꿨다. nidda에서는 같은 지점(k=2)이다.
    - 이유: gmu 재풀이는 `0c3d0d`가 복사 LP를 푼다. 또 판단 시점의 `D`는 scale돼 있어 API 값이 역scale 계산을 거친다.
    - 대신 덤프 시 `D`의 scale 배열이 없어야 한다는 조건을 C1에 넣었다.
+   - `GRBXgetvars`는 `D+0x3c≠0`이면 플래그 열의 부호를 뒤집는다. nidda 덤프 시점은 `D+0x3c=−1`이지만 C2·E가 열 값을 대조한다. 대조가 없는 gmu는 `D+0x3c=0`을 요구한다(실제 0).
 2. C1의 "정확히 2회"는 nidda에만 둔다. gmu는 노드 LP 진입이 k=1·3이다. 공통 규칙은 노드 LP 진입의 `D` 해시가 모두 같고 덤프 시 해시와도 같다는 것이다.
 3. C3를 노드 LP의 모든 ws에 적용했다(nidda k=2, gmu k=3).
+   - C4는 처음에 nidda에서만 검사했으나 검토에서 지적받아 두 사례로 넓혔다. 모든 재풀이 LP 호출의 ws 상태가 `x:cda5b:leave` 상태와 같아야 한다. 노드 LP 호출은 "목적값≥cutoff이면 6, 아니면 2"를 만족해야 한다.
 4. E의 "앞 402행이 비트 단위로 같다"는 실패했다. 100행은 부호 반전, 1행은 1/5배였다. 규칙을 "같은 비영 패턴, 정확한 유리수 배수 λ(rhs 포함), λ<0이면 '<'↔'>'"로 바꿨다.
    - vtype은 "같거나, 모델 'I'이고 [0,1]이면 'B'"로 바꿨다.
    - 실패한 원래 규칙의 첫 차이는 행 0 열 203이다(모델 15, LP 3, λ=1/5).
 5. MIP 구조체 번호를 포인터 라벨에서 결정적 값으로 바꿨다. 결정적 값은 `5bbf7f` 진입 순번·깊이, `M+0x620==M`, `M+0x628==M`, 재시작 횟수다.
    - 이유: 첫 전체 실행에서 gmu 1·2회차의 top-level 사건 수가 5215와 5214로 달랐다. heap 재사용으로 라벨이 바뀐 것이다. 그 실행은 중단하고 지웠다.
    - `y:mipmain`·`y:restart`·`y:decision_dhash` 사건을 더했고, backtrace는 libgurobi 안 프레임만 남긴다.
-6. 자기검사 변조에 모델 행과 ws 누락을 더했다(8종 → 10종).
+6. 자기검사 변조에 모델 행·ws 누락·gmu Cutoff·gmu dhash를 더했다(8종 → 12종).
+7. 노드 LP 파일에 호출 위치, basis 종류, 시작 basis, `lp+0x238` warm 여부, branch를 더했다. 처음 파일은 gmu k=3을 "basis 없음"으로 적어 cold 재풀이처럼 읽혔다.
+8. runner의 timeout을 900초에서 3600초로 늘렸다. gmu 1회가 약 15분이어서 여유가 없었다. 캡처는 900초 판으로 했고 모두 시간 안에 끝났다.
 
 - pilot 실패:
   - `y:mipmain` 훅에서 `this.depth`에 쓰다가 Frida 오류가 났다. `depth`는 Frida InvocationContext의 읽기 전용 속성이다.
@@ -176,7 +199,9 @@
   - Q3: cutoff는 LP env Cutoff에서 `ws+0x3b8`로 들어가고, 재풀이 결과와 모순이 없다.
 - M2-03d-4에 주는 영향: 두 원본 사례 모두 일반 B&B 노드가 아니다(RINS 고정 LP, sub-MIP 루트). Rust에는 RINS와 sub-MIP가 없다.
   - 따라서 `bnb.rs` 실제 경로 연결은 이 두 사례로 검증할 수 없다.
-  - 가능한 L2는 LP 재생이다. 캡처한 LP, 노드 basis, method, cutoff를 Rust LP에 넣고 상태(nidda 12→6, gmu 12→2)를 비교한다.
+  - 가능한 L2는 LP 재생이다.
+    - nidda: 캡처한 LP, 노드 basis, method 0, cutoff를 Rust LP에 넣고 상태 6을 비교한다. 첫 LP 12의 재현은 별도 문제다.
+    - gmu: 재풀이가 `0c3d0d`의 여러 LP 호출이다. 단일 LP로 비교할 수 있는 것은 k=3(노드 LP, given basis, method 1 → 2)뿐이다.
   - 실제 경로를 검증하려면 일반 B&B 노드에서 일어나는 자연 재풀이 사례가 따로 필요하다. 03c-1 스캔에서는 이 두 사례만 찾았다.
 - 남은 한계:
   - 62행의 cut 종류·생성 순서.
