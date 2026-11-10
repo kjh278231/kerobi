@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M1-02e kb2 피벗 21 진입 차이의 원인을 특정했다(조사). 원본 BFRT는 NONDEGENFLIP(`spx+0x3fc`, 재분해 직후 조건부로 켜짐)이 켜지면 진입을 고른 뒤 flip 구간을 다시 훑어 |α|/w′가 더 큰 flip 후보로 바꾼다. 수정 프로토타입이 Netlib 64 코퍼스에서 flip 3112/3112·진입 3108/3112다(남은 tuff 4건은 비용 이동). Rust 반영은 M1-02f. [계약과 결과](m1/m1_02e_bfrt.md).
+
 M2-06b-2 힙 키 식을 원본 캡처로 확인하고 Rust `child_key`·`deep_key`로 옮겼다(구현 L1, 통과). 6사례 키 17,382개가 원본과 비트까지 같다. 키는 bound + (부모 분수 수 / 루트 분수 수, 최대 1)·2⁻⁴⁸·max(|bound|,1)이고 목적이 0이면 분수 수다. 깊이 항 등 실행 0회 분기는 C만이다. 다음은 M2-06c·06e. [계약과 결과](m2/mip_node_key.md).
 
 M2-06b 전역 노드 힙을 Rust `NodeHeap`으로 이식했다(구현 L1, 통과). 06a 4사례의 삽입·pop·가지치기를 재생해 꺼낸 노드·지운 순서·배열 스냅숏 728개가 원본과 비트까지 같고, 동률 변이는 동률 있는 3사례에서 거부된다. `bnb.rs`에는 아직 연결하지 않았다. 다음은 M2-06b-2(키 식)·06c·06e. [계약과 결과](m2/mip_node_heap_rust.md).
@@ -97,7 +99,7 @@ flowchart TD
 
     subgraph M1["M1 LP 엔진"]
         PRE["✅ LP presolve·postsolve<br/>64/64"]:::done
-        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 24/64(presolve 전 측정)<br/>kb2 β 원본 합산(02b)"]:::doing
+        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 24/64(presolve 전 측정)<br/>kb2 β 원본 합산(02b) · BFRT 재훑기 원인(02e)"]:::doing
         DRV["🔄 LP 드라이버 G5<br/>main 병합 · 수치 차이 확인 남음"]:::doing
         GATE1["⏳ M1 관문<br/>병합 + 속도 비교표"]:::todo
     end
