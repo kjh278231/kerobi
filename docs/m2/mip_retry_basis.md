@@ -78,8 +78,76 @@
 
 ## 6. 실행 결과
 
-(실행 후 기록)
+- 환경: 작업 branch `work/m2-03c-2`, Gurobi 13.0.3 위 해시, Node Frida, 공유 `../.venv`의 gurobipy. 입력 모델 해시와 캡처 14개 파일 해시는 `bench/oracle/mip_retry_basis_manifest.json`에 있다.
+- 실행: `tools/mip_retry_basis_runs.sh bench/oracle/mip_retry_basis`. 12개 원본 프로세스가 모두 정상 종료했다(2026-11-10 14:48–15:10).
+- 판정: `python3 tools/mip_retry_basis_check.py --self-test`의 종료코드는 0이다.
+  - manifest PASS(14개).
+  - controls PASS 12건. 12개 캡처 모두 03c-1 사건으로 투영하면 저장본 `*_retry_1.json`과 JSON 전체가 같고, 최종 출력(`DONE 8 6000`·`DONE 8 20000`)도 같다. 같은 사례·모드의 3회는 사건 전체가 같다.
+  - acceptance PASS.
+  - 메모리 변조 17종을 모두 의도한 검사에서 거부했다. 대상은 바이너리 해시, 빈 사건, 투영, 실행 간 차이, null끼리 같음, 별칭, decode, 사슬, 상태 재설정, 적재, 자연 export 제거, export null, setbasis, 68341b 구간, 합성만 존재, 합성 누락, 가짜 자연 export다.
+  - 디스크 캡처 1바이트 변조는 종료코드 1, 복원하면 0이다.
+- 첫 실행 실패(보존): 도구 v1로 돈 12회 중 gmu synth 2회차만 사건 1번(`x:solve_basis.provenance`)이 달랐다.
+  - 원인: 노드 정보 `I` 포인터로 찾는 마지막 쓰기 기록이 heap 주소 재사용 때문에 다른 노드의 오래된 기록을 가리켰다. 진입 시 `I+0xb0`는 null이었다.
+  - 수정: 현재 `I+0xb0` 내용 해시가 기록과 같을 때만 기록을 인정하고, 아니면 `stale`로 표시한다. 수정 뒤 12회를 다시 캡처했다.
+  - 실패 파일 두 개와 v1 해시 목록은 `bench/oracle/mip_retry_basis_v1_failure/`에 있다. 판정 규칙은 바꾸지 않았다.
+
+### 질문 1. 입력 basis 출처
+
+**nidda stress (비루트 노드 8287, 3회 동일)**
+
+| 순서 | 사건 | 근거 |
+|---|---|---|
+| 1 | 주 트리 노드 8278의 LP가 최적이 되면 `5d4427`이 `113d92`(반환 `0x4f707f`)로 basis를 노드 `I+0x98/0xa0`에 저장한다 | 부모 저장 내용 해시 = 그 export 해시 |
+| 2 | `8e4682`가 별도 트리를 만들고 `69e299`(반환 `0x722880`)로 8278의 풀린 basis를 새 루트 8287에 복사한다. 이 때문에 8287은 부모 포인터가 null이고 깊이가 0이다(03c-1의 미확인 항목 해소) | `8e4682` C:282–298. 복사 결과 해시가 decode 결과와 같다 |
+| 3 | `69d237`(반환 `0x722894`)이 압축해 `I+0xb0`(31단어)에 쓰고 `I+0x98`를 해제한다 | 압축 해시 = decode 직전 `I+0xb0` 해시 |
+| 4 | `5ce67b` 진입에서 `69d7ea`가 `I+0xb0`를 VBasis 형식으로 푼다. 열 253(0: 100, −1: 137, −2: 16), 행 464(0: 364, −1: 100) | Python decoder 재계산이 원본 출력과 같다 |
+| 5 | 첫 LP `cda5b`(`5ccea5`, 반환 `0x4f9626`, method 1)와 재풀이 `cda5b`(`5ce67b` C:929, 반환 `0x4f5b08`, **method 0**)가 둘 다 `I+0x98/0xa0` 포인터를 그대로 받는다. 내용도 같다 | 별칭·내용 정확 비교 |
+
+- 결론: 재풀이는 실패한 LP의 마지막 basis에서 이어 가지 않고 **노드에 저장된 시작 basis**에서 다시 시작한다. 시작 basis는 첫 LP와 같다. 재풀이 method는 C:925 `local_110 = (param_3[3]==0)`로 정해지며 이번 사례에서 0(primal)이었다. 첫 LP는 1이었다.
+- `8e4682`(호출자 `8e3397`)가 어떤 휴리스틱인지는 해석하지 않았다.
+
+**gmu-35-50 default (루트, 3회 동일)**
+- 첫 LP와 재풀이 첫 `0c3d0d` 안의 첫 `cda5b`(`0x14c192`)는 cold start다. vbasis·cbasis 인자, `lp+0x238`, workspace가 모두 없다.
+- `0c3d0d` 안의 둘째 `cda5b`(`0x14fe6d`)는 basis와 primal start(인자 5·6)를 받는다. 적재된 header가 인자와 같다. 이 basis는 `0c3d0d` 내부에서 만들어지며(uncrush로 추정) 출처는 추적하지 않았다.
+
+### 질문 2. 재풀이 후 VBasis·CBasis
+
+- **nidda: 원본이 만들지 않는다.** 재풀이 뒤 LP 상태 6(cutoff)이다. 재풀이 블록부터 반환까지 자연 `113d92`·`5d3deb`·`5d4427` 호출이 0회다(3회 동일).
+  - export 가능 조건은 `lp+0x64=6`, `ws+0x1d8=7`(bit0=1), `lp+0x238` null이었다.
+  - 합성 직접 호출(`113d92` rc 0)의 결과는 열(0: 84, −1: 136, −2: 33), 행(0: 380, −1: 84)이다. 입력 basis와 비교해 열 70칸, 행 64칸이 다르다. 이 값은 참고 자료이며 자연 증거로 쓰지 않는다.
+- **gmu: 원본이 만든다.** 재풀이 첫 `0c3d0d`가 반환되면(LP 상태 2) `5d4427`(`5ce67b`의 `0x4f1b84`)이 `113d92`(반환 `0x4f707f`, rc 0)로 export해 노드 `I+0x98/0xa0`에 저장한다. 열 53(0: 30, −1: 14, −2: 9), 행 110(0: 80, −1: 30)이다. 같은 지점의 합성 export와 해시가 같다.
+- 이어서 같은 `5ce67b` 호출에서 `68341b`(DegenMoves 문자열 사용, `5ce67b` 반환 `0x4f2a37`)가 실행된다.
+  - `10acb2`(`68341b` C:933, 반환 `0x56ac2d`)로 노드 `I+0x98/0xa0`를 `lp+0x238`에 넣는다.
+  - 그 뒤 Method 0 `0c3d0d`의 `cda5b`(`0x1502d6`)는 인자 없이 `lp+0x238`에서 basis를 적재한다. 적재된 header는 자연 export와 같다.
+  - 즉 둘째 LP는 재풀이 export basis에서 warm start한다. 이 LP 뒤의 합성 export는 열(0: 30, −1: 23)이고 자연 export는 없다.
+
+### 질문 3. 적재·분해·norm
+
+| 사례·호출 | `2f7e1` 뒤 `ws+0xf0` | `325b4` 적재 | `036ade` 분해 횟수 | 인자 5–8·`I+0xa8` |
+|---|---|---|---|---|
+| nidda 첫 LP | 1 (workspace 신규) | `I+0x98/0xa0`, header = 노드 basis | 4 | 모두 null·null |
+| nidda 재풀이 | 12→**1** | 같은 `I+0x98/0xa0`, header = 노드 basis | 5 | 모두 null·null |
+| gmu 첫 LP | 1 | 없음 (cold) | 5 | null·null |
+| gmu 재풀이 `0c3d0d` 1단계 | 1 | 없음 (cold) | 6 | null |
+| gmu 재풀이 `0c3d0d` 2단계 | 1 | 인자 basis | 1 | 5·6 있음, 7·8 null |
+| gmu `68341b` Method 0 | 1 | `lp+0x238` = 자연 export | 1 | null |
+
+- nidda 재풀이에서는 `2f7e1`이 상태 12인 workspace의 `ws+0xf0`를 1로 되돌린다(`cda5b` C:182–190 조건). 그러면 `325b4`가 노드 basis를 다시 적재하고 분해를 새로 한다. 재풀이에 들어가는 dual norm은 없다. 인자 7·8이 null이고 `I+0xa8`도 null이다.
+- LU 값·pivot 순서, pricing 가중치·모드는 §1에서 미리 정한 대로 미검증이다. 분해 횟수는 호출 횟수일 뿐이며 각 분해의 이유(초기·재분해)는 구분하지 않았다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 기록)
+- 작업 수행 상태: 완료(오라클 구축). 동등성: Rust 미변경으로 **미검증**.
+- 통과한 정확한 범위:
+  - 질문 1: 두 사례 모두 3회 같은 사슬로 연결됐다. nidda는 export→copy→pack→decode→두 `cda5b`이고, gmu는 cold start다.
+  - 질문 2: nidda는 "원본 미생성", gmu는 자연 export 통과다.
+  - 질문 3: 적재 여부, 상태 재설정, 분해 호출 횟수, norm 입력 null을 3회 확인했다.
+  - 모든 결과는 두 입력·설정의 원본 실행에 한정된다.
+- 남은 한계:
+  - LU·가중치 내용.
+  - gmu `0c3d0d` 내부 2단계 basis의 출처.
+  - `8e4682`·`68341b`의 의미.
+  - 상태 10, 자연 5→12, `682037` 진입 predicate(M2-03c에 남김).
+  - Rust 재풀이를 원본과 맞추는 구현. 현재 Rust는 자식 Numeric을 그대로 둔다.
+- 후속 후보: Rust 재풀이 구현이다. 입력은 노드 저장 basis(`I+0x98/0xa0`), method는 `param_3[3]` 규칙, 재풀이 뒤 상태 2이면 basis를 저장한다. 구현 전 이 오라클의 nidda·gmu 사건을 Rust 계측과 맞출 비교 경계를 먼저 정한다.
+- 다음 실행 명령: `python3 tools/mip_retry_basis_check.py --self-test`(저장 기준). 원본 재캡처는 `tools/mip_retry_basis_runs.sh <출력>` 후 같은 검사기를 쓰거나 저장본과 비교한다.
