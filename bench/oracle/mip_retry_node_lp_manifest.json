@@ -7,10 +7,16 @@
     "bench/oracle/mip_retry_node_lp/gmu-35-50_default_1.json": "fe864d84facd3e2fc314149a92abdb7eda6e4024acec1ec7e8f384a6ddeba050",
     "bench/oracle/mip_retry_node_lp/gmu-35-50_default_2.json": "fe864d84facd3e2fc314149a92abdb7eda6e4024acec1ec7e8f384a6ddeba050",
     "bench/oracle/mip_retry_node_lp/gmu-35-50_default_3.json": "fe864d84facd3e2fc314149a92abdb7eda6e4024acec1ec7e8f384a6ddeba050",
+    "bench/oracle/mip_retry_node_lp/nidda_bnb_H_s1_1.json": "9ef4c0ecebe9942bc6059173f050a0c4fa6f9ac7f4f184bab688f51ddc631c39",
+    "bench/oracle/mip_retry_node_lp/nidda_bnb_H_s1_2.json": "9ef4c0ecebe9942bc6059173f050a0c4fa6f9ac7f4f184bab688f51ddc631c39",
+    "bench/oracle/mip_retry_node_lp/nidda_bnb_H_s1_3.json": "9ef4c0ecebe9942bc6059173f050a0c4fa6f9ac7f4f184bab688f51ddc631c39",
+    "bench/oracle/mip_retry_node_lp/nidda_bnb_H_s1_natural.json": "ad087a231da57046f71743a2d1ead387c33777fa020a80ce7c3bea53661adfdb",
     "bench/oracle/mip_retry_node_lp/nidda_stress.node_lp.json": "fa78066700252682426fd8e0a686691b194c0a004ab0eac1f20ce85da4c71b2d",
     "bench/oracle/mip_retry_node_lp/gmu-35-50_default.node_lp.json": "5a6525215acadec49cb0f2ac2938cf00ace3a2b317dd0bcee3a69c3c40ecc59d",
+    "bench/oracle/mip_retry_node_lp/nidda_bnb_H_s1.node_lp.json": "1c0b56ac871665f4d0ec67ef11caebfb1bc9d6d746c1f8a1bb444c5e6eb594d1",
     "tools/mip_retry_node_lp.js": "37880eb20e3a958240e01c7d883f56a45116362125b59726c621fbc5874bf250",
-    "tools/mip_retry_node_lp_runs.sh": "7aa7518e3334a96bf237f9716ad2620e4f7e14a3d6ce5c8bcf836f0ea67e7822"
+    "tools/mip_retry_node_lp_runs.sh": "7aa7518e3334a96bf237f9716ad2620e4f7e14a3d6ce5c8bcf836f0ea67e7822",
+    "tools/mip_retry_bnb_node_lp_runs.sh": "e6ab42ff270d5d28301d21aa52581cf8fcd4cd19d7cd96f26e84de738b98678c"
   },
   "external_models": {
     "re/bench/data/miplib/neos-3754480-nidda.mps.gz": "63f322dd9be49acf31f7579d8f04e3bb578bdd7ca7d3525683384190c9a8bf7f",
