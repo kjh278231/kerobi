@@ -184,17 +184,26 @@ def check_repro(data):
     return 'B: 3 runs identical: ' + ', '.join(out)
 
 
+def unaddressed(evs):
+    """b:/d: events without the LP numbering of tools/mip_blank_rows.js lpId, which keys LPs by heap pointer (a new id when an
+    LP object lands at a new address): drop b:lpnew and every 'lp' field (contract change, docs/m2/mip_dive_gate.md section 6)."""
+    return [{k: v for k, v in e.items() if k != 'lp'} for e in evs if e['event'][:2] in ('b:', 'd:') and e['event'] != 'b:lpnew']
+
+
 def check_projection(data, ref):
-    n = 0
+    n, raw = 0, []
     for c in CASES:
-        ev8 = ref[c]['events']
+        ev8 = unaddressed(ref[c]['events'])
         for r in RUNS:
-            proj = [e for e in data[c][r]['events'] if e['event'][:2] in ('b:', 'd:')]
+            proj = unaddressed(data[c][r]['events'])
             need(len(proj) == len(ev8), f'N {c} run {r}: {len(proj)} b:/d: events != M2-03d-8 {len(ev8)}')
             for i, (a, b) in enumerate(zip(proj, ev8)):
                 need(a == b, f'N {c} run {r}: event {i} ({a["event"]}) differs from M2-03d-8: {json.dumps(a)[:160]} != {json.dumps(b)[:160]}')
         n += len(ev8)
-    return f'N: b:/d: projection = M2-03d-8 capture ({n} events over {len(CASES)} cases, 3 runs each)'
+        if [e for e in data[c][RUNS[0]]['events'] if e['event'][:2] in ('b:', 'd:')] == ref[c]['events']:
+            raw.append(c)
+    return (f'N: b:/d: projection without pointer-derived LP numbering = M2-03d-8 capture ({n} events over {len(CASES)} cases, '
+            f'3 runs each); byte-equal including LP numbering: {", ".join(raw) or "none"}')
 
 
 def check_case(c, evs, st=None):
@@ -344,7 +353,12 @@ def tampers():
     yield 'depth-failing C:1581 made equal', every_run(N, lambda evs: nth(evs, depth_fail).__setitem__('w34', nth(evs, depth_fail)['depth']))
     yield 'a0 null on a passing C:1581', set_field(N, passes, 'a0_null', True)
     yield 'sol null on a passing C:1581', set_field(G, passes, 'sol_null', True)
-    yield 'param_3+0x18 = 2 on a passing C:1581', set_field(N, passes, 'p3_18', 2)
+    def p18(evs):
+        i = first(evs, passes)
+        evs[i]['p3_18'] = 2
+        next(e for e in evs[i + 1:] if e['event'] == 'g:hit' and e['at'] == '5131b7')['r15_18'] = 2   # keep I passing: R must reject
+    yield 'param_3+0x18 = 2 on a passing C:1581 (gate and 5131b7)', every_run(N, p18)
+    yield 'param_3+0x18 = 2 at the gate only', set_field(N, passes, 'p3_18', 2)
     yield 'a7f0ad eax 1', set_hit(N, '51319d', 'eax', 1)
     yield 'a7f923 eax 1', set_hit(A, '5131af', 'eax', 1)
     yield 'r15+0x18 differs from gate value', set_hit(G, '5131b7', 'r15_18', 0)
