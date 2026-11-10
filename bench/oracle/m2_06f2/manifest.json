@@ -1,0 +1,34 @@
+{
+ "task": "M2-06f-2",
+ "schema": 1,
+ "tool": "tools/mip_node_life.js",
+ "tool_sha256": "767f2f2d3ca4d66bc558d527b93df4b6d03ae64bc3f07683c25f6f2a87540b3d",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "NodeLimit": 2000
+ },
+ "models": "../re/bench/data/miplib/<case>.mps.gz",
+ "files": {
+  "markshare_4_0_1.json.gz": "ac09f53d724b6d6aba2666166b597b2394aebb7c9fecb4d1b0ce46e730cd73f7",
+  "markshare_4_0_2.json.gz": "ac09f53d724b6d6aba2666166b597b2394aebb7c9fecb4d1b0ce46e730cd73f7",
+  "markshare_4_0_3.json.gz": "ac09f53d724b6d6aba2666166b597b2394aebb7c9fecb4d1b0ce46e730cd73f7",
+  "pk1_1.json.gz": "551660850da1daa5052168e3c1ad208006028373d3cd93f4eef2af90af54396d",
+  "pk1_2.json.gz": "551660850da1daa5052168e3c1ad208006028373d3cd93f4eef2af90af54396d",
+  "pk1_3.json.gz": "551660850da1daa5052168e3c1ad208006028373d3cd93f4eef2af90af54396d",
+  "neos5_1.json.gz": "933155bbf6b29e555e3619d083e7886fe67ee8b8327d2f8b8d9291a8de1fdfe8",
+  "neos5_2.json.gz": "933155bbf6b29e555e3619d083e7886fe67ee8b8327d2f8b8d9291a8de1fdfe8",
+  "neos5_3.json.gz": "933155bbf6b29e555e3619d083e7886fe67ee8b8327d2f8b8d9291a8de1fdfe8",
+  "tr12-30_1.json.gz": "fde01245571665eff05fce131573d45df040328dc275217fbf44d47200c3a612",
+  "tr12-30_2.json.gz": "fde01245571665eff05fce131573d45df040328dc275217fbf44d47200c3a612",
+  "tr12-30_3.json.gz": "fde01245571665eff05fce131573d45df040328dc275217fbf44d47200c3a612",
+  "fhnw-binpack4-4_1.json.gz": "feb9994d87892cfd01a19b51e19875d7a9893a1c50556ec5b7f5ed9312c86d12",
+  "fhnw-binpack4-4_2.json.gz": "feb9994d87892cfd01a19b51e19875d7a9893a1c50556ec5b7f5ed9312c86d12",
+  "fhnw-binpack4-4_3.json.gz": "feb9994d87892cfd01a19b51e19875d7a9893a1c50556ec5b7f5ed9312c86d12",
+  "neos-860300_1.json.gz": "ebd7b345806e9021dcfb1c86c571a97a2f36e51fca3ef28c895accfed90bea53",
+  "neos-860300_2.json.gz": "ebd7b345806e9021dcfb1c86c571a97a2f36e51fca3ef28c895accfed90bea53",
+  "neos-860300_3.json.gz": "ebd7b345806e9021dcfb1c86c571a97a2f36e51fca3ef28c895accfed90bea53"
+ }
+}
