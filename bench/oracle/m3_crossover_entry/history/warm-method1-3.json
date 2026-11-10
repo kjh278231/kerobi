@@ -1,0 +1,181 @@
+{
+  "origin": "natural",
+  "kind": "warm",
+  "model_sha256": "c14a6db31c1ec2ed206ddf2a585f9467ced4e1dbdff11202685f61dd5c478a8d",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "5fb507bd275b2c8c3b6d966898836a346490e149561c1c00a8d0c69fedc04e8e",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 1,
+    "Crossover": 1,
+    "LPWarmStart": 2
+  },
+  "starts": {
+    "PStart": [
+      2,
+      1,
+      1
+    ],
+    "DStart": [
+      1,
+      0,
+      0
+    ]
+  },
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.23.4"
+  },
+  "output": "CROSSOVER_RESULT {\"status\": 2, \"vbasis\": [0, -1, -1], \"cbasis\": [-1, 0, 0]}\n",
+  "result": {
+    "status": 2,
+    "vbasis": [
+      0,
+      -1,
+      -1
+    ],
+    "cbasis": [
+      -1,
+      0,
+      0
+    ]
+  },
+  "reason": "process-terminated",
+  "errors": [],
+  "events": [
+    {
+      "event": "warm:enter",
+      "call": 1,
+      "mode": null,
+      "state": {
+        "model": 1,
+        "n": 3,
+        "m": 3,
+        "status": 1,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": null,
+        "copy": {
+          "id": 2,
+          "primal": null,
+          "dual": null
+        },
+        "start": {
+          "id": 3,
+          "count": 6,
+          "status": 2,
+          "values": [
+            "0000000000000040",
+            "000000000000f03f",
+            "000000000000f03f",
+            "000000000000f03f",
+            "0000000000000000",
+            "0000000000000000"
+          ]
+        },
+        "scale": {
+          "c": null,
+          "r": null,
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": 0
+        },
+        "workspace": null
+      }
+    },
+    {
+      "event": "warm:leave",
+      "call": 1,
+      "ret": 0,
+      "state": {
+        "model": 1,
+        "n": 3,
+        "m": 3,
+        "status": 2,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": null,
+        "copy": {
+          "id": 2,
+          "primal": null,
+          "dual": null
+        },
+        "start": {
+          "id": 3,
+          "count": -6,
+          "status": 0,
+          "values": null
+        },
+        "scale": {
+          "c": [
+            "0000000000000040",
+            "0000000000001040",
+            "0000000000000040"
+          ],
+          "r": [
+            "000000000000d03f",
+            "000000000000d03f",
+            "000000000000d03f"
+          ],
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": -1
+        },
+        "workspace": {
+          "id": 4,
+          "rows": 3,
+          "cols": 3,
+          "vstat": [
+            "00000000",
+            "ffffffff",
+            "ffffffff",
+            "ffffffff",
+            "01000000",
+            "02000000"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "origin": "natural",
+  "kind": "control",
+  "model_sha256": "c14a6db31c1ec2ed206ddf2a585f9467ced4e1dbdff11202685f61dd5c478a8d",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "e8e997cb1f905e89bf01efbfc07a90b433f21b7cb49e459c6088065fd16ea337",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 0,
+    "LPWarmStart": 2
+  },
+  "starts": null,
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.23.4"
+  },
+  "output": "CROSSOVER_RESULT {\"status\": 2, \"vbasis\": null, \"cbasis\": null}\n",
+  "result": {
+    "status": 2,
+    "vbasis": null,
+    "cbasis": null
+  },
+  "reason": "process-terminated",
+  "errors": [],
+  "events": [
+    {
+      "event": "barrier:enter",
+      "call": 1,
+      "mode": null,
+      "state": {
+        "model": 1,
+        "n": 3,
+        "m": 3,
+        "status": 1,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": null,
+        "copy": {
+          "id": 2,
+          "primal": null,
+          "dual": null
+        },
+        "start": null,
+        "scale": {
+          "c": null,
+          "r": null,
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": 0
+        },
+        "workspace": null
+      }
+    },
+    {
+      "event": "barrier:leave",
+      "call": 1,
+      "ret": 0,
+      "state": {
+        "model": 1,
+        "n": 3,
+        "m": 3,
+        "status": 2,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": {
+          "id": 3,
+          "x": [
+            "919ff9ffffff0f40",
+            "0070c1ef1832e93d",
+            "00a891a13b52d33d"
+          ],
+          "slack": [
+            "0040c5dddcb2d2bd",
+            "d1c5fcffffff13c0",
+            "766ffaffffff1f40"
+          ],
+          "y": [
+            "f2b3f8ffffffefbf",
+            "00583910c1eec1bd",
+            "00787f606876973d"
+          ],
+          "reduced": [
+            "0004321e36b5aabd",
+            "09c601000000f03f",
+            "de30020000000040"
+          ]
+        },
+        "copy": {
+          "id": 2,
+          "primal": null,
+          "dual": null
+        },
+        "start": null,
+        "scale": {
+          "c": [
+            "0000000000000040",
+            "0000000000001040",
+            "0000000000000040"
+          ],
+          "r": [
+            "000000000000d03f",
+            "000000000000d03f",
+            "000000000000d03f"
+          ],
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": -1
+        },
+        "workspace": null
+      }
+    }
+  ]
+}

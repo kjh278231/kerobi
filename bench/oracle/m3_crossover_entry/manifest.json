@@ -1,0 +1,454 @@
+{
+  "task": "M3-04a-1",
+  "schema_version": 1,
+  "float_encoding": "IEEE-754 binary64 little-endian hex; exact bits including signed zero",
+  "original_version": "13.0.3",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "input": {
+    "path": "small.lp",
+    "sha256": "c14a6db31c1ec2ed206ddf2a585f9467ced4e1dbdff11202685f61dd5c478a8d"
+  },
+  "final_capture_commit": "e1f841c",
+  "predecessor_merge_commit": "057ab2f",
+  "tools": {
+    "tools/crossover_entry_capture.js": "c461a9c6edf02db7f86cd2813c689a7dd5465a196f74f547a12a781aeb99746a",
+    "tools/crossover_entry_check.py": "ba0d23e322cb8644db4a725354ddc7cd7ee9cbcc955d759d89a3a9996b35f265",
+    "tools/crossover_entry_selftest.py": "afa4be5e29d1fa87b39ddddc6ebb1f4bd2acdef567427bef114fe22c546ed5d2",
+    "tools/crossover_entry_mutation.py": "d06036e6efc77ce1d367c2d6c445875648f8cd730e864e5b72177f997bc0d778"
+  },
+  "sources": {
+    "../re/decomp/c/002dd9b0_PRIVATE00000000002bb770.c": "876b90d466237dd0778f00b32dc92f91e8997f5a8de1d03496a622cd34c15282",
+    "../re/decomp/c/003639a0_PRIVATE000000000034f033.c": "b7a8d2f6f44c947158261f398f50e7b61ad2ac889a8c63048a1642a11e183b52",
+    "../re/decomp/c/002dc620_PRIVATE00000000002baaa4.c": "035e897776ea0550c65880ee7e35362852bf19bad67dcea4e13bc14d3d3f947f",
+    "../re/decomp/c/001bc570_PRIVATE000000000013f64d.c": "23060c6681fb4f89148ec3571ddbe44743d63cf49b7fc63970e2fabc212f1dff",
+    "../re/decomp/c/001bc5d0_PRIVATE000000000013f716.c": "0a631de8d82d656807bc6232ad85ffa162c6812fe3cebeed6ff737d0b9f7a8e4",
+    "../re/decomp/c/0014acb0_PRIVATE00000000000c3d0d.c": "bae1fe3772bc20facd328ecd6835953b7602cc90387d2daea6fffe3d4ccbfeb2",
+    "../re/decomp/c/0010b0f0_PRIVATE000000000007a069.c": "e7cbd0d4e3f5e6f2f25a7fdf1c614187f57105674cad2c93289ead588f678ea8",
+    "../re/decomp/c/0010bad0_PRIVATE000000000007a2ee.c": "09d7bc0af1fbba02e331bdc7fef707beb90ba6f2c5a84b61c8e99d7e9906713e",
+    "../re/decomp/c/0010bbf0_PRIVATE000000000007a366.c": "9ebb3828131fae10bcaaf43a5a8b7db9654dae8b6363aaa999257ebb7ef8e5da",
+    "../re/decomp/c/0010fa70_PRIVATE0000000000088237.c": "9dcd0ff2b9bec1eb1befa17d9d704fc21204e3d10e46d0024b2e340b99628d86",
+    "../re/decomp/c/001a85a0_PRIVATE000000000011603b.c": "c8e06bc98445fc009c16c978064810e0569912d8d0b62f83896f2fbf4ff4fa9c"
+  },
+  "hook_offsets": {
+    "pdhg": "0x3639a0",
+    "barrier": "0x2dd9b0",
+    "helper": "0x2dc620",
+    "dispatcher": "0x1bc570",
+    "body": "0x1bc5d0",
+    "lpdriver": "0x14acb0",
+    "prepared": "0x1bd281"
+  },
+  "captures": [
+    {
+      "path": "barrier-1-final.json",
+      "sha256": "28701faf49e37f084087509d5649d9b662957103dce45ac6bc76e63617106621",
+      "kind": "barrier",
+      "role": "baseline",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "barrier-2-final.json",
+      "sha256": "28701faf49e37f084087509d5649d9b662957103dce45ac6bc76e63617106621",
+      "kind": "barrier",
+      "role": "baseline",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "barrier-3-final.json",
+      "sha256": "28701faf49e37f084087509d5649d9b662957103dce45ac6bc76e63617106621",
+      "kind": "barrier",
+      "role": "baseline",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "barrier-review.json",
+      "sha256": "28701faf49e37f084087509d5649d9b662957103dce45ac6bc76e63617106621",
+      "kind": "barrier",
+      "role": "reviewer",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "control-1-final.json",
+      "sha256": "b2258d828e375de9f1c5558880a90a442041497abd6b4f02406ba94573213dca",
+      "kind": "control",
+      "role": "baseline",
+      "target_events": 0,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "control-2-final.json",
+      "sha256": "b2258d828e375de9f1c5558880a90a442041497abd6b4f02406ba94573213dca",
+      "kind": "control",
+      "role": "baseline",
+      "target_events": 0,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "control-3-final.json",
+      "sha256": "b2258d828e375de9f1c5558880a90a442041497abd6b4f02406ba94573213dca",
+      "kind": "control",
+      "role": "baseline",
+      "target_events": 0,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "pdhg-1-final.json",
+      "sha256": "7f3f166ef186ba59a818e4d30f9da80a06f2156ca82bbdf7919edcb676ddc288",
+      "kind": "pdhg",
+      "role": "baseline",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "pdhg-2-final.json",
+      "sha256": "7f3f166ef186ba59a818e4d30f9da80a06f2156ca82bbdf7919edcb676ddc288",
+      "kind": "pdhg",
+      "role": "baseline",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "pdhg-3-final.json",
+      "sha256": "7f3f166ef186ba59a818e4d30f9da80a06f2156ca82bbdf7919edcb676ddc288",
+      "kind": "pdhg",
+      "role": "baseline",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "pdhg-review.json",
+      "sha256": "7f3f166ef186ba59a818e4d30f9da80a06f2156ca82bbdf7919edcb676ddc288",
+      "kind": "pdhg",
+      "role": "reviewer",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "warm-1-final.json",
+      "sha256": "b187cdb86750e3295c7bfebdf060d42985ca3f4b5b132a2895e97e8e46882243",
+      "kind": "warm",
+      "role": "baseline",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "warm-2-final.json",
+      "sha256": "b187cdb86750e3295c7bfebdf060d42985ca3f4b5b132a2895e97e8e46882243",
+      "kind": "warm",
+      "role": "baseline",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "warm-3-final.json",
+      "sha256": "b187cdb86750e3295c7bfebdf060d42985ca3f4b5b132a2895e97e8e46882243",
+      "kind": "warm",
+      "role": "baseline",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    },
+    {
+      "path": "warm-review.json",
+      "sha256": "b187cdb86750e3295c7bfebdf060d42985ca3f4b5b132a2895e97e8e46882243",
+      "kind": "warm",
+      "role": "reviewer",
+      "target_events": 1,
+      "status": 2,
+      "environment": {
+        "platform": "linux",
+        "arch": "x64",
+        "release": "6.6.87.2-microsoft-standard-WSL2",
+        "node": "v22.23.4"
+      }
+    }
+  ],
+  "history": [
+    {
+      "path": "history/barrier-1-new.json",
+      "sha256": "d20415c5a4ac0428a66ac779d5a9bf03e0c17e48410d15a04108f64d50fe20ac",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/barrier-1.json",
+      "sha256": "4b979736121514a20a2245f0bacb2640177ebc0f03d949c498d4ad46a9132492",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/barrier-2-new.json",
+      "sha256": "d20415c5a4ac0428a66ac779d5a9bf03e0c17e48410d15a04108f64d50fe20ac",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/barrier-2.json",
+      "sha256": "4b979736121514a20a2245f0bacb2640177ebc0f03d949c498d4ad46a9132492",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/barrier-3-new.json",
+      "sha256": "d20415c5a4ac0428a66ac779d5a9bf03e0c17e48410d15a04108f64d50fe20ac",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/barrier-3.json",
+      "sha256": "4b979736121514a20a2245f0bacb2640177ebc0f03d949c498d4ad46a9132492",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/barrier-probe.json",
+      "sha256": "4b979736121514a20a2245f0bacb2640177ebc0f03d949c498d4ad46a9132492",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/control-1-new.json",
+      "sha256": "601087abdb2a815c7a7284e67beac2de030bd194aaf9005f4a81a30be4fed335",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/control-1.json",
+      "sha256": "4ff4f3ba3e588789e06b0395bf80a6c0bac8bc8d01196a296e13983daad3597d",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/control-2-new.json",
+      "sha256": "601087abdb2a815c7a7284e67beac2de030bd194aaf9005f4a81a30be4fed335",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/control-2.json",
+      "sha256": "4ff4f3ba3e588789e06b0395bf80a6c0bac8bc8d01196a296e13983daad3597d",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/control-3-new.json",
+      "sha256": "601087abdb2a815c7a7284e67beac2de030bd194aaf9005f4a81a30be4fed335",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/control-3.json",
+      "sha256": "4ff4f3ba3e588789e06b0395bf80a6c0bac8bc8d01196a296e13983daad3597d",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/lock-collision-initial.json",
+      "sha256": "b5b25fb97f2c1dde5799859b35ee0ee7550533f22726a6e1f9fe74e89d226be6",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/pdhg-1-new.json",
+      "sha256": "f9ed1c9f6c2983dfb2ee3bc3e3c6e9db612e247545d0942914f634caac729b7b",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/pdhg-1.json",
+      "sha256": "8377fc5c67cf4cf35b0a4792c67c7347e0a4238cca2a44aa0d4b41e9c44d6fb8",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/pdhg-2-new.json",
+      "sha256": "f9ed1c9f6c2983dfb2ee3bc3e3c6e9db612e247545d0942914f634caac729b7b",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/pdhg-2.json",
+      "sha256": "8377fc5c67cf4cf35b0a4792c67c7347e0a4238cca2a44aa0d4b41e9c44d6fb8",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/pdhg-3-new.json",
+      "sha256": "f9ed1c9f6c2983dfb2ee3bc3e3c6e9db612e247545d0942914f634caac729b7b",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/pdhg-3.json",
+      "sha256": "8377fc5c67cf4cf35b0a4792c67c7347e0a4238cca2a44aa0d4b41e9c44d6fb8",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/warm-1-new.json",
+      "sha256": "61c173d2f69666bac76258440c65dc68d9d06b2743f5f8800baa30a65a231bb9",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/warm-2-new.json",
+      "sha256": "61c173d2f69666bac76258440c65dc68d9d06b2743f5f8800baa30a65a231bb9",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/warm-3-new.json",
+      "sha256": "61c173d2f69666bac76258440c65dc68d9d06b2743f5f8800baa30a65a231bb9",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/warm-method1-1.json",
+      "sha256": "909f796b4bde4c43afd806680cacc186198641c5cd00befc6ecdd87281e3fb3a",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/warm-method1-2.json",
+      "sha256": "909f796b4bde4c43afd806680cacc186198641c5cd00befc6ecdd87281e3fb3a",
+      "accepted_as_current_baseline": false
+    },
+    {
+      "path": "history/warm-method1-3.json",
+      "sha256": "909f796b4bde4c43afd806680cacc186198641c5cd00befc6ecdd87281e3fb3a",
+      "accepted_as_current_baseline": false
+    }
+  ],
+  "reviewer_mutations": [
+    {
+      "case": "binary_sha256=0",
+      "rejected": true,
+      "diagnostic": "binary_sha256"
+    },
+    {
+      "case": "model_sha256=0",
+      "rejected": true,
+      "diagnostic": "model_sha256"
+    },
+    {
+      "case": "model_sha256=arbitrary",
+      "rejected": true,
+      "diagnostic": "입력 파일 해시 불일치"
+    },
+    {
+      "case": "tool_sha256=0",
+      "rejected": true,
+      "diagnostic": "tool_sha256"
+    },
+    {
+      "case": "events=[]",
+      "rejected": true,
+      "diagnostic": "events"
+    },
+    {
+      "case": "no_target_body",
+      "rejected": true,
+      "diagnostic": "목표 body 사건 0회"
+    },
+    {
+      "case": "empty_result_x",
+      "rejected": true,
+      "diagnostic": "result.x"
+    },
+    {
+      "case": "missing_scale_c",
+      "rejected": true,
+      "diagnostic": "scale 필드 누락"
+    },
+    {
+      "case": "synthetic_only",
+      "rejected": true,
+      "diagnostic": "실제 실행 출처"
+    },
+    {
+      "case": "reversed_events",
+      "rejected": true,
+      "diagnostic": "호출 중첩·순서"
+    },
+    {
+      "case": "wrong_method",
+      "rejected": true,
+      "diagnostic": "파라미터"
+    },
+    {
+      "case": "wrong_copy_x_bits",
+      "rejected": true,
+      "diagnostic": "barrier S.primal[0]: 기준='919ff9ffffff0f40', 실제='0000000000000000'"
+    }
+  ],
+  "not_verified": [
+    "Rust equivalence",
+    "time/work",
+    "other LP inputs",
+    "failures/interrupts/presolve mapping",
+    "factor/norm/RNG state and full object lifetimes"
+  ]
+}

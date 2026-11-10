@@ -1,0 +1,795 @@
+{
+  "origin": "natural",
+  "kind": "barrier",
+  "model_sha256": "c14a6db31c1ec2ed206ddf2a585f9467ced4e1dbdff11202685f61dd5c478a8d",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "c461a9c6edf02db7f86cd2813c689a7dd5465a196f74f547a12a781aeb99746a",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 1,
+    "LPWarmStart": 2
+  },
+  "starts": null,
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.23.4"
+  },
+  "output": "CROSSOVER_RESULT {\"status\": 2, \"vbasis\": [0, -1, -1], \"cbasis\": [-1, 0, 0]}\n",
+  "result": {
+    "status": 2,
+    "vbasis": [
+      0,
+      -1,
+      -1
+    ],
+    "cbasis": [
+      -1,
+      0,
+      0
+    ]
+  },
+  "reason": "process-terminated",
+  "errors": [],
+  "events": [
+    {
+      "event": "warm:enter",
+      "call": 1,
+      "mode": null,
+      "state": {
+        "model": 3,
+        "n": 3,
+        "m": 3,
+        "aliases": {
+          "result_x": null,
+          "result_slack": null,
+          "result_y": null,
+          "result_reduced": null,
+          "copy_primal": null,
+          "copy_dual": null,
+          "start_values": null,
+          "scale_c": null,
+          "scale_r": null,
+          "flip": 1,
+          "sense": 2,
+          "vstat": null
+        },
+        "status": 1,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": null,
+        "copy": {
+          "id": 4,
+          "primal": null,
+          "dual": null
+        },
+        "start": null,
+        "scale": {
+          "c": null,
+          "r": null,
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": 0
+        },
+        "workspace": null
+      }
+    },
+    {
+      "event": "barrier:enter",
+      "call": 2,
+      "mode": null,
+      "state": {
+        "model": 3,
+        "n": 3,
+        "m": 3,
+        "aliases": {
+          "result_x": null,
+          "result_slack": null,
+          "result_y": null,
+          "result_reduced": null,
+          "copy_primal": null,
+          "copy_dual": null,
+          "start_values": null,
+          "scale_c": null,
+          "scale_r": null,
+          "flip": 1,
+          "sense": 2,
+          "vstat": null
+        },
+        "status": 1,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": null,
+        "copy": {
+          "id": 4,
+          "primal": null,
+          "dual": null
+        },
+        "start": null,
+        "scale": {
+          "c": null,
+          "r": null,
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": 0
+        },
+        "workspace": null
+      }
+    },
+    {
+      "event": "dispatch:enter",
+      "call": 3,
+      "mode": null,
+      "state": {
+        "model": 3,
+        "n": 3,
+        "m": 3,
+        "aliases": {
+          "result_x": 5,
+          "result_slack": 6,
+          "result_y": 7,
+          "result_reduced": 8,
+          "copy_primal": 9,
+          "copy_dual": 10,
+          "start_values": null,
+          "scale_c": 11,
+          "scale_r": 12,
+          "flip": 1,
+          "sense": 2,
+          "vstat": null
+        },
+        "status": 2,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": {
+          "id": 13,
+          "x": [
+            "919ff9ffffffff3f",
+            "0070c1ef1832c93d",
+            "00a891a13b52c33d"
+          ],
+          "slack": [
+            "0040c5dddcb2b23d",
+            "d1c5fcfffffff33f",
+            "766ffaffffffff3f"
+          ],
+          "y": [
+            "f2b3f8ffffff0fc0",
+            "00583910c1eee1bd",
+            "00787f606876b7bd"
+          ],
+          "reduced": [
+            "0004321e36b5babd",
+            "09c6010000001040",
+            "de30020000001040"
+          ]
+        },
+        "copy": {
+          "id": 4,
+          "primal": [
+            "919ff9ffffff0f40",
+            "0070c1ef1832e93d",
+            "00a891a13b52d33d",
+            "0040c5dddcb2d2bd",
+            "d1c5fcffffff13c0",
+            "766ffaffffff1f40"
+          ],
+          "dual": [
+            "0004321e36b5aabd",
+            "09c601000000f03f",
+            "de30020000000040",
+            "f2b3f8ffffffefbf",
+            "00583910c1eec1bd",
+            "00787f606876973d"
+          ]
+        },
+        "start": null,
+        "scale": {
+          "c": [
+            "0000000000000040",
+            "0000000000001040",
+            "0000000000000040"
+          ],
+          "r": [
+            "000000000000d03f",
+            "000000000000d03f",
+            "000000000000d03f"
+          ],
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": -1
+        },
+        "workspace": null
+      }
+    },
+    {
+      "event": "body:enter",
+      "call": 4,
+      "mode": 0,
+      "state": {
+        "model": 3,
+        "n": 3,
+        "m": 3,
+        "aliases": {
+          "result_x": 5,
+          "result_slack": 6,
+          "result_y": 7,
+          "result_reduced": 8,
+          "copy_primal": 9,
+          "copy_dual": 10,
+          "start_values": null,
+          "scale_c": 11,
+          "scale_r": 12,
+          "flip": 1,
+          "sense": 2,
+          "vstat": null
+        },
+        "status": 2,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": {
+          "id": 13,
+          "x": [
+            "919ff9ffffffff3f",
+            "0070c1ef1832c93d",
+            "00a891a13b52c33d"
+          ],
+          "slack": [
+            "0040c5dddcb2b23d",
+            "d1c5fcfffffff33f",
+            "766ffaffffffff3f"
+          ],
+          "y": [
+            "f2b3f8ffffff0fc0",
+            "00583910c1eee1bd",
+            "00787f606876b7bd"
+          ],
+          "reduced": [
+            "0004321e36b5babd",
+            "09c6010000001040",
+            "de30020000001040"
+          ]
+        },
+        "copy": {
+          "id": 4,
+          "primal": [
+            "919ff9ffffff0f40",
+            "0070c1ef1832e93d",
+            "00a891a13b52d33d",
+            "0040c5dddcb2d2bd",
+            "d1c5fcffffff13c0",
+            "766ffaffffff1f40"
+          ],
+          "dual": [
+            "0004321e36b5aabd",
+            "09c601000000f03f",
+            "de30020000000040",
+            "f2b3f8ffffffefbf",
+            "00583910c1eec1bd",
+            "00787f606876973d"
+          ]
+        },
+        "start": null,
+        "scale": {
+          "c": [
+            "0000000000000040",
+            "0000000000001040",
+            "0000000000000040"
+          ],
+          "r": [
+            "000000000000d03f",
+            "000000000000d03f",
+            "000000000000d03f"
+          ],
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": -1
+        },
+        "workspace": null
+      }
+    },
+    {
+      "event": "prepared",
+      "model": 3,
+      "scale": {
+        "c": [
+          "0000000000000040",
+          "0000000000001040",
+          "0000000000000040"
+        ],
+        "r": [
+          "000000000000d03f",
+          "000000000000d03f",
+          "000000000000d03f"
+        ],
+        "o": [
+          "000000000000f03f"
+        ],
+        "flip": [
+          "00",
+          "00",
+          "00"
+        ],
+        "sense": [
+          "3e",
+          "3e",
+          "3c"
+        ],
+        "flip_enabled": -1
+      },
+      "x": [
+        "919ff9ffffffff3f",
+        "0070c1ef1832c93d",
+        "00a891a13b52c33d"
+      ],
+      "slack": [
+        "0040c5dddcb2b23d",
+        "d1c5fcfffffff33f",
+        "766ffaffffffff3f"
+      ],
+      "reduced": [
+        "0004321e36b5babd",
+        "09c6010000001040",
+        "de30020000001040"
+      ],
+      "y": [
+        "f2b3f8ffffff0f40",
+        "00583910c1eee13d",
+        "00787f606876b73d"
+      ]
+    },
+    {
+      "event": "body:leave",
+      "call": 4,
+      "ret": 0,
+      "state": {
+        "model": 3,
+        "n": 3,
+        "m": 3,
+        "aliases": {
+          "result_x": null,
+          "result_slack": null,
+          "result_y": null,
+          "result_reduced": null,
+          "copy_primal": 9,
+          "copy_dual": 10,
+          "start_values": null,
+          "scale_c": 11,
+          "scale_r": 12,
+          "flip": 1,
+          "sense": 2,
+          "vstat": 14
+        },
+        "status": 2,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": null,
+        "copy": {
+          "id": 4,
+          "primal": [
+            "919ff9ffffff0f40",
+            "0070c1ef1832e93d",
+            "00a891a13b52d33d",
+            "0040c5dddcb2d2bd",
+            "d1c5fcffffff13c0",
+            "766ffaffffff1f40"
+          ],
+          "dual": [
+            "0004321e36b5aabd",
+            "09c601000000f03f",
+            "de30020000000040",
+            "f2b3f8ffffffefbf",
+            "00583910c1eec1bd",
+            "00787f606876973d"
+          ]
+        },
+        "start": null,
+        "scale": {
+          "c": [
+            "0000000000000040",
+            "0000000000001040",
+            "0000000000000040"
+          ],
+          "r": [
+            "000000000000d03f",
+            "000000000000d03f",
+            "000000000000d03f"
+          ],
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": -1
+        },
+        "workspace": {
+          "id": 15,
+          "rows": 3,
+          "cols": 3,
+          "vstat": [
+            "00000000",
+            "ffffffff",
+            "ffffffff",
+            "ffffffff",
+            "01000000",
+            "02000000"
+          ]
+        }
+      }
+    },
+    {
+      "event": "dispatch:leave",
+      "call": 3,
+      "ret": 0,
+      "state": {
+        "model": 3,
+        "n": 3,
+        "m": 3,
+        "aliases": {
+          "result_x": null,
+          "result_slack": null,
+          "result_y": null,
+          "result_reduced": null,
+          "copy_primal": 9,
+          "copy_dual": 10,
+          "start_values": null,
+          "scale_c": 11,
+          "scale_r": 12,
+          "flip": 1,
+          "sense": 2,
+          "vstat": 14
+        },
+        "status": 2,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": null,
+        "copy": {
+          "id": 4,
+          "primal": [
+            "919ff9ffffff0f40",
+            "0070c1ef1832e93d",
+            "00a891a13b52d33d",
+            "0040c5dddcb2d2bd",
+            "d1c5fcffffff13c0",
+            "766ffaffffff1f40"
+          ],
+          "dual": [
+            "0004321e36b5aabd",
+            "09c601000000f03f",
+            "de30020000000040",
+            "f2b3f8ffffffefbf",
+            "00583910c1eec1bd",
+            "00787f606876973d"
+          ]
+        },
+        "start": null,
+        "scale": {
+          "c": [
+            "0000000000000040",
+            "0000000000001040",
+            "0000000000000040"
+          ],
+          "r": [
+            "000000000000d03f",
+            "000000000000d03f",
+            "000000000000d03f"
+          ],
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": -1
+        },
+        "workspace": {
+          "id": 15,
+          "rows": 3,
+          "cols": 3,
+          "vstat": [
+            "00000000",
+            "ffffffff",
+            "ffffffff",
+            "ffffffff",
+            "01000000",
+            "02000000"
+          ]
+        }
+      }
+    },
+    {
+      "event": "barrier:leave",
+      "call": 2,
+      "ret": 0,
+      "state": {
+        "model": 3,
+        "n": 3,
+        "m": 3,
+        "aliases": {
+          "result_x": null,
+          "result_slack": null,
+          "result_y": null,
+          "result_reduced": null,
+          "copy_primal": 9,
+          "copy_dual": 10,
+          "start_values": null,
+          "scale_c": 11,
+          "scale_r": 12,
+          "flip": 1,
+          "sense": 2,
+          "vstat": 14
+        },
+        "status": 2,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": null,
+        "copy": {
+          "id": 4,
+          "primal": [
+            "919ff9ffffff0f40",
+            "0070c1ef1832e93d",
+            "00a891a13b52d33d",
+            "0040c5dddcb2d2bd",
+            "d1c5fcffffff13c0",
+            "766ffaffffff1f40"
+          ],
+          "dual": [
+            "0004321e36b5aabd",
+            "09c601000000f03f",
+            "de30020000000040",
+            "f2b3f8ffffffefbf",
+            "00583910c1eec1bd",
+            "00787f606876973d"
+          ]
+        },
+        "start": null,
+        "scale": {
+          "c": [
+            "0000000000000040",
+            "0000000000001040",
+            "0000000000000040"
+          ],
+          "r": [
+            "000000000000d03f",
+            "000000000000d03f",
+            "000000000000d03f"
+          ],
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": -1
+        },
+        "workspace": {
+          "id": 15,
+          "rows": 3,
+          "cols": 3,
+          "vstat": [
+            "00000000",
+            "ffffffff",
+            "ffffffff",
+            "ffffffff",
+            "01000000",
+            "02000000"
+          ]
+        }
+      }
+    },
+    {
+      "event": "warm:leave",
+      "call": 1,
+      "ret": 0,
+      "state": {
+        "model": 3,
+        "n": 3,
+        "m": 3,
+        "aliases": {
+          "result_x": null,
+          "result_slack": null,
+          "result_y": null,
+          "result_reduced": null,
+          "copy_primal": 16,
+          "copy_dual": 17,
+          "start_values": null,
+          "scale_c": 11,
+          "scale_r": 12,
+          "flip": 1,
+          "sense": 2,
+          "vstat": 14
+        },
+        "status": 2,
+        "env": {
+          "field_2478": [
+            "000000000000803f"
+          ],
+          "field_24a0": [
+            "2d431cebe2362a3f"
+          ],
+          "field_26fc": -1
+        },
+        "result": null,
+        "copy": {
+          "id": 4,
+          "primal": [
+            "919ff9ffffff0f40",
+            "0070c1ef1832e93d",
+            "00a891a13b52d33d",
+            "0040c5dddcb2d2bd",
+            "d1c5fcffffff13c0",
+            "766ffaffffff1f40"
+          ],
+          "dual": [
+            "0004321e36b5aabd",
+            "09c601000000f03f",
+            "de30020000000040",
+            "f2b3f8ffffffefbf",
+            "00583910c1eec1bd",
+            "00787f606876973d"
+          ]
+        },
+        "start": null,
+        "scale": {
+          "c": [
+            "0000000000000040",
+            "0000000000001040",
+            "0000000000000040"
+          ],
+          "r": [
+            "000000000000d03f",
+            "000000000000d03f",
+            "000000000000d03f"
+          ],
+          "o": [
+            "000000000000f03f"
+          ],
+          "flip": [
+            "00",
+            "00",
+            "00"
+          ],
+          "sense": [
+            "3e",
+            "3e",
+            "3c"
+          ],
+          "flip_enabled": -1
+        },
+        "workspace": {
+          "id": 15,
+          "rows": 3,
+          "cols": 3,
+          "vstat": [
+            "00000000",
+            "ffffffff",
+            "ffffffff",
+            "ffffffff",
+            "01000000",
+            "02000000"
+          ]
+        }
+      }
+    }
+  ]
+}
