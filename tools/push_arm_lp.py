@@ -35,7 +35,7 @@ GADGETS = {
     'T4': ([('xT4', 0, 10, 0, 5), ('wT4', 0, 10, 0, 0)], [('rT4', {'xT4': 1, 'wT4': 1}, '<=', 10 - 5e-11, 0.0)]),
     'T5': ([('xT5', 0, 10, 0, 5), ('wT5', 0, 10, 0, 0)], [('rT5', {'xT5': 1, 'wT5': 1}, '<=', 9.9999999999, 0.0)]),
 }
-DUALS = {'rt': -1.0}  # SD: dual-first에서 rt의 slack을 비기저(시작값 0.5)로 남긴다
+DUALS = {'rt': -1.0}  # SD: 단독 묶음 dual-first에서 rt의 slack이 비기저로 남았다(DStart 0이면 basic, history/tSD0)
 PARAMS = {'ScaleFlag': 0}
 
 

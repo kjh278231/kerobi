@@ -119,6 +119,9 @@ def decide(record, p=DEFAULT, label=''):
         need(len(ratios) == 1, where, 'ratio 호출 수(재호출 제외 범위)', 1, len(ratios))
         rin, rout = ratios[0]
         need(rin['name'] == 'feasible', where, 'ratio 경로(제외 범위)', 'feasible', rin['name'])
+        # feasible 경로는 위반 수 local_1b0==0일 때만 온다. A·B 표시는 그 수를 올리므로 있으면 안 된다(C 839·856·1688-1717·1940-1978·2199-2222·2342-2405).
+        marks_ab = [i for i, mk in enumerate(rin['marks']) if mk in ('41', '42')]
+        need(not marks_ab, where, 'feasible ratio의 A·B 표시', '없음', marks_ab)
         st = rin['state']
         n, m = st['n'], st['m']
         tol = {kk: f64(v) for kk, v in st['tolerances'].items()}
@@ -324,10 +327,26 @@ def load_all(manifest, arms=False):
             if c['role'] == 'noninterference':
                 noninterference_arm(am, c)
                 continue
+            if c['role'] == 'noninterference-old-agent':
+                noninterference_old_agent(manifest, am, c)
+                continue
             recs = validate_new([ROOT / x for x in c['captures']], am, case)
             if c['role'] == 'target':
                 data.append((case, recs[0]))
     return data
+
+
+def noninterference_old_agent(manifest, am, c):
+    """보류 훅이 실제로 발동하는 arm LP에서: 새 agent 대상 캡처에서 step:defer를 빼면 04b-2 agent 탐색 캡처와 같아야 한다."""
+    old = json.loads((ROOT / c['captures'][0]).read_text())
+    new = json.loads((ROOT / c['compare']).read_text())
+    assert old['agent_sha256'] == manifest['tools'][TOOLS[1]] == sha(ROOT / TOOLS[1]), '탐색 캡처 agent가 04b-2 agent가 아님'
+    assert new['agent_sha256'] == am['tools'][c['agent']], '대상 agent'
+    assert old['binary_sha256'] == new['binary_sha256'] == BINARY_SHA and old['model_sha256'] == new['model_sha256'] == c['model_sha256'], '비간섭 출처'
+    assert old['params'] == new['params'] and old['starts'] == new['starts'] and old['kind'] == new['kind'], '비간섭 설정'
+    assert any(e['event'] == 'step:defer' for e in new['events']), '보류 훅이 발동하지 않음'
+    assert [e for e in new['events'] if e['event'] != 'step:defer'] == old['events'], '보류 훅을 뺀 사건이 이전 agent와 다름'
+    assert new['result'] == old['result'] and new['output'] == old['output'], '비간섭 결과'
 
 
 def noninterference_arm(am, c):
@@ -446,6 +465,7 @@ def self_test(data):
     edits['alpha-sign'] = lambda x: first(x, 'ratio:enter')['alpha']['values'].__setitem__(0, bits(-f64(first(x, 'ratio:enter')['alpha']['values'][0])))
     edits['kind'] = lambda x: first(x, 'step:enter').__setitem__('kind', 'pivot' if first(x, 'step:enter')['kind'] == 'flip' else 'flip')
     edits['theta'] = lambda x: first(x, 'step:enter').__setitem__('theta', bits(f64(first(x, 'step:enter')['theta']) * 2 + 1))
+    edits['marks-B'] = lambda x: first(x, 'ratio:enter')['marks'].__setitem__(0, '42')
     edits['cost'] = lambda x: first(x, 'push:enter')['model']['cost'].__setitem__(first(x, 'supply:leave', lambda e: e['candidate'] >= 0)['candidate'], bits(7.25))
     def leave_state_edit(x):
         ev = x['events']
@@ -475,6 +495,20 @@ def self_test(data):
             out['control-events'] = str(err)
         else:
             raise Mismatch('캡처 변조 허용: control-events')
+    manifest = json.loads((BASE / 'manifest.json').read_text())
+    case, c = next((k, v) for k, v in am['cases'].items() if v['role'] == 'noninterference-old-agent')
+    with tempfile.TemporaryDirectory() as tmp:
+        x = json.loads((ROOT / c['compare']).read_text())
+        k = next(i for i, e in enumerate(x['events']) if e['event'] == 'step:enter')
+        x['events'][k]['theta'] = '0' * 16
+        q = Path(tmp) / 'new.json'
+        q.write_text(json.dumps(x))
+        try:
+            noninterference_old_agent(manifest, am, dict(c, compare=str(q)))
+        except AssertionError as err:
+            out['old-agent-noninterference'] = str(err)
+        else:
+            raise Mismatch('캡처 변조 허용: old-agent-noninterference')
     if any(e['event'] == 'step:defer' for e in rec['events']):
         def drop_defer(x):
             x['events'] = [e for e in x['events'] if e['event'] != 'step:defer']

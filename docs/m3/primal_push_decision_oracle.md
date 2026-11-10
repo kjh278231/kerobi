@@ -119,6 +119,8 @@ python3 tools/primal_push_decision_check.py --probe $D/history/<이름>-<kind>-1
 
 ## 7. 판정과 인수인계
 
+- 이후 변경: M3-04b-3이 검사기에 보류 양성 사건·시작 벡터·arm 사례를 더했다. 이 작업 manifest의 검사기 해시는 당시 값이다. 현재 검사 범위는 [M3-04b-3](primal_push_arms_oracle.md)을 따른다.
+
 - 작업 수행: 완료.
 - 오라클 판정: 계약 범위 **통과**(방향 1은 r>0 절 3건). 세 슬롯은 h의 상수배이고(asm·CFG·frame 비트), 판단 모델이 실제 LP 2개×2순서×3회의 40단계에서 방향·alpha 반전·단계 종류·theta·이탈 상태를 원본과 같게 재구성했다. 방향 1과 r≠0 절은 실행 관측했다.
 - 미관측·미검증: 거부 판정 발동(9개 LP 0건, 100h·-100h는 매 pivot 단계에서 읽히지만 조건이 참인 적 없음), pivot 보류, 이탈 상태 `A`·`U`·`B`·`X`·고정폭·`L`(a<0) arm, 위 생존 변조 12경계. `0x1e88`(2h)을 읽는 네 곳은 모두 미관측 arm(`L` a<0·`B`·`A`·`U`)에 있어 2h는 값만 확인했고 판단에 쓰인 것은 미관측이다. 거리 flip의 방향 1과 첫 절(bound)로 만든 방향 1은 대상 캡처에 없고 history 단일 실행에만 있다. theta=I 재호출에서 거부 arm이 `r13b`를 쓰는 것은 asm만이다. 위반 basis·infeasible ratio·batch·x87은 범위 밖이다.
