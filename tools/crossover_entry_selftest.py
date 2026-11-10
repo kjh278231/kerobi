@@ -15,7 +15,9 @@ leave["workspace"] = {"rows": 1, "cols": 1, "vstat": ["00000000", "00000000"]}
 prepared = {"event": "prepared", "model": 1, **{k: [bits] for k in ("x", "slack", "reduced", "y")}}
 d = {"origin": "natural", "kind": "barrier",
      "model_sha256": sha256(Path("bench/oracle/m3_crossover_entry/small.lp").read_bytes()).hexdigest(),
-     "binary_sha256": EXPECTED, "tool_sha256": "2" * 64, "result": {"status": 2}, "errors": [],
+     "binary_sha256": EXPECTED, "tool_sha256": sha256(Path("tools/crossover_entry_capture.js").read_bytes()).hexdigest(),
+     "params": {"Threads": 1, "Seed": 0, "OutputFlag": 0, "Presolve": 0, "Method": 2, "Crossover": 1, "LPWarmStart": 2},
+     "starts": None, "result": {"status": 2}, "errors": [],
      "events": [{"event": "barrier:enter", "call": 1, "state": state},
                 {"event": "dispatch:enter", "call": 2, "state": state},
                 {"event": "body:enter", "call": 3, "mode": 0, "state": state}, prepared,

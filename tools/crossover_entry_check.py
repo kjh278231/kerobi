@@ -57,7 +57,12 @@ def check(data):
     require(data["binary_sha256"] == EXPECTED, "binary_sha256 기준 불일치")
     model = Path(__file__).resolve().parent.parent / "bench/oracle/m3_crossover_entry/small.lp"
     require(data["model_sha256"] == hashlib.sha256(model.read_bytes()).hexdigest(), "입력 파일 해시 불일치")
-    require(data.get("result", {}).get("status") == 2 and not data.get("errors"), "정상 완료 상태")
+    tool = Path(__file__).resolve().parent / "crossover_entry_capture.js"
+    require(data["tool_sha256"] == hashlib.sha256(tool.read_bytes()).hexdigest(), "도구 해시 불일치")
+    params = {"Threads": 1, "Seed": 0, "OutputFlag": 0, "Presolve": 0, "Method": {"pdhg": 6, "barrier": 2, "warm": 1}[kind], "Crossover": 1, "LPWarmStart": 2}
+    require(data.get("params") == params, "파라미터")
+    require(data.get("starts") == ({"PStart": [2, 1, 1], "DStart": [1, 0, 0]} if kind == "warm" else None) and "starts" in data, "시작 벡터 메타데이터")
+    require((data.get("result") or {}).get("status") == 2 and not data.get("errors"), "정상 완료 상태")
     events = data.get("events")
     require(isinstance(events, list) and events, "events")
     mode = 1 if kind == "warm" else 0
@@ -88,6 +93,7 @@ def check(data):
         n, m = s.get("n"), s.get("m")
         require(isinstance(n, int) and n > 0 and isinstance(m, int) and m > 0, "차원")
         env, scale = s.get("env") or {}, s.get("scale") or {}
+        require(set(scale) == {"c", "r", "o", "flip", "flip_enabled", "sense"}, "scale 필드 누락")
         def raw(value, count, width, name, nullable=False):
             if nullable and value is None:
                 return
