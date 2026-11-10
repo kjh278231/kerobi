@@ -81,7 +81,8 @@ pub fn select(s: &Sel, calls: &mut Vec<(i32, bool)>, w: &mut f64) -> Vec<i32> {
 }
 
 /// `66661c`: true when lifting the row activity to rhs (integral rows: the next integer above rhs) costs more than
-/// `gap` in reduced cost, taking the five cheapest |rc/a| columns first.
+/// `gap` in reduced cost, taking the five cheapest |rc/a| columns first. Comparisons follow the asm branches
+/// (unordered included), which differ from the decompiled C on NaN; the width cap is `minsd`.
 #[allow(clippy::too_many_arguments)]
 fn f66661c(rhs: f64, gap: f64, ind: &[i32], val: &[f64], vtype: &[u8], lb: &[f64], ub: &[f64], rc: &[f64], w: &mut f64) -> bool {
     let mut loc = 0.0;
@@ -102,14 +103,14 @@ fn f66661c(rhs: f64, gap: f64, ind: &[i32], val: &[f64], vtype: &[u8], lb: &[f64
             return false;
         }
         let r = rc[j];
-        if !(a <= 0.0 || 1e-10 < r) {
+        if a > 0.0 && 1e-10 >= r {
             loc = loc + u * a;
             continue;
         }
         if 0.0 < a && l <= -1e30 {
             return false;
         }
-        if !(0.0 <= a || r < -1e-10) {
+        if 0.0 > a && r >= -1e-10 {
             loc = loc + l * a;
             continue;
         }
@@ -141,7 +142,7 @@ fn f66661c(rhs: f64, gap: f64, ind: &[i32], val: &[f64], vtype: &[u8], lb: &[f64
     let (mut cost, mut s) = (0.0, 0);
     while s < k {
         let mut step = (rhs - loc) / c[s + 1];
-        if s + 1 < k && wd[s + 1] <= step {
+        if s + 1 < k && !(step < wd[s + 1]) {
             step = wd[s + 1];
         }
         loc = loc + c[s + 1] * step;
