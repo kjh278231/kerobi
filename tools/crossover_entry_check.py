@@ -186,6 +186,7 @@ def main():
     ap.add_argument("files", nargs="+")
     args = ap.parse_args()
     try:
+        require(len(args.files) == 3 and len(set(args.files)) == 3, "서로 다른 독립 캡처 파일 3개 필요")
         records = [json.loads(Path(p).read_text()) for p in args.files]
         for p, data in zip(args.files, records):
             print(p, "대조군 목표 사건" if args.control else "목표 사건", check_control(data) if args.control else check(data))

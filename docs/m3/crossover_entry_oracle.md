@@ -29,7 +29,7 @@
 ```bash
 tools/gurun.sh node tools/crossover_entry_capture.js barrier bench/oracle/m3_crossover_entry/small.lp bench/oracle/m3_crossover_entry/barrier-probe.json
 python3 tools/crossover_entry_selftest.py
-python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/barrier-probe.json
+python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/barrier-1.json bench/oracle/m3_crossover_entry/barrier-2.json bench/oracle/m3_crossover_entry/barrier-3.json
 ```
 
 도구는 프로세스 시작 전에 입력·도구·바이너리 해시를 고정하고 종료 시 다시 대조한다. warm 시작값은 PStart `[2,1,1]`, DStart `[1,0,0]`으로 메타데이터에도 기록한다. 결과 구조의 `output`은 진단 로그로 보관하되 상태 비교에서 제외한다. 결과 status·훅 오류·반환값·환경과 배열은 제외하지 않는다. 시간 측정값을 캡처하지 않았고 시간이나 work의 동등성은 주장하지 않는다. 실제 자료로 변환 식을 아직 검증하지 않았으며 CLI를 합격용으로 활성화하지 않았다.
