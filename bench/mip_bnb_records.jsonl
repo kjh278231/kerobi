@@ -1,0 +1,38 @@
+{"record_types": {}, "elapsed": 0.015124412999284687, "name": "ran14x18-disj-8"}
+{"record_types": {}, "elapsed": 0.0023233030005940236, "name": "gen-ip002"}
+{"record_types": {}, "elapsed": 0.002155363999918336, "name": "gen-ip054"}
+{"record_types": {"1": 1, "2": 1}, "elapsed": 0.012011064998660004, "name": "ic97_potential"}
+{"record_types": {}, "elapsed": 0.002157226001145318, "name": "pk1"}
+{"record_types": {"2": 40}, "elapsed": 0.0039209110000228975, "name": "neos859080"}
+{"record_types": {"9": 24}, "elapsed": 0.006878737000079127, "name": "neos-911970"}
+{"record_types": {"1": 7, "9": 7}, "elapsed": 0.0017765390002750792, "name": "markshare2"}
+{"record_types": {"1": 1, "4": 2}, "elapsed": 0.00391379799839342, "name": "mas74"}
+{"record_types": {}, "elapsed": 0.004594998998072697, "name": "exp-1-500-5-5"}
+{"record_types": {"9": 4}, "elapsed": 0.0014089639989833813, "name": "markshare_4_0"}
+{"record_types": {"1": 1, "4": 2}, "elapsed": 0.003905561999999918, "name": "mas76"}
+{"record_types": {"2": 1, "10": 136, "1": 152, "9": 32}, "elapsed": 0.6233696290000807, "name": "neos-860300"}
+{"record_types": {"2": 44, "1": 8}, "elapsed": 0.0070489729987457395, "name": "tr12-30"}
+{"record_types": {}, "elapsed": 0.0029333429993130267, "name": "neos5"}
+{"record_types": {"9": 200, "1": 200}, "elapsed": 0.003155089998472249, "name": "enlight_hard"}
+{"record_types": {"2": 152, "1": 29}, "elapsed": 0.004014501999336062, "name": "sp150x300d"}
+{"record_types": {"4": 4}, "elapsed": 0.008928025999921374, "name": "mik-250-20-75-4"}
+{"record_types": {"1": 24}, "elapsed": 0.018220085999928415, "name": "neos17"}
+{"record_types": {"2": 441, "1": 462}, "elapsed": 0.010020834000897594, "name": "neos-4954672-berkel"}
+{"record_types": {"2": 21}, "elapsed": 0.01238797200130648, "name": "neos-4338804-snowy"}
+{"record_types": {"1": 4, "2": 85}, "elapsed": 0.004927513997245114, "name": "neos-2657525-crna"}
+{"record_types": {"2": 3, "1": 59}, "elapsed": 0.007961767998494906, "name": "neos-3627168-kasai"}
+{"record_types": {"2": 129}, "elapsed": 0.0030895019990566652, "name": "neos-3046615-murg"}
+{"record_types": {}, "elapsed": 0.0030173509985615965, "name": "neos-3754480-nidda"}
+{"record_types": {"2": 76, "1": 1, "9": 238}, "elapsed": 0.013234311998530757, "name": "csched008"}
+{"record_types": {}, "elapsed": 0.007369603001279756, "name": "mad"}
+{"record_types": {"1": 1}, "elapsed": 0.024252196999441367, "name": "bppc4-08"}
+{"record_types": {"1": 6}, "elapsed": 0.005262945000140462, "name": "glass4"}
+{"record_types": {"1": 963, "2": 3}, "elapsed": 0.0494502649999049, "name": "gmu-35-50"}
+{"record_types": {}, "elapsed": 0.006321008997474564, "name": "supportcase26"}
+{"record_types": {"1": 100}, "elapsed": 0.00464168799953768, "name": "fhnw-binpack4-4"}
+{"record_types": {}, "elapsed": 0.060483910998300416, "name": "cod105"}
+{"record_types": {"1": 549, "2": 5}, "elapsed": 0.026597463998768944, "name": "gmu-35-40"}
+{"record_types": {"2": 20, "11": 20}, "elapsed": 0.007059905998175964, "name": "graphdraw-domain"}
+{"record_types": {"2": 18, "1": 13, "4": 1}, "elapsed": 0.0036054679985682014, "name": "timtab1"}
+{"record_types": {"2": 76, "1": 3, "9": 246}, "elapsed": 0.014358645003085257, "name": "csched007"}
+{"record_types": {}, "elapsed": 0.011841930998343742, "name": "assign1-5-8"}
