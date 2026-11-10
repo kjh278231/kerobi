@@ -3,7 +3,7 @@
 
 (default)         manifest hashes (this and the M2-03c-2 one), then checks A, B, C1-C4, E and prints the findings
 --self-test       also requires every in-memory tamper to be rejected
---write-manifest  record the capture, tool and model hashes
+--write-manifest  write the Rust-readable node LP files from run 1, then record capture, file, tool and model hashes
 Exit code 0 only when every requested check passes.
 """
 import copy, hashlib, json, os, struct, sys
@@ -17,6 +17,8 @@ DATA = 'bench/oracle/mip_retry_node_lp'
 OLD = 'bench/oracle/mip_retry_basis'
 MANIFEST = 'bench/oracle/mip_retry_node_lp_manifest.json'
 TOOLS = ['tools/mip_retry_node_lp.js', 'tools/mip_retry_node_lp_runs.sh']
+LPFILE = DATA + '/{}.node_lp.json'
+LP_KEYS = ('cols', 'rows', 'model_sense', 'obj_con', 'obj', 'lb', 'ub', 'vtype', 'rhs', 'sense', 'cbeg', 'ind', 'val', 'env_params')
 MODELS = {'nidda_stress': 're/bench/data/miplib/neos-3754480-nidda.mps.gz', 'gmu-35-50_default': 're/bench/data/miplib/gmu-35-50.mps.gz'}
 RUNS = (1, 2, 3)
 # old: M2-03c-2 natural capture; ws: C2 applies (ScaleFlag 0); model: E applies (node LP keeps the model columns)
@@ -203,12 +205,38 @@ def enclosing(d):
     return [(e['call'], e['depth'], [e['model_rows'], e['model_cols']], e['presolved'], e['env_2728']) for e in stack]
 
 
+def node_lp(case, d):
+    """Rust-readable node LP (schema rsolver.node_lp.v1): the API dump, the LP calls on the node LP, the node basis if any."""
+    ye, es = retry_y(d)
+    lp = one(ye, 'y:lp')
+    node_k = [e['k'] for e in ye if e['event'] == 'y:dhash' and e['lp_is_node_lp']]
+    enters = {e['k']: e for e in es if e['event'] == 'x:cda5b:enter'}
+    leaves = {e['k']: e for e in es if e['event'] == 'x:cda5b:leave'}
+    calls = [{'k': k, 'retry': enters[k]['retry'], 'method': enters[k]['method'], 'node_basis': enters[k]['vb_rel'] == 'I98' and enters[k]['cb_rel'] == 'Ia0',
+              'status': leaves[k]['lp']['lp_status']} for k in node_k]
+    dec = [e for e in es if e['event'] == 'x:decode:leave']
+    basis = {'vbasis': dec[0]['vbasis'], 'cbasis': dec[0]['cbasis']} if dec else None
+    return dict({'schema': 'rsolver.node_lp.v1', 'case': case, 'doubles': 'u64 bit pattern, 16 hex digits',
+                 'source': f'{DATA}/{case}_1.json (run 1 of 3, y:lp at cda5b k={lp["k"]})'},
+                **{k: lp[k] for k in LP_KEYS}, node_lp_calls=calls, node_basis=basis)
+
+
+def check_lpfiles(caps):
+    for case in CASES:
+        need(B.load(LPFILE.format(case)) == node_lp(case, caps[case][1]), f'{case}: stored node LP file differs from the capture')
+
+
 def sha(p):
     return hashlib.sha256(open(os.path.join(ROOT, p), 'rb').read()).hexdigest()
 
 
 def write_manifest():
     caps = [f'{DATA}/{c}_{r}.json' for c in CASES for r in RUNS]
+    for c in CASES:
+        with open(os.path.join(ROOT, LPFILE.format(c)), 'w') as fh:
+            json.dump(node_lp(c, B.load(f'{DATA}/{c}_1.json')), fh)
+            fh.write('\n')
+    caps += [LPFILE.format(c) for c in CASES]
     m = {'binary_sha256': B.BINARY, 'files': {p: sha(p) for p in caps + TOOLS},
          'external_models': {p: sha(os.path.join('..', p)) for p in MODELS.values()}}
     with open(os.path.join(ROOT, MANIFEST), 'w') as fh:
@@ -219,7 +247,8 @@ def write_manifest():
 def check_manifests(caps):
     m = B.load(MANIFEST)
     need(m['binary_sha256'] == B.BINARY, 'manifest binary hash')
-    need({f'{DATA}/{c}_{r}.json' for c in CASES for r in RUNS} | set(TOOLS) <= set(m['files']), 'manifest misses a file')
+    need({f'{DATA}/{c}_{r}.json' for c in CASES for r in RUNS} | {LPFILE.format(c) for c in CASES} | set(TOOLS) <= set(m['files']),
+         'manifest misses a file')
     for p, h in m['files'].items():
         need(sha(p) == h, f'hash mismatch {p}')
     for p, h in m['external_models'].items():
@@ -308,6 +337,8 @@ def main():
         check_manifests(caps)
         print('manifest PASS')
         res = run(caps, olds)
+        check_lpfiles(caps)
+        print('node LP files PASS')
     except Fail as e:
         print('FAIL', e); return 1
     for case, r in res.items():

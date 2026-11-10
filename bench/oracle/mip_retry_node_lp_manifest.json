@@ -7,6 +7,8 @@
     "bench/oracle/mip_retry_node_lp/gmu-35-50_default_1.json": "fe864d84facd3e2fc314149a92abdb7eda6e4024acec1ec7e8f384a6ddeba050",
     "bench/oracle/mip_retry_node_lp/gmu-35-50_default_2.json": "fe864d84facd3e2fc314149a92abdb7eda6e4024acec1ec7e8f384a6ddeba050",
     "bench/oracle/mip_retry_node_lp/gmu-35-50_default_3.json": "fe864d84facd3e2fc314149a92abdb7eda6e4024acec1ec7e8f384a6ddeba050",
+    "bench/oracle/mip_retry_node_lp/nidda_stress.node_lp.json": "e986cd91a349c6c8412b29030e87bd4f546b4ef3b026a63b699db97322b03370",
+    "bench/oracle/mip_retry_node_lp/gmu-35-50_default.node_lp.json": "74788bd928e3fe168d824919f60d4248f23c4ff198b01f46521115428a63949f",
     "tools/mip_retry_node_lp.js": "37880eb20e3a958240e01c7d883f56a45116362125b59726c621fbc5874bf250",
     "tools/mip_retry_node_lp_runs.sh": "1b1f48408de4a9eecb46a304099c77e647adf139d457eaf306cc11cc6ba77bb0"
   },
