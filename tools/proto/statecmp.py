@@ -9,7 +9,7 @@ name, gpath = sys.argv[1], sys.argv[2]
 g = {s["iter"]: s for s in map(json.loads, open(gpath))}
 snap = tempfile.mktemp(suffix=".jsonl")
 code = (f"import rsolver; m = rsolver.read({str(ROOT.parent / 're/bench/data/netlib' / (name + '.mps.gz'))!r}); "
-        "m.Params['Method'] = 1; m.optimize()")
+        "m.Params['Method'] = 1; m.Params['Presolve'] = 0; m.optimize()")
 subprocess.run([sys.executable, "-c", code], env=dict(os.environ, RSOLVER_SNAP=snap), check=True)
 mine = {}
 for line in open(snap):

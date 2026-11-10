@@ -7,7 +7,7 @@ firsts = []
 for n in names:
     g = json.load(gzip.open(f'{D}/{n}.json.gz'))
     gp = [(tuple(ent), tuple(lev)) for it, ent, lev, flips, obj in g['path'][1:] if ent or lev]
-    m = rsolver.read(f'/home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/{n}.mps.gz'); m.Params['Method'] = 1
+    m = rsolver.read(f'/home/sds/workspace/gurobi-sandbox/re/bench/data/netlib/{n}.mps.gz'); m.Params['Method'] = 1; m.Params['Presolve'] = 0
     m.Params['IterationLimit'] = 3 * g['IterCount'] + 1000
     m.optimize()
     mp = [((q,), (o,)) for (_, q, o) in m._path]

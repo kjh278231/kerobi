@@ -7,7 +7,7 @@ name, ncalls = sys.argv[1], int(sys.argv[2]) if len(sys.argv) > 2 else 10
 g = [x for x in map(json.loads, gzip.open(ROOT / f"bench/oracle/bfrt_io/{name}.jsonl.gz", "rt")) if x[0] == "bfrt" and x[1] == ">"]
 dump = tempfile.mktemp(suffix=".jsonl")
 code = (f"import rsolver; m = rsolver.read({str(ROOT.parent / 're/bench/data/netlib' / (name + '.mps.gz'))!r}); "
-        "m.Params['Method'] = 1; m.optimize()")
+        "m.Params['Method'] = 1; m.Params['Presolve'] = 0; m.optimize()")
 subprocess.run([sys.executable, "-c", code], env=dict(os.environ, RSOLVER_BFRT=dump), check=True)
 mine = [json.loads(x) for x in open(dump)]
 os.unlink(dump)
