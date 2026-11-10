@@ -2,7 +2,8 @@
 from copy import deepcopy
 from hashlib import sha256
 from pathlib import Path
-from crossover_entry_check import EXPECTED, check, difference
+import struct
+from crossover_entry_check import EXPECTED, check, difference, transformed
 
 bits = "0000000000000000"
 state = {"model": 1, "n": 1, "m": 1, "status": 2,
@@ -45,4 +46,12 @@ for mutate in (lambda x: x.update(model_sha256="0" * 64), lambda x: x.update(mod
 bad = deepcopy(d)
 bad["events"][4]["ret"] = 3
 assert "ret" in difference(d, bad, case="시험")
-print("합성 오류 주입 15건 검출; 원본 성공 아님")
+def f(v):
+    return struct.pack("<d", v).hex()
+r = {"x": [f(2)], "slack": [f(4)], "reduced": [f(8)], "y": [f(16)]}
+scale = {"c": [f(2)], "r": [f(4)], "o": [f(2)], "flip": ["01"], "flip_enabled": 1, "sense": ["3e"]}
+assert transformed(r, scale) == ([f(-4), f(-1)], [f(-2), f(32)])
+zero = {k: [f(0.0)] for k in r}
+scale.update(c=None, r=None, flip=None, flip_enabled=0, sense=["3c"])
+assert transformed(zero, scale) == ([f(0.0), f(0.0)], [f(0.0), f(-0.0)])
+print("합성 오류 주입 15건 및 스케일·부호·±0 확인; 원본 성공 아님")
