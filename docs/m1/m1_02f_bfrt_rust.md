@@ -66,14 +66,19 @@
   - `tools/proto/pathcmp.py kb2`: 수정 전 `first diff at pivot 21: g ((25,), (78,)) mine ((4,), (78,))` → 수정 뒤 `gurobi 38 pivots 38 mine 38 pivots 38 first diff at pivot 38`(진입·이탈 38피벗 전부 같음).
   - `tools/proto/statecmp.py kb2`(저장 오라클 반복 0–30): 수정 전 반복 22 vstat 2개 [4, 25]부터 다름 → 수정 뒤 반복 0–21 OK, 반복 22는 vstat·xB·d·w가 같고 가격 목록(mode 1, 길이 13) 순서만 위치 8부터 다르다(g `[17, 19, 64, 24]`, Rust `[19, 24, 64, 66]`). 반복 23부터 d·w의 끝자리 차이(반복 23 d 6개, w 21개). 계약대로 새 첫 차이는 기록만 한다(후속 M1-02g).
 - 회귀:
-  - `tools/lp_check.py --methods 1 --timeout 120`(수정 전은 수정 전 빌드 사본): 정답 90/91 그대로, 상태 변화 없음. IterCount 일치 24/64 → 29/64. 새로 일치: etamacro 494→490, fit1d 67→66, ganges 833→859, grow7 376→316, stocfor1 83→85. 잃은 모델 없음. 반복이 바뀐 나머지(일치 아님): bandm 386→381(원본 372), boeing1 780→626(651), e226 415→414(410), fit1p 566→562(568), grow15 1116→1066(1033), grow22 2265→2031(1145), maros 1825→1739(1975), perold 1288→1341(1273), pilot4 654→642(691), stair 381→393(356). 원본 기준 없는 모델: 80bau3b, fit2d, fit2p, greenbea, greenbeb, nesm, pilot, pilot87, pilotnov, stocfor2.
+  - `tools/lp_check.py --methods 1 --timeout 120`(수정 전은 수정 전 빌드 사본): 정답 90/91 그대로, 상태 변화 없음. IterCount 일치 24/64 → 29/64. 새로 일치: etamacro 494→490, fit1d 67→66, ganges 833→859, grow7 376→316, stocfor1 83→85. 잃은 모델 없음. 반복이 바뀐 나머지(일치 아님): bandm 386→381(원본 372), boeing1 780→626(651), e226 415→414(410), fit1p 566→562(568), grow15 1116→1066(1033), grow22 2265→2031(1145), maros 1825→1739(1975), perold 1288→1341(1273), pilot4 654→642(691), stair 381→393(356). 원본 기준 없는 모델: 80bau3b 4511→4953, fit2d 152→202, fit2p 8234→8521, greenbea 4375→3843, greenbeb 5835→6134, nesm 1628→1963, pilot 5130→4378, pilot87 10155→11806, pilotnov 1150→1223, stocfor2 1747→1720.
+  - `tools/proto/pathcmp.py all`(`bench/oracle/path1` 64모델, 수정 전 빌드 사본과 비교): 피벗 경로 완전 일치 18/64 → 23/64, 첫 차이 위치 비율 중앙값 0.492 → 0.589. 첫 차이가 앞당겨진 모델 0, 늦춰진 모델 14(bandm 140→154, boeing1 176→381, e226 103→363, etamacro 157→490 완전, fit1d 18→66 완전, fit1p 64→188, ganges 189→761, grow15 78→365, grow22 141→256, grow7 74→316 완전, kb2 21→38 완전, maros 399→475, stair 199→211, stocfor1 48→85 완전).
   - `cargo test -p rsolver-lp` 통과, `cargo test --release --workspace` 124 통과·무시 8(새 `bfrt_corpus` 포함), `cargo clippy --workspace --all-targets -- -D warnings` 0, worktree 빌드 pytest 657 passed.
+- 상태 수명: `nondeg_flip`은 `Engine::new`에서 false로 시작하고 다시 끄지 않는다. 같은 단계 상태 `pt_lvl`도 `Engine::new`에서만 0이 된다(`perturbed`는 cost 복원 때 false로 돌아가지만 `pt_lvl`은 그대로). `Engine`은 풀이마다 새로 만든다(`crates/driver/src/lib.rs`·`simplex.rs`의 `Engine::new` 호출, `crates/mip`에서는 직접 만들지 않음).
 - 실행하지 못한 검사: `spx+0x178 ≥ 10`·`0x178 ≠ 0`(대응 상태 없음, 캡처 0회), FLIP(reason 4) 경로의 켜짐 검사 원본 대조, Method 0/−1·MIP 노드 LP 궤적(pytest만), 정수 열(fac 1.5)의 재훑기 가중(Netlib 코퍼스에 정수 열 없음).
 
 ## 7. 판정과 인수인계
 
 - 작업 수행 상태: 완료(구현).
-- 동등성: C1 통과(02e 코퍼스 범위: 진입 3108/3112·flip 3112/3112, 남은 4건은 02e가 설명한 tuff 비용 이동, 프로토타입과 3112/3112 같음). C2 통과(6모델 켜짐 반복). C3 통과(kb2 pathcmp 38/38, statecmp 반복 22의 vstat·xB·d·w). 새 첫 차이 kb2 반복 22 가격 목록 순서는 미해결.
+- 동등성:
+  - C1 통과(02e 코퍼스 범위: 진입 3108/3112·flip 3112/3112, 남은 4건은 02e가 설명한 tuff 비용 이동, 프로토타입과 3112/3112 같음).
+  - C2 통과(6모델 켜짐 반복).
+  - C3 경로 통과(kb2 pathcmp 38/38, 첫 차이 21 → 없음). C3 상태는 **미충족**: 계약의 "statecmp 반복 22가 같다"는 vstat·xB·d·w만 같고 가격 목록 순서가 위치 8부터 다르다(계약 변경: 판정을 경로와 상태로 나눠 기록하고, 상태 쪽은 M1-02g로 넘긴다. 반복 0–21에서는 목록이 같고 재훑기가 처음 진입을 바꾼 피벗 21 직후에 처음 갈리므로, 재훑기 교체 경로의 다른 부수 효과(02f 미이식)일 가능성을 배제하지 못했다).
 - 남은 한계: `spx+0x178` 미구현(pow 항 항상 더함, 켜짐 조건 하나 생략), NONDEGENFLIP 0 초기화 위치·FLIP 경로, R4 생존, tuff RNG 비용 이동, 정수 열 가중.
 - 후속:
   - **M1-02g**(조사, 새 행 제안): kb2 반복 22 가격 목록(mode 1) 순서 차이. 첫 명령 `zcat bench/oracle/iter0-30/kb2.jsonl.gz > <tmp>/kb2.jsonl; PYTHONPATH=$PWD/python ../.venv/bin/python tools/proto/statecmp.py kb2 <tmp>/kb2.jsonl`.

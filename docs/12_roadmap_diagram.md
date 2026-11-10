@@ -1,6 +1,6 @@
 # 12. 로드맵 다이어그램
 
-M1-02f BFRT 재훑기·NONDEGENFLIP을 Rust에 넣었다(구현, 통과). 02e 코퍼스 3112호출에서 Rust `bfrt` 진입 3108·flip 3112가 원본과 같고, 켜짐 반복 6모델 일치, kb2 피벗 경로 38/38 일치. 새 첫 차이는 kb2 반복 22 가격 목록 순서(M1-02g). Netlib Method=1 정답 90/91, IterCount 일치 24/64 → 29/64. [계약과 결과](m1/m1_02f_bfrt_rust.md).
+M1-02f BFRT 재훑기·NONDEGENFLIP을 Rust에 넣었다(구현, 상태 일부 미충족). 02e 코퍼스 3112호출에서 Rust `bfrt` 진입 3108·flip 3112가 원본과 같고, 켜짐 반복 6모델 일치, kb2 피벗 경로 38/38 일치, Netlib 경로 완전 일치 18 → 23/64. kb2 반복 22 가격 목록 순서는 다르다(M1-02g). Netlib Method=1 정답 90/91, IterCount 일치 24/64 → 29/64. [계약과 결과](m1/m1_02f_bfrt_rust.md).
 
 M2-06e pseudocost 초기화·노드 갱신·감쇠·대칭 전파를 원본 캡처로 확정했다(조사·오라클). 노드 갱신(`5fb8ec`→`6edfcf`, 깊이 가중 w)·조상 감쇠(`6ee1d3`)·루트 끝 대칭 orbit 전파(`6ef22e`, watchpoint로 발견)·M 재생성 때의 시드 초기화가 6사례×3회의 표 A 전이를 비트까지 재현하고 해제 직전 스냅숏으로 사슬이 닫힌다. 연속 변수 분기·병렬·SB 입력은 미검증. 다음은 M2-06f(Rust 이식)·06c·06e-2. [계약과 결과](m2/mip_pseudocost.md).
 
