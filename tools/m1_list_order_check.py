@@ -157,7 +157,41 @@ def check(g, caps, order=None):
         ker = [c.split('@')[0] for c in e['ft']['calls'] if c.split('@')[0] in ('21686f', '21841f', '2126cd')]
         if k in res and 'aq' in res[k] and idx != sorted(idx):
             need(any(x in ('21686f', '21841f') for x in ker), f'P pivot {k}: unsorted alpha_q list without a sparse U kernel {ker}')
+    ftran_order(caps[0])
     return res
+
+
+def ftran_order(cap, rule='orig'):
+    """P2: 09d112 calls the sparse L kernel 21b9de iff LU+0x104 * nnz(a_q) <= m (LU+0x128 < 0 on every kb2 pivot).
+    P3: on sparse-U pivots (21686f / 21841f) the 09d112 alpha_q output is [rows with LU+0xf8 = -1, as output] +
+    [tail rows (U position >= t) by U position descending] + [prefix rows by LU+0xf8 ascending].
+    Returns the pivots whose output that rule tells apart from index order."""
+    disc = []
+    for k, e in sorted(cap.items()):
+        ft = e['ft']
+        lu, calls = ft['lu'], [c.split('@')[0] for c in ft['calls']]
+        need(lu['x128'] < 0, f'P2 pivot {k}: LU+0x128 {lu["x128"]} >= 0 (level path, not covered)')
+        need(('21b9de' in calls) == (lu['x104'] * ft['aq_in']['nnz'] <= ft['m']),
+             f'P2 pivot {k}: 21b9de {"21b9de" in calls}, LU+0x104 {lu["x104"]} * nnz {ft["aq_in"]["nnz"]} vs m {ft["m"]}')
+        if not any(c in ('21686f', '21841f') for c in calls):
+            continue
+        pos = {r: i for i, r in enumerate(ft['ord'])}
+        out, t, f8 = ft['aq_out']['idx'], ft['t'], ft['f8']
+        neg = [r for r in out if pos[r] < t and f8[r] == -1]
+        tail = [r for r in out if pos[r] >= t]
+        pre = [r for r in out if pos[r] < t and f8[r] >= 0]
+        if rule == 'orig':
+            want = neg + sorted(tail, key=lambda r: -pos[r]) + sorted(pre, key=lambda r: f8[r])
+        elif rule == 'tail-asc':
+            want = neg + sorted(tail, key=lambda r: pos[r]) + sorted(pre, key=lambda r: f8[r])
+        elif rule == 'prefix-upos':
+            want = neg + sorted(tail, key=lambda r: -pos[r]) + sorted(pre, key=lambda r: pos[r])
+        else:  # 'index': the dense compaction order
+            want = sorted(out)
+        need(out == want, f'P3 pivot {k}: 09d112 output {out} != rule {rule} {want}')
+        if want != neg + sorted(tail + pre):
+            disc.append(k)
+    return disc
 
 
 def main():
@@ -184,7 +218,20 @@ def main():
               f'scan {sum(v["scanned"] for v in res.values())}, x1.1 {sum(v["raised"] for v in res.values())}, '
               f'flip pivots {sum(1 for v in res.values() if v["flips"])}; refactor pivots {refac} not replayed; '
               f'discriminating pivots {disc}')
+        fdisc = ftran_order(caps[0])
+        print(f'P2: 21b9de iff LU+0x104*nnz(a_q) <= m on {len(caps[0])} pivots; P3: sparse-U output order rule on '
+              f'{sum(1 for e in caps[0].values() if any(c.split("@")[0] in ("21686f", "21841f") for c in e["ft"]["calls"]))} '
+              f'pivots, discriminating {fdisc}')
         if self_test:
+            need(fdisc, 'V: no pivot tells the output order rule apart')
+            for v in ('tail-asc', 'prefix-upos', 'index'):
+                try:
+                    ftran_order(caps[0], v)
+                    raise Fail(f'V {v}: output order variant passed')
+                except Fail as ex:
+                    if str(ex).startswith('V '):
+                        raise
+                    print(f'V {v}: rejected: {str(ex)[:120]}')
             need(disc, 'V: no discriminating pivot')
             try:
                 replay(g, sorted)
