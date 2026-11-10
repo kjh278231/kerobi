@@ -1,0 +1,22 @@
+{
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "files": {
+    "bench/oracle/mip_linear_child_retry/gmu-35-50_default_retry_1.json": "a2c11cc9b8684d17c215ef2058f6b83dfea2223a39ad3654b9e0abc9c0d03dbf",
+    "bench/oracle/mip_linear_child_retry/gmu-35-50_default_retry_2.json": "a2c11cc9b8684d17c215ef2058f6b83dfea2223a39ad3654b9e0abc9c0d03dbf",
+    "bench/oracle/mip_linear_child_retry/gmu-35-50_default_retry_3.json": "a2c11cc9b8684d17c215ef2058f6b83dfea2223a39ad3654b9e0abc9c0d03dbf",
+    "bench/oracle/mip_linear_child_retry/nidda_stress_retry_1.json": "3b304b2d173c4cd4cb92cd43ed88b269e2c9ef8c45279f112f66a68f849edfce",
+    "bench/oracle/mip_linear_child_retry/nidda_stress_retry_2.json": "3b304b2d173c4cd4cb92cd43ed88b269e2c9ef8c45279f112f66a68f849edfce",
+    "bench/oracle/mip_linear_child_retry/nidda_stress_retry_3.json": "3b304b2d173c4cd4cb92cd43ed88b269e2c9ef8c45279f112f66a68f849edfce",
+    "bench/oracle/mip_linear_child_retry/snowy_default_set3_1.json": "a9a6f18b5494c87cd57c6f3812cfbe8d90c4d658b61155148ae06b68456af6f6",
+    "bench/oracle/mip_linear_child_retry/snowy_default_set3_2.json": "a9a6f18b5494c87cd57c6f3812cfbe8d90c4d658b61155148ae06b68456af6f6",
+    "bench/oracle/mip_linear_child_retry/snowy_default_set3_3.json": "a9a6f18b5494c87cd57c6f3812cfbe8d90c4d658b61155148ae06b68456af6f6",
+    "bench/oracle/mip_linear_child_retry/timelimit_tainted/summary.json": "5dc6bfde97c9a8dcff3655149ec3b53a42992566f7dab1b3d9456c8431dba8d7",
+    "tools/mip_linear_child_retry.js": "64537523951d192dce18645fdcedd6cc0afe242cf49260742f43bf0a67cff750",
+    "tools/mip_linear_child_retry_runs.sh": "3897f887f62d9b2d7005464131b77d2bbe3200a928c4f84f60cfa89c67340ba5"
+  },
+  "external_models": {
+    "re/bench/data/miplib/gmu-35-50.mps.gz": "5652e6ad8889e874bc88356d3f717677793457dc6afe76c934b3603bc3adb8d1",
+    "re/bench/data/miplib/neos-3754480-nidda.mps.gz": "63f322dd9be49acf31f7579d8f04e3bb578bdd7ca7d3525683384190c9a8bf7f",
+    "re/bench/data/miplib/neos-4338804-snowy.mps.gz": "a8111bbb59ae6b28be2253e0532c9e628749e7c7cc7d1a1603992ec079f7eb04"
+  }
+}

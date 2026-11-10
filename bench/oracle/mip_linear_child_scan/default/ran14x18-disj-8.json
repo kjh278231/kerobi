@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "kind": "natural_scan",
+  "model": "ran14x18-disj-8.mps.gz",
+  "model_sha256": "2a063d948b69e080e8712c449000bf8f26b05ff4f619552a35b06ca5b6eb38c8",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000
+  },
+  "output": "DONE 9 10202",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "counts": {
+    "n:before:1:-1:2": 78,
+    "n:after:1:2:2": 1862,
+    "n:before:1:2:2": 1784,
+    "n:before:1:2:6": 11,
+    "n:after:1:2:6": 11,
+    "set:0": 115,
+    "set:4": 47,
+    "n:before:1:-1:6": 17,
+    "n:after:1:6:6": 17,
+    "n:before:0:2:2": 16803,
+    "n:after:0:2:2": 16803,
+    "n:before:0:2:6": 2004,
+    "n:after:0:2:6": 2004,
+    "n:before:0:2:3": 21,
+    "n:after:0:2:3": 21,
+    "n:before:1:2:11": 9,
+    "n:after:1:2:11": 9,
+    "n:before:1:-1:11": 9,
+    "n:after:1:11:11": 9,
+    "n:before:1:2:9": 6,
+    "n:after:1:2:9": 6
+  }
+}

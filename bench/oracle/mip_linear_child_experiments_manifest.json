@@ -1,0 +1,42 @@
+{
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "files": {
+    "bench/mip_linear_child/continuous_candidate.lp": "fcdd879ec021d4623581050b89bc37137b734ade4b11754db4b35d81356a3b26",
+    "bench/oracle/mip_linear_child_check_3e9fc00.py.txt": "0203ad0181ab83d9b7b05fc6cbaa2de5450364255e4ba380ae4a6fd4a6a9b867",
+    "bench/oracle/mip_linear_child_experiments/branch_1.json": "247a884011551fd9d38d7407878f6acf24b80fdda6f1514e1ce5a5e9ff912c8a",
+    "bench/oracle/mip_linear_child_experiments/branch_attempt2.json": "599a72585614bef47b379fc61dd71be0001359ddfa2cc657ab6603ad0e773660",
+    "bench/oracle/mip_linear_child_experiments/earlier_inject_branch_1.json": "599a72585614bef47b379fc61dd71be0001359ddfa2cc657ab6603ad0e773660",
+    "bench/oracle/mip_linear_child_experiments/earlier_inject_branch_2.json": "599a72585614bef47b379fc61dd71be0001359ddfa2cc657ab6603ad0e773660",
+    "bench/oracle/mip_linear_child_experiments/earlier_inject_branch_3.json": "599a72585614bef47b379fc61dd71be0001359ddfa2cc657ab6603ad0e773660",
+    "bench/oracle/mip_linear_child_experiments/earlier_inject_reclass_1.json": "c97f5031b4b9c773173f5969bc29e89ce3586d957763e286ee494d388d0d07f5",
+    "bench/oracle/mip_linear_child_experiments/earlier_inject_reclass_2.json": "c97f5031b4b9c773173f5969bc29e89ce3586d957763e286ee494d388d0d07f5",
+    "bench/oracle/mip_linear_child_experiments/earlier_inject_reclass_3.json": "c97f5031b4b9c773173f5969bc29e89ce3586d957763e286ee494d388d0d07f5",
+    "bench/oracle/mip_linear_child_experiments/earlier_natural_1.json": "cad5c9374886f39bf0516a2003fc9fa08e277062410ff35801c10516c4492fc8",
+    "bench/oracle/mip_linear_child_experiments/earlier_natural_2.json": "cad5c9374886f39bf0516a2003fc9fa08e277062410ff35801c10516c4492fc8",
+    "bench/oracle/mip_linear_child_experiments/earlier_natural_3.json": "cad5c9374886f39bf0516a2003fc9fa08e277062410ff35801c10516c4492fc8",
+    "bench/oracle/mip_linear_child_experiments/inject_branch_1.json": "a41ca9c3dce94f6663c411508971688f11e5481c86ed7c288c958b7fcd390bca",
+    "bench/oracle/mip_linear_child_experiments/inject_branch_2.json": "4017ad6ab38260609b6ee7d2eb8c0196e9deae40bf39c56cc6444ddff7a8fd30",
+    "bench/oracle/mip_linear_child_experiments/inject_branch_3.json": "4017ad6ab38260609b6ee7d2eb8c0196e9deae40bf39c56cc6444ddff7a8fd30",
+    "bench/oracle/mip_linear_child_experiments/inject_reclass_1.json": "9d4d2d1724fdfc1fd0e596fd1b3d4135ffc993846a9e6b830d3f590992e0d1d8",
+    "bench/oracle/mip_linear_child_experiments/inject_reclass_2.json": "9d4d2d1724fdfc1fd0e596fd1b3d4135ffc993846a9e6b830d3f590992e0d1d8",
+    "bench/oracle/mip_linear_child_experiments/inject_reclass_3.json": "9d4d2d1724fdfc1fd0e596fd1b3d4135ffc993846a9e6b830d3f590992e0d1d8",
+    "bench/oracle/mip_linear_child_experiments/natural_1.json": "13a8519e328486fca4a0aadda1646c7075086d508039743c48053d63b699ccd6",
+    "bench/oracle/mip_linear_child_experiments/natural_2.json": "13a8519e328486fca4a0aadda1646c7075086d508039743c48053d63b699ccd6",
+    "bench/oracle/mip_linear_child_experiments/natural_3.json": "13a8519e328486fca4a0aadda1646c7075086d508039743c48053d63b699ccd6",
+    "bench/oracle/mip_linear_child_experiments/reclass_1.json": "49953c2ede810f7e3dd1c41775d9277da9f31d4004016444835a383b49b88ec7",
+    "tools/mip_linear_child_accept.py": "a51fef76b29fc61c194181d1d7a158581eaa17402fe6c2fb87bfc9167a6ffc8f",
+    "tools/mip_linear_child_check.py": "f90d0e0e4cc6dbb1a1d9fa54535cac8afce3e3820b2d21564f90aaaad7e2cf9b",
+    "tools/mip_linear_child_experiment.js": "9b8b3fbb175bf12cd5c1baa300eebecd3d08d8a6feefd07eba8edf797f88b197"
+  },
+  "notes": "natural/inject_* are final tracer runs; earlier_* and branch_1, branch_attempt2, reclass_1 and natural_1 are preserved exploratory captures from older revisions.",
+  "params": {
+    "Cuts": 0,
+    "Heuristics": 0,
+    "LogToConsole": 0,
+    "NodeLimit": 100,
+    "Presolve": 0,
+    "Seed": 0,
+    "Threads": 1
+  },
+  "schema": 1
+}

@@ -1,0 +1,116 @@
+{
+ "kind": "failure_evidence_summary",
+ "reason": "TimeLimit=20 with heavy hooks changed the trajectory; not a comparison baseline",
+ "tool": "tools/mip_linear_child_retry.js set3 (pre-buffering version, before 13:17)",
+ "first_divergence_run1_vs_run2": 11780,
+ "runs": [
+  {
+   "file": "snowy_default_set3_1.json",
+   "sha256": "6a5b8ce6c1b48f6bf4ec1e763a16907bdd010b5ffe177127ad536ba5140268f0",
+   "bytes": 203089095,
+   "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000
+   },
+   "output": "DONE 9 2465",
+   "ok": true,
+   "events": 11789,
+   "status3_after_fallback": [
+    [
+     11784,
+     4238,
+     4236,
+     81
+    ]
+   ],
+   "branch_events": [
+    {
+     "event": "branch:enter",
+     "seq": 5893,
+     "node": {
+      "id": 4238,
+      "parent": 4236,
+      "depth": 81,
+      "root": false,
+      "status": 3,
+      "cache": 2,
+      "mip": 1,
+      "counter_d4": 1
+     }
+    },
+    {
+     "event": "create:leave",
+     "ret": 0,
+     "branching_node": 4238,
+     "child": {
+      "id": 4255,
+      "parent": 4238,
+      "depth": 82,
+      "root": false,
+      "status": 0,
+      "cache": 2,
+      "mip": 1,
+      "counter_d4": 1
+     }
+    },
+    {
+     "event": "create:leave",
+     "ret": 0,
+     "branching_node": 4238,
+     "child": {
+      "id": 4256,
+      "parent": 4238,
+      "depth": 82,
+      "root": false,
+      "status": 0,
+      "cache": 2,
+      "mip": 1,
+      "counter_d4": 1
+     }
+    },
+    {
+     "event": "branch:leave",
+     "seq": 5893,
+     "ret": 0
+    }
+   ]
+  },
+  {
+   "file": "snowy_default_set3_2.json",
+   "sha256": "2d818082be99cc5ec492b8bbea8ecaec89e2812ba2e0a39ec75fb55766896fcc",
+   "bytes": 213162426,
+   "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000
+   },
+   "output": "DONE 9 2492",
+   "ok": true,
+   "events": 12510,
+   "status3_after_fallback": [],
+   "branch_events": []
+  },
+  {
+   "file": "snowy_default_set3_3.json",
+   "sha256": "81eaf9a98292712b07d6f913aaf3a12ac43066098fb1f0758b4b4ec478803db8",
+   "bytes": 226652977,
+   "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000
+   },
+   "output": "DONE 9 2603",
+   "ok": true,
+   "events": 13168,
+   "status3_after_fallback": [],
+   "branch_events": []
+  }
+ ]
+}

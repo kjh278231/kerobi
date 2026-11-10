@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "kind": "natural_scan",
+  "model": "gen-ip002.mps.gz",
+  "model_sha256": "cb37e723fa2187947981215bf9c8ba40d452984d7b9be3467e9f9d18f0343f78",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000
+  },
+  "output": "DONE 8 20000",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "counts": {
+    "n:before:1:-1:2": 98,
+    "n:after:1:2:2": 1374,
+    "n:before:1:2:2": 1276,
+    "n:before:1:2:6": 8,
+    "n:after:1:2:6": 8,
+    "set:0": 165,
+    "n:before:1:-1:6": 57,
+    "n:after:1:6:6": 57,
+    "n:before:0:2:2": 31675,
+    "n:after:0:2:2": 31675,
+    "set:4": 433,
+    "n:before:0:2:6": 2389,
+    "n:after:0:2:6": 2389,
+    "n:before:0:2:3": 147,
+    "n:after:0:2:3": 147,
+    "n:before:1:-1:3": 1,
+    "n:after:1:3:3": 1,
+    "n:before:0:2:9": 2,
+    "n:after:0:2:9": 2,
+    "n:before:1:-1:11": 2,
+    "n:after:1:11:11": 2,
+    "n:before:1:2:11": 3,
+    "n:after:1:2:11": 3
+  }
+}
