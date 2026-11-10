@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "kind": "natural_scan",
+  "model": "enlight_hard.mps.gz",
+  "model_sha256": "942168c2126a2a91ae3ec1ededea59bc1af0cad55f94223edf4c03d20e831f66",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000,
+    "Presolve": 0,
+    "ScaleFlag": 0,
+    "Quad": 0,
+    "NumericFocus": 0,
+    "MarkowitzTol": 0.0001
+  },
+  "output": "DONE 2 1",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "counts": {
+    "n:before:1:-1:2": 2,
+    "n:after:1:2:2": 102,
+    "n:before:1:2:2": 100,
+    "set:0": 2,
+    "n:before:1:2:6": 1,
+    "n:after:1:2:6": 1
+  }
+}

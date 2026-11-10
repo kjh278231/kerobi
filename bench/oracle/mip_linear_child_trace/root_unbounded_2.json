@@ -1,0 +1,338 @@
+{
+  "schema": 1,
+  "model_sha256": "cb58593f88156fa64ca16188d9b7d3a095304a9b7fe4fb2142cd876bf92e9000",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Presolve": 0,
+    "Cuts": 0,
+    "Heuristics": 0,
+    "Seed": 0,
+    "NodeLimit": 100,
+    "LogToConsole": 0
+  },
+  "output": "DONE 5 1",
+  "events": [
+    {
+      "event": "create:enter",
+      "call": 1,
+      "node": null
+    },
+    {
+      "event": "create:leave",
+      "call": 1,
+      "ret": 0,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": -1,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      }
+    },
+    {
+      "event": "solve:enter",
+      "call": 2,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": -1,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "c6293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "domain_upper": [
+          "46293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": false,
+        "workspace_vstat": null
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 3,
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": false,
+        "workspace_vstat": null
+      }
+    },
+    {
+      "event": "simplex:leave",
+      "call": 3,
+      "ret": 0,
+      "lp": {
+        "status": 5,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -3,
+          -4,
+          0
+        ]
+      }
+    },
+    {
+      "event": "normalize_before",
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": -1,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "c6293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "domain_upper": [
+          "46293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 5,
+      "lp": {
+        "status": 5,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -3,
+          -4,
+          0
+        ]
+      }
+    },
+    {
+      "event": "normalize_after",
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 5,
+        "mip": 5,
+        "counter_d4": 0,
+        "domain_lower": [
+          "c6293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "domain_upper": [
+          "46293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 5,
+      "lp": {
+        "status": 5,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -3,
+          -4,
+          0
+        ]
+      }
+    },
+    {
+      "event": "finish:enter",
+      "call": 4,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 5,
+        "mip": 5,
+        "counter_d4": 0,
+        "domain_lower": [
+          "c6293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "domain_upper": [
+          "46293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "finish:leave",
+      "call": 4,
+      "ret": 0,
+      "holder_changed": null,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 3,
+        "cache": 5,
+        "mip": 5,
+        "counter_d4": 1,
+        "domain_lower": [
+          "c6293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "domain_upper": [
+          "46293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "solve:leave",
+      "call": 2,
+      "ret": 0,
+      "holder_changed": false,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 3,
+        "cache": 5,
+        "mip": 5,
+        "counter_d4": 1,
+        "domain_lower": [
+          "c6293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "domain_upper": [
+          "46293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": {
+        "status": 5,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -3,
+          -4,
+          0
+        ]
+      }
+    },
+    {
+      "event": "set:enter",
+      "call": 5,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 3,
+        "cache": 5,
+        "mip": 5,
+        "counter_d4": 1,
+        "domain_lower": [
+          "c6293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "domain_upper": [
+          "46293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "value": 0
+    },
+    {
+      "event": "set:leave",
+      "call": 5,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 5,
+        "mip": 5,
+        "counter_d4": 1,
+        "domain_lower": [
+          "c6293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "domain_upper": [
+          "46293e5939a08cea",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "value": 0
+    }
+  ]
+}

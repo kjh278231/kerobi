@@ -1,0 +1,42 @@
+{
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "capture_method": "read-only Frida; one original process per capture; no state injection",
+  "external_sources": {
+    "re/decomp/c/004f0e10_PRIVATE00000000005ce67b.c": "0dd5c819af272c348685d37ee5500e0da7513c60b3019b79c6e41b87181357b6",
+    "re/decomp/c/00517690_PRIVATE00000000005ff14d.c": "795015fc45bad0a39c43fec33e3e09229ff1060441508edc82da10b103711802",
+    "re/decomp/c/005177f0_PRIVATE00000000005ff358.c": "1890eed9df95c6adbd023fcc3dd920926e12f0002fa3b8502afca346aa543dac",
+    "re/decomp/c/00518170_PRIVATE0000000000600d25.c": "296341b34a07a98e92271f69aabdfe98168c0c39b2211b4163423207a97d58c8",
+    "re/decomp/c/00519b10_PRIVATE000000000060145b.c": "a93814479f3071e5386a148203c8efa53e9cadcee69f1f5c117a618d6d538427",
+    "re/decomp/c/005320c0_PRIVATE0000000000627f3e.c": "c4ff6047fae2494cdb56eec06a0a6a7cc89e0df41d56667fd427954fe8c648fe"
+  },
+  "files": {
+    "bench/mip_linear_child/fractional_branch.lp": "2c5655e554ecce10a772b57e279577be507224847381399a22d305af47d9ec41",
+    "bench/mip_linear_child/root_unbounded.lp": "cb58593f88156fa64ca16188d9b7d3a095304a9b7fe4fb2142cd876bf92e9000",
+    "bench/oracle/mip_linear_child_trace/fractional_branch_1.json": "cd00b14963a57130cebe1c51f7e066b9fc9eb303104310dea8a322a4c31c40ae",
+    "bench/oracle/mip_linear_child_trace/fractional_branch_2.json": "cd00b14963a57130cebe1c51f7e066b9fc9eb303104310dea8a322a4c31c40ae",
+    "bench/oracle/mip_linear_child_trace/fractional_branch_3.json": "cd00b14963a57130cebe1c51f7e066b9fc9eb303104310dea8a322a4c31c40ae",
+    "bench/oracle/mip_linear_child_trace/root_unbounded_1.json": "cfd3f00f52b3426e62cb74c4d3fc35d44076aa86de0005a439886abdfd43856a",
+    "bench/oracle/mip_linear_child_trace/root_unbounded_2.json": "cfd3f00f52b3426e62cb74c4d3fc35d44076aa86de0005a439886abdfd43856a",
+    "bench/oracle/mip_linear_child_trace/root_unbounded_3.json": "cfd3f00f52b3426e62cb74c4d3fc35d44076aa86de0005a439886abdfd43856a",
+    "bench/oracle/mip_unbounded_reclassification.s": "4c7c4fb867b7578e94a8064aed924c3e04f1ef8fc13c765e3f1759ee82e975e7",
+    "bench/oracle/mip_unbounded_reclassification_sources.json": "b9521bc39e4d166894280f04947d1e882baa2c45e3d60eef9661fba75dff8948",
+    "tools/mip_linear_child_check.py": "0203ad0181ab83d9b7b05fc6cbaa2de5450364255e4ba380ae4a6fd4a6a9b867",
+    "tools/mip_linear_child_trace.js": "831994c06020fcf9cc0b9c5f7e0899c1f8d4f0305b0cbd2f9ef300388d00fa95"
+  },
+  "parameters": {
+    "Cuts": 0,
+    "Heuristics": 0,
+    "LogToConsole": 0,
+    "NodeLimit": 100,
+    "Presolve": 0,
+    "Seed": 0,
+    "Threads": 1
+  },
+  "schema": 1,
+  "tools": {
+    "node": "v22.23.4",
+    "node_frida": "17.23.2",
+    "objdump": "GNU Binutils 2.42",
+    "python": "3.13.12"
+  }
+}

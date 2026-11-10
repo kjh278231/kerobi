@@ -1,0 +1,3278 @@
+{
+  "schema": 2,
+  "mode": "inject_reclass",
+  "model_sha256": "fcdd879ec021d4623581050b89bc37137b734ade4b11754db4b35d81356a3b26",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Presolve": 0,
+    "Cuts": 0,
+    "Heuristics": 0,
+    "Seed": 0,
+    "NodeLimit": 100,
+    "LogToConsole": 0
+  },
+  "output": "DONE 2 3",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "crash": null,
+  "events": [
+    {
+      "event": "create:enter",
+      "call": 1,
+      "node": null
+    },
+    {
+      "event": "create:leave",
+      "call": 1,
+      "ret": 0,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": -1,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      }
+    },
+    {
+      "event": "solve:enter",
+      "call": 2,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": -1,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": false,
+        "workspace_vstat": null
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 3,
+      "solve_call": 2,
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": false,
+        "workspace_vstat": null
+      },
+      "vbasis": null,
+      "cbasis": null
+    },
+    {
+      "event": "simplex:leave",
+      "call": 3,
+      "ret": 0,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_before",
+      "solve_call": 2,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": -1,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_after",
+      "solve_call": 2,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "finish:enter",
+      "call": 4,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "finish:leave",
+      "call": 4,
+      "ret": 0,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "solve:leave",
+      "call": 2,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "qualify:enter",
+      "call": 5,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "qualify:leave",
+      "call": 5,
+      "ret": 1,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "branch:enter",
+      "call": 6,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "branch:leave",
+      "call": 6,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": null
+    },
+    {
+      "event": "solve:enter",
+      "call": 7,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 8,
+      "solve_call": 7,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      },
+      "vbasis": null,
+      "cbasis": null
+    },
+    {
+      "event": "simplex:leave",
+      "call": 8,
+      "ret": 0,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_before",
+      "solve_call": 7,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_after",
+      "solve_call": 7,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "finish:enter",
+      "call": 9,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "finish:leave",
+      "call": 9,
+      "ret": 0,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "solve:leave",
+      "call": 7,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "solve:enter",
+      "call": 10,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 11,
+      "solve_call": 10,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      },
+      "vbasis": null,
+      "cbasis": null
+    },
+    {
+      "event": "simplex:leave",
+      "call": 11,
+      "ret": 0,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_before",
+      "solve_call": 10,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_after",
+      "solve_call": 10,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "finish:enter",
+      "call": 12,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "finish:leave",
+      "call": 12,
+      "ret": 0,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "solve:leave",
+      "call": 10,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "branch:enter",
+      "call": 13,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "branch:leave",
+      "call": 13,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": null
+    },
+    {
+      "event": "solve:enter",
+      "call": 14,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 15,
+      "solve_call": 14,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      },
+      "vbasis": null,
+      "cbasis": null
+    },
+    {
+      "event": "simplex:leave",
+      "call": 15,
+      "ret": 0,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_before",
+      "solve_call": 14,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_after",
+      "solve_call": 14,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "finish:enter",
+      "call": 16,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "finish:leave",
+      "call": 16,
+      "ret": 0,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "solve:leave",
+      "call": 14,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "set:enter",
+      "call": 17,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "value": 0
+    },
+    {
+      "event": "set:leave",
+      "call": 17,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "value": 0
+    },
+    {
+      "event": "solve:enter",
+      "call": 18,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": false,
+        "workspace_vstat": null
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 19,
+      "solve_call": 18,
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": false,
+        "workspace_vstat": null
+      },
+      "vbasis": null,
+      "cbasis": null
+    },
+    {
+      "event": "simplex:leave",
+      "call": 19,
+      "ret": 0,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_before",
+      "solve_call": 18,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_after",
+      "solve_call": 18,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "finish:enter",
+      "call": 20,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "finish:leave",
+      "call": 20,
+      "ret": 0,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "solve:leave",
+      "call": 18,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "solve:enter",
+      "call": 21,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": false,
+        "workspace_vstat": null
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 22,
+      "solve_call": 21,
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": false,
+        "workspace_vstat": null
+      },
+      "vbasis": null,
+      "cbasis": null
+    },
+    {
+      "event": "simplex:leave",
+      "call": 22,
+      "ret": 0,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_before",
+      "solve_call": 21,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_after",
+      "solve_call": 21,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "finish:enter",
+      "call": 23,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "finish:leave",
+      "call": 23,
+      "ret": 0,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "solve:leave",
+      "call": 21,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "qualify:enter",
+      "call": 24,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "qualify:leave",
+      "call": 24,
+      "ret": 1,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "branch:enter",
+      "call": 25,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "create:enter",
+      "call": 26,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      }
+    },
+    {
+      "event": "create:leave",
+      "call": 26,
+      "ret": 0,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      }
+    },
+    {
+      "event": "bound:enter",
+      "call": 27,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "entries": [
+        {
+          "column": 1,
+          "value_bits": "0000000000000000",
+          "sense": "<"
+        }
+      ]
+    },
+    {
+      "event": "bound:leave",
+      "call": 27,
+      "ret": 0
+    },
+    {
+      "event": "create:enter",
+      "call": 28,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      }
+    },
+    {
+      "event": "create:leave",
+      "call": 28,
+      "ret": 0,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      }
+    },
+    {
+      "event": "bound:enter",
+      "call": 29,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "entries": [
+        {
+          "column": 1,
+          "value_bits": "3ff0000000000000",
+          "sense": ">"
+        }
+      ]
+    },
+    {
+      "event": "bound:leave",
+      "call": 29,
+      "ret": 0
+    },
+    {
+      "event": "branch:leave",
+      "call": 25,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": null
+    },
+    {
+      "event": "gate:enter",
+      "call": 30,
+      "node": {
+        "id": 0,
+        "parent": null,
+        "depth": 0,
+        "root": true,
+        "parent_is_root": false,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "gate:leave",
+      "call": 30,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": null
+    },
+    {
+      "event": "solve:enter",
+      "call": 31,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 32,
+      "solve_call": 31,
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -2,
+          0,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      },
+      "vbasis": null,
+      "cbasis": null
+    },
+    {
+      "event": "simplex:leave",
+      "call": 32,
+      "ret": 0,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_before",
+      "solve_call": 31,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "inject_reclass",
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "before": 2,
+      "after": 5,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_after",
+      "solve_call": 31,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp_status": 12,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "retry",
+      "solve_call": 31,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp_status": 12,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 33,
+      "solve_call": 31,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      },
+      "vbasis": [
+        -2,
+        0,
+        -1,
+        -1
+      ],
+      "cbasis": [
+        -1,
+        0
+      ]
+    },
+    {
+      "event": "simplex:leave",
+      "call": 33,
+      "ret": 0,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "finish:enter",
+      "call": 34,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "finish:leave",
+      "call": 34,
+      "ret": 0,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "solve:leave",
+      "call": 31,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "qualify:enter",
+      "call": 35,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "qualify:leave",
+      "call": 35,
+      "ret": 1,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "branch:enter",
+      "call": 36,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "create:enter",
+      "call": 37,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      }
+    },
+    {
+      "event": "create:leave",
+      "call": 37,
+      "ret": 0,
+      "node": {
+        "id": 3,
+        "parent": 2,
+        "depth": 2,
+        "root": false,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      }
+    },
+    {
+      "event": "bound:enter",
+      "call": 38,
+      "node": {
+        "id": 3,
+        "parent": 2,
+        "depth": 2,
+        "root": false,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "entries": [
+        {
+          "column": 0,
+          "value_bits": "0000000000000000",
+          "sense": "<"
+        }
+      ]
+    },
+    {
+      "event": "bound:leave",
+      "call": 38,
+      "ret": 0
+    },
+    {
+      "event": "create:enter",
+      "call": 39,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      }
+    },
+    {
+      "event": "create:leave",
+      "call": 39,
+      "ret": 0,
+      "node": {
+        "id": 4,
+        "parent": 2,
+        "depth": 2,
+        "root": false,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      }
+    },
+    {
+      "event": "bound:enter",
+      "call": 40,
+      "node": {
+        "id": 4,
+        "parent": 2,
+        "depth": 2,
+        "root": false,
+        "parent_is_root": false,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": null,
+        "domain_upper": null,
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "entries": [
+        {
+          "column": 0,
+          "value_bits": "3ff0000000000000",
+          "sense": ">"
+        }
+      ]
+    },
+    {
+      "event": "bound:leave",
+      "call": 40,
+      "ret": 0
+    },
+    {
+      "event": "branch:leave",
+      "call": 36,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": null
+    },
+    {
+      "event": "gate:enter",
+      "call": 41,
+      "node": {
+        "id": 2,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 2,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "8000000000000000",
+          "3ff0000000000000",
+          "8000000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "gate:leave",
+      "call": 41,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": null
+    },
+    {
+      "event": "solve:enter",
+      "call": 42,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "3ff0000000000000",
+          "8000000000000000",
+          "3ff0000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "0000000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "event": "simplex:enter",
+      "call": 43,
+      "solve_call": 42,
+      "lp": {
+        "status": 1,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          0,
+          -4,
+          -1,
+          -1,
+          -1,
+          1
+        ]
+      },
+      "vbasis": [
+        -2,
+        0,
+        -1,
+        -1
+      ],
+      "cbasis": [
+        -1,
+        0
+      ]
+    },
+    {
+      "event": "simplex:leave",
+      "call": 43,
+      "ret": 0,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -4,
+          -4,
+          -4,
+          -1,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_before",
+      "solve_call": 42,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "3ff0000000000000",
+          "8000000000000000",
+          "3ff0000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "0000000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -4,
+          -4,
+          -4,
+          -1,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "event": "normalize_after",
+      "solve_call": 42,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "3ff0000000000000",
+          "8000000000000000",
+          "3ff0000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "0000000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp_status": 2,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -4,
+          -4,
+          -4,
+          -1,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "event": "finish:enter",
+      "call": 44,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 0,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "3ff0000000000000",
+          "8000000000000000",
+          "3ff0000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "0000000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "finish:leave",
+      "call": 44,
+      "ret": 0,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 1,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "3ff0000000000000",
+          "8000000000000000",
+          "3ff0000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "0000000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": true,
+        "basis_a8_present": false,
+        "basis_b0_present": false
+      },
+      "lp": null
+    },
+    {
+      "event": "solve:leave",
+      "call": 42,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": {
+        "status": 2,
+        "presolve": 0,
+        "method": 1,
+        "concurrent_method": -1,
+        "threads": 1,
+        "workspace_present": true,
+        "workspace_vstat": [
+          -4,
+          -4,
+          -4,
+          -1,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "event": "qualify:enter",
+      "call": 45,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 1,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "3ff0000000000000",
+          "8000000000000000",
+          "3ff0000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "0000000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "qualify:leave",
+      "call": 45,
+      "ret": 0,
+      "holder_changed": null,
+      "holder_nonnull": null,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 1,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "3ff0000000000000",
+          "8000000000000000",
+          "3ff0000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "0000000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "gate:enter",
+      "call": 46,
+      "node": {
+        "id": 1,
+        "parent": 0,
+        "depth": 1,
+        "root": false,
+        "parent_is_root": true,
+        "status": 1,
+        "cache": 2,
+        "mip": 1,
+        "counter_d4": 0,
+        "domain_lower": [
+          "3ff0000000000000",
+          "8000000000000000",
+          "3ff0000000000000",
+          "0000000000000000"
+        ],
+        "domain_upper": [
+          "3ff0000000000000",
+          "0000000000000000",
+          "3ff0000000000000",
+          "3ff0000000000000"
+        ],
+        "basis_98_present": false,
+        "basis_a8_present": false,
+        "basis_b0_present": true
+      },
+      "lp": null
+    },
+    {
+      "event": "gate:leave",
+      "call": 46,
+      "ret": 0,
+      "holder_changed": false,
+      "holder_nonnull": true,
+      "node": null,
+      "lp": null
+    }
+  ]
+}
