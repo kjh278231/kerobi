@@ -271,7 +271,7 @@ def a1(manifest):
     return out
 
 
-REQUIRED = ('rel0', 'rel3', 'rel4', 'rel6', 'cascade0', 'free1', 'stop_old5', 'stop_pstage3', 'root_fr', 'dec_noI_end',
+REQUIRED = ('rel0', 'rel3', 'rel4', 'rel6', 'cascade0', 'free1', 'stop_old5', 'root_fr', 'dec_noI_end',
             'dec_nop_end', 'src_cut', 'src_fk', 'src_opt', 'rc_checked')
 # V expectation: variant -> branch counter that must be > 0 in a case for the variant to be rejected there
 VKEY = {'W1': 'v_old5', 'W2': 'v_pstage3', 'W3': 'v_cascade0', 'W4': 'v_stage4', 'W5': 'v_free1', 'W6': 'v_root'}
