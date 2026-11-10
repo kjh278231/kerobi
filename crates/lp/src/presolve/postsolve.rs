@@ -585,6 +585,13 @@ fn dj_status(d: f64) -> i32 {
     }
 }
 
+/// Restore the primal values of a parallel-column record with flag 0.
+pub fn parallel_col_primal(x: &mut [f64], columns: (usize, usize), bounds_ratio: [f64; 5], infbound: f64) {
+    let mut dual = vec![0.0; x.len()];
+    let mut basis = vec![0; x.len()];
+    parallel_col(x, &mut dual, &mut basis, columns, bounds_ratio, infbound);
+}
+
 /// `35d235` for type 4 (x' = x + r y was merged into column x; split the merged value back into x and y). The
 /// integer-column branches (record flag at +0x30 = 1 or 2) are not ported: LP columns carry flag 0.
 /// shortcut: the basis argument is assumed to be passed (the decompile of the call drops it); fit1d confirms.

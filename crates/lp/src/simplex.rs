@@ -54,6 +54,7 @@ pub struct Engine<'a> {
     rc_on: bool,
     pub iter: u64,
     pub iter_limit: u64,
+    deadline: Option<std::time::Instant>,
     /// Record the per-iteration trace (objective and infeasibility sums, O(n+m) each); off when nobody reads it.
     pub trace_on: bool,
     lu_interval: usize,
@@ -126,6 +127,7 @@ impl<'a> Engine<'a> {
             rc_on: false,
             iter: 0,
             iter_limit: u64::MAX,
+            deadline: None,
             trace_on: true,
             lu_interval: interval,
             perturbed: false,
@@ -939,7 +941,7 @@ impl<'a> Engine<'a> {
         self.in_dual = true;
         let mut retried = false;
         loop {
-            if self.iter >= self.iter_limit {
+            if self.iter >= self.iter_limit || self.deadline.is_some_and(|d| std::time::Instant::now() >= d) {
                 return Status::IterLimit;
             }
             // weights past 1e30 or NaN restart from 1 (06268b L200-415, "simplex pricing changes to steepest edge")
@@ -1226,7 +1228,7 @@ impl<'a> Engine<'a> {
         let (mut deg, mut deg0, mut it0, mut refactors, mut lvl, mut removals) = (0u64, 0u64, self.iter, 0u64, 0u32, 0u32);
         let mut pv = 2e-4;
         loop {
-            if self.iter >= self.iter_limit {
+            if self.iter >= self.iter_limit || self.deadline.is_some_and(|d| std::time::Instant::now() >= d) {
                 return Status::IterLimit;
             }
             // row marks: −1 'B' below the lower bound, +1 'A' above the upper bound
@@ -1697,12 +1699,17 @@ pub fn solve_model_warm(
     iter_limit: u64,
     want_trace: bool,
 ) -> LpResult {
-    solve_model_run(md, -1, iter_limit, want_trace, Some((vbasis, cbasis)))
+    solve_model_run(md, -1, iter_limit, want_trace, Some((vbasis, cbasis)), None)
 }
 
 /// `solve_model` with the per-iteration trace optional (`want_trace` false: `LpResult::trace` stays empty).
 pub fn solve_model_opts(md: &rsolver_model::Model, method: i32, iter_limit: u64, want_trace: bool) -> LpResult {
-    solve_model_run(md, method, iter_limit, want_trace, None)
+    solve_model_run(md, method, iter_limit, want_trace, None, None)
+}
+
+/// Solve while checking an optional wall-clock deadline between simplex iterations.
+pub fn solve_model_deadline(md: &rsolver_model::Model, method: i32, iter_limit: u64, deadline: Option<std::time::Instant>) -> LpResult {
+    solve_model_run(md, method, iter_limit, false, None, deadline)
 }
 
 fn solve_model_run(
@@ -1711,6 +1718,7 @@ fn solve_model_run(
     iter_limit: u64,
     want_trace: bool,
     warm: Option<(&[i32], &[i32])>,
+    deadline: Option<std::time::Instant>,
 ) -> LpResult {
     let mut spx = Spx::new(md);
     if md.sense < 0 {
@@ -1720,6 +1728,7 @@ fn solve_model_run(
     }
     let mut e = Engine::new(&spx);
     e.iter_limit = iter_limit;
+    e.deadline = deadline;
     e.trace_on = want_trace;
     let status = match warm {
         Some((vb, cb)) => e.solve_warm(vb, cb),
@@ -1748,6 +1757,7 @@ fn solve_model_run(
         let mut e2 = Engine::new(&sp2);
         e2.iter = e.iter;
         e2.iter_limit = iter_limit;
+        e2.deadline = deadline;
         e2.trace_on = want_trace;
         if let Some(st) = e2.resolve_unscaled(e.vstat.clone()) {
             let xs = e2.x();

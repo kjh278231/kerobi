@@ -4,7 +4,7 @@
 //! bounds and the column types kept (spx+0xb8). Equality-based domain initialization and optional validated
 //! incumbent bounds and initial heuristics are applied before the diagnostic LP. The progress APIs add generic
 //! linear propagation and whole-MIP termination checks; cuts and branching remain.
-use rsolver_lp::simplex::{solve_model_opts, LpResult, Status};
+use rsolver_lp::simplex::{solve_model_deadline, LpResult, Status};
 use rsolver_model::Model;
 
 use crate::Params;
@@ -245,17 +245,17 @@ pub fn solve_root_with_incumbent(presolved: &Model, p: &Params, incumbent: Optio
 }
 
 fn solve_domain(presolved: &Model, domain: &Model, p: &Params, incumbent: Option<Vec<f64>>) -> Option<RootLp> {
-    solve_domain_limit(presolved, domain, p, incumbent, u64::MAX)
+    solve_domain_limit(presolved, domain, p, incumbent, u64::MAX, None)
 }
 
-fn solve_domain_limit(presolved: &Model, domain: &Model, p: &Params, incumbent: Option<Vec<f64>>, iterations: u64) -> Option<RootLp> {
+fn solve_domain_limit(presolved: &Model, domain: &Model, p: &Params, incumbent: Option<Vec<f64>>, iterations: u64, deadline: Option<std::time::Instant>) -> Option<RootLp> {
     let n = presolved.obj.len();
     if n == 0 { return None; }
     let (method, _) = root_method(p, presolved.rhs.len() as i32, n as i32, presolved.num_nz() as i64);
     let lp = if empty_domain(domain) {
         LpResult { status: Status::Infeasible, obj: f64::NAN, x: Vec::new(), iter: 0,
             trace: Vec::new(), path: Vec::new(), basis: Vec::new() }
-    } else { solve_model_opts(domain, if method == 0 { 0 } else { 1 }, iterations, false) };
+    } else { solve_model_deadline(domain, if method == 0 { 0 } else { 1 }, iterations, deadline) };
     Some(RootLp { method, lp, incumbent })
 }
 
@@ -312,7 +312,10 @@ pub struct RootProgress {
 /// Continue past the diagnostic root LP: propagate rows/cutoff, submit integral LP solutions, check termination.
 /// Input and returned solutions use the same (usually presolved) coordinates.
 pub fn solve_root_progress(model: &Model, p: &Params, incumbent: Option<&[f64]>) -> Result<RootProgress, &'static str> {
-    let started = std::time::Instant::now();
+    solve_root_progress_started(model, p, incumbent, std::time::Instant::now())
+}
+
+pub(crate) fn solve_root_progress_started(model: &Model, p: &Params, incumbent: Option<&[f64]>, started: std::time::Instant) -> Result<RootProgress, &'static str> {
     if model.vtype.iter().any(|t| !matches!(t, b'C' | b'B' | b'I')) {
         return Err("root progress requires C, B, or I columns");
     }
@@ -358,7 +361,7 @@ fn progress_domain(model: &Model, mut domain: Model, p: &Params, mut candidate: 
             state.exhausted = true;
         } else {
             domain.vtype.clone_from(&model.vtype);
-            root = solve_domain_limit(model, &domain, p, candidate.clone(), p.iteration_limit.max(0.0).ceil() as u64);
+            root = solve_domain_limit(model, &domain, p, candidate.clone(), p.iteration_limit.max(0.0).ceil() as u64, crate::bnb::deadline(started, p));
             if let Some(r) = &root {
                 state.iterations = r.lp.iter as f64;
                 state.root_processed = true;
@@ -382,7 +385,7 @@ fn progress_domain(model: &Model, mut domain: Model, p: &Params, mut candidate: 
                     Status::Infeasible => state.exhausted = true,
                     // An unbounded relaxation alone does not certify an unbounded MIP.
                     Status::Unbounded => state.bound = -1e100,
-                    Status::IterLimit => state.status = MipStatus::IterationLimit,
+                    Status::IterLimit => state.status = if started.elapsed().as_secs_f64() >= p.time_limit { MipStatus::TimeLimit } else { MipStatus::IterationLimit },
                     Status::Numeric => state.status = MipStatus::Numeric,
                 }
             } else {

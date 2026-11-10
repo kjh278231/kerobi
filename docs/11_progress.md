@@ -1,12 +1,40 @@
 # 11. 진행 기록과 운영
 
-## 현재 작업 상태 (2026-11-09)
+## 현재 작업 상태 (2026-11-10)
 
-상세 기록을 `docs/m1/`, `docs/m2/`, `docs/m3/`로 묶고 [문서 안내](README.md)를 추가했다.
+스프린트 검증의 핵심 기준을 [동작 동등성 검증 기준](15_sprint_verification.md)으로 작성했다. 실제 Gurobi 13.0.3 바이너리 실행을 기준으로 같은 입력 상태의 판단·출력·상태 변경을 구간·연결·전체 층에서 비교한다. 원본 오라클 방식·재현성·필드별 비교·시간과 work·사례와 오류 검출·기준 자료·완료 판정을 명시하고 [계약 양식](templates/sprint_acceptance.md)을 추가했다. AGENTS·스프린트 목록·영역별 설계·인수인계 시작 절차에서 필수 참조한다. P0~P3 관문 수치는 유지하며 집계 일치가 내부 동등성의 증명이라는 표현을 수정했다. 문서 링크·참조·변경 공백을 확인했고 솔버 코드·오라클은 실행하지 않았다. 이번 문서와 기존 변경은 main worktree에 미커밋이며 별도 미병합 worktree는 없다.
 
-`m2-mip-presolve`에서 B&B, 루트 전파·휴리스틱, presolve 후 B&B 및 고정·치환 변수 복원, Python MIP `optimize()` 연결을 구현했다(`13ce2fe`, main 병합 `3e5c9d4`). 다른 복원 레코드와 빈 축약 모델은 원래 모델을 직접 푼다. LP presolve→simplex→postsolve 연결, 나머지 MIP 복원과 MIP 콜백은 남았다. 별도 검증: G6 기본 축약 모델·postsolve 레코드·PRELIMIT 저장 변화점 및 최종 모델 각 38/38, workspace clippy 경고 0·Rust 테스트 통과·Python 테스트 498개 통과. 38개에서 실행되지 않은 하위 풀이 등은 미구현이다. 이 병합 상태를 반영한 문서 변경은 두 worktree에 미커밋이다.
+새 세션과 세 영역 동시 작업을 위한 시작 절차를 `AGENTS.md`에서 [인수인계 안내](handoff/README.md)로 연결했다. 영역별 다음 작업·선행 변경·검증 상태를 M1·M2·M3 인수인계에 기록했다. `tools/session.py`는 같은 git common-dir의 영역 점유, 환경 확인과 미커밋 변경을 보존한 오프라인 bundle 생성을 지원한다. 별도 컴퓨터 간 자동 점유 동기화는 제공하지 않으며, 기존 원격 금지 정책을 유지해 비공개 패키지 전달과 영역 사전 배정을 사용한다. 임시 저장소에서 점유 충돌·다른 worktree의 중복 점유·소유자 해제·수정·삭제·미추적 파일 복원 및 index 보존 검사가 통과했고 현재 환경 doctor를 확인했다. 솔버 오라클은 재실행하지 않았다. 기존 변경과 설정은 main worktree에 미커밋이며 별도 미병합 worktree는 없다.
+
+1주 스프린트를 기준으로 기존 24개 번호를 상위 작업으로 유지하고 [하위 작업 목록](14_sprint_plan.md)을 추가했다. 각 항목에 종류·범위·선행 조건·종료 확인을 적었으며, 원본 미해독 영역은 설계 조사 뒤 구현을 추가한다. M1·M2·M3의 상태 소유권·데이터 전달·오라클 경계를 설계 보완 문서로 정리했다. 문서 링크·번호·변경 공백을 확인했으며 솔버 검사나 원본 오라클은 재실행하지 않았다. 기존 코드 변경과 이번 문서는 main worktree에 미커밋이며 별도 미병합 worktree는 없다.
+
+M1·M2·M3를 식별 가능한 작업 번호로 나누고 상태·완료 확인·상세 기록을 [작업 단위 목록](13_work_units.md)에 정리했다. 기존 G1~G6 관문은 유지한다. 문서 변경은 main worktree에 미커밋이며 별도 worktree는 없다.
+
+자식 LP 무계 처리를 조사했다. 원본 `600d25`는 조건에 따라 무계 방향을 검사해 노드 상태 11 또는 3을 선택하며 `5c239f`는 상태 11을 MIP 무계로 전달한다. 직접 진입 조건과 방향 검사 전체, 자식 노드 재현·오라클은 아직 미확인이라 구현은 바꾸지 않았다. [조사 기록](m2/mip_recovery_bnb.md). main의 기존 변경과 이 문서는 미커밋이며 별도 worktree는 없다.
+
+MIP 복원 후속: type 4 flag 1·2의 정수 보정을 `35d235` 및 어셈블리와 대조해 추가했으며 합성 Gurobi 오라클 1,000개와 일치한다. type 10·11과 빈 축약 모델도 연결했다. mas74·mas76은 축약 경로의 원본 해 검사를 통과했고 enlight_hard는 축약 후 복원해 최적 목적 37을 확인했다. neos-860300·graphdraw-domain은 rsolver가 30초 내 해를 찾지 못했으나 Gurobi가 각 축약 모델에서 찾은 해를 복원해 원본 제약·정수성·목적 3201·19848을 검증했다. 38개 재측정은 전부 축약 경로, 최적 1·시간 초과 37, 원본 해 검사 22개 통과다. 진단 API 추가 뒤 Rust workspace 테스트·Clippy와 Python 테스트 653개가 통과했다. [작업 기록](m2/mip_recovery_bnb.md). 변경은 main worktree에 미커밋이며 별도 미병합 worktree는 없다.
+
+MIP type 4 flag 0 복원을 기존 LP 분할로 연결하고 `363164` 합성 오라클 4개와 Rust 회귀 검사를 통과했다. 실제 mik-250-20-75-4는 축약 경로의 원본 해 검사를 통과했고 timtab1은 축약 경로에서 시간 내 해가 없었다. Rust workspace 테스트·Clippy와 로컬 확장 사용 Python 테스트 652개가 통과했다. type 4 flag 1·2, type 10·11과 빈 축약 모델은 아직 우회한다. 상세 [작업 기록](m2/mip_recovery_bnb.md). 작업 중 별도 문서 재배치가 `f86edd8`로 main에 커밋됐다. MIP 변경은 그 위 worktree에 미커밋이며 별도 미병합 worktree는 없다.
+
+문서 탐색을 위해 상세 기록을 `docs/m1/`, `docs/m2/`, `docs/m3/`로 묶고 [문서 안내](README.md)를 추가했다. 기존 작업은 main worktree에 미커밋이며 별도 미병합 worktree는 없다.
+
+`AGENTS.md`에 원본 복원 기준과 함께 프로젝트 구조, 현재 상태·원본·오라클을 찾는 경로, 빌드·검증과 공유 환경 규칙을 정리했다. 프로젝트 구조와 원본 경로는 개조식으로 구분했다. 경로와 기존 문서를 확인했으며 솔버 동작은 변경하지 않았다. 지침과 이 기록은 main worktree에 미커밋이고 별도 미병합 worktree는 없다.
+
+MIP 해 복원·B&B 동기화를 시작했다. Gurobi 13.0.3 `363164`의 type 9 식과 역순을 합성 원본 오라클로 확인하고 적용했다. 서로 다른 이동·배율과 고정 레코드를 섞은 회귀 검사 및 B&B Python 테스트 404개가 통과했다. 38개를 5초 재측정하여 축약 31·미지원 우회 6·빈 축약 우회 1, 원본 해 검증 21개 통과, rsolver 시간 초과 38을 기록했다. 기존 type 9 대상 여섯 모델 중 세 모델의 해를 검증했고 두 모델은 해가 없었으며 하나는 빈 축약 우회였다. type 4·10·11의 실제 오라클 검증과 구현, 자식 LP 무계와 presolve·전파 시간 제한은 남았다. 호출 대응표·레코드 빈도·측정·한계는 [작업 기록](m2/mip_recovery_bnb.md)에 있다. 변경은 main worktree에 미커밋이며 별도 미병합 worktree는 없다.
+
+`m2-mip-presolve`에서 B&B, 루트 전파·휴리스틱, presolve 후 B&B 및 고정·치환 변수 복원, Python MIP `optimize()` 연결을 구현했다(`13ce2fe`, main 병합 `3e5c9d4`). 다른 복원 레코드와 빈 축약 모델은 원래 모델을 직접 푼다. 나머지 MIP 복원과 MIP 콜백은 남았다. 별도 검증: G6 기본 축약 모델·postsolve 레코드·PRELIMIT 저장 변화점 및 최종 모델 각 38/38, workspace clippy 경고 0·Rust 테스트 통과·Python 테스트 498개 통과. 38개에서 실행되지 않은 하위 풀이 등은 미구현이다.
+
+사용자 요청에 따라 `main` worktree 하나만 남겼다. 제거한 `rsolver-barrier`의 미커밋 진행 문서와 미추적 파일은 `worktree-backups/rsolver-barrier/`에 복사했다. 이 백업과 현재 worktree의 상태 기록은 미커밋이다.
+
+`m1-lp-driver`를 `87ad61e`로 main에 병합했다. LP·MIP 경로의 네 파일 충돌과 MIP 테스트 모델의 RNG 초기화를 해결했다. 병합 결과를 임시 복제본에서 검증하여 Rust workspace 테스트, Clippy 경고 0, Python 테스트 650개가 통과했다. `m2-root`와 `m2-mip-presolve`를 포함해 남은 로컬 브랜치는 모두 main에 병합된 상태다. G5의 etamacro 요약 목적값과 simplex 추가 반복의 수치 차이는 남는다(`docs/m1/m1_driver.md` §11).
+
+2026-11-09 MIPLIB B&B 첫 기준 측정: Threads=1, 내부 TimeLimit=2초, 외부 감시 6초에서 rsolver 37개 시간 초과·1개(`cod105`) 외부 감시 중단, Gurobi 5개 최적·1개 불가능·32개 시간 초과였다. rsolver 해 20개는 원래 모델에서 검증했다. 별도 presolve 레코드 조사에서 12/38에 미지원 유형이 나왔으나 실제 원본 직접 풀이 경로 비율은 아직 계측하지 않았다. presolve 전체 시간 제한이 동일하게 적용되지 않는 한계와 모델별 수치는 [기준표](m2/mip_bnb_baseline.md)에 있다. 기준표·원시 결과·측정 도구와 이 문서 변경은 main worktree에서 미커밋이며 따라서 커밋된 main에는 아직 반영되지 않았다. 단일 worktree가 main을 사용하므로 별도 미병합 작업 브랜치는 없다. 기존 미추적 AGENTS.md와 백업도 남아 있다.
+
+2026-11-09 후속: `cod105`의 2초 제한 초과는 presolve·휴리스틱을 끈 루트 simplex에서 재현됐고 반복 제한 1에서는 즉시 종료했다. simplex 반복에 마감 확인을 연결하고 presolve부터 같은 시계를 사용한 뒤 2초 재현이 약 2.04초에 반환됐다. 실제 풀이 경로 계측을 추가해 5초 재측정한 결과 rsolver 38개 시간 초과·외부 감시 중단 0, 축약 풀이 26·미지원 레코드로 원본 풀이 12, 원래 모델 해 검증 21개 통과였다. Gurobi는 최적 6·불가능 1·시간 초과 31이다. B&B·루트 Python 테스트 436개, Rust workspace 테스트와 workspace Clippy가 통과했다. 단일 presolve·전파·LP 연산 중의 즉시 중단은 아직 지원하지 않는다. 상세 [5초 기준표](m2/mip_bnb_5s.md). 코드·검증 결과·문서는 main worktree에 미커밋이며, 별도 미병합 브랜치는 없다.
 
 ## 1. 운영 규칙 (2026-11-05 사용자 지시)
+
+이 절의 Herdr 탭·branch 표는 당시 운영 기록이다. 현재 새 세션의 작업 선택·점유·이동 절차는 `AGENTS.md`와 [인수인계 안내](handoff/README.md)를 따른다.
 
 오케스트레이터(Herdr 워크스페이스 w4 1번 탭의 Claude 세션)가 M 단계 작업을 탭별 에이전트에게 나눠 맡긴다.
 
@@ -37,7 +65,7 @@
 | ↳ symmetry (presolve 하위 에이전트, pane `w4:pV`) | `rsolver-symmetry` / `m1-symmetry` | 대칭 검출 `5577ba`→`551cc0` | `docs/m1/m1_presolve.md` | G2의 일부 |
 | ~~M3 barrier~~ (완료, main 병합) | `rsolver-barrier` / `m3-barrier` | barrier 본체(crossover 제외) | `docs/m3/m3_barrier.md` | G3 |
 | ~~M3 PDHG~~ (완료, main 병합) | `rsolver-barrier` / `m3-pdhg` | PDHG 본체(crossover 제외) | `docs/m3/m3_pdhg.md` | G4 |
-| M1 LP 드라이버 | `rsolver-presolve` / `m1-lp-driver` | 파라미터 표, 드라이버, Presolve 켠 연속 경로 | `docs/m1/m1_driver.md` | G5 |
+| M1 LP 드라이버 (main 병합, 수치 한계 남음) | `rsolver` / `main` | 파라미터 표, 드라이버, Presolve 켠 연속 경로 | `docs/m1/m1_driver.md` | G5 |
 | M2 MIP presolve (별도 검증 후 main 병합) | `rsolver-barrier` / `m2-mip-presolve` | MIP presolve `3cd406` P0. 검증 범위·한계는 §3 | `docs/m2/m2_presolve.md` | G6 |
 | ↳ MIP presolve 하위 작업 (상위 브랜치에 병합 완료) | `m2-mip-presolve`에 통합 | probing·clique·바깥 reduction·마무리 | `docs/m2/m2_presolve.md` | G6의 일부 |
 
