@@ -243,7 +243,11 @@ def main():
             args.mutate_rust.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
             print(json.dumps(result, ensure_ascii=False, indent=1))
         elif args.compare:
-            print(json.dumps(compare(cases, text, TRACE.read_text()), ensure_ascii=False))
+            result = compare(cases, text, TRACE.read_text())
+            print(json.dumps(result, ensure_ascii=False))
+            if result['link_mismatch']:
+                print('연결 불일치: Rust 반전 열의 feasible_ratio가 ratio:leave와 다름', file=sys.stderr)
+                sys.exit(3)  # 판단 대조는 통과했으나 04c 연결이 실패
         else:
             print(json.dumps({'rejected': self_test(cases, text, TRACE.read_text())}, ensure_ascii=False))
     except (AssertionError, KeyError, ValueError, IndexError) as error:
