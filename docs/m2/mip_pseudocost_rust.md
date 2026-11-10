@@ -111,8 +111,23 @@ python3 tools/mip_pseudocost_check.py             # 06e 자료 회귀(도구·�
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 실행 commit: 계약 `15e13f3`(V 사례 집합 고정), 구현·드라이버 `edc158f`(work/m2-06f). x86-64 WSL2 Linux, rustc stable release, 기준 자료 `bench/oracle/m2_06e/<사례>_1.json.gz`(manifest SHA-256 일치, M 통과). Gurobi는 실행하지 않았다.
+- `python3 tools/mip_pseudocost_rust.py`: `PASS`, 종료 0. 첫 실행은 기대값 스냅숏을 문자열로 정렬해(`"11" < "8"`) 해제 스냅숏에서 실패했다. 드라이버의 정렬을 j 숫자순으로 고친 뒤 통과했다(Rust 코드 변경 없음).
+- K: 입구 12,442(발동 11,157), 감쇠 입구 12,450(감쇠 8,972), 새 표 636(시드 6), 해제 636, 주입 37,452, 대칭 4. 사례별 값이 §3.1과 같다.
+- G/D/S/N/F/O: 6사례의 Rust 출력 75,659줄이 원본과 모두 같다(markshare_4_0 5,135, pk1 10,573, neos5 8,826, tr12-30 20,409, fhnw-binpack4-4 16,646, neos-860300 14,070). w는 Rust `f64::powf`(glibc `pow`)가 11,157회 모두 원본 스택 값과 비트까지 같다.
+- `python3 tools/mip_pseudocost_rust.py --self-test`(Herdr `tools/hrun.sh`, 2분 24초): `PASS (+ self-test)`, 종료 0.
+  - T 5종 모두 거부: 갱신 항목 sum 비트(markshare_4_0 사건 103), w 비트(pk1 사건 211), 감쇠 입구 발동 줄(tr12-30 사건 1420), 줄 삭제(neos5 사건 3의 주입 전 항목), 해제 스냅숏 cnt(fhnw 사건 19549).
+  - V 16종이 §3.1 기대와 사례마다 같다. P1–P3·P6·D1–D3 6사례 거부, P5·G1 4사례(markshare_4_0, pk1, neos5, fhnw), D4 4사례(markshare_4_0, pk1, fhnw, neos-860300), Z2 4사례(pk1, neos5, tr12-30, fhnw), S2 2사례(neos5, fhnw), P4 neos5, P8 fhnw, S1·Z1 6사례 생존.
+- 회귀: `cargo clippy --workspace --all-targets -- -D warnings` 종료 0. `cargo test --release --workspace` 124 통과·무시 9(새 `pseudocost_l1` 무시 1 추가). `python3 tools/mip_pseudocost_check.py` `ACCEPTANCE PASS`(06e 도구·자료 미변경). pytest는 실행하지 않았다(Python 패키지와 Python 경계 미변경).
+- 감쇠 벡터: 원본이 읽지 않은 쪽 벡터(`L+0x28`/`L+0x70` 중 하나)는 캡처에 없어 NaN으로 채웠다. NaN이면 부호 제외가 없어지므로 Rust가 벡터를 잘못 고르면 결과가 달라진다. 이 선택 규칙 자체는 캡처 도구가 같은 C 규칙으로 값을 읽었으므로 C 근거다(변이로 따로 검사하지 않았다).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: 완료.
+- 동등성: 통과(L1 저장 기준 재생, 비트 비교). 범위는 §4 6사례 run 1의 표 A 사건과 §1의 연산이다.
+- 남은 한계(미검증): §4의 실행 0회 분기(`'C'` ±0.5, 상태 7·그 밖 상태·p ≤ −1e100 미발동, w ≤ 0.001 멈춤, 대칭 동률, 시드 음수 map·`+0x850 ≠ 0`, f = 0·NaN, NaN 곱), 다른 호출자의 입력(주입만), 변경 목록·머리 칸, 병렬, `bnb.rs` 연결.
+- 후속:
+  - **M2-06f-2**(조사): `bnb.rs` 연결 전 조상 노드 정보(I·부모 링크)의 해제 시점과 노드 LP 결과 벡터(`L+0x28`·`L+0x70`·`L+0x54`·`L+0x58`)의 의미·생성 위치. Rust B&B가 같은 입력을 만들 수 있는지 판정한다.
+  - M2-06e-2(표 B·C), M2-06g(SB 입력), M2-06c(plunge)는 그대로.
+- 작업 branch `work/m2-06f`, 병합은 main의 `Merge M2-06f` 이력으로 확인한다.
+- 교훈: `docs/lessons/tooling.md`(기대 스냅숏 정렬은 숫자 키로, 원본이 읽지 않은 입력은 NaN으로 채워 선택 오류를 드러냄).
