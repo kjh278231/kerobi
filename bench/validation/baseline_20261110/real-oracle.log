@@ -1,0 +1,9 @@
+Restricted license - for non-production use only - expires 2027-11-29
+Read MPS format model from file /tmp/tmpi5x1q4o4/reduced.mps
+Reading time = 0.00 seconds
+neos-860300_pre: 568 rows, 1466 columns, 38040 nonzeros
+neos-860300 validated objective 3201.0 gurobi_status 2
+Read MPS format model from file /tmp/tmpqinqmode/reduced.mps
+Reading time = 0.00 seconds
+graphdraw-domain_pre: 845 rows, 254 columns, 2646 nonzeros
+graphdraw-domain validated objective 19848.0 gurobi_status 9

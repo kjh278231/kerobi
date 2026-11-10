@@ -177,4 +177,4 @@ M2-03a 조사 수행은 완료다. 직접 상태 11의 분기 조건·필드·�
 
 다음 작업은 M2-03b-1이다. `python3 tools/session.py status`로 점유를 확인한 뒤 해당 번호를 점유하고 `5ce67b`:718–761과 `5fb8ec`·`5c239f`·`5fe9cd`의 상태 3 소비 경로를 조사한다.
 
-작업 branch는 `sprint/m2-03a`, 선행 스냅숏은 `7ea2301`이다. 이번 파일·오라클·공유 기록만 선택 커밋한다. main에는 결과를 미커밋으로 복사하고 기존 변경을 보존하므로 branch는 미병합이다. 최종 commit은 [M2 인수인계](../handoff/M2.md)에 기록한다.
+최초 작업 branch는 `sprint/m2-03a`, 선행 스냅숏은 `7ea2301`이었다. 조사·기록 commit `37d2e89`·`657d031`을 선행 정리 후 `work/m2-03a`에 `b80ece9`·`d535cac`로 재적용해 main `ebb35d6`에 병합했다. 재적용 전후 tree가 같으며 원래 스냅숏 이력은 `safety/m2-03a-snapshot-20261110` 태그가 보존한다. [정리와 검증 기록](baseline_reconciliation.md), [M2 인수인계](../handoff/M2.md)를 참조한다.

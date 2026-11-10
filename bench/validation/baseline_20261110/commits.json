@@ -1,0 +1,65 @@
+[
+  {
+    "commit": "a8c308170310a63bec764900eb395a373e9b4139",
+    "message": "Preserve MIP restoration and deadline prerequisite changes",
+    "files": [
+      "bench/oracle/mip_postsolve_parallel.txt",
+      "crates/lp/src/presolve/postsolve.rs",
+      "crates/lp/src/simplex.rs",
+      "crates/mip/src/bnb.rs",
+      "crates/mip/src/root.rs",
+      "crates/py/src/lib.rs",
+      "docs/m2/mip_recovery_bnb.md",
+      "tests/test_bnb.py",
+      "tools/mip_postsolve_oracle.py",
+      "tools/mip_recovery_real_oracle.py"
+    ]
+  },
+  {
+    "commit": "7a7ab2432acc5d3c2d25bea3f9de0b63d8c7e401",
+    "message": "Preserve MIP benchmark tools and recorded baselines",
+    "files": [
+      "bench/mip_bnb_5s.jsonl",
+      "bench/mip_bnb_baseline.jsonl",
+      "bench/mip_bnb_records.jsonl",
+      "bench/mip_bnb_recovery_5s.jsonl",
+      "bench/mip_bnb_type9_5s.jsonl",
+      "docs/m2/mip_bnb_5s.md",
+      "docs/m2/mip_bnb_baseline.md",
+      "tools/mip_bnb_benchmark.py"
+    ]
+  },
+  {
+    "commit": "bf53bede08dea789c270395025cefd783a5ae69b",
+    "message": "Preserve session coordination and sprint verification prerequisites",
+    "files": [
+      "AGENTS.md",
+      "docs/10_porting.md",
+      "docs/11_progress.md",
+      "docs/12_roadmap_diagram.md",
+      "docs/13_work_units.md",
+      "docs/14_sprint_plan.md",
+      "docs/15_sprint_verification.md",
+      "docs/README.md",
+      "docs/handoff/M1.md",
+      "docs/handoff/M2.md",
+      "docs/handoff/M3.md",
+      "docs/handoff/README.md",
+      "docs/m1/sprint_design.md",
+      "docs/m2/sprint_design.md",
+      "docs/m3/sprint_design.md",
+      "docs/templates/sprint_acceptance.md",
+      "tools/session.py",
+      "tools/test_session.py"
+    ]
+  },
+  {
+    "commit": "42ab9d0a68dca1eb96c44e63eb07d8f5bfcf7819",
+    "message": "Preserve historical barrier worktree handoff backups",
+    "files": [
+      "worktree-backups/rsolver-barrier/AGENTS.md",
+      "worktree-backups/rsolver-barrier/docs/11_progress.md",
+      "worktree-backups/rsolver-barrier/docs/12_roadmap_diagram.md"
+    ]
+  }
+]

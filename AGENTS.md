@@ -12,6 +12,8 @@
 
 작업은 하위 번호로 점유하고 독립 branch·worktree에서 수행한다. 같은 영역은 한 세션이 맡고 공유 파일 변경은 추가 shared 점유를 얻는다. 점유는 같은 git common-dir 안에서만 유효하므로 다른 컴퓨터의 담당 영역은 이동 절차에 따라 인계한다. 원격 동기화 허용 여부와 오프라인 패키지 절차도 `docs/handoff/README.md`를 따른다.
 
+브랜치 생성·검증·병합·미커밋 선행 변경 정리에는 [verified-task-branches 스킬](.agents/skills/verified-task-branches/SKILL.md)을 먼저 읽는다. 하위 작업별로 최신 main에서 분기하고 검증 후 `--no-ff`로 병합한다. 스프린트는 일정 단위이며 브랜치 수명을 결정하지 않는다.
+
 ## 코드와 원본 찾기
 
 - `crates/model`: 모델·입출력.
@@ -41,7 +43,7 @@
 
 # 작업 완료 기록
 
-작업을 마치기 전에 현재 worktree와 main의 `docs/11_progress.md`, `docs/12_roadmap_diagram.md`를 구현·검증 결과와 비교하고, 변경된 상태와 남은 한계를 반영한다. worktree의 미커밋·미병합 상태를 명시한다. 갱신할 수 없으면 완료 보고에 이유와 누락된 문서를 적는다.
+작업을 마치기 전에 현재 worktree와 main의 `docs/11_progress.md`, `docs/12_roadmap_diagram.md`를 구현·검증 결과와 비교한다. 상세 결과와 변경 상태는 작업 branch에서 갱신해 병합으로 main에 반영한다. 미병합이면 shared 점유를 얻은 병합 담당자가 main 인수인계에 branch·commit·위치·검증 상태만 기록한다. 상세 파일을 main에 미리 복사하지 않는다. worktree의 미커밋·미병합 상태와 남은 한계를 명시하며, 갱신할 수 없으면 완료 보고에 이유와 누락된 문서를 적는다.
 
 종료 전 해당 `docs/handoff/M*.md`에 하위 작업 번호, branch·commit·미커밋 선행 변경, 실제 검증 명령·결과와 다음 명령을 기록하고 얻었던 점유를 해제한다. 다른 컴퓨터로 이동할 때는 미커밋 변경을 포함한 최신 패키지를 생성한다.
 

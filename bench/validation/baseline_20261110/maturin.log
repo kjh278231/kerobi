@@ -1,0 +1,13 @@
+🍹 Building a mixed python/rust project
+🐍 Found CPython 3.13 at /home/sds/workspace/gurobi-sandbox/.venv/bin/python
+🔗 Found pyo3 bindings
+   Compiling pyo3-build-config v0.24.2
+   Compiling pyo3-ffi v0.24.2
+   Compiling pyo3-macros-backend v0.24.2
+   Compiling pyo3 v0.24.2
+   Compiling pyo3-macros v0.24.2
+   Compiling rsolver v0.1.0 (/home/sds/workspace/gurobi-sandbox/rsolver/crates/py)
+    Finished `release` profile [optimized] target(s) in 8.10s
+📦 Built wheel for CPython 3.13 to /tmp/.tmp5Srdxs/rsolver-0.1.0-cp313-cp313-linux_x86_64.whl
+✏️ Setting installed package as editable
+🛠 Installed rsolver-0.1.0
