@@ -96,6 +96,8 @@ pub struct Engine<'a> {
     /// Whether the last pivot's BTRAN output was dense (snapshot `bt_dense`, tools/m1_beta_check.py).
     bt_dense: bool,
     last_aq_row: f64,
+    /// Row-wise U (by position, storage order) and prefix t at the last DSE τ, as snapshot JSON.
+    last_urow: String,
     /// `RSOLVER_SNAP` / `RSOLVER_BFRT` dump files, read once.
     snap_path: Option<String>,
     bfrt_path: Option<String>,
@@ -161,6 +163,7 @@ impl<'a> Engine<'a> {
             last_dse: (Vec::new(), 0.0, 0.0),
             bt_dense: false,
             last_aq_row: 0.0,
+            last_urow: String::new(),
             snap_path: std::env::var("RSOLVER_SNAP").ok(),
             bfrt_path: std::env::var("RSOLVER_BFRT").ok(),
             c8: false,
@@ -572,11 +575,11 @@ impl<'a> Engine<'a> {
             .map(|j| self.d[j])
             .collect();
         let line = format!(
-            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",\"bt_dense\":{},\"aqrow\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",{}\"bt_dense\":{},\"aqrow\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
             self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr),
             self.pr.allow, self.lu.n_updates, self.pr.avg, hex(&self.pr.score), self.pr.cost_mode, hex(&self.pr.row_cost),
             hex(&self.pr.var_cost), self.lu.n_singleton, self.lu.eta_nnz(), self.upd_cols,
-            hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), self.bt_dense, hexf(self.last_aq_row), self.pt_rc, self.pt_deg, self.pt_deg0,
+            hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), self.last_urow, self.bt_dense, hexf(self.last_aq_row), self.pt_rc, self.pt_deg, self.pt_deg0,
             self.pt_it0
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
@@ -1119,13 +1122,10 @@ impl<'a> Engine<'a> {
             self.d[out] -= a_out * theta_d;
 
             // DSE weights with τ = B⁻¹ρ
+            let supp: Vec<usize> = (0..self.m).filter(|&p| col[p] != 0.0).collect(); // α_q support, position order
             let mut tau = rho.clone();
             self.lu.ftran_lower(&mut tau);
-            self.lu.ftran_upper(&mut tau);
-            let mut taup = vec![0.0; self.m];
-            for &(rr, pos, _) in &self.lu.steps {
-                taup[pos] = tau[rr];
-            }
+            let taup = self.lu.ftran_tau(tau, &supp);
             // 1bae9c L420-470: β = ‖ρ_r‖² (above), w_r = (β/α_r)/α_r, then
             // w_i = max(1e-8, (β·t·t − (t+t)·τ_i) + w_i) with t = α_i/α_r
 
@@ -1134,9 +1134,14 @@ impl<'a> Engine<'a> {
                 self.last_dse = (taup.clone(), arq, beta);
                 self.bt_dense = dense;
                 self.last_aq_row = alpha[q];
+                let (rows, t) = self.lu.u_rows();
+                let rows: Vec<String> = rows
+                    .iter()
+                    .map(|r| format!("[{}]", r.iter().map(|&(c, u)| format!("[{},\"{}\"]", c, hexf(u))).collect::<Vec<_>>().join(",")))
+                    .collect();
+                self.last_urow = format!("\"urow\":[{}],\"t\":{},", rows.join(","), t);
             }
             self.w[r] = if beta == 0.0 { 1e-8 } else { (beta / ar) / ar };
-            let supp: Vec<usize> = (0..self.m).filter(|&p| col[p] != 0.0).collect(); // α_q support, position order
             for &p in &supp {
                 if p != r {
                     let t = col[p] / ar;

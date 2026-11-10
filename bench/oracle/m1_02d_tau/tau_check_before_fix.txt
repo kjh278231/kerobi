@@ -1,0 +1,33 @@
+M: 3 runs, binary/model/params/output, pinned file sha, tool = current file b41afe7503934821, Rust LU dump and patch pinned
+B: 38 pivots, 3 runs equal
+X: one 09d112 call per pivot; its rho input = M1-02a compacted rho, beta = M1-02a, alpha_r/beta = stored oracle
+A: alpha_q list and aligned tau at the 8b473 return = 09d112 outputs with the pivot swapped out (38 pivots)
+W: 1bae9c DSE update from the captured alpha_q, tau, beta, alpha_r = next weights on 34 pivots (3 refactor boundaries not checked)
+U: Rust LU dump = original U rows (sets, values), diagonal, U order and prefix t on 22 pivots (946 rows); LU+0xf8 = -2 tail, -1 empty prefix row, >=0 prefix row
+I: Rust rho = original 09d112 rho input; Rust FTRAN of the original a_q = original alpha_q output (pivots 0-21)
+R: Rust rule on the dump = current Rust snapshot tau (pivots 0-21, all positions)
+T: Rust tau = original tau on all 129 alpha_q positions of pivots 0-21 (bits, signed zeros included); the pre-M1-02d all-row scatter would differ at 0 positions, first []
+G: original rule (tail scatter to tail rows, prefix gather over the stored U row order) = original tau on all 129 positions; 12 gathered rows with 2+ terms, 0 with 8+ (C only)
+F: Rust snapshots 0-22 w = stored oracle
+O: Rust row-wise U (column order, value bits) and prefix t = capture on pivots 0-20 (same basis as the stored oracle through snapshot 21)
+P: 0:. rho2 tau2 eta0 21b9de+21b9de+21686f+21574d; 1:. rho3 tau3 eta0 21b9de+21b9de+21686f+21574d; 2:. rho2 tau2 eta0 21b9de+21b9de+21686f+21574d; 3:. rho2 tau2 eta0 21b9de+21b9de+21686f+21574d; 4:. rho3 tau3 eta0 21b9de+21b9de+21686f+21574d; 5:. rho3 tau3 eta0 21b9de+21b9de+2126cd+21574d; 6:. rho5 tau5 eta0 inline; 7:. rho3 tau3 eta0 inline; 8:. rho3 tau3 eta0 inline; 9:. rho5 tau5 eta0 inline; 10:. rho6 tau-1 eta1 inline; 11:. rho11 tau-1 eta2 inline; 12:. rho12 tau-1 eta3 inline; 13:. rho6 tau-1 eta4 inline; 14:. rho7 tau-1 eta5 inline; 15:. rho4 tau4 eta0 inline; 16:. rho13 tau13 eta0 inline; 17:. rho16 tau16 eta0 inline; 18:. rho14 tau-1 eta1 inline; 19:. rho20 tau-1 eta2 inline; 20:. rho21 tau-1 eta3 inline; 21:. rho22 tau-1 eta4 21b9de+214344+21f83a+21841f
+FAIL R pivot 1: original rule on the dump != Rust snapshot 2 tau
+FAIL R pivot 11: original rule on the dump != Rust snapshot 12 tau
+FAIL R pivot 12: original rule on the dump != Rust snapshot 13 tau
+FAIL R pivot 13: original rule on the dump != Rust snapshot 14 tau
+FAIL R pivot 14: original rule on the dump != Rust snapshot 15 tau
+FAIL R pivot 18: original rule on the dump != Rust snapshot 19 tau
+FAIL R pivot 19: original rule on the dump != Rust snapshot 20 tau
+FAIL R pivot 20: original rule on the dump != Rust snapshot 21 tau
+FAIL R pivot 21: original rule on the dump != Rust snapshot 22 tau
+FAIL T: the pre-M1-02d rule's first difference [], want (11, [20, 22])
+FAIL F: Rust w != stored oracle at snapshots [(12, [20, 22]), (13, [19, 20, 22, 35]), (14, [19, 20, 22, 32, 35])]
+FAIL O pivot 14 position 9: Rust U row [6, 15] != original [15, 6]
+FAIL O pivot 15 position 32: Rust U row [39, 41, 42] != original [41, 42, 39]
+FAIL O pivot 16 position 32: Rust U row [39, 41, 42] != original [41, 42, 39]
+FAIL O pivot 17 position 32: Rust U row [39, 41, 42] != original [41, 42, 39]
+FAIL O pivot 18 position 32: Rust U row [39, 41, 42] != original [41, 42, 39]
+FAIL O pivot 19 position 32: Rust U row [39, 41, 42] != original [41, 42, 39]
+FAIL O pivot 20 position 32: Rust U row [39, 41, 42] != original [41, 42, 39]
+FAIL O: Rust path equals the original on 21 pivots, want at least 22
+FAIL

@@ -15,7 +15,7 @@ GZ_SHA = "caad5976f259e668d473e9e992b4c1b69e44254cbce7b63eda778c7b479e48b1"  # e
 TOOL = ROOT / "tools/m1_beta_path.js"
 PARAMS = {"Threads": 1, "Method": 1, "Presolve": 0, "OutputFlag": 0}
 RUST_PIVOTS = 22  # pivots 0..21: before the pivot path splits (pathcmp: first diff at pivot 21 is the 22nd entering choice)
-W12 = (2, 58)  # snapshot 12 w differences left after the beta fix (count, first variable): M1-02a-1
+FIRST = (22, "state")  # first differing snapshot after the M1-02d tau fix: pivot 21's entering choice (was (12, "w"))
 
 
 def u2f(h):
@@ -186,21 +186,15 @@ def check(runs, oracle, mine):
         if not (same and same_w):
             first = (it, "state" if not same else "w")
             break
-    if first != (12, "w"):
-        bad.append(f"F: first differing snapshot {first}, want (12, 'w')")
-    else:
-        a, s = oracle[12], mine[12]
-        wa, wb = [fh(x) for x in a["w"]], [fh(x) for x in s["w"]]
-        wd = [j for j in range(len(a["vstat"])) if a["vstat"][j] >= 0 and wa[a["vstat"][j]] != wb[s["vstat"][j]]]
-        if len(wd) != W12[0] or wd[0] != W12[1]:
-            bad.append(f"F: snapshot 12 w differs at variables {wd}, want {W12[0]} starting at {W12[1]}")
+    if first != FIRST:
+        bad.append(f"F: first differing snapshot {first}, want {FIRST}")
     for it in range(1, 13):
         a, s = oracle[it], mine[it]
         if fh(a["beta"]) != fh(s["beta"]):
             bad.append(f"F: beta at snapshot {it}: oracle {a['beta']} Rust {s['beta']}")
         if fh(a["ar"]) != fh(s["ar"]):
             bad.append(f"F: alpha_r at snapshot {it}: oracle {a['ar']} Rust {s['ar']}")
-    rep.append(f"F: snapshots 0-11 equal (vstat, x_B, d, w), first difference at 12 is w on {W12[0]} variables from {W12[1]}; beta and alpha_r equal 1-12")
+    rep.append(f"F: snapshots 0-{FIRST[0] - 1} equal (vstat, x_B, d, w), first difference at {FIRST}; beta and alpha_r equal 1-12")
     return bad, rep
 
 
