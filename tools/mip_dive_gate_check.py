@@ -19,6 +19,7 @@ DATA = 'bench/oracle/mip_dive_gate'
 MANIFEST = 'bench/oracle/mip_dive_gate_manifest.json'
 TOOLS = ['tools/mip_dive_gate.js', 'tools/mip_dive_gate_runs.sh']
 REF8 = 'bench/oracle/mip_dive_rows'          # M2-03d-8 captures, same cases and params
+UNADDRESSED = {'gmu-35-40_default'}   # LP numbering differs from M2-03d-8 only here (section 6.3); others must be byte-equal
 REACT_RET = 0x51096e                         # 5fb8ec+0x79e, return of the C:526 10e662 call
 SEQ = ['51305f', '513078', '51319d', '5131af', '5131b7', '5131c2']
 VARIANTS = ['dyn', 'depth526', 'depth1581', 'state', 'a0', 'sol', 'a7f0ad', 'a7f923', 'p18_off', 'p18_1', 'p18_3']
@@ -191,19 +192,18 @@ def unaddressed(evs):
 
 
 def check_projection(data, ref):
-    n, raw = 0, []
+    n = 0
     for c in CASES:
-        ev8 = unaddressed(ref[c]['events'])
+        pr = unaddressed if c in UNADDRESSED else (lambda evs: [e for e in evs if e['event'][:2] in ('b:', 'd:')])
+        ev8 = pr(ref[c]['events'])
         for r in RUNS:
-            proj = unaddressed(data[c][r]['events'])
+            proj = pr(data[c][r]['events'])
             need(len(proj) == len(ev8), f'N {c} run {r}: {len(proj)} b:/d: events != M2-03d-8 {len(ev8)}')
             for i, (a, b) in enumerate(zip(proj, ev8)):
                 need(a == b, f'N {c} run {r}: event {i} ({a["event"]}) differs from M2-03d-8: {json.dumps(a)[:160]} != {json.dumps(b)[:160]}')
         n += len(ev8)
-        if [e for e in data[c][RUNS[0]]['events'] if e['event'][:2] in ('b:', 'd:')] == ref[c]['events']:
-            raw.append(c)
-    return (f'N: b:/d: projection without pointer-derived LP numbering = M2-03d-8 capture ({n} events over {len(CASES)} cases, '
-            f'3 runs each); byte-equal including LP numbering: {", ".join(raw) or "none"}')
+    return (f'N: b:/d: projection = M2-03d-8 capture ({n} events, {len(CASES)} cases x 3 runs; '
+            f'without the pointer-derived LP numbering only for {", ".join(sorted(UNADDRESSED))})')
 
 
 def check_case(c, evs, st=None):
@@ -344,6 +344,7 @@ def tampers():
     yield 'no events', lambda d, r, m: [d[A][x].__setitem__('events', []) for x in RUNS]
     yield 'M2-03d-8 projection (one d:sel row)', every_run(N, lambda evs: nth(evs, lambda e: e['event'] == 'd:sel' and e['count'] > 0)['list'].pop())
     yield 'M2-03d-8 reference event', lambda d, r, m: r[G]['events'].pop()
+    yield 'LP number in a byte-equal case', every_run(A, lambda evs: nth(evs, lambda e: e['event'] == 'b:op').__setitem__('lp', 9))
     # raw inputs of evaluations whose outcome they change
     yield 'dyn of a passing C:1581 -> 0', set_field(N, passes, 'dyn', 0)
     yield 'depth of a passing C:1581', set_field(N, passes, 'depth', 7777)
