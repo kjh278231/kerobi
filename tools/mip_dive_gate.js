@@ -151,7 +151,7 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
  const p2stack = [];   // param_2 of the open 5fb8ec calls
  // M2-03d-11: one frame per open 5fb8ec call (serial, param_1 node, param_2, param_3)
  const fbs = []; let fbSerial = 0;
- Interceptor.attach(b.add(0x5101d0), {onEnter(a) { p2stack.push(a[1]); fbs.push({fb: ++fbSerial, node: a[0].readPointer(), p2: a[1], p3: a[2], k: 0}); },
+ Interceptor.attach(b.add(0x5101d0), {onEnter(a) { p2stack.push(a[1]); fbs.push({fb: ++fbSerial, p1: a[0], node: a[0].readPointer(), p2: a[1], p3: a[2], k: 0}); },
    onLeave() { p2stack.pop(); fbs.pop(); }});
  const fbTop = () => fbs.length ? fbs[fbs.length - 1] : null;
  // raw clause values, read even when an earlier clause fails (I, W and param_3 stay valid for the whole 5fb8ec call)
@@ -159,7 +159,8 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
    send({event: kind, fb: f ? f.fb : null, k: f ? ++f.k : null, mip_depth: mipDepth, call: nextCall, node: n.readDouble(),
      dyn: c.r12.add(0x2b48).readS32(), depth: I.add(0x2c).readS32(), w34: W.add(0x34).readS32(), state: I.add(0x28).readS32(),
      a0_null: I.add(0xa0).readPointer().isNull(), sol_null: I.add(8).readPointer().isNull(), p3_18: f ? f.p3.add(0x18).readS32() : null,
-     slot_is_node: !!(f && n.equals(f.node)), rbx_is_param2: !!(f && W.equals(f.p2))}); }
+     // the slot is reloaded from *param_1 (C:1577), which 5fb8ec may replace during the call
+     slot_is_node: !!(f && n.equals(f.p1.readPointer())), node_is_entry: !!(f && n.equals(f.node)), rbx_is_param2: !!(f && W.equals(f.p2))}); }
  // instruction probes (function form): the object form treats the address as a function entry and rewrites [rsp]
  // (its return-address slot); at 51319d..5131c2 that slot holds the mip pointer read at 5131ef (docs/lessons/tooling.md)
  const hit = (at, extra) => { const f = fbTop(); send(Object.assign({event: 'g:hit', at, fb: f ? f.fb : null}, extra || {})); };
