@@ -1,9 +1,12 @@
 """BFRT (1c35c5) prototype checked against bench/oracle/bfrt_io (Gurobi inputs/outputs per call).
-usage: python tools/proto/bfrt.py [-v] [name ...]   reports calls whose flip list or entering column differ."""
-import gzip, json, sys
+usage: python tools/proto/bfrt.py [-v] [--dir DIR] [name ...]   reports calls whose flip list or entering column differ.
+--dir bench/oracle/m1_02e_bfrt: corpus whose entry also has spx+0x438/0x420/0x430/0x3fc/0x178/0x380 (M1-02e);
+there the flip re-scan (spx+0x3fc != 0) runs."""
+import gzip, json, os, sys
 from pathlib import Path
 D = Path(__file__).resolve().parents[2] / "bench/oracle/bfrt_io"
 OPT, PIV = 1e-6, 3e-8
+OFF = float(os.environ.get("BFRT_OFF", "0"))  # M1-02e: unknown dVar103*OptTol in the re-scan test (C:1515)
 
 
 def lane_sum(run, xs, start, sign):
@@ -127,12 +130,41 @@ def bfrt(e, lens=None):
         # flips: passed breakpoints within the dual step θ = d_q/α_q, q excluded (L1575-1610)
         th = hmax
         flips = [c[0] for c in cand[:lo] if c[0] != q and d[c[0]] <= val[c[0]] * th]
+        if len(e) > 17 and e[17] != 0:
+            q, flips = rescan(q, best_s, cand[:lo], flips, d, val, idx, e[18] < 10, w)
     return (idx[q] if q is not None else None), flips
 
 
+def rescan(q, score, passed, flips, d, val, idx, use_pow, w):
+    """spx+0x3fc != 0 (1c35c5 C:1500-1610): a passed breakpoint t with 0 <= d_t <= θ_q·α_t − OFF and a better
+    |α|/w' than q enters instead, w' = (column count (slack 0.5) + ((θ_q·α_t − d_t)/OptTol)^0.25 when spx+0x178 < 10)
+    · (0.3·f + 0.7); the flips are then the other passed breakpoints with d ≤ α·θ_new, in order."""
+    thq, new = d[q] / val[q], None
+    for c in passed:
+        t = c[0]
+        if d[t] < 0.0:
+            continue
+        dv = thq * val[t]
+        if d[t] <= dv - OFF:
+            base = w(t) / (1.0 * 0.3 + 0.7)
+            ww = (base + (((dv - d[t]) / OPT) ** 0.25 if use_pow else 0.0)) * (1.0 * 0.3 + 0.7)
+            if val[t] < score * ww:
+                new, score = t, val[t] / ww
+    if new is None:
+        return q, flips
+    th = d[new] / val[new]
+    return new, [c[0] for c in passed if idx[c[0]] != idx[new] and d[c[0]] <= val[c[0]] * th]
+
+
 def main():
-    verbose = "-v" in sys.argv
-    names = [a for a in sys.argv[1:] if not a.startswith("-")] or sorted(p.name[:-9] for p in D.glob("*.jsonl.gz"))
+    global D
+    args = sys.argv[1:]
+    if "--dir" in args:
+        k = args.index("--dir")
+        D = Path(args[k + 1]).resolve()
+        del args[k:k + 2]
+    verbose = "-v" in args
+    names = [a for a in args if not a.startswith("-")] or sorted(p.name[:-9] for p in D.glob("*.jsonl.gz"))
     tot = okq = okf = 0
     for name in names:
         rows = [json.loads(x) for x in gzip.open(D / f"{name}.jsonl.gz", "rt")]
