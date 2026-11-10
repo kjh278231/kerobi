@@ -1,7 +1,8 @@
 """BFRT (1c35c5) prototype checked against bench/oracle/bfrt_io (Gurobi inputs/outputs per call).
 usage: python tools/proto/bfrt.py [-v] [--strict] [--dir DIR [--same-as OLD]] [name ...]   reports calls whose flip list
 or entering column differ (--strict: exit 1 then). --same-as: every row of DIR cut to the length of the OLD row equals it.
-BFRT_RESCAN=0 turns the re-scan off (the pre-M1-02e rule).
+BFRT_RESCAN=0 turns the re-scan off (the pre-M1-02e rule). --shift-replay: rerun mismatches with the returned d
+of candidates whose d was in (-OptTol, -1e-13) (the original shifts those costs with its RNG).
 --dir bench/oracle/m1_02e_bfrt: corpus whose entry also has spx+0x438/0x420/0x430/0x3fc/0x178/0x380 (M1-02e);
 there the flip re-scan (spx+0x3fc != 0) runs."""
 import gzip, json, os, sys
@@ -208,7 +209,8 @@ def main():
                 print(f"{name}: rows {len(a)} vs {len(b)}, first differing row {k}")
         print(f"projection: {len(names) - bad}/{len(names)} models equal")
         sys.exit(1 if bad else 0)
-    tot = okq = okf = 0
+    shift = "--shift-replay" in args
+    tot = okq = okf = nshift = 0
     for name in names:
         rows = [json.loads(x) for x in gzip.open(D / f"{name}.jsonl.gz", "rt")]
         lens = json.loads(gzip.open(D.parent / "iter0-5p" / f"{name}.jsonl.gz", "rt").readline())["len"]
@@ -221,10 +223,21 @@ def main():
             tot += 1
             okq += q == gq
             okf += flips == gflips
+            if (q != gq or flips != gflips) and shift:
+                # candidates with -OptTol < d < -1e-13 get a random cost shift in the original (C:1690-1740);
+                # replay with their d as returned (AX:0x1e0 at leave, matched by column)
+                ld = dict(zip(lv[6][1], lv[5]))
+                e2 = json.loads(json.dumps(e))
+                for t, j in enumerate(e2[5][1]):
+                    if -1e-6 < e2[6][t] < -1e-13 and j in ld:
+                        e2[6][t] = ld[j]
+                fixed = bfrt(e2, lens) == (gq, gflips)
+                nshift += fixed
+                print(f"{name} call {k // 2}: replay with returned d of small negative d: {'equal' if fixed else 'differs'}")
             if (q != gq or flips != gflips) and verbose and shown < (99 if verbose > 1 else 2):
                 shown += 1
                 print(f"{name} call {k // 2}: q g {gq} mine {q}; flips g {len(gflips)} {gflips[:8]} mine {len(flips)} {flips[:8]}")
-    print(f"calls {tot}: q equal {okq}, flip list equal {okf}")
+    print(f"calls {tot}: q equal {okq}, flip list equal {okf}" + (f", mismatches equal after shift replay {nshift}" if shift else ""))
     if strict and (okq != tot or okf != tot or not tot):
         sys.exit(1)
 
