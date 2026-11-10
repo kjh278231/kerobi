@@ -224,7 +224,7 @@ MUTANTS = {
     'reject-off-1': [('entry.r > tol.reject && entry.dl < tol.reject', 'false')],
     'defer-off': [('Ok(if 1e-6 > pivot || -1e-5 > *theta * pivot { PushStep::Defer } else { PushStep::Pivot })',
                    'Ok(if pivot.is_nan() { PushStep::Defer } else { PushStep::Pivot })')],
-    'flip-dir1-off': [('if gap - 1e-10 <= *theta {', 'if !entry.decrease && gap - 1e-10 <= *theta {')],
+    'flip-dir1-off': [('if gap - 1e-10 <= *theta || pos < 0 {', 'if (!entry.decrease && gap - 1e-10 <= *theta) || pos < 0 {')],
     'dir-first-off': [('(10.0 * dl < du && -(r * dl) < e) ||', '(false && 10.0 * dl < du && -(r * dl) < e) ||')],
     'leave-fixed-1': [('if range <= fixed {\n        return -4;', 'if range <= fixed {\n        return -1;')],
     'leave-fixed-lt+X-1': [('if range <= fixed', 'if range < fixed'),

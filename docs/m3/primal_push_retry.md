@@ -104,12 +104,12 @@ NaN은 허용하지 않는다. I(`1e30`)와 ±0은 비트 그대로 둔다. Thre
 
 ### 4.2 `056973` 합성 직접 호출(합성)
 
-`tools/push_retry_ratio_oracle.py`. 표시·부호별과 경계 36사례×sparse/dense(역순 사례는 sparse만), 총 70호출을 독립 3회 실행한다. h=1e-6, 허용오차 3e-8은 자연 캡처값이다. theta·pivot 슬롯은 -123, `S+0x2f8`은 7로 두고 호출해 원본이 쓰지 않는 경로를 구분한다. 사례별 설계 행과 S 변경을 검사한다.
+`tools/push_retry_ratio_oracle.py`. 표시·부호별과 경계 37사례×sparse/dense(역순 사례는 sparse만), 총 72호출을 독립 3회 실행한다. h=1e-6, 허용오차 3e-8은 자연 캡처값이다. theta·pivot 슬롯은 -123, `S+0x2f8`은 7로 두고 호출해 원본이 쓰지 않는 경로를 구분한다. 사례별 설계 행과 S 변경을 검사한다.
 
 - 1단계: 각 표시×부호(A·B·L·N·U·X·F, 허용오차 경계), w=I인 음수 N, -0 theta.
 - ×2 판별: `posN-x2`(×2가 없으면 큰 \|a\| 행), `posL-nox2`·`negU-nox2`(×2를 붙이면 다른 행).
 - 동률: t=0 같은 \|a\|(정·역순), 대체 최소 ratio 동률(정·역순).
-- cap: `cap-sparse-N`(sparse는 cap 너머 2를 고르고 dense는 -1), `cap-no-cand`(theta=cap).
+- cap: `cap-sparse-N`(sparse는 cap 너머 2를 고르고 dense는 -1), `cap-no-cand`(theta=cap), `cap-exit`(sparse N breakpoint가 cap과 같아 t=cap 종료. Rust 변조 생존을 보고 첫 대상 캡처 뒤 추가, §6).
 - quickselect: B 5행+L(중간 교차), `lanes`(B 10행+L, 첫 분할이 11원소 벡터 합. 원본 차선 순서면 t=7, 순차 합이면 t=8 — 설계 보조 모델로 찾았다).
 - 재진입: `reentry-pick`(강화 허용오차로 큰 행), `reentry-keep`(factor 갱신 3 → 1차 선택 유지), `reentry-refactor`(갱신 20 → 요청 2, -1, theta·pivot은 1차 값).
 
@@ -139,8 +139,8 @@ cargo test -p rsolver-lp --test push_decision --test push_ratio && python3 tools
 ## 6. 실행 결과
 
 - 환경: x86-64 Linux(WSL2), node·Frida는 04c-2와 같다. 원본 ELF 해시는 §2. 도구·입력·캡처·기록 해시는 [manifest](../../bench/oracle/m3_push_retry/manifest.json)에 있다. 대상 캡처는 계약 commit `db37218` 뒤에 `tools/push_retry_runs.sh`로 실행했다. Gurobi는 `tools/gurun.sh`로 다른 세션과 순차 실행했다.
-- 원본 실행: 합성 70호출×3회(사건 필드 9개 일치), 대상 LP primal-first 3회(80사건), dual-first 3회(78사건), 대조군 3회(0사건, 상태 2), 비간섭 3회(대상 LP 04c-2 agent 두 순서, 04c-2 `violated.lp` 새 agent 1회). 순서별 3회는 사건·입력·시작 벡터·결과·출력 줄 전체가 같다.
-- 합성 사례: 70호출이 모두 설계 행과 S 변경에 들어갔다. 재진입 요청 2 사례만 `S+0x294=2`·`S+0x2f8=-1`이고 theta·pivot은 1차 패스 값(0.1, 1e-7) 그대로다. `cap-sparse-N`은 sparse가 cap(1) 너머 theta 2를, dense는 -1을 돌려 asm의 sparse 미검사를 원본이 확인했다. `lanes`는 원본 t=7(행 7)이다. `negL-t0`·`negU-at-bound`·`negX`의 theta는 -0이다.
+- 원본 실행: 합성 72호출×3회(사건 필드 9개 일치), 대상 LP primal-first 3회(80사건), dual-first 3회(78사건), 대조군 3회(0사건, 상태 2), 비간섭 3회(대상 LP 04c-2 agent 두 순서, 04c-2 `violated.lp` 새 agent 1회). 순서별 3회는 사건·입력·시작 벡터·결과·출력 줄 전체가 같다.
+- 합성 사례: 72호출이 모두 설계 행과 S 변경에 들어갔다. 재진입 요청 2 사례만 `S+0x294=2`·`S+0x2f8=-1`이고 theta·pivot은 1차 패스 값(0.1, 1e-7) 그대로다. `cap-sparse-N`은 sparse가 cap(1) 너머 theta 2를, dense는 -1을 돌려 asm의 sparse 미검사를 원본이 확인했다. `lanes`는 원본 t=7(행 7)이다. `negL-t0`·`negU-at-bound`·`negX`의 theta는 -0이다.
 - 비간섭(검사기가 매번 확인): 새 agent 대상 캡처의 `retry:*`를 04c-2 필드로 투영하면 04c-2 agent 캡처와 사건·결과·출력이 같다(두 순서). 04c-2 `violated.lp` 새 agent 캡처는 04c-2 `violated-primal-1`과 같다(재시도 0).
 - 판단 재구성: 두 순서 각 8단계, 모두 위반 경로이며 재시도 1회다. 같은 단계 순서와 진입 변수다. 판단 모델이 방향·alpha 반전·게이트·재시도 입력·단계 종류·theta·frame·이탈 상태를 원본과 같게 재구성했다. 04b-1·face5·arm·04c-2 위반 127단계도 함께 다시 통과했다.
 
@@ -156,10 +156,13 @@ cargo test -p rsolver-lp --test push_decision --test push_ratio && python3 tools
 - 검사기 변조(`primal_push_decision_check.py --self-test`, 종료 0): 04c-2까지의 65종에 재시도 판단 변조 8종(재시도 사건 삭제, 게이트 거짓인데 재시도, 재시도 theta, B 두 번째 breakpoint, 재시도 입력·진입 슬롯, 자유 열로 재호출 조건 참, 054eef 결과로 단계 진행), 재시도 캡처 변조 12종(해시·출처·설정·사건·x87·batch·frame·값·중복 실행·재시도 입력 누락), 비간섭 변조 3종, 필수 arm 누락 5종을 더한 93종을 모두 거부했다.
 - 판단 모델 변조([기록](../../bench/oracle/m3_push_retry/model-mutation.json)): 04c-2의 43종과 게이트 3종, 총 46종 중 39종 거부(frame을 지운 판단만 실행도 같다). 생존 7종은 04c-2의 6종과 `gate-no-neg`다. `054eef`는 -1을 돌릴 때 pivot도 0으로 쓰므로(C·합성 캡처) 위치<0 절은 \|pivot\|<0.001 절에 포함돼 구조상 생존이다.
 - Rust 재생(구현):
-  - `056973`: `python3 tools/push_retry_rust.py --compare` 종료 0. 합성 64호출과 자연 16호출(두 순서 각 8)이 위치·행·theta·pivot·work 비트 일치했다. 자연 work는 `retry:enter`의 work(054eef 뒤)와 `S+0x148`에서 이어 계산했다. 재진입 6호출은 Rust가 설계대로 `Reentry`로 거부했다(입력 `ratio_input.txt` 본문 `8fa641ba…`).
+  - `056973`: `python3 tools/push_retry_rust.py --compare` 종료 0. 합성 66호출과 자연 16호출(두 순서 각 8)이 위치·행·theta·pivot·work 비트 일치했다. 자연 work는 `retry:enter`의 work(054eef 뒤)와 `S+0x148`에서 이어 계산했다. 재진입 6호출은 Rust가 설계대로 `Reentry`로 거부했다(입력 `bench/oracle/m3_push_retry/ratio_input.txt`).
   - 판단·연결: `python3 tools/primal_push_decision_rust.py --compare` 종료 0. 153단계(04c-2까지 137 + 재시도 16, 고유 7)가 방향·반전 alpha·단계 종류·theta·frame·이탈 상태 비트 일치했고, V 경로 연결(`violated_ratio` = 054eef → 게이트 → 056973)도 153단계 모두 캡처 결과와 같았다. SR의 theta=I 비재호출 단계는 Rust `push_step`이 거리 flip으로 판단했다(전에는 `Recall`로 거부).
-- Rust 소스 변조: MUTATION_RESULTS
-- 회귀: 공유 꼬리를 `small_pivot`으로 나눈 뒤 `push_violated_rust.py --compare`(55사례)·`primal_push_ratio_rust.py --compare`(자연 18·합성 29) 종료 0, 두 도구의 변조 대상 문자열을 새 코드에 맞췄다. REGRESSION_RESULTS
+- Rust 소스 변조:
+  - `056973`([기록](../../bench/oracle/m3_push_retry/ratio-rust-mutation.json)): 분기별 22종 중 20종 거부. 차선 합 순차·결합 순서·중간 pivot 분할은 `lanes`, sparse cap은 `cap-sparse-N`, cap 종료 비교는 `cap-exit`, ×2 유무는 `posN-x2`·`posL-nox2`가 거부했다. 생존 2종은 구조상 동치다. `negLN-inf`(w=I 검사 제거)는 (x−I)/a가 늘 I 이상이라 cap에서 걸러진다. `posA-order`(A 두 breakpoint 순서)는 두 항목이 같은 위치이고 (x−w)/a ≤ x/a다.
+  - 판단·게이트([기록](../../bench/oracle/m3_push_retry/rust-mutation.json)): 04c-2의 48종에 게이트 3종·재호출 조건 4종을 더한 55종(미적용 `reject-arm-current` 1 별도) 중 43종 거부. `recall-no-theta`는 04c-2에서 생존이었으나 SR 단계가 거부했다. `gate-off`·`gate-pivot-1e-4`는 단계 판단 입력이 캡처값이라 판단 대조는 통과하지만 연결 검사가 6단계 불일치로 검출한다(`--compare` 종료 3). 생존은 04c-2의 6종(`leave-fixed-lt`, `leave-neg-default-2`, `leave-X-1`, `leave-U-le`, `sign-zero-neg`, `v-sigma-ge0`), `gate-no-neg`(구조상), `recall-free-only`·`recall-up-any-dir`(재호출 조건이 참인 사례는 04c-8 범위)다.
+  - 첫 `056973` 변조 실행에서 `hoare-le`(왼쪽 스캔 `>=`)가 분할 루프를 끝내지 못해 테스트가 46분 멈췄다. 테스트 프로세스를 끝내 기록을 폐기하고, 종료하는 중간 pivot 변조 `hoare-mid`로 바꾸고 도구에 600초 제한을 넣어 다시 돌렸다. 같은 실행에서 `gate-off`는 게이트를 거치지 않는 직접 호출 도구에 있어 판단 재생 변조로 옮겼고, `cap-exit` 생존을 보고 합성 사례 `cap-exit`를 더해 합성을 다시 3회 캡처했다(이전 70사례 3회는 `history/ratio-toolv1-*`, 공통 70사례의 사건이 같다).
+- 회귀: 공유 꼬리를 `small_pivot`으로 나눈 뒤 `push_violated_rust.py --compare`(55사례)·`primal_push_ratio_rust.py --compare`(자연 18·합성 29) 종료 0, 두 도구의 변조 대상 문자열을 새 코드에 맞췄다. 리팩터 뒤 04c `--mutate-rust` 14종(10 거부)·04c-2 `054eef` 19종(17 거부)의 분류가 기존 기록과 같다([04c](../../bench/oracle/m3_push_retry/ratio04c-rust-mutation-rerun.json), [04c-2](../../bench/oracle/m3_push_retry/ratio04c2-rust-mutation-rerun.json)). `primal_push_decision_check.py --old`, `push_slot_reach.py`, `push_infeasible_ratio_oracle.py --check … --selftest` 종료 0. `cargo test --release --workspace` 통과(119개), `cargo clippy --workspace --all-targets -- -D warnings` 종료 0. `git diff --check` 깨끗함.
 - 실행하지 않은 검사: Python 확장·pytest. Rust 변경은 호출자가 없는 `crossover` 모듈과 그 테스트뿐이고 Python 경계를 바꾸지 않았다.
 - 기준 자료 갱신 순서: `tools/push_retry_runs.sh` → `python3 tools/push_retry_rust.py --write`·`python3 tools/primal_push_decision_rust.py --write` → 변조 기록 → `python3 tools/push_retry_manifest.py`(검사 전).
 
@@ -167,7 +170,7 @@ cargo test -p rsolver-lp --test push_decision --test push_ratio && python3 tools
 
 - 작업 수행: 완료.
 - 오라클 판정: 계약 범위 **통과**. 게이트 뒤 `056973`의 결과와 그 뒤 거리 flip(theta=I 비재호출 포함)·승인·보류·이탈 `B`→-2·`A`→-1을 원본 순서별 독립 3회로 관측했다. `056973` 1단계·t=0·quickselect·차선 합·2단계 ×2 유무·두 번 시도·동률·대체 최소 ratio·cap·재진입·`12dd49` 요청 2를 합성 직접 호출 3회로 고정했다.
-- 구현 판정: 계약 범위 **통과**. Rust `retry_ratio`·`violated_ratio`가 합성 64·자연 16호출에서, `push_step`이 재시도 16단계와 기존 137단계에서 원본과 비트 일치했다. 재진입 6호출은 설계대로 거부한다.
+- 구현 판정: 계약 범위 **통과**. Rust `retry_ratio`·`violated_ratio`가 합성 66·자연 16호출에서, `push_step`이 재시도 16단계와 기존 137단계에서 원본과 비트 일치했다. 재진입 6호출은 설계대로 거부한다.
 - 미검증: `056973` 재진입 패스의 Rust(원본 합성 출력만 있음), `gate-no-neg`(구조상), 위치<0·유한 theta의 `push_step` flip(재진입 요청 2 뒤에만 옴), 자연 실행의 dense 열과 quickselect 8원소 이상(합성만), 재시도 뒤 거부(관측하지 않음), `S+0x3b0`≠0. NaN 처리 차이(asm `minsd`·`maxsd`)는 사례가 없다.
 - 후속: **M3-04c-8**(새 행) theta=I 반대 방향 재호출(위반·feasible). Rust `PushEntry::recall`이 조건을 계산하고 `push_step`이 `Recall`로 거부한다. 재호출 뒤 방향은 바뀌지만 거부 arm은 방향식 직후의 `r13b`로 고르므로 오래 생존한 `reject-arm-current` 변조를 처음 판별할 수 있다. feasible 재호출이 -1이면 `S+0x2f8`은 이전 값을 유지한다(C 1549–1554). M3-04c-5(재진입)는 그대로다.
 - branch `work/m3-04c-7`, worktree `../rsolver-m3-04c-7`. 결과·인수인계·진행·로드맵은 이 branch에서 갱신해 `--no-ff`로 병합한다.

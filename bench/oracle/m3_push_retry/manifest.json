@@ -11,15 +11,19 @@
   "tools/primal_push_violated_agent.js": "3e978a23a30299d01f510d463ebcdb406b87662fa8a94d6bef83c3e12ee8a808",
   "tools/push_retry_lp.py": "649687c033bf30f6486896dfa2b2c9d2d662e26175ae7851cc24d711449fa6ce",
   "tools/push_violated_lp.py": "071c3eba19a443a986b9ed25b5e0bf2eba846af80c7d2cd6510046f4de30e3dc",
-  "tools/push_retry_ratio_oracle.py": "4f9b561f4f540b56262ccf053d980ebdaf3f08edabc1000c001253cfe052a0a8",
+  "tools/push_retry_ratio_oracle.py": "03a5e0261af536d2b6a405a0094125a970b8c9260fc870e375aea016101ef034",
+  "tools/push_retry_rust.py": "5454ec215f778ba526bd31e17ea8c7e8bb4b35371d8836266a060e44a30da311",
   "tools/primal_push_decision_check.py": "abc7b77695ba487821eb2eb5bf0040be0940d4f46897c366c177fe24c8791447",
-  "tools/primal_push_decision_rust.py": "5d37050caeda4021787577e75dd23ab108150be01859a89873907d729c86c250",
+  "tools/primal_push_decision_rust.py": "cb5a0c3acd4cdd57442d81d2901f2ae8e63e5835f77ecb99fd06bfa362d8d7fe",
   "tools/push_retry_runs.sh": "c13a8edca1f0bd64a98b37b8c591a2dbb10549cb8e3f5059e8a77fed91e03da8",
   "tools/push_retry_manifest.py": "0893204b641095f8e75803cfc465dd4fe72fe4443a1765286de5c4483197eb23"
  },
  "records": {
   "bench/oracle/m3_push_retry/model-mutation.json": "eb65fe2b27acbaf72d17017f37adf74699e9e7b3fda5628a6983ef0b09ba449e",
-  "bench/oracle/m3_push_decision_rust/input.txt": "c71f89fd403c3836c3089b39e8c9169d9cacdb87b0fcd956eb72fbb178a6e440"
+  "bench/oracle/m3_push_retry/rust-mutation.json": "8d268acaadf46f5618d2bcab46e848876448422fa981d1da21238dc7b5ce3c75",
+  "bench/oracle/m3_push_retry/ratio-rust-mutation.json": "7628842c327881bb39651eb9b6e6e840e6126d7f139fef7c7e65cef3cf77b374",
+  "bench/oracle/m3_push_retry/ratio_input.txt": "7a6407f024d7db0c8b6eb65998cab9857be655d39948a6ef66948fc45cb02b69",
+  "bench/oracle/m3_push_decision_rust/input.txt": "978205cf4d7b568d731b5b06413c51622e75110fbcb96941130ca14dc119bf99"
  },
  "sources": {
   "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb",
@@ -31,12 +35,15 @@
   "bench/oracle/m3_push_retry/retry.extra.json": "a14e2011d1e13d4abf085d97bc3043a5781a1b0daaea2298f036a5a4692d5e1b"
  },
  "ratio_captures": {
-  "bench/oracle/m3_push_retry/ratio-1.json": "dcaaad01fb652753a83d2b91b0f38a221916882d1139ddfde1529f2c46ce8d8d",
-  "bench/oracle/m3_push_retry/ratio-2.json": "dcaaad01fb652753a83d2b91b0f38a221916882d1139ddfde1529f2c46ce8d8d",
-  "bench/oracle/m3_push_retry/ratio-3.json": "dcaaad01fb652753a83d2b91b0f38a221916882d1139ddfde1529f2c46ce8d8d"
+  "bench/oracle/m3_push_retry/ratio-1.json": "9882c9d42e7322eade177da47bb269874d0f19479622118f66c6fa59e44d1907",
+  "bench/oracle/m3_push_retry/ratio-2.json": "9882c9d42e7322eade177da47bb269874d0f19479622118f66c6fa59e44d1907",
+  "bench/oracle/m3_push_retry/ratio-3.json": "9882c9d42e7322eade177da47bb269874d0f19479622118f66c6fa59e44d1907"
  },
  "history": {
-  "bench/oracle/m3_push_retry/history/ratio-explore.json": "dcaaad01fb652753a83d2b91b0f38a221916882d1139ddfde1529f2c46ce8d8d"
+  "bench/oracle/m3_push_retry/history/ratio-explore.json": "dcaaad01fb652753a83d2b91b0f38a221916882d1139ddfde1529f2c46ce8d8d",
+  "bench/oracle/m3_push_retry/history/ratio-toolv1-1.json": "dcaaad01fb652753a83d2b91b0f38a221916882d1139ddfde1529f2c46ce8d8d",
+  "bench/oracle/m3_push_retry/history/ratio-toolv1-2.json": "dcaaad01fb652753a83d2b91b0f38a221916882d1139ddfde1529f2c46ce8d8d",
+  "bench/oracle/m3_push_retry/history/ratio-toolv1-3.json": "dcaaad01fb652753a83d2b91b0f38a221916882d1139ddfde1529f2c46ce8d8d"
  },
  "cases": {
   "retry-primal": {
