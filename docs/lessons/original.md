@@ -47,6 +47,9 @@
 - **flip(`0x1c2994`)과 pivot(`0x1c2ab5`) 경로는 `0x1c3004`에서 합류한다.** 이 지점이 교환 직후·rhs 보정 전이며 r14는 workspace S다. pivot 경로에서 `S+0x2f8`은 ratio의 sparse 위치에서 basis 행으로 바뀐다. C·asm·캡처. (M3-04b-1, [§3](../m3/primal_push_step_oracle.md#3-캡처-경계-보완))
 - **pivot 뒤 factor 처리(`05b257` 호출 구간)가 basis header 전체 순서를 재배열할 수 있다.** 다음 후보 직전 header에서 교환한 행 위치를 그대로 기대하면 틀린다. 교환은 `0x1c3004`에서 보고, factor 후에는 집합 보존만 검사한다. 캡처. (M3-04b-1)
 - **목적 0인 `interior.lp`에서는 Crossover=1(dual-first)과 3(primal-first)의 primal push 단계 순서가 같았다.** 다른 궤적이 필요하면 목적이 있는 LP를 먼저 탐색한다. 캡처 1개 LP. (M3-04b-1)
+- **push가 부르는 `055f68`의 xmm 인자는 진입 직후 저장한 스택 슬롯에서 온다.** `S+0x380→0x2070`, `S+0x398→0x2078`, `S+0x370→0x1fc8(%rsp)`를 `0x1c021e–0x1c028d`에서 한 번 쓰고 함수 안에서 다시 쓰지 않는다. 호출점은 `rbp=rsp+0x1eb8`을 쓰므로 `0x1b8/0x1c0/0x110(%rbp)`가 같은 슬롯이다. `edx=0`이라 열길이 가중은 꺼진다. asm. (M3-04c, [§2](../m3/primal_push_ratio_rust.md#2-원본과-상태-경계))
+- **`055f68` 2차 선택은 strict `<`라 동률이면 먼저 기록된 후보가 남고, 반환은 행이 아니라 희소 위치다.** C·합성 캡처(tie·tie-reversed). (M3-04c)
+- **`055f68` 작은 pivot 재진입 패스는 반환 위치·theta·pivot을 다시 초기화하지 않는다.** C만, 실행 미관측. (M3-04c)
 
 ## 디컴파일 읽기
 

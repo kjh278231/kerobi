@@ -13,3 +13,4 @@ pub mod presolve;
 pub mod start;
 pub mod barrier;
 pub mod pdhg;
+pub mod crossover;
