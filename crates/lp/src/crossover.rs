@@ -1,4 +1,5 @@
-//! Crossover primal push pieces. Only the feasible-basis ratio test exists so far (docs/m3/primal_push_ratio_rust.md).
+//! Crossover primal push pieces on a feasible basis: the ratio test (docs/m3/primal_push_ratio_rust.md) and the step
+//! decisions around it (docs/m3/primal_push_decision_rust.md). No push loop calls them yet.
 
 /// The small-pivot second pass with a tightened pivot tolerance was never observed in the original; it is refused
 /// instead of guessed.
@@ -80,4 +81,115 @@ pub fn feasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option
         _ => 1e-6,
     };
     if piv_tol * big * scale <= *pivot { Ok(chosen) } else { Err(Reentry) }
+}
+
+/// After the ratio test the original re-runs it in the opposite direction when it found nothing (`theta == I`); that
+/// path is outside the step decision and is refused instead of guessed.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Recall;
+
+/// Step-loop constants written once from `h` (the Harris slack the ratio test also gets).
+#[derive(Debug, Clone, Copy)]
+pub struct PushTol {
+    pub e: f64,
+    pub reject: f64,
+    pub reject_neg: f64,
+    pub leave: f64,
+}
+
+impl PushTol {
+    pub fn new(h: f64) -> Self {
+        Self { e: h * 0.01, reject: 100.0 * h, reject_neg: -100.0 * h, leave: h + h }
+    }
+}
+
+/// Entering column `j` before the ratio test: reduced cost, distance to the lower and upper bound, and whether it
+/// moves down (the original's direction 1).
+#[derive(Debug, Clone, Copy)]
+pub struct PushEntry {
+    pub r: f64,
+    pub dl: f64,
+    pub du: f64,
+    pub decrease: bool,
+}
+
+/// What the step does with the ratio result. `Reject` is a flip with `theta = I`; `Defer` skips the pivot.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum PushStep {
+    Flip,
+    Reject,
+    Pivot,
+    Defer,
+}
+
+/// Direction of entering column `j` on a feasible basis. `x` holds the n structural values and `slack` the row slacks;
+/// `cost`/`lb`/`ub` span all n+m columns. `(idx, val)` is the sparse FTRAN column; its signs are flipped when the
+/// column decreases, as the ratio test then expects.
+#[allow(clippy::too_many_arguments)]
+pub fn push_direction(j: usize, x: &[f64], slack: &[f64], lb: &[f64], ub: &[f64], cost: &[f64], header: &[i32],
+                      idx: &[i32], val: &mut [f64], tol: &PushTol, inf: f64) -> PushEntry {
+    let n = x.len();
+    let (dl, du) = if j < n { (x[j] - lb[j], ub[j] - x[j]) } else { (slack[j - n], inf) };
+    let mut r = cost[j];
+    for (&i, &a) in idx.iter().zip(val.iter()) {
+        r -= a * cost[header[i as usize] as usize];
+    }
+    let e = tol.e;
+    // The second clause is branched as `!(..)` in the original, so an unordered compare falls through to `0 < r`.
+    let decrease = (10.0 * dl < du && -(r * dl) < e) || (!(dl > 10.0 * du && e > du * r) && 0.0 < r);
+    if decrease {
+        val.iter_mut().for_each(|v| *v = -*v);
+    }
+    PushEntry { r, dl, du, decrease }
+}
+
+/// Step kind after the feasible ratio test returned position `pos` with `theta` and `|pivot|`. A rejection writes
+/// `theta = inf`.
+pub fn push_step(entry: &PushEntry, tol: &PushTol, inf: f64, pos: i32, theta: &mut f64, pivot: f64)
+                 -> Result<PushStep, Recall> {
+    if pos < 0 || *theta == inf {
+        return Err(Recall);
+    }
+    let gap = if entry.decrease { entry.dl } else { entry.du };
+    if gap - 1e-10 <= *theta {
+        return Ok(PushStep::Flip);
+    }
+    let reject = if entry.decrease {
+        entry.r > tol.reject && entry.dl < tol.reject
+    } else {
+        entry.r < tol.reject_neg && entry.du < tol.reject
+    };
+    if reject {
+        *theta = inf;
+        return Ok(PushStep::Reject);
+    }
+    Ok(if 1e-6 > pivot || -1e-5 > *theta * pivot { PushStep::Defer } else { PushStep::Pivot })
+}
+
+/// Nonbasic status (-1 lower, -2 upper, -4 fixed) of the variable leaving on an accepted pivot. `range` is its
+/// `ub - lb`; `a` the signed pivot entry after the direction flip; `mark`/`basic`/`width` describe the pivot row.
+#[allow(clippy::too_many_arguments)]
+pub fn push_leave_state(range: f64, fixed: f64, a: f64, theta: f64, mark: u8, basic: f64, width: f64, tol: &PushTol)
+                        -> i32 {
+    let (t, k) = (theta, tol.leave);
+    if range <= fixed {
+        return -4;
+    }
+    if 0.0 > a {
+        match mark {
+            b'N' | b'U' => -2,
+            b'B' => if (t + 1.0) * k > (basic / a - t).abs() { -1 } else { -2 },
+            b'X' => -4,
+            b'L' => if k > a.abs() * t { -1 } else { -2 },
+            _ => -1,
+        }
+    } else {
+        match mark {
+            b'L' | b'N' => -1,
+            b'X' => -4,
+            b'A' if (t + 1.0) * k > ((basic - width) / a - t).abs() => -2,
+            b'U' if k > a.abs() * t => -2,
+            _ => -1,
+        }
+    }
 }
