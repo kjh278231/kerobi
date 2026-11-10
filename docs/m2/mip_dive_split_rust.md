@@ -75,7 +75,7 @@
 - 회귀: `cargo clippy --workspace --all-targets -- -D warnings` 0, `cargo test --release --workspace` 121 통과·0 실패(새 재생 테스트는 무시 테스트로 도구가 돌림), `python3 tools/mip_dive_split_check.py` PASS(기준 자료 불변).
 - 회귀(계속): `python3 tools/mip_dive_list_rust.py --self-test`·`python3 tools/mip_dive_gate_rust.py --self-test` 종료 0(03d-10의 안정 분할 변이는 그 캡처로는 여전히 판별 안 됨으로 통과, 기대대로).
 - 실행하지 않은 검사: pytest(Python 경계 변경 없음), Gurobi(원본 재실행 불필요, 03d-13 기준 자료 사용).
-- 계약 변경: 없음.
+- 계약 변경: 판정 규칙은 없음. §3 변조 "바뀐 열 ind 한 칸"은 도구에서 두 칸 교환으로 만들었다(값 집합은 그대로 두고 순서만 바꿔 더 약한 변조).
 
 ## 7. 판정과 인수인계
 
@@ -86,7 +86,7 @@
   - val 근거는 03d-13의 `val_moved` 훅 비교다.
   - 목록 순서·`changed`·중첩 참조수(>1)는 이 재생이 시험하지 않는다. `c3d0d`·`390989` 재생성과 중첩 교체는 원본 실행 0회다.
   - `bnb.rs`에는 연결하지 않았다.
-- 후속: M2-03d-4(L2, 선행 M2-10b·M1 요청)가 남은 M2-03d 연결 작업이다. DynamicRows 선택·목록 유지·관문·분할이 모두 L1 통과 상태로 미연결이다.
+- 후속: M2-03d-4(L2, 선행 M2-10b·M1 요청)가 남은 M2-03d 연결 작업이다. DynamicRows 선택·목록 유지·관문·분할이 모두 L1 통과 상태로 미연결이다. 선행이 막혀 있어 다음 착수 전 사용자 확인(03d-5부터의 두 질문)이 필요하다. 회귀 명령: `python3 tools/mip_dive_split_rust.py --self-test`(`dive_rows.rs` 분할을 바꿀 때).
 - 작업 branch `work/m2-03d-14`. 커밋: 계약 `15a3cfd`, 도구·테스트 `5f80f95`, 결과·인수인계는 이 문서와 같은 커밋. 미커밋 선행 변경 없음.
 - 갱신: `docs/handoff/M2.md`, `docs/11_progress.md`, `docs/12_roadmap_diagram.md`, `docs/14_sprint_plan.md`, `docs/m2/sprint_design.md`.
 - 교훈: `docs/lessons/tooling.md`(참조 압축 캡처를 Rust 재생 입력에도 그대로 쓰기, 재생에 필요한 진입 값이 캡처에 없을 때의 한계).
