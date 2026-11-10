@@ -32,6 +32,7 @@
   - `--self-test`: 메모리를 변조해 각 검사가 거부하는지 확인한다.
   - 참고 구현은 `tools/mip_retry_basis_check.py`다. (M2-03c-2)
 - **양쪽이 모두 null이면 합격이 아니다.** 합성 결과만 있어도 목표 검사가 0이 아닌 값으로 끝나야 한다. 둘 다 변조 항목에 넣는다. (M2-03c-1·03c-2)
+- **새 기준 자료 투영기는 기존 검사기를 import해 manifest·3회 일치를 재사용한다.** `tools/mip_retry_rust_expect.py`가 `mip_retry_basis_check`의 `load`·`first`·`check_manifest`를 쓴다. trace 비교는 첫 차이(사건·필드·기준값·실제값)를 출력하고 추가 필드·사건도 실패로 본다. (M2-03d-1)
 
 ## git worktree
 
