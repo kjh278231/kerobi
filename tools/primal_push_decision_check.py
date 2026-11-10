@@ -1,7 +1,8 @@
 """M3-04b-2: primal push 한 단계의 방향·거리 flip·거부·승인·이탈 상태 판단을 원본 캡처와 대조한다.
 
 판단 모델은 134a87 asm(0x1c2164-0x1c2d7f)을 따른다. M3-04c-2부터 위반 basis(local_1b0>0)의 방향식
-(0x1c227c-0x1c23d1)과 054eef 단계도 다루며, 056973 재시도가 붙은 단계는 범위 밖으로 거부한다.
+(0x1c227c-0x1c23d1)과 054eef 단계도 다룬다. M3-04c-7부터 056973 재시도 게이트(054eef 위치<0 또는 |pivot|<0.001)와
+재시도 결과로 가는 단계도 다루며, theta=I 반대 방향 재호출은 범위 밖으로 거부한다.
 04b-1 저장 캡처(frame 없음), 04b-2 새 캡처(frame 있음), M3-04b-3 arm LP 캡처(시작 벡터·보류 사건 step:defer),
 M3-04c-2 위반 basis 캡처(재시도 사건 retry:*)를 읽는다.
 """
@@ -51,7 +52,9 @@ DEFAULT = dict(ten=10.0, e_scale=0.01, dir_strict=True, neg_rdl=True, r_pos_stri
                neg_u=-2, neg_l='formula', nonneg_u='formula',
                # M3-04c-2 위반 basis 방향식 변조용. 기본값은 원본 식 그대로다.
                v_pre=(True, True), v_sigma_sign=1.0, v_clause=(True, True), v_small=True, v_small_clause=(True, True),
-               v_r_strict=True, v_sigma_strict=True, v_ten=10.0)
+               v_r_strict=True, v_sigma_strict=True, v_ten=10.0,
+               # M3-04c-7 재시도 게이트 변조용(asm 0x1c258e-0x1c25ae)
+               gate_pivot=0.001, gate_neg=True, retry_use=True)
 
 
 class Mismatch(AssertionError):
@@ -145,15 +148,14 @@ def decide(record, p=DEFAULT, label=''):
         pre = e['alpha']
         where = f"{label} call{e['call']} step{e['step']}"
         k = i + 1
-        ratios, retries = [], 0
+        ratios, retries = [], []
         while k < len(events) and events[k]['event'] not in ('supply:enter', 'push:leave', 'step:enter', 'step:defer'):
             if events[k]['event'] == 'ratio:enter':
                 ratios.append((events[k], events[k + 1]))
-            retries += events[k]['event'] == 'retry:enter'
+            if events[k]['event'] == 'retry:enter':
+                retries.append((events[k], events[k + 1] if k + 1 < len(events) else {}))
             k += 1
         need(len(ratios) == 1, where, 'ratio 호출 수(재호출 제외 범위)', 1, len(ratios))
-        # 056973 재시도는 M3-04c-2 범위 밖이다(사건으로 확인, 0x1c25b4·0x1c4c50).
-        need(retries == 0, where, '056973 재시도(제외 범위)', 0, retries)
         rin, rout = ratios[0]
         violated = rin['name'] == 'infeasible'
         need(rin['name'] in ('feasible', 'infeasible'), where, 'ratio 경로', 'feasible|infeasible', rin['name'])
@@ -193,14 +195,33 @@ def decide(record, p=DEFAULT, label=''):
         else:
             d, clause = direction(p, r, dL, dU, e_tol)
         need(rin['selected']['direction'] == d, where, '방향', d, rin['selected']['direction'])
+        # 재시도 게이트(C 1447-1452, asm 0x1c258e-0x1c25ae): 위반 경로에서 054eef가 위치<0 또는 |pivot|<0.001이면 056973
+        gate = violated and ((p['gate_neg'] and rout['chosen'] < 0) or abs(f64(rout['pivot'])) < p['gate_pivot'])
+        need(len(retries) == int(gate), where, '056973 재시도 횟수', int(gate), len(retries))
+        first = rout
+        if retries:
+            qin, qout = retries[0]
+            need(qout.get('event') == 'retry:leave', where, '재시도 반환 사건', 'retry:leave', qout.get('event'))
+            # 재시도 입력은 054eef와 같은 배열이고 theta·pivot 슬롯에는 054eef 결과가 들어 있다(04c-7 agent만 배열을 기록)
+            for f in ('alpha', 'basic', 'width', 'marks'):
+                if f in qin:
+                    need(qin[f] == rin[f], where, '재시도 입력 ' + f, '054eef 입력과 같음', '다름')
+            need((qin['theta'], qin['pivot']) == (rout['theta'], rout['pivot']), where, '재시도 진입 theta·pivot', (rout['theta'], rout['pivot']), (qin['theta'], qin['pivot']))
+            if p['retry_use']:
+                rout = qout
         post = rin['alpha']
         need(post['indices'] == pre['indices'], where, 'alpha 인덱스', pre['indices'], post['indices'])
         for a0, a1 in zip(pre['values'], post['values'], strict=True):
             want = bits(-f64(a0)) if d else a0
             need(a1 == want, where, 'alpha 부호 반전', want, a1)
         chosen, theta, piv = rout['chosen'], f64(rout['theta']), f64(rout['pivot'])
-        need(chosen >= 0, where, 'ratio 반환(-1은 재호출 경로, 제외)', '>=0', chosen)
-        need(rout['theta'] != bits(inf), where, 'theta=I(0x1c28ee 재호출 경로, 제외)', '유한', rout['theta'])
+        if rout['theta'] == bits(inf):
+            # C 1458-1586: theta=I이면 자유 열 또는 방향 0·ub>=I일 때 반대 방향 재호출(범위 밖). 그 밖은 아래 거리 flip이다.
+            recall = (lb[j] <= -inf and inf <= ub[j]) or (d == 0 and inf <= ub[j])
+            need(not recall, where, 'theta=I 반대 방향 재호출(범위 밖)', '재호출 조건 거짓', '참')
+        else:
+            # 위치<0·유한 theta는 056973 재진입의 요청 2 반환뿐이며 관측하지 않았다
+            need(chosen >= 0, where, 'ratio 반환(위치<0·유한 theta, 미관측)', '>=0', chosen)
         kreject = p['k_reject'] * h
         if d == 0:
             dist = (dU - p['flip_eps'] <= theta) if p['flip_le'] else (dU - p['flip_eps'] < theta)
@@ -226,7 +247,9 @@ def decide(record, p=DEFAULT, label=''):
         # 보류는 양성 사건(step:defer, M3-04b-3 agent)으로만 인정한다. 단계 사건이 없으면 실패다.
         got = {'step:enter': nxt and nxt.get('kind'), 'step:defer': 'defer'}.get(nxt and nxt['event'], '사건 없음')
         need(got == kind, where, '단계 종류', f'{kind}({cause})', got)
-        info = dict(call=e['call'], step=e['step'], enter=j, direction=d, clause=clause, path=rin['name'], r_sign='+' if r > 0 else '-' if r < 0 else '0', kind=kind, cause=cause, r=bits(r))
+        info = dict(call=e['call'], step=e['step'], enter=j, direction=d, clause=clause, path=rin['name'], r_sign='+' if r > 0 else '-' if r < 0 else '0', kind=kind, cause=cause, r=bits(r),
+                    retry=('none' if not retries else 'theta-I' if rout['theta'] == bits(inf) else
+                           'changed' if (rout['chosen'], rout['theta']) != (first['chosen'], first['theta']) else 'same'))
         if kind == 'defer':
             need(nxt['theta'] == rout['theta'] and nxt['pivot'] == rout['pivot'], where, '보류 theta·pivot', (rout['theta'], rout['pivot']), (nxt['theta'], nxt['pivot']))
             check_frame(nxt, p, where, r, dL, dU, h, e_tol, kreject)
@@ -347,7 +370,7 @@ def validate_new(paths, manifest, case):
 
 def summary(steps):
     steps_tags = {}
-    keys = ['direction', 'kind', 'cause', 'arm']
+    keys = ['direction', 'kind', 'cause', 'arm', 'retry']
     for s in steps:
         tag = f"dir{s['direction']}-{s['clause']}-r{s['r_sign']}" + (f"-{s['cause']}" if s['kind'] == 'flip' else '')
         out_tag = 'step:' + tag
@@ -358,6 +381,10 @@ def summary(steps):
             if kk in s:
                 tag = f'{kk}={s[kk]}'
                 out[tag] = out.get(tag, 0) + 1
+    for s in steps:
+        if 'leave_state' in s:
+            tag = f"leave={s['arm']}{s['leave_state']}"
+            out[tag] = out.get(tag, 0) + 1
     out['r_nonzero'] = sum(1 for s in steps if f64(s['r']) != 0.0)
     return dict(sorted(out.items()))
 
