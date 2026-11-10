@@ -1,0 +1,35 @@
+{
+  "assembly_normalization": "binary path replaced by libgurobi130.so; line trailing whitespace and final empty lines removed",
+  "assembly_sha256": "74e9e5b81aefd51b42dcdbb109d86f77d0a908daa9ca4e481330e9fa98d4e8a0",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "capture_sha256": "4dc371bc1d70b33e190378d19a7e9ac53423575ad730f2488d6af58fe9edb513",
+  "objdump": "GNU objdump (GNU Binutils for Ubuntu) 2.42",
+  "ranges": [
+    [
+      "0x518170",
+      "0x518468"
+    ],
+    [
+      "0x518468",
+      "0x51871e"
+    ],
+    [
+      "0x51993f",
+      "0x519b04"
+    ]
+  ],
+  "sources": {
+    "decomp/c/004e7e20_PRIVATE00000000005c239f.c": "d7c84eb6f62f2c022314f367e5cbe53f7f92979fd41e95cfe725f58c35fe5629",
+    "decomp/c/004f0e10_PRIVATE00000000005ce67b.c": "0dd5c819af272c348685d37ee5500e0da7513c60b3019b79c6e41b87181357b6",
+    "decomp/c/004fb0a0_PRIVATE00000000005daa82.c": "82ad6e3a892401c45b4a69fac574704e38e45ab5bc8b5bedd4e09370a9a17980",
+    "decomp/c/00518170_PRIVATE0000000000600d25.c": "296341b34a07a98e92271f69aabdfe98168c0c39b2211b4163423207a97d58c8",
+    "decomp/c/0061ed20_PRIVATE000000000078d933.c": "c5808fc600784dc6d8176cb9517e89bcd39cbfb42f8e103cc4cde71f7cfa137b",
+    "decomp/c/0061ef50_PRIVATE000000000078dd89.c": "538ed6223888126e38351643cfc5a61b475c42d9cc5b904f90cdba7bb9345ece",
+    "decomp/c/007c5320_PRIVATE000000000099b471.c": "76af815ac716e1ccd4a392340b02d55ccee192b78775ac5ca062f6fbb439019d",
+    "decomp/c/0088ce00_PRIVATE0000000000a7e4de.c": "dff4b27c2806e23ff2f56233221740acf1ce446c310ad4c47b9e12abf9b177d6",
+    "decomp/c/0088de50_PRIVATE0000000000a7f923.c": "0b878d757d5571cb3ad589ced7ff0f10880ce906454227aeb01c1f65da25cafe",
+    "decomp/c/00946650_PRIVATE0000000000b3fb65.c": "916d29fc599ff1b410a53977055693b31344dd6a4f0f911c411d20ee58646bb8",
+    "notes/env_param_offsets.tsv": "953662d8dd28ba1b1faf7d61251d3591c7ec14477aa6e32aa0c899bdd23e6638"
+  },
+  "tool_sha256": "602cc85b721007eec21a380feefd76bf1dee203ff54e49dcdda92122b183439f"
+}
