@@ -405,6 +405,23 @@ def self_test(runs, beta, oracle, dump, mine):
             e["tau"][e["aq"]["idx"].index(p)] = v
             e["ft"]["tau_out"]["val"][e["ft"]["aq_out"]["idx"].index(p)] = v
     tampers["original tau at pivot 11 replaced by Rust tau"] = (each(orig_is_rust), dump, mine, None)
+    # the Rust LU dump bridge (U, I, R): one bit of a dump L value, of a captured U value, of the original a_q input
+    d2 = copy.deepcopy(dump)
+    lc = d2[11]["lu"]["lcol"]
+    k = next(k for k, c in enumerate(lc) if c)
+    i0, v0 = lc[k][0]
+    lc[k][0] = (i0, struct.unpack("<d", (struct.unpack("<Q", bits(v0))[0] ^ 1).to_bytes(8, "little"))[0])
+    tampers["dump L value bit at pivot 11"] = (runs, d2, mine, DUMP_SHA)
+
+    def urow_bit(d):
+        row = next(r for r in d["events"][11]["ft"]["urow"] if r["val"])
+        row["val"][0] = flip(row["val"][0])
+    tampers["captured U value bit at pivot 11"] = (each(urow_bit), dump, mine, None)
+
+    def aq_in_bit(d):
+        v = d["events"][11]["ft"]["aq_in"]["val"]
+        v[0] = flip(v[0])
+    tampers["original a_q input bit at pivot 11"] = (each(aq_in_bit), dump, mine, None)
     out = []
     for name, (rr, dd, mm, ds) in tampers.items():
         bad, _ = check(rr, beta, oracle, dd, mm, ds)
