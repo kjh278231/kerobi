@@ -53,10 +53,29 @@ python3 tools/primal_push_ratio_rust.py --self-test       # 비교기 변조 거
 
 비교기는 원본 캡처를 직접 읽어 Rust trace와 대조한다. trace에 입력 텍스트 해시를 넣고 다르면 거부한다. Rust 구현의 판별력은 임시 소스 변조(비교 `<=`/`<`, Harris 부호, 2차 동률, 폭<I, `F` 제외, 조기 반환, 임계값, work식)로 확인하고 결과를 §6에 적는다. 변조는 최종 코드에 남기지 않는다.
 
+Rust 변조 재현: `python3 tools/primal_push_ratio_rust.py --mutate-rust <새 경로>.json`. 소스를 하나씩 바꿔 테스트·비교를 돌린 뒤 원래 내용으로 되돌린다.
+
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: x86-64 Linux(WSL2), rustc 1.99.1. Gurobi는 실행하지 않았다(저장 기준 재생).
+- 원본 자료: 자연 캡처는 `primal_push_step_check.check`로, 합성 캡처는 `primal_push_ratio_oracle.check`로 해시·출처·독립 3회 일치를 먼저 검사한 뒤 투영한다. 두 도구와 기존 캡처는 바꾸지 않았다.
+- Rust 입력 `bench/oracle/m3_push_ratio_rust/input.txt`: 47사례(자연 18·합성 29), 본문 SHA-256 `04d3d252bdb8f0f018f3dc47d0a19d4c94b9f93c34098745ae12e40062a3f74e`(파일 첫 줄). 자연 18건은 primal-first·dual-first가 같은 입력 9개다. 모두 희소 열이다.
+- 재생 비교: `cargo test -p rsolver-lp --test push_ratio && python3 tools/primal_push_ratio_rust.py --compare` 종료 0. 47사례 전부 일치. 자연은 위치·행·theta·pivot 4필드, 합성은 work까지 5필드를 비트 비교했다. Rust 재진입 거부 0건. skip·누락 0.
+- 비교기 변조: `--self-test` 종료 0. theta·pivot·위치, 합성 work·theta 부호, 사례 누락, 재진입 거부, 오래된 입력 해시, 입력 투영 변경 9종을 모두 거부했다.
+- Rust 변조 14종([기록](../../bench/oracle/m3_push_ratio_rust/rust-mutation.json)): 10종 거부. 1차 수락 `<=`→`<`, Harris 부호, 2차 동률 `<`→`<=`, 폭<I, `F` 제외, 하한 분자, 유한 상한 조기 반환, 작은 pivot 검사 강화, dense·희소 work식이다.
+- 살아남은 4종은 저장 사례가 판별하지 못하는 경계다. 함수 전체 통과로 세지 않는다.
+  - 2차 선택의 `ratio <= bound`를 `<`로: 기록된 ratio가 최종 Harris 상한과 정확히 같은 사례가 없다(여유 1e-6>0).
+  - 후보가 있는데 상한이 I인 반환(`bound == I`): 사례 없음.
+  - pivot 0.1 임계값과 작은 pivot 배율표를 완화: 모든 사례가 검사 통과 쪽이라 임계 위치를 가르지 못한다. 재진입 미관측과 같은 원인이다.
+- 회귀: 기존 저장 검사 `primal_push_ratio_oracle.py --check … --selftest`, `primal_push_step_check.py` primal·dual·`--control`, `crossover_entry_check.py` pdhg·barrier·warm·`--control` 종료 0. `cargo test -p rsolver-lp`, `cargo test --release --workspace`, `cargo clippy --workspace --all-targets -- -D warnings` 종료 0. clippy가 `*work = units*coef + *work`를 `+=`로 바꾸라고 해 수정했다. IEEE 덧셈은 교환법칙이 비트 단위로 성립하며 수정 뒤 재생·변조를 다시 실행했다.
+- 실행하지 않은 검사: Python 확장 재빌드·pytest. 새 함수는 호출자가 없고 `crates/py`·Python API를 바꾸지 않았다. 공유 `.venv` 규칙상 main worktree 빌드 대상이다.
+- 해시: `crates/lp/src/crossover.rs` `4efd5ea0fe7f5010293c3d68ca312fd7beabee9bcbd416821b16b003e69d441f`, `crates/lp/tests/push_ratio.rs` `ae471d99f295faa291801b2aa8d9df4d5b9ad67a985924338e946bd00115f901`, 원본 C `055f68` `bebc9eec4c74cd5abaec3454c3495a23aedeab276c0ccf03710dd517c4360649`(04b-1 manifest와 같음). 도구 해시는 커밋 이력으로 추적한다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: 완료.
+- 동등성: 계약 범위 **통과**(저장 기준 재생, 비트 비교). 자연 9개 입력(×2 순서)과 합성 29사례에서 `055f68` 첫 패스의 위치·theta·pivot이, 합성에서는 work까지 원본과 같다.
+- 미검증: §6의 생존 변조 4경계, 재진입 패스, 열길이 가중, 자연 work. 방향식·ratio 뒤 판정·pivot 적용·infeasible ratio·x87·push 전체는 범위 밖이다.
+- 후속: M3-04c-5(작은 pivot 재진입과 `12dd49` 요청 2)는 원본 합성 사례를 새로 캡처해야 한다. ratio 뒤 판정·pivot 적용은 `S+0x1f8`·`local_250`과 방향 1 사례를 담은 새 자연 캡처(목적이 있는 LP)가 먼저 필요하다. 이 캡처 확장을 M3-04b-2로 둔다.
+- branch `work/m3-04c`, worktree `../rsolver-m3-04c`. 결과·인수인계·진행·로드맵은 이 branch에서 갱신해 `--no-ff`로 병합한다.
+- 교훈: `docs/lessons/original.md`(xmm 슬롯·재진입 상태)와 `process.md`(경계 입력 확인·변조 생존 기록)에 추가했다. Herdr `wait-output`이 명령줄 에코에 맞는 함정을 이번에도 겪었지만 `tooling.md`에 이미 있어 추가하지 않았다.
