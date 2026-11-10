@@ -1,0 +1,89 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "neos-860300.mps.gz",
+ "model_sha256": "d1b2a0a0500834ef6e3a97a6dbfc17c48226c6619056edfedf990e4d83c01504",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 1,
+  "LogToConsole": 0,
+  "TimeLimit": 20,
+  "NodeLimit": 50000,
+  "Presolve": 0,
+  "ScaleFlag": 0,
+  "Quad": 0,
+  "NumericFocus": 0,
+  "MarkowitzTol": 0.0001,
+  "Heuristics": 0,
+  "RINS": 0
+ },
+ "output": "DONE 2 63",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {
+  "n:before:654502:1:1:0:-1:2": 1,
+  "n:after:654502:1:1:0:2:2": 40,
+  "n:before:654502:1:1:0:2:2": 39,
+  "n:before:6dec7d:1:1:0:2:2": 30,
+  "n:after:6dec7d:1:1:0:2:2": 30,
+  "n:before:654502:2:1:0:-1:2": 2,
+  "n:after:654502:2:1:0:2:2": 8,
+  "n:before:654502:2:1:0:2:2": 6,
+  "n:before:6dec7d:2:1:0:2:2": 3,
+  "n:after:6dec7d:2:1:0:2:2": 3,
+  "set:0": 3,
+  "n:before:64da9f:1:1:0:2:2": 1,
+  "n:after:64da9f:1:1:0:2:2": 1,
+  "n:before:5fb8ec:1:1:0:2:2": 1,
+  "n:after:5fb8ec:1:1:0:2:2": 1,
+  "n:before:5fb8ec:1:0:1:2:2": 42,
+  "n:after:5fb8ec:1:0:1:2:2": 42,
+  "n:before:5fb8ec:1:0:1:2:3": 7,
+  "n:after:5fb8ec:1:0:1:2:3": 7,
+  "set:5": 2,
+  "set:4": 7,
+  "n:before:5fb8ec:1:0:1:2:6": 12,
+  "n:after:5fb8ec:1:0:1:2:6": 12
+ },
+ "events": [
+  {
+   "event": "mipmain",
+   "serial": 0,
+   "depth": 1,
+   "ret": "c23877",
+   "model_rows": 850,
+   "model_cols": 1385,
+   "presolved": {
+    "rows": 850,
+    "cols": 1385
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 1,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 136,
+   "model_cols": 1385,
+   "presolved": {
+    "rows": 136,
+    "cols": 1385
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 2,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 141,
+   "model_cols": 1385,
+   "presolved": {
+    "rows": 141,
+    "cols": 1385
+   }
+  }
+ ]
+}

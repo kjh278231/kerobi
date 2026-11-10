@@ -1,0 +1,141 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "neos-4954672-berkel.mps.gz",
+ "model_sha256": "634fa369d5100ae7a9c3d5e872f8c58af74d2873f6642291be899362322c1e6c",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "TimeLimit": 20,
+  "NodeLimit": 50000,
+  "Presolve": 0,
+  "ScaleFlag": 0,
+  "Quad": 0,
+  "NumericFocus": 0,
+  "MarkowitzTol": 0.0001,
+  "Heuristics": 0,
+  "RINS": 0
+ },
+ "output": "DONE 9 4419",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {
+  "n:before:654502:1:1:0:-1:2": 2,
+  "n:after:654502:1:1:0:2:2": 433,
+  "n:before:654502:1:1:0:2:2": 431,
+  "n:before:6dec7d:1:1:0:2:2": 263,
+  "n:after:6dec7d:1:1:0:2:2": 263,
+  "n:before:654502:2:1:0:-1:2": 6,
+  "n:after:654502:2:1:0:2:2": 51,
+  "n:before:654502:2:1:0:2:2": 45,
+  "n:before:6dec7d:2:1:0:2:2": 37,
+  "n:after:6dec7d:2:1:0:2:2": 37,
+  "set:0": 8,
+  "n:before:64da9f:1:1:0:2:2": 2,
+  "n:after:64da9f:1:1:0:2:2": 2,
+  "n:before:5fb8ec:1:1:0:2:2": 3,
+  "n:after:5fb8ec:1:1:0:2:2": 3,
+  "n:before:5fb8ec:1:0:1:2:2": 5582,
+  "n:after:5fb8ec:1:0:1:2:2": 5582,
+  "n:before:5fb8ec:1:0:1:2:6": 166,
+  "n:after:5fb8ec:1:0:1:2:6": 166,
+  "set:5": 18,
+  "n:before:6a6563:1:1:0:2:2": 1,
+  "n:after:6a6563:1:1:0:2:2": 1,
+  "n:before:7aef0b:1:0:0:2:2": 1,
+  "n:after:7aef0b:1:0:0:2:2": 1,
+  "set:4": 3,
+  "n:before:5fb8ec:1:0:1:2:9": 1,
+  "n:after:5fb8ec:1:0:1:2:9": 1
+ },
+ "events": [
+  {
+   "event": "mipmain",
+   "serial": 0,
+   "depth": 1,
+   "ret": "c23877",
+   "model_rows": 1848,
+   "model_cols": 1533,
+   "presolved": {
+    "rows": 1848,
+    "cols": 1533
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 1,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 489,
+   "model_cols": 1533,
+   "presolved": {
+    "rows": 489,
+    "cols": 1533
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 2,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 549,
+   "model_cols": 1533,
+   "presolved": {
+    "rows": 549,
+    "cols": 1533
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 3,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 559,
+   "model_cols": 1533,
+   "presolved": {
+    "rows": 559,
+    "cols": 1533
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 4,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 549,
+   "model_cols": 1533,
+   "presolved": {
+    "rows": 549,
+    "cols": 1533
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 5,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 546,
+   "model_cols": 1533,
+   "presolved": {
+    "rows": 546,
+    "cols": 1533
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 6,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 552,
+   "model_cols": 1533,
+   "presolved": {
+    "rows": 552,
+    "cols": 1533
+   }
+  }
+ ]
+}

@@ -1,0 +1,63 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "neos-3754480-nidda.mps.gz",
+ "model_sha256": "63f322dd9be49acf31f7579d8f04e3bb578bdd7ca7d3525683384190c9a8bf7f",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 1,
+  "LogToConsole": 0,
+  "TimeLimit": 20,
+  "NodeLimit": 50000,
+  "Presolve": 0,
+  "ScaleFlag": 0,
+  "Quad": 0,
+  "NumericFocus": 0,
+  "MarkowitzTol": 0.0001,
+  "Heuristics": 0,
+  "RINS": 0,
+  "Cuts": 0
+ },
+ "output": "DONE 8 50000",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {
+  "n:before:654502:1:1:0:-1:2": 2,
+  "n:after:654502:1:1:0:2:2": 6,
+  "n:before:654502:1:1:0:2:2": 4,
+  "n:before:64da9f:1:1:0:2:2": 2,
+  "n:after:64da9f:1:1:0:2:2": 2,
+  "set:0": 2,
+  "n:before:5fb8ec:1:1:0:2:2": 2,
+  "n:after:5fb8ec:1:1:0:2:2": 2,
+  "n:before:5fb8ec:1:0:1:2:2": 84993,
+  "n:after:5fb8ec:1:0:1:2:2": 84993,
+  "set:5": 12,
+  "n:before:5fb8ec:1:0:1:2:6": 7607,
+  "n:after:5fb8ec:1:0:1:2:6": 7607,
+  "set:4": 66,
+  "n:before:6a6563:1:1:0:2:2": 1,
+  "n:after:6a6563:1:1:0:2:2": 1,
+  "n:before:7aef0b:1:0:0:2:2": 1,
+  "n:after:7aef0b:1:0:0:2:2": 1,
+  "n:before:5fb8ec:1:0:1:2:3": 10,
+  "n:after:5fb8ec:1:0:1:2:3": 10
+ },
+ "events": [
+  {
+   "event": "mipmain",
+   "serial": 0,
+   "depth": 1,
+   "ret": "c23877",
+   "model_rows": 402,
+   "model_cols": 253,
+   "presolved": {
+    "rows": 402,
+    "cols": 253
+   }
+  }
+ ]
+}

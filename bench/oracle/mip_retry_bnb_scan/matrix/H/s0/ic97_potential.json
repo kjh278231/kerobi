@@ -1,0 +1,127 @@
+{
+ "schema": 1,
+ "kind": "retry_bnb_scan",
+ "model": "ic97_potential.mps.gz",
+ "model_sha256": "db709f9ca628323d2ebcad02cb681e135a7638dfb1e6bdef4853b5366b6faa92",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "039177d0c33999e64796341dc43b14f14d88640e5c873b28cd66ec1137d32517",
+ "params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "TimeLimit": 20,
+  "NodeLimit": 50000,
+  "Presolve": 0,
+  "ScaleFlag": 0,
+  "Quad": 0,
+  "NumericFocus": 0,
+  "MarkowitzTol": 0.0001,
+  "Heuristics": 0,
+  "RINS": 0
+ },
+ "output": "DONE 9 9035",
+ "errors": [],
+ "ok": true,
+ "detach_reason": "process-terminated",
+ "counts": {
+  "n:before:654502:1:1:0:-1:2": 2,
+  "n:after:654502:1:1:0:2:2": 98,
+  "n:before:654502:1:1:0:2:2": 96,
+  "n:before:6dec7d:1:1:0:2:2": 75,
+  "n:after:6dec7d:1:1:0:2:2": 75,
+  "n:before:654502:2:1:0:-1:2": 5,
+  "n:after:654502:2:1:0:2:2": 25,
+  "n:before:654502:2:1:0:2:2": 20,
+  "n:before:6dec7d:2:1:0:2:2": 20,
+  "n:after:6dec7d:2:1:0:2:2": 20,
+  "set:0": 7,
+  "n:before:64da9f:1:1:0:2:2": 2,
+  "n:after:64da9f:1:1:0:2:2": 2,
+  "n:before:5fb8ec:1:1:0:2:2": 4,
+  "n:after:5fb8ec:1:1:0:2:2": 4,
+  "n:before:5fb8ec:1:0:1:2:2": 12046,
+  "n:after:5fb8ec:1:0:1:2:2": 12046,
+  "set:4": 145,
+  "set:5": 9,
+  "n:before:5fb8ec:1:0:1:2:6": 1731,
+  "n:after:5fb8ec:1:0:1:2:6": 1731,
+  "n:before:6a6563:1:1:0:2:2": 1,
+  "n:after:6a6563:1:1:0:2:2": 1,
+  "n:before:5fb8ec:1:0:1:2:9": 1,
+  "n:after:5fb8ec:1:0:1:2:9": 1
+ },
+ "events": [
+  {
+   "event": "mipmain",
+   "serial": 0,
+   "depth": 1,
+   "ret": "c23877",
+   "model_rows": 1046,
+   "model_cols": 728,
+   "presolved": {
+    "rows": 1046,
+    "cols": 728
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 1,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 212,
+   "model_cols": 728,
+   "presolved": {
+    "rows": 212,
+    "cols": 728
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 2,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 212,
+   "model_cols": 728,
+   "presolved": {
+    "rows": 212,
+    "cols": 728
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 3,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 224,
+   "model_cols": 728,
+   "presolved": {
+    "rows": 224,
+    "cols": 728
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 4,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 224,
+   "model_cols": 728,
+   "presolved": {
+    "rows": 224,
+    "cols": 728
+   }
+  },
+  {
+   "event": "mipmain",
+   "serial": 5,
+   "depth": 2,
+   "ret": "c23877",
+   "model_rows": 224,
+   "model_cols": 728,
+   "presolved": {
+    "rows": 224,
+    "cols": 728
+   }
+  }
+ ]
+}
