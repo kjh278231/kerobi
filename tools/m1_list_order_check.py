@@ -161,11 +161,12 @@ def check(g, caps, order=None):
     return res
 
 
-def ftran_order(cap, rule='orig'):
+def ftran_order(cap, rule='orig', bad=None):
     """P2: 09d112 calls the sparse L kernel 21b9de iff LU+0x104 * nnz(a_q) <= m (LU+0x128 < 0 on every kb2 pivot).
     P3: on sparse-U pivots (21686f / 21841f) the 09d112 alpha_q output is [rows with LU+0xf8 = -1, as output] +
     [tail rows (U position >= t) by U position descending] + [prefix rows by LU+0xf8 ascending].
-    Returns the pivots whose output that rule tells apart from index order."""
+    Returns the pivots whose output that rule tells apart from index order; with `bad` (a list) a differing pivot is
+    appended there instead of failing."""
     disc = []
     for k, e in sorted(cap.items()):
         ft = e['ft']
@@ -173,22 +174,32 @@ def ftran_order(cap, rule='orig'):
         need(lu['x128'] < 0, f'P2 pivot {k}: LU+0x128 {lu["x128"]} >= 0 (level path, not covered)')
         need(('21b9de' in calls) == (lu['x104'] * ft['aq_in']['nnz'] <= ft['m']),
              f'P2 pivot {k}: 21b9de {"21b9de" in calls}, LU+0x104 {lu["x104"]} * nnz {ft["aq_in"]["nnz"]} vs m {ft["m"]}')
+        # one 21b9de call per right-hand side (a_q, rho) that passes the same test
+        nb = sum(lu['x104'] * v['nnz'] <= ft['m'] for v in (ft['aq_in'], ft['rho_in']) if v['nnz'] >= 0)
+        need(calls.count('21b9de') == nb, f'P2 pivot {k}: {calls.count("21b9de")} 21b9de calls, test passes for {nb} RHS')
         if not any(c in ('21686f', '21841f') for c in calls):
+            # P: without a sparse U kernel the final alpha_q list is in index order
+            need(e['aq']['idx'] == sorted(e['aq']['idx']), f'P pivot {k}: no sparse U kernel but final list unsorted')
             continue
         pos = {r: i for i, r in enumerate(ft['ord'])}
         out, t, f8 = ft['aq_out']['idx'], ft['t'], ft['f8']
         neg = [r for r in out if pos[r] < t and f8[r] == -1]
         tail = [r for r in out if pos[r] >= t]
         pre = [r for r in out if pos[r] < t and f8[r] >= 0]
-        if rule == 'orig':
+        if rule == 'neg-last':
+            want = sorted(tail, key=lambda r: -pos[r]) + sorted(pre, key=lambda r: f8[r]) + neg
+        elif rule == 'orig':
             want = neg + sorted(tail, key=lambda r: -pos[r]) + sorted(pre, key=lambda r: f8[r])
         elif rule == 'tail-asc':
             want = neg + sorted(tail, key=lambda r: pos[r]) + sorted(pre, key=lambda r: f8[r])
         elif rule == 'prefix-upos':
             want = neg + sorted(tail, key=lambda r: -pos[r]) + sorted(pre, key=lambda r: pos[r])
-        else:  # 'index': the dense compaction order
-            want = sorted(out)
-        need(out == want, f'P3 pivot {k}: 09d112 output {out} != rule {rule} {want}')
+        else:  # 'index': the dense compaction order for the rows the rule orders
+            want = neg + sorted(tail + pre)
+        if out != want:
+            if bad is None:
+                raise Fail(f'P3 pivot {k}: 09d112 output {out} != rule {rule} {want}')
+            bad.append(k)
         if want != neg + sorted(tail + pre):
             disc.append(k)
     return disc
@@ -224,14 +235,18 @@ def main():
               f'pivots, discriminating {fdisc}')
         if self_test:
             need(fdisc, 'V: no pivot tells the output order rule apart')
-            for v in ('tail-asc', 'prefix-upos', 'index'):
-                try:
-                    ftran_order(caps[0], v)
-                    raise Fail(f'V {v}: output order variant passed')
-                except Fail as ex:
-                    if str(ex).startswith('V '):
-                        raise
-                    print(f'V {v}: rejected: {str(ex)[:120]}')
+            mixed = [k for k, e in caps[0].items() if any(c.split('@')[0] in ('21686f', '21841f') for c in e['ft']['calls'])
+                     and any(e['ft']['f8'][r] == -1 and e['ft']['ord'].index(r) < e['ft']['t'] for r in e['ft']['aq_out']['idx'])
+                     and any(e['ft']['f8'][r] != -1 for r in e['ft']['aq_out']['idx'])]
+            for v in ('tail-asc', 'prefix-upos', 'index', 'neg-last'):
+                bad = []
+                ftran_order(caps[0], v, bad)
+                need(bad, f'V {v}: output order variant passed')
+                need(set(bad) <= set(fdisc) if v != 'neg-last' else set(bad) <= set(mixed),
+                     f'V {v}: rejected at {bad}, outside the pivots the rule decides')
+                if v == 'index':
+                    need(bad == fdisc, f'V index: rejected at {bad} != discriminating {fdisc}')
+                print(f'V {v}: rejected at pivots {bad}')
             need(disc, 'V: no discriminating pivot')
             try:
                 replay(g, sorted)
