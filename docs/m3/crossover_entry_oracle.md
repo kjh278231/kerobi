@@ -23,3 +23,13 @@
 `python3 tools/crossover_entry_selftest.py`는 합성 형식 fixture에 해시·사건·배열·순서 변조 10건을 주입해 거부를 확인한다. 이 fixture는 실제 실행이 아니다. `tools/crossover_entry_check.py`는 아직 복사·변환 식과 경로별 중첩을 충분히 확인하지 못하므로 명령은 의도적으로 항상 실패한다. 목표 합격으로 사용할 수 없다. 입력 파일 해시를 실제 `small.lp`에 연결하고 환경·스케일·준비 배열의 길이와 원시 비트 형식을 검사한다.
 
 준비 훅 `0x1bd281`의 배열 위치는 ELF `0x1bcb31`, `0x1bcb55`, `0x1bcb7d–0x1bcb8d` 및 mode 1의 `0x1bcd77–0x1bcdc3`에서 확인했다. 두 경로의 `rbx`와 `r12`가 열 x와 reduced cost이고 `rsp+0x238`, `rsp+0x240`이 행 slack과 y다. 합류 지점의 `rbp`는 모델이다. 실제 훅 실행과 필드 내용은 아직 확인하지 않았다.
+
+현재 재실행 명령은 다음과 같다. 캡처는 잠금을 기다리는 동안 실패 파일에 진단을 남기며 성공 파일을 덮어쓰지 않는다. 검사기 명령은 미완성 표시를 출력하고 종료 1이다.
+
+```bash
+tools/gurun.sh node tools/crossover_entry_capture.js barrier bench/oracle/m3_crossover_entry/small.lp bench/oracle/m3_crossover_entry/barrier-probe.json
+python3 tools/crossover_entry_selftest.py
+python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/barrier-probe.json
+```
+
+도구는 프로세스 시작 전에 입력·도구·바이너리 해시를 고정하고 종료 시 다시 대조한다. warm 시작값은 PStart `[2,1,1]`, DStart `[1,0,0]`으로 메타데이터에도 기록한다. 결과 구조의 `output`은 진단 로그로 보관하되 상태 비교에서 제외한다. 결과 status·훅 오류·반환값·환경과 배열은 제외하지 않는다. 시간 측정값을 캡처하지 않았고 시간이나 work의 동등성은 주장하지 않는다. 실제 자료로 변환 식을 아직 검증하지 않았으며 CLI를 합격용으로 활성화하지 않았다.

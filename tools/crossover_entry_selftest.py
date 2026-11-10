@@ -5,10 +5,11 @@ from pathlib import Path
 from crossover_entry_check import EXPECTED, check, difference
 
 bits = "0000000000000000"
-state = {"model": 1, "n": 1, "m": 1,
+state = {"model": 1, "n": 1, "m": 1, "status": 2,
          "env": {"field_2478": [bits], "field_24a0": [bits], "field_26fc": 0},
          "scale": {"c": None, "r": None, "o": [bits], "flip": None, "flip_enabled": 0, "sense": ["3e"]},
          "result": {k: [bits] for k in ("x", "slack", "reduced", "y")}}
+state["copy"] = {"primal": [bits, "0000000000000080"], "dual": [bits, bits]}
 leave = deepcopy(state)
 leave["workspace"] = {"rows": 1, "cols": 1, "vstat": ["00000000", "00000000"]}
 prepared = {"event": "prepared", "model": 1, **{k: [bits] for k in ("x", "slack", "reduced", "y")}}

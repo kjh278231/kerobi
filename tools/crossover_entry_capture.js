@@ -5,8 +5,10 @@ if (!['pdhg', 'barrier', 'warm', 'control'].includes(kind) || !model || !output)
 const root = path.resolve(__dirname, '../..'), py = path.join(root, '.venv/bin/python');
 const binary = path.join(root, '.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so');
 const hash = p => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+const modelHash = hash(model), toolHash = hash(__filename);
 const bh = hash(binary), expected = '8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c';
 if (bh !== expected) throw Error('원본 바이너리 해시 불일치');
+const starts = kind === 'warm' ? {PStart:[2,1,1], DStart:[1,0,0]} : null;
 const params = {Threads: 1, Seed: 0, OutputFlag: 0, Presolve: 0, Method: kind === 'pdhg' ? 6 : kind === 'warm' ? 1 : 2, Crossover: kind === 'control' ? 0 : 1, LPWarmStart: 2};
 const code = `import gurobipy as gp\ne=gp.Env(params=${JSON.stringify(params)})\nm=gp.read(${JSON.stringify(path.resolve(model))},e)\n${kind === 'warm' ? "m.setAttr('PStart',m.getVars(),[2.,1.,1.]); m.setAttr('DStart',m.getConstrs(),[1.,0.,0.]); m.update()" : ''}\nm.optimize()\nimport json\nprint('CROSSOVER_RESULT '+json.dumps({'status':m.Status}),flush=True)`;
 const agent = `
@@ -35,6 +37,6 @@ Process.attachModuleObserver({onAdded(mod) { if (mod.name !== 'libgurobi130.so')
  const pid=await device.spawn([py,'-c',code],{stdio:'pipe'}), session=await device.attach(pid), script=await session.createScript(agent);
  script.message.connect(msg=>{if(msg.type==='send') events.push(msg.payload); else errors.push(msg.stack||JSON.stringify(msg));});
  device.output.connect((p,fd,data)=>{if(p===pid) out+=data.toString()});
- session.detached.connect(reason=>{const markers=out.split('\n').filter(x=>x.startsWith('CROSSOVER_RESULT ')); let result=null; try { if(markers.length===1) result=JSON.parse(markers[0].slice(17)); } catch(e) { errors.push(String(e)); } const ok=!!result && Number.isInteger(result.status) && !errors.length && reason==='process-terminated'; fs.writeFileSync(ok?output:output+'.failed',JSON.stringify({origin:'natural',kind,model_sha256:hash(model),binary_sha256:bh,tool_sha256:hash(__filename),params,output:out,result,reason,errors,events},null,2)+'\n'); console.log(kind,'사건',events.length,'성공',ok,errors.join(' '),out.trim()); process.exit(ok?0:1)});
+ session.detached.connect(reason=>{const markers=out.split('\n').filter(x=>x.startsWith('CROSSOVER_RESULT ')); let result=null; try { if(markers.length===1) result=JSON.parse(markers[0].slice(17)); } catch(e) { errors.push(String(e)); } if(hash(model)!==modelHash || hash(__filename)!==toolHash || hash(binary)!==bh) errors.push('실행 중 입력 또는 도구 해시 변경'); const ok=!!result && Number.isInteger(result.status) && !errors.length && reason==='process-terminated'; fs.writeFileSync(ok?output:output+'.failed',JSON.stringify({origin:'natural',kind,model_sha256:modelHash,binary_sha256:bh,tool_sha256:toolHash,params,starts,output:out,result,reason,errors,events},null,2)+'\n'); console.log(kind,'사건',events.length,'성공',ok,errors.join(' '),out.trim()); process.exit(ok?0:1)});
  await script.load(); await device.resume(pid);
 })().catch(e=>{console.error(e);process.exit(1)});
