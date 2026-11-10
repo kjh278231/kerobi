@@ -58,7 +58,7 @@
 
 ## 6. 실행 결과
 
-- 실행: `tools/mip_bnb_profile.sh bench/oracle/m2_10a/run1`(Herdr, 약 4분) 뒤 `python3 tools/mip_bnb_profile.py bench/oracle/m2_10a/run1 --self-test` 종료 0. 기준 commit `82ce09d` + 하네스·패치(해시는 `run1/env.txt`), 패치 SHA-256 앞 16자 `381029dfae27e5a3`, Intel Core Ultra 7 155H, WSL2. loadavg 0.9–1.2(`run1/load.txt`, M1 세션과 기계 공유).
+- 실행: `tools/mip_bnb_profile.sh bench/oracle/m2_10a/run1`(Herdr, 약 4분) 뒤 `python3 tools/mip_bnb_profile.py bench/oracle/m2_10a/run1 --self-test` 종료 0. 기준 commit `82ce09d`(rebase 뒤 `d493c21`, 사이 main 변경은 문서·도구뿐이고 `crates/` 변경 없음) + 하네스·패치(해시는 `run1/env.txt`), 패치 SHA-256 앞 16자 `381029dfae27e5a3`, Intel Core Ultra 7 155H, WSL2. loadavg 0.9–1.2(`run1/load.txt`, M1 세션과 기계 공유).
 - 무영향: 계측 3회 모두 12모델의 상태·노드·반복·경계 비트·목적 비트·경로가 계측 없는 실행과 같다. LP 재생은 cold·warm 각 18,000 노드 LP(3회×12모델×500) 모두 status·iter·obj·x 비트가 실제 호출과 같았다(패치 `assert`, 실패 시 RESULT가 빠져 요약이 실패한다).
 - 검사기 판별: `--self-test`가 RESULT 반복 수 변조와 PROFILE 줄 삭제를 거부했다.
 - 구간 합: 기타(루프 벽시각 − 재생·반사실 시간 − 측정 구간)는 0.1–3.8%다. 재생 합/실제 LP는 0.89–1.00이다(markshare_4_0의 0.89는 노드당 LP 0.06ms라 타이머·할당 잡음 비중이 크다).
