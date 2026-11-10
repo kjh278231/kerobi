@@ -17,9 +17,9 @@
 ### 진입과 ABI
 
 - PDHG `34f033` ([C](../../../re/decomp/c/003639a0_PRIVATE000000000034f033.c), 186, 529–575줄)은 `local_50 = 2baa47(model)`을 사용한다. 종료 분기에서 `local_50 != 0`, 상태가 9·11·16이 아니고 앞선 특수 조건을 만족하지 않을 때 `2baaa4`를 호출한다. 따라서 자연 실행 경로가 존재하지만 이 조건만으로 특정 입력에서 도달한다고 확정할 수 없다. `2baa47` ([C](../../../re/decomp/c/002dc5e0_PRIVATE00000000002baa47.c), 8–15줄)은 두 선행 검사 결과가 모두 0일 때 현재 `Crossover != 0`을 반환한다. 호출자는 진입 시 Crossover를 저장하고 종료 시 복원한다 (53, 579줄). 두 선행 검사의 전체 의미는 미확인이다.
-- `2baaa4` ([C](../../../re/decomp/c/002dc620_PRIVATE00000000002baaa4.c), 39–45, 154–165, 244–255줄)는 선택적으로 `2c6a7a`를 호출하고 시작 구조를 준비한 뒤 `13f64d`를 호출한다. 모델 또는 결과 포인터가 없으면 복사를 건너뛰어도 호출한다. 선택 분기의 정확한 의미와 `2c6a7a`의 결과 반영은 미확인이다.
+- `2baaa4` ([C](../../../re/decomp/c/002dc620_PRIVATE00000000002baaa4.c), 39–45, 154–165, 244–255줄)는 선택적으로 `2c6a7a`를 호출하고 시작 구조를 준비한 뒤 `13f64d`를 호출한다. 시작 구조 S 또는 결과 R·R의 x 포인터가 없으면 복사를 건너뛰어도 호출한다. 모델 포인터 자체의 null 허용을 뜻하지 않는다. 선택 분기의 정확한 의미와 `2c6a7a`의 결과 반영은 미확인이다.
 - barrier `2bb770` ([C](../../../re/decomp/c/002dd9b0_PRIVATE00000000002bb770.c), 275–326줄)은 같은 복사·세 변환을 자체 수행한 뒤 `13f64d`에 직접 진입한다. warm-start `0c3d0d` ([C](../../../re/decomp/c/0014acb0_PRIVATE00000000000c3d0d.c), 784–796줄)는 `local_60 != 0`일 때 `13f716(model, 1, work)`을 직접 부른다. `13f716` mode 0은 결과 배열 네 개를 요구하지만 mode 1은 별도 경로로 시작 구조를 확보한다 ([C](../../../re/decomp/c/001bc5d0_PRIVATE000000000013f716.c), 160–185, 1704–1725, 1966–1975줄). mode 1의 필수 start 구성 전체는 미확인이다.
-- ELF x86-64에서 `2baaa4`는 `xmm0` 시작 work, `rdi` 모델, `rsi` work 포인터를 받는다. `13f64d`는 `xmm0` work 차이, `rdi` 모델, `rsi` 스레드 수, `rdx` work 포인터를 받는다. `Crossover != 5`면 `rsi=0`으로 `13f716`에 tail jump한다. 값 5에 스레드 2 미만이면 임시로 -1을 넣고 mode 0을 호출한 뒤 5를 복구하며, 그 외에는 `9b54f1`로 간다. ELF `0x1bc570–0x1bc5c2`, `0x2dc893–0x2dc898`의 반환 레지스터와 호출자를 보면 C의 `void` 선언 및 누락된 double 인자는 부정확하다. 기준 ELF SHA-256은 `8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c`다. 검증 명령은 `objdump -d --start-address=0x1bc570 --stop-address=0x1bc5f0 ../.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so`다.
+- ELF x86-64에서 `2baaa4`는 `xmm0` 시작 work, `rdi` 모델, `rsi` work 포인터를 받는다. `13f64d`는 `xmm0` work 차이, `rdi` 모델, `esi` 스레드 수, `rdx` work 포인터를 받는다. `Crossover != 5`면 `rsi=0`으로 `13f716`에 tail jump한다. 값 5에 스레드 2 미만이면 임시로 -1을 넣고 mode 0을 호출한 뒤 5를 복구하며, 그 외에는 `9b54f1`로 간다. ELF `0x1bc570–0x1bc5c2`, `0x2dc893–0x2dc898`의 반환 레지스터와 호출자를 보면 C의 `void` 선언 및 누락된 double 인자는 부정확하다. 기준 ELF SHA-256은 `8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c`다. 검증 명령은 `objdump -d --start-address=0x1bc570 --stop-address=0x1bc5f0 ../.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so`다.
 
 ### 배열과 변환
 
@@ -83,7 +83,7 @@ warm-start `0c3d0d`는 `local_60`을 0으로 초기화한다. `iVar16 != 0`인 �
 | x[j] | x[j] × C[j] |
 | slack[i] | slack[i] ÷ R[i] |
 | reduced cost[j] | reduced cost[j] ÷ (C[j] × O) |
-| y[i] | y[i] × (R[i] ÷ O) |
+| y[i] | (R[i] ÷ O) × y[i] |
 
 근거는 [07a069](../../../re/decomp/c/0010b0f0_PRIVATE000000000007a069.c) 50–57, 70–83, 187–194, 328–333, 465–480줄이다. 이어 `07a2ee`가 y를 뒤집고 `07a366`이 앞 절의 열 flag·행 sense 조건으로 부호를 바꾼다. 이 세 함수는 목적 sense 필드를 직접 검사하지 않는다. C·R·O에 사전에 반영된 의미는 아직 미확인이다.
 
@@ -95,7 +95,7 @@ warm-start `0c3d0d`는 `local_60`을 0으로 초기화한다. `iVar16 != 0`인 �
 
 ## 검증 계약의 항목과 실행 결과
 
-1. 범위는 세 진입 경계의 정적 조사다. 기준 `063516e`에서 분기했고 선행 미커밋 변경은 없다. push 알고리즘과 구현은 M3-04b·04d·04f로 남긴다.
+1. 범위는 세 진입 경계의 정적 조사다. 기준 `063516e`에서 분기했고 선행 미커밋 변경은 없다. push 알고리즘 조사는 M3-04b·04d, 해당 분기 구현은 M3-04c·04e, cleanup 연결은 M3-04f로 남긴다.
 2. 원본은 위 SHA-256의 Gurobi 13.0.3 ELF 및 연결된 C다. 시작은 각 호출 직전, 종료는 반환 직후다. 모델·설정·work·배열과 포인터 수명, 상태·반환값·임시 설정 복원이 비교 경계다. RNG와 동시 실행의 전체 상태는 미확인이다.
 3. 후속 비교 필드는 진입 사건·호출 인자, n·m과 네 배열, 변환 전후 부호 비트, 상태 배열, basis, 반환값 및 상태, 세 복원 설정이다. 정수·포인터 존재와 사건 순서는 정확히 비교한다. 부동소수점 허용 오차, NaN·무한대·±0의 최종 규칙은 캡처 설계에서 정한다. 시간과 work는 별도 기록하며 수치 일치 근거로 대체하지 않는다.
 4. 필요한 실제 사례는 PDHG의 T 양쪽과 상태 분기, barrier switch의 각 상태군, warm-start mode 1, 두 할당 실패와 cleanup 설치·실패다. 입력·해시·원본 출력은 아직 없다. 합성 오류 주입은 실제 사건의 보조 사례다.
@@ -110,3 +110,18 @@ rg -n 'local_60 = 1|PRIVATE00000000000325b4|case 0x11|0x2478\) = local_c8' ../re
 python3 -c 'from pathlib import Path; import re; p=Path("docs/m3/crossover_entry_contract.md"); assert all((p.parent / x.split("#")[0]).exists() for x in re.findall(r"\]\(([^)]+)\)", p.read_text()))'
 git diff --check
 ```
+
+## 검토자 확인
+
+Terra의 착수 `aaa31e7`, 조사 `32bceef`, 보완 `e75a6f6`을 별도로 검토했다. 원본 C와 ELF에서 ABI, 배열 분할·변환 순서, 부분 할당 실패, 임시 환경값 복원, cleanup 상태 배열 설치 경계를 대조했다. 시작 구조가 없는 경우를 모델 포인터가 없는 경우로 쓴 문장을 수정했고, y 스케일 식의 피연산자 순서를 원본대로 기록했다.
+
+검토자의 독립 Python 단언에서 상대 링크 27개, 원본 인용 구간 8개, 실제 ELF SHA-256과 명령어 바이트 4곳, 변경 경로 2개를 확인했다. 모두 종료 0이었다. ELF의 `0x1bc598`, `0x1bc5c2`, `0x2dc893`, `0x2dc898`에서 호출·tail jump와 `eax` 반환값 소비를 확인했다. 이 검사는 정적 근거의 식별 검사이며 원본 상태 전이 비교가 아니다.
+
+```bash
+sha256sum ../.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so
+objdump -d -M intel --start-address=0x1bc570 --stop-address=0x1bc5c7 ../.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so
+objdump -d -M intel --start-address=0x2dc82c --stop-address=0x2dc8f7 ../.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so
+git diff --check main
+```
+
+이번 판정은 정적 조사 완료, 원본 동등성 미검증이다. 수치·좌표·목적 sense와 최종 basis의 보존은 후속 원본 캡처에서 확인한다.
