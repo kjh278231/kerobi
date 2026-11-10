@@ -1,0 +1,6 @@
+PROFILE presolve=0.000311 root=0.000148 root_iter=13 loop=3.713265 select=0.286429 lp=1.168208 spx=0.063495 eng=0.018809 solve=0.745368 unscaled=0.156117 incumbent=0.003293 branch=0.041339 clones=17668 clone_nnz=2173164 max_open=14657 lp_iter=172710 warm_nodes=20000 warm_iter=49966 warm_lp=0.634096 warm_cold_iter=172710 warm_cold_lp=1.168208 warm_mismatch=0 warm_none=0 warm_all=0.634096 wspx=0.061542 weng=0.017923 wsolve=0.343761 wunscaled=0.132447
+PROFILE_RESTORE restore=0.000004
+RESULT markshare_4_0 status=NodeLimit nodes=20000 iters=172723 bound=0000000000000000 obj=4008000000000000 path=reduced wall=3.731872
+PROFILE presolve=0.000978 root=0.000800 root_iter=39 loop=29.918343 select=0.646129 lp=10.003896 spx=0.380901 eng=0.041985 solve=8.139642 unscaled=1.074786 incumbent=0.007105 branch=0.169316 clones=20001 clone_nnz=18440922 max_open=20002 lp_iter=668258 warm_nodes=20000 warm_iter=111607 warm_lp=4.764512 warm_cold_iter=668258 warm_cold_lp=10.003896 warm_mismatch=0 warm_none=0 warm_all=4.764512 wspx=0.366293 weng=0.037534 wsolve=3.145991 wunscaled=0.993235
+PROFILE_RESTORE restore=0.000006
+RESULT gen-ip002 status=NodeLimit nodes=20000 iters=668297 bound=c0b2d2f7685d792a obj=c0a65aeeda7a347b path=reduced wall=30.069978

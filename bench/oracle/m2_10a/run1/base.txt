@@ -1,0 +1,12 @@
+RESULT gen-ip002 status=NodeLimit nodes=500 iters=18938 bound=c0b2dfdbb95fa7fb obj=c0a65aeeda7a347b path=reduced wall=0.303895
+RESULT pk1 status=NodeLimit nodes=500 iters=31174 bound=0000000000000000 obj=4085180000000000 path=reduced wall=0.383818
+RESULT neos5 status=NodeLimit nodes=500 iters=44175 bound=402b800000000000 obj=4038000000000000 path=reduced wall=0.784131
+RESULT tr12-30 status=NodeLimit nodes=500 iters=176855 bound=40d9a72d10a28b90 obj=4107b31000000000 path=reduced wall=1.950033
+RESULT neos-3754480-nidda status=NodeLimit nodes=500 iters=88243 bound=c12a169bd8d41f43 obj=40daa7820f190d6d path=reduced wall=2.061442
+RESULT gmu-35-40 status=NodeLimit nodes=500 iters=250428 bound=c1425d0fc69287ec obj=none path=reduced wall=4.530419
+RESULT assign1-5-8 status=NodeLimit nodes=500 iters=175498 bound=40677d4c3e19ed0b obj=406e000000000000 path=reduced wall=5.117286
+RESULT supportcase26 status=NodeLimit nodes=500 iters=58669 bound=4094b059cc028af3 obj=40a133c240320e18 path=reduced wall=1.073311
+RESULT markshare_4_0 status=NodeLimit nodes=500 iters=4848 bound=0000000000000000 obj=407e600000000000 path=reduced wall=0.030990
+RESULT mas74 status=NodeLimit nodes=500 iters=25238 bound=40c4e5bae9e9b9e2 obj=41033504e1f4b1ee path=reduced wall=0.372240
+RESULT neos-860300 status=NodeLimit nodes=500 iters=184745 bound=40a2840000000000 obj=none path=reduced wall=8.553346
+RESULT timtab1 status=NodeLimit nodes=500 iters=70418 bound=40f9e11000000000 obj=none path=reduced wall=0.424710

@@ -1,0 +1,2 @@
+RESULT markshare_4_0 status=NodeLimit nodes=20000 iters=172723 bound=0000000000000000 obj=4008000000000000 path=reduced wall=1.488008
+RESULT gen-ip002 status=NodeLimit nodes=20000 iters=668297 bound=c0b2d2f7685d792a obj=c0a65aeeda7a347b path=reduced wall=10.786275

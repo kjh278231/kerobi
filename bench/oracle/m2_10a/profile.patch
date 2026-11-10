@@ -1,0 +1,205 @@
+diff --git a/crates/mip/src/bnb.rs b/crates/mip/src/bnb.rs
+index 32d18fd..af1372f 100644
+--- a/crates/mip/src/bnb.rs
++++ b/crates/mip/src/bnb.rs
+@@ -13,13 +13,24 @@ pub struct SearchResult {
+     pub path: &'static str,
+ }
+ 
+-struct Node { model: Model, bound: f64 }
++struct Node { model: Model, bound: f64, basis: Option<Vec<i32>> }
++
++// M2-10a profile patch (bench/oracle/m2_10a/profile.patch): not for merge
++#[derive(Default)]
++struct Prof { presolve: f64, root: f64, loop_wall: f64, select: f64, lp: f64, spx: f64, eng: f64, solve: f64, unscaled: f64,
++    incumbent: f64, branch: f64, clones: u64, clone_nnz: u64, max_open: usize, lp_iter: u64, root_iter: u64,
++    warm_lp: f64, warm_iter: u64, warm_cold_lp: f64, warm_cold_iter: u64, warm_nodes: u64, warm_mismatch: u64, warm_none: u64, warm_all: f64, wph: [f64; 4] }
++thread_local! { static PROF: std::cell::RefCell<Prof> = std::cell::RefCell::new(Prof::default()); }
++fn secs(t: std::time::Instant) -> f64 { t.elapsed().as_secs_f64() }
+ 
+ /// Solve in reduced coordinates and restore the incumbent. Unsupported reductions use the original model.
+ pub fn solve_original(model: &Model, p: &Params) -> Result<SearchResult, &'static str> {
+     let started = std::time::Instant::now();
++    PROF.with(|f| *f.borrow_mut() = Prof::default());
+     if p.presolve == 0 { return solve_started(model, p, None, started); }
+-    let (reduced, state) = match crate::presolve_with_state(model, p) {
++    let presolve_result = crate::presolve_with_state(model, p);
++    PROF.with(|f| f.borrow_mut().presolve = secs(started));
++    let (reduced, state) = match presolve_result {
+         Ok(result) => result,
+         Err(_) => return fallback(model, p, started, "presolve_error"),
+     };
+@@ -27,6 +38,7 @@ pub fn solve_original(model: &Model, p: &Params) -> Result<SearchResult, &'stati
+         return fallback(model, p, started, "unsupported_records");
+     }
+     let mut result = solve_started(&reduced, p, None, started)?;
++    let t_restore = std::time::Instant::now();
+     if let Some(ref reduced_x) = result.incumbent {
+         let Ok((x, objective)) = restore_candidate(model, p, &state, reduced_x) else { return fallback(model, p, started, "invalid_restoration"); };
+         if result.incumbent_objective.is_some_and(|v| (v - objective).abs() > p.feastol * (1.0 + objective.abs())) {
+@@ -36,6 +48,7 @@ pub fn solve_original(model: &Model, p: &Params) -> Result<SearchResult, &'stati
+         result.incumbent_objective = Some(objective);
+     }
+     result.path = "reduced";
++    println!("PROFILE_RESTORE restore={:.6}", secs(t_restore));
+     Ok(result)
+ }
+ 
+@@ -132,7 +145,11 @@ pub(crate) fn deadline(started: std::time::Instant, p: &Params) -> Option<std::t
+ }
+ 
+ fn solve_started(model: &Model, p: &Params, incumbent: Option<&[f64]>, started: std::time::Instant) -> Result<SearchResult, &'static str> {
++    let t_root = std::time::Instant::now();
+     let root = root::solve_root_progress_started(model, p, incumbent, started)?;
++    let mut pf = PROF.with(|f| std::mem::take(&mut *f.borrow_mut()));
++    pf.root = secs(t_root);
++    pf.root_iter = root.root.as_ref().map_or(0, |r| r.lp.iter);
+     let sense = model.sense as f64;
+     let mut best = root.incumbent;
+     let mut state = State { incumbent: root.incumbent_objective.map_or(1e100, |z| sense * z),
+@@ -151,11 +168,19 @@ fn solve_started(model: &Model, p: &Params, incumbent: Option<&[f64]>, started:
+     let mut nodes = Vec::new();
+     if status == Status::Running {
+         let lp = root.root.as_ref().ok_or("missing root relaxation")?;
+-        if lp.lp.status != LpStatus::Optimal || !branch(&mut nodes, root.domain, state.bound, &lp.lp.x, p.intfeastol) {
++        let nm = root.domain.num_vars() + root.domain.num_constrs();
++        let basis = (lp.lp.basis.len() == nm).then(|| lp.lp.basis.clone());
++        let t = std::time::Instant::now();
++        let branched = lp.lp.status == LpStatus::Optimal && branch(&mut nodes, root.domain, state.bound, &lp.lp.x, p.intfeastol, basis, &mut pf);
++        pf.branch += secs(t);
++        if !branched {
+             status = Status::Numeric;
+         }
+     }
++    let t_loop = std::time::Instant::now();
+     while status == Status::Running {
++        let t_sel = std::time::Instant::now();
++        pf.max_open = pf.max_open.max(nodes.len());
+         state.seconds = started.elapsed().as_secs_f64();
+         state.cutoff = crate::cutoff::improvement_cutoff(state.incumbent, user_cutoff, step, offset, p);
+         nodes.retain(|n| n.bound < state.cutoff || (n.bound == state.cutoff && state.incumbent >= 1e100));
+@@ -166,8 +191,31 @@ fn solve_started(model: &Model, p: &Params, incumbent: Option<&[f64]>, started:
+         if status != Status::Running { break; }
+         let index = nodes.iter().enumerate().min_by(|a, b| a.1.bound.total_cmp(&b.1.bound)).unwrap().0;
+         let node = nodes.swap_remove(index);
++        pf.select += secs(t_sel);
+         let remaining = (p.iteration_limit - state.iterations).max(0.0).ceil() as u64;
++        let t = std::time::Instant::now();
+         let lp = solve_model_deadline(&node.model, 1, remaining, deadline(started, p));
++        let lp_secs = secs(t);
++        pf.lp += lp_secs;
++        pf.lp_iter += lp.iter;
++        let mut ph = [pf.spx, pf.eng, pf.solve, pf.unscaled];
++        replay_lp(&node.model, remaining, &lp, None, &mut ph);
++        [pf.spx, pf.eng, pf.solve, pf.unscaled] = ph;
++        match &node.basis {
++            Some(b) => {
++                let n = node.model.num_vars();
++                let t = std::time::Instant::now();
++                let w = rsolver_lp::simplex::solve_model_warm(&node.model, &b[..n], &b[n..], remaining, false);
++                let warm_secs = secs(t);
++                pf.warm_all += warm_secs;
++                replay_lp(&node.model, remaining, &w, Some((&b[..n], &b[n..])), &mut pf.wph);
++                if w.status == lp.status && (lp.status != LpStatus::Optimal || (w.obj - lp.obj).abs() <= 1e-6 * (1.0 + lp.obj.abs())) {
++                    pf.warm_nodes += 1; pf.warm_iter += w.iter; pf.warm_lp += warm_secs;
++                    pf.warm_cold_iter += lp.iter; pf.warm_cold_lp += lp_secs;
++                } else { pf.warm_mismatch += 1; }
++            }
++            None => pf.warm_none += 1,
++        }
+         state.nodes += 1.0;
+         state.iterations += lp.iter as f64;
+         match lp.status {
+@@ -177,37 +225,86 @@ fn solve_started(model: &Model, p: &Params, incumbent: Option<&[f64]>, started:
+             LpStatus::Optimal => {
+                 let bound = node.bound.max(termination::lattice_bound(sense * lp.obj, step, offset, p));
+                 if bound < state.cutoff || (bound == state.cutoff && state.incumbent >= 1e100) {
+-                    if let Ok(z) = root::incumbent_objective(model, p, &lp.x) {
++                    let t = std::time::Instant::now();
++                    let inc = root::incumbent_objective(model, p, &lp.x);
++                    pf.incumbent += secs(t);
++                    if let Ok(z) = inc {
+                         if z <= user_cutoff && z < state.incumbent {
+                             state.incumbent = z; state.solutions += 1; best = Some(lp.x);
+                         }
+-                    } else if !branch(&mut nodes, node.model, bound, &lp.x, p.intfeastol) {
+-                        nodes.push(Node { model: model.clone(), bound });
++                    } else if { let t = std::time::Instant::now(); let nm = node.model.num_vars() + node.model.num_constrs();
++                        let basis = (lp.basis.len() == nm).then(|| lp.basis.clone());
++                        let ok = branch(&mut nodes, node.model, bound, &lp.x, p.intfeastol, basis, &mut pf); pf.branch += secs(t); !ok } {
++                        nodes.push(Node { model: model.clone(), bound, basis: None });
+                         status = Status::Numeric;
+                     }
+                 }
+             }
+         }
+     }
++    pf.loop_wall = secs(t_loop);
++    println!("PROFILE presolve={:.6} root={:.6} root_iter={} loop={:.6} select={:.6} lp={:.6} spx={:.6} eng={:.6} solve={:.6} unscaled={:.6} incumbent={:.6} branch={:.6} clones={} clone_nnz={} max_open={} lp_iter={} warm_nodes={} warm_iter={} warm_lp={:.6} warm_cold_iter={} warm_cold_lp={:.6} warm_mismatch={} warm_none={} warm_all={:.6} wspx={:.6} weng={:.6} wsolve={:.6} wunscaled={:.6}",
++        pf.presolve, pf.root, pf.root_iter, pf.loop_wall, pf.select, pf.lp, pf.spx, pf.eng, pf.solve, pf.unscaled, pf.incumbent, pf.branch,
++        pf.clones, pf.clone_nnz, pf.max_open, pf.lp_iter, pf.warm_nodes, pf.warm_iter, pf.warm_lp, pf.warm_cold_iter, pf.warm_cold_lp, pf.warm_mismatch, pf.warm_none, pf.warm_all, pf.wph[0], pf.wph[1], pf.wph[2], pf.wph[3]);
+     if !nodes.is_empty() { state.bound = nodes.iter().map(|n| n.bound).fold(1e100, f64::min); }
+     status = termination::finish(status, best.is_some(), p);
+     Ok(SearchResult { status, bound: sense * state.bound, incumbent_objective: best.as_ref().map(|_| sense * state.incumbent),
+         incumbent: best, nodes: state.nodes as u64, iterations: state.iterations, path: "original" })
+ }
+ 
+-fn branch(nodes: &mut Vec<Node>, model: Model, bound: f64, x: &[f64], tol: f64) -> bool {
++/// `solve_model_run` (simplex.rs) rebuilt from its pub pieces so each phase can be timed; must equal the real call.
++fn replay_lp(md: &Model, iter_limit: u64, real: &rsolver_lp::simplex::LpResult, warm: Option<(&[i32], &[i32])>, ph: &mut [f64; 4]) {
++    use rsolver_lp::{simplex::{Engine, Status}, spx::Spx};
++    let t = std::time::Instant::now();
++    let mut spx = Spx::new(md);
++    if md.sense < 0 { for c in &mut spx.c { *c = -*c; } }
++    ph[0] += secs(t);
++    let t = std::time::Instant::now();
++    let mut e = Engine::new(&spx);
++    e.iter_limit = iter_limit;
++    e.trace_on = false;
++    ph[1] += secs(t);
++    let t = std::time::Instant::now();
++    let status = match warm { Some((vb, cb)) => e.solve_warm(vb, cb), None => e.solve(1) };
++    ph[2] += secs(t);
++    let t = std::time::Instant::now();
++    let mut out = None;
++    if status == Status::Optimal {
++        let mut sp2 = Spx::unscaled(md);
++        if md.sense < 0 { for c in &mut sp2.c { *c = -*c; } }
++        let mut e2 = Engine::new(&sp2);
++        e2.iter = e.iter;
++        e2.iter_limit = iter_limit;
++        e2.trace_on = false;
++        if let Some(st) = e2.resolve_unscaled(e.vstat.clone()) {
++            let xs = e2.x();
++            out = Some((st, xs[..sp2.n].to_vec(), e2.iter));
++        }
++    }
++    let (st, x, iter) = out.unwrap_or_else(|| {
++        let xs = e.x();
++        (status, (0..spx.n).map(|j| xs[j] * spx.scaling.col[j]).collect(), e.iter)
++    });
++    let obj = md.obj.iter().zip(&x).map(|(c, x)| c * x).sum::<f64>() + md.objcon;
++    ph[3] += secs(t);
++    assert!(st == real.status && iter == real.iter && obj.to_bits() == real.obj.to_bits()
++        && x.len() == real.x.len() && x.iter().zip(&real.x).all(|(a, b)| a.to_bits() == b.to_bits()), "LP replay differs");
++}
++
++fn branch(nodes: &mut Vec<Node>, model: Model, bound: f64, x: &[f64], tol: f64, basis: Option<Vec<i32>>, pf: &mut Prof) -> bool {
+     let j = (0..model.obj.len()).filter(|&j| matches!(model.vtype[j], b'B' | b'I') && (x[j] - x[j].round()).abs() > tol)
+         .max_by(|&a, &b| (x[a] - x[a].round()).abs().total_cmp(&(x[b] - x[b].round()).abs()));
+     let Some(j) = j else { return false };
+     let down = x[j].floor();
+     let up = x[j].ceil();
+     if down >= model.lb[j] {
++        pf.clones += 1; pf.clone_nnz += model.col_val.len() as u64;
+         let mut child = model.clone(); child.ub[j] = child.ub[j].min(down);
+-        nodes.push(Node { model: child, bound });
++        nodes.push(Node { model: child, bound, basis: basis.clone() });
+     }
+     if up <= model.ub[j] {
+         let mut child = model; child.lb[j] = child.lb[j].max(up);
+-        nodes.push(Node { model: child, bound });
++        nodes.push(Node { model: child, bound, basis });
+     }
+     true
+ }
