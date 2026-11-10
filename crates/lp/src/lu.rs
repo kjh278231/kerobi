@@ -646,6 +646,11 @@ impl Lu {
     /// Callers sum in this order, so the order is part of the result. shortcut: the Lᵀ linear-scan path (L956) is not
     /// ported, and with U off-diagonals or row etas a plain dense solve stands in for the original's paths.
     pub fn btran(&self, x: &[(usize, f64)]) -> Vec<(usize, f64)> {
+        self.btran_dense(x).0
+    }
+
+    /// `btran` and whether the output is dense (the original's output nnz < 0), which `28c93` reads.
+    pub fn btran_dense(&self, x: &[(usize, f64)]) -> (Vec<(usize, f64)>, bool) {
         assert!(self.complete(), "singular basis");
         if self.n_updates > 0 || self.general {
             // Markowitz kernel or FT updates: U is no longer diagonal, the same phase order applies
@@ -684,9 +689,9 @@ impl Lu {
             for (k, &(r, _, _)) in self.steps.iter().enumerate() {
                 y[r] = (r, dense[k]);
             }
-            return y;
+            return (y, true);
         }
-        self.lt_sparse(&xs)
+        (self.lt_sparse(&xs), false)
     }
 
     /// Sparse Lᵀ of BTRAN (`221173` L262–616) on step-indexed inputs in arrival order: the descending-step heap
@@ -741,7 +746,7 @@ impl Lu {
     /// (`lt_sparse`, so the output order is the original's) when 0x104·nnz ≤ m, else dense in row order.
     /// shortcut: the etas are textbook FT multipliers, not the original η = Uᵀ⁻¹e_r, so values can differ in the last
     /// bits; the Uᵀ phase is computed densely.
-    fn btran_updated(&self, x: &[(usize, f64)]) -> Vec<(usize, f64)> {
+    fn btran_updated(&self, x: &[(usize, f64)]) -> (Vec<(usize, f64)>, bool) {
         let m = self.head.len();
         let mut w = vec![0.0; m]; // by step
         for &(pos, v) in x {
@@ -779,7 +784,7 @@ impl Lu {
         let xs: Vec<(usize, f64)> =
             list.iter().filter(|&&r| y[r].abs() >= ZERO).map(|&r| (self.prow[r] as usize, y[r])).collect();
         if self.sparse_mult * xs.len() <= m {
-            return self.lt_sparse(&xs);
+            return (self.lt_sparse(&xs), false);
         }
         let mut dense = vec![0.0; m]; // by step
         for &(k, v) in &xs {
@@ -797,7 +802,7 @@ impl Lu {
         for (k, &(r, _, _)) in self.steps.iter().enumerate() {
             out[r] = (r, dense[k]);
         }
-        out
+        (out, true)
     }
 
     /// FTRAN through L and the row etas (x by row); the result is the FT spike of the column.

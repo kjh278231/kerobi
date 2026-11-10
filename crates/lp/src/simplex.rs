@@ -93,6 +93,8 @@ pub struct Engine<'a> {
     rhs_max: f64,
     /// Last dual pivot for snapshots: τ = B⁻¹ρ by position, α_r, β = ‖ρ‖².
     last_dse: (Vec<f64>, f64, f64),
+    /// Whether the last pivot's BTRAN output was dense (snapshot `bt_dense`, tools/m1_beta_check.py).
+    bt_dense: bool,
     last_aq_row: f64,
     /// `RSOLVER_SNAP` / `RSOLVER_BFRT` dump files, read once.
     snap_path: Option<String>,
@@ -157,6 +159,7 @@ impl<'a> Engine<'a> {
             col_nnz: 0,
             rhs_max: 0.0,
             last_dse: (Vec::new(), 0.0, 0.0),
+            bt_dense: false,
             last_aq_row: 0.0,
             snap_path: std::env::var("RSOLVER_SNAP").ok(),
             bfrt_path: std::env::var("RSOLVER_BFRT").ok(),
@@ -569,11 +572,11 @@ impl<'a> Engine<'a> {
             .map(|j| self.d[j])
             .collect();
         let line = format!(
-            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",\"aqrow\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",\"bt_dense\":{},\"aqrow\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
             self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr),
             self.pr.allow, self.lu.n_updates, self.pr.avg, hex(&self.pr.score), self.pr.cost_mode, hex(&self.pr.row_cost),
             hex(&self.pr.var_cost), self.lu.n_singleton, self.lu.eta_nnz(), self.upd_cols,
-            hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), hexf(self.last_aq_row), self.pt_rc, self.pt_deg, self.pt_deg0,
+            hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), self.bt_dense, hexf(self.last_aq_row), self.pt_rc, self.pt_deg, self.pt_deg0,
             self.pt_it0
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
@@ -975,9 +978,10 @@ impl<'a> Engine<'a> {
                 return Status::Optimal;
             }
             let delta = self.primal_infeas(r);
-            let rho_sp = self.lu.btran(&[(r, 1.0)]);
-            // β = ‖ρ_r‖² summed in BTRAN output order (1bae9c L1971–2110)
-            let beta = sum_squares(&rho_sp.iter().map(|e| e.1).collect::<Vec<_>>());
+            let (rho_sp, dense) = self.lu.btran_dense(&[(r, 1.0)]);
+            // β = ‖ρ_r‖² (8b473 C:105–222) over what 28c93 C:149–163 hands it: a dense BTRAN output compacted to
+            // |ρ_i| > ZERO in row order, a sparse one as it is
+            let beta = sum_squares(&rho_sp.iter().map(|e| e.1).filter(|v| !dense || v.abs() > ZERO).collect::<Vec<_>>());
             let mut rho = vec![0.0; self.m];
             for &(i, v) in &rho_sp {
                 rho[i] = v;
@@ -1122,12 +1126,13 @@ impl<'a> Engine<'a> {
             for &(rr, pos, _) in &self.lu.steps {
                 taup[pos] = tau[rr];
             }
-            // 1bae9c L420-470: β = ‖ρ_r‖² (summed in BTRAN output order), w_r = (β/α_r)/α_r, then
+            // 1bae9c L420-470: β = ‖ρ_r‖² (above), w_r = (β/α_r)/α_r, then
             // w_i = max(1e-8, (β·t·t − (t+t)·τ_i) + w_i) with t = α_i/α_r
 
             let ar = if arq.abs() >= 1e-8 { arq } else if arq < 0.0 { -1e-8 } else { 1e-8 };
             if self.snap_path.is_some() {
                 self.last_dse = (taup.clone(), arq, beta);
+                self.bt_dense = dense;
                 self.last_aq_row = alpha[q];
             }
             self.w[r] = if beta == 0.0 { 1e-8 } else { (beta / ar) / ar };
