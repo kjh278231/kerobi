@@ -12,13 +12,14 @@
   "tools/push_recall_lp.py": "6bba39d1c3fa59cf872cec4cd214c7f47a7e4fd03c0f7b445a1c4f2f2cb681b9",
   "tools/push_violated_lp.py": "071c3eba19a443a986b9ed25b5e0bf2eba846af80c7d2cd6510046f4de30e3dc",
   "tools/primal_push_decision_check.py": "1934fe1f7a8dd1eba984bd93cfb40a8b7c7b919658fda4442d3eb3d68038c3b1",
-  "tools/primal_push_decision_rust.py": "1ff20e905cd2951b06768238734ab570cc53ae5686437d0aec4f729a5d86feb1",
+  "tools/primal_push_decision_rust.py": "b6a67bdff68003424c86e2dcce4f822611d38ae2ee3e533c470a666405818162",
   "tools/push_recall_runs.sh": "0fbbb0032cee5fb970477fb0539b6f4d839c641079ffbc9de6acc384834974e5",
-  "tools/push_recall_manifest.py": "0823a9950b2ee49fe4ea33465a15dc713bd6b0d22d26794524b9b458992995a5"
+  "tools/push_recall_manifest.py": "7a47b1e778d61b2f2194ffe66993c4420078e06c519d5904d6a40d0a7dcf2dd5"
  },
  "records": {
   "bench/oracle/m3_push_recall/model-mutation.json": "e10d932ed81af65fdd21fe39ab0309a6e1a15f5edf769d38d4949964cde46a46",
   "bench/oracle/m3_push_recall/rust-mutation.json": "aeb3463aff148d48e596cd1d7f1a37e9cb54246e9a5e6a5571dbb189f257cbef",
+  "bench/oracle/m3_push_recall/rust-mutation-v2.json": "36606791bb84b99fd8dea97da3fee938e03ec31f4c48cac9eb9e0e20953236f1",
   "bench/oracle/m3_push_decision_rust/input.txt": "5eccb886f607db19d3221920b15323d41e13b27d7fee608d7f4c0e0b7aab7cb0"
  },
  "sources": {
