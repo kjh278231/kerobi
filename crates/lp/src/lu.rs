@@ -955,13 +955,14 @@ impl Lu {
     /// position, `r` the pivot position. Returns the U kernel ("21686f", "2126cd", "21841f" or "inline"), the α_q
     /// output order (positions; M1-02g P3 on the sparse-U kernels: rows with LU+0xf8 = −1 in input order, tail rows
     /// by U position descending, listed prefix rows by LU+0xf8; else position order with the pivot last, C:1812–1832)
-    /// and the spike order for `update`.
+    /// the spike order for `update` and the number of its rows placed by the shortcut fill order below (0 when the
+    /// spike is collected densely; snapshots mark those pivots as outside the checked rule).
     /// shortcut: the counts after L and the row etas are nonzeros of the dense solve (a sparse kernel's list may also
     /// hold cancelled entries), a sparse side's order is its input rows then the other rows in position order (the
     /// `21b9de` Kahn FIFO and `21f83a` orders are not modelled), the LU+0x128 level path is left out and a side that
     /// `21f83a` takes densely counts as dense; checked on kb2 pivots 0–37 only (M1-02h). Upgrade when a capture
     /// disagrees.
-    pub fn ftran2(&self, a_in: &[usize], a_l: i64, spike: &[f64], rho: [i64; 3], aq: &[f64], r: usize) -> (&'static str, Vec<usize>, Vec<usize>) {
+    pub fn ftran2(&self, a_in: &[usize], a_l: i64, spike: &[f64], rho: [i64; 3], aq: &[f64], r: usize) -> (&'static str, Vec<usize>, Vec<usize>, usize) {
         let m = self.head.len() as i64;
         let s = self.sparse_mult as i64;
         let dense = |n: i64| n < 0 || m < s * n;
@@ -987,11 +988,12 @@ impl Lu {
             (false, false) => "inline",
         };
         let sorder = if na < 0 { self.dense_order(spike) } else { lr.clone() };
+        let fill = if na < 0 { 0 } else { lr.iter().filter(|&&i| !seen[i]).count() };
         let supp: Vec<usize> = (0..aq.len()).filter(|&p| aq[p] != 0.0).collect();
         if !matches!(kernel, "21686f" | "21841f") {
             let mut out: Vec<usize> = supp.into_iter().filter(|&p| p != r).collect();
             out.push(r);
-            return (kernel, out, sorder);
+            return (kernel, out, sorder, fill);
         }
         let t = self.prefix;
         let pos = |k: usize| self.steps[k].1;
@@ -1004,7 +1006,7 @@ impl Lu {
         out.extend(tail);
         out.extend(pre);
         debug_assert_eq!(out.len(), supp.len(), "sparse-U output covers the support");
-        (kernel, out.into_iter().map(pos).collect(), sorder)
+        (kernel, out.into_iter().map(pos).collect(), sorder, fill)
     }
 
     /// LU+0xf0 list as basis positions (snapshots).

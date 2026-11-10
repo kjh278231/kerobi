@@ -1147,7 +1147,7 @@ impl<'a> Engine<'a> {
             let rho_l = nz(&tau);
             self.lu.ftran_r(&mut tau);
             let a_in: Vec<usize> = self.spx.col(q).map(|e| e.0).collect();
-            let (uk, mut aq_list, sorder) = self.lu.ftran2(&a_in, a_l, &spike, [rho_in, rho_l, nz(&tau)], &col, r);
+            let (uk, mut aq_list, sorder, fill) = self.lu.ftran2(&a_in, a_l, &spike, [rho_in, rho_l, nz(&tau)], &col, r);
             // 8b473 C:466–482: the pivot's place in the α_q list takes its last entry
             if let Some(i) = aq_list.iter().position(|&p| p == r) {
                 aq_list.swap_remove(i);
@@ -1228,7 +1228,7 @@ impl<'a> Engine<'a> {
                 self.price_touch(&changed, Some(r), true);
             }
             if self.snap_path.is_some() {
-                self.last_aqo = format!("\"aqo\":{:?},\"uk\":\"{}\",", aq_list, uk);
+                self.last_aqo = format!("\"aqo\":{:?},\"uk\":\"{}\",\"fill\":{},", aq_list, uk, fill);
             }
 
             self.log();
