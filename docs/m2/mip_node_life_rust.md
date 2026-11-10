@@ -123,6 +123,7 @@ cargo test --release --workspace
   - 입력 변조 추가: neos-860300 입력의 `end` 줄을 지우면 그 사례만 `panic` 줄로 끝나 거부되고(출력 6,852줄 vs 6,851) 다른 5사례는 통과한다. `catch_unwind` 사례 격리 경로를 이것으로 처음 실행했다.
   - 다시 돌린 `python3 tools/mip_node_life_rust.py --self-test`: 종료 0, C/R/D 110,753줄 같음, T 7종 거부, V 기대대로.
 - 회귀: `cargo clippy --workspace --all-targets -- -D warnings` 0, `cargo test --release --workspace` 124 통과·무시 10(새 무시 테스트 `node_life_l1` 포함), `python3 tools/mip_node_life_check.py --self-test` `ACCEPTANCE PASS (+ self-test)`. pytest는 실행하지 않았다(Python 미변경).
+- 병합 전 재검사: main `6451309`(M1-02h, `crates/lp` 변경)을 받아 합친 트리에서 `python3 tools/mip_node_life_rust.py --self-test` PASS, clippy 0, `cargo test --release --workspace` 124 통과·무시 10, `python3 tools/mip_node_life_check.py --self-test` `ACCEPTANCE PASS (+ self-test)`.
 - 실행하지 못한 검사: 없음(계약 범위). 원본 재캡처는 계약상 하지 않았다(06f-2 L1 재사용).
 
 ## 7. 판정과 인수인계
