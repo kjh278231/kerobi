@@ -12,6 +12,8 @@
 - **훅 오프셋은 objdump로 함수 진입점인지 확인한다.** 진입점은 보통 `push %r12`로 시작한다. 디컴파일 파일 이름의 앞 숫자가 그대로 훅 오프셋이다. (M2-03c-2)
 - **Python venv에는 frida 모듈이 없다.** Node Frida(`tools/mip_retry_basis.js`의 require 경로)를 쓴다. (M2-03b-1)
 
+- **함수 중간 지점 훅은 objdump로 명령 경계, 그 지점으로 가는 jmp 전부의 출처, 레지스터 쓰기를 확인한 뒤 붙인다.** `0x1c3004`는 jmp 9개가 모두 단계 구간 안에서 왔고 r14 쓰기가 없었다. 새 훅의 사건만 빼서 이전 캡처와 같으면 비간섭 증거가 된다. (M3-04b-1, [§3](../m3/primal_push_step_oracle.md#3-캡처-경계-보완))
+
 ## 원본 주소 인용
 
 - **캡처에 10진수로 남은 반환 주소는 `hex()`로 변환해 인용한다.** 손으로 변환하다 `0x722794`를 `0x722894`로 문서에 적었다(검토에서 발견). 함수 매핑도 같은 값으로 `../re/decomp/index.tsv`를 bisect해 구한다. (M2-03c-2)
@@ -24,6 +26,8 @@
 - **Bash 도구 timeout은 최대 600초다.** 긴 배치는 `wait-output --timeout 580000`을 여러 번 부른다. (M2-03c-2)
 - **`tools/gurun.sh`는 출력을 `$()`로 받기 때문에 pane에 ctrl+c를 보내도 멈추지 않는다.** 자신이 띄운 PID(runs.sh, gurun, node, frida로 띄운 python)를 kill한다. (M2-03c-2)
 - **원본 캡처는 약 2분/회(nidda 6000노드, gmu 20000노드)다.** 다른 세션이 Gurobi를 쓰면 `gurun.sh`가 대기하므로 더 걸린다. (M2-03c-2)
+
+- **Codex 세션이 사용량 한도로 끝나면 rollout JSONL(`~/.codex/sessions/YYYY/MM/DD/*<id>.jsonl`)의 `task_complete.error`와 마지막 `custom_tool_call_output`로 중단 지점을 복구한다.** 마지막 출력에 남은 캡처 결과가 미추적 파일로 남아 있을 수 있다. (M3-04b-1)
 
 ## 검사기
 

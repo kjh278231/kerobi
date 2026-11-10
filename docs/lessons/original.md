@@ -42,6 +42,12 @@
 - NodeMethod=−1 기본값에서 `param_3[3]`은 1(dual)이다. nidda 한 점에서만 관측했다(첫 LP method 1, `param_7=0`). (M2-03d-1)
 - `a7f923`·`a7f0ad`·`local_58+0x1a0`은 선형 MIP에서 0이다. nidda가 `cda5b` 직접 경로를 탔다는 사실과만 모순이 없다. (M2-03d-2)
 
+## crossover primal push (`134a87`)
+
+- **flip(`0x1c2994`)과 pivot(`0x1c2ab5`) 경로는 `0x1c3004`에서 합류한다.** 이 지점이 교환 직후·rhs 보정 전이며 r14는 workspace S다. pivot 경로에서 `S+0x2f8`은 ratio의 sparse 위치에서 basis 행으로 바뀐다. C·asm·캡처. (M3-04b-1, [§3](../m3/primal_push_step_oracle.md#3-캡처-경계-보완))
+- **pivot 뒤 factor 처리(`05b257` 호출 구간)가 basis header 전체 순서를 재배열할 수 있다.** 다음 후보 직전 header에서 교환한 행 위치를 그대로 기대하면 틀린다. 교환은 `0x1c3004`에서 보고, factor 후에는 집합 보존만 검사한다. 캡처. (M3-04b-1)
+- **목적 0인 `interior.lp`에서는 Crossover=1(dual-first)과 3(primal-first)의 primal push 단계 순서가 같았다.** 다른 궤적이 필요하면 목적이 있는 LP를 먼저 탐색한다. 캡처 1개 LP. (M3-04b-1)
+
 ## 디컴파일 읽기
 
 - **Ghidra 서명이 깨질 수 있다**(`2f7e1`이 `double param_1`로 나온다). 인자 의미는 호출 지점의 실인자로 판단한다. (M2-03c-2)

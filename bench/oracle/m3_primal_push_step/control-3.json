@@ -1,0 +1,36 @@
+{
+  "pid": 1507239,
+  "run_id": "6ebda6cc-f422-4c2b-a888-5607f38f5ffa",
+  "schema": "M3-04b-1-v1",
+  "origin": "natural",
+  "kind": "control",
+  "agent_sha256": "9dd25ce04d140527b10dfc97a35ed961e7569565e9de01eb830e3c7b8ba8b71e",
+  "model_sha256": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "3e2ed3c80bd971df64de582b7e0adf29591e239f027ec0abd66b762aeb12c458",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 0,
+    "LPWarmStart": 2
+  },
+  "starts": null,
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.23.4"
+  },
+  "output": "CROSSOVER_RESULT {\"status\": 2, \"vbasis\": null, \"cbasis\": null}\n",
+  "result": {
+    "status": 2,
+    "vbasis": null,
+    "cbasis": null
+  },
+  "reason": "process-terminated",
+  "errors": [],
+  "events": []
+}

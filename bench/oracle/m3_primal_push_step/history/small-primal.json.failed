@@ -1,0 +1,30 @@
+{
+  "schema": "M3-04b-1-v1",
+  "origin": "natural",
+  "kind": "primal",
+  "agent_sha256": "4e789a238fb26b09c3a6ac388eb739613896ca1e8ba745d4738aea2f6636398b",
+  "model_sha256": "c14a6db31c1ec2ed206ddf2a585f9467ced4e1dbdff11202685f61dd5c478a8d",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "4aa6ff47e5be1cc49c22c40e87f19b1f8143e00e21c12ddad5c600024781a5f6",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 3,
+    "LPWarmStart": 2
+  },
+  "starts": null,
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.23.4"
+  },
+  "output": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    import gurobipy as gp\n  File \"<frozen importlib._bootstrap>\", line 1360, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 1322, in _find_and_load_unlocked\n  File \"<frozen importlib._bootstrap>\", line 1262, in _find_spec\n  File \"/home/sds/workspace/gurobi-sandbox/.venv/lib/python3.13/site-packages/gurobi_guard.py\", line 38, in find_spec\n    raise RuntimeError(f\"Gurobi is already running (pid {holder}, lock {LOCK}). Gurobi must not run twice \"\n                       \"at once; wait for that process to exit, then retry.\") from None\nRuntimeError: Gurobi is already running (pid 1391793, lock /home/sds/workspace/gurobi-sandbox/.venv/gurobi.lock). Gurobi must not run twice at once; wait for that process to exit, then retry.\n",
+  "result": null,
+  "reason": "process-terminated",
+  "errors": [],
+  "events": []
+}
