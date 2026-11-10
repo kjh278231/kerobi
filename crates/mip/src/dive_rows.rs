@@ -170,13 +170,17 @@ impl RowList {
         x.built = false;
     }
 
-    /// D changed (rows, rhs, coefficients): `dcd29`/`db102`/`fbf68`/`edd71` C:3454 clear X+0x18; new rows are unlisted.
+    /// D changed: X+0x18 is cleared by `edd71` C:3454 (rhs), `dcd29`/`db102` (row/column capacity) and `fbf68`; new rows
+    /// are unlisted. Call with the current D row count after every change.
     pub fn changed(&mut self, nrows: usize) {
         let Some(x) = self.x.as_mut() else { return };
         x.built = false;
-        // shortcut: row deletion with listed rows (renumbering) is not ported; never seen in the M2-03d-8 runs
-        assert!(x.list.iter().all(|&r| (r as usize) < nrows), "row deletion with a non-empty dive list");
-        x.pos.resize(nrows.max(x.pos.len()), -1);
+        if nrows < x.pos.len() {
+            // shortcut: row deletion with listed rows (renumbering) is not ported; never seen in the M2-03d-8 runs
+            assert!(x.list.is_empty(), "row deletion with a non-empty dive list");
+            x.pos.truncate(nrows);
+        }
+        x.pos.resize(nrows, -1);
     }
 
     /// `10f448`: on the first swap of a nesting, put the reduced column lengths and rhs into D. Building the copies moves
