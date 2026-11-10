@@ -1,0 +1,36 @@
+PROFILE presolve=0.001392 root=0.000826 root_iter=39 loop=0.850373 select=0.000477 lp=0.291798 spx=0.009697 eng=0.001077 solve=0.241646 unscaled=0.032804 incumbent=0.000136 branch=0.003284 clones=501 clone_nnz=461922 max_open=502 lp_iter=18899 warm_nodes=500 warm_iter=2689 warm_lp=0.136530 warm_cold_iter=18899 warm_cold_lp=0.291798 warm_mismatch=0 warm_none=0 warm_all=0.136530 wspx=0.009208 weng=0.000936 wsolve=0.089281 wunscaled=0.029739
+PROFILE_RESTORE restore=0.000004
+RESULT gen-ip002 status=NodeLimit nodes=500 iters=18938 bound=c0b2dfdbb95fa7fb obj=c0a65aeeda7a347b path=reduced wall=0.853603
+PROFILE presolve=0.000659 root=0.000755 root_iter=52 loop=1.328827 select=0.000553 lp=0.385273 spx=0.008285 eng=0.001507 solve=0.344439 unscaled=0.025773 incumbent=0.000197 branch=0.004028 clones=501 clone_nnz=458415 max_open=502 lp_iter=31122 warm_nodes=500 warm_iter=20166 warm_lp=0.279372 warm_cold_iter=31122 warm_cold_lp=0.385273 warm_mismatch=0 warm_none=0 warm_all=0.279372 wspx=0.008065 weng=0.001503 wsolve=0.241136 wunscaled=0.024826
+PROFILE_RESTORE restore=0.000009
+RESULT pk1 status=NodeLimit nodes=500 iters=31174 bound=0000000000000000 obj=4085180000000000 path=reduced wall=1.332264
+PROFILE presolve=0.001181 root=0.002220 root_iter=108 loop=2.247801 select=0.000670 lp=0.777694 spx=0.008773 eng=0.001683 solve=0.696621 unscaled=0.070740 incumbent=0.000242 branch=0.004412 clones=501 clone_nnz=1010016 max_open=502 lp_iter=44067 warm_nodes=500 warm_iter=7303 warm_lp=0.344876 warm_cold_iter=44067 warm_cold_lp=0.777694 warm_mismatch=0 warm_none=0 warm_all=0.344876 wspx=0.008515 weng=0.001567 wsolve=0.261503 wunscaled=0.063897
+PROFILE_RESTORE restore=0.000010
+RESULT neos5 status=NodeLimit nodes=500 iters=44175 bound=402b800000000000 obj=4038000000000000 path=reduced wall=2.253069
+PROFILE presolve=0.004363 root=0.004433 root_iter=364 loop=5.541552 select=0.001182 lp=1.912023 spx=0.051143 eng=0.008131 solve=1.744324 unscaled=0.083271 incumbent=0.000953 branch=0.022782 clones=501 clone_nnz=1206408 max_open=502 lp_iter=176491 warm_nodes=500 warm_iter=1283 warm_lp=0.856323 warm_cold_iter=176491 warm_cold_lp=1.912023 warm_mismatch=0 warm_none=0 warm_all=0.856323 wspx=0.047163 weng=0.008043 wsolve=0.705408 wunscaled=0.074128
+PROFILE_RESTORE restore=0.000023
+RESULT tr12-30 status=NodeLimit nodes=500 iters=176855 bound=40d9a72d10a28b90 obj=4107b31000000000 path=reduced wall=5.566222
+PROFILE presolve=0.001421 root=0.004672 root_iter=187 loop=5.521178 select=0.000989 lp=2.021779 spx=0.032540 eng=0.004657 solve=1.912711 unscaled=0.073176 incumbent=0.003408 branch=0.012759 clones=501 clone_nnz=745488 max_open=502 lp_iter=88056 warm_nodes=500 warm_iter=1642 warm_lp=0.731228 warm_cold_iter=88056 warm_cold_lp=2.021779 warm_mismatch=0 warm_none=0 warm_all=0.731228 wspx=0.030431 weng=0.004594 wsolve=0.607227 wunscaled=0.070218
+PROFILE_RESTORE restore=0.000017
+RESULT neos-3754480-nidda status=NodeLimit nodes=500 iters=88243 bound=c12a169bd8d41f43 obj=40daa7820f190d6d path=reduced wall=5.534828
+PROFILE presolve=0.023860 root=0.009186 root_iter=485 loop=10.144389 select=0.001312 lp=4.487815 spx=0.069065 eng=0.005122 solve=4.209254 unscaled=0.200529 incumbent=0.001810 branch=0.017639 clones=501 clone_nnz=2072637 max_open=502 lp_iter=249943 warm_nodes=500 warm_iter=3716 warm_lp=0.573910 warm_cold_iter=249943 warm_cold_lp=4.487815 warm_mismatch=0 warm_none=0 warm_all=0.573910 wspx=0.067164 weng=0.005126 wsolve=0.369058 wunscaled=0.117769
+PROFILE_RESTORE restore=0.000000
+RESULT gmu-35-40 status=NodeLimit nodes=500 iters=250428 bound=c1425d0fc69287ec obj=none path=reduced wall=10.187521
+PROFILE presolve=0.009620 root=0.014076 root_iter=400 loop=13.009152 select=0.001453 lp=5.143004 spx=0.021639 eng=0.002993 solve=4.808690 unscaled=0.293704 incumbent=0.001901 branch=0.008822 clones=501 clone_nnz=1695885 max_open=502 lp_iter=175098 warm_nodes=500 warm_iter=9365 warm_lp=1.362720 warm_cold_iter=175098 warm_cold_lp=5.143004 warm_mismatch=0 warm_none=0 warm_all=1.362720 wspx=0.022134 weng=0.003053 wsolve=1.029601 wunscaled=0.291833
+PROFILE_RESTORE restore=0.000027
+RESULT assign1-5-8 status=NodeLimit nodes=500 iters=175498 bound=40677d4c3e19ed0b obj=406e000000000000 path=reduced wall=13.037796
+PROFILE presolve=0.005822 root=0.003148 root_iter=207 loop=3.393665 select=0.000865 lp=1.026556 spx=0.044009 eng=0.007783 solve=0.908590 unscaled=0.047239 incumbent=0.002489 branch=0.016421 clones=500 clone_nnz=1226000 max_open=500 lp_iter=58462 warm_nodes=500 warm_iter=15515 warm_lp=0.666514 warm_cold_iter=58462 warm_cold_lp=1.026556 warm_mismatch=0 warm_none=0 warm_all=0.666514 wspx=0.043219 weng=0.007691 wsolve=0.554787 wunscaled=0.047153
+PROFILE_RESTORE restore=0.000035
+RESULT supportcase26 status=NodeLimit nodes=500 iters=58669 bound=4094b059cc028af3 obj=40a133c240320e18 path=reduced wall=3.415650
+PROFILE presolve=0.000261 root=0.000155 root_iter=13 loop=0.084491 select=0.000258 lp=0.028731 spx=0.001527 eng=0.000416 solve=0.020642 unscaled=0.003171 incumbent=0.000077 branch=0.000860 clones=489 clone_nnz=60147 max_open=478 lp_iter=4835 warm_nodes=500 warm_iter=1146 warm_lp=0.014681 warm_cold_iter=4835 warm_cold_lp=0.028731 warm_mismatch=0 warm_none=0 warm_all=0.014681 wspx=0.001545 weng=0.000408 wsolve=0.008042 wunscaled=0.003226
+PROFILE_RESTORE restore=0.000002
+RESULT markshare_4_0 status=NodeLimit nodes=500 iters=4848 bound=0000000000000000 obj=407e600000000000 path=reduced wall=0.085499
+PROFILE presolve=0.002234 root=0.000882 root_iter=52 loop=0.944458 select=0.000508 lp=0.367900 spx=0.017897 eng=0.001170 solve=0.318474 unscaled=0.021608 incumbent=0.000237 branch=0.005112 clones=501 clone_nnz=842682 max_open=502 lp_iter=25186 warm_nodes=500 warm_iter=2598 warm_lp=0.106931 warm_cold_iter=25186 warm_cold_lp=0.367900 warm_mismatch=0 warm_none=0 warm_all=0.106931 wspx=0.017372 weng=0.001116 wsolve=0.063468 wunscaled=0.019794
+PROFILE_RESTORE restore=0.000018
+RESULT mas74 status=NodeLimit nodes=500 iters=25238 bound=40c4e5bae9e9b9e2 obj=41033504e1f4b1ee path=reduced wall=0.949916
+PROFILE presolve=0.481220 root=0.033350 root_iter=551 loop=24.764067 select=0.001600 lp=8.030468 spx=0.269369 eng=0.009306 solve=7.379310 unscaled=0.332730 incumbent=0.002110 branch=0.035572 clones=453 clone_nnz=17232120 max_open=406 lp_iter=184194 warm_nodes=500 warm_iter=44489 warm_lp=4.334249 warm_cold_iter=184194 warm_cold_lp=8.030468 warm_mismatch=0 warm_none=0 warm_all=4.334249 wspx=0.268333 weng=0.009120 wsolve=3.716788 wunscaled=0.312111
+PROFILE_RESTORE restore=0.000000
+RESULT neos-860300 status=NodeLimit nodes=500 iters=184745 bound=40a2840000000000 obj=none path=reduced wall=25.292921
+PROFILE presolve=0.001798 root=0.001184 root_iter=141 loop=1.038705 select=0.000444 lp=0.408019 spx=0.019226 eng=0.002996 solve=0.359618 unscaled=0.022621 incumbent=0.002370 branch=0.007823 clones=485 clone_nnz=388485 max_open=470 lp_iter=70277 warm_nodes=500 warm_iter=1371 warm_lp=0.108072 warm_cold_iter=70277 warm_cold_lp=0.408019 warm_mismatch=0 warm_none=0 warm_all=0.108072 wspx=0.018254 weng=0.002849 wsolve=0.060247 wunscaled=0.020167
+PROFILE_RESTORE restore=0.000000
+RESULT timtab1 status=NodeLimit nodes=500 iters=70418 bound=40f9e11000000000 obj=none path=reduced wall=1.046833
