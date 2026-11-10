@@ -12,6 +12,7 @@
 - 제외 범위와 후속:
   - 관문(C:1581–1610)과 C:526–529의 재활성 조건: 03d-8 `d:gate` 사건은 통과한 호출만 입력을 기록하고(사례별 `d:gate` 수 = `d:sel` 수), 실패는 `d:gate_counts` 집계뿐이다. `I+0x28`·`I+0x2c`·`a7f0ad`·`a7f923` 입력도 없다. 음성 사례 입력이 없어 L1 대조가 불가능하므로 이번 범위에서 뺀다. 관문 입력 오라클(번호 미배정, 제안)로 넘긴다.
   - `edd71`의 "마지막 원소를 옮겨 빼기"로 목록이 비지 않게 남는 경우: 세 사례 모두 실행 0회다(비어 있지 않음→비어 있지 않음 76단계 중 행이 빠진 단계 0). C만으로 옮기고 미검증으로 남긴다.
+  - 이미 목록에 있는 행의 비활성 요청(위치≥0이면 무시): 세 사례 모두 실행 0회다. C만이다.
   - `10f448` 두 포인터 교환의 열 내 순서: 03d-6 API LP는 이미 분할된 상태(R 행이 있는 169열 모두 비목록 행이 앞)다. 재생에서 교환이 한 번도 일어나지 않는다. C만으로 옮기고 미검증으로 남긴다. 판별하려면 `X+0x18`=0으로 들어오는 `10f448`의 전후 ind·val 캡처가 필요하다(후속 제안).
   - 비어 있지 않은 목록에서의 행 삭제와 재번호: 실행 0회이고 원본 위치도 찾지 않았다. Rust는 이 경우를 지원하지 않는다(panic, `shortcut:` 주석).
   - `10e62f`(행별 재활성, 호출자 0)와 `10e5fc`의 두 번째 호출자 `68341b`(실행 0회), 중첩 MIP의 목록, `10f973`·`5d4427`의 목록 읽기, `bnb.rs` 연결은 하지 않는다.
@@ -45,16 +46,17 @@
 | X 재생 입력 | 생성기는 `b:lpnew`·`b:op`(op, rows, D_rows)와 `b:xlist`의 위치·D_rows만 쓴다. `b:xlist`의 rows·count, `x_rows`, `y:ws` 내용은 넣지 않는다. 입력 머리에 사례 이름과 캡처 SHA-256을 적는다 |
 | T trace | Rust trace 머리의 사례·SHA-256이 입력과 같다. 실행 전에 이전 trace를 지운다 |
 | P 목록 | 모든 `b:xlist`에서 Rust 목록이 캡처 rows와 개수·순서까지 같다. 건너뛴 단계는 0이어야 한다 |
-| K 개수 | 사례별 (lp 1 단계, lp 2 단계, 비어 있지 않음→비어 있지 않음, 그중 행 감소) 고정값: nidda_H_s1 (20, 2377, 36, 0), gmu-35-40_default (32, 283, 46, 0), assign1-5-8_default (17, 200, 30, 0) |
-| S 교체 | 03d-7 대상 k=1·k=2: 교체 전 Rust 목록 = 캡처 `x_rows`(96행), 참조수 0→1→0. 교체 뒤 길이 합 1840, 열 앞부분 ind·val·열 시작이 `y:ws` k=2의 cbeg·ind·val과, rhs가 `y:ws` b와 비트 단위로 같다. 바뀐 rhs 행은 캡처 `rhs_diff`(58행)와 같다. 복원 뒤 길이·rhs가 API 값과 같다. k=1에 사본을 만들고 k=2는 다시 만들지 않는다 |
+| K 개수 | 사례별 (lp 1 단계, lp 2 단계, 비어 있지 않음→비어 있지 않음, 그중 행 감소) 고정값: nidda_H_s1 (20, 2377, 36, 0), gmu-35-40_default (32, 283, 46, 0), assign1-5-8_default (17, 200, 30, 0). 03d-7 nidda_bnb_H_s1도 같은 연산 열이며(03d-8 nidda의 투영과 같음) (20, 2377, 36, 0)이다 |
+| S 교체 | 03d-7 대상 k=1·k=2(03d-7 캡처와 03d-8 nidda 캡처 둘 다 대상 사건이 있다. 노드 16948, D 해시 `4051b704-7e653419`, 노드 LP임을 먼저 확인): 교체 전 Rust 목록 = 캡처 `x_rows`(96행), 참조수 0→1→0. 교체 뒤 길이 합 1840, 열 앞부분 ind·val·열 시작이 `y:ws` k=2의 cbeg·ind·val과, rhs가 `y:ws` b와 비트 단위로 같다. 바뀐 rhs 행은 캡처 `rhs_diff`(58행)와 같다. 복원 뒤 길이·rhs가 API 값과 같다. k=1에 사본을 만들고 k=2는 다시 만들지 않는다 |
 
 - 정수·목록은 순서까지 정확 비교. 부동소수(val, rhs)는 u64 비트 비교. 허용오차 없음.
 - 시간·work: 이 함수들에는 work 증가가 없다(C 확인). 비교하지 않는다.
 - 재현성: 03d-7이 3회, 03d-8이 사례마다 3회 바이트 동일을 확인했다(manifest). run 1만 재생한다.
 - 자기검사(`--self-test`):
   - trace 변조 거부: 목록 한 행 삭제, 목록 순서 교환, 갱신 한 줄 삭제, 캡처 SHA-256 변경, 교체 뒤 ind 한 칸 변경.
-  - 코드 변이 거부(임시 복사본): 행 번호 내림차순 반영, react_all 무시, 이미 있는 행 중복 붙이기, rhs +0 생략, 길이 사본에 원래 길이.
-  - 판별되지 않음을 확인하는 변이(거부되지 않아야 한다. 거부되면 §1 미검증 항목을 다시 쓴다): 빼기를 순서 보존 삭제로, 두 포인터 교환을 안정 분할로.
+  - 코드 변이 거부(임시 복사본): 행 번호 내림차순 반영, react_all 무시, rhs +0 생략, 길이 사본에 원래 길이.
+  - 판별되지 않음을 확인하는 변이(거부되지 않아야 한다. 거부되면 §1 미검증 항목을 다시 쓴다): 이미 있는 행 중복 붙이기, 빼기를 순서 보존 삭제로, 두 포인터 교환을 안정 분할로.
+  - 계약 변경(첫 자기검사 뒤, 판정 전): "이미 있는 행 중복 붙이기"를 거부 대상에서 판별되지 않음으로 옮겼다. 세 사례에서 이미 목록에 있는 행을 다시 비활성하는 요청이 0회임을 캡처로 셌기 때문이다(§1).
 
 ## 4. 사례와 원본 자료
 
@@ -75,8 +77,52 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 실행: worktree `../rsolver-m2-03d-10`, 코드 commit `f05b596`(계약 `8147630`), x86-64 Linux(WSL2), `cargo test --release`. 입력은 03d-8 run 1 세 개, 03d-7 run 1, 03d-6 API LP·run 1(SHA-256 §4, manifest 일치)이다. 원본은 다시 실행하지 않았다(저장 기준 재생).
+- `python3 tools/mip_dive_list_rust.py --self-test` 종료 0:
+
+```text
+M: captures match the M2-03d-7/03d-8 manifests (4 cases, API LP, y:ws)
+X: replay inputs in target/mip_dive_list_rust/in
+P/K: nidda_H_s1 updates lp1 20 lp2 2377, non-empty -> non-empty 36 (row left 0)
+P/K: gmu-35-40_default updates lp1 32 lp2 283, non-empty -> non-empty 46 (row left 0)
+P/K: assign1-5-8_default updates lp1 17 lp2 200, non-empty -> non-empty 30 (row left 0)
+P/K: nidda_bnb_H_s1 updates lp1 20 lp2 2377, non-empty -> non-empty 36 (row left 0)
+S: nidda target (call 19901 node 16948) k=1,2 in both nidda captures: rust list = x_rows, reduced D = y:ws (cbeg/ind/val/b bits), restore = API, refs 0-1-0
+rejected: list row dropped: P gmu-35-40_default: lp 1 call 952 node 5: rust 3 rows != capture 4; ...
+rejected: list order: P assign1-5-8_default: lp 1 call 352 node 7: rust 8 rows != capture 8; first diff at 0: ...
+rejected: update deleted: K nidda_H_s1: 2396 list updates in the trace, capture 2397
+rejected: capture sha256: T gmu-35-40_default: trace is for gmu-35-40_default e1e4…7d00, capture e1e4…7d0c
+rejected: swapped ind: S k=1: reduced ind != y:ws, first diff at 0
+mutant rejected: rows in decreasing order: P nidda_H_s1: lp 1 call 74 node 1: rust 7 rows != capture 7; ...
+mutant rejected: react_all ignored: P nidda_H_s1: lp 1 call 185 node 3: rust 7 rows != capture 0; ...
+mutant rejected: rhs of listed rows kept: S k=1: rhs != y:ws b, first diff row 125
+mutant rejected: reduced length = full length: S k=1: reduced nnz 4955
+mutant passes (not discriminated by the captures, section 1): already listed row appended again
+mutant passes (not discriminated by the captures, section 1): order-preserving removal
+mutant passes (not discriminated by the captures, section 1): stable partition
+PASS
+```
+
+- P: 네 입력의 모든 `b:xlist` 5,326건(03d-8 2,929건, 03d-7 2,397건 — 03d-7은 03d-8 nidda와 같은 연산 열)에서 Rust 목록이 개수·순서까지 캡처와 같다. 건너뛴 단계는 없다. 행 수 감소는 모두 빈 목록일 때였다(03d-7 P는 감소 뒤 15단계를 건너뛰었지만 이번 재생은 전부 비교했다). skip·xfail 없음.
+- S: 대상 k=1에서 Rust가 사본을 만들고(만듦 표시 0→1) k=2는 재사용했다. 원본은 k=1 진입 때 이미 사본이 있었다(`built_before` 1, call 19865 이후 만들어짐). 교체 뒤 D는 03d-6 `y:ws`와 비트 단위로 같다. 이 비교는 사본을 만든 시점과 무관하다. 대상까지 D 계수가 바뀌지 않았다는 전제는 03d-7 L(진입 D 해시 = 03d-6)이 받친다.
+- 판별되지 않은 변이 3종은 계약대로 통과했다(§1 미검증 항목의 근거).
+- 첫 실행에서 드라이버 오류 두 건을 고쳤다. 이식 코드는 고치지 않았다. (1) 03d-8 nidda 캡처에도 대상 사건이 있어 S를 두 nidda 사례에 적용했고, 대상 노드·D 해시 확인을 넣었다. (2) 합격 조건에서도 실패 메시지의 `next()`가 먼저 평가돼 StopIteration이 났다.
+- 관련 회귀: `cargo test -p rsolver-mip` 종료 0(단위 `dive_rows::tests::row_list` 포함, L1 테스트 2개는 ignored), `cargo test --release --workspace` 종료 0, `cargo clippy --workspace --all-targets -- -D warnings` 종료 0, `python3 tools/mip_dive_rows_rust.py` PASS(03d-9 재생 불변).
+- 실행하지 않은 검사: pytest(`crates/py`·`python/rsolver` 미변경), Gurobi(원본 재캡처 불필요).
+- 계약 변경: "이미 있는 행 중복 붙이기" 변이를 거부 대상에서 판별되지 않음으로 옮겼다(§3, 첫 자기검사 뒤·판정 전, 실행 0회를 캡처로 셈).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: **완료(구현 L1)**.
+- 동등성: **통과(L1, 저장 기준 재생)**. 목록 유지는 세 사례 top-level LP의 모든 X 목록 변경을 순서까지 재현한다. 교체는 nidda 대상 노드에서 줄인 D(열 앞부분 길이·ind·val, rhs)와 복원을 비트 단위로 재현한다.
+- 남은 한계:
+  - C만(실행에서 판별되지 않음): 비어 있지 않게 남는 빼기(마지막 원소 옮기기), 이미 목록에 있는 행의 비활성 요청, `10f448` 두 포인터 교환의 열 내 순서(입력 D가 이미 분할돼 교환 0회), `0x2716` 오류, 참조수 중첩(>1).
+  - 미이식: 관문(C:1581–1610)과 C:526 재활성 조건(음성 사례 입력 없음), 비어 있지 않은 목록의 행 삭제·재번호(Rust는 panic), `10e62f`, `68341b` 경로, 중첩 MIP, `bnb.rs` 연결.
+  - `10f448`은 D의 ind·val을 제자리에서 바꾸고 `10f5ae`는 되돌리지 않는다. 열 내 순서가 목록 이력에 따라 누적되므로, M2-03d-4에서 원본 궤적을 맞추려면 Rust 노드 LP도 같은 D 배열을 이어 써야 한다(매번 원본 LP에서 다시 만들면 순서가 달라질 수 있다).
+- 후속:
+  - 관문 입력 오라클(번호 미배정, 제안): C:1581–1610·C:526의 모든 판정(실패 포함)에서 DynamicRows, `I+0x28`, `I+0x2c`, `param_2+0x34`, `a7f0ad`·`a7f923`·`+0x18`을 캡처한다.
+  - 분할 순서 오라클(번호 미배정, 제안): `X+0x18`=0으로 들어오는 `10f448`의 전후 D ind·val을 캡처한다.
+  - M2-03d-4(L2): 다이브 행 선택·목록 유지·교체는 이식됐다. 남은 선행은 M2-10b, M1 요청(primal warm start·LP cutoff), 관문이다.
+- 재실행: `python3 tools/mip_dive_list_rust.py --self-test`(release 빌드와 변이 7회 빌드 포함 수 분).
+- 작업 branch: `work/m2-03d-10`. 검사 통과 뒤 main에 `--no-ff`로 병합한다.
+- 교훈: [원본 사실](../lessons/original.md)(`10f448` 제자리 분할 누적, 만듦 표시를 지우는 함수들), [도구](../lessons/tooling.md)(판별되지 않는 변이를 "통과해야 함"으로 고정, 실패 메시지의 즉시 평가)에 추가했다.

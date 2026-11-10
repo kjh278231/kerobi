@@ -37,6 +37,7 @@ MUTANTS = [
     ('react_all ignored', [('self.mark(nrows, &list, REACT)', 'let _ = list;\n        Ok(())')], True),
     ('rhs of listed rows kept', [('x.rhs[r as usize] = 0.0;', 'let _ = r;')], True),
     ('reduced length = full length', [('x.len[j] = (a - s as i64) as i32;', 'x.len[j] = len[j];')], True),
+    ('already listed row appended again', [('if x.pos[i] < 0 {', 'if f & DEACT != 0 {')], False),
     ('order-preserving removal', [(REMOVE, '''let p = x.pos[i] as usize;
                 x.list.remove(p);
                 for q in p..x.list.len() {
