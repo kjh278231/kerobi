@@ -24,6 +24,13 @@ ARMS = ROOT / 'bench/oracle/m3_push_arms'
 VIOL = ROOT / 'bench/oracle/m3_push_violated'
 BINARY_SHA = step.BINARY_SHA
 TOOLS = ['tools/primal_push_decision_capture.js', 'tools/primal_push_decision_agent.js']
+VTOOLS = ['tools/primal_push_violated_capture.js', 'tools/primal_push_violated_agent.js']
+ATOOLS = ['tools/primal_push_arm_capture.js', 'tools/primal_push_arm_agent.js']
+# M3-04c-2 계약 §4: 대상 두 순서 합집합에서 반드시 나와야 하는 위반 경로 arm
+REQUIRED_VIOLATED = {
+    'clause': {'pre-reject1', 'pre-reject0', 'bound-sigma', 'bound-sigma0', 'small-bound', 'small-bound0', 'small-r',
+               'small-r0', 'sigma', 'sigma0'},
+    'cause': {'distance', 'reject', 'accept'}, 'arm': {'neg-B', 'nonneg-A'}}
 FRAME = ['r', 'dL', 'dU', 'k100', 'km100', 'k2', 'e']
 
 
@@ -355,9 +362,10 @@ def summary(steps):
     return dict(sorted(out.items()))
 
 
-def load_all(manifest, arms=False):
+def load_all(manifest, arms=False, violated=False):
     """04b-1 저장 캡처(검사 통과 후)와 04b-2 사례들을 (이름, 레코드) 목록으로 돌려준다.
-    arms면 M3-04b-3 대상 사례도 더한다(대조군·비간섭도 함께 검사)."""
+    arms면 M3-04b-3 대상 사례도 더한다(대조군·비간섭도 함께 검사). violated면 M3-04c-2 위반 basis 사례도 더하고
+    필수 arm(REQUIRED_VIOLATED)을 확인한다."""
     data = []
     for kind in ('primal', 'dual'):
         paths = [OLD / f'{kind}-{i}.json' for i in (1, 2, 3)]
@@ -380,7 +388,45 @@ def load_all(manifest, arms=False):
             recs = validate_new([ROOT / x for x in c['captures']], am, case)
             if c['role'] == 'target':
                 data.append((case, recs[0]))
+    if violated:
+        vm = json.loads((VIOL / 'manifest.json').read_text())
+        seen = {k: set() for k in REQUIRED_VIOLATED}
+        targets = 0
+        for case, c in vm['cases'].items():
+            if c['role'] == 'noninterference':
+                noninterference_retry(vm, c)
+                continue
+            recs = validate_new([ROOT / x for x in c['captures']], vm, case)
+            if c['role'] == 'target':
+                data.append((case, recs[0]))
+                targets += 1
+                for s in decide(recs[0], label=case):
+                    assert s['path'] == 'infeasible', f"{case} call{s['call']} step{s['step']}: 위반 LP의 feasible 단계"
+                    for k in seen:
+                        seen[k].add(s.get(k))
+        assert targets == 2, '위반 대상 두 순서 필요'
+        for k, want in REQUIRED_VIOLATED.items():
+            assert want <= seen[k], f'위반 경로 필수 {k} 누락: {sorted(want - seen[k])}'
     return data
+
+
+def noninterference_retry(vm, c):
+    """재시도 훅(retry:*)을 뺀 새 agent 사건이 04b-3 arm agent 캡처와 같아야 한다. firing이면 훅이 실제로 발동해야 한다."""
+    new, old = (json.loads((ROOT / c[k]).read_text()) for k in ('new', 'old'))
+    am = json.loads((ARMS / 'manifest.json').read_text())
+    assert new['agent_sha256'] == vm['tools'][VTOOLS[1]] == sha(ROOT / VTOOLS[1]), '새 agent'
+    assert new['tool_sha256'] == vm['tools'][VTOOLS[0]] == sha(ROOT / VTOOLS[0]), '새 도구'
+    for i, what in enumerate(('tool', 'agent')):
+        assert old[what + '_sha256'] == am['tools'][ATOOLS[i]] == vm['tools'][ATOOLS[i]] == sha(ROOT / ATOOLS[i]), '이전 ' + what
+    assert new['binary_sha256'] == old['binary_sha256'] == BINARY_SHA, '비간섭 바이너리'
+    assert new['model_sha256'] == old['model_sha256'] == c['model_sha256'], '비간섭 모델'
+    assert new['params'] == old['params'] and new['starts'] == old['starts'] and new['kind'] == old['kind'] == c['kind'], '비간섭 설정'
+    assert new['errors'] == old['errors'] == [] and new['reason'] == old['reason'] == 'process-terminated', '비간섭 실행 오류'
+    fired = [e for e in new['events'] if e['event'].startswith('retry:')]
+    assert bool(fired) == c['firing'], ('재시도 훅 발동 여부', c['firing'], len(fired))
+    assert [e for e in new['events'] if not e['event'].startswith('retry:')] == old['events'], '재시도 사건을 뺀 사건이 이전 agent와 다름'
+    assert new['result'] == old['result'] and new['output'] == old['output'], '비간섭 결과'
+    return len(fired)
 
 
 def noninterference_old_agent(manifest, am, c):
@@ -444,7 +490,7 @@ def main():
                 data.append((f'04b-1/{kind}', json.loads(paths[0].read_text())))
         else:
             manifest = json.loads((BASE / 'manifest.json').read_text())
-            data = load_all(manifest, arms=True)
+            data = load_all(manifest, arms=True, violated=True)
         report = {}
         for label, rec in data:
             st = decide(rec, label=label)
@@ -503,7 +549,7 @@ def capture_tamper(base=BASE, extra=None):
 
 def self_test(data):
     """실제 캡처의 판단 필드를 하나씩 바꿔 대조가 실패하는지 확인한다."""
-    label, rec = data[-1]
+    label, rec = next((lb, r) for lb, r in reversed(data) if lb.startswith('arms-'))
     edits = {}
 
     def first(rec, ev, pred=lambda e: True):
@@ -573,6 +619,74 @@ def self_test(data):
             raise AssertionError('변조 허용: ' + name)
         except (Mismatch, StopIteration) as err:
             out[name] = str(err)
+    out.update(self_test_violated(data))
+    return out
+
+
+def self_test_violated(data):
+    """M3-04c-2: 위반 경로 캡처·판단·비간섭·필수 arm 변조가 거부되는지 확인한다."""
+    import tempfile
+    label, rec = next((lb, r) for lb, r in reversed(data) if lb.startswith('violated-'))
+    out = {}
+    steps = decide(rec, label=label)
+
+    def window(x, clause):
+        s = next(s for s in steps if s['clause'] == clause)
+        ev = x['events']
+        return ev, next(i for i, e in enumerate(ev) if e['event'] == 'ratio:leave' and (e['call'], e['step']) == (s['call'], s['step']))
+
+    def retry_inject(x):
+        ev, k = window(x, 'sigma')
+        ev.insert(k + 1, dict(event='retry:enter', call=ev[k]['call'], step=ev[k]['step']))
+
+    def path_feasible(x):
+        ev, k = window(x, 'sigma')
+        ev[k - 1]['name'] = 'feasible'
+
+    def sigma_mark(x):  # σ=+1 행의 B 표시를 N으로: σ=0이 되어 방향이 바뀌어야 한다
+        ev, k = window(x, 'sigma')
+        rin = ev[k - 1]
+        row = next(e for e in reversed(ev[:k]) if e['event'] == 'supply:leave')['alpha']['indices'][0]
+        rin['marks'][row] = '4e'
+
+    def tiny_sigma(x):  # |σ|<e bound 절(S6)의 σ=5e-9를 5e-6으로: |σ|>=e의 σ 부호 절로 가서 방향이 1이 되어야 한다
+        s = next(s for s in steps if s['clause'] == 'small-bound0')
+        sl = next(e for e in x['events'] if e['event'] == 'supply:leave' and (e['call'], e['step']) == (s['call'], s['step']))
+        vals = sl['alpha']['values']
+        i = min(range(len(vals)), key=lambda q: abs(f64(vals[q])))
+        vals[i] = bits(f64(vals[i]) * 1e3)
+
+    for name, edit in {'v-retry': retry_inject, 'v-path-feasible': path_feasible, 'v-sigma-mark': sigma_mark,
+                       'v-tiny-sigma': tiny_sigma}.items():
+        x = copy.deepcopy(rec)
+        edit(x)
+        try:
+            decide(x, label=label)
+            raise AssertionError('변조 허용: ' + name)
+        except (Mismatch, StopIteration) as err:
+            out[name] = str(err)
+    vm = json.loads((VIOL / 'manifest.json').read_text())
+    out.update({'violated-' + k: v for k, v in capture_tamper(VIOL, {'retry-event': lambda x: x['events'].insert(
+        3, dict(event='retry:enter', call=1, step=1))}).items()})
+    # 비간섭: 발동 사례에서 재시도 사건을 지우면 firing 조건, 비발동 사례 사건 값 변조는 사건 비교로 거부돼야 한다
+    for case, edit in (('retry-primal', lambda x: x.__setitem__('events', [e for e in x['events'] if not e['event'].startswith('retry:')])),
+                       ('violated-primal-armagent', lambda x: next(e for e in x['events'] if e['event'] == 'step:enter').__setitem__('theta', '0' * 16))):
+        c = vm['cases'][case]
+        with tempfile.TemporaryDirectory() as tmp:
+            x = json.loads((ROOT / c['new']).read_text())
+            edit(x)
+            q = Path(tmp) / 'new.json'
+            q.write_text(json.dumps(x))
+            try:
+                noninterference_retry(vm, dict(c, new=str(q)))
+            except AssertionError as err:
+                out['noninterference-' + case] = str(err)
+            else:
+                raise Mismatch('비간섭 변조 허용: ' + case)
+    # 필수 arm: 한 종단을 빼면(그 단계의 방향 결과를 다른 종단으로 바꿀 수 없으므로 모델 변조로) 부족을 잡아야 한다
+    seen = {s['clause'] for _, r in data if _.startswith('violated-') for s in decide(r)}
+    out['required-clause-check'] = f'{len(seen & REQUIRED_VIOLATED["clause"])}/10 관측'
+    assert REQUIRED_VIOLATED['clause'] <= seen
     return out
 
 
