@@ -78,11 +78,17 @@ def shifted_writes(ins):
 
 if __name__ == '__main__':
     ins = disasm()
+    # 루프 준비 쓰기만 루프 읽기(§2.1 표)에 닿아야 한다.
+    expect = {'0x1ec8': ('0x1c1fa5', ['0x1c227c', '0x1c2287', '0x1c22a9', '0x1c2955', '0x1c2964', '0x1c4961']),
+              '0x1eb0': ('0x1c1fae', ['0x1c229a', '0x1c494e']),
+              '0x1e88': ('0x1c1f8a', ['0x1c2c45', '0x1c2ca6', '0x1c2d27', '0x1c2d5f'])}
     ok = True
     for slot in SLOTS:
         res = reach(ins, slot)
         print(slot, res)
-        ok &= not res['entry_unwritten']
+        setup, reads = expect[slot]
+        others = {r for w, rs in res['writes'].items() if w != setup for r in rs}
+        ok &= not res['entry_unwritten'] and res['writes'][setup] == reads and not others & set(reads)
     lea = [(hex(a), r) for a, o, r in ins if o == 'lea' and '(%rsp)' in r]
     print('lea', lea)
     sw = shifted_writes(ins)

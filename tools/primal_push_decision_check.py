@@ -49,7 +49,9 @@ def need(cond, where, field, expected, actual):
 def direction(p, r, dL, dU, e):
     first = (p['ten'] * dL < dU if p['dir_strict'] else p['ten'] * dL <= dU) and ((-(r * dL) if p['neg_rdl'] else r * dL) < e)
     pos = 0 < r if p['r_pos_strict'] else 0 <= r
-    return 1 if first or ((dL <= p['ten'] * dU or e <= dU * r) and pos) else 0
+    second = (dL <= p['ten'] * dU or e <= dU * r) and pos
+    # 방향 1을 만든 절: bound(첫 절)·cost(r>0 절)·both
+    return (1 if first or second else 0), ('both' if first and second else 'bound' if first else 'cost' if second else 'none')
 
 
 def leave_state(p, a, t, mark, b, w, k, width):
@@ -122,7 +124,7 @@ def decide(record, p=DEFAULT, label=''):
         for idx, v in terms:
             r = r - f64(v) * cost[st['header'][idx]]
         e_tol = h * p['e_scale']
-        d = direction(p, r, dL, dU, e_tol)
+        d, clause = direction(p, r, dL, dU, e_tol)
         need(rin['selected']['direction'] == d, where, '방향', d, rin['selected']['direction'])
         post = rin['alpha']
         need(post['indices'] == pre['indices'], where, 'alpha 인덱스', pre['indices'], post['indices'])
@@ -131,6 +133,7 @@ def decide(record, p=DEFAULT, label=''):
             need(a1 == want, where, 'alpha 부호 반전', want, a1)
         chosen, theta, piv = rout['chosen'], f64(rout['theta']), f64(rout['pivot'])
         need(chosen >= 0, where, 'ratio 반환(-1은 재호출 경로, 제외)', '>=0', chosen)
+        need(rout['theta'] != bits(inf), where, 'theta=I(0x1c28ee 재호출 경로, 제외)', '유한', rout['theta'])
         kreject = p['k_reject'] * h
         if d == 0:
             dist = (dU - p['flip_eps'] <= theta) if p['flip_le'] else (dU - p['flip_eps'] < theta)
@@ -154,7 +157,7 @@ def decide(record, p=DEFAULT, label=''):
         nxt = events[k] if k < len(events) else None
         got = nxt['event'] == 'step:enter' and nxt['kind'] or 'defer'
         need(got == kind, where, '단계 종류', f'{kind}({cause})', got)
-        info = dict(call=e['call'], step=e['step'], enter=j, direction=d, kind=kind, cause=cause, r=bits(r))
+        info = dict(call=e['call'], step=e['step'], enter=j, direction=d, clause=clause, r_sign='+' if r > 0 else '-' if r < 0 else '0', kind=kind, cause=cause, r=bits(r))
         if kind != 'defer':
             se = nxt
             need(se['selected']['direction'] == rin['selected']['direction'], where, '방향 보존', rin['selected']['direction'], se['selected']['direction'])
@@ -258,8 +261,13 @@ def validate_new(paths, manifest, case):
 
 
 def summary(steps):
+    steps_tags = {}
     keys = ['direction', 'kind', 'cause', 'arm']
-    out = {}
+    for s in steps:
+        tag = f"dir{s['direction']}-{s['clause']}-r{s['r_sign']}" + (f"-{s['cause']}" if s['kind'] == 'flip' else '')
+        out_tag = 'step:' + tag
+        steps_tags[out_tag] = steps_tags.get(out_tag, 0) + 1
+    out = steps_tags
     for s in steps:
         for kk in keys:
             if kk in s:
