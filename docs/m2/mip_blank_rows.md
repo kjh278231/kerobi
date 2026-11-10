@@ -117,6 +117,6 @@ PASS
   - Rust 실제 경로가 같은 LP에 닿으려면 DynamicRows 메커니즘이 필요하다. 다이브 시작 판정, 행 선택, 목록 유지, 재활성이 모두 필요하다. 재풀이뿐 아니라 다이브 안 모든 노드 LP의 반복·basis 궤적에 영향을 준다.
   - 비운 행의 slack은 [0, INFBOUND]이고 b=0이다. basis 크기는 그대로다(03d-6 C2).
 - 남은 한계: 선택 규칙의 변수 의미와 원본 대조, DynamicRows=0 대조, `edd71`의 빼기 순서(실행 0회), C:528·C:1581 깊이 조건의 정확한 의미, `66661c` cutoff 검사, DynamicRows 기본값 -1의 자동 판정(어떤 모델에서 꺼지는지), 행 삭제 시 `edd71`의 목록 재번호, 중첩 MIP의 동작.
-- 후속(제안, 번호만 배정): **M2-03d-8** 다이브 행 선택 규칙 오라클. C:1856 직전에 `5fb8ec` 지역 배열(노드 bound `plVar24[0x10]`·`[0x11]`, slack `plVar24[1]+0x20`, 행 플래그 `plVar24[0x14]`, cut 포인터, Cutoff)을 캡처한다. 그 입력으로 C 규칙을 재구성해 deact 목록 1135건과 대조한다. DynamicRows=0 대조군도 넣는다.
+- 후속: **M2-03d-8** 다이브 행 선택 규칙 오라클([완료](mip_dive_rows.md)). 당시 제안: C:1856 직전에 `5fb8ec` 지역 배열(노드 bound `plVar24[0x10]`·`[0x11]`, slack `plVar24[1]+0x20`, 행 플래그 `plVar24[0x14]`, cut 포인터, Cutoff)을 캡처한다. 그 입력으로 C 규칙을 재구성해 deact 목록 1135건과 대조한다. DynamicRows=0 대조군도 넣는다.
 - 작업 branch: `work/m2-03d-7`. 검사 통과 뒤 main에 `--no-ff`로 병합한다.
 - 교훈: [원본 사실](../lessons/original.md)(DynamicRows 다이브 행 비활성, `cda5b`의 D 배열 교체, API 덤프 시점), [도구](../lessons/tooling.md)(`cda5b` 안에서 D 해시가 바뀜, 재생 변조는 재생 창 안을 노릴 것)에 추가했다. 03d-6 교훈 두 항목은 이 결과로 고쳤다.
