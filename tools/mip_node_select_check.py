@@ -6,17 +6,20 @@ A2 the global heaps (one per tree) replayed with the C rules equal every heap sn
    bits) at 6e8eb3 calls that pop and at 6e460c returns: 6e5802 insert (sift-up), 6e8eb3 pop (sift-down), 6e460c prune
    (stable removal of the nodes it frees, then sift-down from the last index to 0). Popped nodes are the deferred adds of that call followed by the selected node.
 A3 tie variants V1-V4 replayed the same way, reported per case as rejected (first difference) or surviving, at the pop
-   level (which node is taken) and at the array level (heap layout); P1-P2 the same for the 6e460c rebuild.
+   level (which node is taken) and at the array level (heap layout); P1-P2 the same for the 6e460c rebuild; L1-L2 for
+   the plunge list (stable removal of the chosen entry, reverse re-insert order).
 A4 plunge list after a selection: the chosen entry is swap-removed with the last one, the kept entries keep that order,
    and the removed ones that are re-inserted reach 6e5802 in that order.
-A5 tie counts: pops with another heap entry of the same key bits.
+A5 tie counts: pops with another heap entry of the same key bits; pops where V4 on the same heap state takes another
+   node, or V1/V3 leave another root (V2 is an insert rule, it only changes later states); non-root inserts with
+   key == bound and with key - bound outside [0, 2^-48 max(1,|bound|) + ulp(bound)].
 
   python3 tools/mip_node_select_check.py                  # controls + acceptance on bench/oracle/m2_06a
   python3 tools/mip_node_select_check.py --sweep FILE...  # exploration only (no manifest, no 3-run check)
   python3 tools/mip_node_select_check.py --self-test      # tampers must be rejected
   python3 tools/mip_node_select_check.py --write-manifest
 """
-import argparse, copy, gzip, hashlib, json, struct, sys
+import argparse, copy, gzip, hashlib, json, math, struct, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -30,7 +33,7 @@ CASES = {  # name -> (model file, NodeLimit); fixed in docs/m2/mip_node_select_s
     'tr12-30': ('tr12-30.mps.gz', 2000),
 }
 RUNS = (1, 2, 3)
-RULES = ('C', 'V1', 'V2', 'V3', 'V4', 'P1', 'P2')
+RULES = ('C', 'V1', 'V2', 'V3', 'V4', 'P1', 'P2', 'L1', 'L2')
 
 
 class Fail(Exception):
@@ -141,10 +144,6 @@ class Heap:
     def array(self):
         return [t[2] for t in self.h] if self.rule == 'V4' else self.h
 
-    def reset(self, arr):
-        self.h = [(k(e), j, e) for j, e in enumerate(arr)] if self.rule == 'V4' else [list(e) for e in arr]
-        self.seq = len(arr)
-
     def __len__(self):
         return len(self.h)
 
@@ -165,9 +164,9 @@ def replay(trace, rule='C', arrays=True, stats=None):
             op = e
         elif e['e'] == 'leave':
             op['_leave'] = e
-    heaps, dirty, h10 = {}, set(), {}
+    heaps, h10, seq = {}, {}, {}
     n = dict.fromkeys(('enter', 'snap', 'pops', 'ins', 'ins10', 'defer', 'prune', 'pruned', 'a4', 'dropped', 'restart',
-                       'resync', 'tfree'), 0)
+                       'tfree'), 0)
     cur, pr = None, None
 
     def heap(t, x):
@@ -179,28 +178,21 @@ def replay(trace, rule='C', arrays=True, stats=None):
         if pr is None:
             return
         hp, drop = heap(pr['tree'], x), set(pr['drop'])
-        if pr['tree'] not in dirty:
-            have = {e[0]: e for e in hp.array()}
-            main = [i for i in pr['drop'] if i in have]
-            need(len(main) + sum(1 for i in pr['drop'] if i in h10.get(pr['tree'], set())) == len(pr['drop']),
-                 f'event {x}: prune drops a node not in the heaps')
-            kept = [f(e[2]) for e in hp.array() if e[0] not in drop]
-            if main and kept:
-                need(max(kept) < min(f(have[i][2]) for i in main), f'event {x}: prune keeps a bound >= a dropped bound')
-            hp.prune(drop)
-            n['pruned'] += len(main)
+        have = {e[0]: e for e in hp.array()}
+        main = [i for i in pr['drop'] if i in have]
+        need(len(main) + sum(1 for i in pr['drop'] if i in h10.get(pr['tree'], set())) == len(pr['drop']),
+             f'event {x}: prune drops a node not in the heaps')
+        kept = [f(e[2]) for e in hp.array() if e[0] not in drop]
+        if main and kept:
+            need(max(kept) < min(f(have[i][2]) for i in main), f'event {x}: prune keeps a bound >= a dropped bound')
+        hp.prune(drop)
+        n['pruned'] += len(main)
         h10.get(pr['tree'], set()).difference_update(drop)
         n['prune'] += 1
         pr = None
 
     def snap(st, x, where):
         hp = heap(st['tree'], x)
-        if st['tree'] in dirty:
-            if 'heap' in st:
-                hp.reset(st['heap'])
-                dirty.discard(st['tree'])
-                n['resync'] += 1
-            return
         need(st['heap_n'] == len(hp), f'event {x} {where}: heap size {st["heap_n"]} vs replay {len(hp)}')
         if 'heap' in st:
             arr = hp.array()
@@ -216,10 +208,20 @@ def replay(trace, rule='C', arrays=True, stats=None):
         hp = heap(en['st']['tree'], x)
         for _ in range(npop):
             need(len(hp) > 0, f'event {x} sel {en["sel"]}: pop from empty heap')
-            if stats is not None:
+            if stats is not None:  # A5: same heap state, would a variant pop rule take another node here?
                 arr = hp.array()
                 stats['pops'] += 1
                 stats['tie_pops'] += sum(1 for e in arr if e[1] == arr[0][1]) > 1
+                stats['V4_local'] += min(arr, key=lambda e: (k(e), seq[e[0]]))[0] != arr[0][0]
+                for r in ('V1', 'V3'):
+                    alt = Heap(r)
+                    alt.h = [list(e) for e in arr]
+                    alt.pop()
+                    ref = [list(e) for e in arr]
+                    pop_ref = Heap('C')
+                    pop_ref.h = ref
+                    pop_ref.pop()
+                    stats[r + '_local'] += alt.h[:1] != pop_ref.h[:1]
             cur['popped'].append(hp.pop()[0])
             n['pops'] += 1
 
@@ -231,10 +233,8 @@ def replay(trace, rule='C', arrays=True, stats=None):
             need(e['tree'] not in heaps, f'event {x}: tree {e["tree"]} created twice')
             heaps[e['tree']] = Heap(rule)
         elif t == 'tfree':
-            if e['tree'] not in dirty:
-                need(e['heap_n'] == len(heap(e['tree'], x)), f'event {x}: freed tree {e["tree"]} size differs')
+            need(e['heap_n'] == len(heap(e['tree'], x)), f'event {x}: freed tree {e["tree"]} size differs')
             heaps.pop(e['tree'], None)
-            dirty.discard(e['tree'])
             n['tfree'] += 1
         elif t == 'enter':
             need(cur is None, f'event {x}: enter inside a selection')
@@ -256,22 +256,23 @@ def replay(trace, rule='C', arrays=True, stats=None):
             if cur is not None and e['in_sel']:
                 cur['ins'].append(e['node'][0])
             hp = heap(e['tree'], x)
-            if e['tree'] in dirty:
-                continue
             need(e['heap_n'] == len(hp), f'event {x}: insert of {e["node"][0]} sees heap size {e["heap_n"]} vs replay {len(hp)}')
             nd = e['node']
+            if stats is not None and e['from'] != '5daa82':  # A5: key - bound within the 627f3e perturbation (+1 ulp)
+                b, d = f(nd[1]), f(nd[2]) - f(nd[1])
+                stats['key_eq'] += d == 0
+                stats['key_out'] += not 0 <= d <= 2 ** -48 * max(1.0, abs(b)) + math.ulp(b)
+            seq[nd[0]] = len(seq)
             hp.push([nd[0], nd[2], nd[1]])
         elif t == 'prune':
-            if e['tree'] not in dirty:
-                need(e['heap_n'] == len(heap(e['tree'], x)), f'event {x}: prune sees heap size {e["heap_n"]}')
+            need(e['heap_n'] == len(heap(e['tree'], x)), f'event {x}: prune sees heap size {e["heap_n"]}')
             pr = {'tree': e['tree'], 'drop': []}
         elif t == 'acct':
             if e['from'] == '6e460c':
                 need(pr is not None and pr['tree'] == e['tree'], f'event {x}: 6e460c removal outside a prune')
                 pr['drop'].append(e['node'])
-            elif e['from'] == '6a6563':  # restart (M2-06j): tree contents no longer modeled until a snapshot
-                dirty.add(e['tree'])
-                n['restart'] += 1
+            elif e['from'] == '6a6563':  # restart: 606036 here only accounts the root's memory, the heap is emptied by
+                n['restart'] += 1          # the 6e460c prune that follows (checked by its heap size and the next snapshots)
             else:
                 raise Fail(f'event {x}: unmodeled node removal by {e["from"]}')
         elif t == 'leave':
@@ -279,17 +280,16 @@ def replay(trace, rule='C', arrays=True, stats=None):
             if not cur['popdone']:
                 do_pops(x)
             cur['leave'] = e
-            check_leave(cur, x, n)
+            check_leave(cur, x, n, rule)
             snap(e['st'], x, f'sel {e["sel"]} leave')
             cur = None
         elif t == 'pruned':  # 6e460c return: heap after the stable removal and the heapify
-            if e['tree'] not in dirty:
-                arr = heap(e['tree'], x).array()
-                if arrays and rule != 'V4':
-                    need(e['heap'] == arr, f'event {x}: heap after prune differs at index {first_diff(e["heap"], arr)}')
-                else:
-                    need(len(e['heap']) == len(arr), f'event {x}: heap size after prune differs')
-                n['snap'] += 1
+            arr = heap(e['tree'], x).array()
+            if arrays and rule != 'V4':
+                need(e['heap'] == arr, f'event {x}: heap after prune differs at index {first_diff(e["heap"], arr)}')
+            else:
+                need(len(e['heap']) == len(arr), f'event {x}: heap size after prune differs')
+            n['snap'] += 1
         elif t == 'flush':
             pass
         else:
@@ -299,7 +299,9 @@ def replay(trace, rule='C', arrays=True, stats=None):
     return n
 
 
-def check_leave(cur, x, n):
+def check_leave(cur, x, n, rule='C'):
+    """A4. rule 'L1': the chosen entry is removed keeping the order (instead of the swap with the last entry);
+    'L2': the removed entries are re-inserted in reverse list order."""
     en, lv = cur['enter'], cur['leave']
     sel, popped = en['sel'], cur['popped']
     lst = ids(en['st']['plunge'])
@@ -317,13 +319,18 @@ def check_leave(cur, x, n):
         return
     sid = lv['node'][0]
     need(sid in lst, f'event {x} sel {sel}: selected {sid} not in the plunge list {lst}')
-    sw = lst[:]
-    sw[lst.index(sid)] = sw[-1]
-    sw.pop()
+    if rule == 'L1':
+        sw = [a for a in lst if a != sid]
+    else:
+        sw = lst[:]
+        sw[lst.index(sid)] = sw[-1]
+        sw.pop()
     kept = ids(lv['st']['plunge'])
     it = iter(sw)
     need(all(any(a == b for b in it) for a in kept), f'event {x} sel {sel}: kept {kept} is not a subsequence of {sw}')
     removed = [a for a in sw if a not in kept]
+    if rule == 'L2':
+        removed.reverse()
     it = iter(removed)
     need(all(any(a == b for b in it) for a in cur['ins']), f'event {x} sel {sel}: re-inserted {cur["ins"]} not in order of {removed}')
     need(len(kept) + len(removed) == len(sw), f'event {x} sel {sel}: kept entries not from the list')
@@ -333,7 +340,7 @@ def check_leave(cur, x, n):
 
 def analyse(trace):
     """C replay with tie counts, then every variant at pop level (arrays=False) and array level."""
-    stats = {'pops': 0, 'tie_pops': 0}
+    stats = {'pops': 0, 'tie_pops': 0, 'V1_local': 0, 'V3_local': 0, 'V4_local': 0, 'key_eq': 0, 'key_out': 0}
     n = replay(copy.deepcopy(trace), 'C', True, stats)
     var = {}
     for r in RULES[1:]:
