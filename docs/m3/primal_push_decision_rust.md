@@ -67,8 +67,40 @@ python3 tools/primal_push_decision_rust.py --mutate-rust <새 경로>.json   # R
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: x86-64 Linux(WSL2), rustc 1.99.1. Gurobi는 실행하지 않았다(저장 기준 재생). 투영 도구는 원본 C 해시도 검사하므로 저장소 옆 `../re/decomp/c/`가 있어야 한다.
+- 원본 자료: 04b-1은 `primal_push_step_check.check`, face5는 `primal_push_decision_check.validate_new`로 해시·출처·순서별 독립 3회 일치를 먼저 검사한 뒤 첫 실행을 투영했다. 보조 비간섭 캡처는 agent·바이너리·모델 해시와 frame을 뺀 사건이 04b-1 primal-1과 같음을 검사했다. 기존 도구와 캡처는 바꾸지 않았다.
+- Rust 입력 `bench/oracle/m3_push_decision_rust/input.txt`: 49단계(대상 40·보조 9), 본문 SHA-256 `3c5d7588180b1bad20c3d89846ff495559543e74535b04e6ddcb30f3fdc9a9a8`(파일 첫 줄). 대상 40단계의 고유 입력은 20개다. 두 순서의 단계 입력이 같기 때문이다(04b-1 9, face5 11).
+- 재생 비교: `cargo test -p rsolver-lp --test push_decision && python3 tools/primal_push_decision_rust.py --compare` 종료 0. 49단계 전부 일치. Rust 재호출 거부 0, skip·누락 0.
+  - 집계: 대상은 방향 1 6, pivot 36, flip 4(모두 거리), 보류 0, frame 22. 보조는 pivot 7, flip 2, frame 9.
+  - 필드: 방향, 반전 뒤 alpha 전체, 단계 종류, theta, 이탈 상태(pivot 43건). frame이 있는 31단계는 r·dL·dU·e·100h·-100h·2h 비트도 비교했다.
+- 연결: Rust가 반전한 열로 돌린 `feasible_ratio`의 위치·theta·pivot이 49단계 모두 `ratio:leave`와 비트 일치했다. 04c가 보지 못한 방향 1 반전 열 6건과 음수 theta를 포함한다. 04c-6 판정과는 따로 센다.
+- 비교기 변조: `--self-test` 종료 0. 방향, r·dU·2h 비트, 단계 종류, theta, 이탈 상태, alpha 부호, 재호출 거부, 사례 누락, 오래된 입력 해시, 입력 투영 변경 12종을 모두 거부했다. ratio theta 변조는 연결 불일치 1건으로 보고했다.
+- Rust 소스 변조([기록](../../bench/oracle/m3_push_decision_rust/rust-mutation.json)): 04b-2 모델 변조 20종 중 19종을 옮겼다. `reject-arm-current`는 옮기지 않았다. Rust 방향은 방향식 결과 하나뿐이고, 현재 `S+0x328`과 다른 경우는 `Recall`로 거부하는 재호출 경로에만 있기 때문이다. Rust 전용 5종을 더해 24종을 돌렸다.
+  - 거부 9종. 오라클과 같은 8종과 Rust 전용 1종이다.
+    - 판단으로 거부 4종: `0<r`→`<=`, `-1e-5`→0, `L`(a≥0)→-2, alpha 반전 생략(이탈 상태에서 검출).
+    - r 비트로 거부 1종: 합산 역순.
+    - 상수 값으로 거부 4종: e, 거부 상수 두 종, 2h. frame 대조와 같은 정보이며 판단 판별로 세지 않는다.
+  - 생존 15종.
+    - 오라클 생존 12경계 중 옮긴 11종: 방향식 계수 10과 `<`, `-(r*dL)` 부호, 거리 flip의 `1e-10`·`<=`, 거부 arm 교환, pivot `1e-6`, 고정폭 `<=`, a<0 기본 -1, `X`→-4, `U`의 `<`.
+    - Rust 전용 4종: 진입 slack의 dL·dU(진입 slack 단계 0건), ±0 pivot의 부호 arm, 거부 theta=I, theta=I 재호출 검사.
+- 회귀: `primal_push_ratio_rust.py --compare`(04c 47사례), `primal_push_decision_check.py --old` 종료 0. `cargo test --release --workspace`는 종료 0(lp 36, push_decision 1, push_ratio 1, mip 66, clique 5, retry_l1 1, driver 4, model 3). `cargo clippy --workspace --all-targets -- -D warnings`도 종료 0이다. clippy 지적 두 가지를 반영했다.
+  - `r = r - a*c`를 `r -= a*c`로 바꿨다. 같은 IEEE 연산이다.
+  - 비음수 `A`·`U` arm을 match guard로 바꿨다. 분기 결과는 같다.
+  - 반영 뒤 재생과 변조를 다시 실행했고, 위 결과가 그 실행이다.
+- 실행하지 않은 검사: Python 확장 재빌드·pytest. 새 함수는 호출자가 없고 `crates/py`·Python API를 바꾸지 않았다. 공유 `.venv` 규칙상 main worktree 빌드 대상이다.
+- 해시: `crates/lp/src/crossover.rs` `28cc34cb6777baf745791fc5ae1cb7b3119b1f7981a019958a121de2515cc4aa`, `crates/lp/tests/push_decision.rs` `2894ae8f991077c3a649448638c91b573b18d319e98becefd269a32c31e0f65f`, `tools/primal_push_decision_rust.py` `bc3b6da3738d52a126d3837f040206009dcfcc0be108f2054632fefe4cd96e84`.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: 완료.
+- 동등성: 계약 범위 **통과**(저장 기준 재생, 비트 비교). 실제 LP 2개×2순서(순서별 원본 3회)의 40단계에서 방향·반전 alpha·단계 종류·theta·이탈 상태가 원본과 같다. frame이 있는 22단계(보조 9 추가)에서는 r·dL·dU와 루프 상수도 같다.
+- 실행 증거가 있는 분기: 방향 0(r<0·r=0)과 방향 1(r>0 절), 구조 열 진입, 거리 flip(방향 0), 승인 pivot(음수 theta 포함), 이탈 `N`(a 양·음)과 `L`(a≥0).
+- 미검증(구현은 asm대로 했으나 원본 실행 증거 없음):
+  - 방향식: 첫 절로 만든 방향 1, 진입 slack 열.
+  - flip·거부·보류: 방향 1 거리 flip, 거부 발동(두 arm), pivot 보류.
+  - 이탈 상태 arm: 고정폭, `X`, `A`, `U`, `B`, `L`(a<0), a=±0.
+  - 생존 변조 15경계(§6). 재호출 경로는 `Recall`로 거부한다.
+  - 위반 basis·infeasible ratio·batch·x87·pivot 적용·push 연결·work는 범위 밖이다.
+- 후속: M3-04b-3(미관측 arm·거부·보류 오라클)이 생기면 같은 도구에 사례를 추가해 생존 경계를 줄인다. M3-04c-5(재진입)는 그대로다. push 한 단계 연결은 pivot 적용(basis 교환·basic 값·rhs 보정) 구현 뒤 별도 번호로 둔다.
+- branch `work/m3-04c-6`, worktree `../rsolver-m3-04c-6`. 결과·인수인계·진행·로드맵은 이 branch에서 갱신해 `--no-ff`로 병합한다.
+- 교훈: `docs/lessons/process.md`(오라클 모델 변조를 Rust 소스 변조로 옮겨 하네스 강도를 대조).
