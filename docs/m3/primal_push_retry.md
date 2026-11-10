@@ -138,8 +138,37 @@ cargo test -p rsolver-lp --test push_decision --test push_ratio && python3 tools
 
 ## 6. 실행 결과
 
-(대상 캡처 뒤 작성)
+- 환경: x86-64 Linux(WSL2), node·Frida는 04c-2와 같다. 원본 ELF 해시는 §2. 도구·입력·캡처·기록 해시는 [manifest](../../bench/oracle/m3_push_retry/manifest.json)에 있다. 대상 캡처는 계약 commit `db37218` 뒤에 `tools/push_retry_runs.sh`로 실행했다. Gurobi는 `tools/gurun.sh`로 다른 세션과 순차 실행했다.
+- 원본 실행: 합성 70호출×3회(사건 필드 9개 일치), 대상 LP primal-first 3회(80사건), dual-first 3회(78사건), 대조군 3회(0사건, 상태 2), 비간섭 3회(대상 LP 04c-2 agent 두 순서, 04c-2 `violated.lp` 새 agent 1회). 순서별 3회는 사건·입력·시작 벡터·결과·출력 줄 전체가 같다.
+- 합성 사례: 70호출이 모두 설계 행과 S 변경에 들어갔다. 재진입 요청 2 사례만 `S+0x294=2`·`S+0x2f8=-1`이고 theta·pivot은 1차 패스 값(0.1, 1e-7) 그대로다. `cap-sparse-N`은 sparse가 cap(1) 너머 theta 2를, dense는 -1을 돌려 asm의 sparse 미검사를 원본이 확인했다. `lanes`는 원본 t=7(행 7)이다. `negL-t0`·`negU-at-bound`·`negX`의 theta는 -0이다.
+- 비간섭(검사기가 매번 확인): 새 agent 대상 캡처의 `retry:*`를 04c-2 필드로 투영하면 04c-2 agent 캡처와 사건·결과·출력이 같다(두 순서). 04c-2 `violated.lp` 새 agent 캡처는 04c-2 `violated-primal-1`과 같다(재시도 0).
+- 판단 재구성: 두 순서 각 8단계, 모두 위반 경로이며 재시도 1회다. 같은 단계 순서와 진입 변수다. 판단 모델이 방향·alpha 반전·게이트·재시도 입력·단계 종류·theta·frame·이탈 상태를 원본과 같게 재구성했다. 04b-1·face5·arm·04c-2 위반 127단계도 함께 다시 통과했다.
+
+| 단계 | 묶음 | `054eef` → `056973` | 단계 | 재시도 태그 |
+|---|---|---|---|---|
+| 1 | TZ | 행 8 theta 0 → 같음 | pivot, 이탈 `L`→-1 | same |
+| 2·7·8 | TD | pivot 5e-7 → 같음 | 보류(accept-fail) | same |
+| 3 | SR | -1 → -1, theta=I(방향 1, ub 유한) | 거리 flip | theta-I |
+| 4 | TF | 행 5 theta 0.500001 → 행 6 theta 0.5 | pivot, 이탈 `N`→-1 | changed |
+| 5 | TB2 | theta 0.2 → 0.6(둘째 breakpoint) | pivot, 이탈 `B`(a<0)→**-2** | changed |
+| 6 | TA2 | theta 0.2 → 0.6 | pivot, 이탈 `A`(a≥0)→**-1** | changed |
+
+- 검사기 변조(`primal_push_decision_check.py --self-test`, 종료 0): 04c-2까지의 65종에 재시도 판단 변조 8종(재시도 사건 삭제, 게이트 거짓인데 재시도, 재시도 theta, B 두 번째 breakpoint, 재시도 입력·진입 슬롯, 자유 열로 재호출 조건 참, 054eef 결과로 단계 진행), 재시도 캡처 변조 12종(해시·출처·설정·사건·x87·batch·frame·값·중복 실행·재시도 입력 누락), 비간섭 변조 3종, 필수 arm 누락 5종을 더한 93종을 모두 거부했다.
+- 판단 모델 변조([기록](../../bench/oracle/m3_push_retry/model-mutation.json)): 04c-2의 43종과 게이트 3종, 총 46종 중 39종 거부(frame을 지운 판단만 실행도 같다). 생존 7종은 04c-2의 6종과 `gate-no-neg`다. `054eef`는 -1을 돌릴 때 pivot도 0으로 쓰므로(C·합성 캡처) 위치<0 절은 \|pivot\|<0.001 절에 포함돼 구조상 생존이다.
+- Rust 재생(구현):
+  - `056973`: `python3 tools/push_retry_rust.py --compare` 종료 0. 합성 64호출과 자연 16호출(두 순서 각 8)이 위치·행·theta·pivot·work 비트 일치했다. 자연 work는 `retry:enter`의 work(054eef 뒤)와 `S+0x148`에서 이어 계산했다. 재진입 6호출은 Rust가 설계대로 `Reentry`로 거부했다(입력 `ratio_input.txt` 본문 `8fa641ba…`).
+  - 판단·연결: `python3 tools/primal_push_decision_rust.py --compare` 종료 0. 153단계(04c-2까지 137 + 재시도 16, 고유 7)가 방향·반전 alpha·단계 종류·theta·frame·이탈 상태 비트 일치했고, V 경로 연결(`violated_ratio` = 054eef → 게이트 → 056973)도 153단계 모두 캡처 결과와 같았다. SR의 theta=I 비재호출 단계는 Rust `push_step`이 거리 flip으로 판단했다(전에는 `Recall`로 거부).
+- Rust 소스 변조: MUTATION_RESULTS
+- 회귀: 공유 꼬리를 `small_pivot`으로 나눈 뒤 `push_violated_rust.py --compare`(55사례)·`primal_push_ratio_rust.py --compare`(자연 18·합성 29) 종료 0, 두 도구의 변조 대상 문자열을 새 코드에 맞췄다. REGRESSION_RESULTS
+- 실행하지 않은 검사: Python 확장·pytest. Rust 변경은 호출자가 없는 `crossover` 모듈과 그 테스트뿐이고 Python 경계를 바꾸지 않았다.
+- 기준 자료 갱신 순서: `tools/push_retry_runs.sh` → `python3 tools/push_retry_rust.py --write`·`python3 tools/primal_push_decision_rust.py --write` → 변조 기록 → `python3 tools/push_retry_manifest.py`(검사 전).
 
 ## 7. 판정과 인수인계
 
-(대상 캡처 뒤 작성)
+- 작업 수행: 완료.
+- 오라클 판정: 계약 범위 **통과**. 게이트 뒤 `056973`의 결과와 그 뒤 거리 flip(theta=I 비재호출 포함)·승인·보류·이탈 `B`→-2·`A`→-1을 원본 순서별 독립 3회로 관측했다. `056973` 1단계·t=0·quickselect·차선 합·2단계 ×2 유무·두 번 시도·동률·대체 최소 ratio·cap·재진입·`12dd49` 요청 2를 합성 직접 호출 3회로 고정했다.
+- 구현 판정: 계약 범위 **통과**. Rust `retry_ratio`·`violated_ratio`가 합성 64·자연 16호출에서, `push_step`이 재시도 16단계와 기존 137단계에서 원본과 비트 일치했다. 재진입 6호출은 설계대로 거부한다.
+- 미검증: `056973` 재진입 패스의 Rust(원본 합성 출력만 있음), `gate-no-neg`(구조상), 위치<0·유한 theta의 `push_step` flip(재진입 요청 2 뒤에만 옴), 자연 실행의 dense 열과 quickselect 8원소 이상(합성만), 재시도 뒤 거부(관측하지 않음), `S+0x3b0`≠0. NaN 처리 차이(asm `minsd`·`maxsd`)는 사례가 없다.
+- 후속: **M3-04c-8**(새 행) theta=I 반대 방향 재호출(위반·feasible). Rust `PushEntry::recall`이 조건을 계산하고 `push_step`이 `Recall`로 거부한다. 재호출 뒤 방향은 바뀌지만 거부 arm은 방향식 직후의 `r13b`로 고르므로 오래 생존한 `reject-arm-current` 변조를 처음 판별할 수 있다. feasible 재호출이 -1이면 `S+0x2f8`은 이전 값을 유지한다(C 1549–1554). M3-04c-5(재진입)는 그대로다.
+- branch `work/m3-04c-7`, worktree `../rsolver-m3-04c-7`. 결과·인수인계·진행·로드맵은 이 branch에서 갱신해 `--no-ff`로 병합한다.
+- 교훈: `docs/lessons/original.md`(`056973` ABI·sparse cap·차선 합, 재진입 no-cand, 게이트 위치<0 중복과 자연 설계), `docs/lessons/process.md`(asm 명세 subagent와 임시 모델로 판별 사례 탐색, 계약 전 분할), `docs/lessons/tooling.md`(hrun 즉시 124).

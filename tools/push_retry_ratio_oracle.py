@@ -71,6 +71,8 @@ def cases():
         # sparse N/U(a>0)는 cap을 거르지 않아 대체 최소 ratio가 cap 너머(2)를 고르고, dense는 걸러 -1이다
         ("cap-sparse-N", [1.0], [2.0], [10.0], "N", 1.0, [0], -1, 0),
         ("cap-no-cand", [-1.0], [-2.0], [INF], "B", 1.0, [0], -1, 0),
+        # sparse N 행만 cap(1)과 같은 breakpoint 1을 넣어 t=cap: cap 종료(theta=cap, -1). dense는 후보 없음 종료(theta=cap)
+        ("cap-exit", [-1.0, 1.0], [-5.0, 1.0], [INF, 10.0], "BN", 1.0, [0, 1], -1, 0),
         ("slope-pos-with-cand", [1.0, 5.0], [3.0, 0.0], [1.0, 10.0], "AL", INF, [0, 1], 1, 0),
         # 5개 B 행과 L 행(+1): 기울기 -2가 ratio 3(행 0)에서 0이 된다
         ("quickselect", QS_A + [1.0], [-r * abs(a) for r, a in zip(QS_R, QS_A)] + [5.0], [INF] * 6, "BBBBBL", INF,

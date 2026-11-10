@@ -151,9 +151,9 @@ MUTANTS = {
     'lower-num': ('x[r] - width[r]', 'width[r] - x[r]'),
     'cap-return': ('cap < inf && cap <= bound', 'cap < inf && cap < bound'),
     'no-candidate': ('if bound == inf || cands.is_empty()', 'if cands.is_empty()'),
-    'pivot-threshold': ('if *pivot >= 0.1 {', 'if *pivot >= 1e-12 {'),
+    'pivot-threshold': ('if pivot >= 0.1 {', 'if pivot >= 1e-12 {'),
     'small-scale': ('b if b < 10.0 => 0.1,', 'b if b < 10.0 => 1e-12,'),
-    'small-check-strict': ('piv_tol * big * scale <= *pivot', 'piv_tol * big * scale * 1e12 <= *pivot'),
+    'small-check-strict': ('piv_tol * big * scale <= pivot', 'piv_tol * big * scale * 1e12 <= pivot'),
     'work-dense': ('tested as f64 + tested as f64 + count', 'tested as f64 + count'),
     'work-sparse': ('count as f64 * 4.0', 'count as f64 * 3.0'),
 }

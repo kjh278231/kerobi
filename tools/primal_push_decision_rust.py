@@ -1,6 +1,8 @@
 """M3-04c-6: push 단계 판단 원본 캡처를 Rust 입력으로 투영하고, Rust trace를 원본 캡처 필드와 비교한다.
 M3-04b-3: arm LP 캡처(시작 벡터, 보류 양성 사건 step:defer)를 'arms' 사례로 더했다.
 M3-04c-2: 위반 basis 캡처를 'violated' 사례로 더했다. 줄의 경로 토큰(F·V)으로 Rust가 방향식과 ratio(055f68·054eef)를 고른다.
+M3-04c-7: 재시도 LP 캡처를 'retry' 사례로 더했다. V 경로 연결은 게이트(054eef → 056973)를 거치고, 단계 판단 입력은
+재시도가 있으면 retry:leave의 결과다.
 
 Rust에는 원시 캡처 필드만 넘긴다. 판단 모델(primal_push_decision_check.decide)의 계산값은 쓰지 않는다.
 """
@@ -27,7 +29,9 @@ EXPECT = {'target': dict(steps=40, dir1=6, pivot=36, flip=4, defer=0, frame=22),
           # M3-04b-3 arm LP primal·dual 각 25단계(판단 모델 decide 집계에서 정함, 보류는 step:defer 양성 사건)
           'arms': dict(steps=50, dir1=13, pivot=33, flip=11, defer=6, frame=50),
           # M3-04c-2 위반 LP primal·dual 각 19단계(판단 모델 decide 집계에서 정함, 모두 054eef 경로)
-          'violated': dict(steps=38, dir1=20, pivot=20, flip=18, defer=0, frame=38)}
+          'violated': dict(steps=38, dir1=20, pivot=20, flip=18, defer=0, frame=38),
+          # M3-04c-7 재시도 LP primal·dual 각 8단계(판단 모델 decide 집계에서 정함, 모두 056973 뒤)
+          'retry': dict(steps=16, dir1=4, pivot=8, flip=2, defer=6, frame=16)}
 
 
 def project(label, rec, role):
@@ -41,17 +45,21 @@ def project(label, rec, role):
         if e['event'] != 'supply:leave' or e['candidate'] < 0:
             i += 1
             continue
-        k, ratios, retries = i + 1, [], 0
+        k, ratios, retries = i + 1, [], []
         while k < len(events) and events[k]['event'] not in ('supply:enter', 'push:leave', 'step:enter', 'step:defer'):
             if events[k]['event'] == 'ratio:enter':
                 ratios.append((events[k], events[k + 1]))
-            retries += events[k]['event'] == 'retry:enter'
+            if events[k]['event'] == 'retry:enter':
+                retries.append(events[k + 1])
             k += 1
         name = f"{label}/c{e['call']}s{e['step']}"
         assert len(ratios) == 1, (name, 'ratio 호출 수(재호출은 범위 밖)', len(ratios))
-        assert retries == 0, (name, '056973 재시도(범위 밖)')
+        assert len(retries) <= 1, (name, '056973 재시도 수')
         rin, rout = ratios[0]
-        assert rin['name'] in ('feasible', 'infeasible') and rout['event'] == 'ratio:leave', (name, '경로')
+        if retries:  # 게이트 여부는 판단 모델(decide)이 이미 검사했다. 단계 입력은 재시도 결과다.
+            rout = retries[0]
+            assert rout['event'] == 'retry:leave', (name, '재시도 반환 사건')
+        assert rin['name'] in ('feasible', 'infeasible') and rout['event'] in ('ratio:leave', 'retry:leave'), (name, '경로')
         pre, post, st = e['alpha'], rin['alpha'], rin['state']
         assert pre['count'] >= 0 and pre['indices'] == post['indices'], (name, '희소 열·인덱스 보존')
         tol = st['tolerances']
@@ -80,8 +88,9 @@ def collect():
     manifest = json.loads((dc.BASE / 'manifest.json').read_text())
     cases = []
     # 04b-1·face5·arm LP: 해시·출처·순서별 독립 3회(arm은 대조군·비간섭 포함) 검사 후 첫 실행
-    for label, rec in dc.load_all(manifest, arms=True, violated=True):
-        role = 'arms' if label.startswith('arms-') else 'violated' if label.startswith('violated-') else 'target'
+    for label, rec in dc.load_all(manifest, arms=True, violated=True, retry=True):
+        role = ('arms' if label.startswith('arms-') else 'violated' if label.startswith('violated-')
+                else 'retry' if label.startswith('retry-') else 'target')
         cases += project(label, rec, role)
     # 보조: 04b-2 비간섭 단일 실행. frame을 빼면 04b-1 primal-1과 같아야 한다.
     c = manifest['cases']['interior-noninterference']
@@ -133,7 +142,7 @@ def compare(cases, text, trace):
         s['frame'] += w['frame'] is not None
     for role, want in EXPECT.items():
         assert tally[role] == want, ('집계', role, '기대', want, '실제', tally[role])
-    unique = {r: len({c['line'].split(' ', 1)[1] for c in cases if c['role'] == r}) for r in ('target', 'arms', 'violated')}
+    unique = {r: len({c['line'].split(' ', 1)[1] for c in cases if c['role'] == r}) for r in ('target', 'arms', 'violated', 'retry')}
     return dict(tally=tally, unique_inputs=unique, link_cases=len(cases), link_mismatch=link_bad)
 
 
@@ -202,7 +211,14 @@ MUTANTS = {
     'slack-gap-swap': [('(slack[j - n], inf)', '(inf, slack[j - n])')],
     'sign-zero-neg': [('if 0.0 > a {', 'if 0.0 >= a {')],
     'reject-keep-theta': [('*theta = inf;\n        return Ok(PushStep::Reject);', 'return Ok(PushStep::Reject);')],
-    'recall-no-theta': [(' || *theta == inf', '')],
+    'recall-no-theta': [('if *theta == inf && entry.recall {', 'if *theta == inf {')],
+    # M3-04c-7: theta=I 비재호출 조건과 위치<0 flip
+    'recall-free-only': [('|| (!decrease && unbounded_up)', '')],
+    'recall-up-any-dir': [('|| (!decrease && unbounded_up)', '|| unbounded_up')],
+    'gate-off': [('if pos < 0 || 0.001 > pivot.abs() {', 'if false {')],
+    'gate-pivot-1e-4': [('if pos < 0 || 0.001 > pivot.abs() {', 'if pos < 0 || 1e-4 > pivot.abs() {')],
+    'gate-no-neg': [('if pos < 0 || 0.001 > pivot.abs() {', 'if 0.001 > pivot.abs() {')],
+    'recall-always': [('let recall = (lb[j] <= -inf && unbounded_up) || (!decrease && unbounded_up);', 'let recall = true;')],
     # M3-04b-3: 새로 관측한 arm마다 그 arm만 바꾸는 변조(오라클 MUTANTS와 같은 이름)
     'reject-off-0': [('entry.r < tol.reject_neg && entry.du < tol.reject', 'false')],
     'reject-off-1': [('entry.r > tol.reject && entry.dl < tol.reject', 'false')],

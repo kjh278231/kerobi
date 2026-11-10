@@ -42,6 +42,7 @@
 - **원본 캡처는 약 2분/회(nidda 6000노드, gmu 20000노드)다.** 다른 세션이 Gurobi를 쓰면 `gurun.sh`가 대기하므로 더 걸린다. (M2-03c-2)
 
 - **Codex 세션이 사용량 한도로 끝나면 rollout JSONL(`~/.codex/sessions/YYYY/MM/DD/*<id>.jsonl`)의 `task_complete.error`와 마지막 `custom_tool_call_output`로 중단 지점을 복구한다.** 마지막 출력에 남은 캡처 결과가 미추적 파일로 남아 있을 수 있다. (M3-04b-1)
+- **`tools/hrun.sh --timeout 580000`과 `--wait`가 명령이 도는 중인데 곧바로 124(still running)를 돌려준 적이 있다(원인 미확인, 같은 세션의 첫 호출은 정상).** 그때는 `until herdr pane read <pane> --source recent-unwrapped --lines 5 | grep -qE '<끝 표시>|Error|Traceback'; do sleep 5; done`를 Bash 백그라운드로 돌려 끝을 기다린다. 끝 표시는 스크립트가 직접 찍는 문자열로 둔다. (M3-04c-7)
 
 ## 검사기
 
