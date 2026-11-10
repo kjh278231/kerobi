@@ -139,12 +139,55 @@ def self_test(cases, text, trace):
     return rejected
 
 
+# Rust 분기별 오류 주입. 각 변조는 원본 대조에서 실패해야 한다(최종 코드에는 남기지 않는다).
+RUST = ROOT / 'crates/lp/src/crossover.rs'
+MUTANTS = {
+    'accept-strict': ('if ratio <= bound {', 'if ratio < bound {'),
+    'harris-sign': ('{ (num + harris) / a }', '{ (num - harris) / a }'),
+    'second-tie': ('best < val[k].abs()', 'best <= val[k].abs()'),
+    'second-bound': ('if ratio <= bound && best', 'if ratio < bound && best'),
+    'width-inf': ('width[r] < inf', 'width[r] <= inf'),
+    'free-mark': ("if a <= piv_tol || marks[r] == b'F' {", 'if a <= piv_tol {'),
+    'lower-num': ('x[r] - width[r]', 'width[r] - x[r]'),
+    'cap-return': ('cap < inf && cap <= bound', 'cap < inf && cap < bound'),
+    'no-candidate': ('if bound == inf || cands.is_empty()', 'if cands.is_empty()'),
+    'pivot-threshold': ('if *pivot >= 0.1 {', 'if *pivot >= 1e-12 {'),
+    'small-scale': ('b if b < 10.0 => 0.1,', 'b if b < 10.0 => 1e-12,'),
+    'small-check-strict': ('piv_tol * big * scale <= *pivot', 'piv_tol * big * scale * 1e12 <= *pivot'),
+    'work-dense': ('tested as f64 + tested as f64 + count', 'tested as f64 + count'),
+    'work-sparse': ('count as f64 * 4.0', 'count as f64 * 3.0'),
+}
+
+
+def mutate_rust(cases, text):
+    import subprocess
+    original, result = RUST.read_text(), {}
+    try:
+        for name, (old, new) in MUTANTS.items():
+            assert original.count(old) == 1, ('변조 대상 없음', name)
+            RUST.write_text(original.replace(old, new))
+            TRACE.unlink(missing_ok=True)
+            run = subprocess.run(['cargo', 'test', '-q', '-p', 'rsolver-lp', '--test', 'push_ratio'], cwd=ROOT,
+                                 capture_output=True, text=True)
+            try:
+                assert run.returncode == 0, 'Rust 테스트 실패'
+                compare(cases, text, TRACE.read_text())
+                result[name] = '생존'
+            except AssertionError as error:
+                result[name] = '거부: ' + str(error)[:160]
+    finally:
+        RUST.write_text(original)
+        TRACE.unlink(missing_ok=True)
+    return result
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument('--write', action='store_true')
     g.add_argument('--compare', action='store_true')
     g.add_argument('--self-test', action='store_true')
+    g.add_argument('--mutate-rust', type=Path, help='변조 결과 JSON 경로(덮어쓰기 거부)')
     args = p.parse_args()
     try:
         cases = natural() + synthetic()
@@ -153,11 +196,16 @@ def main():
             INPUT.write_text(render(cases))
             print(f'{len(cases)}사례 저장: {INPUT.relative_to(ROOT)}')
             return
-        text, trace = INPUT.read_text(), TRACE.read_text()
-        if args.compare:
-            print(json.dumps(compare(cases, text, trace), ensure_ascii=False))
+        text = INPUT.read_text()
+        if args.mutate_rust:
+            assert not args.mutate_rust.exists(), '검증 기록 덮어쓰기 거부'
+            result = mutate_rust(cases, text)
+            args.mutate_rust.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
+            print(json.dumps(result, ensure_ascii=False, indent=1))
+        elif args.compare:
+            print(json.dumps(compare(cases, text, TRACE.read_text()), ensure_ascii=False))
         else:
-            print(json.dumps({'rejected': self_test(cases, text, trace)}, ensure_ascii=False))
+            print(json.dumps({'rejected': self_test(cases, text, TRACE.read_text())}, ensure_ascii=False))
     except (AssertionError, KeyError, ValueError, IndexError) as error:
         print('불합격: ' + str(error), file=sys.stderr)
         sys.exit(1)

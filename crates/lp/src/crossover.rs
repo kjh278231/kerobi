@@ -47,7 +47,7 @@ pub fn feasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option
     } else {
         count as f64 * 4.0 + cands.len() as f64 * 3.0
     };
-    *work = units * work_coef + *work;
+    *work += units * work_coef;
     if cap < inf && cap <= bound {
         *pivot = 0.0;
         *theta = cap;
