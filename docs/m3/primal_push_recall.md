@@ -136,3 +136,45 @@ python3 tools/primal_push_decision_check.py --self-test --mutation <새 경로>.
 cargo test -p rsolver-lp --test push_decision && python3 tools/primal_push_decision_rust.py --compare
 python3 tools/primal_push_decision_rust.py --mutate-rust <새 경로>.json
 ```
+
+## 6. 실행 결과
+
+- 환경: x86-64 Linux(WSL2), node·Frida는 04c-7과 같다. 원본 ELF 해시는 §2. 도구·입력·캡처·기록 해시는 [manifest](../../bench/oracle/m3_push_recall/manifest.json)에 있다. 대상 캡처는 계약 commit `1860e32` 뒤에 `tools/push_recall_runs.sh`로 실행했고 캡처 commit은 `8740f7b`다.
+- 원본 실행: feasible LP primal-first 3회(42사건), dual-first 3회(40사건), 대조군 3회(0사건, 상태 2). 위반 LP primal-first 3회(87사건), dual-first 3회(85사건), 대조군 3회(0사건, 상태 2). 비간섭 5회(두 LP × 두 순서 04c-7 agent, 04c-7 `retry.lp` primal 새 agent). 순서별 3회는 사건·입력·시작 벡터·결과·출력 줄 전체가 같다.
+- `local_1d8`: 새 agent의 모든 단계 frame `ninf`가 -1e30(-I) 비트였다(C 602·195 해석 실행 확인).
+- 비간섭(검사기가 매번 확인): 새 agent 캡처에서 `frame.ninf`만 빼면 04c-7 agent 캡처와 사건·결과·출력이 같다(대상 두 LP 두 순서, 04c-7 `retry.lp` primal).
+- 판단 재구성: feasible LP 두 순서 각 4단계, 위반 LP 두 순서 각 7단계. 두 순서의 단계 순서·진입 변수가 같다. 판단 모델이 ratio 호출 수, 재호출 방향·재반전 alpha·진입 `S+0x2f8`, 호출별 게이트·재시도, 단계 종류·theta·frame·`ninf`, 이탈 상태와 flip 상태를 원본과 같게 재구성했다. 기존 04b-1·face5·arm·04c-2·04c-7 153단계도 flip 상태 검사를 더한 모델로 다시 통과했다.
+
+| LP | 단계 | 묶음 | 방향식 | 첫 호출 → 재호출 | 단계 | 태그 |
+|---|---|---|---|---|---|---|
+| feasible | 1 | FN | 0(r=0) | -1 → -1 | flip, 상태 -3. 재호출 진입 `leave`=0(이전 값) | `free0-none` |
+| feasible | 2 | FR | 0 | -1 → 행 2 theta 1 | pivot, 이탈 `N`→-1 | `free0-pivot` |
+| feasible | 3 | FU | 1(bound 절) | -1, 재호출 없음 | 거리 flip, 상태 -1 | `none-up1` |
+| feasible | 4 | FD | 0(r=-1) | -1(1e-8 행 무시) → 행 1 theta 1 | pivot | `up0-pivot` |
+| 위반 | 1 | VN | 0(small-r0) | -1(056973 -1) → -1(056973 -1) | flip, 상태 -3 | `free0-none` |
+| 위반 | 2 | VR | 0 | -1 → 행 1 theta 1 | pivot | `free0-pivot` |
+| 위반 | 3 | VU | 1(bound-sigma) | -1, 재호출 없음 | 거리 flip, 상태 -1 | `none-up1` |
+| 위반 | 4 | VRg | 0 | -1 → `054eef` pivot 5e-4 → 재호출 안 `056973` 행 5 theta 0.2 | pivot | `free0-pivot` |
+| 위반 | 5 | VDd | 0(sigma0) | -1 → theta 1 ≥ dL 0.5 | 새 방향 gap으로 거리 flip, 상태 -1 | `up0-distance` |
+| 위반 | 6 | VS | 1(sigma, σ=+2e-8) | -1 → 방향 0 행 2 theta 1 | pivot | `free1-pivot` |
+| 위반 | 7 | VD | 0(sigma0) | -1 → 행 3 theta 1 | pivot | `up0-pivot` |
+
+- 검사기 변조(`primal_push_decision_check.py --self-test`, 종료 0): 04c-7까지의 93종에 재호출 판단 변조 10종(재호출 삭제, 재호출 방향, 재반전 없음, feasible 진입 `S+0x2f8`을 -1로, 단계 방향, flip 상태, 재호출 안 재시도 삭제, 자유 열 lb 유한화, VDd 시작값, `ninf`), 재호출 캡처 변조 12종(기존 11종+`ninf` 누락), 비간섭 변조 3종, 필수 태그 누락 6종을 더한 124종을 모두 거부했다.
+- 판단 모델 변조([기록](../../bench/oracle/m3_push_recall/model-mutation.json)): 04c-7의 46종과 재호출·flip 9종, 총 55종 중 48종 거부(frame을 지운 판단만 실행도 같다). 새 9종은 모두 거부됐다. 생존 7종은 04c-7과 같다(`reject-arm-current`, `leave-fixed-lt`, `leave-neg-default-2`, `leave-X-1`, `leave-U-le`, `v-sigma-ge0`, `gate-no-neg`). `reject-arm-current`는 이제 재호출 단계에도 적용되지만 §2.3대로 판별되지 않았다.
+- Rust 재생(구현): `cargo test -p rsolver-lp --test push_decision && python3 tools/primal_push_decision_rust.py --compare` 종료 0. 175단계(기존 153 + 재호출 LP 22, 고유 입력 11)가 방향·frame·단계 종류·theta·이탈/flip 상태·재호출 여부·최종 alpha 비트 일치했고, 연결 검사(Rust 반전 열의 ratio, 재호출 18단계는 재반전 열의 두 번째 ratio까지)도 175단계 불일치 0이다. 이번부터 모든 flip 단계에서 `push_flip_state`를 비교한다. `--self-test` 종료 0(변조 15종 거부, 연결 변조 2종 검출).
+- Rust 소스 변조([기록](../../bench/oracle/m3_push_recall/rust-mutation.json)): 04c-7의 54종에 재호출·flip 6종(`recall-free-lt`, `recall-gap-original`, `recall-free-pos`, `flip-free-state`, `flip-dir-swap`, `reject-arm-current` 이식)을 더한 60종 중 49종 거부, 연결 검사로만 검출 2종(`gate-off`·`gate-pivot-1e-4`), 생존 9종. 04c-7에서 생존이던 `recall-free-only`·`recall-up-any-dir`가 거부됐다. 생존은 04c-2의 6종(`leave-fixed-lt`, `leave-neg-default-2`, `leave-X-1`, `leave-U-le`, `sign-zero-neg`, `v-sigma-ge0`), `gate-no-neg`(구조상), `reject-arm-current`·`recall-free-pos`(§1 구조상 판별 불가)다.
+- 회귀: 기준선 `c87c4fe` 위 작업 commit `64ae4d5`에서 `cargo test --release --workspace` 통과, `cargo clippy --workspace --all-targets -- -D warnings` 종료 0, `cargo test -p rsolver-lp --test push_decision --test push_ratio`, `push_retry_rust.py --compare`(합성 84 비교·재진입 6 거부), `push_violated_rust.py --compare`(55), `primal_push_ratio_rust.py --compare`(자연 18·합성 29), `primal_push_decision_check.py --old`, `push_slot_reach.py` 종료 0. main(M1-02b 병합 `7a4af88`)을 합친 `49bdd96` 위에서 `cargo test --release --workspace`(121 통과, 실패 0)·clippy·`push_decision` 재생 `--compare`·검사기 `--self-test`를 다시 통과했다.
+- 실행하지 않은 검사: Python 확장·pytest. Rust 변경은 호출자가 없는 `crossover` 모듈과 그 재생 테스트뿐이고 Python 경계를 바꾸지 않았다.
+- 계약 변경: 없음. 사례 이름은 04c-2 `violated-primal`과 겹쳐 manifest 사례를 `recall-` 접두어로 지었다(캡처 파일 이름은 그대로). 필수 flip 상태 -3·-1은 계약 문구대로 두 LP 합집합으로 검사한다(feasible LP에는 재호출 뒤 -1 flip이 없다).
+- 04b-3·04c-2·04c-7 manifest의 검사기·재생 도구·`input.txt` 해시는 이번 변경 전 값이다(캡처 도구·agent 해시만 검사에 쓰이며 그대로다).
+- 기준 자료 갱신 순서: `tools/push_recall_runs.sh` → `python3 tools/primal_push_decision_rust.py --write` → 변조 기록 → `python3 tools/push_recall_manifest.py`(검사 전).
+
+## 7. 판정과 인수인계
+
+- 작업 수행: 완료.
+- 오라클 판정: 계약 범위 **통과**. theta=I 반대 방향 재호출을 feasible(`055f68`)·위반(`054eef`→`056973`) 두 경로에서 원본 순서별 독립 3회로 관측했다. 재호출 조건의 세 절(자유·방향 0, 자유·방향 1, 자유 아님·방향 0·ub=I)과 재호출 없는 방향 1·ub=I, 재호출 결과 pivot·-1(자유 flip -3)·새 방향 gap 거리 flip, 재호출 안 `056973`, feasible -1의 `S+0x2f8` 미기록, `local_1d8`=-I를 확인했다.
+- 구현 판정: 계약 범위 **통과**. Rust `push_step`·`push_recall_step`·`push_flip_state`가 재호출 22단계와 기존 153단계에서 원본과 비트 일치했다.
+- 미검증·구조상 판별 불가: `reject-arm-current`(§2.3), 자유 열 재호출 뒤 위치 -1 대입(`recall-free-pos`, 뒤 거리 검사가 언제나 flip), 재호출 뒤 거부·보류(재호출 조건과 거부·보류 조건이 함께 서기 어려움, 관측 없음), dense 열 재호출, NaN. flip 적용 뒤 x·rhs 보정과 push 연결은 범위 밖이다.
+- 후속: M3-04c-5(`055f68` 재진입) 그대로. push 연결(Rust push 루프가 `Recall` 뒤 재반전·ratio·`push_recall_step`을 부르는 일)은 연결 작업에서 한다.
+- branch `work/m3-04c-8`, worktree `../rsolver-m3-04c-8`. 결과·인수인계·진행·로드맵은 이 branch에서 갱신해 `--no-ff`로 병합한다.
+- 교훈: `docs/lessons/original.md`(재호출 경로와 `local_1d8`, feasible -1 미기록, flip 상태), `docs/lessons/process.md`(스프린트 행 기대의 구조상 도달 불가 판정, 사례 이름 충돌).
