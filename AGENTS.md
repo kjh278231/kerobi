@@ -24,6 +24,7 @@
 - `../re/decomp/c/`: 원본 디컴파일 결과. 저장소 밖에 있다.
 - `../re/decomp/asm/`, `../re/decomp/index.tsv`, `../re/decomp/callgraph.tsv`: 어셈블리, 함수 인덱스, 호출 그래프.
 - `../re/notes/`: 원본 함수와 구조를 찾는 지도.
+- `docs/lessons/`: 이전 작업의 교훈. 원본 사실, 도구 함정과 실패한 접근, 절차를 담는다. 원본 함수·Frida 훅·Herdr·검사기를 다루기 전에 함수 이름이나 도구 이름으로 grep한다.
 - `docs/port_map.tsv`, `docs/00_overview.md` §4: 원본 함수와 모듈의 대응. 영역별 설계는 `docs/01_*.md`–`docs/08_*.md` 참조.
 - 기존 오라클과 비교기는 `tools/`, 기준 데이터는 `bench/`, 테스트는 `tests/`와 각 크레이트에 있다. LP 상태·경로는 `tools/spx_oracle.py`, `tools/path_oracle.py`, presolve·복원은 `tools/presolve_check.py`, `tools/mip_rec_check.py`, `tools/mip_postsolve_oracle.py` 등을 작업에 맞게 확인한다. 오라클의 적용 범위와 실행법은 관련 작업 기록에서 확인한다.
 
@@ -44,6 +45,8 @@
 # 작업 완료 기록
 
 작업을 마치기 전에 현재 worktree와 main의 `docs/11_progress.md`, `docs/12_roadmap_diagram.md`를 구현·검증 결과와 비교한다. 상세 결과와 변경 상태는 작업 branch에서 갱신해 병합으로 main에 반영한다. 미병합이면 shared 점유를 얻은 병합 담당자가 main 인수인계에 branch·commit·위치·검증 상태만 기록한다. 상세 파일을 main에 미리 복사하지 않는다. worktree의 미커밋·미병합 상태와 남은 한계를 명시하며, 갱신할 수 없으면 완료 보고에 이유와 누락된 문서를 적는다.
+
+종료 전 이번 작업의 교훈을 `docs/lessons/`에 기록한다. 대상은 새로 확인한 원본 사실, 실패한 접근과 그 대안, 다음 작업에서 재사용할 도구·절차다. 형식은 `docs/lessons/README.md`를 따른다. 기록이 없으면 작업 기록 §7에 "교훈 없음"과 이유를 적는다.
 
 종료 전 해당 `docs/handoff/M*.md`에 하위 작업 번호, branch·commit·미커밋 선행 변경, 실제 검증 명령·결과와 다음 명령을 기록하고 얻었던 점유를 해제한다. 다른 컴퓨터로 이동할 때는 미커밋 변경을 포함한 최신 패키지를 생성한다.
 
