@@ -26,11 +26,13 @@ def arr(p, k, kind="d"):
     return [x.hex() if kind == "d" else x for x in (t * k).from_address(p)]  # doubles as hex: exact bits
 
 
-def sparse(p):
-    """{int cnt; int* idx (+8); double* val (+0x10)}: (cnt, idx[:cnt], val[:cnt])."""
+def sparse(p, m):
+    """{int cnt; int* idx (+8); double* val (+0x10)}: (cnt, idx[:cnt], val[:cnt]); cnt = -1 is dense: (-1, None, val[:m])."""
     if not p:
         return None
     k = I(p)
+    if k == -1:
+        return [k, None, arr(L(p + 0x10), m)]
     return [k, arr(L(p + 8), k, "i"), arr(L(p + 0x10), k)] if 0 < k < 10**7 else [k, None, None]
 
 
@@ -45,8 +47,9 @@ def dump(spx, it, full):
            "pt": {"rc": I(spx + 0x2c0), "deg": I(spx + 0x330), "deg0": I(spx + 0x334), "it0": D(spx + 0x2b0),
                   "f110": I(spx + 0x110), "rec": D(spx + 0x140), "x3e0": D(spx + 0x3e0), "sw": I(spx + 0x35c),
                   "x2a8": D(spx + 0x2a8)}, "q": I(spx + 0x2fc), "refactor_reason": I(spx + 0x294),
-           # last pivot: FTRAN column α_q (spx+0x210) and τ = B⁻¹ρ (spx+0x218) as {cnt, idx*, val*}, α_r, β = ‖ρ‖²
-           "aq": sparse(L(spx + 0x210)), "tau": sparse(L(spx + 0x218)), "ar": D(spx + 0x300).hex(), "aq308": D(spx + 0x308).hex(),
+           # last pivot: FTRAN column α_q (spx+0x210) and "tau" = spx+0x218 as {cnt, idx*, val*}, α_r, β = ‖ρ‖². spx+0x218 holds ρ_r
+           # inside 28c93/8b473; at the callback it is a reused, mixed buffer (docs/m1/m1_02a_beta.md), not a clean ρ or τ
+           "aq": sparse(L(spx + 0x210), m), "tau": sparse(L(spx + 0x218), m), "ar": D(spx + 0x300).hex(), "aq308": D(spx + 0x308).hex(),
            "beta": D(spx + 0x310).hex(),
            "vstat": arr(L(spx + 0x168), n + m, "i"), "d": arr(L(spx + 0x1e0), n + m), "xB": arr(L(spx + 0x1e8), m),
            "c": arr(L(spx + 0x98), n + m), "l": arr(L(spx + 0xa8), n + m), "u": arr(L(spx + 0xb0), n + m),

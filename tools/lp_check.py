@@ -47,7 +47,7 @@ def published():
 
 def run_one(name, method, timeout):
     code = (f"import rsolver, json, time\nm = rsolver.read({str(DATA / 'netlib' / (name + '.mps.gz'))!r})\n"
-            f"m.Params['Method'] = {method}\nm.optimize()\n"
+            f"m.Params['Method'] = {method}\nm.Params['Presolve'] = 0\nm.optimize()\n"
             f"print(json.dumps({{'Status': m.Status, 'ObjVal': m._objval, 'IterCount': m.IterCount, 'Runtime': m.Runtime}}))")
     t = time.time()
     try:

@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M1-02a kb2 Method=1 최초 분기를 특정했다(조사). 피벗 11의 DSE β: 원본은 조밀 BTRAN 출력을 압축(`28c93`)한 뒤 8레인 합산(`8b473`), Rust는 압축 전 m개를 합산한다. 원본 3회 동일, 변조 10종 거부. M1 비교 도구에 Presolve=0을 넣었고 기존 24/64는 presolve 전 측정이다. 다음은 M1-02b(구현)와 M1-02a-1(남은 w 차이). [계약과 결과](m1/m1_02a_beta.md).
+
 M2-03d-11 DynamicRows 관문 입력 오라클을 완료했다. `5fb8ec` C:526·C:1581의 모든 평가(실패 포함)에서 절 입력과 양성 훅 결과를 4사례 3회씩 캡처했고, Python 규칙이 160,353회를 정확히 재현했다(38모델 sweep도 일치). 판별된 절은 dyn, 깊이, 상태=2, `+0x18`<2이고 null·QP·QCP 절은 C만이다. 다음은 관문 Rust 이식이다. M2-03d-4의 남은 선행은 M2-10b, M1 요청, 관문 이식이다. [계약과 결과](m2/mip_dive_gate.md).
 
 M2-03d-10 DynamicRows 비활성 목록 유지와 D 교체를 Rust로 이식했다(L1). `dive_rows::RowList`가 원본 연산 열 재생에서 03d-8 세 사례의 X 목록 변경 2,929건을 순서까지, nidda 대상 노드의 줄인 D와 복원을 비트 단위로 재현한다. 관문(음성 사례 입력 없음)과 `bnb.rs` 연결은 남았다. M2-03d-4의 남은 선행은 M2-10b, M1 요청, 관문이다. [계약과 결과](m2/mip_dive_list_rust.md).
@@ -71,7 +73,7 @@ flowchart TD
 
     subgraph M1["M1 LP 엔진"]
         PRE["✅ LP presolve·postsolve<br/>64/64"]:::done
-        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 24/64"]:::doing
+        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 24/64(presolve 전 측정)<br/>kb2 최초 분기 β 특정"]:::doing
         DRV["🔄 LP 드라이버 G5<br/>main 병합 · 수치 차이 확인 남음"]:::doing
         GATE1["⏳ M1 관문<br/>병합 + 속도 비교표"]:::todo
     end

@@ -45,6 +45,7 @@
 
 - **Codex 세션이 사용량 한도로 끝나면 rollout JSONL(`~/.codex/sessions/YYYY/MM/DD/*<id>.jsonl`)의 `task_complete.error`와 마지막 `custom_tool_call_output`로 중단 지점을 복구한다.** 마지막 출력에 남은 캡처 결과가 미추적 파일로 남아 있을 수 있다. (M3-04b-1)
 - **`tools/hrun.sh --timeout 580000`과 `--wait`가 명령이 도는 중인데 곧바로 124(still running)를 돌려준 적이 있다(원인 미확인, 같은 세션의 첫 호출은 정상).** 그때는 `until herdr pane read <pane> --source recent-unwrapped --lines 5 | grep -qE '<끝 표시>|Error|Traceback'; do sleep 5; done`를 Bash 백그라운드로 돌려 끝을 기다린다. 끝 표시는 스크립트가 직접 찍는 문자열로 둔다. (M3-04c-7)
+- **`tools/gurun.sh`는 출력에 잠금 메시지가 있으면 같은 명령을 다시 돌린다.** 캡처 도구가 잠금 오류로 끝난 실행의 출력 파일을 먼저 쓰면 재시도가 덮어쓰기 금지에 걸린다. 잠금 메시지(`Gurobi is already running`)면 파일을 쓰지 않고 끝내게 한다(`tools/m1_beta_path.js`). (M1-02a)
 
 ## 검사기
 
@@ -70,6 +71,8 @@
 - **재생 검사의 변조는 재생 창 안의 사건을 노린다.** M2-03d-7 캡처는 대상 노드 뒤까지 기록하므로 "마지막 deact 삭제" 변조가 대상 뒤 사건을 지워 5종이 통과했다. 대상 이전의 마지막 사건을 고르는 `before()`로 고친 뒤 모두 거부됐다. (M2-03d-7)
 - **가벼운 훅만 붙이면 nidda NodeLimit 32898 실행이 약 20초다.** 03d-6 도구(노드마다 basis 해시)는 회당 10분 이상 걸렸다. 탐색 probe는 비교 필드를 줄여 먼저 돌린다. (M2-03d-7)
 - **수치 비교를 16진수 문자열로 하면 ±0이 다르게 센다.** 고정 열을 `lb == ub` 문자열로 세면 lb −0.0·ub +0.0인 열이 빠진다. 판정에는 `f()`로 바꾼 값을 쓴다. (M2-03d-6)
+- **M1 비교 도구가 rsolver에 Presolve=0을 주지 않아 LP presolve 도입 뒤 원본 기준(Presolve=0)과 다른 LP를 비교했다.** `statecmp.py`·`pathcmp.py`·`alphacmp.py`·`lp_check.py`에 넣었다. 새 비교 도구는 원본 설정을 rsolver에도 그대로 준다. `bench/pathcmp.txt`(2026-11-06)는 presolve 전 측정이다. (M1-02a)
+- **spx_oracle 콜백 시점의 spx+0x218은 ρ_r도 τ도 아닌 재사용 버퍼다.** 반복 중에는 `28c93`·`8b473`이 ρ_r로 쓰지만, 콜백에서는 일부 원소만 직전 ρ와 같다. ρ·τ 비교는 사용 지점 훅(`8b473` `0x11f7ba`)이나 BTRAN 직접 호출로 한다. (M1-02a)
 
 ## git worktree
 
