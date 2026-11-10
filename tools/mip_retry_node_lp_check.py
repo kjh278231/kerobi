@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """M2-03d-3 checker: retry node LP captures (tools/mip_retry_node_lp.js), contract docs/m2/mip_retry_node_lp.md section 3.
+M2-03d-6 adds the general B&B node case nidda_bnb_H_s1, contract docs/m2/mip_retry_bnb_node_lp.md section 3 (checks F, G).
 
 (default)         manifest hashes (this and the M2-03c-2 one), then checks A, B, C1-C4, E and prints the findings
 --self-test       also requires every in-memory tamper to be rejected
@@ -16,16 +17,25 @@ ROOT = B.ROOT
 DATA = 'bench/oracle/mip_retry_node_lp'
 OLD = 'bench/oracle/mip_retry_basis'
 MANIFEST = 'bench/oracle/mip_retry_node_lp_manifest.json'
-TOOLS = ['tools/mip_retry_node_lp.js', 'tools/mip_retry_node_lp_runs.sh']
+TOOLS = ['tools/mip_retry_node_lp.js', 'tools/mip_retry_node_lp_runs.sh', 'tools/mip_retry_bnb_node_lp_runs.sh']
 LPFILE = DATA + '/{}.node_lp.json'
 # call-site labels for x:cda5b:enter.ret (file offset, size from ../re/decomp/index.tsv)
-FUNCS = {'5ccea5': (0x4f92d0, 4320), '5ce67b': (0x4f0e10, 22107), '0c3d0d': (0x14acb0, 24529)}
+FUNCS = {'5ccea5': (0x4f92d0, 4320), '5ce67b': (0x4f0e10, 22107), '0c3d0d': (0x14acb0, 24529), '5fb8ec': (0x5101d0, 21510)}
 LP_KEYS = ('cols', 'rows', 'model_sense', 'obj_con', 'obj', 'lb', 'ub', 'vtype', 'rhs', 'sense', 'cbeg', 'ind', 'val', 'env_params')
-MODELS = {'nidda_stress': 're/bench/data/miplib/neos-3754480-nidda.mps.gz', 'gmu-35-50_default': 're/bench/data/miplib/gmu-35-50.mps.gz'}
+MODELS = {'nidda_stress': 're/bench/data/miplib/neos-3754480-nidda.mps.gz', 'gmu-35-50_default': 're/bench/data/miplib/gmu-35-50.mps.gz',
+          'nidda_bnb_H_s1': 're/bench/data/miplib/neos-3754480-nidda.mps.gz'}
 RUNS = (1, 2, 3)
-# old: M2-03c-2 natural capture; ws: C2 applies (ScaleFlag 0); model: E applies (node LP keeps the model columns)
-CASES = {'nidda_stress': {'old': 'nidda_stress_natural', 'ws': True, 'model': True},
-         'gmu-35-50_default': {'old': 'gmu-35-50_default_natural', 'ws': False, 'model': False}}
+# old: read-only natural capture of tools/mip_retry_basis.js (check A); ws: C2 applies (ScaleFlag 0); model: E applies (node LP keeps the model columns)
+# node: M2-03d-6 check F, the M2-03d-5 hit (scan solve_serial 19900 counts 5ce67b entries from 0, this tool's call from 1)
+CASES = {'nidda_stress': {'old': f'{OLD}/nidda_stress_natural_1.json', 'ws': True, 'model': True},
+         'gmu-35-50_default': {'old': f'{OLD}/gmu-35-50_default_natural_1.json', 'ws': False, 'model': False},
+         # model 'report': E fails as written (sense change); the sense differences are recorded, every other E rule still fails
+         'nidda_bnb_H_s1': {'old': f'{DATA}/nidda_bnb_H_s1_natural.json', 'ws': True, 'model': 'report',
+                            'node': {'call': 19901, 'id': 16948.0, 'parent': 16946.0, 'depth': 30, 'root': False, 'I94': 488,
+                                     'where': {'depth': 1, 'restarts': 1, 'root_is_self': False}, 'frame': '5fb8ec',
+                                     # ws rows emptied at 02f7e1 return, pinned from the capture: not a bound-redundancy rule (contract section 6)
+                                     'blanked': [125, 147, 150, 175, 197, 200, 205, 212, 213, 214, 219, 228, 235, 237, 238, 275, 297, 300, 325, 347, 350, 355, 362, 363, 364, 369, 378, 385, 387, 388, 397, 400, 405, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 428, 430, 431, 432, 433, 434, 435, 436, 437, 438, 440, 441, 442, 443, 444, 445, 446, 447, 452, 453, 454, 455, 456, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 475, 480, 481, 482, 483, 484, 485, 486, 487]}}}
+BASIS_TOOL = 'tools/mip_retry_basis.js'
 need, Fail = B.need, B.Fail
 
 
@@ -84,10 +94,14 @@ def neg(h):
 
 def check_case(case, caps, old):
     cfg = CASES[case]
-    # A: instrumentation did not change the solve
+    # A: instrumentation did not change the solve; the reference is a read-only capture with the 03c-2 tool version
+    need(old['ok'] and old['binary_sha256'] == B.BINARY and old['model_sha256'] == model_sha(case), f'{case}: reference capture not ok or wrong binary/model')
+    need(old['tool_sha256'] == B.load(B.MANIFEST)['files'][BASIS_TOOL], f'{case}: reference captured with another {BASIS_TOOL}')
+    need(old['params'] == caps[1]['params'], f'{case}: reference params differ')
     for r, d in caps.items():
         need(d['ok'] and not d['errors'], f'{case} run {r}: capture not ok')
         need(d['binary_sha256'] == B.BINARY, f'{case} run {r}: binary hash')
+        need(d['model_sha256'] == model_sha(case), f'{case} run {r}: model hash')
         need(d['output'] == old['output'], f'{case} run {r}: output differs from 03c-2: {d["output"]!r} vs {old["output"]!r}')
         need(strip_y(d['events']) == old['events'], f'{case} run {r}: non-y events differ from the 03c-2 natural capture')
     # B: three runs agree on every y: event and the model dump
@@ -111,6 +125,9 @@ def check_case(case, caps, old):
     # GRBXgetvars negates flagged columns when D+0x3c != 0; nidda is cross-checked by C2 and E, the others must have it 0
     need(cfg['ws'] or lp['dhash']['D3c'] == 0, f'{case}: D+0x3c is {lp["dhash"]["D3c"]} at the API dump and nothing cross-checks the columns')
     out = {'rows': lp['rows'], 'cols': lp['cols'], 'nnz': lp['cbeg'][-1], 'node_lp_cda5b': [e['k'] for e in dh], 'dump_k': lp['k']}
+    if 'node' in cfg:
+        check_node(case, cfg['node'], d, es, ye)
+        out['node_processing'] = processing(es)
     env = lp['env_params']
     # C3: ws cutoff of every node-LP call comes from the LP env (02f7e1 C:247-259)
     cut, extra = env['Cutoff'], env['env+0x24b8']
@@ -129,7 +146,8 @@ def check_case(case, caps, old):
     need(lp['model_sense'] == 1, f'{case}: cutoff rule written for minimisation')
     for e in wl:
         need(e['status_f0'] == leaves[e['k']]['lp']['lp_status'], f'{case}: ws status k={e["k"]} vs cda5b leave')
-        if e['k'] in node_k:
+        # 03d-6 contract: other node-LP statuses are a finding (B fixes them over 3 runs); 03d-3 cases are 2 or 6
+        if e['k'] in node_k and ('node' not in cfg or e['status_f0'] in (2, 6)):
             need(e['status_f0'] in (2, 6), f'{case}: node-LP retry status {e["status_f0"]}')
             need((f(e['obj_118']) >= f(cut)) == (e['status_f0'] == 6), f'{case}: k={e["k"]} status {e["status_f0"]} objective {f(e["obj_118"])} vs cutoff {f(cut)}')
     out['retry_ws_status'] = [(e['k'], e['status_f0'], f(e['obj_118'])) for e in wl]
@@ -145,18 +163,28 @@ def check_case(case, caps, old):
         flip = [s == '>' for s in lp['sense']]
         sgn = lp['model_sense']
         need(sgn in (1, -1), f'{case}: ModelSense')
+        # blanked rows R: rows with no ws entry. 03d-6 contract change: the B&B node LP's ws at 02f7e1 return is the API LP with the
+        # rows R emptied and b=0 (origin not identified); the 03d-3 cases must have R empty (then this is the original strict rule)
+        R = blanked_rows(ws)
+        need(R == cfg.get('node', {}).get('blanked', []), f'{case}: ws empty rows {len(R)}, first {R[:5]}, differ from the pinned set')
         for j in range(n):
             need(ws['c'][j] == (lp['obj'][j] if sgn == 1 else neg(lp['obj'][j])), f'{case}: ws c[{j}] {ws["c"][j]} vs obj {lp["obj"][j]}')
             need(ws['l'][j] == lp['lb'][j] and ws['u'][j] == lp['ub'][j], f'{case}: ws bound col {j}: '
                  f'l {ws["l"][j]} u {ws["u"][j]} vs lb {lp["lb"][j]} ub {lp["ub"][j]}')
-            need(ws['cbeg'][j + 1] - ws['cbeg'][j] == lp['cbeg'][j + 1] - lp['cbeg'][j], f'{case}: ws column {j} length')
-            for k, k2 in zip(range(ws['cbeg'][j], ws['cbeg'][j + 1]), range(lp['cbeg'][j], lp['cbeg'][j + 1])):
+            kept = [k2 for k2 in range(lp['cbeg'][j], lp['cbeg'][j + 1]) if lp['ind'][k2] not in R]
+            need(ws['cbeg'][j + 1] - ws['cbeg'][j] == len(kept), f'{case}: ws column {j} length {ws["cbeg"][j + 1] - ws["cbeg"][j]} vs {len(kept)} outside R')
+            for k, k2 in zip(range(ws['cbeg'][j], ws['cbeg'][j + 1]), kept):
                 i = lp['ind'][k2]
                 need(ws['ind'][k] == i, f'{case}: ws column {j} row index {ws["ind"][k]} vs {i}')
                 need(ws['val'][k] == (neg(lp['val'][k2]) if flip[i] else lp['val'][k2]), f'{case}: ws value col {j} row {i}')
         for i in range(m):
-            need(ws['b'][i] == (neg(lp['rhs'][i]) if flip[i] else lp['rhs'][i]), f'{case}: ws b[{i}] {ws["b"][i]} vs rhs {lp["rhs"][i]}')
+            want = '0000000000000000' if i in R else neg(lp['rhs'][i]) if flip[i] else lp['rhs'][i]
+            need(ws['b'][i] == want, f'{case}: ws b[{i}] {ws["b"][i]} vs {want} (rhs {lp["rhs"][i]}, blanked {i in R})')
             need(ws['sense'][i] == ('<' if flip[i] else lp['sense'][i]), f'{case}: ws sense[{i}]')
+        if R:
+            md = d['model_dump']['rows']
+            out['blanked_rows'] = {'count': len(R), 'model_rows': sum(i < md for i in R), 'extra_rows': sum(i >= md for i in R),
+                                   'rhs_nonzero': sum(f(lp['rhs'][i]) != 0.0 for i in R), 'senses': ''.join(sorted({lp['sense'][i] for i in R}))}
         out['slack_bounds'] = sorted({(ws['sense'][i], ws['l'][n + i], ws['u'][n + i]) for i in range(m)})
         out['slack_c_zero'] = all(f(x) == 0.0 for x in ws['c'][n:])
     if cfg['model']:
@@ -170,7 +198,7 @@ def check_case(case, caps, old):
             need(a == c or (a, c) == ('I', 'B') and f(md['lb'][j]) == 0.0 and f(md['ub'][j]) == 1.0, f'{case}: vtype col {j} {a} vs {c}')
         out['vtype_I_to_B'] = sum(a != c for a, c in zip(md['vtype'], lp['vtype']))
         # rows: same pattern; LP row = lam * model row exactly (as rationals), rhs too; lam < 0 turns '>' into '<' (contract section 6)
-        lr, lams = rows_of(lp), []
+        lr, lams, sense_changed = rows_of(lp), [], []
         for i in range(md['rows']):
             a = dict(zip(*md['row_major'][i]))
             need(sorted(a) == sorted(lr[i]) and a, f'{case}: LP row {i} pattern differs from model row {i}')
@@ -180,7 +208,9 @@ def check_case(case, caps, old):
                 need(Fraction(f(lr[i][j])) == lam * Fraction(f(a[j])), f'{case}: LP row {i} col {j} not lam * model ({f(lr[i][j])} vs {f(a[j])}, lam {lam})')
             need(Fraction(f(lp['rhs'][i])) == lam * Fraction(f(md['rhs'][i])), f'{case}: LP row {i} rhs not lam * model rhs')
             ms, ls = md['sense'][i], lp['sense'][i]
-            need(ms == ls == '=' or (lam > 0 and ms == ls) or (lam < 0 and {ms, ls} == {'<', '>'}), f'{case}: LP row {i} sense {ls} vs model {ms}, lam {lam}')
+            if not (ms == ls == '=' or (lam > 0 and ms == ls) or (lam < 0 and {ms, ls} == {'<', '>'})):
+                need(cfg['model'] == 'report', f'{case}: LP row {i} sense {ls} vs model {ms}, lam {lam}')
+                sense_changed.append((i, ms, ls, str(lam), lp['rhs'][i]))
             lams.append(lam)
         out['rows_negated'] = sum(l < 0 for l in lams)
         out['rows_rescaled'] = sum(abs(l) != 1 for l in lams)
@@ -191,7 +221,58 @@ def check_case(case, caps, old):
         out['int_fixed'] = {v: sum(lp['lb'][j] == lp['ub'][j] == v for j in ints) for v in sorted({lp['lb'][j] for j in ints})}
         out['int_cols'] = len(ints)
         out['extra_row_senses'] = ''.join(sorted(set(lp['sense'][md['rows']:])))
+        if cfg['model'] == 'report':
+            out['E'] = 'FAIL as written: sense changed' if sense_changed else 'PASS'
+            out['E_sense_changed'] = sense_changed
     return out
+
+
+def blanked_rows(ws):
+    filled = set(ws['ind'])
+    return [i for i in range(ws['rows']) if i not in filled]
+
+
+def check_node(case, want, d, es, ye):
+    """F: the retry is the M2-03d-5 hit; G: the node basis written for Rust is the one passed to the LP calls."""
+    enter = es[0]
+    need(enter['event'] == 'solve:enter' and enter['call'] == want['call'], f'{case}: retry solve call {enter.get("call")} vs {want["call"]}')
+    nd = enter['node']
+    for k in ('id', 'parent', 'depth', 'root'):
+        need(nd[k] == want[k], f'{case}: retry node {k} {nd[k]} vs {want[k]}')
+    nb = one(es, 'x:retry_basis')['node_basis']
+    need(nb['I94'] == want['I94'] and not nb['vb_null'] and not nb['cb_null'], f'{case}: node basis at the retry {nb}')
+    w = one(ye, 'y:where')
+    for k, v in want['where'].items():
+        need(w[k] == v, f'{case}: y:where {k} {w[k]} vs {v}')
+    lo, n = FUNCS[want['frame']]
+    need(any(lo <= x < lo + n for x in w['bt_accurate'] + w['bt_fuzzy']), f'{case}: no {want["frame"]} frame in the retry backtrace')
+    lp, basis = one(ye, 'y:lp'), node_lp(case, d)['node_basis']
+    need(basis and len(basis['vbasis']) == lp['cols'] and len(basis['cbasis']) == lp['rows'],
+         f'{case}: node basis lengths vs LP {lp["cols"]}x{lp["rows"]}')
+    on_node = [e for e in es if e['event'] == 'x:cda5b:enter' and e['depth'] == 1 and (e['vb_rel'], e['cb_rel']) == ('I98', 'Ia0')]
+    need(len(on_node) >= 2, f'{case}: expected the first LP and the retry with the node basis, got {len(on_node)}')
+    for e in on_node:
+        need(e['vbasis'] == basis['vbasis'] and e['cbasis'] == basis['cbasis'], f'{case}: cda5b k={e["k"]} basis differs from the decoded node basis')
+
+
+def processing(es):
+    """Node-processing events of the retry solve (compared through A and B, reported here)."""
+    leave = [e for e in es if e['event'] == 'solve:leave'][-1]
+    return {'set': [(e['value'], e['ret']) for e in es if e['event'] == 'set'],
+            'finish': [e.get('ret') for e in es if e['event'] == 'finish:leave'],
+            'exports': sum(e['event'] == 'x:export' for e in es),
+            'saves': [e['event'] for e in es if e['event'].startswith('x:save_') and e['event'].endswith(':enter')],
+            'leave': {'ret': leave['ret'], 'node_status': leave['node']['status'] if leave['node'] else None, 'holder_changed': leave['holder_changed']}}
+
+
+_msha = {}
+
+
+def model_sha(case):
+    p = os.path.join('..', MODELS[case])
+    if p not in _msha:
+        _msha[p] = sha(p)
+    return _msha[p]
 
 
 def summary(case, d):
@@ -237,10 +318,14 @@ def node_lp(case, d):
     branch = {'5ce67b': 'node_basis_direct', '0c3d0d': '0c3d0d'}[first_retry['site'].split('+')[0]]
     dec = [e for e in es if e['event'] == 'x:decode:leave']
     basis = {'vbasis': dec[0]['vbasis'], 'cbasis': dec[0]['cbasis']} if dec else None
+    extra = {}
+    if 'node' in CASES[case]:
+        extra['simplex_blanked_rows'] = blanked_rows(one(ye, 'y:ws'))
+        extra['simplex_note'] = 'simplex ws at 02f7e1 return = this LP with rows simplex_blanked_rows emptied and rhs 0 (check C2; origin not identified)'
     return dict({'schema': 'rsolver.node_lp.v1', 'case': case, 'doubles': 'u64 bit pattern, 16 hex digits',
                  'source': f'{DATA}/{case}_1.json (run 1 of 3, y:lp at cda5b k={lp["k"]})',
                  'env_params_note': 'raw reads at the offsets of re/notes/env_param_offsets.tsv; only Cutoff is cross-checked (C3)'},
-                **{k: lp[k] for k in LP_KEYS}, branch=branch, lp_calls=calls, node_basis=basis)
+                **{k: lp[k] for k in LP_KEYS}, branch=branch, lp_calls=calls, node_basis=basis, **extra)
 
 
 def check_lpfiles(caps):
@@ -253,7 +338,7 @@ def sha(p):
 
 
 def write_manifest():
-    caps = [f'{DATA}/{c}_{r}.json' for c in CASES for r in RUNS]
+    caps = [f'{DATA}/{c}_{r}.json' for c in CASES for r in RUNS] + [cfg['old'] for cfg in CASES.values() if cfg['old'].startswith(DATA)]
     for c in CASES:
         with open(os.path.join(ROOT, LPFILE.format(c)), 'w') as fh:
             json.dump(node_lp(c, B.load(f'{DATA}/{c}_1.json')), fh)
@@ -269,7 +354,8 @@ def write_manifest():
 def check_manifests(caps):
     m = B.load(MANIFEST)
     need(m['binary_sha256'] == B.BINARY, 'manifest binary hash')
-    need({f'{DATA}/{c}_{r}.json' for c in CASES for r in RUNS} | {LPFILE.format(c) for c in CASES} | set(TOOLS) <= set(m['files']),
+    need({f'{DATA}/{c}_{r}.json' for c in CASES for r in RUNS} | {LPFILE.format(c) for c in CASES} | set(TOOLS)
+         | {cfg['old'] for cfg in CASES.values() if cfg['old'].startswith(DATA)} <= set(m['files']),
          'manifest misses a file')
     for p, h in m['files'].items():
         need(sha(p) == h, f'hash mismatch {p}')
@@ -286,7 +372,7 @@ def load_all():
     caps, olds = {}, {}
     for case, cfg in CASES.items():
         caps[case] = {r: B.load(f'{DATA}/{case}_{r}.json') for r in RUNS}
-        olds[case] = B.load(f'{OLD}/{cfg["old"]}_1.json')
+        olds[case] = B.load(cfg['old'])
     return caps, olds
 
 
@@ -296,7 +382,7 @@ def run(caps, olds):
 
 def tampers(caps):
     def nidda(fn):
-        def t(c):
+        def t(c, o):
             fn(c['nidda_stress'])
         return t
 
@@ -345,11 +431,77 @@ def tampers(caps):
         rs['events'] = [e for e in rs['events'] if e['event'] != 'y:ws']
 
     def gmu(fn):
-        def t(c):
+        def t(c, o):
             fn(c['gmu-35-50_default'])
         return t
 
-    return [('gmu cutoff', gmu(all_runs(set_cut))), ('gmu dhash', gmu(all_runs(dhash))), ('nnz value', nidda(all_runs(set_val))), ('bound', nidda(all_runs(set_ub))), ('cutoff', nidda(all_runs(set_cut))),
+    def bnb(fn):
+        def t(c, o):
+            fn(c['nidda_bnb_H_s1'])
+        return t
+
+    def bnb_ref(fn, ref=True):
+        """F/G tampers: also applied to the reference capture so that check A passes and F/G must reject."""
+        def t(c, o):
+            for r in RUNS:
+                fn(c['nidda_bnb_H_s1'][r])
+            if ref:
+                fn(o['nidda_bnb_H_s1'])
+        return t
+
+    def rs(d):
+        return [e for e in d['events'] if e['event'] == 'retry_solve'][0]['events']
+
+    def ev(d, name):
+        return [e for e in rs(d) if e['event'] == name][0]
+
+    def parent(d):
+        rs(d)[0]['node']['parent'] = None
+
+    def call(d):
+        rs(d)[0]['call'] += 1
+
+    def i94(d):
+        ev(d, 'x:retry_basis')['node_basis']['I94'] = 464
+
+    def frame(d):
+        w = ev(d, 'y:where'); w['bt_accurate'] = []; w['bt_fuzzy'] = [x for x in w['bt_fuzzy'] if not 0x5101d0 <= x < 0x5101d0 + 21510]
+
+    def restarts(d):
+        ev(d, 'y:where')['restarts'] = 0
+
+    def dec_len(d):
+        ev(d, 'x:decode:leave')['cbasis'].pop()
+
+    def extra_blank(d):
+        # empty one more ws row (entries removed, b=0) consistently in every run
+        w = ev(d, 'y:ws'); i = w['ind'][0]; keep = [k for k in range(len(w['ind'])) if w['ind'][k] != i]
+        cb = [sum(1 for k in keep if k < w['cbeg'][j]) for j in range(w['cols'] + 1)]
+        w['ind'] = [w['ind'][k] for k in keep]; w['val'] = [w['val'][k] for k in keep]; w['cbeg'] = cb; w['b'][i] = '0' * 16
+
+    def zero_bin(d):
+        d['binary_sha256'] = '0' * 64
+
+    def zero_model(d):
+        d['model_sha256'] = '0' * 64
+
+    def node_id(d):
+        rs = [e for e in d['events'] if e['event'] == 'retry_solve'][0]
+        rs['events'][0]['node']['id'] += 2
+
+    def basis_entry(d):
+        rs = [e for e in d['events'] if e['event'] == 'retry_solve'][0]
+        x = [e for e in rs['events'] if e['event'] == 'x:cda5b:enter' and e['vbasis']][-1]; x['vbasis'][0] ^= 1
+
+    bnb_t = [('bnb ' + n, bnb(t)) for n, t in [
+        ('binary hash', all_runs(zero_bin)), ('model hash', all_runs(zero_model)), ('retry solve removed', all_runs(drop_retry)),
+        ('node id', all_runs(node_id)), ('nnz value', all_runs(set_val)), ('cutoff', all_runs(set_cut)), ('dhash', all_runs(dhash)),
+        ('non-y event', all_runs(non_y)), ('run differs', lambda cs: set_ub(cs[3])), ('ws array', all_runs(ws_l)),
+        ('model row', all_runs(model_row)), ('cda5b basis', all_runs(basis_entry))]]
+    bnb_t += [('bnb F/G ' + n, bnb_ref(fn, ref)) for n, fn, ref in [
+        ('node id', node_id, True), ('parent', parent, True), ('call', call, True), ('I94', i94, True), ('5fb8ec frame', frame, False),
+        ('restarts', restarts, False), ('cda5b basis', basis_entry, True), ('decoded basis length', dec_len, True), ('extra blanked row', extra_blank, False)]]
+    return bnb_t + [('gmu cutoff', gmu(all_runs(set_cut))), ('gmu dhash', gmu(all_runs(dhash))), ('nnz value', nidda(all_runs(set_val))), ('bound', nidda(all_runs(set_ub))), ('cutoff', nidda(all_runs(set_cut))),
             ('retry solve removed', nidda(all_runs(drop_retry))), ('run differs', nidda(lambda cs: set_ub(cs[2]))),
             ('non-y event', nidda(all_runs(non_y))), ('dhash', nidda(all_runs(dhash))), ('ws array', nidda(all_runs(ws_l))),
             ('model row', nidda(all_runs(model_row))), ('ws missing', nidda(all_runs(drop_ws)))]
@@ -373,10 +525,10 @@ def main():
         print('  ', json.dumps(summary(case, caps[case][1])))
     if selftest:
         for name, fn in tampers(caps):
-            c = copy.deepcopy(caps)
-            fn(c)
+            c, o = copy.deepcopy(caps), copy.deepcopy(olds)
+            fn(c, o)
             try:
-                run(c, olds)
+                run(c, o)
             except Fail as e:
                 print('rejected', name, '-', e); continue
             print('FAIL tamper accepted:', name); return 1
