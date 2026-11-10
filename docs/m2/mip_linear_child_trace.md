@@ -163,3 +163,40 @@ python3 tools/mip_linear_child_check.py --self-test        # 0
 - 자연 5→12: 정상 산술에서 불가능하고 이번 스캔에서 미관측이다.
 
 Rust 동등성은 범위 밖이며 미검증이다. 기존 `mip_linear_child_accept.py acceptance`(옛 계약)는 종료코드 1로 남고 이번 계약으로 대체된다.
+
+## 12. 최종 판정과 범위 구분 (병합 시점)
+
+**C 원본 관찰·검증인지 Rust 구현인지**
+- 이번 작업의 결과는 모두 **Gurobi 13.0.3 원본 바이너리의 관찰과 검증**이다. 근거는 디컴파일 C(`5ce67b`, `682037`, `5ff754`, `627f3e`)와 Frida 읽기 훅으로 얻은 원본 캡처다. 합성 실험만 원본 메모리에 상태를 주입했다.
+- **Rust 솔버(`crates/mip` 등)는 한 줄도 바꾸지 않았다.** Rust의 재풀이·상태 3 처리는 원본과 대조하지 않았고 동등성은 미검증이다. 현재 Rust는 자식 Numeric·Unbounded를 Numeric으로 처리하며 이번 작업으로 바뀌지 않았다. Rust·Python 통합 테스트는 대상이 아니어서 실행하지 않았다.
+- 추가한 코드는 원본 관찰용 도구(`tools/mip_linear_child_*.js|py|sh`)와 기준 자료(`bench/`)뿐이다.
+
+**검증 완료 (원본 3회 이상, 검사기 종료코드 0)**
+- 자연 상태 12 재풀이: 비루트 노드(nidda)와 루트(gmu)에서 사건 순서, LP·노드 상태 입출력, Presolve·Method·ConcurrentMethod·Threads 복구, 재풀이 입력 basis의 크기와 basic 수, 전후 basis header의 유효성과 변화량을 확인했다. 루트 경로에서는 `0c3d0d` 진입 전 workspace 해제와 Presolve 1·Threads 1 설정을 확인했다.
+- 합성 5→12 재분류 경계: 3회.
+- 상태 3 호출자: `682037@0x566c48`. 반복 제한 LP 두 번이 비최적이면 상태 3이 되고, 이어지는 `627f3e` 분기와 자식 상태(0)를 확인했다(노드 2개, 3회).
+
+**미검증 (검증 완료로 간주하지 않음)**
+- M2-03c-2로 분리: 재풀이 후 VBasis/CBasis 형식의 basis, 재풀이 입력 basis의 출처, factor·norm 동작.
+- M2-03c 범위에 남김: 상태 10 생성(자연 0회), `682037` 진입 predicate의 의미, env+0x2960 한도의 의미(노트는 IterationLimit, 관측 LP 상태는 9), 노드 8287의 부모 관계.
+- 자연 5→12: 정상 산술에서 불가능하고 이번 스캔(76회)에서 미관측이다. 수치 오류로 발생할 가능성은 배제하지 않는다.
+- 옛 계약의 `mip_linear_child_accept.py acceptance`는 종료코드 1로 남는다(대체됨).
+
+**병합 전 전체 재실행**: `tools/mip_linear_child_premerge.sh target/m2-03c-1-premerge` 후 `python3 tools/mip_linear_child_rerun_compare.py target/m2-03c-1-premerge`. 결과는 아래 §13에 기록한다.
+
+## 13. 병합 전 전체 재실행 결과 (2026-11-10)
+
+- 명령: `tools/mip_linear_child_premerge.sh target/m2-03c-1-premerge`를 실행했다. 원본 Gurobi 13.0.3 프로세스 33회를 한 번에 하나씩 돌렸고, 결과는 git이 무시하는 `target/`에 두었다. 이어서 `python3 tools/mip_linear_child_rerun_compare.py target/m2-03c-1-premerge`로 비교했고 **종료코드 0**이다.
+- 비교 30건 PASS, FAIL 0건:
+  - 대조군 trace 6회: 저장 기록과 JSON 전체 일치
+  - 자연·합성 재분류 실험 6회: 전체 일치
+  - 합성 상태 3 분기 3회: 비정상 종료와 주입 시점까지의 사건 일치
+  - 스캔 재현 nidda·gmu 6회: 카운트 일치
+  - 재풀이·상태 3 캡처 9회: 사건·출력·파라미터·해시·`fallback_counts` 일치
+- INFO 3건: snowy TimeLimit 스캔에서 상태 3 setter가 2·1·1회였고 노드 수도 달랐다. TimeLimit에 따라 결과가 달라진다는 앞선 판단을 다시 확인했으며 합격 근거로 쓰지 않는다.
+- 저장 자료 검사:
+  - 종료코드 0: `mip_linear_child_retry_check.py --self-test`(변조 14종 거부), `mip_linear_child_accept.py controls`와 `--self-test controls`, `mip_linear_child_check.py --self-test`, `mip_deferred_gate_oracle.py --check`
+  - 종료코드 1(예상): `mip_linear_child_accept.py acceptance`. 대체된 옛 계약이다.
+  - scan(88)·retry(12) manifest와 외부 모델 해시가 모두 일치했다. `node --check`, `py_compile`, `bash -n`, `git diff --check`도 통과했다.
+- 검증 범위: 원본 동작의 재현성과 저장 기준의 일치만 확인했다. Rust는 변경하지 않았다(`git diff 6c8ea6a -- crates python` 0파일). Rust 동등성, Rust·Python 통합 테스트는 대상이 아니어서 실행하지 않았다.
+- 판정: **M2-03c-1 부분 완료**. §12의 미검증 항목은 검증 완료로 간주하지 않는다.
