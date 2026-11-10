@@ -64,8 +64,29 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 실행: 작업 branch `work/m2-03d-14`, 커밋 `5f80f95`(Rust 코드 `crates/mip/src/dive_rows.rs`는 main `7924343`과 같음). 도구 `tools/mip_dive_split_rust.py` SHA-256 `77d6247a…`, 테스트 `crates/mip/tests/dive_split_l1.rs` `c99876cd…`. 기준 자료는 03d-13 manifest의 run 1 캡처 세 개(M 통과). x86-64 Linux(WSL2). Gurobi는 실행하지 않았다.
+- `python3 tools/mip_dive_split_rust.py` 종료 0:
+  - X: 입력은 진입 필드만으로 만들었다(전체 기록 479, 참조 기록 3,827).
+  - P/L/H/S: 세 사례의 재생성 4,306회 전부에서 Rust가 바꾼 열 집합·각 열 ind·val 비트, 진입과 다른 줄인 길이, rhs 변경 행(모두 +0)이 캡처와 같다. `swap_in` 뒤 `state()` = (1, 1), `swap_out` 뒤 참조수 0이고 길이·rhs가 진입과 같다.
+  - K: nidda 2,743(교환 있는 1,354, 안정 분할과 다른 열 119,019), gmu 1,318(354, 22,800), assign 245(111, 4,453). 합계 4,306·1,819·146,272로 03d-13 고정값과 같다.
+- `python3 tools/mip_dive_split_rust.py --self-test` 종료 0(약 1분 30초):
+  - 트레이스 변조 7종 모두 거부: 열 ind 두 칸 교환(P), val 한 비트(P), 줄인 길이 +1(L), rhs 행 추가(H), build 2 삭제(K), 사례 해시(T), 만듦 표시 0(S).
+  - 코드 변이 6종 모두 거부: 안정 분할(P, nidda build 1 열 0), val 미교환(P), 줄인 길이 = 원래 길이(L), 목록 행 rhs 유지(H), 목록 판정 `> 0`(L, 열 0 길이 222≠221), 앞으로 찾아 바꾸기(P). 03d-10에서 판별 안 되던 안정 분할이 이제 거부된다.
+- 회귀: `cargo clippy --workspace --all-targets -- -D warnings` 0, `cargo test --release --workspace` 121 통과·0 실패(새 재생 테스트는 무시 테스트로 도구가 돌림), `python3 tools/mip_dive_split_check.py` PASS(기준 자료 불변).
+- 회귀(계속): `python3 tools/mip_dive_list_rust.py --self-test`·`python3 tools/mip_dive_gate_rust.py --self-test` 종료 0(03d-10의 안정 분할 변이는 그 캡처로는 여전히 판별 안 됨으로 통과, 기대대로).
+- 실행하지 않은 검사: pytest(Python 경계 변경 없음), Gurobi(원본 재실행 불필요, 03d-13 기준 자료 사용).
+- 계약 변경: 없음.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: 완료(검증).
+- 동등성: 통과(L1, 비트 비교). 범위는 03d-13 세 양성 사례 run 1의 `cda5b` 호출자 재생성 4,306회. Rust `RowList::swap_in`/`swap_out`은 원본 `10f448` 재생성의 열 ind·val·줄인 길이·rhs 변경 행과 같다. Rust 코드는 바꾸지 않았다.
+- 남은 한계:
+  - rhs는 변경 행 집합과 +0만 대조했다. 진입 rhs 값은 캡처에 없어 합성했다.
+  - val 근거는 03d-13의 `val_moved` 훅 비교다.
+  - 목록 순서·`changed`·중첩 참조수(>1)는 이 재생이 시험하지 않는다. `c3d0d`·`390989` 재생성과 중첩 교체는 원본 실행 0회다.
+  - `bnb.rs`에는 연결하지 않았다.
+- 후속: M2-03d-4(L2, 선행 M2-10b·M1 요청)가 남은 M2-03d 연결 작업이다. DynamicRows 선택·목록 유지·관문·분할이 모두 L1 통과 상태로 미연결이다.
+- 작업 branch `work/m2-03d-14`. 커밋: 계약 `15a3cfd`, 도구·테스트 `5f80f95`, 결과·인수인계는 이 문서와 같은 커밋. 미커밋 선행 변경 없음.
+- 갱신: `docs/handoff/M2.md`, `docs/11_progress.md`, `docs/12_roadmap_diagram.md`, `docs/14_sprint_plan.md`, `docs/m2/sprint_design.md`.
+- 교훈: `docs/lessons/tooling.md`(참조 압축 캡처를 Rust 재생 입력에도 그대로 쓰기, 재생에 필요한 진입 값이 캡처에 없을 때의 한계).
