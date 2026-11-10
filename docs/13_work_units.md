@@ -33,7 +33,7 @@
 | M2-07 | Cut 생성·선택·관리 | 예정. 기본 설정에서 실행되는 separator와 pool을 원본에 맞춰 연결하고 유효성과 루트 cut 수를 확인한다. | [cut 설계](07_cuts_heuristics.md), [M2 기준](09_roadmap.md#1-마일스톤) |
 | M2-08 | 전파와 휴리스틱 | 진행. 루트 전파와 휴리스틱이 있다. 기본 스케줄과 실행 경로를 원본과 대조하고 누락된 경로를 분리한다. | [루트 기록](m2/m2_root.md), [cut·휴리스틱 설계](07_cuts_heuristics.md) |
 | M2-09 | MIP 콜백과 시작해 | 예정. MIP·MIPSOL·MIPNODE 콜백과 관련 제출 API, MIP start의 원본 동작을 각각 검증한다. | [M2 기준](09_roadmap.md#1-마일스톤) |
-| M2-10 | B&B 성능·전체 관문 | 진행. 38개 5초 기준 측정이 있다. 노드별 모델 복사와 LP 재풀이 비용을 조사하고 60초 상태, P1 및 속도를 기존 M2 기준으로 평가한다. | [기준표](m2/mip_bnb_5s.md), [복원 후 측정](m2/mip_recovery_bnb.md#복원-경로-확장-후-38개-재측정) |
+| M2-10 | B&B 성능·전체 관문 | 진행. 38개 5초 기준 측정이 있다. 노드별 비용은 [M2-10a](m2/mip_bnb_node_cost.md)에서 측정했다(노드 LP cold start가 91–99%, 개선 대상은 basis 재사용). 60초 상태, P1 및 속도를 기존 M2 기준으로 평가한다. | [기준표](m2/mip_bnb_5s.md), [복원 후 측정](m2/mip_recovery_bnb.md#복원-경로-확장-후-38개-재측정) |
 
 ## M3 Barrier·PDHG·Concurrent
 
