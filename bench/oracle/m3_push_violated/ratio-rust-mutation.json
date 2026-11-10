@@ -1,0 +1,21 @@
+{
+  "pos-A-num": "거부: ('pos-A-sparse', 'theta', '기준', '000000000000f03f', '실제', '0000000000001840', '정확·비트 비교')",
+  "pos-B-taken": "거부: ('pos-B-skip-sparse', 'pos', '기준', -1, '실제', 0, '정확·비트 비교')",
+  "neg-B-num": "거부: ('neg-B-sparse', 'theta', '기준', '0000000000000040', '실제', '0000000000002840', '정확·비트 비교')",
+  "neg-U-num": "거부: ('neg-U-sparse', 'theta', '기준', '000000000000e03f', '실제', '00000000000023c0', '정확·비트 비교')",
+  "neg-LN-inf": "거부: ('neg-N-inf-skip-sparse', 'work', '기준', '000000000000f03f', '실제', '000000000000f83f', '정확·비트 비교')",
+  "neg-A-taken": "거부: ('neg-A-skip-sparse', 'pos', '기준', -1, '실제', 0, '정확·비트 비교')",
+  "dense-strict-off": "거부: ('negU-at-bound-dense', 'pos', '기준', 0, '실제', 1, '정확·비트 비교')",
+  "strict-everywhere": "거부: ('negU-at-bound-sparse', 'pos', '기준', 1, '실제', 0, '정확·비트 비교')",
+  "harris-sign": "거부: ('neg-B-sparse', 'theta', '기준', '0000000000000040', '실제', '0000000000c05ec0', '정확·비트 비교')",
+  "tested-skip": "거부: ('pos-N-dense', 'work', '기준', '000000000000f43f', '실제', '000000000000e83f', '정확·비트 비교')",
+  "work-dense": "거부: ('pos-N-dense', 'work', '기준', '000000000000f43f', '실제', '000000000000f03f', '정확·비트 비교')",
+  "work-sparse": "거부: ('pos-N-sparse', 'work', '기준', '000000000000f83f', '실제', '000000000000f43f', '정확·비트 비교')",
+  "tol-ge": "거부: ('at-tol-skip-sparse', 'pos', '기준', -1, '실제', 1, '정확·비트 비교')",
+  "tail-second-tie": "거부: ('tie-sparse', 'pos', '기준', 0, '실제', 1, '정확·비트 비교')",
+  "tail-second-bound": "거부: ('negU-at-bound-sparse', 'pos', '기준', 1, '실제', 0, '정확·비트 비교')",
+  "tail-cap-return": "거부: ('finite-cap-sparse', 'theta', '기준', '000000000000f03f', '실제', 'ea8ca039593e2946', '정확·비트 비교')",
+  "tail-no-candidate": "생존",
+  "tail-pivot-threshold": "거부: ('reentry-sparse', '재진입 사례는 Rust가 거부해야 함', ['0', '9a9999999999b93f', '3a8c30e28e79453e', '0000000000000440'])",
+  "tail-small-scale": "생존"
+}

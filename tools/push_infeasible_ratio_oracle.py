@@ -169,7 +169,7 @@ def selftest(record):
         changed = copy.deepcopy(record)
         changed[field] = value
         rejected(changed)
-    for field, value in [("row", 5), ("inputs_preserved", False), ("theta", "7ff8000000000000")]:
+    for field, value in [("row", 5), ("inputs_preserved", False), ("theta", bits(float("nan")))]:
         changed = copy.deepcopy(record)
         changed["events"][0][field] = value
         rejected(changed)

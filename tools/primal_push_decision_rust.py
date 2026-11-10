@@ -1,5 +1,6 @@
 """M3-04c-6: push 단계 판단 원본 캡처를 Rust 입력으로 투영하고, Rust trace를 원본 캡처 필드와 비교한다.
 M3-04b-3: arm LP 캡처(시작 벡터, 보류 양성 사건 step:defer)를 'arms' 사례로 더했다.
+M3-04c-2: 위반 basis 캡처를 'violated' 사례로 더했다. 줄의 경로 토큰(F·V)으로 Rust가 방향식과 ratio(055f68·054eef)를 고른다.
 
 Rust에는 원시 캡처 필드만 넘긴다. 판단 모델(primal_push_decision_check.decide)의 계산값은 쓰지 않는다.
 """
@@ -24,7 +25,9 @@ KIND = {'Flip': 'flip', 'Reject': 'flip', 'Pivot': 'pivot', 'Defer': 'defer'}
 EXPECT = {'target': dict(steps=40, dir1=6, pivot=36, flip=4, defer=0, frame=22),
           'support': dict(steps=9, dir1=0, pivot=7, flip=2, defer=0, frame=9),
           # M3-04b-3 arm LP primal·dual 각 25단계(판단 모델 decide 집계에서 정함, 보류는 step:defer 양성 사건)
-          'arms': dict(steps=50, dir1=13, pivot=33, flip=11, defer=6, frame=50)}
+          'arms': dict(steps=50, dir1=13, pivot=33, flip=11, defer=6, frame=50),
+          # M3-04c-2 위반 LP primal·dual 각 19단계(판단 모델 decide 집계에서 정함, 모두 054eef 경로)
+          'violated': dict(steps=38, dir1=20, pivot=20, flip=18, defer=0, frame=38)}
 
 
 def project(label, rec, role):
@@ -38,15 +41,17 @@ def project(label, rec, role):
         if e['event'] != 'supply:leave' or e['candidate'] < 0:
             i += 1
             continue
-        k, ratios = i + 1, []
+        k, ratios, retries = i + 1, [], 0
         while k < len(events) and events[k]['event'] not in ('supply:enter', 'push:leave', 'step:enter', 'step:defer'):
             if events[k]['event'] == 'ratio:enter':
                 ratios.append((events[k], events[k + 1]))
+            retries += events[k]['event'] == 'retry:enter'
             k += 1
         name = f"{label}/c{e['call']}s{e['step']}"
         assert len(ratios) == 1, (name, 'ratio 호출 수(재호출은 범위 밖)', len(ratios))
+        assert retries == 0, (name, '056973 재시도(범위 밖)')
         rin, rout = ratios[0]
-        assert rin['name'] == 'feasible' and rout['event'] == 'ratio:leave', (name, '경로')
+        assert rin['name'] in ('feasible', 'infeasible') and rout['event'] == 'ratio:leave', (name, '경로')
         pre, post, st = e['alpha'], rin['alpha'], rin['state']
         assert pre['count'] >= 0 and pre['indices'] == post['indices'], (name, '희소 열·인덱스 보존')
         tol = st['tolerances']
@@ -62,7 +67,7 @@ def project(label, rec, role):
             applied = events[k + 1]
             assert applied['event'] == 'step:applied', (name, '적용 사건')
             want['state'] = applied['state']['vstat'][st['header'][rout['row']]]
-        fields = [name, str(st['n']), str(st['m']), str(e['candidate']), tol['380'], tol['398'], tol['370'],
+        fields = [name, 'V' if rin['name'] == 'infeasible' else 'F', str(st['n']), str(st['m']), str(e['candidate']), tol['380'], tol['398'], tol['370'],
                   tol['3b0'], str(rout['chosen']), rout['theta'], rout['pivot'], *model['cost'], *model['lb'],
                   *model['ub'], *st['x'], *st['slack'], *map(str, st['header']), str(pre['count']),
                   *map(str, pre['indices']), *pre['values'], *rin['basic'], *rin['width'], *rin['marks']]
@@ -75,8 +80,9 @@ def collect():
     manifest = json.loads((dc.BASE / 'manifest.json').read_text())
     cases = []
     # 04b-1·face5·arm LP: 해시·출처·순서별 독립 3회(arm은 대조군·비간섭 포함) 검사 후 첫 실행
-    for label, rec in dc.load_all(manifest, arms=True):
-        cases += project(label, rec, 'arms' if label.startswith('arms-') else 'target')
+    for label, rec in dc.load_all(manifest, arms=True, violated=True):
+        role = 'arms' if label.startswith('arms-') else 'violated' if label.startswith('violated-') else 'target'
+        cases += project(label, rec, role)
     # 보조: 04b-2 비간섭 단일 실행. frame을 빼면 04b-1 primal-1과 같아야 한다.
     c = manifest['cases']['interior-noninterference']
     new = json.loads((ROOT / c['captures'][0]).read_text())
@@ -127,7 +133,7 @@ def compare(cases, text, trace):
         s['frame'] += w['frame'] is not None
     for role, want in EXPECT.items():
         assert tally[role] == want, ('집계', role, '기대', want, '실제', tally[role])
-    unique = {r: len({c['line'].split(' ', 1)[1] for c in cases if c['role'] == r}) for r in ('target', 'arms')}
+    unique = {r: len({c['line'].split(' ', 1)[1] for c in cases if c['role'] == r}) for r in ('target', 'arms', 'violated')}
     return dict(tally=tally, unique_inputs=unique, link_cases=len(cases), link_mismatch=link_bad)
 
 
@@ -214,6 +220,22 @@ MUTANTS = {
     'leave-nonnegU-always-1': [("            b'U' if k > a.abs() * t => -2,\n", '')],
     'leave-nonnegU-always-2': [("b'U' if k > a.abs() * t => -2,", "b'U' => -2,")],
 }
+MUTANTS.update({
+    # M3-04c-2: 위반 basis 방향식의 절마다 그 절만 바꾸는 변조(오라클 MUTANTS와 같은 이름)
+    'v-pre1-off': [('if r > k && k > dl {', 'if false && r > k && k > dl {')],
+    'v-pre0-off': [('if tol.reject_neg > r && k > du {', 'if false && tol.reject_neg > r && k > du {')],
+    'v-sigma-neg': [("b'B' => s += a,", "b'B' => s -= a,"), ("b'A' => s -= a,", "b'A' => s += a,")],
+    'v-clause1-off': [('if du > tl && e > -(dl * s) && e > -(r * dl) {', 'if false {')],
+    'v-clause0-off': [('if dl > tu && e > du * s && e > du * r {', 'if false {')],
+    'v-small-off': [('if e > s.abs() {', 'if false {')],
+    'v-small1-off': [('        if du > tl && e > -(r * dl) {', '        if false {')],
+    'v-small0-off': [('        if dl > tu && e > du * r {', '        if false {')],
+    'v-r-ge0': [('return r > 0.0;', 'return r >= 0.0;')],
+    'v-sigma-ge0': [('    s > 0.0\n}', '    s >= 0.0\n}')],
+    'v-ten-9': [('let (tl, tu) = (10.0 * dl, 10.0 * du);', 'let (tl, tu) = (9.0 * dl, 9.0 * du);')],
+    # Rust 전용: 위반 경로를 feasible 방향식·ratio로 돌리는 오류
+    'v-as-feasible': [('let decrease = match violated {', 'let decrease = match None::<&[u8]> {')],
+})
 NOT_PORTED = {'reject-arm-current': 'Rust 방향은 방향식 결과 하나뿐이다. 현재 S+0x328과 다른 경우는 재호출 경로(Recall 거부)에만 있다.'}
 
 

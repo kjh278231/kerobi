@@ -1,0 +1,810 @@
+{
+  "pid": 1839893,
+  "run_id": "3c73b05f-d93d-40ed-90c5-a276af7c6a83",
+  "schema": "M3-04c-2-v1",
+  "origin": "natural",
+  "kind": "primal",
+  "agent_sha256": "3e978a23a30299d01f510d463ebcdb406b87662fa8a94d6bef83c3e12ee8a808",
+  "model_sha256": "56733b5a457ba05cf9333af5d1ae83847dc2ac1531b4d7ad8df7901f06c9b58f",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "c37d7617a5401f9f70e8bfd09b455754fead16e88c57b86de2267950fdfd0fa7",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 3,
+    "LPWarmStart": 2,
+    "ScaleFlag": 0
+  },
+  "starts": {
+    "PStart": [
+      1,
+      1,
+      5
+    ],
+    "DStart": [
+      0,
+      0
+    ]
+  },
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.23.4"
+  },
+  "output": "CROSSOVER_RESULT {\"status\": 2, \"vbasis\": [0, -2, -1], \"cbasis\": [-1, 0]}\n",
+  "result": {
+    "status": 2,
+    "vbasis": [
+      0,
+      -2,
+      -1
+    ],
+    "cbasis": [
+      -1,
+      0
+    ]
+  },
+  "reason": "process-terminated",
+  "errors": [],
+  "events": [
+    {
+      "event": "push:enter",
+      "call": 1,
+      "step": 0,
+      "first": 1,
+      "model_status": 1,
+      "attempt": 0,
+      "alias_contiguous": true,
+      "model": {
+        "starts": [
+          "0000000000000000",
+          "0100000000000000",
+          "0200000000000000"
+        ],
+        "lengths": [
+          1,
+          1,
+          1
+        ],
+        "rows": [
+          0,
+          0,
+          1
+        ],
+        "values": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "000000000000f03f"
+        ],
+        "cost": [
+          "0000000000000000",
+          "0000000000000000",
+          "000000000000f03f",
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "rhs": [
+          "333333333333fb3f",
+          "0000000000405a40"
+        ],
+        "lb": [
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "ub": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "0000000000002440",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ]
+      },
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -2,
+          -3,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "0000000000001440"
+        ],
+        "slack": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 1,
+          "iterations": "0000000000000000"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        }
+      }
+    },
+    {
+      "event": "factor:enter",
+      "call": 1,
+      "step": 0,
+      "request": 10,
+      "header": [
+        4,
+        3
+      ]
+    },
+    {
+      "event": "factor:leave",
+      "call": 1,
+      "step": 0,
+      "ret": 0,
+      "request": 10,
+      "header": [
+        4,
+        3
+      ]
+    },
+    {
+      "event": "supply:enter",
+      "call": 1,
+      "step": 0,
+      "candidates": [
+        2
+      ],
+      "position": 0,
+      "failures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "support": 0,
+      "support_marks": null,
+      "batch": 0,
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -2,
+          -3,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "0000000000001440"
+        ],
+        "slack": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "000000000000f03f"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000005940",
+          "343333333333d3bf"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "42"
+        ],
+        "rhs": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "pinf": "343333333333d33f"
+      }
+    },
+    {
+      "event": "supply:leave",
+      "call": 1,
+      "step": 1,
+      "candidate": 2,
+      "position": 1,
+      "alpha": {
+        "count": 1,
+        "indices": [
+          0
+        ],
+        "values": [
+          "000000000000f03f"
+        ]
+      }
+    },
+    {
+      "event": "ratio:enter",
+      "call": 1,
+      "step": 1,
+      "name": "infeasible",
+      "selected": {
+        "enter": 2,
+        "leave": 0,
+        "direction": 1
+      },
+      "alpha": {
+        "count": 1,
+        "indices": [
+          0
+        ],
+        "values": [
+          "000000000000f0bf"
+        ]
+      },
+      "basic": [
+        "0000000000005940",
+        "343333333333d3bf"
+      ],
+      "width": [
+        "ea8ca039593e2946",
+        "ea8ca039593e2946"
+      ],
+      "marks": [
+        "4e",
+        "42"
+      ],
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -2,
+          -3,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "0000000000001440"
+        ],
+        "slack": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "000000000000f03f"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000005940",
+          "343333333333d3bf"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "42"
+        ],
+        "rhs": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "pinf": "343333333333d33f"
+      }
+    },
+    {
+      "event": "ratio:leave",
+      "call": 1,
+      "step": 1,
+      "name": "infeasible",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "cacccccccca47c40"
+    },
+    {
+      "event": "retry:enter",
+      "call": 1,
+      "step": 1,
+      "selected": {
+        "enter": 2,
+        "leave": 0,
+        "direction": 1
+      },
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000"
+    },
+    {
+      "event": "retry:leave",
+      "call": 1,
+      "step": 1,
+      "chosen": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000"
+    },
+    {
+      "event": "step:enter",
+      "call": 1,
+      "step": 1,
+      "kind": "flip",
+      "selected": {
+        "enter": 2,
+        "leave": -1,
+        "direction": 1
+      },
+      "theta": "ea8ca039593e2946",
+      "pivot": null,
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -2,
+          -3,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "0000000000001440"
+        ],
+        "slack": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "000000000000f03f"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000005940",
+          "343333333333d3bf"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "42"
+        ],
+        "rhs": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "pinf": "343333333333d33f"
+      },
+      "frame": {
+        "r": "000000000000f03f",
+        "dL": "0000000000001440",
+        "dU": "0000000000001440",
+        "k100": "2c431cebe2361a3f",
+        "km100": "2c431cebe2361abf",
+        "k2": "8dedb5a0f7c6c03e",
+        "e": "3a8c30e28e79453e"
+      }
+    },
+    {
+      "event": "step:applied",
+      "call": 1,
+      "step": 1,
+      "kind": "flip",
+      "selected": {
+        "enter": 2,
+        "leave": -1,
+        "direction": 1
+      },
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -2,
+          -1,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "0000000000001440"
+        ],
+        "slack": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000005940",
+          "343333333333d3bf"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "42"
+        ],
+        "rhs": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "pinf": "343333333333d33f"
+      }
+    },
+    {
+      "event": "step:leave",
+      "call": 1,
+      "step": 1,
+      "kind": "flip",
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -2,
+          -1,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "0000000000001440"
+        ],
+        "slack": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000405a40",
+          "343333333333d3bf"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "42"
+        ],
+        "rhs": [
+          "343333333333d3bf",
+          "0000000000405a40"
+        ],
+        "pinf": "343333333333d33f"
+      },
+      "selected": {
+        "enter": 2,
+        "leave": -1,
+        "direction": 1
+      }
+    },
+    {
+      "event": "supply:enter",
+      "call": 1,
+      "step": 1,
+      "candidates": [
+        2
+      ],
+      "position": 1,
+      "failures": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "support": 0,
+      "support_marks": null,
+      "batch": 0,
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -2,
+          -1,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "0000000000001440"
+        ],
+        "slack": [
+          "343333333333d3bf",
+          "0000000000005940"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000405a40",
+          "343333333333d3bf"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "42"
+        ],
+        "rhs": [
+          "343333333333d3bf",
+          "0000000000405a40"
+        ],
+        "pinf": "343333333333d33f"
+      }
+    },
+    {
+      "event": "supply:leave",
+      "call": 1,
+      "step": 1,
+      "candidate": -1,
+      "position": 1,
+      "alpha": null
+    },
+    {
+      "event": "factor:enter",
+      "call": 1,
+      "step": 1,
+      "request": 10,
+      "header": [
+        4,
+        3
+      ]
+    },
+    {
+      "event": "factor:leave",
+      "call": 1,
+      "step": 1,
+      "ret": 0,
+      "request": 10,
+      "header": [
+        4,
+        3
+      ]
+    },
+    {
+      "event": "push:leave",
+      "call": 1,
+      "step": 1,
+      "ret": 0,
+      "condition": "000000000000f03f",
+      "retry": 0,
+      "remaining": 0,
+      "state": {
+        "m": 2,
+        "n": 3,
+        "status": 1,
+        "precision": 0,
+        "vstat": [
+          -2,
+          -2,
+          -1,
+          1,
+          0
+        ],
+        "header": [
+          4,
+          3
+        ],
+        "x": [
+          "000000000000f03f",
+          "000000000000f03f",
+          "0000000000001440"
+        ],
+        "slack": [
+          "343333333333d3bf",
+          "0000000000405a40"
+        ],
+        "factor": {
+          "updates": 0,
+          "limit": 20,
+          "nnzL": "0200000000000000",
+          "nnzU": "0200000000000000"
+        },
+        "counters": {
+          "numeric": 0,
+          "failure": 0,
+          "request": 0,
+          "iterations": "0000000000000040"
+        },
+        "tolerances": {
+          "370": "ea8ca039593e2946",
+          "380": "8dedb5a0f7c6b03e",
+          "390": "9a9999999999b93f",
+          "398": "2b69a4292b1b603e",
+          "3b0": "0000000000000000"
+        },
+        "basic": [
+          "0000000000405a40",
+          "343333333333d3bf"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e",
+          "42"
+        ],
+        "rhs": [
+          "343333333333d3bf",
+          "0000000000405a40"
+        ],
+        "pinf": "343333333333d33f"
+      }
+    }
+  ]
+}
