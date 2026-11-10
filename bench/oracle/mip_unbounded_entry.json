@@ -1,0 +1,479 @@
+{
+  "runs": [
+    {
+      "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+      "cases": [
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_unbounded",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 5,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_optimal",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_unknown",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": -1,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_other",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 4,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 2,
+          "name": "optimal_integral",
+          "node_status": 1,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 1,
+          "lp_status": 2,
+          "name": "optimal_fractional",
+          "node_status": 2,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 3,
+          "name": "infeasible",
+          "node_status": 4,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 4,
+          "name": "inf_or_unbounded",
+          "node_status": 6,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 5,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 6,
+          "name": "cutoff",
+          "node_status": 5,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 7,
+          "name": "iteration_limit",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 9,
+          "name": "time_limit",
+          "node_status": 7,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 12,
+          "name": "numeric_root_optimal",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 13,
+          "name": "suboptimal_root_optimal",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        }
+      ],
+      "entry_elf": "0x518170",
+      "gurobi_version": [
+        13,
+        0,
+        3
+      ],
+      "jump_table_hex": "594238270d6363006300636363630000",
+      "kind": "synthetic-call-free-state",
+      "schema": 1,
+      "tool_sha256": "602cc85b721007eec21a380feefd76bf1dee203ff54e49dcdda92122b183439f"
+    },
+    {
+      "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+      "cases": [
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_unbounded",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 5,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_optimal",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_unknown",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": -1,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_other",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 4,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 2,
+          "name": "optimal_integral",
+          "node_status": 1,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 1,
+          "lp_status": 2,
+          "name": "optimal_fractional",
+          "node_status": 2,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 3,
+          "name": "infeasible",
+          "node_status": 4,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 4,
+          "name": "inf_or_unbounded",
+          "node_status": 6,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 5,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 6,
+          "name": "cutoff",
+          "node_status": 5,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 7,
+          "name": "iteration_limit",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 9,
+          "name": "time_limit",
+          "node_status": 7,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 12,
+          "name": "numeric_root_optimal",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 13,
+          "name": "suboptimal_root_optimal",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        }
+      ],
+      "entry_elf": "0x518170",
+      "gurobi_version": [
+        13,
+        0,
+        3
+      ],
+      "jump_table_hex": "594238270d6363006300636363630000",
+      "kind": "synthetic-call-free-state",
+      "schema": 1,
+      "tool_sha256": "602cc85b721007eec21a380feefd76bf1dee203ff54e49dcdda92122b183439f"
+    },
+    {
+      "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+      "cases": [
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_unbounded",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 5,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_optimal",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_unknown",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": -1,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 5,
+          "name": "linear_unbounded_root_other",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 4,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 2,
+          "name": "optimal_integral",
+          "node_status": 1,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 1,
+          "lp_status": 2,
+          "name": "optimal_fractional",
+          "node_status": 2,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 3,
+          "name": "infeasible",
+          "node_status": 4,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 4,
+          "name": "inf_or_unbounded",
+          "node_status": 6,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 5,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 6,
+          "name": "cutoff",
+          "node_status": 5,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 7,
+          "name": "iteration_limit",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 17,
+          "fractional": 0,
+          "lp_status": 9,
+          "name": "time_limit",
+          "node_status": 7,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 12,
+          "name": "numeric_root_optimal",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        },
+        {
+          "counter": 18,
+          "fractional": 0,
+          "lp_status": 13,
+          "name": "suboptimal_root_optimal",
+          "node_status": 3,
+          "preserved": true,
+          "rc": 0,
+          "root_status": 2,
+          "work_hex": "0000000000d05e40"
+        }
+      ],
+      "entry_elf": "0x518170",
+      "gurobi_version": [
+        13,
+        0,
+        3
+      ],
+      "jump_table_hex": "594238270d6363006300636363630000",
+      "kind": "synthetic-call-free-state",
+      "schema": 1,
+      "tool_sha256": "602cc85b721007eec21a380feefd76bf1dee203ff54e49dcdda92122b183439f"
+    }
+  ],
+  "schema": 1
+}
