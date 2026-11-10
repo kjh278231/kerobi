@@ -1043,15 +1043,15 @@ fn gather(v: f64, row: &[(usize, f64)], x: impl Fn(usize) -> f64) -> f64 {
     if row.len() < 8 {
         return row.iter().fold(v, |a, &(j, u)| a - u * x(j));
     }
-    let n8 = row.len() / 8 * 8;
+    let (chunks, rest) = row.as_chunks::<8>();
     let mut a = [v, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-    for c in row[..n8].chunks_exact(8) {
+    for c in chunks {
         for (q, &(j, u)) in c.iter().enumerate() {
             a[q] -= u * x(j);
         }
     }
     let w = ((a[0] + a[2]) + (a[4] + a[6])) + ((a[1] + a[3]) + (a[5] + a[7]));
-    row[n8..].iter().fold(w, |a, &(j, u)| a - u * x(j))
+    rest.iter().fold(w, |a, &(j, u)| a - u * x(j))
 }
 
 /// Basic solution x_B = B⁻¹(b − N·x_N) with nonbasic values from the status array
@@ -1291,5 +1291,15 @@ mod tests {
         let lanes = ((1e16 + 1.0) + (1.0 + 1.0)) + ((1.0 + 1.0) + (1.0 + 1.0));
         assert_eq!(sum_squares(&v), lanes + 1.0);
         assert_eq!(sum_squares(&v[..7]), v[..7].iter().fold(0.0, |w, t| w + t * t));
+    }
+
+    #[test]
+    fn gather_lane_order() {
+        // 9 terms u·1: v and terms 0..8 in lanes (v seeds lane 0), the 9th subtracted last; 1e16 shows the grouping
+        let row: Vec<(usize, f64)> = (0..9).map(|_| (0, 1.0)).collect();
+        let lanes = (((1e16 - 1.0) + -1.0) + (-1.0 + -1.0)) + ((-1.0 + -1.0) + (-1.0 + -1.0));
+        assert_eq!(gather(1e16, &row, |_| 1.0), lanes - 1.0);
+        assert_ne!(lanes - 1.0, (0..9).fold(1e16, |a, _| a - 1.0));
+        assert_eq!(gather(1e16, &row[..7], |_| 1.0), (0..7).fold(1e16, |a, _| a - 1.0));
     }
 }

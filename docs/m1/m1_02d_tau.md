@@ -78,8 +78,64 @@ Rust 쪽 자료는 `RSOLVER_SNAP` 스냅숏에 새 필드로 낸다. τ 계산 �
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+### 6.1 구현
+
+- `crates/lp/src/lu.rs`
+  - `factor_tol`: 행 U를 `finish()`에서 단계 오름차순으로 다시 만들지 않고 만들 때부터 원본 순서로 쌓는다. singleton 행은 재분해 전 기저 위치를 오름차순으로 돌며 그 열의 원소를 붙이고(`1da0b2` C:530–560·C:657–677), kernel 행은 `kernel_u[단계]` 목록 순서를 그대로 쓴다.
+  - `update`: 나가는 열 원소를 `retain`(안정 삭제) 대신 `swap_remove`(마지막 원소로 채움, `05b257` C:556–567)로 지운다.
+  - 새 `ftran_tau`(τ U 단계)와 `gather`(asm 레인 결합). `ftran_upper`(α_q)는 그대로다.
+  - 스냅숏용 `u_rows`(위치별 행 U, 접두 t).
+- `crates/lp/src/simplex.rs`: τ를 `ftran_lower` 뒤 `ftran_tau(α_q 지지)`로 계산한다. τ는 α_q 지지 위치만 채우고 나머지는 0이다(쓰는 곳은 지지 위치뿐). `RSOLVER_SNAP` 스냅숏에 `urow`·`t`(τ 지점의 행 U·접두 t)를 더했다.
+- C 추가 확인(계약 뒤, 판정 근거는 아님): `1da0b2`의 U 값 쓰기(local_80/78)는 C:530 앞에 없다. 단계 1(행 singleton)·3(길이 1 열과 slack) 열은 앞선 행에 원소가 없으므로, singleton 행의 U 원소는 단계 4 열이거나 kernel 열이고 모두 C:530–560 또는 C:657–677에서 열 위치 오름차순으로 쓰인다. 02a-2가 미정으로 둔 "singleton 열 원소를 가진 singleton 행"도 같은 규칙이다(C만, kb2는 해당 없음).
+
+### 6.2 판정
+
+- 실행: worktree `../rsolver-m1-02d`, 기준 main `e46e1a5`, 계약 `c784f39`, 구현·검사기 `e8f3458`(뒤에 clippy·단위 테스트 수정). x86-64 Linux(WSL2). Gurobi는 실행하지 않았다(고정 캡처 사용).
+- 오류 검출 증거(수정 전 코드 + 스냅숏 필드만 더한 빌드, 경계 수정 전 검사기): 종료 1. O가 피벗 14 위치 9(`[6, 15]` 대 원본 `[15, 6]`, 갱신 13→14 안정 삭제)와 피벗 15 위치 32(`[39, 41, 42]` 대 원본 `[41, 42, 39]`, 재분해 초기 순서)에서, R이 피벗 1·11–14·18–21에서, F가 스냅숏 12(w 위치 [20, 22])에서 실패했다.
+- 수정 뒤 `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_tau_check.py --self-test` 종료 0(P 줄 생략):
+
+```text
+M: 3 runs, binary/model/params/output, pinned file sha, tool = current file b41afe7503934821, Rust LU dump and patch pinned
+B: 38 pivots, 3 runs equal
+X: one 09d112 call per pivot; its rho input = M1-02a compacted rho, beta = M1-02a, alpha_r/beta = stored oracle
+A: alpha_q list and aligned tau at the 8b473 return = 09d112 outputs with the pivot swapped out (38 pivots)
+W: 1bae9c DSE update from the captured alpha_q, tau, beta, alpha_r = next weights on 34 pivots (3 refactor boundaries not checked)
+U: Rust LU dump = original U rows (sets, values), diagonal, U order and prefix t on 22 pivots (946 rows); LU+0xf8 = -2 tail, -1 empty prefix row, >=0 prefix row
+I: Rust rho = original 09d112 rho input; Rust FTRAN of the original a_q = original alpha_q output (pivots 0-21)
+R: original rule on the dump (captured U row order) = current Rust snapshot tau (pivots 0-21, final alpha_q positions)
+T: Rust tau = original tau on all 269 alpha_q positions of pivots 0-21 (bits, signed zeros included); the pre-M1-02d all-row scatter would differ at 34 positions, first [(11, [20, 22])]
+G: original rule (tail scatter to tail rows, prefix gather over the stored U row order) = original tau on all 269 positions; 90 gathered rows with 2+ terms, 0 with 8+ (C only)
+F: Rust snapshots 0-21 w = stored oracle
+O: Rust row-wise U (column order, value bits) and prefix t = capture on pivots 0-21 (same basis as the stored oracle through snapshot 21)
+self-test: 19 tampers rejected (아래 목록)
+PASS
+```
+
+- 자기검사 변조 19종: 기존 원본 쪽 12종(해시·3회·도구·덤프 해시·빈 사건·τ 비트·α_q 원소·ρ 비트·w 비트·캡처 U 행 순서·덤프 L 값·캡처 U 값·a_q 입력 비트 중 유지분), 재조준 2종(Rust τ 피벗 11을 수정 전 규칙 값으로 → R, 원본 τ 피벗 11을 수정 전 규칙 값으로 → W), 새 3종(Rust τ 피벗 13 한 ulp → R, Rust 행 U 피벗 15 두 원소 교환 → O, Rust 접두 t 피벗 14 → O)이 모두 거부됐다.
+- O 범위: 피벗 0–21(갱신 20회, 재분해 피벗 15 포함). 피벗 21의 진입 선택이 원본과 달라(아래 pathcmp) 스냅숏 22부터 기저가 갈리므로 재분해 피벗 26과 피벗 22 이후 갱신은 Rust 경로로 대조할 수 없다.
+- 계약 변경(결과 확인 뒤, 넓히거나 줄인 판정 대상 없음, 경계 수정):
+  - O의 "같은 경로" 조건을 스냅숏 0..k+1에서 0..k로 고쳤다. 피벗 k의 τ 지점 LU는 피벗 k−1 뒤 상태라 스냅숏 k+1(피벗 k의 출력)에 의존하지 않는다. 처음 조건으로는 피벗 21이 빠져 "최소 0–21" 요구를 못 채웠다.
+  - F를 "스냅숏 0–22"에서 "0–21"로 고쳤다. 스냅숏 22는 피벗 21의 출력이고, 피벗 21의 진입 변수는 수정 전부터 원본과 다르다(원본 25, Rust 4, τ와 무관한 분기). §3의 "0–22"는 한 칸 어긋난 오기다.
+  - `tools/m1_beta_check.py` F의 고정 첫 차이 `(12, 'w')`를 `(22, 'state')`로 바꿨다(β 판정 R·D는 그대로). 수정 뒤 첫 실행에서 이 고정값 때문에 종료 1이었다.
+- 회귀: (최종 재실행 결과로 갱신)
+  - `tools/proto/statecmp.py kb2`: 수정 전 반복 12부터 w 차이(반복 12 w 2개·score 2개 …). 수정 뒤 반복 0–21 모두 OK, 첫 차이는 반복 22(vstat 2개 [4, 25], 피벗 21 진입 선택).
+  - `tools/proto/pathcmp.py kb2`: 수정 전후 모두 첫 피벗 분기 21(원본 진입 25, Rust 4, 이탈 78).
+  - `tools/lp_check.py --methods 1 --timeout 120`: 수정 전후 정답 90/91, IterCount 일치 24/64 그대로. 상태 변화 없음. 반복 수가 바뀐 모델 4개: degen2 639→644(원본 634), maros 1769→1825(원본 1975), fit2p 7326→8234, greenbeb 5946→5835(둘 다 원본 기준 없음).
+  - `tools/m1_urow_check.py --self-test` 종료 0(고정 자료, Rust 미사용 부분), `tools/m1_beta_check.py --self-test` 종료 0(F 재조준 뒤, 변조 12종 거부).
+- 실행하지 못한 검사: 8항 이상 모으기·첫 원소 떼기(kb2 없음, asm만), fill 있는 kernel 행, 다른 모델의 τ·행 U(원본 캡처 없음).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: **완료(구현)**.
+- 동등성: **통과**(계약 범위). kb2 피벗 0–21에서 Rust τ 269개가 원본과 비트(±0 포함)까지 같고, 같은 피벗의 Rust 행 U 순서·값·접두 t가 원본 캡처와 같다. 수정 전 코드는 같은 검사에서 실패했다.
+- 남은 한계:
+  - τ 모으기 규칙을 모든 피벗에 쓴다. 원본의 희소·커널 경로와 같다는 근거는 kb2 피벗 0–21뿐이다(shortcut 주석).
+  - 8항 이상 모으기 레인 결합은 asm 근거만, 첫 원소 떼기는 모델링하지 않았다(shortcut 주석).
+  - 행 U 순서: 재분해 피벗 26과 피벗 22 이후 갱신, fill 있는 kernel 행, singleton 열 원소를 가진 singleton 행(C 규칙은 같음)은 실행 대조가 없다.
+  - `row_cost_estimate`(`9e60b`)는 행 U를 저장 순서로 접는데, 이번에 순서가 바뀌었다. 원본 P+0x68과의 비교는 하지 않았다(kb2 statecmp 반복 0–21 pricing 상태는 같음).
+- 후속:
+  - **M1-02e**(조사, 새 행 제안): kb2 피벗 21의 진입 선택 차이(원본 25, Rust 4, 이탈 78). 반복 21까지 저장 오라클 상태가 모두 같으므로 dual ratio test(`48d5f` 계열) 입력부터 본다.
+  - **M1-02c**(검증): Method=1 Netlib 64 재측정(이번 회귀 24/64가 그대로 출발점).
+- 작업 branch·commit: `work/m1-02d`, worktree `../rsolver-m1-02d`. 병합 상태는 [M1 인수인계](../handoff/M1.md)와 main 이력으로 확인한다.
+- 갱신 위치: [M1 인수인계](../handoff/M1.md), [스프린트 목록](../14_sprint_plan.md) M1-02d 행과 새 행, [작업 단위](../13_work_units.md) M1-02, [진행 기록](../11_progress.md)·[로드맵](../12_roadmap_diagram.md) 맨 위.
+- 교훈 기록: [원본 사실](../lessons/original.md) "DSE τ" 항목(8레인 결합 asm)과 "U 행 저장 순서" 항목(singleton 행 규칙 C 근거, Rust 반영), [도구](../lessons/tooling.md) "피벗 k의 진입 상태와 스냅숏 경계".
