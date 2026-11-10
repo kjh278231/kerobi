@@ -64,8 +64,48 @@ LP 상태 필드는 주입값이 그대로 나오는 순서 표지다.
 
 ## 6. 실행 결과
 
-(작성 예정)
+- 환경: worktree `../rsolver-m2-03d-2`, 구현 commit `19c6675`. 입력 SHA-256 앞 16자리:
+  - `crates/mip/src/retry.rs` `2dd678a8a6e4d3e5`
+  - `tools/mip_retry_rust_expect.py` `bb364f4f5d2371d9`
+  - `bench/oracle/mip_retry_rust/nidda_stress.input.txt` `73bf1fef03c20aef`
+  - 기준 자료 `nidda_stress.json`은 M2-03d-1과 같다. `--write`로 다시 만들어도 같았다.
+- 구현:
+  - `crates/mip/src/retry.rs`의 `process_node_lp(ctx, basis, solve)`. LP는 `FnMut(LpCall) -> i32`(Gurobi 상태 코드)로 받는다.
+  - 판단 코드에는 계측이나 테스트 분기가 없다. trace는 하네스(`crates/mip/tests/retry_l1.rs`)가 LP 클로저에 들어온 실제 인자와 반환된 `Outcome`으로 만든다.
+  - `bnb.rs`는 바꾸지 않았다. Numeric 종료를 유지하고 dual·cold 대체도 없다.
+- L1: `cargo test -p rsolver-mip --test retry_l1`을 실행한 뒤 `python3 tools/mip_retry_rust_expect.py --self-test --compare target/mip_retry_rust/nidda_stress.trace.json`은 종료코드 0이다.
+  - 기준 자료는 사건 5개다. 캡처·trace 변조 18종을 거부했고 Rust 입력 텍스트도 기준 자료와 일치했다.
+  - compare PASS. 첫 LP와 재풀이 basis가 노드 basis(253·464)와 같고, method는 1→0, 노드 5, 저장 없음이다.
+- 오류 검출: 임시로 `retry.rs`를 바꿔 trace를 다시 만들었고, 세 경우 모두 compare가 실패했다. 원본은 복원했고 복원 뒤 PASS다.
+  - 재풀이 method를 `warm_method`로 바꿈: `event 2 (retry) field method: expected 0 got 1`
+  - `basis_saved: true`: `event 4 (node_done) field basis_saved`
+  - 노드 상태 2: `event 4 (node_done) field node_status`
+- 합성 단위 검사 `retry::tests::retry_rules`: C 규칙의 분기 7개다. 원본 실행 증거는 아니다.
+- 회귀: `cargo test --release --workspace` 종료코드 0, `cargo clippy --workspace --all-targets -- -D warnings` 종료코드 0. Herdr pane에서 실행했고 로그는 worktree의 `target/m2-03d-2-*.log`다.
+- 실행하지 않은 것:
+  - Python 확장 재빌드와 pytest. Python 경계와 실제 풀이 경로를 바꾸지 않았다.
+  - Gurobi. 새 캡처가 필요 없었다.
 
 ## 7. 판정과 인수인계
 
-(작성 예정)
+- 작업 수행 상태: **완료**(구현).
+- 동등성: **L1 통과**. 범위는 nidda `node_basis_direct` 한 사례에서 원본 LP 결과를 주입한 재풀이 판단 구간이다. Rust LP와 원본 LP의 동등성이나 실제 B&B 경로를 뜻하지 않는다.
+
+| 동작 | 상태 | 근거 |
+|---|---|---|
+| 노드 basis가 있으면 첫 LP에 노드 basis와 `param_3[3]` | L1 통과 | 캡처 사건 4 |
+| 첫 LP 12, 캐시 2 → 재풀이 | L1 통과 | 캡처 사건 15·18 |
+| 재풀이에 같은 노드 basis를 쓰고 method는 `warm≠0`→0 | L1 통과 | 캡처 사건 18 |
+| 재풀이 6, 캐시 2 → 노드 5, 저장 없음 | L1 통과 | 캡처 사건 32, `600d25` |
+| `warm==0`→재풀이 method 1 | 구현, 미검증(C만) | C:926 |
+| 루트이면서 캐시≠2 → 미이식 반환 | 구현, 미검증(C만, 캐시 갱신 부수효과를 이식하지 않음) | C:1013–1020 |
+| 재풀이 2·12 → 미이식 반환 | 미이식 | C:963, 1358, 2244 |
+| 실제 B&B 연결, Rust LP primal warm·cutoff | 미구현·미검증 | M2-10b, M1 |
+| 첫 LP 적응 선택, 재풀이 전 정규화, `a7f923`·FEASHELPER·`local_58+0x1a0` 조건, dual norm | 전제로 두고 미이식 | §1 |
+
+- 후속:
+  - M2-03d-3: 노드 LP 원본 캡처. 추가 62행의 정체와 gmu sub-MIP 가능성 조사를 포함한다.
+  - M2-03d-4: 실제 경로 연결과 LP 포함 동등성. M2-10b, M1 요청, M2-03d-3 뒤에 한다.
+  - M1 요청: [M1 인수인계](../handoff/M1.md).
+- branch: `work/m2-03d-2`. 검증 뒤 main에 `--no-ff`로 병합한다.
+- 교훈: [원본 사실](../lessons/original.md)의 확인 사실과 미검증 가설, [절차](../lessons/process.md), [도구](../lessons/tooling.md).
