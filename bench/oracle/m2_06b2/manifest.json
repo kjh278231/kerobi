@@ -1,0 +1,31 @@
+{
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "files": {
+  "fhnw-binpack4-4_1.json.gz": "8c36e01c6c647f7fcfced8e7d956f9cbd0d3b90fe93202ce1d33011289d5d5e1",
+  "fhnw-binpack4-4_2.json.gz": "8c36e01c6c647f7fcfced8e7d956f9cbd0d3b90fe93202ce1d33011289d5d5e1",
+  "fhnw-binpack4-4_3.json.gz": "8c36e01c6c647f7fcfced8e7d956f9cbd0d3b90fe93202ce1d33011289d5d5e1",
+  "markshare_4_0_1.json.gz": "a82b02e7ee6731b8268e316fb5b0997184b7373d1831c09c765bad79f2cae153",
+  "markshare_4_0_2.json.gz": "a82b02e7ee6731b8268e316fb5b0997184b7373d1831c09c765bad79f2cae153",
+  "markshare_4_0_3.json.gz": "a82b02e7ee6731b8268e316fb5b0997184b7373d1831c09c765bad79f2cae153",
+  "neos-860300_1.json.gz": "27866fe6cf7b37bab82bc533e7f0a3cb8ec837acc766cb99cfb41be4fcc900fb",
+  "neos-860300_2.json.gz": "27866fe6cf7b37bab82bc533e7f0a3cb8ec837acc766cb99cfb41be4fcc900fb",
+  "neos-860300_3.json.gz": "27866fe6cf7b37bab82bc533e7f0a3cb8ec837acc766cb99cfb41be4fcc900fb",
+  "neos5_1.json.gz": "85182feb50e9bb43e77ade383934412c703115abfbe27c2f0cef4c8f3c11be84",
+  "neos5_2.json.gz": "85182feb50e9bb43e77ade383934412c703115abfbe27c2f0cef4c8f3c11be84",
+  "neos5_3.json.gz": "85182feb50e9bb43e77ade383934412c703115abfbe27c2f0cef4c8f3c11be84",
+  "pk1_1.json.gz": "c23836cf898e2ad225c37616b862fe90a762833fd2b72c58ebc1866864affdd1",
+  "pk1_2.json.gz": "c23836cf898e2ad225c37616b862fe90a762833fd2b72c58ebc1866864affdd1",
+  "pk1_3.json.gz": "c23836cf898e2ad225c37616b862fe90a762833fd2b72c58ebc1866864affdd1",
+  "tr12-30_1.json.gz": "5cd03bb0effaf71ff9a0b71fc0929f7a865ed787dae03b1f5289ef6353d444fd",
+  "tr12-30_2.json.gz": "5cd03bb0effaf71ff9a0b71fc0929f7a865ed787dae03b1f5289ef6353d444fd",
+  "tr12-30_3.json.gz": "5cd03bb0effaf71ff9a0b71fc0929f7a865ed787dae03b1f5289ef6353d444fd"
+ },
+ "models": "../re/bench/data/miplib/<case>.mps.gz",
+ "params": {
+  "NodeLimit": 2000
+ },
+ "schema": 1,
+ "task": "M2-06b-2",
+ "tool": "tools/mip_node_key.js",
+ "tool_sha256": "348c22024c7830d28411f5564e5f169c0aa344637b3c9e58bc5c1dce43a20bfa"
+}
