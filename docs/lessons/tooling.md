@@ -84,6 +84,12 @@
 - **참조를 바꾸는 변조는 대상의 내용이 원래 참조와 같으면 무변조가 된다.** `before_ref`를 build 1로 돌린 변조가 통과했다(같은 D에서 교환 없는 재생성이 이어져 내용이 같았다). 열 수가 다른 D의 build를 가리키게 바꿔 거부를 확인했다. 변조 대상은 내용이 달라지는지 먼저 본다. (M2-03d-13)
 - **저장 오라클 `vstat`는 재분해 뒤 기저 위치를 단계 순서로 다시 매긴 값이다.** 재분해 입력(원소 순서가 달린 상태)을 Rust로 다시 만들려면 스냅숏 k−1 `vstat`에 피벗 k−1 교환(위치 r ← q)을 적용한 직전 기저를 쓰고, Rust 단계 순서로 매긴 위치가 스냅숏 k `vstat`와 같은지 확인한다. 스냅숏 k를 그대로 인수분해하면 U 집합·값은 같아도 원소 순서가 달라 판별력이 없다. 임시 덤프는 `_core.row_costs(vstat)`(=`Lu::factor`)에 env 훅 패치로 붙이면 된다. [M1-02a-2](../m1/m1_02a2_urow.md).
 
+## Rust 비용 계측
+
+- **이 기계(WSL2)에는 perf·valgrind가 없다. Rust 구간 비용은 `Instant` 누적을 넣은 임시 패치로 잰다.** 계측 없는 실행의 상태·노드·반복·경계 비트와 같은지 먼저 확인하고, 시간 종료 대신 NodeLimit로 같은 일을 시킨다. (M2-10a, [기록](../m2/mip_bnb_node_cost.md#6-실행-결과))
+- **다른 영역 크레이트(`crates/lp`)를 고치지 않고 내부 단계를 나눠 재려면 래퍼 함수를 pub 조각으로 재생하고 매 호출 결과를 비트 비교로 `assert`한다.** `solve_model_run`은 `Spx::new`·`Engine::new`·`solve`/`solve_warm`·`Spx::unscaled`·`resolve_unscaled`로 재생돼 status·iter·obj·x가 비트까지 같았다. `Engine::new`는 `trace_on`이 기본 true이므로 꺼야 같은 일을 한다. (M2-10a)
+- **`cargo test`의 작업 디렉터리는 크레이트 폴더다.** 하네스에 넘기는 모델 경로는 절대경로로 만든다. 상대경로면 첫 실행이 파일 없음으로 바로 실패한다. (M2-10a)
+
 ## git worktree
 
 - **`session.py claim … && claim shared && git worktree add …` 한 줄은 shared 점유 실패에서 멈춰 worktree가 생기지 않는다.** 그 뒤 Write 도구로 worktree 경로에 파일을 쓰면 git 저장소가 아닌 일반 디렉터리가 생긴다. 점유와 worktree 생성을 나눠 실행하고 `git -C <worktree> status`로 확인한다. (M2-03d-5)
