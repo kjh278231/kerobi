@@ -62,3 +62,39 @@ def test_optimize_restores_original_variables_after_presolve():
     assert m.ObjVal == pytest.approx(5)
     assert fixed.X == pytest.approx(2)
     assert sum(v.X for v in x) == pytest.approx(1)
+
+
+def test_expired_time_limit_and_presolve_path():
+    model = _core.build_model([-1.0] * 3,
+        [([(i, 1.0), (j, 1.0)], -1e30, 1.0) for i, j in [(0, 1), (1, 2), (0, 2)]],
+        [0.0] * 3, [1.0] * 3, 'BBB')
+    result, path = model.mip_solve_diagnostics([('TimeLimit', 0), ('Presolve', 0)])
+    assert result[0] == 9
+    assert path == 'original'
+
+
+def test_restore_candidate_validates_input_and_returns_original_solution():
+    model = _core.build_model([3.0], [], [2.0], [2.0], 'I')
+    x, objective = model.mip_restore_candidate([], [])
+    assert x == pytest.approx([2.0])
+    assert objective == pytest.approx(6.0)
+    with pytest.raises(ValueError, match='wrong reduced solution length'):
+        model.mip_restore_candidate([], [0.0])
+
+
+def test_time_limit_interrupts_long_root_lp():
+    import os
+    from pathlib import Path
+    import subprocess
+    import sys
+
+    path = Path(__file__).resolve().parents[2] / 're/bench/data/miplib/cod105.mps.gz'
+    if not path.exists():
+        pytest.skip('external MIPLIB fixture unavailable')
+    code = '''from rsolver import _core
+import sys
+m = _core.read_model(sys.argv[1])
+r = m.mip_solve([("Presolve", 0), ("Heuristics", 0), ("TimeLimit", 0.25)])
+assert r[0] == 9 and r[5] > 0, r
+'''
+    subprocess.run([sys.executable, '-c', code, str(path)], check=True, timeout=6, env=os.environ.copy())

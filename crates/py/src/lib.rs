@@ -339,6 +339,14 @@ impl PyCoreModel {
             (r.kind(), l.bytes, l.pads, l.ptrs)
         }).collect()
     }
+    /// Restore and validate an incumbent supplied in the presolved model's coordinates.
+    fn mip_restore_candidate(&self, params: Vec<(String, f64)>, reduced_x: Vec<f64>) -> PyResult<(Vec<f64>, f64)> {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let (_, state) = rsolver_mip::presolve_with_state(&self.inner, &p)
+            .map_err(|s| pyo3::exceptions::PyValueError::new_err(format!("presolve status {s}")))?;
+        rsolver_mip::bnb::restore_candidate(&self.inner, &p, &state, &reduced_x)
+            .map_err(pyo3::exceptions::PyValueError::new_err)
+    }
     /// Presolve, then uncrush the presolved solution (x, dj, status as `363daa` reads them) back to this model:
     /// (basis, x, dual). `aligns` (two parities per record, oldest first) overrides the arena simulation.
     #[pyo3(signature = (params, x, dj, st, aligns=None))]
@@ -571,6 +579,15 @@ impl PyCoreModel {
         let r = py.allow_threads(|| rsolver_mip::bnb::solve_original(&self.inner, &p))
             .map_err(pyo3::exceptions::PyValueError::new_err)?;
         Ok((r.status as i32, r.bound, r.incumbent_objective, r.incumbent, r.nodes, r.iterations))
+    }
+    /// Solve a MIP and report whether presolve was used or why the original model was solved.
+    fn mip_solve_diagnostics(&self, py: Python<'_>, params: Vec<(String, f64)>)
+        -> PyResult<(MipSolveOutput, &'static str)>
+    {
+        let p = rsolver_mip::Params::from_pairs(&params);
+        let r = py.allow_threads(|| rsolver_mip::bnb::solve_original(&self.inner, &p))
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        Ok(((r.status as i32, r.bound, r.incumbent_objective, r.incumbent, r.nodes, r.iterations), r.path))
     }
     /// Original incumbent and (presolve status, unchanged P0, whole-MIP root progress).
     fn mip_presolve_progress(&self, py: Python<'_>, params: Vec<(String, f64)>)
