@@ -1,5 +1,7 @@
 # 11. 진행 기록과 운영
 
+M2-03c-2 재풀이 basis 오라클을 완료했다(main 병합). Gurobi 원본 읽기 전용 훅으로 자연 상태 12 재풀이 2건(nidda 비루트, gmu 루트)을 사례·모드별 독립 3회, 총 12회 캡처했다. 새 훅을 붙여도 03c-1 사건 투영이 저장본과 같음을 확인했다. 재풀이 입력 basis는 실패한 LP의 마지막 basis가 아니라 노드에 저장된 시작 basis다. nidda에서는 노드 8278의 `5d4427`→`113d92` export, `8e4682`의 `69e299` 복사, `69d237` 압축, `69d7ea` decode를 거쳐 첫 LP와 재풀이 `cda5b`에 같은 `I+0x98/0xa0`가 들어간다. 재풀이 method는 0이었다. 재풀이 뒤 원본의 VBasis export는 nidda(LP 6)에서 없고, gmu(LP 2)에서는 `5d4427`이 만든다. 재풀이에서는 `2f7e1`이 `ws+0xf0`를 12→1로 되돌린 뒤 `325b4`가 노드 basis를 다시 적재하고 분해를 새로 한다. dual norm 입력은 없다. 검사기 `--self-test` 종료코드 0, 변조 17종을 거부했다. LU·가중치 내용, Rust 동등성은 미검증이고 솔버 코드는 변경하지 않았다. [계약과 결과](m2/mip_retry_basis.md).
+
 M3-04b primal push 분기 조사를 완료했다. `134a87`·`256781`의 double·x87 경로, 후보 정렬·방향·ratio·bound 이동·basis 교환·재분해와 signed remaining을 원본 C·ELF로 분할했다. `055f68` 합성 29사례를 원본 독립 3회, 총 87호출 실행해 사건 필드 9개와 수치 비트를 비교했고, CLI 변조 10개를 모두 거부했다. [계약·분기표·실행 결과](m3/primal_push_branches.md). 전체 push 자연 실행·Rust·x87·infeasible ratio·factor 동등성은 미검증이며 다음은 M3-04b-1 정상 push 한 단계 오라클이다. 솔버 코드는 변경하지 않았다.
 
 M3-04a-1 정상 crossover 진입 오라클을 완료했다. 소형 LP 하나에서 PDHG·barrier mode 0과 시작 벡터 mode 1을 각각 원본 독립 3회 실행했고 경로별 상태·배열이 비트 단위로 일치했다. 검토자도 세 경로를 각 1회 재캡처해 일치시켰다. Crossover=0 대조군은 목표 0건×3회, 실제 캡처 오류 주입 7개와 추가 변조 검토·합성 self-test도 통과했다. 원본 분기에 따라 warm 설정을 Method=1에서 2로 바꿨으며 기존 실패 3개는 보존했다. [계약·원본 근거·실행 결과](m3/crossover_entry_oracle.md). Rust·시간·work·다른 모델 동등성은 미검증이다. 후속 primal push 조사는 맨 위 M3-04b 기록을 따른다.
