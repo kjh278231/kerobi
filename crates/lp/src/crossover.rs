@@ -1,6 +1,6 @@
 //! Crossover primal push pieces: the ratio tests on a feasible (docs/m3/primal_push_ratio_rust.md) and a violated basis
 //! (docs/m3/primal_push_violated.md) with its retry (docs/m3/primal_push_retry.md), and the step decisions around them
-//! (docs/m3/primal_push_decision_rust.md). No push loop calls them yet.
+//! (docs/m3/primal_push_decision_rust.md, docs/m3/primal_push_recall.md). No push loop calls them yet.
 
 /// The small-pivot second pass with a tightened pivot tolerance was never observed in the original; it is refused
 /// instead of guessed.
@@ -328,8 +328,8 @@ fn lane_sum(seed: f64, pos: &[usize], val: &[f64], sub: bool) -> f64 {
     (blocks..pos.len()).fold(s, step)
 }
 
-/// After the ratio test the original re-runs it in the opposite direction when it found nothing (`theta == I`) and the
-/// column is free or increases without an upper bound; that path (M3-04c-8) is refused instead of guessed.
+/// The ratio test found nothing (`theta == I`) and the column is free or increases without an upper bound: the caller
+/// flips the column's signs back, runs the ratio test in the opposite direction and finishes with [`push_recall_step`].
 #[derive(Debug, PartialEq, Eq)]
 pub struct Recall;
 
@@ -358,6 +358,8 @@ pub struct PushEntry {
     pub decrease: bool,
     /// `theta == I` sends the step to the opposite-direction recall instead of a distance flip.
     pub recall: bool,
+    /// `lb <= -I` and `ub >= I`.
+    pub free: bool,
 }
 
 /// What the step does with the ratio result. `Reject` is a flip with `theta = I`; `Defer` skips the pivot.
@@ -402,8 +404,9 @@ pub fn push_direction(j: usize, x: &[f64], slack: &[f64], lb: &[f64], ub: &[f64]
         val.iter_mut().for_each(|v| *v = -*v);
     }
     let unbounded_up = inf <= ub[j];
-    let recall = (lb[j] <= -inf && unbounded_up) || (!decrease && unbounded_up);
-    PushEntry { r, dl, du, decrease, recall }
+    let free = lb[j] <= -inf && unbounded_up;
+    let recall = free || (!decrease && unbounded_up);
+    PushEntry { r, dl, du, decrease, recall, free }
 }
 
 /// Violated-basis direction with `s` the sum of the column over `B` rows minus over `A` rows. Each test is a taken
@@ -442,10 +445,34 @@ pub fn push_step(entry: &PushEntry, tol: &PushTol, inf: f64, pos: i32, theta: &m
     if *theta == inf && entry.recall {
         return Err(Recall);
     }
-    let gap = if entry.decrease { entry.dl } else { entry.du };
-    if gap - 1e-10 <= *theta || pos < 0 {
-        return Ok(PushStep::Flip);
+    Ok(step_tail(entry, entry.decrease, tol, inf, pos, theta, pivot))
+}
+
+/// Step kind after a [`Recall`]: `pos`/`theta`/`pivot` come from the ratio test in the opposite direction, with
+/// `theta = I` when the feasible ratio test found nothing (the original writes it again). The distance check uses the
+/// new direction's gap; the rejection still uses the direction formula's result.
+pub fn push_recall_step(entry: &PushEntry, tol: &PushTol, inf: f64, pos: i32, theta: &mut f64, pivot: f64) -> PushStep {
+    let pos = if *theta == inf && entry.free { -1 } else { pos };
+    step_tail(entry, !entry.decrease, tol, inf, pos, theta, pivot)
+}
+
+/// Status of entering column `j` after a flip: -1/-2 at the bound it moved to (`decrease` is the current direction),
+/// -3 when both bounds are infinite and it stays superbasic.
+pub fn push_flip_state(lb: f64, ub: f64, inf: f64, decrease: bool) -> i32 {
+    if -inf < lb || ub < inf {
+        if decrease { -1 } else { -2 }
+    } else {
+        -3
     }
+}
+
+fn step_tail(entry: &PushEntry, decrease: bool, tol: &PushTol, inf: f64, pos: i32, theta: &mut f64, pivot: f64)
+             -> PushStep {
+    let gap = if decrease { entry.dl } else { entry.du };
+    if gap - 1e-10 <= *theta || pos < 0 {
+        return PushStep::Flip;
+    }
+    // The original picks the rejection arm from the direction formula's result (r13b), not the current direction.
     let reject = if entry.decrease {
         entry.r > tol.reject && entry.dl < tol.reject
     } else {
@@ -453,9 +480,9 @@ pub fn push_step(entry: &PushEntry, tol: &PushTol, inf: f64, pos: i32, theta: &m
     };
     if reject {
         *theta = inf;
-        return Ok(PushStep::Reject);
+        return PushStep::Reject;
     }
-    Ok(if 1e-6 > pivot || -1e-5 > *theta * pivot { PushStep::Defer } else { PushStep::Pivot })
+    if 1e-6 > pivot || -1e-5 > *theta * pivot { PushStep::Defer } else { PushStep::Pivot }
 }
 
 /// Nonbasic status (-1 lower, -2 upper, -4 fixed) of the variable leaving on an accepted pivot. `range` is its

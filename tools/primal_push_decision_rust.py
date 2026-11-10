@@ -3,6 +3,8 @@ M3-04b-3: arm LP 캡처(시작 벡터, 보류 양성 사건 step:defer)를 'arms
 M3-04c-2: 위반 basis 캡처를 'violated' 사례로 더했다. 줄의 경로 토큰(F·V)으로 Rust가 방향식과 ratio(055f68·054eef)를 고른다.
 M3-04c-7: 재시도 LP 캡처를 'retry' 사례로 더했다. V 경로 연결은 게이트(054eef → 056973)를 거치고, 단계 판단 입력은
 재시도가 있으면 retry:leave의 결과다.
+M3-04c-8: theta=I 재호출 LP 캡처를 'recall' 사례로 더했다. 재호출이면 입력 줄 끝에 두 번째 호출 결과(R 위치 theta pivot)를 넣고,
+모든 flip 단계는 진입 열의 flip 상태(step:applied vstat[j])도 비교한다.
 
 Rust에는 원시 캡처 필드만 넘긴다. 판단 모델(primal_push_decision_check.decide)의 계산값은 쓰지 않는다.
 """
@@ -31,7 +33,9 @@ EXPECT = {'target': dict(steps=40, dir1=6, pivot=36, flip=4, defer=0, frame=22),
           # M3-04c-2 위반 LP primal·dual 각 19단계(판단 모델 decide 집계에서 정함, 모두 054eef 경로)
           'violated': dict(steps=38, dir1=20, pivot=20, flip=18, defer=0, frame=38),
           # M3-04c-7 재시도 LP primal·dual 각 8단계(판단 모델 decide 집계에서 정함, 모두 056973 뒤)
-          'retry': dict(steps=16, dir1=4, pivot=8, flip=2, defer=6, frame=16)}
+          'retry': dict(steps=16, dir1=4, pivot=8, flip=2, defer=6, frame=16),
+          # M3-04c-8 재호출 LP feasible 4·위반 7단계 × 두 순서(판단 모델 decide 집계에서 정함, dir은 방향식 결과)
+          'recall': dict(steps=22, dir1=6, pivot=12, flip=10, defer=0, frame=22)}
 
 
 def project(label, rec, role):
@@ -45,20 +49,17 @@ def project(label, rec, role):
         if e['event'] != 'supply:leave' or e['candidate'] < 0:
             i += 1
             continue
-        k, ratios, retries = i + 1, [], []
+        k, calls = i + 1, []
         while k < len(events) and events[k]['event'] not in ('supply:enter', 'push:leave', 'step:enter', 'step:defer'):
             if events[k]['event'] == 'ratio:enter':
-                ratios.append((events[k], events[k + 1]))
-            if events[k]['event'] == 'retry:enter':
-                retries.append(events[k + 1])
+                calls.append([events[k], events[k + 1]])
+            if events[k]['event'] == 'retry:enter':  # 게이트 여부는 판단 모델(decide)이 이미 검사했다. 단계 입력은 재시도 결과다.
+                assert events[k + 1]['event'] == 'retry:leave', (f"{label}/c{e['call']}s{e['step']}", '재시도 반환 사건')
+                calls[-1][1] = events[k + 1]
             k += 1
         name = f"{label}/c{e['call']}s{e['step']}"
-        assert len(ratios) == 1, (name, 'ratio 호출 수(재호출은 범위 밖)', len(ratios))
-        assert len(retries) <= 1, (name, '056973 재시도 수')
-        rin, rout = ratios[0]
-        if retries:  # 게이트 여부는 판단 모델(decide)이 이미 검사했다. 단계 입력은 재시도 결과다.
-            rout = retries[0]
-            assert rout['event'] == 'retry:leave', (name, '재시도 반환 사건')
+        assert len(calls) in (1, 2), (name, 'ratio 호출 수', len(calls))
+        (rin, rout), last = calls[0], calls[-1]
         assert rin['name'] in ('feasible', 'infeasible') and rout['event'] in ('ratio:leave', 'retry:leave'), (name, '경로')
         pre, post, st = e['alpha'], rin['alpha'], rin['state']
         assert pre['count'] >= 0 and pre['indices'] == post['indices'], (name, '희소 열·인덱스 보존')
@@ -67,18 +68,22 @@ def project(label, rec, role):
         nxt = events[k] if k < len(events) else None
         se = nxt if nxt is not None and nxt['event'] in ('step:enter', 'step:defer') else None
         assert se is not None, (name, '단계 사건 없음(보류는 step:defer 양성 사건만 인정)')
-        want = dict(dir=rin['selected']['direction'], alpha=post['values'],
+        frame = se.get('frame')
+        want = dict(dir=rin['selected']['direction'], alpha=last[0]['alpha']['values'],
                     kind='defer' if se['event'] == 'step:defer' else se['kind'],
-                    theta=se['theta'], frame=se.get('frame'), state=None,
-                    link=[str(rout['chosen']), rout['theta'], rout['pivot']])
-        if se['event'] == 'step:enter' and se['kind'] == 'pivot':
+                    theta=se['theta'], frame=frame and {f: frame[f] for f in FRAME}, state=None, recall=len(calls) - 1,
+                    link=[str(rout['chosen']), rout['theta'], rout['pivot']],
+                    link2=[str(last[1]['chosen']), last[1]['theta'], last[1]['pivot']] if len(calls) == 2 else ['x'] * 3)
+        if se['event'] == 'step:enter':
             applied = events[k + 1]
             assert applied['event'] == 'step:applied', (name, '적용 사건')
-            want['state'] = applied['state']['vstat'][st['header'][rout['row']]]
+            # pivot은 이탈 변수 상태, flip은 진입 열의 flip 상태(C 1596-1612)
+            want['state'] = applied['state']['vstat'][st['header'][last[1]['row']] if se['kind'] == 'pivot' else e['candidate']]
         fields = [name, 'V' if rin['name'] == 'infeasible' else 'F', str(st['n']), str(st['m']), str(e['candidate']), tol['380'], tol['398'], tol['370'],
                   tol['3b0'], str(rout['chosen']), rout['theta'], rout['pivot'], *model['cost'], *model['lb'],
                   *model['ub'], *st['x'], *st['slack'], *map(str, st['header']), str(pre['count']),
-                  *map(str, pre['indices']), *pre['values'], *rin['basic'], *rin['width'], *rin['marks']]
+                  *map(str, pre['indices']), *pre['values'], *rin['basic'], *rin['width'], *rin['marks'],
+                  *(['R', str(last[1]['chosen']), last[1]['theta'], last[1]['pivot']] if len(calls) == 2 else ['-'])]
         cases.append(dict(name=name, role=role, line=' '.join(fields), want=want))
         i = k
     return cases
@@ -88,8 +93,8 @@ def collect():
     manifest = json.loads((dc.BASE / 'manifest.json').read_text())
     cases = []
     # 04b-1·face5·arm LP: 해시·출처·순서별 독립 3회(arm은 대조군·비간섭 포함) 검사 후 첫 실행
-    for label, rec in dc.load_all(manifest, arms=True, violated=True, retry=True):
-        role = ('arms' if label.startswith('arms-') else 'violated' if label.startswith('violated-')
+    for label, rec in dc.load_all(manifest, arms=True, violated=True, retry=True, recall=True):
+        role = ('recall' if label.startswith('recall-') else 'arms' if label.startswith('arms-') else 'violated' if label.startswith('violated-')
                 else 'retry' if label.startswith('retry-') else 'target')
         cases += project(label, rec, role)
     # 보조: 04b-2 비간섭 단일 실행. frame을 빼면 04b-1 primal-1과 같아야 한다.
@@ -129,12 +134,14 @@ def compare(cases, text, trace):
             for f, v in zip(FRAME, t[2:9]):
                 need('frame ' + f, w['frame'][f], v)
         if w['state'] is not None:
-            need('이탈 상태', w['state'], int(t[11]))
+            need('이탈·flip 상태', w['state'], int(t[11]))
         else:
-            need('이탈 상태 없음', 'x', t[11])
-        need('반전 뒤 alpha', w['alpha'], t[15:])
-        if t[12:15] != w['link']:
-            link_bad.append((name, '기준', w['link'], '실제', t[12:15]))
+            need('상태 없음(보류)', 'x', t[11])
+        need('재호출', w['recall'], int(t[12]))
+        need('반전 뒤 alpha(재호출이면 재반전 뒤)', w['alpha'], t[19:])
+        for got, ref in ((t[13:16], w['link']), (t[16:19], w['link2'])):
+            if got != ref:
+                link_bad.append((name, '기준', ref, '실제', got))
         s = tally[c['role']]
         s['steps'] += 1
         s['dir1'] += w['dir']
@@ -142,15 +149,17 @@ def compare(cases, text, trace):
         s['frame'] += w['frame'] is not None
     for role, want in EXPECT.items():
         assert tally[role] == want, ('집계', role, '기대', want, '실제', tally[role])
-    unique = {r: len({c['line'].split(' ', 1)[1] for c in cases if c['role'] == r}) for r in ('target', 'arms', 'violated', 'retry')}
+    unique = {r: len({c['line'].split(' ', 1)[1] for c in cases if c['role'] == r}) for r in ('target', 'arms', 'violated', 'retry', 'recall')}
     return dict(tally=tally, unique_inputs=unique, link_cases=len(cases), link_mismatch=link_bad)
 
 
 def self_test(cases, text, trace):
     compare(cases, text, trace)
     rows = trace.splitlines()
-    piv = next(i for i, c in enumerate(cases, 1) if c['want']['state'] is not None and c['want']['frame'] is not None)
+    piv = next(i for i, c in enumerate(cases, 1) if c['want']['kind'] == 'pivot' and c['want']['frame'] is not None)
     d1 = next(i for i, c in enumerate(cases, 1) if c['want']['dir'] == 1)
+    flip = next(i for i, c in enumerate(cases, 1) if c['want']['kind'] == 'flip')
+    rc = next(i for i, c in enumerate(cases, 1) if c['want']['recall'] and c['want']['kind'] == 'pivot')
 
     def edit(i, k, v):
         t = rows[i].split()
@@ -160,7 +169,9 @@ def self_test(cases, text, trace):
         'direction': edit(d1, 1, '0'), 'r-bits': edit(piv, 2, dc.bits(dc.f64(rows[piv].split()[2]) + 1.0)),
         'du-bits': edit(piv, 4, dc.bits(1.0)), 'k2-bits': edit(piv, 8, dc.bits(1.0)),
         'kind': edit(piv, 9, 'Flip'), 'theta': edit(piv, 10, dc.bits(3.0)), 'leave-state': edit(piv, 11, '-2'),
-        'alpha-sign': edit(d1, 15, dc.bits(-dc.f64(rows[d1].split()[15]))), 'recall': edit(1, 9, 'recall'),
+        'alpha-sign': edit(d1, 19, dc.bits(-dc.f64(rows[d1].split()[19]))), 'recall': edit(1, 9, 'recall'),
+        'flip-state': edit(flip, 11, '-3' if rows[flip].split()[11] != '-3' else '-1'), 'recall-flag': edit(rc, 12, '0'),
+        'recall-alpha': edit(rc, 19, dc.bits(-dc.f64(rows[rc].split()[19]))),
         'missing-case': '\n'.join(rows[:-1]) + '\n', 'stale-hash': '\n'.join(['input ' + '0' * 64] + rows[1:]) + '\n',
     }
     rejected = []
@@ -179,9 +190,12 @@ def self_test(cases, text, trace):
         rejected.append('input-drift')
     else:
         raise AssertionError(('변조 허용', 'input-drift'))
-    link = compare(cases, text, edit(1, 13, dc.bits(5.0)))['link_mismatch']
+    link = compare(cases, text, edit(1, 14, dc.bits(5.0)))['link_mismatch']
     assert len(link) == 1, ('연결 변조 미검출', link)
     rejected.append('link-theta(연결 불일치로 보고)')
+    link = compare(cases, text, edit(rc, 17, dc.bits(5.0)))['link_mismatch']
+    assert len(link) == 1, ('재호출 연결 변조 미검출', link)
+    rejected.append('recall-link-theta(연결 불일치로 보고)')
     return rejected
 
 
@@ -210,7 +224,7 @@ MUTANTS = {
     'alpha-no-flip': [('val.iter_mut().for_each(|v| *v = -*v);', '')],
     'slack-gap-swap': [('(slack[j - n], inf)', '(inf, slack[j - n])')],
     'sign-zero-neg': [('if 0.0 > a {', 'if 0.0 >= a {')],
-    'reject-keep-theta': [('*theta = inf;\n        return Ok(PushStep::Reject);', 'return Ok(PushStep::Reject);')],
+    'reject-keep-theta': [('*theta = inf;\n        return PushStep::Reject;', 'return PushStep::Reject;')],
     'recall-no-theta': [('if *theta == inf && entry.recall {', 'if *theta == inf {')],
     # M3-04c-7: theta=I 비재호출 조건과 위치<0 flip
     'recall-free-only': [('|| (!decrease && unbounded_up)', '')],
@@ -218,13 +232,21 @@ MUTANTS = {
     'gate-off': [('if pos < 0 || 0.001 > pivot.abs() {', 'if false {')],
     'gate-pivot-1e-4': [('if pos < 0 || 0.001 > pivot.abs() {', 'if pos < 0 || 1e-4 > pivot.abs() {')],
     'gate-no-neg': [('if pos < 0 || 0.001 > pivot.abs() {', 'if 0.001 > pivot.abs() {')],
-    'recall-always': [('let recall = (lb[j] <= -inf && unbounded_up) || (!decrease && unbounded_up);', 'let recall = true;')],
+    'recall-always': [('let recall = free || (!decrease && unbounded_up);', 'let recall = true;')],
+    # M3-04c-8: 재호출 뒤 단계와 flip 상태
+    'recall-free-lt': [('let free = lb[j] <= -inf && unbounded_up;', 'let free = lb[j] < -inf && unbounded_up;')],
+    'recall-gap-original': [('step_tail(entry, !entry.decrease, tol, inf, pos, theta, pivot)',
+                             'step_tail(entry, entry.decrease, tol, inf, pos, theta, pivot)')],
+    'recall-free-pos': [('let pos = if *theta == inf && entry.free { -1 } else { pos };', 'let pos = pos;')],
+    'flip-free-state': [('if -inf < lb || ub < inf {', 'if true {')],
+    'flip-dir-swap': [('if decrease { -1 } else { -2 }', 'if decrease { -2 } else { -1 }')],
+    'reject-arm-current': [('let reject = if entry.decrease {', 'let reject = if decrease {')],
     # M3-04b-3: 새로 관측한 arm마다 그 arm만 바꾸는 변조(오라클 MUTANTS와 같은 이름)
     'reject-off-0': [('entry.r < tol.reject_neg && entry.du < tol.reject', 'false')],
     'reject-off-1': [('entry.r > tol.reject && entry.dl < tol.reject', 'false')],
-    'defer-off': [('Ok(if 1e-6 > pivot || -1e-5 > *theta * pivot { PushStep::Defer } else { PushStep::Pivot })',
-                   'Ok(if pivot.is_nan() { PushStep::Defer } else { PushStep::Pivot })')],
-    'flip-dir1-off': [('if gap - 1e-10 <= *theta || pos < 0 {', 'if (!entry.decrease && gap - 1e-10 <= *theta) || pos < 0 {')],
+    'defer-off': [('if 1e-6 > pivot || -1e-5 > *theta * pivot { PushStep::Defer } else { PushStep::Pivot }',
+                   'if pivot.is_nan() { PushStep::Defer } else { PushStep::Pivot }')],
+    'flip-dir1-off': [('if gap - 1e-10 <= *theta || pos < 0 {', 'if (!decrease && gap - 1e-10 <= *theta) || pos < 0 {')],
     'dir-first-off': [('(10.0 * dl < du && -(r * dl) < e) ||', '(false && 10.0 * dl < du && -(r * dl) < e) ||')],
     'leave-fixed-1': [('if range <= fixed {\n        return -4;', 'if range <= fixed {\n        return -1;')],
     'leave-fixed-lt+X-1': [('if range <= fixed', 'if range < fixed'),
@@ -252,7 +274,7 @@ MUTANTS.update({
     # Rust 전용: 위반 경로를 feasible 방향식·ratio로 돌리는 오류
     'v-as-feasible': [('let decrease = match violated {', 'let decrease = match None::<&[u8]> {')],
 })
-NOT_PORTED = {'reject-arm-current': 'Rust 방향은 방향식 결과 하나뿐이다. 현재 S+0x328과 다른 경우는 재호출 경로(Recall 거부)에만 있다.'}
+NOT_PORTED = {}
 
 
 def mutate_rust(cases, text):
