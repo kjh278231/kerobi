@@ -23,10 +23,18 @@ BASE = ROOT / 'bench/oracle/m3_push_decision'
 OLD = ROOT / 'bench/oracle/m3_primal_push_step'
 ARMS = ROOT / 'bench/oracle/m3_push_arms'
 VIOL = ROOT / 'bench/oracle/m3_push_violated'
+RETRY = ROOT / 'bench/oracle/m3_push_retry'
 BINARY_SHA = step.BINARY_SHA
 TOOLS = ['tools/primal_push_decision_capture.js', 'tools/primal_push_decision_agent.js']
 VTOOLS = ['tools/primal_push_violated_capture.js', 'tools/primal_push_violated_agent.js']
 ATOOLS = ['tools/primal_push_arm_capture.js', 'tools/primal_push_arm_agent.js']
+RTOOLS = ['tools/primal_push_retry_capture.js', 'tools/primal_push_retry_agent.js']
+# M3-04c-7 계약 §3: 재시도 대상 두 순서 합집합에서 반드시 나와야 하는 arm
+REQUIRED_RETRY = {'retry': {'changed', 'same', 'theta-I'}, 'cause': {'distance', 'accept', 'accept-fail'},
+                  'leave_arm': {'neg-B-2', 'nonneg-A-1'}}
+# 04c-2 agent의 retry:* 필드(새 agent 캡처를 이 필드로 투영하면 04c-2 agent 캡처와 같아야 한다)
+RETRY_OLD_FIELDS = {'retry:enter': {'event', 'call', 'step', 'selected', 'theta', 'pivot'},
+                    'retry:leave': {'event', 'call', 'step', 'chosen', 'theta', 'pivot'}}
 # M3-04c-2 계약 §4: 대상 두 순서 합집합에서 반드시 나와야 하는 위반 경로 arm
 REQUIRED_VIOLATED = {
     'clause': {'pre-reject1', 'pre-reject0', 'bound-sigma', 'bound-sigma0', 'small-bound', 'small-bound0', 'small-r',
@@ -271,7 +279,8 @@ def decide(record, p=DEFAULT, label=''):
                                                    p['k_leave'] * h, ub[lv] - lb[lv])
                 got_state = applied['state']['vstat'][lv]
                 need(got_state == want_state, where, f'이탈 상태 leave={lv}', f'{want_state}({arm_name})', got_state)
-                info.update(leave=lv, leave_state=want_state, arm=arm_name, mark=mark, alpha_sign='neg' if a < 0 else 'nonneg')
+                info.update(leave=lv, leave_state=want_state, arm=arm_name, mark=mark, alpha_sign='neg' if a < 0 else 'nonneg',
+                            leave_arm=f'{arm_name}{want_state}')
             else:
                 need(se['selected']['leave'] == -1, where, 'flip leave', -1, se['selected']['leave'])
         out.append(info)
@@ -298,6 +307,8 @@ MUTANTS = {
     'v-clause1-off': dict(v_clause=(False, True)), 'v-clause0-off': dict(v_clause=(True, False)), 'v-small-off': dict(v_small=False),
     'v-small1-off': dict(v_small_clause=(False, True)), 'v-small0-off': dict(v_small_clause=(True, False)),
     'v-r-ge0': dict(v_r_strict=False), 'v-sigma-ge0': dict(v_sigma_strict=False), 'v-ten-9': dict(v_ten=9.0),
+    # M3-04c-7: 재시도 게이트와 결과 사용
+    'gate-pivot-1e-4': dict(gate_pivot=1e-4), 'gate-no-neg': dict(gate_neg=False), 'retry-ignore': dict(retry_use=False),
 }
 
 
@@ -389,7 +400,7 @@ def summary(steps):
     return dict(sorted(out.items()))
 
 
-def load_all(manifest, arms=False, violated=False):
+def load_all(manifest, arms=False, violated=False, retry=False):
     """04b-1 저장 캡처(검사 통과 후)와 04b-2 사례들을 (이름, 레코드) 목록으로 돌려준다.
     arms면 M3-04b-3 대상 사례도 더한다(대조군·비간섭도 함께 검사). violated면 M3-04c-2 위반 basis 사례도 더하고
     필수 arm(REQUIRED_VIOLATED)을 확인한다."""
@@ -427,7 +438,57 @@ def load_all(manifest, arms=False, violated=False):
                 data.append((case, recs[0]))
                 steps[case] = decide(recs[0], label=case)
         required_violated(steps)
+    if retry:
+        rm = json.loads((RETRY / 'manifest.json').read_text())
+        steps = {}
+        for case, c in rm['cases'].items():
+            if c['role'] == 'noninterference':
+                noninterference_retry_agent(rm, c)
+                continue
+            recs = validate_new([ROOT / x for x in c['captures']], rm, case)
+            if c['role'] == 'target':
+                data.append((case, recs[0]))
+                steps[case] = decide(recs[0], label=case)
+        required_retry(steps)
     return data
+
+
+def required_retry(steps):
+    """재시도 대상 두 순서의 단계가 모두 위반 경로·재시도이고 필수 arm(REQUIRED_RETRY)을 합집합으로 다 덮는지 확인한다."""
+    assert len(steps) == 2, '재시도 대상 두 순서 필요'
+    seen = {k: set() for k in REQUIRED_RETRY}
+    for case, st in steps.items():
+        assert st, f'{case}: 단계 없음'
+        for s in st:
+            where = f"{case} call{s['call']} step{s['step']}"
+            assert s['path'] == 'infeasible' and s['retry'] != 'none', f'{where}: 재시도 없는 단계'
+            for k in seen:
+                seen[k].add(s.get(k))
+    for k, want in REQUIRED_RETRY.items():
+        assert want <= seen[k], f'재시도 필수 {k} 누락: {sorted(want - seen[k])}'
+
+
+def project_old_retry(events):
+    return [{k: v for k, v in e.items() if k in RETRY_OLD_FIELDS[e['event']]} if e['event'] in RETRY_OLD_FIELDS else e
+            for e in events]
+
+
+def noninterference_retry_agent(rm, c):
+    """04c-7 agent: 재시도 사건을 04c-2 필드로 투영하면 04c-2 agent 캡처와 같아야 한다(발동). 비발동은 그대로 같아야 한다."""
+    new, old = (json.loads((ROOT / c[k]).read_text()) for k in ('new', 'old'))
+    vm = json.loads((VIOL / 'manifest.json').read_text())
+    for rec, tools, mf in ((new, RTOOLS, rm), (old, VTOOLS, vm)):
+        assert rec['tool_sha256'] == mf['tools'][tools[0]] == sha(ROOT / tools[0]), '비간섭 도구'
+        assert rec['agent_sha256'] == mf['tools'][tools[1]] == sha(ROOT / tools[1]), '비간섭 agent'
+    assert new['binary_sha256'] == old['binary_sha256'] == BINARY_SHA, '비간섭 바이너리'
+    assert new['model_sha256'] == old['model_sha256'] == c['model_sha256'], '비간섭 모델'
+    assert new['params'] == old['params'] and new['starts'] == old['starts'] and new['kind'] == old['kind'] == c['kind'], '비간섭 설정'
+    assert new['errors'] == old['errors'] == [] and new['reason'] == old['reason'] == 'process-terminated', '비간섭 실행 오류'
+    fired = [e for e in new['events'] if e['event'].startswith('retry:')]
+    assert bool(fired) == c['firing'], ('재시도 훅 발동 여부', c['firing'], len(fired))
+    assert project_old_retry(new['events']) == old['events'], '새 재시도 필드를 뺀 사건이 04c-2 agent와 다름'
+    assert new['result'] == old['result'] and new['output'] == old['output'], '비간섭 결과'
+    return len(fired)
 
 
 def required_violated(steps):
@@ -523,7 +584,7 @@ def main():
                 data.append((f'04b-1/{kind}', json.loads(paths[0].read_text())))
         else:
             manifest = json.loads((BASE / 'manifest.json').read_text())
-            data = load_all(manifest, arms=True, violated=True)
+            data = load_all(manifest, arms=True, violated=True, retry=True)
         report = {}
         for label, rec in data:
             st = decide(rec, label=label)
@@ -653,6 +714,7 @@ def self_test(data):
         except (Mismatch, StopIteration) as err:
             out[name] = str(err)
     out.update(self_test_violated(data))
+    out.update(self_test_retry(data))
     return out
 
 
@@ -726,6 +788,101 @@ def self_test_violated(data):
             changed = {lb: [s for s in st if s.get(key) != value] for lb, st in steps.items()}
         try:
             required_violated(changed)
+        except AssertionError as err:
+            out[f'required-{key}-{value}'] = str(err)
+        else:
+            raise Mismatch(f'필수 arm 누락 허용: {key}={value}')
+    return out
+
+
+def self_test_retry(data):
+    """M3-04c-7: 재시도 게이트·입력·결과·theta=I 재호출·비간섭·필수 arm 변조가 거부되는지 확인한다."""
+    import tempfile
+    label, rec = next((lb, r) for lb, r in reversed(data) if lb.startswith('retry-'))
+    out = {}
+    steps = decide(rec, label=label)
+
+    def window(x, tag, pick=lambda s: True):
+        s = next(s for s in steps if s['retry'] == tag and pick(s))
+        ev = x['events']
+        k = next(i for i, e in enumerate(ev) if e['event'] == 'retry:enter' and (e['call'], e['step']) == (s['call'], s['step']))
+        return ev, k, s
+
+    def drop_retry(x):
+        ev, k, _ = window(x, 'same')
+        del ev[k:k + 2]
+
+    def gate_off(x):  # 054eef pivot을 0.002로: 게이트가 거짓인데 재시도가 있다
+        ev, k, _ = window(x, 'same')
+        ev[k - 1]['pivot'] = bits(0.002)
+
+    def retry_theta(x):
+        ev, k, _ = window(x, 'changed')
+        ev[k + 1]['theta'] = bits(f64(ev[k + 1]['theta']) * 0.5)
+
+    def retry_row(x):  # B 두 번째 breakpoint(-2) 대신 다른 행을 고른 것처럼: 이탈 상태가 달라져야 한다
+        ev, k, _ = window(x, 'changed', lambda s: s.get('leave_arm') == 'neg-B-2')
+        ev[k + 1]['theta'] = ev[k - 1]['theta']
+
+    def retry_input(x):
+        ev, k, _ = window(x, 'same')
+        ev[k]['basic'][0] = bits(f64(ev[k]['basic'][0]) + 1.0)
+
+    def retry_slot(x):
+        ev, k, _ = window(x, 'same')
+        ev[k]['pivot'] = bits(0.0)
+
+    def free_column(x):  # theta=I 단계의 진입 열을 자유 열로: 재호출 조건이 참이 되어 거부해야 한다
+        ev, k, s = window(x, 'theta-I')
+        model = next(e for e in ev if e['event'] == 'push:enter')['model']
+        model['lb'][s['enter']] = bits(-1e30)
+        model['ub'][s['enter']] = bits(1e30)
+
+    def leave_back(x):  # 재시도 결과를 무시하고 054eef 결과를 쓴 것처럼 step theta를 바꾼다
+        ev, k, _ = window(x, 'changed', lambda s: s['kind'] == 'pivot')
+        nxt = next(e for e in ev[k:] if e['event'] == 'step:enter')
+        nxt['theta'] = ev[k - 1]['theta']
+
+    for name, edit in {'r-drop': drop_retry, 'r-gate-off': gate_off, 'r-theta': retry_theta, 'r-row': retry_row,
+                       'r-input': retry_input, 'r-slot': retry_slot, 'r-free-column': free_column,
+                       'r-step-054eef': leave_back}.items():
+        x = copy.deepcopy(rec)
+        edit(x)
+        try:
+            decide(x, label=label)
+            raise AssertionError('변조 허용: ' + name)
+        except (Mismatch, StopIteration) as err:
+            out[name] = str(err)
+    rm = json.loads((RETRY / 'manifest.json').read_text())
+    # 대상 첫 ratio theta가 +0이라 기본 event-value 변조(+0)는 값을 바꾸지 않는다
+    out.update({'retry-' + k: v for k, v in capture_tamper(RETRY, {'event-value': lambda x: next(
+        e for e in x['events'] if e['event'] == 'ratio:leave').__setitem__('theta', bits(0.125)), 'retry-input-missing': lambda x: next(
+        e for e in x['events'] if e['event'] == 'retry:enter').pop('basic')}).items()})
+    for case, edit in (('retry-primal-violatedagent', lambda x: next(e for e in x['events'] if e['event'] == 'retry:leave').__setitem__('chosen', 9)),
+                       ('retry-dual-violatedagent', lambda x: x.__setitem__('events', [e for e in x['events'] if not e['event'].startswith('retry:')])),
+                       ('violated-primal-retryagent', lambda x: next(e for e in x['events'] if e['event'] == 'step:enter').__setitem__('theta', '0' * 16))):
+        c = rm['cases'][case]
+        with tempfile.TemporaryDirectory() as tmp:
+            x = json.loads((ROOT / c['new']).read_text())
+            edit(x)
+            q = Path(tmp) / 'new.json'
+            q.write_text(json.dumps(x))
+            try:
+                noninterference_retry_agent(rm, dict(c, new=str(q)))
+            except AssertionError as err:
+                out['noninterference-' + case] = str(err)
+            else:
+                raise Mismatch('비간섭 변조 허용: ' + case)
+    steps = {lb: decide(r, label=lb) for lb, r in data if lb.startswith('retry-')}
+    required_retry(steps)
+    for key, value in (('retry', 'theta-I'), ('cause', 'accept-fail'), ('leave_arm', 'neg-B-2'), ('leave_arm', 'nonneg-A-1'),
+                       ('retry', 'none')):
+        if value == 'none':
+            changed = {lb: [dict(s, retry='none') if i == 0 else s for i, s in enumerate(st)] for lb, st in steps.items()}
+        else:
+            changed = {lb: [s for s in st if s.get(key) != value] for lb, st in steps.items()}
+        try:
+            required_retry(changed)
         except AssertionError as err:
             out[f'required-{key}-{value}'] = str(err)
         else:
