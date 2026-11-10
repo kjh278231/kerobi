@@ -129,8 +129,8 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04a-1 | 오라클 구축 완료(범위 한정) | 실제 LP 하나의 PDHG·barrier·시작 벡터 정상 진입 | 04a | [각 3회 비트 비교·독립 재캡처·변조 검출](m3/crossover_entry_oracle.md). Rust 동등성은 미검증 |
 | M3-04a-2 | 조사 | 실패·중단·고급 presolve 매핑의 원본 조건과 후속 분할 | 04a·04a-1 | 조건별 함수·필수 상태·독립 오라클 번호를 확정. 세 가족 전체 구현은 제외 |
 | M3-04b | 조사 완료 | primal push의 원본 분기 분할 | 04a | [double·x87·상태 분기와 합성 ratio 29사례×3회](m3/primal_push_branches.md). 전체 push·Rust 동등성은 미검증 |
-| M3-04b-1 | 오라클 구축 완료(범위 한정) | 정상 push 한 단계의 후보·ratio·flip·basis 교환 | 04b·04a-1 | [interior.lp 두 순서 각 3회, pivot 7·flip 2](m3/primal_push_step_oracle.md). 방향 1·`S+0x1f8`·`local_250`은 미캡처 |
-| M3-04b-2 | 오라클 구축 | 목적이 있는 LP의 방향 1·ratio 뒤 거부·pivot 이탈 상태 입력 | 04b-1 | `S+0x1f8`·`local_250` 의미 확정과 캡처, 방향 0·1 각 사건 독립 3회 |
+| M3-04b-1 | 오라클 구축 완료(범위 한정) | 정상 push 한 단계의 후보·ratio·flip·basis 교환 | 04b·04a-1 | [interior.lp 두 순서 각 3회, pivot 7·flip 2](m3/primal_push_step_oracle.md). 방향 1·`0x1ec8(%rsp)`·`local_250`은 미캡처 |
+| M3-04b-2 | 오라클 구축 | 목적이 있는 LP의 방향 1·ratio 뒤 거부·pivot 이탈 상태 입력 | 04b-1 | 먼저 asm에서 `0x1ec8(%rsp)`·`local_228`·`local_250`의 저장 출처를 찾는다. 상수나 기존 필드면 방향 0 판정은 04b-1의 `step:enter`로 대조하고, 아니면 방향 0·1 각 사건을 독립 3회 캡처 |
 | M3-04c | 구현 완료(범위 한정) | double feasible ratio `055f68` 첫 패스 | 04b·04b-1 | [자연 9입력×2·합성 29사례 비트 일치, 변조 14종 중 10 거부](m3/primal_push_ratio_rust.md). 생존 4경계·재진입·push 연결 미검증 |
 | M3-04c-5 | 오라클·구현 | `055f68` 작은 pivot 재진입과 `12dd49` 요청 2 | 04c | 재진입·2차 상한 동률·후보 있는 I 상한의 원본 합성 사례 3회와 Rust 비교 |
 | M3-04d | 조사 | dual push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |

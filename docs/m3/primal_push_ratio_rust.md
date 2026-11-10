@@ -19,7 +19,7 @@
 - Gurobi 13.0.3 `libgurobi130.so` SHA-256 `8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c`.
 - C `../re/decomp/c/000ef960_PRIVATE0000000000055f68.c` 전체(329줄). 호출점 `001c0070_PRIVATE0000000000134a87.c` 1309–1312줄, 1543–1546줄.
 - ABI는 [04b 조사 §3](primal_push_branches.md#3-합성-ratio-오라클-계약과-결과)을 따른다. `xmm0`=Harris 여유, `xmm1`=pivot 허용, `xmm2`=I, `xmm3`=초기 상한. 반환은 행이 아니라 희소 위치다(dense면 행).
-- 자연 호출의 xmm 값은 훅이 읽지 않았으므로 asm으로 재구성한다. push 진입 직후 `0x1c021e–0x1c028d`에서 `S+0x370→0x1fc8(%rsp)`, `S+0x380→0x2070(%rsp)`, `S+0x398→0x2078(%rsp)`를 한 번 저장한다. 함수 전체(`0x1c0070–0x1c5310`)에서 세 슬롯에 쓰는 명령은 이 셋뿐이다. 호출점 `0x1c284e–0x1c289f`는 `rbp=rsp+0x1eb8`에서 `xmm0=0x2070`, `xmm1=0x2078`, `xmm2=xmm3=0x1fc8`을 넣는다. 따라서 xmm0=`S+0x380`, xmm1=`S+0x398`, xmm2=xmm3=`S+0x370`이며, 투영 도구는 push 진입과 모든 ratio 진입에서 세 값이 같음을 검사한다.
+- 자연 호출의 xmm 값은 훅이 읽지 않았으므로 asm으로 재구성한다. push 진입 직후 `0x1c021e–0x1c028d`에서 `S+0x370→0x1fc8(%rsp)`, `S+0x380→0x2070(%rsp)`, `S+0x398→0x2078(%rsp)`를 한 번 저장한다. 함수 전체(`0x1c0070–0x1c5310`)에서 세 슬롯에 rsp·rbp 기준으로 직접 저장하는 명령은 이 셋뿐이다(objdump grep 범위). 자연 비교 일치는 xmm0·xmm1 값을 독립적으로 확인하지 못하며 근거는 이 asm이다. 호출점 `0x1c284e–0x1c289f`는 `rbp=rsp+0x1eb8`에서 `xmm0=0x2070`, `xmm1=0x2078`, `xmm2=xmm3=0x1fc8`을 넣는다. 따라서 xmm0=`S+0x380`, xmm1=`S+0x398`, xmm2=xmm3=`S+0x370`이며, 투영 도구는 push 진입과 모든 ratio 진입에서 세 값이 같음을 검사한다.
 - 시작: `055f68` 진입. 입력 희소 열은 방향 부호 반전 뒤 값이다(훅이 인자 포인터에서 읽음). 종료: 반환 직후. theta 포인터의 호출 전 값은 자연 캡처에 없다. 원본이 theta를 쓰지 않는 경로라면 Rust 출력이 NaN 초기값으로 남아 비교에서 실패한다.
 
 ## 3. 비교 계약
@@ -58,9 +58,10 @@ Rust 변조 재현: `python3 tools/primal_push_ratio_rust.py --mutate-rust <새 
 ## 6. 실행 결과
 
 - 환경: x86-64 Linux(WSL2), rustc 1.99.1. Gurobi는 실행하지 않았다(저장 기준 재생).
+- 재생 도구는 원본 C 해시도 검사하므로 저장소 옆 `../re/decomp/c/`가 있어야 실행된다.
 - 원본 자료: 자연 캡처는 `primal_push_step_check.check`로, 합성 캡처는 `primal_push_ratio_oracle.check`로 해시·출처·독립 3회 일치를 먼저 검사한 뒤 투영한다. 두 도구와 기존 캡처는 바꾸지 않았다.
 - Rust 입력 `bench/oracle/m3_push_ratio_rust/input.txt`: 47사례(자연 18·합성 29), 본문 SHA-256 `04d3d252bdb8f0f018f3dc47d0a19d4c94b9f93c34098745ae12e40062a3f74e`(파일 첫 줄). 자연 18건은 primal-first·dual-first가 같은 입력 9개다. 모두 희소 열이다.
-- 재생 비교: `cargo test -p rsolver-lp --test push_ratio && python3 tools/primal_push_ratio_rust.py --compare` 종료 0. 47사례 전부 일치. 자연은 위치·행·theta·pivot 4필드, 합성은 work까지 5필드를 비트 비교했다. Rust 재진입 거부 0건. skip·누락 0.
+- 재생 비교: `cargo test -p rsolver-lp --test push_ratio && python3 tools/primal_push_ratio_rust.py --compare` 종료 0. 47사례 전부 일치. 자연은 위치·행·theta·pivot 4필드, 합성은 work까지 5필드를 비트 비교했다. 행은 양쪽 모두 위치와 입력 인덱스에서 유도하므로 독립 판별 필드는 자연 3개·합성 4개다. Rust 재진입 거부 0건. skip·누락 0.
 - 비교기 변조: `--self-test` 종료 0. theta·pivot·위치, 합성 work·theta 부호, 사례 누락, 재진입 거부, 오래된 입력 해시, 입력 투영 변경 9종을 모두 거부했다.
 - Rust 변조 14종([기록](../../bench/oracle/m3_push_ratio_rust/rust-mutation.json)): 10종 거부. 1차 수락 `<=`→`<`, Harris 부호, 2차 동률 `<`→`<=`, 폭<I, `F` 제외, 하한 분자, 유한 상한 조기 반환, 작은 pivot 검사 강화, dense·희소 work식이다.
 - 살아남은 4종은 저장 사례가 판별하지 못하는 경계다. 함수 전체 통과로 세지 않는다.
@@ -76,6 +77,6 @@ Rust 변조 재현: `python3 tools/primal_push_ratio_rust.py --mutate-rust <새 
 - 작업 수행: 완료.
 - 동등성: 계약 범위 **통과**(저장 기준 재생, 비트 비교). 자연 9개 입력(×2 순서)과 합성 29사례에서 `055f68` 첫 패스의 위치·theta·pivot이, 합성에서는 work까지 원본과 같다.
 - 미검증: §6의 생존 변조 4경계, 재진입 패스, 열길이 가중, 자연 work. 방향식·ratio 뒤 판정·pivot 적용·infeasible ratio·x87·push 전체는 범위 밖이다.
-- 후속: M3-04c-5(작은 pivot 재진입과 `12dd49` 요청 2)는 원본 합성 사례를 새로 캡처해야 한다. ratio 뒤 판정·pivot 적용은 `S+0x1f8`·`local_250`과 방향 1 사례를 담은 새 자연 캡처(목적이 있는 LP)가 먼저 필요하다. 이 캡처 확장을 M3-04b-2로 둔다.
+- 후속: M3-04c-5(작은 pivot 재진입과 `12dd49` 요청 2)는 원본 합성 사례를 새로 캡처해야 한다. ratio 뒤 판정·pivot 적용은 `0x1ec8(%rsp)`·`local_228`·`local_250`의 저장 출처를 asm에서 먼저 찾고, 필요하면 방향 1 사례를 담은 새 자연 캡처(목적이 있는 LP)를 만든다. 이 작업을 M3-04b-2로 둔다. 세 값이 상수나 기존 필드로 판명되면 방향 0 판정은 04b-1의 `step:enter`로 바로 대조할 수 있다.
 - branch `work/m3-04c`, worktree `../rsolver-m3-04c`. 결과·인수인계·진행·로드맵은 이 branch에서 갱신해 `--no-ff`로 병합한다.
 - 교훈: `docs/lessons/original.md`(xmm 슬롯·재진입 상태)와 `process.md`(경계 입력 확인·변조 생존 기록)에 추가했다. Herdr `wait-output`이 명령줄 에코에 맞는 함정을 이번에도 겪었지만 `tooling.md`에 이미 있어 추가하지 않았다.
