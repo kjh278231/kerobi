@@ -100,6 +100,8 @@ pub struct Engine<'a> {
     last_aq_row: f64,
     /// Row-wise U (by position, storage order) and prefix t at the last DSE τ, as snapshot JSON.
     last_urow: String,
+    /// Last pivot's final α_q list and `09d112` U kernel, as snapshot JSON fields.
+    last_aqo: String,
     /// `RSOLVER_SNAP` / `RSOLVER_BFRT` dump files, read once.
     snap_path: Option<String>,
     bfrt_path: Option<String>,
@@ -167,6 +169,7 @@ impl<'a> Engine<'a> {
             bt_dense: false,
             last_aq_row: 0.0,
             last_urow: String::new(),
+            last_aqo: String::new(),
             snap_path: std::env::var("RSOLVER_SNAP").ok(),
             bfrt_path: std::env::var("RSOLVER_BFRT").ok(),
             c8: false,
@@ -473,24 +476,27 @@ impl<'a> Engine<'a> {
         (alpha, order)
     }
 
-    /// FTRAN of column j: (B⁻¹a_j by position, spike by row).
-    fn ftran_col(&self, j: usize) -> (Vec<f64>, Vec<f64>) {
+    /// FTRAN of column j: (B⁻¹a_j by position, spike by row, nonzeros after L).
+    fn ftran_col(&self, j: usize) -> (Vec<f64>, Vec<f64>, i64) {
         let mut x = vec![0.0; self.m];
         for (i, a) in self.spx.col(j) {
             x[i] = a;
         }
-        self.lu.ftran_lower(&mut x);
+        self.lu.ftran_l(&mut x);
+        let nl = x.iter().filter(|v| v.abs() > ZERO).count() as i64;
+        self.lu.ftran_r(&mut x);
         let spike = x.clone();
         self.lu.ftran_upper(&mut x);
         let mut col = vec![0.0; self.m];
         for &(r, pos, _) in &self.lu.steps {
             col[pos] = x[r];
         }
-        (col, spike)
+        (col, spike, nl)
     }
 
     /// Replace basis position r by column q (status of the leaving variable given), update the LU or refactor.
-    fn pivot(&mut self, r: usize, q: usize, leave_status: i32, spike: &[f64]) {
+    /// `sorder`: spike rows in the `09d112` order (empty: position order).
+    fn pivot(&mut self, r: usize, q: usize, leave_status: i32, spike: &[f64], sorder: &[usize]) {
         let out = self.head[r];
         self.path.push((self.iter, q as i64, out as i64));
         self.vstat[out] = leave_status;
@@ -521,7 +527,7 @@ impl<'a> Engine<'a> {
                 (self.upd_cols as f64 * 1.5 + self.lu.eta_nnz() as f64 * 2.0) * m - f > 0.0
             }
         };
-        if refactor || !self.lu.update(r, q, spike) {
+        if refactor || !self.lu.update(r, q, spike, sorder) {
             self.reinvert();
         } else {
             // LU+0x190: nonzeros of the FTRAN'd entering column (pivot included)
@@ -586,11 +592,11 @@ impl<'a> Engine<'a> {
             .map(|j| self.d[j])
             .collect();
         let line = format!(
-            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",{}\"bt_dense\":{},\"aqrow\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",{}{}\"f0\":{:?},\"bt_dense\":{},\"aqrow\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
             self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr),
             self.pr.allow, self.lu.n_updates, self.pr.avg, hex(&self.pr.score), self.pr.cost_mode, hex(&self.pr.row_cost),
             hex(&self.pr.var_cost), self.lu.n_singleton, self.lu.eta_nnz(), self.upd_cols,
-            hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), self.last_urow, self.bt_dense, hexf(self.last_aq_row), self.pt_rc, self.pt_deg, self.pt_deg0,
+            hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), self.last_urow, self.last_aqo, self.lu.listed(), self.bt_dense, hexf(self.last_aq_row), self.pt_rc, self.pt_deg, self.pt_deg0,
             self.pt_it0
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
@@ -836,7 +842,7 @@ impl<'a> Engine<'a> {
 
     /// One free-column pivot of the dual start; false when no position has |α| ≥ tol.
     fn free_pivot(&mut self, q: usize, tol: f64) -> bool {
-        let (col, spike) = self.ftran_col(q);
+        let (col, spike, _) = self.ftran_col(q);
         let mut best = (usize::MAX, -1.0);
         for p in 0..self.m {
             if self.spx.l[self.head[p]] > -INFINITY && col[p].abs() > best.1 {
@@ -851,7 +857,7 @@ impl<'a> Engine<'a> {
         let st = if self.spx.u[out] - self.spx.l[out] <= 0.0 { -4 } else { -1 };
         self.col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
         self.iter += 1;
-        self.pivot(p, q, st, &spike);
+        self.pivot(p, q, st, &spike, &[]);
         self.log();
         true
     }
@@ -1000,6 +1006,7 @@ impl<'a> Engine<'a> {
             for &(i, v) in &rho_sp {
                 rho[i] = v;
             }
+            let rho_in = if dense { -1 } else { rho_sp.len() as i64 };
             let rho_sp: Vec<(usize, f64)> = rho_sp.into_iter().filter(|e| e.1.abs() > ZERO).collect();
 
             let (alpha, order) = self.pivot_row(&rho_sp);
@@ -1099,7 +1106,7 @@ impl<'a> Engine<'a> {
             }
             retried = false;
 
-            let (col, spike) = self.ftran_col(q);
+            let (col, spike, a_l) = self.ftran_col(q);
 
             let arq = col[r];
             if arq * alpha[q] <= 0.0 || (arq - alpha[q]).abs() > BIG_TOL * (1.0 + arq.abs()) || arq.abs() <= ZERO {
@@ -1135,7 +1142,16 @@ impl<'a> Engine<'a> {
             // DSE weights with τ = B⁻¹ρ
             let supp: Vec<usize> = (0..self.m).filter(|&p| col[p] != 0.0).collect(); // α_q support, position order
             let mut tau = rho.clone();
-            self.lu.ftran_lower(&mut tau);
+            let nz = |v: &[f64]| v.iter().filter(|x| x.abs() > ZERO).count() as i64;
+            self.lu.ftran_l(&mut tau);
+            let rho_l = nz(&tau);
+            self.lu.ftran_r(&mut tau);
+            let a_in: Vec<usize> = self.spx.col(q).map(|e| e.0).collect();
+            let (uk, mut aq_list, sorder) = self.lu.ftran2(&a_in, a_l, &spike, [rho_in, rho_l, nz(&tau)], &col, r);
+            // 8b473 C:466–482: the pivot's place in the α_q list takes its last entry
+            if let Some(i) = aq_list.iter().position(|&p| p == r) {
+                aq_list.swap_remove(i);
+            }
             let taup = self.lu.ftran_tau(tau, &supp);
             // 1bae9c L420-470: β = ‖ρ_r‖² (above), w_r = (β/α_r)/α_r, then
             // w_i = max(1e-8, (β·t·t − (t+t)·τ_i) + w_i) with t = α_i/α_r
@@ -1173,7 +1189,7 @@ impl<'a> Engine<'a> {
             let updates_before = self.lu.n_updates;
 
             self.iter += 1; // 28c93 L820: counted before the LU update or refactor (seeds, marks)
-            self.pivot(r, q, leave, &spike);
+            self.pivot(r, q, leave, &spike, &sorder);
 
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;
@@ -1206,11 +1222,13 @@ impl<'a> Engine<'a> {
                 self.pr.row_cost[r] = self.pr.row_cost[r].max(p60 + 100.0);
             }
             if self.lu.n_updates > updates_before {
-                let mut changed = supp.clone();
-                if col[r] == 0.0 {
-                    changed.insert(changed.partition_point(|&p| p < r), r);
-                }
+                // 1bae9c C:466–700: the leaving position first, then the α_q list in its order
+                let mut changed = vec![r];
+                changed.extend(&aq_list);
                 self.price_touch(&changed, Some(r), true);
+            }
+            if self.snap_path.is_some() {
+                self.last_aqo = format!("\"aqo\":{:?},\"uk\":\"{}\",", aq_list, uk);
             }
 
             self.log();
@@ -1360,7 +1378,7 @@ impl<'a> Engine<'a> {
             }
             // σ = +1 when x_q increases
             let sigma = if self.vstat[q] == -2 || (self.vstat[q] == -3 && dq > 0.0) { -1.0 } else { 1.0 };
-            let (col, spike) = self.ftran_col(q);
+            let (col, spike, _) = self.ftran_col(q);
             let range = self.spx.u[q] - self.spx.l[q];
             let theta0 = if range < INFINITY { range } else { f64::INFINITY };
             // ratio test: x_B − t·σ·col; pass 1 Harris bound, pass 2 largest |α| among ratios within it
@@ -1467,7 +1485,7 @@ impl<'a> Engine<'a> {
             }
             self.col_nnz = col.iter().filter(|&&a| a.abs() > ZERO).count();
             self.iter += 1;
-            self.pivot(r, q, st, &spike);
+            self.pivot(r, q, st, &spike, &[]);
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;
             } else {

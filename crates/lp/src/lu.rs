@@ -32,6 +32,15 @@ pub struct Lu {
     prefix: usize,
     /// Cache of the highest U position with an empty column (LU+0xe8).
     e8: usize,
+    /// End of the slack phase of the singleton factor (LU+0xdc): prefix positions below it start with empty U rows.
+    dc: usize,
+    /// LU+0x108 + LU+0x110: mean U row length + 1 of the tail rows and of the rows in [0xdc, t) (`036ade`
+    /// C:5725–5740), the density factor of the `09d112` U-stage test.
+    dsum: f64,
+    /// Prefix rows with a non-empty U row (LU+0xf0, its length LU+0xec) as steps in list order, and each step's slot
+    /// in it (LU+0xf8: ≥ 0 slot, −1 prefix with an empty U row, −2 tail).
+    f0: Vec<usize>,
+    f8: Vec<i64>,
     /// Forrest–Tomlin row etas in creation order: (row r, [(row i, μ)]) with x_r −= Σ μ·x_i.
     retas: Vec<(usize, Vec<(usize, f64)>)>,
     /// Sparse-solve multiplier LU+0x104: a sparse Lᵀ needs `mult·nnz ≤ m` (036ade L5709).
@@ -213,6 +222,10 @@ impl Lu {
             upos: Vec::new(),
             prefix: 0,
             e8: 0,
+            dc: 0,
+            dsum: 3.0,
+            f0: Vec::new(),
+            f8: Vec::new(),
             retas: Vec::new(),
             sparse_mult: 2,
             level: None,
@@ -256,6 +269,7 @@ impl Lu {
                 pivot(&mut lu, &mut ppos, j - n, pos, 1.0);
             }
         }
+        lu.dc = lu.steps.len();
         // remaining column singletons and slacks, in basis order
         for (pos, &j) in head.iter().enumerate() {
             if ppos[pos] >= 0 {
@@ -634,6 +648,16 @@ impl Lu {
             self.e8 -= 1;
         }
         self.general = self.ucol.iter().any(|c| !c.is_empty());
+        // 05b257 C:2595–2690: LU+0xf8 = −1 below 0xdc, the prefix rows [0xdc, t) listed in position order, −2 in the
+        // tail; 036ade C:5725–5740: LU+0x108/0x110 (1.5 for an empty range)
+        let (t, dc) = (self.prefix, self.dc);
+        self.f8 = (0..m).map(|k| if k < dc { -1 } else if k < t { (k - dc) as i64 } else { -2 }).collect();
+        self.f0 = (dc..t.max(dc)).collect();
+        let mean = |r: std::ops::Range<usize>| {
+            let n = r.len();
+            if n == 0 { 1.5 } else { r.map(|k| self.urow[k].len()).sum::<usize>() as f64 / n as f64 + 1.0 }
+        };
+        self.dsum = mean(t..m) + mean(dc..t.max(dc));
         self.lrow = vec![Vec::new(); m];
         for k in (0..m).rev() {
             for &(i, l) in &self.lcol[k] {
@@ -821,6 +845,12 @@ impl Lu {
 
     /// FTRAN through L and the row etas (x by row); the result is the FT spike of the column.
     pub fn ftran_lower(&self, x: &mut [f64]) {
+        self.ftran_l(x);
+        self.ftran_r(x);
+    }
+
+    /// FTRAN through L (x by row).
+    pub fn ftran_l(&self, x: &mut [f64]) {
         for (k, &(r, _, _)) in self.steps.iter().enumerate() {
             let xr = x[r];
             if xr.abs() > ZERO {
@@ -829,6 +859,10 @@ impl Lu {
                 }
             }
         }
+    }
+
+    /// FTRAN through the row etas (x by row).
+    pub fn ftran_r(&self, x: &mut [f64]) {
         for (r, eta) in &self.retas {
             // 2207de R phase: x_r = η·x (8 lanes), dropped at or below ZERO
             let v = dot8(eta.iter().map(|&(i, e)| x[i] * e));
@@ -896,10 +930,94 @@ impl Lu {
         xb
     }
 
+    /// Take step k out of the LU+0xf0 list (the last entry fills its slot) and set its LU+0xf8 to `mark`.
+    fn unlist(&mut self, k: usize, mark: i64) {
+        if self.f8[k] >= 0 {
+            let (i, last) = (self.f8[k] as usize, self.f0.pop().expect("listed row"));
+            if last != k {
+                self.f0[i] = last;
+                self.f8[last] = i as i64;
+            }
+        }
+        self.f8[k] = mark;
+    }
+
+    /// Rows of x (by row) above ZERO in basis position order: the `09d112` dense collection order (C:1744–1786).
+    fn dense_order(&self, x: &[f64]) -> Vec<usize> {
+        let mut rows: Vec<usize> = (0..x.len()).filter(|&i| x[i].abs() > ZERO).collect();
+        rows.sort_by_key(|&i| self.steps[self.prow[i] as usize].1);
+        rows
+    }
+
+    /// The two-RHS FTRAN `09d112` of the entering column for the dual DSE (C:150–1884), on the dense results:
+    /// `a_in` the column's rows in storage order, `a_l` its nonzeros after L, `spike` the column after L and the row
+    /// etas (by row), `rho` the nonzeros of ρ on input (−1 dense), after L and after the row etas, `aq` α_q by
+    /// position, `r` the pivot position. Returns the U kernel ("21686f", "2126cd", "21841f" or "inline"), the α_q
+    /// output order (positions; M1-02g P3 on the sparse-U kernels: rows with LU+0xf8 = −1 in input order, tail rows
+    /// by U position descending, listed prefix rows by LU+0xf8; else position order with the pivot last, C:1812–1832)
+    /// and the spike order for `update`.
+    /// shortcut: the counts after L and the row etas are nonzeros of the dense solve (a sparse kernel's list may also
+    /// hold cancelled entries), a sparse side's order is its input rows then the other rows in position order (the
+    /// `21b9de` Kahn FIFO and `21f83a` orders are not modelled), the LU+0x128 level path is left out and a side that
+    /// `21f83a` takes densely counts as dense; checked on kb2 pivots 0–37 only (M1-02h). Upgrade when a capture
+    /// disagrees.
+    pub fn ftran2(&self, a_in: &[usize], a_l: i64, spike: &[f64], rho: [i64; 3], aq: &[f64], r: usize) -> (&'static str, Vec<usize>, Vec<usize>) {
+        let m = self.head.len() as i64;
+        let s = self.sparse_mult as i64;
+        let dense = |n: i64| n < 0 || m < s * n;
+        let mut seen = vec![false; spike.len()];
+        let mut lr: Vec<usize> = a_in.iter().copied().filter(|&i| spike[i].abs() > ZERO).collect();
+        for &i in a_in {
+            seen[i] = true;
+        }
+        lr.extend(self.dense_order(spike).into_iter().filter(|&i| !seen[i]));
+        let a_r = lr.len() as i64;
+        // L: 0x104·nnz ≤ m keeps a side sparse; row etas: a dense side stays dense, a sparse one sparse
+        let (mut na, mut nb) = (if dense(a_in.len() as i64) { -1 } else { a_l }, if dense(rho[0]) { -1 } else { rho[1] });
+        if !self.retas.is_empty() {
+            (na, nb) = (if dense(na) { -1 } else { a_r }, if dense(nb) { -1 } else { rho[2] });
+        }
+        let te = m - self.prefix as i64 + self.f0.len() as i64;
+        let (d2, m2) = (self.dsum * self.dsum, 2.0 * m as f64);
+        let sparse_u = |n: i64| n >= 0 && (te + n < m || d2 * (n as f64) < m2);
+        let kernel = match (sparse_u(nb), sparse_u(na)) {
+            (true, true) => "21686f",
+            (true, false) => "2126cd",
+            (false, true) => "21841f",
+            (false, false) => "inline",
+        };
+        let sorder = if na < 0 { self.dense_order(spike) } else { lr.clone() };
+        let supp: Vec<usize> = (0..aq.len()).filter(|&p| aq[p] != 0.0).collect();
+        if !matches!(kernel, "21686f" | "21841f") {
+            let mut out: Vec<usize> = supp.into_iter().filter(|&p| p != r).collect();
+            out.push(r);
+            return (kernel, out, sorder);
+        }
+        let t = self.prefix;
+        let pos = |k: usize| self.steps[k].1;
+        let mut out: Vec<usize> =
+            lr.iter().map(|&i| self.prow[i] as usize).filter(|&k| self.upos[k] < t && self.f8[k] < 0 && aq[pos(k)] != 0.0).collect();
+        let mut tail: Vec<usize> = supp.iter().map(|&p| self.kpos[p]).filter(|&k| self.upos[k] >= t).collect();
+        tail.sort_by_key(|&k| std::cmp::Reverse(self.upos[k]));
+        let mut pre: Vec<usize> = supp.iter().map(|&p| self.kpos[p]).filter(|&k| self.upos[k] < t && self.f8[k] >= 0).collect();
+        pre.sort_by_key(|&k| self.f8[k]);
+        out.extend(tail);
+        out.extend(pre);
+        debug_assert_eq!(out.len(), supp.len(), "sparse-U output covers the support");
+        (kernel, out.into_iter().map(pos).collect(), sorder)
+    }
+
+    /// LU+0xf0 list as basis positions (snapshots).
+    pub fn listed(&self) -> Vec<usize> {
+        self.f0.iter().map(|&k| self.steps[k].1).collect()
+    }
+
     /// Forrest–Tomlin update (05b257): basis position `pos` takes the column whose spike (L and row etas applied,
     /// by row) is `spike`. The replaced step moves to the end of the U order; its old U row is eliminated into a row
-    /// eta. Returns false when the new diagonal is below ZERO (caller refactors).
-    pub fn update(&mut self, pos: usize, var: usize, spike: &[f64]) -> bool {
+    /// eta. Returns false when the new diagonal is below ZERO (caller refactors). `sorder`: the spike rows in the
+    /// order `09d112` hands them on (`ftran2`); empty for the dense collection order (position order).
+    /// shortcut: callers outside the dual DSE pass an empty `sorder` (the `2207de` sparse paths are not modelled).
+    pub fn update(&mut self, pos: usize, var: usize, spike: &[f64], sorder: &[usize]) -> bool {
         // Forrest–Tomlin as 5b257 stores it (m1_notes §8.10): r = the leaving index, q its U position, t the prefix
         // LU+0x100, p = max(q, t−1), l = max(p, U positions of the spike entries ≠ r). With l ≠ p and a non-empty U
         // row r the row eta is η = e_rᵀU⁻¹ (old U, r first then U order), the new diagonal η·S and row r leaves U;
@@ -914,12 +1032,21 @@ impl Lu {
         let p0 = q.max(t.saturating_sub(1));
         let others: Vec<usize> = (0..spike.len()).filter(|&i| i != rp && spike[i].abs() > ZERO).collect();
         let l = others.iter().map(|&i| at[self.prow[i] as usize]).fold(p0, usize::max);
-        // old column kp out of U
+        // 05b257 C:445–449: the leaving row's place in the spike list takes its last entry
+        let mut sp = if sorder.is_empty() { self.dense_order(spike) } else { sorder.to_vec() };
+        if let Some(i) = sp.iter().position(|&i| i == rp) {
+            sp.swap_remove(i);
+        }
+        // old column kp out of U; rows it leaves with an empty U row leave the LU+0xf0 list below (C:535–551)
+        let mut emptied = Vec::new();
         for &(i, _) in &std::mem::take(&mut self.ucol[kp]) {
             // 05b257 C:556–567: the row's last entry takes the removed one's place
             let ki = self.prow[i] as usize;
             let at_kp = self.urow[ki].iter().position(|e| e.0 == kp).expect("U row entry");
             self.urow[ki].swap_remove(at_kp);
+            if self.urow[ki].is_empty() {
+                emptied.push((ki, at[ki]));
+            }
         }
         let mut diag = spike[rp];
         if l != p0 && !self.urow[kp].is_empty() {
@@ -983,6 +1110,25 @@ impl Lu {
         } else {
             tm1
         };
+        // LU+0xf0 list (05b257 C:535–551, C:1040–1059, C:1085–1097)
+        for (k, at_k) in emptied {
+            if at_k as i64 <= local40 {
+                self.unlist(k, -1);
+            }
+        }
+        if p != p0 {
+            // the empty column at p takes the place of p0: its row enters the prefix
+            let k = self.order[p];
+            if self.urow[k].is_empty() {
+                self.f8[k] = -1;
+            } else {
+                self.f8[k] = self.f0.len() as i64;
+                self.f0.push(k);
+            }
+        }
+        if l != p || p + 1 != t || nz {
+            self.unlist(kp, -2);
+        }
         // permutation (L1101–1218)
         let swap = |order: &mut Vec<usize>, at: &mut Vec<usize>, a: usize, b: usize| {
             order.swap(a, b);
@@ -1019,6 +1165,14 @@ impl Lu {
         }
         self.prefix = (local40 + 1) as usize;
         self.upos = at;
+        // 05b257 C:1240–1262: spike rows that land in the prefix join the list in spike order
+        for &i in &sp {
+            let k = self.prow[i] as usize;
+            if self.upos[k] as i64 <= local40 && self.f8[k] < 0 {
+                self.f8[k] = self.f0.len() as i64;
+                self.f0.push(k);
+            }
+        }
         for &i in &others {
             self.ucol[kp].push((i, spike[i]));
             self.urow[self.prow[i] as usize].push((kp, spike[i]));
@@ -1277,7 +1431,7 @@ mod tests {
             let spike = x.clone();
             lu.ftran_upper(&mut x);
             let Some(pos) = (0..m).find(|&p| x[lu.steps[lu.kpos[p]].0].abs() > 0.5) else { continue };
-            assert!(lu.update(pos, j, &spike));
+            assert!(lu.update(pos, j, &spike, &[]));
             check(&spx, &lu);
             done += 1;
         }
