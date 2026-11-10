@@ -1,0 +1,74 @@
+{
+  "artifacts": {
+    "bench/oracle/mip_deferred_gate.json": "4133b455a209a727c7657e31c69033aba1fe5a9ec9f42fe3e79b4e16baa388b9",
+    "bench/oracle/mip_unbounded_reclassification.s": "4c7c4fb867b7578e94a8064aed924c3e04f1ef8fc13c765e3f1759ee82e975e7",
+    "docs/m2/m2_param_offsets.tsv": "658dcfcc8f279dc4bf4d9bafaac4f3c16b3d66b5b739923c8b6078d9cd051d89",
+    "tools/mip_deferred_gate_oracle.py": "3e4770ad4019f2c4e2ad1e87555ef2f10b1f58b3557e34d096a8d33f09c4a7da",
+    "tools/mip_unbounded_entry_oracle.py": "602cc85b721007eec21a380feefd76bf1dee203ff54e49dcdda92122b183439f"
+  },
+  "assembly_normalization": "binary path replaced by libgurobi130.so; line trailing whitespace and outer blank lines removed",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "objdump": "GNU objdump (GNU Binutils for Ubuntu) 2.42",
+  "ranges": [
+    [
+      "0x4f1a98",
+      "0x4f1b48"
+    ],
+    [
+      "0x4f53a8",
+      "0x4f56a2"
+    ],
+    [
+      "0x4f5a13",
+      "0x4f5a45"
+    ],
+    [
+      "0x4f5ea2",
+      "0x4f6064"
+    ],
+    [
+      "0x5167fe",
+      "0x5169d1"
+    ],
+    [
+      "0x517690",
+      "0x5177ec"
+    ],
+    [
+      "0x5180f0",
+      "0x51816a"
+    ],
+    [
+      "0x519b10",
+      "0x519b66"
+    ],
+    [
+      "0x5320c0",
+      "0x53247e"
+    ],
+    [
+      "0x5324cc",
+      "0x532f6c"
+    ]
+  ],
+  "schema": 1,
+  "sources": {
+    "decomp/c/004e7e20_PRIVATE00000000005c239f.c": "d7c84eb6f62f2c022314f367e5cbe53f7f92979fd41e95cfe725f58c35fe5629",
+    "decomp/c/004f0e10_PRIVATE00000000005ce67b.c": "0dd5c819af272c348685d37ee5500e0da7513c60b3019b79c6e41b87181357b6",
+    "decomp/c/005101d0_PRIVATE00000000005fb8ec.c": "3163e661c105432e3e2d8f53b2c80289e0e9b18c24435940d87bf202028483ca",
+    "decomp/c/00516540_PRIVATE00000000005fe9cd.c": "fb2d20f3da042cd10647ff2ab55bfbfb04a8f1f374de5298a2dbe5901c113063",
+    "decomp/c/00516bc0_PRIVATE00000000005f9d4e.c": "a237a690f3d24d589dae07c8fd5c5a931bc9a80d35d2c95650b662c577842979",
+    "decomp/c/00516f10_PRIVATE00000000005fa560.c": "0476a040cb266772689bb2f07559bfbd8da08739d04d99c1ef6241190b0e6bfe",
+    "decomp/c/00517690_PRIVATE00000000005ff14d.c": "795015fc45bad0a39c43fec33e3e09229ff1060441508edc82da10b103711802",
+    "decomp/c/005177f0_PRIVATE00000000005ff358.c": "1890eed9df95c6adbd023fcc3dd920926e12f0002fa3b8502afca346aa543dac",
+    "decomp/c/005180f0_PRIVATE00000000005ff754.c": "6ce04c10ca41e78154160898249ec837117df07ab2150252a79b79bc70c43798",
+    "decomp/c/00518170_PRIVATE0000000000600d25.c": "296341b34a07a98e92271f69aabdfe98168c0c39b2211b4163423207a97d58c8",
+    "decomp/c/00519b10_PRIVATE000000000060145b.c": "a93814479f3071e5386a148203c8efa53e9cadcee69f1f5c117a618d6d538427",
+    "decomp/c/005320c0_PRIVATE0000000000627f3e.c": "c4ff6047fae2494cdb56eec06a0a6a7cc89e0df41d56667fd427954fe8c648fe",
+    "decomp/c/0057b440_PRIVATE00000000006a0962.c": "bcb20e3f6adbd76f96389b0c29684fc5ed8ee0c6649f35574ca028d07dc9965c",
+    "decomp/c/005c2c10_PRIVATE00000000006fdec9.c": "4a2c04a414ef03ed3192cc8fc1b50f5aee1f1d1b3e93648c7b52da7dd156cc09",
+    "decomp/c/00625dd0_PRIVATE00000000007970f2.c": "5446435408760622a62fbe3f937d0a946bf24a5a01ead223d19418deae749281",
+    "notes/env_param_offsets.tsv": "953662d8dd28ba1b1faf7d61251d3591c7ec14477aa6e32aa0c899bdd23e6638"
+  },
+  "task": "M2-03b-1"
+}

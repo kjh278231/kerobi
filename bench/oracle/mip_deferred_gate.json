@@ -1,0 +1,563 @@
+{
+  "runs": [
+    {
+      "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+      "cases": [
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 0
+        },
+        {
+          "branchable": null,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 1
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 2
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 3
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 4
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 5
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 6
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 9
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 11
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 0
+        },
+        {
+          "branchable": null,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 1
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 2
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 3
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 4
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 5
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 6
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 9
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 11
+        }
+      ],
+      "dependency_sha256": "602cc85b721007eec21a380feefd76bf1dee203ff54e49dcdda92122b183439f",
+      "entries_elf": {
+        "branchable": "0x519b10",
+        "gate": "0x517690",
+        "setter": "0x5180f0"
+      },
+      "entry_bytes": {
+        "branchable": "415753564989ff49",
+        "gate": "4154415541564157",
+        "setter": "4154488b47188970"
+      },
+      "gurobi_version": [
+        13,
+        0,
+        3
+      ],
+      "kind": "synthetic-call-free-deferred-gates",
+      "schema": 1,
+      "tool_sha256": "3e4770ad4019f2c4e2ad1e87555ef2f10b1f58b3557e34d096a8d33f09c4a7da"
+    },
+    {
+      "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+      "cases": [
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 0
+        },
+        {
+          "branchable": null,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 1
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 2
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 3
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 4
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 5
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 6
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 9
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 11
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 0
+        },
+        {
+          "branchable": null,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 1
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 2
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 3
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 4
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 5
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 6
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 9
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 11
+        }
+      ],
+      "dependency_sha256": "602cc85b721007eec21a380feefd76bf1dee203ff54e49dcdda92122b183439f",
+      "entries_elf": {
+        "branchable": "0x519b10",
+        "gate": "0x517690",
+        "setter": "0x5180f0"
+      },
+      "entry_bytes": {
+        "branchable": "415753564989ff49",
+        "gate": "4154415541564157",
+        "setter": "4154488b47188970"
+      },
+      "gurobi_version": [
+        13,
+        0,
+        3
+      ],
+      "kind": "synthetic-call-free-deferred-gates",
+      "schema": 1,
+      "tool_sha256": "3e4770ad4019f2c4e2ad1e87555ef2f10b1f58b3557e34d096a8d33f09c4a7da"
+    },
+    {
+      "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+      "cases": [
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 0
+        },
+        {
+          "branchable": null,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 1
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 2
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 3
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 4
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 5
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 6
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 9
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": false,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 11
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 0
+        },
+        {
+          "branchable": null,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 1
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 2
+        },
+        {
+          "branchable": true,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 3
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 4
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 5
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 6
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 9
+        },
+        {
+          "branchable": false,
+          "gate_preserved": true,
+          "gate_rc": 0,
+          "is_root": true,
+          "setter_preserved": true,
+          "setter_status": 3,
+          "status": 11
+        }
+      ],
+      "dependency_sha256": "602cc85b721007eec21a380feefd76bf1dee203ff54e49dcdda92122b183439f",
+      "entries_elf": {
+        "branchable": "0x519b10",
+        "gate": "0x517690",
+        "setter": "0x5180f0"
+      },
+      "entry_bytes": {
+        "branchable": "415753564989ff49",
+        "gate": "4154415541564157",
+        "setter": "4154488b47188970"
+      },
+      "gurobi_version": [
+        13,
+        0,
+        3
+      ],
+      "kind": "synthetic-call-free-deferred-gates",
+      "schema": 1,
+      "tool_sha256": "3e4770ad4019f2c4e2ad1e87555ef2f10b1f58b3557e34d096a8d33f09c4a7da"
+    }
+  ],
+  "schema": 1
+}
