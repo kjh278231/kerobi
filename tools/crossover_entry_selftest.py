@@ -10,10 +10,11 @@ state = {"model": 1, "n": 1, "m": 1, "status": 2,
          "env": {"field_2478": [bits], "field_24a0": [bits], "field_26fc": 0},
          "scale": {"c": None, "r": None, "o": [bits], "flip": None, "flip_enabled": 0, "sense": ["3e"]},
          "result": {k: [bits] for k in ("x", "slack", "reduced", "y")}}
+state["aliases"] = {k: i + 1 for i, k in enumerate(("result_x", "result_slack", "result_y", "result_reduced", "copy_primal", "copy_dual", "start_values", "scale_c", "scale_r", "flip", "sense", "vstat"))}
 state["copy"] = {"primal": [bits, "0000000000000080"], "dual": [bits, bits]}
 leave = deepcopy(state)
 leave["workspace"] = {"rows": 1, "cols": 1, "vstat": ["00000000", "00000000"]}
-prepared = {"event": "prepared", "model": 1, **{k: [bits] for k in ("x", "slack", "reduced", "y")}}
+prepared = {"event": "prepared", "model": 1, "scale": deepcopy(state["scale"]), **{k: [bits] for k in ("x", "slack", "reduced")}, "y": ["0000000000000080"]}
 d = {"origin": "natural", "kind": "barrier",
      "model_sha256": sha256(Path("bench/oracle/m3_crossover_entry/small.lp").read_bytes()).hexdigest(),
      "binary_sha256": EXPECTED, "tool_sha256": sha256(Path("tools/crossover_entry_capture.js").read_bytes()).hexdigest(),

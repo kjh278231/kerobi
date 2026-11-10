@@ -10,9 +10,9 @@
 - 각 경로는 독립 원본 프로세스 3회로 비교한다. 목표 사건 0회, 필수 상태 누락, 합성만 존재하거나 해시가 유효하지 않으면 목표 검사는 실패해야 한다. 비교기는 최초 차이의 사례·필드·기준·실제를 보여주고 실패한다. 오류 주입으로 검사 신뢰성을 확인한다.
 - 메모리 실패·중단·고급 presolve 매핑 전체는 M3-04a-2에 남긴다. Rust 구현 동등성은 주장하지 않는다. 원본 필드를 해석할 수 없거나 자연 진입이 없으면 실패 입력과 근거를 보존하고 미완료로 남긴다.
 
-## 현재 상태
+## 최종 판정
 
-착수. 원본 캡처, 재현성, 비교기와 오류 주입은 아직 미실행이다.
+실제 소형 LP 하나에서 PDHG·barrier mode 0과 warm-start mode 1을 각각 독립 3회 캡처했다. 경로마다 목표 사건은 실행당 1건이며 비교 CLI가 모두 종료 0이다. Crossover=0 대조군은 목표 사건 0건이고 별도 비교가 종료 0이다. 아래 초안·대기 상태는 작업 이력이다. 최종 기준은 `*-{1,2,3}-final.json`이다. 다른 입력·중단·실패·고급 presolve 매핑과 Rust 동등성은 미검증이다.
 
 ## 훅 초안과 잠금 대기
 
@@ -20,11 +20,11 @@
 
 ## 검사기 초안
 
-`python3 tools/crossover_entry_selftest.py`는 합성 형식 fixture에 해시·사건·배열·순서 변조 10건을 주입해 거부를 확인한다. 이 fixture는 실제 실행이 아니다. `tools/crossover_entry_check.py`는 아직 복사·변환 식과 경로별 중첩을 충분히 확인하지 못하므로 명령은 의도적으로 항상 실패한다. 목표 합격으로 사용할 수 없다. 입력 파일 해시를 실제 `small.lp`에 연결하고 환경·스케일·준비 배열의 길이와 원시 비트 형식을 검사한다.
+`python3 tools/crossover_entry_selftest.py`는 합성 형식 fixture에 해시·사건·배열·순서 변조 10건을 주입해 거부를 확인한다. 이 fixture는 실제 실행이 아니다. `tools/crossover_entry_check.py`는 아직 복사·변환 식과 경로별 중첩을 충분히 확인하지 못하므로 당시 명령은 의도적으로 항상 실패하도록 두었다. 이후 최종 기준 실행과 오류 주입을 확인하고 잠금을 해제했다. 입력 파일 해시를 실제 `small.lp`에 연결하고 환경·스케일·준비 배열의 길이와 원시 비트 형식을 검사한다.
 
 준비 훅 `0x1bd281`의 배열 위치는 ELF `0x1bcb31`, `0x1bcb55`, `0x1bcb7d–0x1bcb8d` 및 mode 1의 `0x1bcd77–0x1bcdc3`에서 확인했다. 두 경로의 `rbx`와 `r12`가 열 x와 reduced cost이고 `rsp+0x238`, `rsp+0x240`이 행 slack과 y다. 합류 지점의 `rbp`는 모델이다. 실제 훅 실행과 필드 내용은 아직 확인하지 않았다.
 
-현재 재실행 명령은 다음과 같다. 캡처는 잠금을 기다리는 동안 실패 파일에 진단을 남기며 성공 파일을 덮어쓰지 않는다. 검사기 명령은 미완성 표시를 출력하고 종료 1이다.
+현재 재실행 명령은 다음과 같다. 캡처는 잠금을 기다리는 동안 실패 파일에 진단을 남기며 성공 파일을 덮어쓰지 않는다. 당시 검사기 명령은 미완성 표시를 출력하고 종료 1이었다.
 
 ```bash
 tools/gurun.sh node tools/crossover_entry_capture.js barrier bench/oracle/m3_crossover_entry/small.lp bench/oracle/m3_crossover_entry/barrier-probe.json
@@ -32,7 +32,7 @@ python3 tools/crossover_entry_selftest.py
 python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/barrier-1.json bench/oracle/m3_crossover_entry/barrier-2.json bench/oracle/m3_crossover_entry/barrier-3.json
 ```
 
-도구는 프로세스 시작 전에 입력·도구·바이너리 해시를 고정하고 종료 시 다시 대조한다. warm 시작값은 PStart `[2,1,1]`, DStart `[1,0,0]`으로 메타데이터에도 기록한다. 결과 구조의 `output`은 진단 로그로 보관하되 상태 비교에서 제외한다. 결과 status·훅 오류·반환값·환경과 배열은 제외하지 않는다. 시간 측정값을 캡처하지 않았고 시간이나 work의 동등성은 주장하지 않는다. 실제 자료로 변환 식을 아직 검증하지 않았으며 CLI를 합격용으로 활성화하지 않았다.
+도구는 프로세스 시작 전에 입력·도구·바이너리 해시를 고정하고 종료 시 다시 대조한다. warm 시작값은 PStart `[2,1,1]`, DStart `[1,0,0]`으로 메타데이터에도 기록한다. 결과 구조의 `output`은 진단 로그로 보관하되 상태 비교에서 제외한다. 결과 status·훅 오류·반환값·환경과 배열은 제외하지 않는다. 시간 측정값을 캡처하지 않았고 시간이나 work의 동등성은 주장하지 않는다. 이후 실제 자료로 변환 식을 검사하고 CLI를 활성화했다.
 
 초기 잠금 충돌은 `lock-collision-initial.json`에 보존했다. 이는 `gurobi_guard`가 import를 거부한 기록이며 실제 목표 사건 0건이다. 이 파일은 원본 성공 사례가 아니다. 고정 파라미터·시작 벡터·캡처 도구 해시도 검사하며 명시적인 null과 필드 누락을 구별한다.
 
@@ -61,3 +61,27 @@ python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/warm-{1,2
 첫 warm 사례의 `Method=1`은 원본 `0014acb0_PRIVATE00000000000c3d0d.c` 990–1009줄의 `env+0x2700 > 0`과 `uVar24 == 1` 분기에서 dual start만 남기고 `start+0x14`를 4로 바꾼다. 이어 1018–1024줄의 `11603b` 검사는 상태 2를 요구하므로 mode 1에 이르지 못한다. 실제 출력도 `Dual warm-start: use dual start, discard primal start`였다. 실패 세 기록은 `warm-method1-{1,2,3}.json`으로 보존한다.
 
 따라서 warm의 고정 Method를 2로 변경했다. 두 시작 벡터와 LPWarmStart=2는 그대로다. 새 도구 해시로 모든 경로를 독립 세 번 다시 실행해 `*-{1,2,3}-new.json`에 저장했다. warm은 `0c3d0d → 13f716(mode 1) → prepared` 각 1건, barrier와 PDHG는 각 mode 0 목표 1건, 대조군은 목표 0건이었다. 각 경로의 세 기록은 진단 `output`을 제외한 모든 필드에서 정확히 일치했다. 형식 검사 함수는 각 목표 1건을 반환했으며 대조군 검사 함수는 0건을 반환했다. 세 번 일치는 이 환경·입력 범위의 근거다. CLI 합격 잠금 해제와 변조 검증은 별도로 진행한다.
+
+## 최종 기준과 재실행
+
+최종 캡처 도구 SHA-256은 `c461a9c6edf02db7f86cd2813c689a7dd5465a196f74f547a12a781aeb99746a`, 입력은 `c14a6db31c1ec2ed206ddf2a585f9467ced4e1dbdff11202685f61dd5c478a8d`, 바이너리는 `8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c`다. 각 경로는 Threads=1, Seed=0, Presolve=0, LPWarmStart=2이고 PDHG는 Method=6, 나머지는 Method=2다. 목표는 Crossover=1, 대조군은 0이다. warm PStart는 `[2,1,1]`, DStart는 `[1,0,0]`이다. 실제 입력이며 합성 fixture가 아니다.
+
+모델·결과·시작·배열 포인터는 주소가 아닌 실행 내 안정 ID와 null로 기록해 별칭을 나타낸다. R/S와 준비된 x/slack/reduced/y, 그 시점의 스케일·sense·flip, 환경 복원 필드, 반환 상태, 내부 vstat와 공개 basis를 저장한다. mode 0의 R→S 원본 식과 R→준비 벡터 복사·y 부호 비트 반전, 상태·사건 순서를 검사한다. warm의 진입시 스케일과 준비 시점 스케일은 별도로 저장한다. 부동소수는 원시 8바이트를 정확 비교한다. `output`은 진단 로그라 비교에서 제외하며 구조화 status·basis·훅 오류는 비교한다. 시간과 work의 동등성은 주장하지 않는다. 같은 주소가 해제 뒤 재사용된 경우의 수명 구분은 별도로 추적하지 않았다.
+
+```bash
+for kind in warm barrier pdhg control; do
+  for i in 1 2 3; do
+    tools/gurun.sh node tools/crossover_entry_capture.js "$kind" bench/oracle/m3_crossover_entry/small.lp "bench/oracle/m3_crossover_entry/$kind-$i-final.json"
+  done
+done
+for kind in warm barrier pdhg; do
+  python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/$kind-{1,2,3}-final.json
+done
+python3 tools/crossover_entry_check.py --control bench/oracle/m3_crossover_entry/control-{1,2,3}-final.json
+python3 tools/crossover_entry_selftest.py
+python3 tools/crossover_entry_mutation.py
+```
+
+각 목표 비교는 3개 파일에 대해 사건 1건씩 출력하고 종료 0, 대조 비교는 사건 0건씩 출력하고 종료 0이다. self-test는 합성 오류 주입 15건과 비균일 스케일·부호·±0을 확인하고 종료 0이다. 실제 barrier 기준 복사본의 바이너리·입력 해시 0, 사건 배열 비움, 목표 0건, x 누락, 준비 배열 비트 변조, 합성 출처 7건은 각각 CLI 종료 1로 거부됐다. 수치 변조는 사건·인덱스·기준 및 실제 비트를 출력했다. 이전 `-new`와 최초 자료는 도구 해시가 다르므로 현재 기준이 아닌 이력이다.
+
+메모리 실패·중단·고급 presolve 매핑은 M3-04a-2로 남긴다. 시간/work와 다른 모델의 재현성, Rust와의 동등성은 미검증이다. shared 점유가 다른 세션에 있으므로 `docs/11_progress.md`와 `docs/12_roadmap_diagram.md`는 수정하지 않았다. 이 branch는 선행 `work/m3-04a`에 의존하며 미병합이다.

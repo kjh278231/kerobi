@@ -20,14 +20,15 @@ Process.attachModuleObserver({onAdded(mod) { if (mod.name !== 'libgurobi130.so')
   const n=d.add(12).readS32(), m=d.add(8).readS32(); if(n<0||m<0||n+m>100000) throw Error('차원 오류');
   const r=p.add(0x1b0).readPointer(), s=p.add(0x1a8).readPointer(), start=p.add(0x238).readPointer();
   function vec(q,offset,k){return q.isNull()?null:arr(q.add(offset).readPointer(),k,8)}
-  return {model:id(p), n,m,status:p.add(100).readS32(), env:{field_2478:arr(env.add(0x2478),1,8),field_24a0:arr(env.add(0x24a0),1,8),field_26fc:env.add(0x26fc).readS32()},
+  const aliases={result_x:r.isNull()?null:id(r.add(8).readPointer()),result_slack:r.isNull()?null:id(r.add(16).readPointer()),result_y:r.isNull()?null:id(r.add(24).readPointer()),result_reduced:r.isNull()?null:id(r.add(32).readPointer()),copy_primal:s.isNull()?null:id(s.add(0x60).readPointer()),copy_dual:s.isNull()?null:id(s.add(0x68).readPointer()),start_values:start.isNull()?null:id(start.add(0x20).readPointer()),scale_c:id(d.add(0x3e0).readPointer()),scale_r:id(d.add(0x3d8).readPointer()),flip:id(d.add(0x408).readPointer()),sense:id(d.add(0x388).readPointer()),vstat:w.isNull()?null:id(w.add(0x168).readPointer())};
+  return {model:id(p), n,m,aliases,status:p.add(100).readS32(), env:{field_2478:arr(env.add(0x2478),1,8),field_24a0:arr(env.add(0x24a0),1,8),field_26fc:env.add(0x26fc).readS32()},
    result:r.isNull()?null:{id:id(r),x:vec(r,8,n),slack:vec(r,16,m),y:vec(r,24,m),reduced:vec(r,32,n)},
    copy:s.isNull()?null:{id:id(s),primal:vec(s,0x60,n+m),dual:vec(s,0x68,n+m)},
    start:start.isNull()?null:{id:id(start),count:start.add(4).readS32(),status:start.add(0x14).readS32(),values:vec(start,0x20,n+m)},
    scale:{c:vec(d,0x3e0,n),r:vec(d,0x3d8,m),o:arr(d.add(1000),1,8),flip:arr(d.add(0x408).readPointer(),n,1),sense:arr(d.add(0x388).readPointer(),m,1),flip_enabled:d.add(0x3c).readS32()},
    workspace:w.isNull()?null:(()=>{const rows=w.add(0x64).readS32(),cols=w.add(0x68).readS32(); if(rows<0||cols<0||rows+cols>100000) throw Error('작업 차원 오류'); return {id:id(w),rows,cols,vstat:arr(w.add(0x168).readPointer(),rows+cols,4)};})()};
  }
- Interceptor.attach(b.add(0x1bd281), {onEnter(){const c=this.context, p=c.rbp, d=p.add(0xe8).readPointer(), n=d.add(12).readS32(), m=d.add(8).readS32(); if(n<0||m<0||n+m>100000) throw Error('준비 배열 차원 오류'); send({event:'prepared',model:id(p),x:arr(c.rbx,n,8),slack:arr(c.rsp.add(0x238).readPointer(),m,8),reduced:arr(c.r12,n,8),y:arr(c.rsp.add(0x240).readPointer(),m,8)});}});
+ Interceptor.attach(b.add(0x1bd281), {onEnter(){const c=this.context, p=c.rbp, d=p.add(0xe8).readPointer(), n=d.add(12).readS32(), m=d.add(8).readS32(); if(n<0||m<0||n+m>100000) throw Error('준비 배열 차원 오류'); send({event:'prepared',model:id(p),scale:snap(p).scale,x:arr(c.rbx,n,8),slack:arr(c.rsp.add(0x238).readPointer(),m,8),reduced:arr(c.r12,n,8),y:arr(c.rsp.add(0x240).readPointer(),m,8)});}});
  for (const [name,off] of [['pdhg',0x3639a0],['helper',0x2dc620],['barrier',0x2dd9b0],['warm',0x14acb0],['dispatch',0x1bc570],['body',0x1bc5d0]]) Interceptor.attach(b.add(off),{
   onEnter(a){this.p=a[0]; this.call=++seq; send({event:name+':enter',call:this.call,mode:name==='body'?a[1].toInt32():null,state:snap(this.p)});},
   onLeave(r){send({event:name+':leave',call:this.call,ret:r.toInt32(),state:snap(this.p)});}

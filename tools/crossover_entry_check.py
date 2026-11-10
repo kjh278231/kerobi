@@ -95,6 +95,8 @@ def check(data):
         s = event.get("state") or {}
         n, m = s.get("n"), s.get("m")
         require(isinstance(n, int) and n > 0 and isinstance(m, int) and m > 0, "차원")
+        aliases = s.get("aliases") or {}
+        require(set(aliases) == {"result_x", "result_slack", "result_y", "result_reduced", "copy_primal", "copy_dual", "start_values", "scale_c", "scale_r", "flip", "sense", "vstat"} and all(v is None or type(v) is int and v > 0 for v in aliases.values()), "포인터 별칭 식별자")
         env, scale = s.get("env") or {}, s.get("scale") or {}
         require(set(scale) == {"c", "r", "o", "flip", "flip_enabled", "sense"}, "scale 필드 누락")
         def raw(value, count, width, name, nullable=False):
@@ -111,12 +113,15 @@ def check(data):
         raw(scale.get("sense"), m, 1, "scale.sense")
         require(type(scale.get("flip_enabled")) is int, "scale.flip_enabled")
         if mode == 0:
+            require(all(aliases[k] is not None for k in ("result_x", "result_slack", "result_y", "result_reduced", "copy_primal", "copy_dual", "sense")), "필수 포인터 식별자")
             r = s.get("result") or {}
             for k, length in (("x", n), ("slack", m), ("reduced", n), ("y", m)):
                 raw(r.get(k), length, 8, "result." + k)
         else:
+            require(aliases["start_values"] is not None and aliases["sense"] is not None, "start 포인터 식별자")
             start = s.get("start") or {}
-            require(start.get("status") == 2 and isinstance(start.get("values"), list) and len(start["values"]) == n + m, "start.values")
+            require(start.get("status") == 2 and start.get("count") == n + m, "start 상태·차원")
+            raw(start.get("values"), n + m, 8, "start.values")
         start_index = events.index(event)
         if mode == 0:
             dispatch = next((e for e in reversed(events[:start_index]) if e.get("event") == "dispatch:enter" and e.get("state", {}).get("model") == s.get("model")), None)
@@ -131,6 +136,23 @@ def check(data):
         require(prepared is not None and prepared.get("model") == s.get("model"), "준비 사건")
         for key, size in (("x", n), ("slack", m), ("reduced", n), ("y", m)):
             raw(prepared.get(key), size, 8, "prepared." + key)
+        ps = prepared.get("scale") or {}
+        require(set(ps) == {"c", "r", "o", "flip", "flip_enabled", "sense"}, "준비 스케일 필드")
+        raw(ps["c"], n, 8, "prepared.scale.c", True)
+        raw(ps["r"], m, 8, "prepared.scale.r", ps["c"] is None)
+        raw(ps["o"], 1, 8, "prepared.scale.o")
+        raw(ps["flip"], n, 1, "prepared.scale.flip", ps["flip_enabled"] != 1)
+        raw(ps["sense"], m, 1, "prepared.scale.sense")
+        require(type(ps["flip_enabled"]) is int, "prepared.scale.flip_enabled")
+        if mode == 0:
+            def negate(bits):
+                v = bytearray.fromhex(bits)
+                v[7] ^= 128
+                return v.hex()
+            for key in ("x", "slack", "reduced", "y"):
+                expected = [negate(v) for v in r[key]] if key == "y" else r[key]
+                diff = difference(expected, prepared[key], field="prepared." + key, case=kind)
+                require(not diff, diff)
         leave = next((e for e in events if e.get("event") == "body:leave" and e.get("call") == event.get("call")), None)
         require(leave is not None and leave.get("ret") == 0 and events.index(prepared) < events.index(leave), "body 반환·준비 순서")
         require(type(leave.get("state", {}).get("status")) is int, "반환 모델 상태")
@@ -172,7 +194,10 @@ def difference(a, b, field="$", case=""):
         if len(a) != len(b):
             return f"{case} {field}.length: 기준={len(a)}, 실제={len(b)}"
         for i, (x, y) in enumerate(zip(a, b)):
-            result = difference(x, y, f"{field}[{i}]", case)
+            label = f"{field}[{i}]"
+            if isinstance(x, dict) and isinstance(x.get("event"), str):
+                label += "(" + x["event"] + ")"
+            result = difference(x, y, label, case)
             if result:
                 return result
     elif a != b:
@@ -195,8 +220,6 @@ def main():
             current = {k: v for k, v in data.items() if k != "output"}
             diff = difference(baseline, current, case=p)
             require(not diff, diff)
-        if not args.control:
-            raise ValueError("검사기 미완성: 실제 원본으로 필드와 경로별 검증 필요")
     except (ValueError, OSError, TypeError, KeyError) as exc:
         print("실패:", exc, file=sys.stderr)
         return 1
