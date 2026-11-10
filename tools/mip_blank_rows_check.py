@@ -15,6 +15,9 @@ MANIFEST = 'bench/oracle/mip_blank_rows_manifest.json'
 TOOLS = ['tools/mip_blank_rows.js', 'tools/mip_blank_rows_runs.sh']
 REF_LP = 'bench/oracle/mip_retry_node_lp/nidda_bnb_H_s1.node_lp.json'   # M2-03d-6: simplex_blanked_rows, API rhs
 REF_CAP = 'bench/oracle/mip_retry_node_lp/nidda_bnb_H_s1_1.json'        # M2-03d-6: y:dhash, y:ws hashes
+# exploratory probe (single run, tool of commit e44ed5e): 08b2fe source and ws<->D aliases at every 02f7e1 return it recorded
+PROBE = DATA + '/history/probe_e44ed5e.json'
+PROBE_TOOL = '95848f0a115aa2ad'   # sha256 prefix of e44ed5e:tools/mip_blank_rows.js
 BINARY = '8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c'
 PARAMS = {'Threads': 1, 'Seed': 1, 'LogToConsole': 0, 'NodeLimit': 32898, 'Presolve': 0, 'ScaleFlag': 0, 'Quad': 0, 'NumericFocus': 0,
           'MarkowitzTol': 0.0001, 'Heuristics': 0, 'RINS': 0}
@@ -157,6 +160,7 @@ def replay(es, lp):
     renumber rows, so after one the list is unknown until an empty X list is seen; the target must be reached with a known list
     and no row deletion since the last empty list."""
     lst, flags, rows, steps, prov, ops, skipped = [], {}, None, 0, {}, {'deact': 0, 'react': 0, 'react_all': 0}, 0
+    cover = {'kept': 0, 'removal': 0}   # steps from a non-empty list to a non-empty list, and those that removed a row
     origin = {}
     for e in es:
         if e.get('lp') != lp:
@@ -187,16 +191,37 @@ def replay(es, lp):
             want = edd71(lst, flags)
             need(want == e['rows'] and e['count'] == len(e['rows']), f'P: X list at call {e["call"]} differs from the replay: '
                  f'got {e["rows"][:8]}.. ({e["count"]}) want {want[:8]}.. ({len(want)})')
+            if lst and e['rows']:
+                cover['kept'] += 1
+                cover['removal'] += not set(lst) <= set(e['rows'])
             lst, flags, steps = e['rows'], {}, steps + 1
             prov = {r: origin[r] for r in lst}
         elif e['event'] == 'b:t:cda5b' and e['k'] == 1:
             need(lst is not None and e['x_rows'] == lst, 'P: target X list unknown or differs from the last replayed list')
             need(not flags, f'P: {len(flags)} flag ops pending at the target')
-            return {'steps': steps, 'ops': ops, 'prov': prov, 'skipped': skipped}
+            return {'steps': steps, 'ops': ops, 'prov': prov, 'skipped': skipped, 'cover': cover}
     raise Fail('P: target not reached')
 
 
-def check(runs, ref, quiet=False):
+def check_probe(pr, ref):
+    """Q1 (single exploratory run): 08b2fe returned lp+0xe8, lp+0xf8/0xf0 null and ws CSC/b == D fields at every recorded
+    02f7e1 return; at the target the ws hash is the M2-03d-6 one and D == ws nnz 1840"""
+    need(pr['ok'] and pr['binary_sha256'] == BINARY and pr['tool_sha256'].startswith(PROBE_TOOL) and pr['params'] == PARAMS
+         and pr['target'] == TARGET and pr['model_sha256'] == ref['model_sha256'], 'Q: probe inputs')
+    es = pr['events']
+    need(len(es) > 0, 'Q: probe has no events')
+    for e in es:
+        need(e['src'] == 'lp+0xe8' and e['lpf8_null'] and e['lpf0_null'] and e.get('alias') == '11111', f'Q: call {e["call"]} k {e["k"]}: '
+             f'src {e["src"]} alias {e.get("alias")}')
+    t = [e for e in es if e['call'] == TARGET]
+    need([e['k'] for e in t] == [1, 2], f'Q: probe target calls {[e["k"] for e in t]}')
+    for e in t:
+        need(e['ws_hash']['hash'] == ref['ws_hash'][e['k']] and e['D_nnz'] == e['ws_nnz'] == ref['ws_nnz'] and not e['ws_new'], f'Q: probe target k {e["k"]}')
+    return len(es)
+
+
+def check(runs, ref, quiet=False, probe=None):
+    nq = check_probe(probe, ref) if probe is not None else None
     check_inputs(runs, ref)
     check_repro(runs)
     es = runs[RUNS[0]]['events']
@@ -205,18 +230,20 @@ def check(runs, ref, quiet=False):
     if not quiet:
         new = [e for e in es if e['event'] == 'b:lpnew' and e['lp'] == lp][0]
         t = target_events(es)
+        print(f'Q: probe {nq} 02f7e1 returns: 08b2fe = lp+0xe8, ws CSC/b alias D (5/5); target ws hash = M2-03d-6')
         print(f'M/B: {len(RUNS)} runs, {len(es)} events each, identical')
         print(f'L: call {TARGET} node {NODE:.0f}, D hash {ref["dhash"][1]} (pre-swap) and ws hash {ref["ws_hash"][1]} = M2-03d-6; lp id {lp} '
               f'(first seen call {new["call"]}, D rows {new["D_rows"]})')
         print(f'X: X list = R ({len(ref["R"])} rows), positions consistent, DynamicRows env+0x2b48 = {t[("b:t:cda5b", 1)]["dynamic_rows"]}, '
               f'X built at k=1 entry {t[("b:t:cda5b", 1)]["x_built"]}')
         print(f'S: 10f448 swaps D len/rhs with X ({ref["api_nnz"]} -> {ref["ws_nnz"]} nnz, rhs of {len(t[("b:t:swap_in", 1)]["rhs_diff"])} R rows -> +0), 10f5ae swaps back')
-        print(f'P: {p["steps"]} X-list steps replayed (order exact), {p["skipped"]} skipped after row deletions; ops up to the target {p["ops"]}')
+        print(f'P: {p["steps"]} X-list steps replayed (order exact), {p["skipped"]} skipped after row deletions; ops up to the target {p["ops"]}; '
+              f'non-empty -> non-empty {p["cover"]["kept"]}, with a removal {p["cover"]["removal"]} (swap-with-last removal not exercised if 0)')
         by = {}
         for r, o in p['prov'].items():
             by.setdefault(o, []).append(r)
         for (call, node, depth), rs in sorted(by.items()):
-            print(f'   deact at call {call} node {node:.0f} depth {depth}: {len(rs)} rows of R')
+            print(f'   deact after 5ce67b call {call} (node {node:.0f}, depth {depth}): {len(rs)} rows of R')
     return p
 
 
@@ -241,6 +268,10 @@ def before(es, pred):
 
 @tamper
 def t_binary(runs, ref): runs[1]['binary_sha256'] = '0' * 64
+@tamper
+def t_probe_alias(runs, ref): ref['probe']['events'][3]['alias'] = '10111'
+@tamper
+def t_probe_src(runs, ref): ref['probe']['events'][-1]['src'] = 'lp+0xf8'
 @tamper
 def t_tool(runs, ref): runs[2]['tool_sha256'] = '0' * 64
 @tamper
@@ -307,8 +338,9 @@ def main():
     args = sys.argv[1:]
     runs = {r: load(f'{DATA}/nidda_bnb_H_s1_{r}.json') for r in RUNS}
     ref = refs()
+    ref['probe'] = load(PROBE)
     if '--write-manifest' in args:
-        files = [f'{DATA}/nidda_bnb_H_s1_{r}.json' for r in RUNS] + TOOLS + ['tools/mip_blank_rows_check.py', REF_LP, REF_CAP]
+        files = [f'{DATA}/nidda_bnb_H_s1_{r}.json' for r in RUNS] + [PROBE] + TOOLS + ['tools/mip_blank_rows_check.py', REF_LP, REF_CAP]
         with open(os.path.join(ROOT, MANIFEST), 'w') as f:
             json.dump({'binary_sha256': BINARY, 'files': {p: sha(p) for p in files}}, f, indent=1)
             f.write('\n')
@@ -317,7 +349,7 @@ def main():
     rc = 0
     try:
         need(not bad, f'manifest: changed {bad}')
-        check(runs, ref)
+        check(runs, ref, probe=ref['probe'])
         print('PASS')
     except Fail as e:
         print('FAIL', e)
@@ -327,7 +359,7 @@ def main():
             r2, f2 = copy.deepcopy(runs), copy.deepcopy(ref)
             fn(r2, f2)
             try:
-                check(r2, f2, quiet=True)
+                check(r2, f2, quiet=True, probe=f2['probe'])
                 print(f'NOT REJECTED {fn.__name__}')
                 rc = 1
             except Fail as e:
