@@ -108,7 +108,7 @@ MUTANTS = {
     'tail-second-bound': [('if ratio <= bound && best', 'if ratio < bound && best')],
     'tail-cap-return': [('cap < inf && cap <= bound', 'cap < inf && cap < bound')],
     'tail-no-candidate': [('if bound == inf || cands.is_empty()', 'if cands.is_empty()')],
-    'tail-pivot-threshold': [('if *pivot >= 0.1 {', 'if *pivot >= 1e-12 {')],
+    'tail-pivot-threshold': [('if pivot >= 0.1 {', 'if pivot >= 1e-12 {')],
     'tail-small-scale': [('b if b < 10.0 => 0.1,', 'b if b < 10.0 => 1e-12,')],
 }
 

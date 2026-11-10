@@ -1,0 +1,70 @@
+{
+  "pid": 1934547,
+  "run_id": "75d9a2f3-d4a4-4d1a-ad4f-e57c1c797115",
+  "schema": "M3-04c-7-v1",
+  "origin": "natural",
+  "kind": "control",
+  "agent_sha256": "03bd70943e04b09faddda4b8d97d3c0102c109e54a2e16b2ffa2874fd13067f8",
+  "model_sha256": "2be78262e14b9c8482ce0c96fe0ab10d68246bc11eae184dc2bdb9c2f8516986",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "6340a494db21c818b414fc3283db188a5175040239736b4bc78336fe1739a9e1",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 0,
+    "LPWarmStart": 2,
+    "ScaleFlag": 0
+  },
+  "starts": {
+    "PStart": [
+      1,
+      1,
+      5,
+      0,
+      0,
+      5,
+      0.0001,
+      5,
+      0,
+      5,
+      0.0001,
+      5,
+      0,
+      5,
+      0,
+      5,
+      0,
+      5
+    ],
+    "DStart": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.23.4"
+  },
+  "output": "CROSSOVER_RESULT {\"status\": 2, \"vbasis\": null, \"cbasis\": null}\n",
+  "result": {
+    "status": 2,
+    "vbasis": null,
+    "cbasis": null
+  },
+  "reason": "process-terminated",
+  "errors": [],
+  "events": []
+}
