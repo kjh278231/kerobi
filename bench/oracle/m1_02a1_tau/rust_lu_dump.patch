@@ -1,0 +1,41 @@
+diff --git a/crates/lp/src/lu.rs b/crates/lp/src/lu.rs
+index 4c7d273..322732a 100644
+--- a/crates/lp/src/lu.rs
++++ b/crates/lp/src/lu.rs
+@@ -805,6 +805,18 @@ impl Lu {
+         (out, true)
+     }
+ 
++    // TEMP M1-02a-1 tau dump (not committed)
++    pub fn tmp_dump(&self) -> String {
++        let h = |x: f64| format!("\"{:016x}\"", x.to_bits());
++        let vv = |v: &Vec<(usize, f64)>| format!("[{}]", v.iter().map(|&(i, x)| format!("[{},{}]", i, h(x))).collect::<Vec<_>>().join(","));
++        format!("{{\"steps\":[{}],\"lcol\":[{}],\"retas\":[{}],\"order\":{:?},\"ucol\":[{}]}}",
++            self.steps.iter().map(|&(r, p, d)| format!("[{},{},{}]", r, p, h(d))).collect::<Vec<_>>().join(","),
++            self.lcol.iter().map(vv).collect::<Vec<_>>().join(","),
++            self.retas.iter().map(|(r, e)| format!("[{},{}]", r, vv(e))).collect::<Vec<_>>().join(","),
++            self.order,
++            self.ucol.iter().map(vv).collect::<Vec<_>>().join(","))
++    }
++
+     /// FTRAN through L and the row etas (x by row); the result is the FT spike of the column.
+     pub fn ftran_lower(&self, x: &mut [f64]) {
+         for (k, &(r, _, _)) in self.steps.iter().enumerate() {
+diff --git a/crates/lp/src/simplex.rs b/crates/lp/src/simplex.rs
+index 4b9ffd1..4a43c4c 100644
+--- a/crates/lp/src/simplex.rs
++++ b/crates/lp/src/simplex.rs
+@@ -1118,6 +1118,13 @@ impl<'a> Engine<'a> {
+             let a_out = if out < self.n { 1.0 } else { rho[out - self.n] };
+             self.d[out] -= a_out * theta_d;
+ 
++            if let Ok(path) = std::env::var("RSOLVER_TAUDUMP") {
++                use std::io::Write;
++                let rh: Vec<String> = rho.iter().map(|x| format!("\"{:016x}\"", x.to_bits())).collect();
++                if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
++                    let _ = writeln!(f, "{{\"iter\":{},\"r\":{},\"rho\":[{}],\"lu\":{}}}", self.iter, r, rh.join(","), self.lu.tmp_dump());
++                }
++            }
+             // DSE weights with τ = B⁻¹ρ
+             let mut tau = rho.clone();
+             self.lu.ftran_lower(&mut tau);
