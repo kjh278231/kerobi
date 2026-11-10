@@ -37,3 +37,5 @@ python3 tools/crossover_entry_check.py bench/oracle/m3_crossover_entry/barrier-p
 초기 잠금 충돌은 `lock-collision-initial.json`에 보존했다. 이는 `gurobi_guard`가 import를 거부한 기록이며 실제 목표 사건 0건이다. 이 파일은 원본 성공 사례가 아니다. 고정 파라미터·시작 벡터·캡처 도구 해시도 검사하며 명시적인 null과 필드 누락을 구별한다.
 
 `python3 tools/crossover_entry_check.py --control <대조군1> <대조군2> <대조군3>`은 `Crossover=0`의 정상 barrier 사건과 목표 진입 부재를 별도로 검사한다. 이 명령도 실제 대조군을 아직 실행하지 않았으므로 기능과 재현성은 미검증이다. 변환 결과가 다르면 첫 배열 인덱스와 기준·실제 비트를 출력하도록 했다. 현재 합성 오류 주입은 15건이다.
+
+캡처 완료 마커는 public `VBasis`·`CBasis`도 기록한다. API가 제공하지 않으면 둘 다 null로 남긴다. 공개 basis와 내부 workspace vstat는 별도 필드다. 이 추가도 원본에서 아직 미실행이다.

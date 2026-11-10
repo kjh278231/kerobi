@@ -63,6 +63,9 @@ def check(data):
     require(data.get("params") == params, "파라미터")
     require(data.get("starts") == ({"PStart": [2, 1, 1], "DStart": [1, 0, 0]} if kind == "warm" else None) and "starts" in data, "시작 벡터 메타데이터")
     require((data.get("result") or {}).get("status") == 2 and not data.get("errors"), "정상 완료 상태")
+    public = data["result"]
+    require("vbasis" in public and "cbasis" in public, "공개 basis 누락")
+    require((public["vbasis"] is None and public["cbasis"] is None) or (isinstance(public["vbasis"], list) and len(public["vbasis"]) == 3 and isinstance(public["cbasis"], list) and len(public["cbasis"]) == 3 and all(type(v) is int for v in public["vbasis"] + public["cbasis"])), "공개 basis 형식")
     events = data.get("events")
     require(isinstance(events, list) and events, "events")
     mode = 1 if kind == "warm" else 0
