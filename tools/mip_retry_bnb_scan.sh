@@ -10,7 +10,8 @@ declare -A cfg=(
  [P]="$stress,\"Heuristics\":0,\"RINS\":0,\"Cuts\":0"
 )
 run() { [ -s "$2" ] && { echo "skip $2"; return; }
- ./tools/gurun.sh timeout "$4" node tools/mip_retry_bnb_scan.js "$1" "$2" "$3" | cut -c1-300 || echo "FAIL $2"; }
+ ./tools/gurun.sh timeout "$4" node tools/mip_retry_bnb_scan.js "$1" "$2" "$3" | cut -c1-300
+ [ "${PIPESTATUS[0]}" = 0 ] || echo "FAIL $2"; }
 lib=../re/bench/data/miplib
 case $mode in
 controls)

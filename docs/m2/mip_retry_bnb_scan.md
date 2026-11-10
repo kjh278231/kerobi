@@ -60,13 +60,14 @@
 
 - 대조군: `tools/mip_retry_bnb_scan.sh controls <출력>`.
 - 매트릭스: `tools/mip_retry_bnb_scan.sh matrix <출력>`(Gurobi 한 프로세스씩, `tools/gurun.sh`).
-- 집계·검사: `python3 tools/mip_retry_bnb_scan_check.py <출력>`; `--self-test`는 저장 대조군 분류와 변조 거부를 확인한다.
+- 집계·검사: `python3 tools/mip_retry_bnb_scan_check.py [<출력>]`. manifest(`manifest.json`, 결과 JSON 234개와 도구 2개의 SHA-256), 대조군 분류, 매트릭스 228키의 완전성과 실행별 파라미터·도구 해시, 재현 3회와 스캔 적중의 일치를 확인한다. `--self-test`는 변조 거부를 확인한다. 전체 캡처 뒤에는 `--write-manifest`로 manifest를 다시 쓴다.
 
 ## 6. 실행 결과
 
-- 실행: 기준 main `e476024`, branch `work/m2-03d-5`. 도구 SHA-256 `mip_retry_bnb_scan.js` `039177d0…d32517`(모든 결과 JSON의 `tool_sha256`이 같다), 바이너리 해시 일치. Gurobi는 `tools/gurun.sh`로 한 프로세스씩 실행했다(다른 세션의 M3-04b-3과 잠금 공유).
+- 실행: 기준 main `e476024`, branch `work/m2-03d-5`에서 원본을 실행했다. 이후 branch를 main `f09d078`(M3-04b-3 병합) 위로 rebase하고 검사기를 다시 돌렸다(M3 변경은 이 도구·자료와 무관). 도구 SHA-256 `mip_retry_bnb_scan.js` `039177d0…d32517`(모든 결과 JSON의 `tool_sha256`이 같다), 바이너리 해시 일치. Gurobi는 `tools/gurun.sh`로 한 프로세스씩 실행했다(다른 세션의 M3-04b-3과 잠금 공유).
 - 대조군(`controls/`): nidda stress → 재풀이 1건 `8e4682`·깊이 1·부모 null·노드 8287·restarts 1. gmu default → 재풀이 1건 `654502`·깊이 2·루트. 03d-3 기록과 같다. 양성 대조: nidda 35,854건, gmu 24,446건의 `5fb8ec`·깊이 1·비루트·부모 있음 정규화 사건을 관측했다.
-- 매트릭스(`matrix/{H,P}/s{0,1,2}/`): 228회 모두 ok(오류·비정상 종료 0). tier A/B 모집단 정규화 사건은 H 3,818,540건, P 6,018,841건이다.
+- 매트릭스(`matrix/{H,P}/s{0,1,2}/`): 228회 모두 ok(오류·비정상 종료 0). tier A/B 모집단 정규화 사건은 H 3,818,540건, P 6,018,841건이다. 이 횟수 키에는 재시작 여부가 없어서 A와 B를 합친 값이다. tier A만의 분모는 측정하지 않았다.
+- `controls/fractional_branch.json`은 양성 대조 후보로 돌렸으나 노드 0(루트에서 해결)이라 쓰지 않았다. 검사 대상이 아니며 manifest에만 들어 있다.
 
 | 설정 | 재풀이 | tier A | tier B | tier C |
 |---|---|---|---|---|
@@ -85,7 +86,7 @@
 | 노드 basis | `I+0x98`·`I+0xa0` 있음, `I+0xa8`·`I+0xb0` null, `I+0x94`=488(모델 402행보다 86행 많음, cut 추정) |
 
 - 재현(`repro/`): TimeLimit 없이 NodeLimit 32898, Seed 1, H 설정으로 독립 3회. 3회 모두 NodeLimit 종료(상태 8, NodeCount 32898)이고 재풀이 사건 전체가 서로, 그리고 TimeLimit 스캔과 같다. `python3 tools/mip_retry_bnb_scan_check.py` 종료코드 0.
-- 검사기 판별력: `--self-test` 종료코드 0. 대조군 분류 변조 6종(호출자·깊이·부모·노드 id·restarts·재풀이 추가), 양성 모집단 삭제, 실행 실패 표시, 재현 변조 4종(solve 순번·basis null·2회·재풀이 없음)을 모두 거부했고 tier 함수 5사례가 맞았다.
+- 검사기 판별력: `--self-test` 종료코드 0. 변조 18종을 모두 거부했다. 대조군 분류 6종(호출자·깊이·부모·노드 id·restarts·재풀이 추가), 양성 모집단 삭제, 실행 실패 표시, 재현 5종(solve 순번·basis null·2회·재풀이 없음·3회 모두 스캔 적중과 다름), 매트릭스 5종(파일 하나 삭제·Seed·Cuts·도구 해시·실행 실패)이다. tier 함수 5사례도 맞았다. 디스크의 매트릭스 파일 하나를 바꾸면 manifest와 실행 판정에서 종료코드 1이다.
 - 실행하지 않은 것: 적중 노드의 LP·basis·cutoff 내용, 재풀이 뒤 LP 상태와 노드 처리 결과, 86행의 정체. Rust·Python 검사는 코드 변경이 없어 실행하지 않았다.
 - 계약 변경: 없음. 대조군은 도구 작성 직후 같은 도구 해시로 실행한 결과를 저장했다.
 
@@ -93,7 +94,7 @@
 
 - 작업 수행 상태: 완료(조사).
 - Q1: 고정 매트릭스 228회에서 tier A(재시작 없는 본 탐색 일반 노드) 재풀이는 0건이다. tier B 1건(nidda H seed 1, 재시작 1회 뒤 본 탐색의 일반 B&B 노드 16948)이 있다. `5fb8ec` 노드 처리 경로에서 노드 basis를 가진 채 재풀이 블록에 들어간다.
-- Q2: tier B 적중은 독립 3회 재현됐다. 분모는 tier A/B 정규화 사건 약 984만 건이다. Cuts=0(P)에서는 0건이라, 적중 노드 LP에는 cut 행이 있다(`I+0x94`=488).
+- Q2: tier B 적중은 독립 3회 재현됐다. 분모는 tier A/B 정규화 사건 약 984만 건이다. 재시작 전 노드(tier A)만의 분모는 측정하지 않았다. 확장 스캔을 하면 횟수 키에 재시작 여부를 넣는다. Cuts=0(P)에서는 0건이라, 적중 노드 LP에는 cut 행이 있다(`I+0x94`=488).
 - M2-03d-4에 주는 것: 일반 B&B 노드(`5fb8ec`)의 자연 재풀이 원본 사례가 처음 생겼다. 다만 재시작 뒤 노드이고 LP에 86행이 더 있어서 Rust 자연 실행으로 같은 노드에 도달할 수는 없다. 이 사례로도 L2(LP 재생)와 원본 `5fb8ec` 경로의 결과 처리 관측까지만 가능하다.
 - 후속 제안:
   - **M2-03d-6**(오라클): 이 노드(solve 19900)의 노드 LP·basis·cutoff·재풀이 결과·노드 처리 결과를 `tools/mip_retry_node_lp.js` 방식으로 독립 3회 캡처한다. 설정은 `{"NodeLimit":32898,"Seed":1,` + H}이다. M2-03d-4의 L2에 nidda RINS 사례 외에 일반 노드 사례를 더한다.
