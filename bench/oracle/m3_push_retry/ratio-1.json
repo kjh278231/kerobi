@@ -3,8 +3,8 @@
   "provenance": "original-synthetic",
   "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
   "source_sha256": "cb7946343603608ec265492ef35060d7e24e64fbe315456b60596645924181ef",
-  "tool_sha256": "03a5e0261af536d2b6a405a0094125a970b8c9260fc870e375aea016101ef034",
-  "inputs_sha256": "0620a70948979b3bad3640adbb8c8d28e2e3e0fb63402ccdb2ec2d5360c3aeb0",
+  "tool_sha256": "7d3040771a983dfb1ec501a367dc53a8484091f25e65633d24bac0207bcc07f1",
+  "inputs_sha256": "1a582a71ad22ddbd778f743cf8b716760e226d4a5efc03bc7bd52b525387c004",
   "environment": {
     "machine": "x86_64",
     "system": "Linux",
@@ -291,6 +291,28 @@
     },
     {
       "name": "negN-winf-skip-dense",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000f43f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 7
+    },
+    {
+      "name": "negN-winf-big-sparse",
+      "chosen": -1,
+      "row": -1,
+      "theta": "ea8ca039593e2946",
+      "pivot": "0000000000000000",
+      "work": "000000000000f83f",
+      "inputs_preserved": true,
+      "refactor": 0,
+      "leaving": 7
+    },
+    {
+      "name": "negN-winf-big-dense",
       "chosen": -1,
       "row": -1,
       "theta": "ea8ca039593e2946",

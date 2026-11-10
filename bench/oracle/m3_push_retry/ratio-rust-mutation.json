@@ -4,7 +4,7 @@
   "sparse-cap": "거부: ('cap-sparse-N-sparse', 'pos', '기준', 0, '실제', -1, '정확·비트 비교')",
   "posA-order": "생존",
   "negB-inf": "거부: ('lanes-sparse', 'pos', '기준', 7, '실제', 2, '정확·비트 비교')",
-  "negLN-inf": "생존",
+  "negLN-inf": "거부: ('negN-winf-big-sparse', 'pos', '기준', -1, '실제', 0, '정확·비트 비교')",
   "at-bound-sign": "거부: ('negU-at-bound-sparse', 'pos', '기준', 0, '실제', -1, '정확·비트 비교')",
   "ab-sign": "거부: ('posB-skip-sparse', 'work', '기준', '000000000000f83f', '실제', '000000000000e03f', '정확·비트 비교')",
   "no-cand-cap": "거부: ('cap-no-cand-sparse', 'theta', '기준', '000000000000f03f', '실제', 'ea8ca039593e2946', '정확·비트 비교')",
