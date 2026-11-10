@@ -101,8 +101,31 @@ cargo test --release --workspace
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 실행 commit: 코드·판정기 `15b6b7b`(work/m2-06f-3, 기준 main `7e47a1e`). x86-64 WSL2 Linux, Rust release. 기준 자료 `bench/oracle/m2_06f2/` run 1(manifest SHA-256 일치, 재캡처 없음). Gurobi는 실행하지 않았다.
+- `python3 tools/mip_node_life_rust.py`: 종료 0, `PASS`. 첫 실행부터 통과했다(계약·코드 수정 없음).
+
+| 사례 | 출력 줄 | `nn` | 해제 0·3·4 | L 생성 | `fr` | `dec` 사슬(noI/nop) | `dec` I·L 없음 |
+|---|---|---|---|---|---|---|---|
+| markshare_4_0 | 12,488 | 2,272 | 2,678 | 2,030 | 4,594 | 286(283/3) | 628 |
+| pk1 | 24,244 | 3,835 | 5,401 | 3,815 | 9,065 | 2,026(1,965/61) | 102 |
+| neos5 | 20,220 | 3,361 | 4,620 | 2,931 | 7,823 | 1,484(1,462/22) | 1 |
+| tr12-30 | 28,008 | 4,193 | 5,811 | 5,797 | 9,798 | 2,401(2,336/65) | 8 |
+| fhnw-binpack4-4 | 18,942 | 3,385 | 4,094 | 3,273 | 6,994 | 408(407/1) | 788 |
+| neos-860300 | 6,851 | 975 | 1,335 | 1,479 | 2,222 | 799(785/14) | 41 |
+| 합계(K) | 110,753 | 18,021 | 23,939 | 19,325 | 40,496 | 7,404(7,238/166) | 1,568 |
+
+- C/R/D: 위 110,753줄이 캡처 기대값과 모두 같다(생성 id, 이전 단계·L, `5fa560` 호출 열과 앞뒤 상태, 감쇠 I·L 표시·조상 열·끝 이유).
+- `python3 tools/mip_node_life_rust.py --self-test`: 종료 0, `PASS (+ self-test)`(Herdr, 작업 복사본 cargo 6회).
+  - T 6종 모두 거부: 이전 단계(pk1 사건 12), `fr` 단계(neos5 사건 669), `fr` 줄 삭제(tr12-30 사건 399), `fr` 뒤 상태(markshare_4_0 사건 200), 조상 id(fhnw-binpack4-4 사건 19730), 끝 이유(neos-860300 사건 472).
+  - V: W1·W3–W6 6사례 거부, W2 6사례 생존(사전 기대대로). panic으로 끝난 사례는 0이었다(모두 첫 차이 줄로 거부).
+- 회귀: `cargo clippy --workspace --all-targets -- -D warnings` 0, `cargo test --release --workspace` 124 통과·무시 10(새 무시 테스트 `node_life_l1` 포함), `python3 tools/mip_node_life_check.py --self-test` `ACCEPTANCE PASS (+ self-test)`. pytest는 실행하지 않았다(Python 미변경).
+- 실행하지 못한 검사: 없음(계약 범위). 원본 재캡처는 계약상 하지 않았다(06f-2 L1 재사용).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 상태: 완료(구현 L1).
+- 동등성: 통과(계약 범위). 06f-2 6사례 run 1의 노드 생성·해제 요청·감쇠 입구에서 `NodeLife`의 단계·`5fa560` 호출 열·I·L·N 수명·감쇠 조상 열이 원본과 같다.
+- 남은 한계(미검증): 단계 −1·1·2·5 직접 호출, 부모 단계 < 3 멈춤(W2 생존), 단계 7 이상, 트리 계정(T+0x10·+0x20, 미이식), 지연 목록·node file·병렬. `bnb.rs`에 연결하지 않았다. 연결해도 처리 순서(06c·06d)와 감쇠 벡터(M1 경계, 06f-4)가 없으면 원본 감쇠 범위가 되지 않는다.
+- 후속: **M2-06f-4**(`95da98` 조사), **M2-06c**(plunge·꼬리), 연결은 06c·06d 뒤. `node_life.rs`를 바꾸면 `python3 tools/mip_node_life_rust.py --self-test`.
+- 작업 branch `work/m2-06f-3`, 병합은 main의 `Merge M2-06f-3` 이력으로 확인한다.
+- 교훈: `docs/lessons/tooling.md`(저장 기준 Rust 재생에서 변이 panic을 사례 단위로 가두기).
