@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "kind": "natural_scan",
+  "model": "supportcase26.mps.gz",
+  "model_sha256": "e5769bd12cc2b5e711165d986ec324d68d336d6314e2b9db4156d5003b9f4ae4",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000
+  },
+  "output": "DONE 9 9611",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "counts": {
+    "n:before:0:-1:2": 1,
+    "n:after:0:-1:2": 1,
+    "n:before:1:-1:2": 49,
+    "n:after:1:2:2": 1669,
+    "n:before:1:2:2": 1620,
+    "n:before:0:2:6": 2450,
+    "n:after:0:2:6": 2450,
+    "set:0": 54,
+    "n:before:0:2:2": 24569,
+    "n:after:0:2:2": 24569,
+    "set:4": 2108,
+    "n:before:0:2:9": 1,
+    "n:after:0:2:9": 1,
+    "n:before:1:2:9": 1,
+    "n:after:1:2:9": 1,
+    "n:before:0:2:3": 1,
+    "n:after:0:2:3": 1,
+    "n:before:1:2:6": 2,
+    "n:after:1:2:6": 2
+  }
+}

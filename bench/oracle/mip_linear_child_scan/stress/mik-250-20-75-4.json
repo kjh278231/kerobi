@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "kind": "natural_scan",
+  "model": "mik-250-20-75-4.mps.gz",
+  "model_sha256": "1fa6126895fa59d1c613787ad19bb10e6080a39207224b018a43b95440dca4ef",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0,
+    "TimeLimit": 20,
+    "NodeLimit": 20000,
+    "Presolve": 0,
+    "ScaleFlag": 0,
+    "Quad": 0,
+    "NumericFocus": 0,
+    "MarkowitzTol": 0.0001
+  },
+  "output": "DONE 2 14994",
+  "errors": [],
+  "ok": true,
+  "detach_reason": "process-terminated",
+  "counts": {
+    "n:before:1:-1:2": 54,
+    "n:after:1:2:2": 1296,
+    "n:before:1:2:2": 1242,
+    "n:before:0:2:6": 5846,
+    "n:after:0:2:6": 5846,
+    "set:0": 87,
+    "n:before:0:2:2": 19716,
+    "n:after:0:2:2": 19716,
+    "set:4": 2,
+    "n:before:1:-1:6": 25,
+    "n:after:1:6:6": 25,
+    "n:before:1:2:6": 23,
+    "n:after:1:2:6": 23,
+    "n:before:1:2:11": 12,
+    "n:after:1:2:11": 12,
+    "n:before:1:2:9": 1,
+    "n:after:1:2:9": 1
+  }
+}
