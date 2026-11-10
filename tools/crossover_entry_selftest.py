@@ -26,11 +26,15 @@ d = {"origin": "natural", "kind": "barrier",
                 {"event": "barrier:leave", "call": 1, "state": state}]}
 assert check(d) == 1
 for mutate in (lambda x: x.update(model_sha256="0" * 64), lambda x: x.update(model_sha256="f" * 64),
-               lambda x: x.update(binary_sha256="0" * 64), lambda x: x.update(events=[]),
+               lambda x: x.update(binary_sha256="0" * 64), lambda x: x.update(tool_sha256="f" * 64),
+               lambda x: x["params"].update(Method=6), lambda x: x.update(events=[]),
+               lambda x: x["events"][2].update(mode=1),
+               lambda x: x["events"][2]["state"]["scale"].pop("c"),
                lambda x: x.update(origin="synthetic"), lambda x: x["events"].reverse(),
                lambda x: x["events"][2]["state"]["result"].update(x=None),
                lambda x: x["events"][2]["state"].update(scale={"sense": []}),
-               lambda x: x["events"][3].update(x=[])):
+               lambda x: x["events"][3].update(x=[]),
+               lambda x: x["events"][1]["state"]["copy"]["primal"].__setitem__(0, "0100000000000000")):
     bad = deepcopy(d)
     mutate(bad)
     try:
@@ -41,4 +45,4 @@ for mutate in (lambda x: x.update(model_sha256="0" * 64), lambda x: x.update(mod
 bad = deepcopy(d)
 bad["events"][4]["ret"] = 3
 assert "ret" in difference(d, bad, case="시험")
-print("합성 오류 주입 10건 검출; 원본 성공 아님")
+print("합성 오류 주입 15건 검출; 원본 성공 아님")

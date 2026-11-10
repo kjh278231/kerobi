@@ -121,7 +121,9 @@ def check(data):
             ds = dispatch["state"]
             copy = ds.get("copy") or {}
             primal, dual = transformed(ds["result"], ds["scale"])
-            require(copy.get("primal") == primal and copy.get("dual") == dual, "S 복사·변환")
+            for key, expected in (("primal", primal), ("dual", dual)):
+                diff = difference(expected, copy.get(key), field="S." + key, case=kind)
+                require(not diff, diff)
         prepared = next((e for e in events[start_index + 1:] if e.get("event") == "prepared"), None)
         require(prepared is not None and prepared.get("model") == s.get("model"), "준비 사건")
         for key, size in (("x", n), ("slack", m), ("reduced", n), ("y", m)):
@@ -137,6 +139,20 @@ def check(data):
     for name in required:
         require(any(e.get("event") == name and e.get("state", {}).get("model") == target[0]["state"]["model"] for e in events), name + " 모델 문맥")
     return len(target)
+
+
+def check_control(data):
+    require(data.get("origin") == "natural" and data.get("kind") == "control", "대조군 실제 출처")
+    root = Path(__file__).resolve().parent.parent
+    require(data.get("model_sha256") == hashlib.sha256((root / "bench/oracle/m3_crossover_entry/small.lp").read_bytes()).hexdigest(), "대조군 입력 해시")
+    require(data.get("tool_sha256") == hashlib.sha256((root / "tools/crossover_entry_capture.js").read_bytes()).hexdigest(), "대조군 도구 해시")
+    require(data.get("binary_sha256") == EXPECTED, "대조군 바이너리 해시")
+    require(data.get("params") == {"Threads": 1, "Seed": 0, "OutputFlag": 0, "Presolve": 0, "Method": 2, "Crossover": 0, "LPWarmStart": 2}, "대조군 설정")
+    require(data.get("starts", "missing") is None and (data.get("result") or {}).get("status") == 2 and not data.get("errors"), "대조군 정상 종료")
+    events = data.get("events") or []
+    require(any(e.get("event") == "barrier:enter" for e in events), "대조군 barrier 사건 없음")
+    require(not any(e.get("event") in ("dispatch:enter", "body:enter") for e in events), "대조군 목표 사건 발생")
+    return 0
 
 
 def difference(a, b, field="$", case=""):
@@ -163,18 +179,20 @@ def difference(a, b, field="$", case=""):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--control", action="store_true")
     ap.add_argument("files", nargs="+")
     args = ap.parse_args()
     try:
         records = [json.loads(Path(p).read_text()) for p in args.files]
         for p, data in zip(args.files, records):
-            print(p, "목표 사건", check(data))
+            print(p, "대조군 목표 사건" if args.control else "목표 사건", check_control(data) if args.control else check(data))
         for p, data in zip(args.files[1:], records[1:]):
             baseline = {k: v for k, v in records[0].items() if k != "output"}
             current = {k: v for k, v in data.items() if k != "output"}
             diff = difference(baseline, current, case=p)
             require(not diff, diff)
-        raise ValueError("검사기 미완성: 복사·변환 식과 경로별 중첩 검증 필요")
+        if not args.control:
+            raise ValueError("검사기 미완성: 실제 원본으로 필드와 경로별 검증 필요")
     except (ValueError, OSError, TypeError, KeyError) as exc:
         print("실패:", exc, file=sys.stderr)
         return 1
