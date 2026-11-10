@@ -14,12 +14,63 @@
 - 합격: 같은 설정 원본 독립 3회에서 모든 계약 필드가 일치하고 각 순서에 pivot·flip이 존재한다. 목표 0건·핵심 상태 누락·합성 출처·바이너리/입력 해시 변조를 CLI에서 거부한다. 완성된 검사기는 실제 캡처 변조로 검사한다.
 - 회귀: 기존 ratio·crossover entry 저장 검사를 실행한다. 솔버·Python API 변경이 없으므로 Rust·확장 재빌드는 대상이 아니다. 명령·입력·도구·소스·캡처 해시와 실제 결과는 아래에 추가한다.
 
-## 2. 실행 결과
+## 2. 탐색 이력
 
-진행 중이다. `history/small-primal-2.json`은 정상 push 반환이지만 후보 0건이고, `history/face-primal-1.json`은 pivot 1건·flip 0건이다. 초안 검사기로 face 캡처의 상태·basis 교환을 확인했으며 마지막 목표 개수 검사에서 불합격했다. 이 탐색 자료를 합격 기준으로 사용하지 않는다. 독립 3회와 목표 두 종류를 확보하기 전 완료로 판정하지 않는다. 
+목표 미달 탐색은 `history/`에 보존했으며 합격 근거로 쓰지 않는다. `small-primal.json.failed`는 다른 세션의 Gurobi 잠금으로 실패한 첫 실행이다. `small-primal-2.json`은 정상 push 반환이지만 후보가 0건이다. `face-primal-1.json`은 pivot 1건·flip 0건이다. `interior-primal-1.json`과 `interior-dual-1.json`은 이전 훅(`step:applied` 없음)으로 얻은 pivot 7건·flip 2건 캡처다. 현재 manifest의 agent 해시와 다르므로 검사기가 거부한다.
 
 ## 3. 캡처 경계 보완
 
-`history/interior-primal-1.json`에서 primal-first pivot 7건·flip 2건을 관측했다. 5번째 후보의 pivot 후 factor 갱신이 header `[4,14,18,16,15,19,6,8]`을 `[14,18,16,15,19,8,4,6]`으로 재배열했다. 다음 후보 직전의 header에 교환 직후 행 위치를 그대로 요구한 초안 검사는 이 사례를 거부했다.
+`interior-primal-1.json`의 5번째 후보에서 pivot 후 factor 갱신이 header `[4,14,18,16,15,19,6,8]`을 `[14,18,16,15,19,8,4,6]`으로 재배열했다. 다음 후보 직전의 header에 교환 직후 행 위치를 그대로 요구한 초안 검사는 이 사례를 거부했다.
 
-C `134a87` 2084–2222줄과 ELF `0x1c3004`를 확인해 교환 직후·rhs 보정 전 사건 `step:applied`를 추가한다. 이 경계에서 header의 한 위치 교환과 vstat·basic 변경을 검사한다. 다음 공급자 직전 `step:leave`에서는 factor 처리 뒤의 전체 순서를 그대로 비트 비교하며, basis 집합 보존도 검사한다. 순서 차이를 정규화해 지우지 않는다. 초기 캡처는 history에 보존하고 보완한 훅으로 원본 3회를 새로 실행한다. 목표 사건·수치 비교 기준은 유지한다.
+C `134a87` 1592–1614줄과 2084–2224줄, ELF `0x1c2994`–`0x1c3004`를 확인했다. flip 경로는 `LAB_002c2994`에서 `LAB_002c3004`로 이어지고, pivot 경로는 header 교환(`local_f0[row]=enter`)·`S+0x2f8=row`·vstat 갱신 뒤 `goto LAB_002c3004`로 합류한다. objdump상 `0x1c3004`(`cmp 0x1f20(%rsp),%rbx`)로 가는 jmp 9개는 모두 `0x1c2994`–`0x1c3004` 안에 있고, 이 구간에서 r14에 쓰는 명령은 없다. 그래서 `0x1c3004`에 교환 직후·rhs 보정 전 사건 `step:applied`를 추가했다. 검사기는 이 경계에서 header 한 위치의 교환, `selected.leave`의 sparse 위치→행 변환, vstat와 반복 카운터 +1을 검사한다. 다음 공급자 직전 `step:leave`에서는 factor 처리 뒤 전체 순서를 그대로 비트 비교하고 basis 집합 보존을 검사한다. 순서 차이를 정규화해 지우지 않는다.
+
+새 훅의 비간섭: `primal-1.json`·`dual-1.json`에서 `step:applied`만 빼면 이전 훅의 `interior-primal-1.json`(78건)·`interior-dual-1.json`(76건)과 사건 JSON 전체가 같다.
+
+## 4. 재실행 명령
+
+worktree 루트에서 실행한다. Gurobi는 한 번에 한 프로세스만 실행한다.
+
+```bash
+D=bench/oracle/m3_primal_push_step
+for k in primal dual control; do for i in 1 2 3; do
+  tools/gurun.sh node tools/primal_push_step_capture.js $k $D/interior.lp $D/$k-$i.json
+done; done
+python3 tools/primal_push_step_check.py $D/primal-{1,2,3}.json
+python3 tools/primal_push_step_check.py $D/dual-{1,2,3}.json
+python3 tools/primal_push_step_check.py --control $D/control-{1,2,3}.json
+python3 tools/primal_push_step_check.py $D/primal-{1,2,3}.json --mutation $D/primal-mutation.json
+python3 tools/primal_push_step_check.py $D/dual-{1,2,3}.json --mutation $D/dual-mutation.json
+```
+
+캡처 도구와 `--mutation`은 기존 파일을 덮어쓰지 않으므로 재실행할 때는 새 경로를 쓴다.
+
+## 5. 실행 결과
+
+- 입력: `interior.lp`(8행×12열, 목적 0) SHA-256 `e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0`. 원본 ELF는 §1의 해시다.
+- 도구: agent `9dd25ce04d140527b10dfc97a35ed961e7569565e9de01eb830e3c7b8ba8b71e`, capture `3e2ed3c80bd971df64de582b7e0adf29591e239f027ec0abd66b762aeb12c458`, check `21546d10a4de9a703f9181ad28356ea745b2530683da0813748e033884cedab9`. 원본 C 6개 해시와 사례별 사건 해시는 [manifest](../../bench/oracle/m3_primal_push_step/manifest.json)에 있다.
+- primal-first(Crossover=3): 독립 3회 모두 성공, 사건 87건, push 1회·pivot 7건·flip 2건. 세 실행의 사건 해시가 같다. 검사기 종료 0.
+- dual-first(Crossover=1): 독립 3회 모두 성공, 사건 85건, push 1회·pivot 7건·flip 2건. 사건 해시가 같다. 검사기 종료 0.
+- 대조군(Crossover=0): 독립 3회 모두 push 0건, VBasis·CBasis 없음, status 2. `--control` 종료 0.
+- 9단계 모두 반복 카운터가 정확히 1 증가했다. ratio 9건은 모두 feasible 경로이고 batch는 0이다.
+- 변조: 실제 primal·dual 캡처 각각에 대해 15종(해시 4종, 사건 비움, 합성 표시, 상태 누락, pivot 0건, flip 0건, ratio theta, basis header, remaining, `step:applied` 누락, 순서 종류, 중복 실행)이 모두 종료 1로 거부됐다. 기록은 `primal-mutation.json`, `dual-mutation.json`이다. 일부 거부 사유는 메시지 없는 assert이며 거부된 검사 위치는 출력하지 않는다.
+- 교차 거부: primal 캡처를 `--control`로 검사하면 종료 1, control 캡처를 목표 검사하면 "목표 0회"로 종료 1, 이전 agent의 history 캡처를 섞으면 "agent_sha256"으로 종료 1이다.
+- 회귀: `python3 tools/primal_push_ratio_oracle.py --check bench/oracle/m3_primal_push/ratio-{1,2,3}.json --selftest` 종료 0. `crossover_entry_check.py` pdhg·barrier·warm 각 3회와 `--control` 종료 0. `node --check` 두 JS, `py_compile`, `git diff --check` 통과. 솔버·Python API 변경이 없어 Cargo·확장 재빌드는 실행하지 않았다.
+
+## 6. 판정과 한계
+
+오라클 구축 계약을 충족했다. 같은 설정 원본 독립 3회에서 계약 필드가 비트 단위로 일치했고 두 순서 모두 pivot·flip이 있다. 목표 0건·상태 누락·합성 출처·해시 변조는 CLI에서 거부된다.
+
+한계:
+
+- 생성한 LP 하나(8×12, 목적 0)의 지정 설정만 확인했다. 다른 모델·파라미터는 미검증이다.
+- primal-first와 dual-first의 primal push는 후보·pivot·flip 순서가 같다. 차이는 반복 카운터 오프셋, ratio work, 진입 factor 요청, 최종 x·slack이다. 서로 다른 단계 순서의 궤적은 아니다. dual push(`M3-04d`) 내부는 훅하지 않았다.
+- infeasible ratio(`054eef`)·batch·x87 경로는 실행되지 않았다.
+- factor 내부는 재생하지 않으며 이 캡처를 factor 재생 오라클로 쓰지 않는다.
+- Rust 구현·동등성은 이번 범위가 아니다. 시간·work 패리티도 미검증이다.
+- 검사기 실패 메시지가 첫 차이의 필드·값을 모두 출력하지는 않는다.
+
+다음은 M3-04c다. 이 캡처의 pivot 한 건 또는 flip 한 건 중 한 경계를 골라 Rust와 비교한다.
+
+## 7. 교훈
+
+`docs/lessons/`의 original·tooling에 `0x1c3004` 합류 지점과 factor 재배열 경계, 잠금 재시도·사용량 중단 인계를 기록했다.
