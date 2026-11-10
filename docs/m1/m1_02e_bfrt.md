@@ -53,8 +53,47 @@
 
 ## 6. 실행 결과
 
-(실행 뒤 작성)
+- 실행 commit: `d508ad9`(work/m1-02e). 환경: WSL2 x86-64 Linux, Node Frida(`tools/fn_trace.js` SHA-256 `7567702e…`), 바이너리 `8e87fca2…`. Gurobi는 `tools/gurun.sh`로 한 프로세스씩 실행했다.
+- 원본 캡처:
+  - `tools/bfrt_corpus.sh tools/trace_specs/bfrt_io_m1_02e.json bench/oracle/m1_02e_bfrt`(spec SHA-256 `d0ebe5a4…`): Netlib 64모델 모두 DONE, 3112회. 파일 해시는 `bench/oracle/m1_02e_bfrt/SHA256SUMS`.
+  - 비간섭·재현성: `python3 tools/proto/bfrt.py --dir bench/oracle/m1_02e_bfrt --same-as bench/oracle/bfrt_io` → `projection: 64/64 models equal`(새 행을 옛 행 길이로 자르면 이전 독립 실행 코퍼스와 같다). kb2는 같은 spec으로 독립 2회를 더 돌려 압축 해제 내용 SHA-256 `677360d0…`가 3회 같았다(재실행 파일은 같은 내용이라 저장하지 않았다).
+  - 첫 탐색 캡처(kb2, `0x438`·`0x420`·`0x430`만 추가): `spx+0x438`은 38회 모두 0. 이 파일은 위 spec의 부분집합이라 지웠다.
+- kb2 호출 21(피벗 21)의 원본 상태(캡처): 진입 `spx+0x3fc = −1`, `spx+0x178 = 0`, `spx+0x2a0 = 21`, 반환 진입 열 25, flip 0, `spx+0x308 = −16.969622862090084`(열 25의 α).
+- 원인(C + 코퍼스): 재선별(C:790–870)까지는 프로토타입과 원본이 같다. quickselect는 lo = 1(flip 후보 열 25, 기여 50.9 < |δ| 924.5)이고 본 선택은 열 4(|α| 0.64)다. 그 뒤 `LAB_001c8ecf`(C:1500–1610)가 `spx+0x3fc`(NONDEGENFLIP, 기본 0, 노트 13 §표)가 0이 아니면 flip 구간을 다시 훑는다.
+  - θ_q = d_q/α_q(α_q는 `spx+0x308`).
+  - 대상: flip 구간 t 중 `d_t ≥ 0`이고 `d_t ≤ θ_q·α_t − 1000·OptTol`. 1000은 같은 레지스터가 C:1219·1278에서 1000.0으로 잡히고 C:1335 비용 이동식의 `/1000`에 쓰이는 값이다(C). 코퍼스에서 보정 8e-4–1.2e-3만 최대 일치이고, 0이면 3092, 1e-6이면 3094, 5e-3이면 3104다.
+  - 점수: `w′ = (열 원소 수(slack 0.5) + ((θ_q·α_t − d_t)/OptTol)^0.25)·(0.3f + 0.7)`. pow 항은 `spx+0x178 < 10`일 때만 더한다. `α_t < s·w′`(s = 본 선택의 α_q/w_q)이면 바꾼다.
+  - 바꾸면 진입은 t, flip은 나머지 flip 구간 중 `d ≤ α·θ_new`(순서 유지).
+  - kb2 21: 열 25의 |α|/w′가 열 4보다 커서 25가 진입하고 flip 목록이 빈다.
+- 코퍼스 대조(`python3 tools/proto/bfrt.py --dir bench/oracle/m1_02e_bfrt -vv`):
+
+| 규칙 | 진입 일치 | flip 일치 |
+|---|---|---|
+| 수정 전(`BFRT_RESCAN=0`) | 3094/3112 | 3098/3112 |
+| 재훑기, 보정 1000·OptTol(최종) | **3108/3112** | **3112/3112** |
+| 재훑기, pow 항 없음(변이) | 3089 | 3093 |
+| 재훑기, 보정 0 / 1e-6(변이) | 3092 / 3094 | 3096 / 3098 |
+
+- 남은 4건은 모두 tuff 호출 31·33·36·37이다. lo = 0(flip 없음)이라 재훑기와 무관하다. 네 호출 모두 후보에 `−OptTol < d < −1e-13`인 열 228이 있고 프로토타입은 228을 고른다. 원본은 C:1690–1740에서 이 d를 난수(`a7b54f`)로 비용 이동한다. 코퍼스에 RNG 상태가 없어 미검증(계약 §1 제외 범위)이다.
+- NONDEGENFLIP 켜짐(C + 탐색 캡처): `48d5f` C:2106–2111은 `spx+0x3fc == 0`이고 (`spx+0x338 > 2` 또는 `m < 3·spx+0x2a0` 또는 `spx+0x178 ≠ 0`)이면 −1로 둔다. 캡처에서는 `LU+0x18c == 0`(재분해 직후 갱신 0회, C:128 분기)인 호출에서만 켜졌다. 갱신 경로(C:170 이후)가 이 검사 전에 끝난다는 것은 [m1_notes §8.9](m1_notes.md)(미검증 명세)의 해석과 맞지만, C:1460 `goto LAB_001e6d2c` 등 goto 경로를 끝까지 확인하지는 않았다.
+  - `tools/trace_specs/nondegenflip_m1_02e.json`(모델명만 바꿔 adlittle·kb2·fit1d·sc50a 1회씩, `bench/oracle/m1_02e_bfrt_trigger`)에서 `python3 tools/proto/bfrt.py --trigger bench/oracle/m1_02e_bfrt_trigger` → 네 모델 모두 규칙과 같다. 켜짐 반복은 adlittle 26, fit1d 18, kb2 15, sc50a 20이고, 독립 실행인 코퍼스의 첫 `0x3fc ≠ 0` 호출과 같다.
+  - 매 반복 평가 변이는 거부된다. adlittle 반복 19–25는 m = 56 < 3·반복인데 `0x3fc`는 0이다(재분해가 아닌 호출).
+  - 코퍼스에서 한 번 켜지면 꺼지지 않는다(3112회 중 켜짐 297회, 꺼짐 전환 0). `spx+0x178`은 3112회 모두 10 미만이다.
+- 판별력 확인:
+  - 재훑기를 끄면 `--strict kb2`가 종료 1, 켜면 0이다.
+  - kb2 호출 21의 d 1비트 변조 사본은 `--same-as`가 행 64에서 거부한다(종료 1).
+- 실행하지 못한 검사: Rust 구현·회귀(이번 범위 아님), 0x2cc ≠ 0 변형 루프와 재훑기의 결합(코퍼스 범위 그대로), `spx+0x178 ≥ 10`(pow 없음) 분기(실행 0회, C만), 재훑기 후보의 slack 계수 0.9375 쪽(Netlib 코퍼스에서 별도 판별 안 함, 본 선택과 같은 1.0 가정).
 
 ## 7. 판정과 인수인계
 
-(실행 뒤 작성)
+- 작업 수행 상태: 완료(조사).
+- 답:
+  1. kb2 피벗 21의 처음 다른 입력은 `spx+0x3fc`(NONDEGENFLIP)다. 반복 15의 재분해 직후 `48d5f`가 −1로 켰다(m = 43 < 45, `0x338 = 3`, 캡처). 원본 `1c35c5`는 본 선택 뒤 flip 구간 재훑기(C:1500–1610)로 열 25를 넣는다. 프로토타입과 Rust `bfrt.rs`에는 이 재훑기와 NONDEGENFLIP 상태가 없다.
+  2. 남은 불일치 18건 중 14건(fit1d 12, kb2 1, stocfor1 1)이 같은 원인이다. 수정 프로토타입은 flip 3112/3112, 진입 3108/3112다. 나머지 tuff 4건은 작은 음의 d에 대한 난수 비용 이동이다.
+- 동등성: 구현 아님. 프로토타입 규칙은 원본 코퍼스 범위(Netlib 64, 모델당 앞 50호출, 0x2cc = 0 위주)에서 위 수치만큼 원본과 정확히 같다.
+- 남은 한계: Rust 미반영, RNG 비용 이동, pow 없는 분기, 0x2cc ≠ 0과의 결합, `spx+0x338`·`spx+0x178`의 Rust 대응 상태.
+- 후속:
+  - **M1-02f**(구현, 새 행 제안): Rust `bfrt.rs`에 재훑기(보정 1000·OptTol, pow 항)를 넣는다. simplex 상태에 NONDEGENFLIP(재분해 직후 dual 재계산에서 위 조건으로 켬)을 넣는다. Rust에 `spx+0x338`(비용 이동 단계)·`spx+0x178`(수치 경고 누적, `28c93`·`5b257`·`1bae9c` 등이 더함)에 해당하는 값이 없으면 먼저 범위를 정한다. 판정은 `statecmp kb2` 반복 22 이후·`pathcmp kb2`, Method=1 Netlib 회귀.
+  - 첫 명령: `grep -n "fn bfrt\|best_s" crates/lp/src/bfrt.rs`, `python3 tools/proto/bfrt.py --dir bench/oracle/m1_02e_bfrt -vv`.
+- branch: `work/m1-02e`, worktree `../rsolver-m1-02e`. 병합 상태는 main 이력으로 확인한다.
+- 교훈: `docs/lessons/original.md`(NONDEGENFLIP 재훑기, 켜짐 시점), `docs/lessons/tooling.md`(코퍼스 스크립트 변수 덮어쓰기, 디컴파일 레지스터 재사용 상수).
