@@ -73,3 +73,16 @@ fn tolerance_clamp_and_signed_zero() {
     assert_eq!(result.up.to_bits(), (-0.0f64).to_bits());
     assert_eq!(result.down.to_bits(), 0.0f64.to_bits());
 }
+
+#[test]
+fn sentinel_returns_unported_after_restoration() {
+    let c = Candidate { column: 0, x: 0.5, lower: 0.0, upper: 1.0,
+        int_tol: 1e-5, parent_obj: 0.0 };
+    let mut lp = Replay { outcomes: [LpResult { value: LpValue::Limited(1e100), iterations: 1.0 }].into(),
+        trace: String::new() };
+    let mut cost = 0.0;
+    assert!(matches!(evaluate(&c, &mut lp, &mut cost), Err(rsolver_mip::strong_branch::Error::Unported)));
+    assert_eq!(cost, 1.0);
+    assert_eq!(lp.trace.matches("solve\n").count(), 1);
+    assert!(lp.trace.ends_with("reset\nrestore\nbound 0 62 0000000000000000\n"));
+}

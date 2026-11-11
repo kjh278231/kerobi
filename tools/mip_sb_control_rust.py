@@ -172,10 +172,20 @@ def self_test(ds, manifest, expected, actual, inputs):
             print('REJECT', name)
         else:
             raise AssertionError('NOT REJECTED '+name)
+    def input_field(d, field, v):
+        s = next(s for e in d['events'] if e['e']=='double' for s in e['steps'] if s['kind']=='input')
+        s[field] = v
+    def change_x(d):
+        e = next(e for e in d['events'] if e['e']=='double')
+        s = next(s for s in e['steps'] if s['kind']=='input')
+        s['x'][e['j'][0]] = bits(2.0)
     tampers = [
         ('binary', lambda d:d.__setitem__('binary_sha256', '0'*64)),
         ('model', lambda d:d.__setitem__('model_sha256', '0'*64)),
         ('empty', lambda d:d.__setitem__('events', [])),
+        ('solution', change_x),
+        ('tolerance', lambda d:input_field(d, 'tol', bits(1.0))),
+        ('null input', lambda d:input_field(d, 'x', [])),
         ('no target', lambda d:d.__setitem__('events', [e for e in d['events'] if e['e']!='double'])),
         ('missing input', lambda d:next(e for e in d['events'] if e['e']=='double').__setitem__('steps',
              [s for s in next(e for e in d['events'] if e['e']=='double')['steps'] if s['kind']!='input'])),
@@ -200,7 +210,7 @@ def self_test(ds, manifest, expected, actual, inputs):
         ('reverse', '(0, Side::Lower, split + 1.0, c.lower),\n        (1, Side::Upper, split, c.upper)',
          '(1, Side::Upper, split, c.upper),\n        (0, Side::Lower, split + 1.0, c.lower)'),
         ('cost', '*iterations += result.iterations;', '*iterations = result.iterations;'),
-        ('restore', 'lp.restore()?;', ''),
+        ('restore', 'lp.restore().map_err(Error::Backend)?;', ''),
         ('split', 'split + 1.0', 'split + 2.0'),
         ('clamp', 'if obj <= c.parent_obj { c.parent_obj } else { obj }', 'obj'),
     ]

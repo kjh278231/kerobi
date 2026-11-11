@@ -38,10 +38,15 @@ manifest는 입력 모델·바이너리·캡처 도구·캡처·재생 도구 �
 
 ## 6. 실행 결과
 
-실행 후 기록한다.
+- 원본 캡처: `tools/mip_sb_control_runs.sh bench/oracle/m2_06h2/capture` 독립 3회 gz 동일, 무훅 대조 최종 출력 동일(`control.json.gz`). 투영이 06h-1 저장 자료와 같다. 정수 타입을 입력에 넣기 전 캡처는 `capture_v1/`, 첫 탐색은 `explore.json.gz`로 보존.
+- 재생: `python3 tools/mip_sb_control_rust.py --self-test` 종료 0. 첫 후보 24개·방향 48(상태7 42, 상태2 6)의 bound 요청·flush·solve·reset·restore·bound 복원 순서, 분기값, 목적값, 반복 비용 누적이 u64 비트로 원본과 같다.
+- 오류 검출: 입력·trace 변조 15종(바이너리·모델 해시, 사건 비우기, 해·허용오차·빈 입력, 대상 없음, 입력·reset 누락, 순서·restore·bound·결과·비용) 거부. Rust 임시 복사본 변이 5종 중 방향 역순·비용 대입·restore 삭제·분기값+2 4종 거부. 최적 상태 clamp 제거는 생존(첫 후보 자료에 obj<=base 사례 없음, 판별 불가).
+- `1e100` 경계: C:660은 up 값이 `< 1e100`일 때만 down(`LAB_00672b45`)으로 가고, 아니면 복구 뒤 `LAB_0067351c`로 건너뛴다. 남은 후보·묶음 처리는 미이식이므로 Rust는 복구 명령을 낸 뒤 `Error::Unported`를 반환한다(down에도 같은 거부 적용). 합성 테스트 `sentinel_returns_unported_after_restoration`만 확인했고 원본 자료에는 이 경로가 없다.
+- 회귀: `python3 tools/mip_sb_snapshot_check.py --self-test`·`python3 tools/mip_sb_restore_check.py --self-test` 종료 0, `cargo test -p rsolver-mip` 통과, `cargo test --release --workspace` 127 통과·0 실패·12 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0. Python 확장 미변경으로 pytest 제외.
+- 독립 검토(Codex 하위 에이전트, `1e100` 보강 전 코드): 높음·중간 결함 없음. 지적에 따라 정수 타입 입력을 캡처에 추가해 재수집했다. `1e100` 거부와 변조 3종(해·허용오차·빈 입력)은 검토 뒤 추가했다.
 
 ## 7. 판정과 인수인계
 
-착수. 동등성 미검증. branch `work/m2-06h-2`, worktree `../rsolver-m2-06h-2`.
+구현(L1), 계약 범위 통과. 첫 후보 한 개의 제어 명령·결과 소비가 원본 LP 결과 입력에서 비트 일치한다. 전체 LP 수치 포함 동등성, 최적 상태 clamp 판별, `1e100` 이후 경로, 추가 전파·모순·오류·연속 열·x87·병렬은 미검증이다. branch `work/m2-06h-2`.
 후속 M2-06h-3: 추가 전파·모순·전체 후보 루프와 부모 재풀이 경계. M2-06i reliability 판단은 이 첫 후보 제어와 구분한다.
-교훈은 종료 시 docs/lessons/m2_sb_snapshot.md에 기록한다.
+교훈은 [docs/lessons/m2_sb_snapshot.md](../lessons/m2_sb_snapshot.md)에 기록했다.
