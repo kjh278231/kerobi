@@ -111,8 +111,25 @@
 
 ## 6. 실행 결과
 
-(실행 뒤 작성)
+- 실행 commit `1b26f93`(계약·코드, 첫 재생 전 커밋), main `8569900` 위. x86-64 Linux(WSL2), Rust release, Threads=1 캡처. 입력 `bench/oracle/m2_06c3` run 1(manifest 해시 일치).
+- `python3 tools/mip_plunge_rust.py` 종료 0(`PASS`), 첫 실행에서 전부 일치. K 합계가 §3과 같고 7사례 출력 줄(17,896·23,920·22,326·24,651·25,170·16,975·17,044)이 모두 원본과 같다.
+  - 규칙 4·7·9 4,351호출(06d `given` 385 + BranchDir 3,966)의 선택, 06d 재생 불가 17호출을 포함한 규칙 1·6 4,346호출의 선택, 본문 `5fb13c` 질의 28,245개의 순서·인자, 규칙 5 239호출의 뽑기 뒤 RNG 상태, 규칙 4 x 읽기 1,023회가 원본과 같다. `given`·`unrep` 0.
+  - BranchDir 두 사례의 꼬리(유지 9,006·힙 2,322·null 조상 31)도 같다.
+- `tools/hrun.sh --timeout 580000 -- 'python3 tools/mip_plunge_rust.py --self-test …'` 종료 0(`PASS (+ self-test)`, 로그 `target/m2_06d3_selftest.log`는 추적 밖):
+  - 변조 17종 모두 거부(06d 11종, 새 5종: 규칙 9 첨자, 선택 뒤 RNG, 본문 조상 결과, 본문 질의 삭제, x 읽기 수; 입력 `end` 삭제는 neos5만 panic으로 거부되고 나머지 통과).
+  - 변이 32종의 사례별 거부가 §3 표와 모두 같다. F13·F14는 각 사례 call 0(루트 하나, est = 1e100이라 −est = best 동률)에서 추가 질의로 거부됐다. 06c-3 X13이 질의 순서로만 거부된 6호출과 같은 종류다.
+- 회귀(Herdr): `cargo clippy --workspace --all-targets -- -D warnings` 0, `cargo test --release --workspace` 통과 125·실패 0·무시 11(06d와 같은 수), `python3 tools/mip_plunge_r47_check.py --self-test` `ACCEPTANCE PASS (+ self-test)`(자료·검사기 미변경). pytest는 Python 패키지 미변경이라 실행하지 않았다.
+- 계약 변경: 없음(§1에 06d 계약 대비 바꾼 것을 첫 재생 전에 적었다).
 
 ## 7. 판정과 인수인계
 
-(실행 뒤 작성)
+- 작업 수행 상태: 완료(구현 L1).
+- 동등성: 통과(06c-3 7사례 run 1 저장 기준, 비트 비교). 13,830호출 전부에서 시드·규칙·선택·본문 질의·선택 뒤 RNG·work·꼬리가 원본 캡처와 같다. 원본을 다시 실행하지는 않았다(06c-3 캡처 3회 동일을 재사용).
+- 남은 한계:
+  - asm대로 옮겼지만 캡처로 판별되지 않은 절(변이 생존): 규칙 4 나눗수(F3)·동률(F5)·루트 항목 건너뛰기(F6), 규칙 7 depth 계수(F9), 규칙 7·9 동률(F5), 방향 바이트 부호 확장, 규칙 9 `== −1`(BranchDir ±1만), 제외 항목(`I+0x41`, 0회). x의 열 공간은 미확인.
+  - 규칙 11(`None`), 8·10, hint 형제 교환, MIPFocus 4: 0회, 06d와 같다.
+  - `bnb.rs` 미연결. 연결 때 `anc`는 `|n, dep, d| ancestor(n, dep, d, &mut parent)`, x는 해 풀 최선해(`5e6f57`, `M+0x3220`)로 준다.
+- 후속: `bnb.rs` 연결(가칭 M2-06d-2, `(*W)+0x60`·k 갱신·plunge 목록 삽입 규칙 확인 뒤), M2-06e-2(표 B·C), M2-06g(SB 입력).
+- 다음 명령: `plunge.rs`를 바꾸면 `python3 tools/mip_plunge_rust.py`와 `tools/hrun.sh --timeout 580000 -- 'python3 tools/mip_plunge_rust.py --self-test'`.
+- 작업 branch `work/m2-06d-3`, 기준 main `8569900`. 커밋·병합 상태는 M2 인수인계를 따른다.
+- 교훈: `docs/lessons/tooling.md`(주입한 질의 답의 순서 비교, 변이 기대표를 넓힐 때 Python 재생으로 다시 구함), `docs/lessons/original.md`(규칙 4 x null 검사 없음, 상수).
