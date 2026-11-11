@@ -1,6 +1,6 @@
 # pi 작업자 설계 (OpenGateway + GLM 5.3 Flash)
 
-상태: **설계 초안, 미구현·미검증.** 작성 2026-11-11. 이 문서의 어떤 항목도 실제 실행으로 확인하지 않았다. §2의 사용자 결정 3건과 §7의 0단계가 끝나기 전에는 스프린트에 쓰지 않는다.
+실행 스크립트와 로그 검사기를 구현했다. pi 1.5.2에서 인증 실패를 캡처하고 검사기가 이를 거부하는지 확인했다. 스프린트 도입에는 §2의 결정과 §7의 0단계 검증이 남아 있다.
 
 ## 1. 목표와 범위
 
@@ -65,7 +65,7 @@ B는 공짜 기본값이 아니다. 교훈 기록에 남은 하위 에이전트 
 
 ```
 Claude 세션 (오케스트레이터·검토자)
-  └─ tools/hrun.sh -- 'pi --mode json -p ... "<프롬프트 파일>"'   # Herdr pane
+  └─ tools/hrun.sh -- 'tools/pi_worker.sh <프롬프트 파일>'      # Herdr pane
        └─ pi (작업자, work/<하위번호> worktree에서 실행)
             └─ https://api.opengateway.one/oss/v1/chat/completions → <MODEL_ID>
 ```
@@ -76,36 +76,11 @@ Claude 세션 (오케스트레이터·검토자)
 npm install -g @earendil-works/pi-coding-agent@<고정 버전>
 ```
 
-패키지 이름은 pi 문서의 import 경로에서 확인했다. 설치 명령과 최신 버전 번호는 문서에서 찾지 못했다(0.81.1 README는 존재). 버전을 고정한다. 0.73.1 예제와 현재 문서의 JSON 이벤트 이름이 다르다(`tool_result_end` → `tool_execution_end`).
+이번 검증에는 설치된 `@earendil-works/pi-coding-agent` 1.5.2를 사용했다. 설치할 때 버전을 고정한다.
 
 ### 4.2 공급자 등록
 
-`~/.pi/agent/models.json`:
-
-```json
-{
-  "$schema": "https://pi.dev/schemas/models.schema.json",
-  "providers": {
-    "opengateway": {
-      "baseUrl": "https://api.opengateway.one/oss/v1",
-      "api": "openai-completions",
-      "apiKey": "$OPENGATEWAY_API_KEY",
-      "authHeader": true,
-      "models": [
-        {
-          "id": "<MODEL_ID>",
-          "name": "GLM 5.3 Flash",
-          "reasoning": false,
-          "input": ["text"],
-          "contextWindow": 0,
-          "maxTokens": 0,
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
-        }
-      ]
-    }
-  }
-}
-```
+공급자 예시를 `~/.pi/agent/models.json`의 기존 설정에 추가한다. `PI_CODING_AGENT_DIR`를 지정했으면 그 디렉터리의 `models.json`을 사용한다. [공급자 설정 예시](../tools/pi_models.example.json)
 
 - `0`으로 둔 값은 자리 표시다. 키로 받은 `/models` 응답과 요금표로 채운다. 2차 출처는 문맥 약 1M 토큰, 출력 최대 131,072 토큰을 말하지만 게이트웨이 경유 값은 미확인이다.
 - `authHeader`의 기본값은 `false`다. `apiKey`만으로 Bearer 헤더가 붙는지는 0단계에서 확인하고 필요 없으면 지운다.
@@ -114,24 +89,24 @@ npm install -g @earendil-works/pi-coding-agent@<고정 버전>
 
 ### 4.3 실행 명령
 
+작업 worktree에서 실행한다. `PI_WORKER_MODEL`에 등록한 모델 ID를 지정한다.
+
 ```bash
-cd <work/하위번호 worktree>
-mkdir -p .pi-run
-tools/hrun.sh --timeout 580000 -- 'pi --mode json -p --no-session -a \
-  --provider opengateway --model "<MODEL_ID>" \
-  --tools read,bash,edit,write,grep,find,ls \
-  "아래 지시를 수행" < docs/handoff/prompts/<하위번호>.md \
-  > .pi-run/<하위번호>.jsonl 2> .pi-run/<하위번호>.err'
+PI_WORKER_MODEL='<MODEL_ID>' tools/pi_worker.sh 'docs/handoff/prompts/<하위번호>.md'
 ```
 
-- `hrun.sh`는 호출한 디렉터리에서 pane을 만들고 명령의 종료 코드를 돌려준다. 580초 안에 끝나지 않으면 124로 돌아오며 `--wait <pane>`으로 다시 기다린다. 이 명령 자체는 실행해 보지 않았다.
-- 프롬프트는 stdin으로 넣는다. pi는 파이프로 받은 stdin을 첫 프롬프트 앞에 붙인다. 따옴표가 겹치지 않는다.
-- `--provider`와 `--model`을 나눠 쓴다. pi의 `--model`은 `provider/id`와 `:<thinking>` 접미사를 해석하는데, 게이트웨이 ID가 `<org>/<Model>:policy` 꼴이라 한 인자로 쓰면 잘못 쪼개질 수 있다. 정책 접미사가 게이트웨이까지 전달되는지 0단계에서 확인한다.
-- `herdr agent start`는 쓰지 않는다. 대화형 에이전트용이고 pi가 지원 종류인지 확인하지 않았다. 비대화형 실행이므로 handoff §5의 `herdr agent wait` 대신 `hrun.sh`의 대기를 쓴다.
+Herdr에서 기다릴 때는 호출자가 같은 명령을 `tools/hrun.sh`로 감싼다.
 
-- `-a`: print·json 모드는 프로젝트 신뢰 기본값이 "ask"이고, 이 값은 프로젝트 자원을 무시한다. `-a` 없이 `AGENTS.md`와 `.agents/skills`가 읽히는지 0단계에서 확인한다.
-- pi는 `AGENTS.md`(또는 `CLAUDE.md`)를 cwd에서 상위로 올라가며 모두 읽고, 스킬은 `.agents/skills`와 `~/.agents/skills`에서 찾는다. 기존 지침과 `verified-task-branches`·`oracle-capture` 스킬을 그대로 쓴다. pi 전용 지침 파일은 만들지 않는다.
-- `.pi-run/`은 ignore 대상이다. 실행 로그이고 증거가 아니다. 증거는 작업자가 worktree에 커밋한 파일이다.
+```bash
+tools/hrun.sh --timeout 580000 -- \
+  'PI_WORKER_MODEL="<MODEL_ID>" tools/pi_worker.sh "docs/handoff/prompts/<하위번호>.md"'
+```
+
+- `PI_WORKER_PROVIDER`의 기본값은 `opengateway`다. `PI_WORKER_MODEL`이 비어 있으면 사용법을 출력하고 종료 코드 `2`를 반환한다.
+- 스크립트는 프롬프트 파일을 pi의 stdin으로 전달한다. stdout은 `.pi-run/<이름>.jsonl`에, stderr는 `.pi-run/<이름>.err`에 저장한다. 이름을 생략하면 프롬프트 파일명에서 `.md`를 뺀 값을 쓴다. Git은 `.pi-run/`을 무시한다.
+- 스크립트는 `tools/pi_log_check.py`의 종료 코드를 반환한다. 검사기는 파싱 실패, 마지막 assistant 메시지 부재나 오류·중단, 금지 도구 호출을 코드 `1`로 판정한다. 원본 접근이 허용된 작업에서는 `PI_WORKER_ALLOW_RE=1`로 검사기의 원본 접근 판정을 해제한다. Gurobi 명령 검사는 항상 적용한다.
+- pi는 `-a`로 이번 실행의 프로젝트 파일을 신뢰한다. `AGENTS.md`와 `.agents/skills`의 실제 로드 여부는 §7의 0단계에서 확인한다.
+- Herdr 도움말의 `agent start --kind` 목록에 `pi`가 있다. 이 비대화형 경로에서는 `hrun.sh`가 작업 종료를 기다린다. `hrun.sh`가 `124`를 반환하면 `tools/hrun.sh --wait <pane>`으로 이어서 기다린다.
 - 재시도와 자동 압축은 pi 기본값을 쓴다(`retry.maxRetries` 3, `compaction.enabled` true).
 
 ### 4.4 프롬프트
@@ -152,7 +127,7 @@ pi 작업자에게만 추가하는 금지:
 | 권한 확인 | 없음. 도구가 pi 프로세스 권한으로 바로 실행된다 | 작업 worktree에서만 실행, 키 외의 비밀을 환경에 두지 않음 |
 | `solver-busy-check` 훅 | 동작하지 않음 | Gurobi 작업을 맡기지 않음. 작업자가 실행 중이면 오케스트레이터도 Gurobi를 실행하지 않음(handoff §5) |
 | 샌드박스 | 없음 | 금지 사항은 프롬프트로만 전달된다. 검토 때 `git status`·`git worktree list`·main의 diff로 위반을 확인 |
-| 실패 종료 코드 | 실행 모드의 종료 코드가 문서에 없음 | pi의 종료 코드를 완료 판정에 쓰지 않는다 |
+| 실패 종료 코드 | pi 1.5.2는 HTTP 401 실패를 JSONL에 기록하고 코드 `0`으로 종료했다 | 로그 검사기의 종료 코드로 판정 |
 
 `../re/` 읽기 금지를 프롬프트에만 맡기면 약하다. B를 고르면 작업자를 `../re/`가 보이지 않는 곳에서 실행하는 방법(컨테이너 또는 별도 사용자)을 0단계에서 정한다. 그 전에는 로그에서 `../re/` 경로나 `dc.py`가 나온 `tool_execution_start`가 0건인지 검사한다.
 
@@ -165,7 +140,7 @@ pi 작업자에게만 추가하는 금지:
 3. 검사기 변조 검사(해시 0, 필수 사건 배열 비우기, 목표 0회 입력)를 직접 실행한다.
 4. `.pi-run/<하위번호>.jsonl`에서 마지막 assistant `message_end`의 보고와 토큰 사용량을 읽는다. 보고와 2·3의 결과가 다르면 결과를 따른다.
 
-로그에서 읽을 것: 마지막 `message_end`(role이 assistant)의 텍스트, 각 `message_end`의 `usage`, `tool_execution_end`의 `isError`, `auto_retry_start` 횟수.
+검사기는 마지막 assistant `message_end`의 텍스트와 각 `message_end.message.usage.totalTokens`의 합계를 출력한다. 도구 호출은 `tool_execution_start`로, 도구 오류는 `tool_execution_end.isError`가 `true`인 건으로, 자동 재시도는 `auto_retry_start`로 센다.
 
 ## 7. 도입 단계
 
@@ -185,12 +160,11 @@ pi 작업자에게만 추가하는 금지:
 
 ### 2단계: 문서 반영
 
-1단계 결과가 좋으면 다음을 고친다. 모두 공유 경계이므로 `claim shared`가 필요하다. 이 문서에서는 고치지 않았다.
+1단계 결과가 좋으면 공유 경계 점유를 얻고 다음 문서를 고친다.
 
 - `docs/handoff/README.md` §5: pi 작업자 실행 명령과 §4.4의 추가 금지.
 - `docs/README.md`: 이 문서 링크.
 - `docs/00_overview.md` §2: 2.1의 결정.
-- `.gitignore`: `.pi-run/`. 그 전까지는 `session.py export`가 이 폴더를 스냅숏에 담는다.
 - `docs/handoff/prompts/`: 새 경로다. 위치를 handoff에 적는다.
 
 ## 8. 확인한 것과 못 한 것
@@ -203,10 +177,45 @@ pi 작업자에게만 추가하는 금지:
 | 도구 호출·스트리밍 지원, rate limit, 요금, 보존 정책, 운영 주체 | **미확인** | 페이지에 문구 없음 |
 | GLM 5.3 Flash 문맥 약 1M 토큰 | 2차 출처만 | https://pricepertoken.com/pricing-page/model/z-ai-glm-5.3-flash , https://aimlapi.com/models/glm-5-3-flash |
 | GLM 5.3 Flash 요금 | **미확인** (검색 요약에 서로 다른 값, 원문 미열람) | 없음 |
-| §4.3 실행 명령, Herdr의 pi 지원 여부 | **미확인** (실행하지 않음) | `tools/hrun.sh` 읽기만 함 |
+| Herdr의 pi 지원 | `agent start --kind` 목록에 `pi` 표시. 실제 기동과 `hrun.sh` 연결은 미실행 | `herdr agent` 도움말 |
 | `models.json` 경로·필드, `apiKey`의 `$NAME` 해석, `compat` 주의 | 공식 문서에서 확인 | https://pi.dev/docs/latest/models-configuration , https://pi.dev/docs/latest/custom-provider |
-| `-p`, `--mode json`, `--no-session`, `--tools`, `--model provider/id`, JSON 이벤트 이름 | 공식 문서에서 확인 | https://pi.dev/docs/latest/cli.md , https://pi.dev/docs/latest/json.md |
-| 컨텍스트 파일·스킬 탐색 경로, 권한 확인 없음, 프로젝트 신뢰 `-a` | README 0.81.1에서 확인 | https://cdn.jsdelivr.net/npm/@earendil-works/pi-coding-agent@0.81.1/README.md |
+| `--mode json`, `-p`, `--no-session`, `-a`, `--provider`, `--model`, `--tools` | pi 1.5.2 도움말에서 확인. `-a`는 이번 실행의 프로젝트 파일을 신뢰하고, `--tools`는 쉼표로 구분한 도구 이름을 받는다 | `PI_CODING_AGENT_DIR=<임시 경로> pi --help` |
+| 컨텍스트 파일·스킬 탐색과 로드 여부 | 경로는 README 0.81.1 참조. `-a` 유무에 따른 실제 로드는 미확인 | https://cdn.jsdelivr.net/npm/@earendil-works/pi-coding-agent@0.81.1/README.md |
 | 재시도·압축 설정 기본값 | 공식 문서에서 확인 | https://pi.dev/docs/latest/settings.md |
-| 실행 모드의 실패 종료 코드 | **미확인** (문서에 없음) | 위 cli.md |
-| pi 설치, 키 발급, 실제 호출 | **실행하지 않음** | 이 컴퓨터에 pi와 키가 없다 |
+| 유효한 키 없이 실행한 pi의 종료 코드 | 잘못된 키로 HTTP 401을 받고 코드 `0`으로 종료. 키 변수를 비운 별도 실행은 생략 | [인증 실패 로그](../tools/testdata/pi_log/invalid_key.jsonl) |
+| 성공 응답과 도구 실행 이벤트 | `tool_execution_start.toolCallId`·`toolName`·`args`, `tool_execution_end.toolCallId`·`toolName`·`result`·`isError`는 설치 문서에서 확인. 인증된 실행은 미확인 | `$(npm root -g)/@earendil-works/pi-coding-agent/docs/json.md`, 같은 경로의 `message-types.md` |
+
+### 8.1 pi 1.5.2 실패 캡처
+
+저장소 밖의 임시 디렉터리에서 `PI_CODING_AGENT_DIR="$PWD/agent"`를 사용했다. 그곳의 `models.json`에 §4.2와 같은 공급자와 시험 모델 `zai-org/GLM-5.2:fastest`를 등록했다. `prompt.txt`에는 `say hi` 한 줄을 넣었다. `PI_CAPTURE_INVALID_KEY`는 시험용으로 만든 잘못된 값이다.
+
+```bash
+PI_CODING_AGENT_DIR="$PWD/agent" OPENGATEWAY_API_KEY="$PI_CAPTURE_INVALID_KEY" \
+  PI_TELEMETRY=0 timeout 50s pi --offline --no-context-files --no-skills \
+  --no-extensions --no-mcp --system-prompt ' ' --mode json -p --no-session -a \
+  --provider opengateway --model 'zai-org/GLM-5.2:fastest' \
+  --tools read,bash,edit,write,grep,find,ls < prompt.txt > failure.jsonl 2> failure.err
+```
+
+- 샌드박스에서 `getaddrinfo EAI_AGAIN api.opengateway.one`이 발생했다. JSONL 37행에 `auto_retry_start` 3건이 남았고 stderr는 비어 있었다. pi는 코드 `0`으로 종료했다. [DNS 실패 로그](../tools/testdata/pi_log/dns_failure.jsonl)
+- 네트워크가 허용된 환경에서 같은 명령을 실행하자 OpenGateway가 HTTP 401과 `Invalid or missing preview API key.`를 반환했다. JSONL은 12행이고 재시도 0건, stderr 0행, pi 종료 코드 `0`이었다. [인증 실패 로그](../tools/testdata/pi_log/invalid_key.jsonl)
+- 두 로그에서 `session`, `agent_start`, `turn_start`, `message_start`, `message_end`, `turn_end`, `agent_end`, `agent_settled`를 확인했다. `agent_settled.aborted`는 두 로그에서 `false`다. DNS 실패 로그에는 `entry_appended`, `auto_retry_start`, `auto_retry_end`도 있다. 재시도 시작 필드는 `attempt`, `maxAttempts`, `delayMs`, `errorMessage`다.
+- 마지막 `message_end.message`의 `role`은 `assistant`, `content`는 빈 배열, `stopReason`은 `error`다. `errorMessage`가 실패 원인을 담으며 `usage.input`, `output`, `cacheRead`, `cacheWrite`, `totalTokens`는 모두 0이다. 인증 실패 시 `message.model`에 시험 ID의 `:fastest` 접미사가 남았다. 게이트웨이가 요청의 접미사를 처리하는지는 인증된 실행에서 확인해야 한다.
+- 저장할 때 임시 작업 디렉터리 경로를 `/tmp/pi-capture`로 바꿨다. 두 로그에 시험용 키 값이 없음을 확인했다.
+
+### 8.2 도구 검증과 인수인계
+
+검증 범위는 `work/pi-worker`의 운영 도구다. 완료 기준은 실제 pi 실패 로그 확보와 아래 명령의 종료 코드다. 합성 자가 시험은 정상, assistant 메시지 누락, 오류·중단, JSONL 파싱 실패, 금지 호출과 `--allow-re` 예외를 검사한다. [작업 지시와 완료 기준](handoff/prompts/pi-worker.md)
+
+| 검증 명령 | 실제 종료 코드 |
+|---|---|
+| `python3 tools/pi_log_check.py --self-test` | 0 |
+| `python3 tools/pi_log_check.py tools/testdata/pi_log/invalid_key.jsonl` | 1 |
+| `python3 tools/pi_log_check.py tools/testdata/pi_log/dns_failure.jsonl` | 1 |
+| `bash -n tools/pi_worker.sh` | 0 |
+| `env -u PI_WORKER_MODEL tools/pi_worker.sh docs/handoff/prompts/pi-worker.md` | 2 |
+| `python3 -c "import json;json.load(open('tools/pi_models.example.json'))"` | 0 |
+
+대역 pi로 인자, stdin, stdout·stderr 경로, `PI_WORKER_ALLOW_RE`, 검사기 종료 코드 전달을 확인했다. 실제 pi에서 성공 응답, 스트리밍, 도구 호출, 프로젝트 컨텍스트 로드, Herdr 연결은 미확인이다. 기본 설정 경로의 `pi --help`는 `trust.json.lock` 생성 중 읽기 전용 오류가 났으며 임시 `PI_CODING_AGENT_DIR`에서 도움말을 확인했다. [실행 도구 교훈](lessons/tooling.md#herdr실행)
+
+선행 커밋은 `63ad22d`이며 미커밋 선행 변경은 없었다. 실제 로그는 `e5f9dc4`, 검사기는 `7939b8e`, 실행 스크립트와 공급자 예시는 `10041ed`에 있다. 브랜치는 검토 대기 상태다. 이 절에 운영 도구의 인수인계를 기록했다. 다음 검증은 출처 정책과 인증 환경이 결정된 뒤 §7의 0단계를 실행하는 것이다.
