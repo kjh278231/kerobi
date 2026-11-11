@@ -140,7 +140,7 @@ weight = pow(1.0 / (depth + 1.0), cut < 5e99 ? 0.1 : 0.2)
 
 double 커널의 저장 149회와 방향 복사 742회에서 §2.4 필드가 source/destination 비트까지 같다. 평가 함수 전후 bound와 임시 파라미터, 최종 부모 LP 재풀이 진입 bound도 같다. 풀이 891회는 상태 2 373회·7 516회·6 2회다. 여기에는 마지막 부모 LP 재풀이 149회가 포함된다. 나머지 742방향에서 상태별 목적 저장과 IterCount를 비교했다. 비용 출력과 T+0x68 누적, IterationLimit 복구도 비트 일치다.
 
-`python3 tools/mip_sb_restore_check.py --self-test`는 변조 15종을 거부했다. 바이너리/모델 해시, 빈 사건·0회 목표, 목적 벡터, work, basis 복사, 소비 결과, 복원 누락, bound, 비용, IterationLimit, weight, 질의 누락과 분기 bound 미적용을 각각 바꿨다. 변이 6종 중 swap work 생략·지수 0.1/0.2 교환은 6사례, 비용 누적 생략은 iters10 3사례에서 거부됐다. **동반 목적 벡터 교환 생략**은 입력 벡터 값이 같아 6사례 모두 판별 불가다. **상태 7의 base clamp 생략**도 관측 dual bound가 base 아래로 내려가지 않아 판별 불가다. 두 생존 변이는 검사기 기대표에 고정했다. 전체 base clamp 제거는 neos5 iters10의 최적 상태 한 건에서 거부된다. 기대 지수 변이의 초기 사례 목록에서 neos5 기본을 빠뜨려 self-test가 실패했고, 실제 여섯 사례 모두 거부되는 결과로 고쳤다. 판별 규칙은 바꾸지 않았다.
+`python3 tools/mip_sb_restore_check.py --self-test`는 변조 15종을 거부했다. 바이너리/모델 해시, 빈 사건·0회 목표, 목적 벡터, work, basis 복사, 소비 결과, 복원 누락, bound, 비용, IterationLimit, weight, 질의 누락과 분기 bound 미적용을 각각 바꿨다. 변이 6종 중 swap work 생략·지수 0.1/0.2 교환은 6사례, 비용 누적 생략은 iters10 3사례에서 거부됐다. **동반 목적 벡터 교환 생략**은 입력 벡터 값이 같아 6사례 모두 판별 불가다. **상태 7의 base clamp 생략**도 관측 dual bound가 base 아래로 내려가지 않아 판별 불가다. 두 생존 변이는 검사기 기대표에 고정했다. 관측 상태 2·7의 base clamp 제거는 neos5 iters10의 최적 상태 한 건에서 거부된다. 기대 지수 변이의 초기 사례 목록에서 neos5 기본을 빠뜨려 self-test가 실패했고, 실제 여섯 사례 모두 거부되는 결과로 고쳤다. 판별 규칙은 바꾸지 않았다.
 
 실패 자료 `explore_pk1_final.json.gz`는 GRBgetdblattr의 PLT `0xbcc70`에 훅을 붙여 DONE 전 종료된 탐색이다. 실제 export `0x7a3820`로 옮겨 해결했다. 성공 탐색과 최종 기준은 구분한다. hrun의 현재 pane 식별자가 유효하지 않아 첫 실행이 `pane_not_found`로 실패했다. 이후 `HERDR_ENV=0 tools/hrun.sh`의 직접 실행 경로를 사용했고, 각 명령의 실제 종료 코드를 확인했다.
 
@@ -152,4 +152,10 @@ Rust·Python 패키지는 변경하지 않아 cargo/pytest는 실행 대상이 �
 
 검사기 `--self-test`는 종료 0(`ACCEPTANCE PASS (+ self-test)`), 기존 `python3 tools/mip_sb_read_check.py`도 종료 0(`ACCEPTANCE PASS`)이다. [판정 로그](../../bench/oracle/m2_06g2/check.log)와 [회귀 로그](../../bench/oracle/m2_06g2/regression.log)를 보존했다.
 
-독립 검토는 정적 C/asm 재유도와 검사기 실행, 원본 neos5 iters10 재캡처 1회를 포함한다. 검토에서 분기 bound를 적용하지 않은 기록이 통과하는 결함을 찾았다. solve의 입력 LB/UB가 부모보다 느슨해지지 않고 선택 열의 방향 bound가 엄격히 조여졌는지 검사해 수정했고, 변조 15번째로 추가해 거부했다. 상태 2 clamp까지 제거하는 변이도 추가해 neos5에서 거부했다. 검토자가 만든 [재캡처](../../bench/oracle/m2_06g2/review_neos5_iters10.json.gz)는 final/neos5_iters10_1과 JSON·gz 바이트가 같다(SHA-256 `d1fa4f3703670267b363ad95a272a073ed262da9d7f47b76f2bc869bcef4eae2`). branch `work/m2-06g-2`, worktree `../rsolver-m2-06g-2`. 단계마다 M2 인계와 커밋을 남긴다. 조사·오라클 계약 통과 뒤 공유 점유를 얻어 진행/로드맵/계획을 갱신하고 검토·병합·정리한다. 교훈은 `docs/lessons/original.md`와 `tooling.md`에 기록한다. 다음 M2-06h-1은 LP 저장·복구 캡처를 먼저 준비하고, M2-06h-2는 그 입력으로 후보 하나의 제어를 Rust에서 재생한다. 전체 factor·방향별 원상 복구 순간·QP·x87 본문·Threads>1·오류·extra>0·cap 명시값·0회 LP 상태·허용오차 경계는 미검증이다. 현재 자료는 factor 전체 재생에 충분하지 않으므로 M2-06h를 06h-1(저장·복구 오라클)과 06h-2(L1 제어 구현)로 분리했다. 이 분할은 전체 factor 입력 없이 06h 구현 완료를 선언하지 않기 위한 것이다.
+독립 검토는 정적 C/asm 재유도와 검사기 실행, 원본 neos5 iters10 재캡처 1회를 포함한다. 검토에서 분기 bound를 적용하지 않은 기록이 통과하는 결함을 찾았다. solve의 입력 LB/UB가 부모보다 느슨해지지 않고 선택 열의 방향 bound가 엄격히 조여졌는지 검사해 수정했고, 변조 15번째로 추가해 거부했다. 상태 2 clamp까지 제거하는 변이도 추가해 neos5에서 거부했다. 검토자가 만든 [재캡처](../../bench/oracle/m2_06g2/review_neos5_iters10.json.gz)는 final/neos5_iters10_1과 JSON·gz 바이트가 같다(SHA-256 `d1fa4f3703670267b363ad95a272a073ed262da9d7f47b76f2bc869bcef4eae2`). 
+
+작업 branch는 `work/m2-06g-2`, worktree는 `../rsolver-m2-06g-2`다. 계약 `60622bd`, 첫 훅 `93ddf79`, 캡처 `8ab7565`, 검사기·최종 결과 `8eeeb72`로 단계를 보존했다. 미커밋 선행 변경은 없다. 병합은 main의 `Merge M2-06g-2`로 확인한다. 병합 뒤 작업 worktree와 branch를 정리하고 점유를 해제한다.
+
+`docs/handoff/M2.md`, `11_progress.md`, `12_roadmap_diagram.md`, `14_sprint_plan.md`, `m2/sprint_design.md`를 갱신했다. 교훈은 `docs/lessons/original.md`와 `tooling.md`에 기록했다.
+
+ 다음 M2-06h-1은 LP 저장·복구 캡처를 먼저 준비하고, M2-06h-2는 그 입력으로 후보 하나의 제어를 Rust에서 재생한다. 전체 factor·방향별 원상 복구 순간·QP·x87 본문·Threads>1·오류·extra>0·cap 명시값·0회 LP 상태·허용오차 경계는 미검증이다. 현재 자료는 factor 전체 재생에 충분하지 않으므로 M2-06h를 06h-1(저장·복구 오라클)과 06h-2(L1 제어 구현)로 분리했다. 이 분할은 전체 factor 입력 없이 06h 구현 완료를 선언하지 않기 위한 것이다.
