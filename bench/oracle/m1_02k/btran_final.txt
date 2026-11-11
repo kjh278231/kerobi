@@ -1,0 +1,2 @@
+rejected Rust new form diff | degen2: e_r output form differs at calls [50], known []
+SELF-TEST PASS

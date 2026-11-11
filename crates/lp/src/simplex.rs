@@ -1899,7 +1899,7 @@ impl<'a> Engine<'a> {
         let lu = &self.lu;
         let force = lu.urow_len(r) > 0;
         let mut out =
-            format!("{{\"k\":{kk},\"r\":{r},\"e\":{},\"d\":{},\"d108\":{},\"t\":{},\"ud\":{},\"od\":{dense}}}\n", lu.n_etas(), bits(lu.dsum()), bits(lu.d108()), lu.prefix_len(), !force && lu.ut_dense(1));
+            format!("{{\"k\":{kk},\"r\":{r},\"e\":{},\"d\":{},\"d108\":{},\"t\":{},\"lt\":{},\"ud\":{},\"od\":{dense}}}\n", lu.n_etas(), bits(lu.dsum()), bits(lu.d108()), lu.prefix_len(), lu.lt_depth(), !force && lu.ut_dense(1));
         let text = std::fs::read_to_string(&spec).unwrap_or_default();
         for (i, line) in text.lines().filter(|l| l.split('\t').next() == Some(&kk.to_string())).enumerate() {
             let x: Vec<(usize, f64)> = line.split('\t').nth(1).unwrap_or("").split(';').filter(|s| !s.is_empty()).map(|e| {

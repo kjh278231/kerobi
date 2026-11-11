@@ -1,0 +1,12 @@
+# 탐색(판정 근거 아님): Netlib 64 Method=1 Presolve=0 Threads=1, tools/m1_btran_path.js 첫 판(r 필드 없음), 원본 BTRAN 221173 호출 집계
+# key = (wrapper, wrapper caller offset, input nnz class, 21a941 ran), value = calls
+calls 53947 models 64
+(288, '0x109289', -1, False) 32
+(288, '0xc36f1', 1, True) 24436
+(288, '0xe53a7', -1, False) 919
+(288, '0xfbca8', -1, False) 2
+(288, '0xfebed', 1, True) 1
+(376, '0x102e5b', 1, True) 2
+(376, '0xc51dd', 1, True) 28555
+(int)D histogram [(3, 28612), (4, 5391), (5, 4205), (6, 2485), (7, 2704), (8, 1914), (9, 1831), (10, 1634), (11, 476), (12, 512), (13, 480), (14, 332), (15, 1322), (16, 732), (17, 431), (18, 624), (19, 2), (20, 211), (21, 49)]
+calls where 3*nnz and (int)D*nnz differ: 0 | 21a941 use vs C:89 prediction mismatches: 0

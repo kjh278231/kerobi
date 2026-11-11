@@ -892,6 +892,11 @@ impl Lu {
         self.d108
     }
 
+    /// Lᵀ DAG depth (LU+0x140), −1 without levels (for the M1-02k probe).
+    pub(crate) fn lt_depth(&self) -> i64 {
+        self.level.as_ref().map_or(-1, |l| l.iter().copied().max().unwrap_or(0) as i64)
+    }
+
     pub(crate) fn prefix_len(&self) -> usize {
         self.prefix
     }
