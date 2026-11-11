@@ -74,5 +74,5 @@
 - 작업 수행: 완료. 동등성: 판정 부분 **통과**, e_r 출력 값·순서 행 **실패(기존 차이 111호출, 고정 목록)**. LU+0x140 값과 희소/조밀 Lᵀ 판정(출력 형태)이 4모델의 같은 상태 범위 832호출에서 원본과 같다. 대상 stair e_r 102·118은 출력 형태와 값이 비트까지 같다. 계약 §3의 e_r 출력 값 비교는 stair 104·bnl1 7호출에서 원본과 다르며, 판정 조건을 빼도 똑같으므로 이번 변경의 결과가 아니다(M1-02y).
 - 남은 한계: 대각 U 경로의 조건, `<=` 경계, nnz 0 처리는 자연 사례가 없어 판별하지 못했다(변이 생존). Method 0·quad·MIP 호출자는 미검증. 같은 상태 범위 밖(stair 185 이후 등)도 미검증.
 - 후속: **M1-02y**(stair e_r 31의 1 ulp에서 시작해 커지는 값 차이, bnl1 레벨 경로 행 587 순서. 첫 명령 `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_lt_check.py --rust`로 고정 목록 확인, stair e_r 31의 행 eta 단계 입력부터 대조), **M1-02w**, **M1-02t**, **M1-02u**.
-- branch `work/m1-02x`, worktree `../rsolver-m1-02x`. shared가 다른 세션(M2-06h4) 점유 중이라 진행·로드맵·스프린트 표 갱신과 병합은 shared를 얻은 뒤 한다.
+- branch `work/m1-02x`, worktree `../rsolver-m1-02x`. shared를 얻은 뒤 main `dcadef1`(M2-06h-4, `crates/mip`만 변경)을 branch에 병합해 재검증하고(`bench/oracle/m1_02x/after_main_merge/`: workspace 테스트·clippy·pytest·`m1_btran_check`·`m1_lt_check` self-test) 진행·로드맵·스프린트 표를 갱신한 뒤 main에 `--no-ff`로 병합했다. worktree·branch는 병합과 함께 정리한다.
 - 교훈: `docs/lessons/original.md`(BTRAN 희소 Lᵀ 세 조건, e_r 출력 기존 차이), `docs/lessons/tooling.md`(함수 중간 훅으로 판정 입력 얻기, 검사기 메시지를 먼저 만드는 문제).
