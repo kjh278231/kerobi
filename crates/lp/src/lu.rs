@@ -186,6 +186,11 @@ impl Lu {
         (rows, self.prefix)
     }
 
+    /// LU+0xe8 and the U positions whose column is empty (snapshots).
+    pub fn empty_cols(&self) -> (usize, Vec<usize>) {
+        (self.e8, (0..self.order.len()).filter(|&p| self.ucol[self.order[p]].is_empty()).collect())
+    }
+
     /// Tail U columns by descending U position as (position, prefix-row positions in storage order) (snapshots).
     pub fn u_prefix_parts(&self) -> Vec<(usize, Vec<usize>)> {
         let t = self.prefix;
@@ -1280,6 +1285,42 @@ impl Lu {
                 emptied.push((ki, at[ki]));
             }
         }
+        // new prefix (L463–512): local_40, with an empty column above p taking the place of p when q < p. It reads
+        // LU+0xe8 and the column ends before row r leaves U below (C:979–1019 raise LU+0xe8 after it)
+        let (tm1, nz) = (t as i64 - 1, !others.is_empty());
+        let (pi, qi, li) = (p0 as i64, q as i64, l as i64);
+        let mut p = p0;
+        let local40 = if li == pi {
+            if qi < pi || pi == tm1 { tm1 - nz as i64 } else { tm1 }
+        } else if qi < pi {
+            let mut e = self.e8 as i64;
+            let mut found = false;
+            if pi < e {
+                loop {
+                    if self.ucol[self.order[e as usize]].is_empty() {
+                        found = true;
+                        break;
+                    }
+                    e -= 1;
+                    if pi >= e {
+                        break;
+                    }
+                }
+            }
+            self.e8 = e as usize;
+            if found {
+                p = e as usize;
+                tm1
+            } else if pi < li {
+                t as i64 - 2
+            } else {
+                tm1
+            }
+        } else if pi < li && pi == tm1 {
+            t as i64 - 2 + (!nz) as i64
+        } else {
+            tm1
+        };
         let mut diag = spike[rp];
         if l != p0 && !self.urow[kp].is_empty() {
             // η = e_rᵀU⁻¹ by Uᵀ in U order (the 21a941 output order) on the U before the update
@@ -1332,41 +1373,6 @@ impl Lu {
                 self.umid[j] += 1;
             }
         }
-        // new prefix (L463–512): local_40, with an empty column above p taking the place of p when q < p
-        let (tm1, nz) = (t as i64 - 1, !others.is_empty());
-        let (pi, qi, li) = (p0 as i64, q as i64, l as i64);
-        let mut p = p0;
-        let local40 = if li == pi {
-            if qi < pi || pi == tm1 { tm1 - nz as i64 } else { tm1 }
-        } else if qi < pi {
-            let mut e = self.e8 as i64;
-            let mut found = false;
-            if pi < e {
-                loop {
-                    if self.ucol[self.order[e as usize]].is_empty() {
-                        found = true;
-                        break;
-                    }
-                    e -= 1;
-                    if pi >= e {
-                        break;
-                    }
-                }
-            }
-            self.e8 = e as usize;
-            if found {
-                p = e as usize;
-                tm1
-            } else if pi < li {
-                t as i64 - 2
-            } else {
-                tm1
-            }
-        } else if pi < li && pi == tm1 {
-            t as i64 - 2 + (!nz) as i64
-        } else {
-            tm1
-        };
         // LU+0xf0 list (05b257 C:535–551, C:1040–1059, C:1085–1097)
         for (k, at_k) in emptied {
             if at_k as i64 <= local40 {
