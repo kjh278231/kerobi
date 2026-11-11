@@ -89,8 +89,41 @@
 
 ## 6. 실행 결과
 
-(실행 뒤 작성)
+- 실행: worktree `../rsolver-m1-02s`(branch `work/m1-02s`, 기준 main `f7ac92b`), 기준선 빌드 `../rsolver-m1-02s-base`(detached `f7ac92b`). 원본 자료는 02p `bench/oracle/m1_02p/{kb2,degen2}_w_1.json.gz`(검사기가 SHA-256 고정)와 02q `fw` 캡처. Gurobi 실행 0회.
+- Rust 변경(`crates/lp/src/simplex.rs`, `pricing.rs`):
+  - dual 루프: `pivot` 앞에 `dse_n = (β ≠ 0).then(α_q 목록 길이)`. 갱신 경로면 0xc0410(β ≠ 0일 때)과 x_B 지점(`pr.mode` = 0 → 0xc06c7, mode 1이고 `c8` 거짓 → 0xc0c24, 참 → 0xc09bd 8·N)을 `price_touch` 앞에 저장한다. 재분해 경로면 `refactor`가 0xf461f 뒤에 `dse_n`을 받아 0xbe793 `(X148·3)·N`.
+  - `price_touch`의 재구성: `Pricing::rebuild`가 `Rebuilt { feasible, scanned, kept, added }`를 돌려주고 0xc26ec(옛 목록이 비면 carry)·0xc2761·0xc2842·0xc2ad4. **c0는 `c8`이 거짓이면 m, 참이면 가능 위치 수**(C:799–855의 카운터 위치. 첫 실행에서 발견, 아래).
+  - 재분해 뒤(`reinvert_with`의 dual 쪽 끝, `dual_start`): 섭동·flip 뒤 `work_xb`(0xc142b) → `price_full`(mode 0이면 0xc4329 = 5m + 4·목록 길이, mode 1이면 0xc1fe3 = 5m + 4·위반 위치 수) → `work_obj`(0xbf981, `big_m`이면 0xbfed2, 플래그 `pt_lvl ≠ 0`). `dual_start`는 0xc142b를 0xc391f 앞에 둔다. `dual_resume`에도 같은 세 지점을 두었다(범위 밖, 미검증).
+- 검사기 `tools/m1_factor_work_check.py`: SITES에 `POST` 14지점(0xc09bd 포함), G2(0xc0410 수 = 갱신 수, `POST_RUN` 13지점 도달), 변조 5·변이 9 추가.
+- 첫 실행: kb2 통과, degen2 저장 1194(k = 138, 인공 bound가 끝난 뒤 첫 재구성)에서 0xc26ec가 Rust 1977·원본 1332(= 3·444)로 실패. 원본 C:799–855(spx+0x2c8 = 0 루프)는 `iVar60++`가 if/else 밖이라 c0 = m이다. 가능 위치만 세는 것은 spx+0x2c8 ≠ 0 루프뿐이다(그 앞 51회 중 k < 131은 인공 bound 단계라 맞았다). 고친 뒤 `--self-test` 종료 0:
+
+```text
+kb2:    W stores 507  {0xc0410 35, 0xc06c7 5, 0xc0c24 30, 0xc142b 4, 0xc4329 1, 0xc1fe3 3, 0xbf981 4, 0xbe793 3, …}
+degen2: W stores 4118 {0xc0410 348, 0xc06c7 272, 0xc0c24 76, 0xc142b 9, 0xc4329 7, 0xc1fe3 2, 0xbf981 5, 0xbfed2 4,
+                      0xc26ec 51, 0xc2761 51, 0xc2842 51, 0xc2ad4 51, 0xbe793 7, …}, W range k < 356
+ACCEPTANCE PASS (+ self-test)
+```
+
+- W: 지점별 횟수가 §4의 기대 횟수와 모두 같고, 02q·02r 지점까지 포함한 kb2 507·degen2 4,118 저장의 지점 순서·k·값 비트가 원본과 같다. 0xc09bd 0회(예상).
+- T(`bench/oracle/m1_02q/check_mutate_02s.txt`): 02r 16종 + 이번 5종(t_c0410·t_c142b·t_mode·t_wc1fe3·t_be793) 모두 거부.
+- R(같은 파일, 최종 코드로 재실행): 02r 15종 + 이번 9종 중 이번 6종 거부(c0410 N + 1 kb2 저장 16, mode 뒤집기 kb2 17, S에 bound 0 열 kb2 8, nInf = 목록 길이 kb2 155, 플래그 0 kb2 156, `k + s` degen2 22). 생존 3종은 사전 표의 예상대로 판별 불가로 기록한다:
+  - 0xc142b를 섭동·flip 앞 vstat으로: 범위 안에 섭동·flip이 S를 바꾼 재분해가 없다. 첫 `--mutate`의 이 변이는 저장을 옮기지 않고 하나 더 끼워 지점 중복으로만 거부됐다. 옮기는 변이로 고쳐 다시 돌리니 생존했다(첫 실행 뒤 변이 수정임을 밝힌다).
+  - 0xc26ec를 옛 목록이 비어도 저장: 범위 안 재구성 51회 모두 옛 목록이 비지 않았다.
+  - 0xbe793 결합 `(N·3)·x148`: 양 끝자리가 합의 반올림에 묻힌다(02q·02r의 결합 변이와 같음).
+- 회귀(worktree 빌드):
+  - `cargo test -p rsolver-lp` 42 통과(1 무시), `cargo test --release --workspace` 125 통과·11 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0.
+  - M1 검사기 12종 `--self-test`(`m1_lsolve`·`m1_update`·`m1_usolve`는 `--rust`) 종료 0, `m1_bfrt_rust` ACCEPTANCE PASS, pytest 657 통과.
+  - Netlib: `tools/proto/pathcmp.py all` 출력이 기준선 빌드와 바이트 동일(완전 일치 27/64, 중앙 0.752). `tools/lp_check.py --methods 1,0,-1 --timeout 120`: 정답 90/91 ×3, IterCount 31/0/31, 273행의 상태·목적값·반복 수가 기준선과 같다(시간 열 제외).
+- 계약 변경: 변이 "0xc142b 섭동 앞"의 구현을 고쳤다(위). 범위·비교 규칙은 바꾸지 않았다.
 
 ## 7. 판정과 인수인계
 
-(실행 뒤 작성)
+- 작업 수행 상태: 완료.
+- 동등성: **통과**(계약 범위). kb2(재분해 5회의 `05b257` 반환까지)·degen2 피벗 0–355에서 `05b257` 뒤 처리 13지점과 02q·02r 지점의 저장 순서·값이 원본과 비트 같다. 재분해 진입 work(0x150)는 원본 값을 입력으로 넣었다.
+- 미검증: 0xc09bd(mode 1·spx+0x2c8 ≠ 0, 실행 0회), β = 0 분기(0xc0410·0xbe793 저장 없음), 0xc26ec carry 분기(옛 목록 빔, 변이 생존), 0xc142b의 섭동·flip 뒤 시점(변이 생존), `1ca57` 두 번째 `1bae9c` 호출·spx+0x490 ≠ 0, `17248`(DSE 모드 2), `dual_resume` 경로, kb2 다섯째 재분해 뒤(k = 38) 저장, degen2 피벗 356 이후. spx+0x338 = `pt_lvl ≠ 0`, spx+0x2c8 = `c8`은 kb2·degen2 범위에서만 판별했다.
+- 후속:
+  - **M1-02v**: 반복 커널 `a4109`·`1c35c5`·`28c93`·`1c8477`·`2896a3`·`15d2d`(19지점). `15d2d`는 이번 `Rebuilt` 수를 CHUZR 쪽 재구성에 쓰되 식·지점이 다르다.
+  - **M1-02t**(02k 뒤)·**M1-02u** 그대로. 모두 끝나면 work를 재분해 판정에 연결하고 `RSOLVER_WORK_SEED` 없이 degen2 피벗 356을 대조.
+- 다음 명령: `tools/build_local.sh && PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_factor_work_check.py --self-test`, 새 지점은 `SITES`와 도달 집합에 더한다.
+- 갱신: `docs/handoff/M1.md`, `docs/14_sprint_plan.md`, `docs/11_progress.md`, `docs/12_roadmap_diagram.md`.
+- 교훈: `docs/lessons/original.md`(dual work 누적 절: 뒤 처리 세 함정), `docs/lessons/tooling.md`(캡처 양 탐침).
