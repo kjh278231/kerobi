@@ -41,7 +41,8 @@ impl Backend for Replay {
         let r = self.work("solve", work)?;
         let v = |s: &str| if s == "-" { 0.0 } else { number(s) };
         let value = match r[1].as_str() {
-            "2" => LpValue::Optimal(v(&r[2])), "6" => LpValue::Infeasible, "7" => LpValue::Limited(v(&r[2])),
+            "2" => LpValue::Optimal(v(&r[2])), "3" | "6" => LpValue::Infeasible,
+            "7" | "11" | "-1000" => LpValue::Limited(v(&r[2])),
             _ => panic!("uncovered status"),
         };
         Ok(LpResult { value, iterations: v(&r[3]) })
