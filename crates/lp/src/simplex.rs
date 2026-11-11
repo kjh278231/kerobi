@@ -9,7 +9,7 @@
 use crate::lu::{sum_squares, Lu, ZERO};
 use crate::bfrt::{bfrt, Cand};
 use crate::common::Rng;
-use crate::pricing::{Pricing, BIG_M_TOL};
+use crate::pricing::{Pricing, Rebuilt, BIG_M_TOL};
 use crate::spx::Spx;
 use crate::start::start_basis;
 use crate::work::{Work, X148};
@@ -114,6 +114,8 @@ pub struct Engine<'a> {
     pub work: Work,
     /// Spike list length LU+0x1c8 pending at a refactor (`05b257` 0xf461f).
     spike_ns: usize,
+    /// α_q list length of a pivot whose DSE update `16b0a` runs in the refactor path (β ≠ 0; 0xbe793).
+    dse_n: Option<usize>,
 }
 
 impl<'a> Engine<'a> {
@@ -181,6 +183,7 @@ impl<'a> Engine<'a> {
             path: Vec::new(),
             work: Work::new(),
             spike_ns: 0,
+            dse_n: None,
         }
     }
 
@@ -249,6 +252,10 @@ impl<'a> Engine<'a> {
         if k > 0 {
             self.work.add(0xf461f, (k as f64 + k as f64) * X148);
         }
+        // 05b257 C:2466–2479: the DSE update of a pivot that refactors instead of updating (`16b0a` C:46–48)
+        if let Some(n) = self.dse_n.take() {
+            self.work.add(0xbe793, (X148 * 3.0) * n as f64);
+        }
         self.lu.refactor_work(&mut self.work, self.pr.cost_mode);
         self.work_dump(&head0);
     }
@@ -311,8 +318,24 @@ impl<'a> Engine<'a> {
                     eprintln!("nondegflip on at it {}", self.iter);
                 }
             }
+            self.work_xb();
             self.price_full();
+            self.work_obj();
         }
+    }
+
+    /// `1bae9c` C:1432–1592 (0xc142b), after `48d5f`'s flips and perturbation: 4m + 2S with S the column lengths of
+    /// the structural nonbasics on a nonzero bound.
+    fn work_xb(&mut self) {
+        let s = (0..self.n).filter(|&j| self.vstat[j] < 0 && self.x_nonbasic(j) != 0.0).map(|j| self.spx.len[j] as i64).sum::<i64>() as f64;
+        self.work.add(0xc142b, ((self.m as f64 * 4.0 + s) + s) * X148);
+    }
+
+    /// `1ca57` C:139–141 / C:312–316 after the refactor path of `1bae9c`: (m+n)(2 + [spx+0x338 ≠ 0]), 0xbfed2 while
+    /// the artificial bounds (spx+0x2cc) are on. shortcut: spx+0x490 = 0 assumed (0xbfed2 is then skipped).
+    fn work_obj(&mut self) {
+        let a = ((self.m + self.n) as f64 * ((self.pt_lvl != 0) as i32 as f64 + 2.0)) * X148;
+        self.work.add(if self.big_m { 0xbfed2 } else { 0xbf981 }, a);
     }
 
     /// TRIGGER of `48d5f` (m1_notes §8.9) after a refactor: every K-th factorization (K = 2, 5 once perturbed), perturb
@@ -699,12 +722,12 @@ impl<'a> Engine<'a> {
         self.spx.var_factor(j) * self.pr.score(p, j, v, self.w[p])
     }
 
-    fn price_rebuild(&mut self) {
+    fn price_rebuild(&mut self) -> Rebuilt {
         let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol(p)).collect();
         let score: Vec<f64> =
             (0..self.m).map(|p| viol[p].map_or(0.0, |v| self.price_score(p, v))).collect();
         self.pr.allow = self.lu_interval as i64;
-        self.pr.rebuild(&viol, &score);
+        self.pr.rebuild(&viol, &score)
     }
 
     /// Full path of `1bae9c` after a factorization: BTRAN-cost weights from the new LU (`9e60b`), the switch to
@@ -731,6 +754,8 @@ impl<'a> Engine<'a> {
             self.pr.budget = 40;
             self.pr.cursor = 0;
             self.price_rebuild();
+            // 1b7106 C:146–147: 5m + 4·(new list length)
+            self.work.add(0xc4329, (self.m as f64 * 5.0 + self.pr.list.len() as f64 * 4.0) * X148);
         } else {
             let viol: Vec<Option<f64>> = (0..self.m).map(|p| self.viol1(p, true)).collect();
             let score: Vec<f64> =
@@ -738,6 +763,9 @@ impl<'a> Engine<'a> {
             // divisor 1000 when the violations are at least nnz(α_q) of the last pivot (or none yet) and not c8
             let few = self.path.is_empty() || viol.iter().flatten().count() >= self.col_nnz.saturating_sub(1);
             self.pr.full_init(&viol, &score, if few && !self.c8 { 1000.0 } else { 100000.0 });
+            // 1bae9c C:2468–2470: 5m + 4·(violated positions)
+            let ninf = viol.iter().flatten().count();
+            self.work.add(0xc1fe3, (self.m as f64 * 5.0 + ninf as f64 * 4.0) * X148);
         }
     }
 
@@ -807,7 +835,19 @@ impl<'a> Engine<'a> {
                 }
                 self.reinvert();
             } else {
-                self.price_rebuild();
+                // 1bae9c C:799–1260: the list rebuild inline after the x_B update
+                let r = self.price_rebuild();
+                // c0: the spx+0x2c8 = 0 loop (C:799–855) counts every position, the other one only the feasible
+                let c0 = if self.c8 { r.feasible } else { self.m };
+                let a = (c0 as f64 * 3.0 + ((self.pr.cost_mode == 1) as i32 as f64 + 5.0) * (self.m - c0) as f64) * X148;
+                if r.scanned > 0 {
+                    self.work.add(0xc26ec, a);
+                } else {
+                    self.work.carry(a);
+                }
+                self.work.add(0xc2761, ((r.kept as f64 + r.kept as f64) + r.scanned as f64) * X148);
+                self.work.add(0xc2842, (r.added as f64 + r.added as f64) * X148);
+                self.work.add(0xc2ad4, self.pr.list.len() as f64 * X148);
             }
         }
     }
@@ -886,6 +926,7 @@ impl<'a> Engine<'a> {
         self.make_dual_feasible();
         self.compute_xb();
         self.exact_weights();
+        self.work_xb();
         // 1bae9c C:2150–2205: the DSE weight init loop over the m basis positions
         self.work.add(0xc391f, self.m as f64 * X148);
         self.big_m = (0..self.n + self.m).any(|j| self.vstat[j] < 0 && self.x_nonbasic(j).abs() >= INFINITY);
@@ -893,6 +934,7 @@ impl<'a> Engine<'a> {
         self.pt_rc = factors;
         self.in_dual = true;
         self.price_full();
+        self.work_obj();
     }
 
     /// One free-column pivot of the dual start; false when no position has |α| ≥ tol.
@@ -1257,7 +1299,9 @@ impl<'a> Engine<'a> {
             let updates_before = self.lu.n_updates;
 
             self.iter += 1; // 28c93 L820: counted before the LU update or refactor (seeds, marks)
+            self.dse_n = (beta != 0.0).then_some(aq_list.len());
             self.pivot(r, q, leave, &spike, &sorder);
+            let dse_n = self.dse_n.take(); // still set: the pivot updated the LU
 
             if self.lu.n_updates > 0 {
                 self.xb[r] = xq;
@@ -1290,6 +1334,16 @@ impl<'a> Engine<'a> {
                 self.pr.row_cost[r] = self.pr.row_cost[r].max(p60 + 100.0);
             }
             if self.lu.n_updates > updates_before {
+                // 1bae9c C:460–462 (DSE update, β ≠ 0) and C:641/777 (x_B update over the α_q list, P+0x40 and spx+0x2c8)
+                let nq = aq_list.len() as f64;
+                if dse_n.is_some() {
+                    self.work.add(0xc0410, (nq * 3.0) * X148);
+                }
+                match (self.pr.mode, self.c8) {
+                    (0, _) => self.work.add(0xc06c7, (nq * 7.0) * X148),
+                    (_, false) => self.work.add(0xc0c24, (nq * 7.0) * X148),
+                    _ => self.work.add(0xc09bd, (nq * 8.0) * X148),
+                }
                 // 1bae9c C:466–700: the leaving position first, then the α_q list in its order
                 let mut changed = vec![r];
                 changed.extend(&aq_list);
@@ -1737,7 +1791,9 @@ impl<'a> Engine<'a> {
         self.shift_costs();
         self.exact_weights();
         self.rc_build();
+        self.work_xb(); // shortcut: the start-path stores as in dual_start, unchecked on re-entry
         self.price_full();
+        self.work_obj();
     }
 
     /// Primal values of all n+m columns (scaled space).
