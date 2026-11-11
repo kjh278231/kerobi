@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""M1-02q/M1-02r: Rust dual work at the factor (036ade), FT update and refactor-return (05b257, 9e60b) and start
-(534f7, 1bae9c) sites against the original. Contracts: docs/m1/m1_02q_work.md and docs/m1/m1_02r_ft_work.md section 3.
+"""M1-02q/M1-02r/M1-02s: Rust dual work at the factor (036ade), FT update and refactor-return (05b257, 9e60b), start
+(534f7, 1bae9c) and post-05b257 (1bae9c, 1b7106, 1ca57, 16b0a) sites against the original. Contracts:
+docs/m1/m1_02q_work.md, docs/m1/m1_02r_ft_work.md and docs/m1/m1_02s_post_work.md section 3.
 Exit 0 only when every check passes.
 Run with this worktree's build: tools/build_local.sh && PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_factor_work_check.py
   --self-test   also the tampers (T)
@@ -23,6 +24,10 @@ SITES = {0xe84b9, 0xc391f, 0xd4ded, 0xd5300, 0xd5e39, 0xd85e6, 0xdc7b2, 0xdcb7b,
 FT = {0xf1beb, 0xf1d02, 0xf1f37, 0xf1f82, 0xf2044, 0xf207a, 0xf2521, 0xf2969, 0xf2a51, 0xf2e3c, 0xf3ca4, 0xf3d83, 0xf3eac,
       0xf3f71, 0xf4073, 0xf461f}  # M1-02r: 05b257 FT update path and the refactor path's spike clear
 SITES |= FT
+POST = {0xc0410, 0xc06c7, 0xc0c24, 0xc09bd, 0xc26ec, 0xc2761, 0xc2842, 0xc2ad4, 0xc142b, 0xc4329, 0xc1fe3, 0xbf981, 0xbfed2,
+        0xbe793}  # M1-02s: 1bae9c per pivot / list rebuild / after a refactor, 1b7106, 1ca57, 16b0a
+SITES |= POST
+POST_RUN = POST - {0xc09bd}  # 0xc09bd (mode 1 with spx+0x2c8 set) is not expected to run (contract section 1)
 UPD = {'kb2': (35, 35), 'degen2': (300, 10 ** 9)}  # FT updates (0xf2e3c) in range: (min, max)
 F = lambda h: struct.unpack('<d', int(h, 16).to_bytes(8, 'little'))[0]
 H = lambda x: struct.pack('<d', x)[::-1].hex()
@@ -166,12 +171,15 @@ def check(caps, wcaps, runs, files_ok=True):
                                f' x 1.3 = {H(x)}, original {v} (amount {(F(v) - F(p)) / 1.3} x 1.3)')
                     break
                 sites[hex(site)] += 1
-                if site in FT:
+                if site in FT or site in POST:
                     reach[site] += 1
         # G: FT updates in range
         nu = sites[hex(0xf2e3c)]
         if not UPD[name][0] <= nu <= UPD[name][1]:
             bad.append(f'G {name}: {nu} FT updates compared, need {UPD[name]}')
+        # G2: one DSE update store per FT update (beta is never 0 here)
+        if sites[hex(0xc0410)] != nu:
+            bad.append(f'G2 {name}: {sites[hex(0xc0410)]} 0xc0410 stores for {nu} FT updates')
         # F: spx+0x158 at each 05b257 return
         v158 = [e['w158'] for e in ev if e['type'] == 'V' and e['reason'] != 0][:n]
         for i in range(n):
@@ -183,6 +191,9 @@ def check(caps, wcaps, runs, files_ok=True):
     miss = sorted(hex(s) for s in FT - set(reach))
     if miss:
         bad.append(f'G: FT sites never compared {miss}')
+    miss = sorted(hex(s) for s in POST_RUN - set(reach))
+    if miss:
+        bad.append(f'G2: post-05b257 sites never compared {miss}')
     return bad, rep
 
 
@@ -266,8 +277,28 @@ def main():
         def t_k(c, w, r):
             next(s for s in r['kb2'][3]['stores'] if s[0] == 0xf2e3c)[3] += 1
 
+        # M1-02s
+        def t_c0410(c, w, r):
+            s = [s for s in r['kb2'][2]['stores'] if s[0] == 0xc0410][1]
+            s[2][-1] = H(F(s[2][-1]) + 1.3)
+
+        def t_c142b(c, w, r):
+            s = r['degen2'][4]['stores']
+            s.remove(next(x for x in s if x[0] == 0xc142b))
+
+        def t_mode(c, w, r):
+            next(s for s in r['kb2'][1]['stores'] if s[0] == 0xc06c7)[0] = 0xc0c24
+
+        def t_wc1fe3(c, w, r):
+            e = next(e for e in w['kb2']['events'] if e['type'] == 'W' and e['pc'] == 0xc1fe3)
+            e['v'] = flip(e['v'])
+
+        def t_be793(c, w, r):
+            s = r['degen2'][3]['stores']
+            s.remove(next(x for x in s if x[0] == 0xbe793))
+
         for t in (t_bin, t_empty, t_nof, t_nwork, t_head, t_head1, t_term, t_add, t_158, t_site, t_wval, t_ftadd, t_ftdrop,
-                  t_461f, t_wft, t_k):
+                  t_461f, t_wft, t_k, t_c0410, t_c142b, t_mode, t_wc1fe3, t_be793):
             c, w, r = copy.deepcopy(caps), copy.deepcopy(wcaps), copy.deepcopy(runs)
             t(c, w, r)
             b2, _ = check(c, w, r)
@@ -298,8 +329,23 @@ MUTANTS = [  # (name, file, original text, mutated text)
     ('f1beb association', 'crates/lp/src/lu.rs', '(X148 * 3.0) * n as f64', 'X148 * (3.0 * n as f64)'),
     # added after the first run (review): the no-store branch of a length-1 row at a position > local_40
     ('f1f37 without local_40 test', 'crates/lp/src/lu.rs', '} else if v as i64 <= local40 {', '} else {'),
+    # M1-02s (contract section 3, fixed before the first run)
+    ('c0410 N with the pivot', 'crates/lp/src/simplex.rs', 'self.work.add(0xc0410, (nq * 3.0) * X148)', 'self.work.add(0xc0410, ((nq + 1.0) * 3.0) * X148)'),
+    ('x_B site mode test flipped', 'crates/lp/src/simplex.rs', '(0, _) => self.work.add(0xc06c7', '(1, _) => self.work.add(0xc06c7'),
+    ('c142b S with zero bounds', 'crates/lp/src/simplex.rs', 'self.vstat[j] < 0 && self.x_nonbasic(j) != 0.0', 'self.vstat[j] < 0'),
+    # moved (not added) before 48d5f's flips and perturbation; fixed after the first --mutate run, whose version added a
+    # second store and was rejected for the duplicate only
+    ('c142b before the perturbation', 'crates/lp/src/simplex.rs',
+     '        if self.in_dual {\n            if flip {\n                if self.make_dual_feasible() {\n                    self.compute_xb();\n                }\n            } else {\n                self.shift_costs();\n            }\n            self.pt_rc += 1;\n            self.perturb_trigger();\n            // 48d5f C:2106-2111, after the perturbation; it stays on\n            // shortcut: the spx+0x178 != 0 disjunct is left out (no spx+0x178 here; 0 in every M1-02e capture)\n            if !self.nondeg_flip && (self.pt_lvl > 2 || (self.m as u64) < 3 * self.iter) {\n                self.nondeg_flip = true;\n                if std::env::var("RSOLVER_DEBUG").is_ok() {\n                    eprintln!("nondegflip on at it {}", self.iter);\n                }\n            }\n            self.work_xb();\n',
+     '        if self.in_dual {\n            self.work_xb();\n            if flip {\n                if self.make_dual_feasible() {\n                    self.compute_xb();\n                }\n            } else {\n                self.shift_costs();\n            }\n            self.pt_rc += 1;\n            self.perturb_trigger();\n            // 48d5f C:2106-2111, after the perturbation; it stays on\n            // shortcut: the spx+0x178 != 0 disjunct is left out (no spx+0x178 here; 0 in every M1-02e capture)\n            if !self.nondeg_flip && (self.pt_lvl > 2 || (self.m as u64) < 3 * self.iter) {\n                self.nondeg_flip = true;\n                if std::env::var("RSOLVER_DEBUG").is_ok() {\n                    eprintln!("nondegflip on at it {}", self.iter);\n                }\n            }\n'),
+    ('c1fe3 nInf = listed', 'crates/lp/src/simplex.rs', 'let ninf = viol.iter().flatten().count();', 'let ninf = self.pr.list.len();'),
+    ('bf981 flag 0', 'crates/lp/src/simplex.rs', '((self.pt_lvl != 0) as i32 as f64 + 2.0)', '(0.0 + 2.0)'),
+    ('c2761 k + s', 'crates/lp/src/simplex.rs', '((r.kept as f64 + r.kept as f64) + r.scanned as f64)', '(r.kept as f64 + r.scanned as f64)'),
+    ('c26ec stored with an empty old list', 'crates/lp/src/simplex.rs', 'if r.scanned > 0 {\n                    self.work.add(0xc26ec', 'if true {\n                    self.work.add(0xc26ec'),
+    ('be793 association', 'crates/lp/src/simplex.rs', '(X148 * 3.0) * n as f64', '(n as f64 * 3.0) * X148'),
 ]
-SURVIVE_OK = {'f1beb association'}  # last-bit amount changes are absorbed by the sum (M1-02q section 6)
+SURVIVE_OK = {'f1beb association', 'c142b before the perturbation', 'c1fe3 nInf = listed', 'c26ec stored with an empty old list',
+              'be793 association'}  # survivors expected in the contract tables (last bit absorbed / branch maybe not run)  # last-bit amount changes are absorbed by the sum (M1-02q section 6)
 
 
 def mutate(caps, wcaps, seeds):

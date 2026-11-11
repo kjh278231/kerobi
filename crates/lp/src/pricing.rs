@@ -7,6 +7,17 @@ use crate::common::sort_desc;
 /// Feasibility tolerance of CHUZR during the artificial-bound phase (spx+0x2cc): FeasTol·1e30·1e-5.
 pub const BIG_M_TOL: f64 = 1e-6 * 1e30 * 1e-5;
 
+/// Counts of one `rebuild` for the work stores (`1bae9c` C:799–1260).
+pub struct Rebuilt {
+    /// Feasible positions (marked 2).
+    pub feasible: usize,
+    /// Old list entries scanned (= the old length P+0x3c) and kept.
+    pub scanned: usize,
+    pub kept: usize,
+    /// Violated positions appended (sorted, then merged).
+    pub added: usize,
+}
+
 pub struct Pricing {
     /// P+0x40: 0 ordered list, 1 Full pricing.
     pub mode: i32,
@@ -67,7 +78,9 @@ impl Pricing {
     /// `15d2d`: keep the untouched listed positions that stay in non-increasing score order, sort the other
     /// infeasible positions by score (`aabbe3`) and merge (ties keep the old entry first). `viol[p]` is the
     /// violation of position p (None if feasible), `score[p]` its score.
-    pub fn rebuild(&mut self, viol: &[Option<f64>], score: &[f64]) {
+    pub fn rebuild(&mut self, viol: &[Option<f64>], score: &[f64]) -> Rebuilt {
+        let feasible = viol.iter().filter(|v| v.is_none()).count();
+        let scanned = self.list.len();
         for (p, v) in viol.iter().enumerate() {
             if v.is_some() {
                 if self.mark[p] != 0 {
@@ -115,6 +128,7 @@ impl Pricing {
         out.extend(idx[b..].iter().map(|&p| p as usize));
         self.list = out;
         self.cursor = 0;
+        Rebuilt { feasible, scanned, kept: kept.len(), added: idx.len() }
     }
 
     /// Mode-0 walk (`2896a3`): next listed position with mark 0, or None when the list is used up.
