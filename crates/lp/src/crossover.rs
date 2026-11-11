@@ -1,11 +1,7 @@
 //! Crossover primal push pieces: the ratio tests on a feasible (docs/m3/primal_push_ratio_rust.md) and a violated basis
 //! (docs/m3/primal_push_violated.md) with its retry (docs/m3/primal_push_retry.md), and the step decisions around them
-//! (docs/m3/primal_push_decision_rust.md, docs/m3/primal_push_recall.md). No push loop calls them yet.
-
-/// The small-pivot second pass of the violated-basis ratio tests (`054eef`, `056973`) was never compared with the
-/// original; it is refused instead of guessed. The feasible ratio test runs its second pass (docs/m3/primal_push_reentry.md).
-#[derive(Debug, PartialEq, Eq)]
-pub struct Reentry;
+//! (docs/m3/primal_push_decision_rust.md, docs/m3/primal_push_recall.md). No push loop calls them yet. All three ratio
+//! tests run their small-pivot second pass (docs/m3/primal_push_reentry.md, docs/m3/primal_push_violated_reentry.md).
 
 /// Feasible-basis ratio test (`055f68`) of the primal push on the FTRAN column `(idx, val)`: `idx = None` is the dense
 /// form with `val.len() == x.len()`. `x` is the lower-shifted basic value, `width` the bound width, `marks` the basic
@@ -85,20 +81,25 @@ pub fn feasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option
             }
         }
         *pivot = val[chosen as usize].abs();
-        let small = first && 0.1 > *pivot; // NaN returns, as the original's jbe
-        if !small {
-            return chosen;
+        match first.then(|| tightened(tol, &val[..count], *pivot)).flatten() {
+            Some(t) => tol = t,
+            None => return chosen,
         }
-        // maxsd: a NaN entry makes the running maximum NaN, and the next entry replaces a NaN maximum
-        let big = val[..count].iter().fold(0.0f64, |m, v| if m > v.abs() { m } else { v.abs() });
-        let scale = pivot_scale(big);
-        let reenter = tol * big * scale > *pivot;
-        if !reenter {
-            return chosen;
-        }
-        tol *= big * scale;
         first = false;
     }
+}
+
+/// The small-pivot check after a first pass: `Some(tolerance)` for the second pass when the pivot is below 0.1 and
+/// below `(tol * max|val|) * scale`, the new tolerance being `tol * (max|val| * scale)` (the original's order). NaN
+/// pivots and thresholds accept, as the original's `jbe`.
+fn tightened(tol: f64, val: &[f64], pivot: f64) -> Option<f64> {
+    if 0.1 > pivot {
+        // maxsd: a NaN entry makes the running maximum NaN, and the next entry replaces a NaN maximum
+        let big = val.iter().fold(0.0f64, |m, v| if m > v.abs() { m } else { v.abs() });
+        let scale = pivot_scale(big);
+        return (tol * big * scale > pivot).then_some(tol * (big * scale));
+    }
+    None
 }
 
 /// Tolerance factor of the small-pivot check by the column's largest |entry| (NaN takes the last one).
@@ -117,246 +118,263 @@ fn pivot_scale(big: f64) -> f64 {
 /// hits, so `B` rows block a decreasing and `A` rows an increasing basic value. The dense form tests `U`/`X` rows on a
 /// negative entry with a strict `<`, as the original does; the sparse form uses `<=` there like everywhere else.
 /// The push sends a result with position < 0 or |pivot| < 0.001 on to [`retry_ratio`]; use [`violated_ratio`].
+/// The small-pivot second pass and its refactor request are those of [`feasible_ratio`].
 #[allow(clippy::too_many_arguments)]
 pub fn infeasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option<&[i32]>, val: &[f64], x: &[f64],
-                        width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64)
-                        -> Result<i32, Reentry> {
+                        width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64,
+                        factor_updates: &mut dyn FnMut() -> i32, refactor: &mut bool) -> i32 {
     let count = idx.map_or(x.len(), |i| i.len());
     let row = |k: usize| idx.map_or(k, |i| i[k] as usize);
-    let (mut ratios, mut cands) = (Vec::new(), Vec::new());
-    let mut chosen = -1i32;
-    let mut tested = 0i32;
-    let mut bound = cap;
-    for k in 0..count {
-        let (a, r) = (val[k], row(k));
-        let (up, down) = (a > piv_tol, a < -piv_tol);
-        if !up && !down {
-            continue;
-        }
-        tested += 1;
-        let (v, w) = (x[r], width[r]);
-        let num = match (up, marks[r]) {
-            (true, b'N' | b'U' | b'L' | b'X') | (false, b'B') => v,
-            (true, b'A') | (false, b'U' | b'X') => v - w,
-            (false, b'L' | b'N') if inf > w => v - w,
-            _ => continue,
-        };
-        let ratio = num / a;
-        let strict = idx.is_none() && !up && matches!(marks[r], b'U' | b'X');
-        if if strict { ratio < bound } else { ratio <= bound } {
-            ratios.push(ratio);
-            cands.push(k);
-            chosen = k as i32;
-            let relaxed = (if up { num + harris } else { num - harris }) / a;
-            if relaxed < bound {
-                bound = relaxed;
+    let (mut tol, mut first, mut chosen) = (piv_tol, true, -1i32);
+    loop {
+        let (mut ratios, mut cands) = (Vec::new(), Vec::new());
+        let mut tested = 0i32;
+        let mut bound = cap;
+        for k in 0..count {
+            let (a, r) = (val[k], row(k));
+            let (up, down) = (a > tol, a < -tol);
+            if !up && !down {
+                continue;
+            }
+            tested += 1;
+            let (v, w) = (x[r], width[r]);
+            let num = match (up, marks[r]) {
+                (true, b'N' | b'U' | b'L' | b'X') | (false, b'B') => v,
+                (true, b'A') | (false, b'U' | b'X') => v - w,
+                (false, b'L' | b'N') if inf > w => v - w,
+                _ => continue,
+            };
+            let ratio = num / a;
+            let strict = idx.is_none() && !up && matches!(marks[r], b'U' | b'X');
+            if if strict { ratio < bound } else { ratio <= bound } {
+                ratios.push(ratio);
+                cands.push(k);
+                chosen = k as i32;
+                let relaxed = (if up { num + harris } else { num - harris }) / a;
+                if relaxed < bound {
+                    bound = relaxed;
+                }
             }
         }
-    }
-    let (c, t, n) = (cands.len() as f64, tested as f64, count as f64);
-    let units = if idx.is_none() { c + c + t + t + n } else { c + c + n * 4.0 };
-    *work += units * work_coef;
-    ratio_tail(piv_tol, inf, cap, &val[..count], bound, &ratios, &cands, chosen, theta, pivot)
-}
-
-/// Shared end of both ratio tests: the finite cap, no candidate, the largest-pivot pick among ratios within `bound`,
-/// and the small-pivot check that would re-run the first pass with a tightened tolerance.
-#[allow(clippy::too_many_arguments)]
-fn ratio_tail(piv_tol: f64, inf: f64, cap: f64, val: &[f64], bound: f64, ratios: &[f64], cands: &[usize],
-              mut chosen: i32, theta: &mut f64, pivot: &mut f64) -> Result<i32, Reentry> {
-    if cap < inf && cap <= bound {
-        *pivot = 0.0;
-        *theta = cap;
-        return Ok(-1);
-    }
-    if bound == inf || cands.is_empty() {
-        *pivot = 0.0;
-        *theta = inf;
-        return Ok(-1);
-    }
-    let mut best = 0.0;
-    for (&ratio, &k) in ratios.iter().zip(cands) {
-        if ratio <= bound && best < val[k].abs() {
-            *theta = ratio;
-            chosen = k as i32;
-            best = val[k].abs();
+        let (c, t, n) = (cands.len() as f64, tested as f64, count as f64);
+        let units = if idx.is_none() { c + c + t + t + n } else { c + c + n * 4.0 };
+        *work += units * work_coef;
+        if cap < inf && cap <= bound {
+            *pivot = 0.0;
+            *theta = cap;
+            return -1;
         }
+        if bound == inf || cands.is_empty() {
+            if first {
+                *pivot = 0.0;
+                *theta = inf;
+                return -1;
+            }
+            if factor_updates() > 16 {
+                *refactor = true;
+            }
+            return chosen; // the second pass's last recorded row, else the first pass's pick
+        }
+        let mut best = 0.0;
+        for (&ratio, &k) in ratios.iter().zip(&cands) {
+            if ratio <= bound && best < val[k].abs() {
+                *theta = ratio;
+                chosen = k as i32;
+                best = val[k].abs();
+            }
+        }
+        *pivot = val[chosen as usize].abs();
+        match first.then(|| tightened(tol, &val[..count], *pivot)).flatten() {
+            Some(t) => tol = t,
+            None => return chosen,
+        }
+        first = false;
     }
-    *pivot = val[chosen as usize].abs();
-    small_pivot(piv_tol, val, *pivot, chosen)
-}
-
-/// Accepts `chosen` unless its pivot is below 0.1 and below the tolerance scaled by the column's largest entry; the
-/// original then re-runs its first pass with that tightened tolerance.
-fn small_pivot(piv_tol: f64, val: &[f64], pivot: f64, chosen: i32) -> Result<i32, Reentry> {
-    if pivot >= 0.1 {
-        return Ok(chosen);
-    }
-    let big = val.iter().fold(0.0f64, |m, v| m.max(v.abs()));
-    if piv_tol * big * pivot_scale(big) <= pivot { Ok(chosen) } else { Err(Reentry) }
 }
 
 /// The push's ratio test on a violated basis: [`infeasible_ratio`], then [`retry_ratio`] on the same column when that
-/// found no row or only a pivot below 0.001.
+/// found no row or only a pivot below 0.001. Either may set `*refactor` (request 2); the push then writes the
+/// returned position over leaving (S+0x2f8) anyway.
 #[allow(clippy::too_many_arguments)]
 pub fn violated_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option<&[i32]>, val: &[f64], x: &[f64],
-                      width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64)
-                      -> Result<i32, Reentry> {
-    let pos = infeasible_ratio(harris, piv_tol, inf, cap, idx, val, x, width, marks, work_coef, work, theta, pivot)?;
+                      width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64,
+                      factor_updates: &mut dyn FnMut() -> i32, refactor: &mut bool) -> i32 {
+    let pos = infeasible_ratio(harris, piv_tol, inf, cap, idx, val, x, width, marks, work_coef, work, theta, pivot,
+                               factor_updates, refactor);
     if pos < 0 || 0.001 > pivot.abs() {
-        return retry_ratio(harris, piv_tol, inf, cap, idx, val, x, width, marks, work_coef, work, theta, pivot);
+        return retry_ratio(harris, piv_tol, inf, cap, idx, val, x, width, marks, work_coef, work, theta, pivot,
+                           factor_updates, refactor);
     }
-    Ok(pos)
+    pos
 }
 
 /// Piecewise-linear retry ratio test (`056973`) with the arguments of [`infeasible_ratio`]. The breakpoints are where a
 /// basic row enters or leaves its bounds; a quickselect finds the one where the total infeasibility slope stops
 /// falling (0 when it never falls), and the row nearest to it within `harris` with the largest |entry| leaves, else the
 /// smallest breakpoint.
+///
+/// A small pivot re-runs everything once with the tolerance of [`feasible_ratio`]. When that second run finds no
+/// breakpoint while the slope falls, `theta`/`pivot` keep the first run's values and the first run's pick is returned,
+/// unless `factor_updates()` exceeds 16: then `*refactor` is set and the result is -1.
 #[allow(clippy::too_many_arguments)]
 pub fn retry_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option<&[i32]>, val: &[f64], x: &[f64],
-                   width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64)
-                   -> Result<i32, Reentry> {
+                   width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64,
+                   factor_updates: &mut dyn FnMut() -> i32, refactor: &mut bool) -> i32 {
     let count = idx.map_or(x.len(), |i| i.len());
     let row = |k: usize| idx.map_or(k, |i| i[k] as usize);
-    let (mut pos, mut rat) = (Vec::new(), Vec::new());
-    let (mut ab, mut at_bound, mut tested) = (0.0, 0.0, 0i32);
-    for k in 0..count {
-        let (a, r) = (val[k], row(k));
-        let (v, w) = (x[r], width[r]);
-        let mut cand = |q: f64, filter: bool| {
-            if !filter || cap > q {
-                pos.push(k);
-                rat.push(q);
-            }
-        };
-        if a > piv_tol {
-            tested += 1;
-            match marks[r] {
-                b'A' => {
-                    cand((v - w) / a, true);
-                    cand(v / a, true);
-                    ab -= a;
+    let (mut piv_tol, mut first, mut prev) = (piv_tol, true, -1i32);
+    loop {
+        let (mut pos, mut rat) = (Vec::new(), Vec::new());
+        let (mut ab, mut at_bound, mut tested) = (0.0, 0.0, 0i32);
+        for k in 0..count {
+            let (a, r) = (val[k], row(k));
+            let (v, w) = (x[r], width[r]);
+            let mut cand = |q: f64, filter: bool| {
+                if !filter || cap > q {
+                    pos.push(k);
+                    rat.push(q);
                 }
-                b'B' => ab += a,
-                b'L' | b'X' => at_bound += a,
-                b'N' | b'U' => cand(v / a, idx.is_none()), // the sparse form skips the cap test here
-                _ => {}
-            }
-        } else if -piv_tol > a {
-            tested += 1;
-            match marks[r] {
-                b'A' => ab -= a,
-                b'B' => {
-                    cand(v / a, true);
-                    if inf > w {
+            };
+            if a > piv_tol {
+                tested += 1;
+                match marks[r] {
+                    b'A' => {
                         cand((v - w) / a, true);
+                        cand(v / a, true);
+                        ab -= a;
                     }
-                    ab += a;
+                    b'B' => ab += a,
+                    b'L' | b'X' => at_bound += a,
+                    b'N' | b'U' => cand(v / a, idx.is_none()), // the sparse form skips the cap test here
+                    _ => {}
                 }
-                b'L' | b'N' if inf > w => cand((v - w) / a, true),
-                b'U' | b'X' => at_bound -= a,
-                _ => {}
+            } else if -piv_tol > a {
+                tested += 1;
+                match marks[r] {
+                    b'A' => ab -= a,
+                    b'B' => {
+                        cand(v / a, true);
+                        if inf > w {
+                            cand((v - w) / a, true);
+                        }
+                        ab += a;
+                    }
+                    b'L' | b'N' if inf > w => cand((v - w) / a, true),
+                    b'U' | b'X' => at_bound -= a,
+                    _ => {}
+                }
             }
         }
-    }
-    let (c, n) = (pos.len() as f64, count as f64);
-    *work += (if idx.is_none() { c * 4.0 + tested as f64 + n } else { c * 4.0 + n + n }) * work_coef;
-    let mut slope = at_bound + ab;
-    if pos.is_empty() && 0.0 > slope {
-        *theta = if cap < inf { cap } else { inf };
-        *pivot = 0.0;
-        return Ok(-1);
-    }
-    let mut t = 0.0;
-    if 0.0 > slope {
-        let (mut lo, mut hi) = (0usize, pos.len() - 1);
-        while lo < hi {
-            let p = rat[lo];
-            let (mut i, mut j) = (lo as isize - 1, hi as isize + 1);
-            loop {
-                j -= 1;
-                while rat[j as usize] > p {
+        let (c, n) = (pos.len() as f64, count as f64);
+        *work += (if idx.is_none() { c * 4.0 + tested as f64 + n } else { c * 4.0 + n + n }) * work_coef;
+        let mut slope = at_bound + ab;
+        if pos.is_empty() && 0.0 > slope {
+            if !first {
+                if factor_updates() > 16 {
+                    *refactor = true;
+                    return -1;
+                }
+                return prev;
+            }
+            *theta = if cap < inf { cap } else { inf };
+            *pivot = 0.0;
+            return -1;
+        }
+        let mut t = 0.0;
+        if 0.0 > slope {
+            let (mut lo, mut hi) = (0usize, pos.len() - 1);
+            while lo < hi {
+                let p = rat[lo];
+                let (mut i, mut j) = (lo as isize - 1, hi as isize + 1);
+                loop {
                     j -= 1;
-                }
-                i += 1;
-                while p > rat[i as usize] {
+                    while rat[j as usize] > p {
+                        j -= 1;
+                    }
                     i += 1;
+                    while p > rat[i as usize] {
+                        i += 1;
+                    }
+                    if i >= j {
+                        break;
+                    }
+                    rat.swap(i as usize, j as usize);
+                    pos.swap(i as usize, j as usize);
                 }
-                if i >= j {
-                    break;
+                let j = j as usize;
+                if 0.0 > slope {
+                    slope = lane_sum(slope, &pos[lo..=j], val, false);
+                } else if j < hi {
+                    slope = lane_sum(slope, &pos[j + 1..=hi], val, true);
                 }
-                rat.swap(i as usize, j as usize);
-                pos.swap(i as usize, j as usize);
+                if 0.0 > slope { lo = j + 1 } else { hi = j }
             }
-            let j = j as usize;
-            if 0.0 > slope {
-                slope = lane_sum(slope, &pos[lo..=j], val, false);
-            } else if j < hi {
-                slope = lane_sum(slope, &pos[j + 1..=hi], val, true);
+            t = rat[lo];
+            if inf > cap && cap <= t {
+                *theta = cap;
+                *pivot = 0.0;
+                return -1;
             }
-            if 0.0 > slope { lo = j + 1 } else { hi = j }
         }
-        t = rat[lo];
-        if inf > cap && cap <= t {
-            *theta = cap;
-            *pivot = 0.0;
-            return Ok(-1);
-        }
-    }
-    let (mut best, mut chosen) = (0.0, -1i32);
-    for k in 0..count {
-        let (a, r) = (val[k], row(k));
-        let (v, w) = (x[r], width[r]);
-        let near = |num: f64| (num - t * a).abs() * 2.0 <= harris;
-        let at = |num: f64| (num - t * a).abs() <= harris; // rows already at a bound get no factor 2
-        let (num, size) = if a > piv_tol {
-            let num = match marks[r] {
-                b'N' | b'U' if near(v) => Some(v),
-                b'A' if near(v - w) => Some(v - w),
-                b'A' if near(v) => Some(v),
-                b'L' | b'X' if at(v) => Some(v),
-                _ => None,
+        let (mut best, mut chosen) = (0.0, -1i32);
+        for k in 0..count {
+            let (a, r) = (val[k], row(k));
+            let (v, w) = (x[r], width[r]);
+            let near = |num: f64| (num - t * a).abs() * 2.0 <= harris;
+            let at = |num: f64| (num - t * a).abs() <= harris; // rows already at a bound get no factor 2
+            let (num, size) = if a > piv_tol {
+                let num = match marks[r] {
+                    b'N' | b'U' if near(v) => Some(v),
+                    b'A' if near(v - w) => Some(v - w),
+                    b'A' if near(v) => Some(v),
+                    b'L' | b'X' if at(v) => Some(v),
+                    _ => None,
+                };
+                (num, a)
+            } else if -piv_tol > a {
+                let num = match marks[r] {
+                    b'L' | b'N' if inf > w && near(v - w) => Some(v - w),
+                    b'B' if near(v) => Some(v),
+                    b'B' if inf > w && near(v - w) => Some(v - w),
+                    b'U' | b'X' if at(v - w) => Some(v - w),
+                    _ => None,
+                };
+                (num, -a)
+            } else {
+                (None, 0.0)
             };
-            (num, a)
-        } else if -piv_tol > a {
-            let num = match marks[r] {
-                b'L' | b'N' if inf > w && near(v - w) => Some(v - w),
-                b'B' if near(v) => Some(v),
-                b'B' if inf > w && near(v - w) => Some(v - w),
-                b'U' | b'X' if at(v - w) => Some(v - w),
-                _ => None,
-            };
-            (num, -a)
-        } else {
-            (None, 0.0)
-        };
-        if let Some(num) = num {
-            if size > best {
-                *theta = num / a;
-                best = size;
-                chosen = k as i32;
+            if let Some(num) = num {
+                if size > best {
+                    *theta = num / a;
+                    best = size;
+                    chosen = k as i32;
+                }
             }
         }
-    }
-    *work += (if idx.is_none() { n * 3.0 } else { n * 4.0 }) * work_coef;
-    if chosen < 0 {
-        *theta = inf;
-        let mut low = inf;
-        for (&q, &k) in rat.iter().zip(&pos) {
-            if low > q {
-                *theta = q;
-                low = q;
-                chosen = k as i32;
-            }
-        }
+        *work += (if idx.is_none() { n * 3.0 } else { n * 4.0 }) * work_coef;
         if chosen < 0 {
-            *pivot = 0.0;
-            return Ok(-1);
+            *theta = inf;
+            let mut low = inf;
+            for (&q, &k) in rat.iter().zip(&pos) {
+                if low > q {
+                    *theta = q;
+                    low = q;
+                    chosen = k as i32;
+                }
+            }
+            if chosen < 0 {
+                *pivot = 0.0;
+                return -1;
+            }
         }
+        *pivot = val[chosen as usize].abs();
+        match first.then(|| tightened(piv_tol, &val[..count], *pivot)).flatten() {
+            Some(t) => piv_tol = t,
+            None => return chosen,
+        }
+        first = false;
+        prev = chosen;
     }
-    *pivot = val[chosen as usize].abs();
-    small_pivot(piv_tol, &val[..count], *pivot, chosen)
 }
 
 /// `seed` plus (or minus) the |entries| of the column at `pos`, summed the way the original vectorizes it: eight

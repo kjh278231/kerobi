@@ -21,7 +21,10 @@ INPUT = DATA / 'ratio_input.txt'
 TRACE = ROOT / 'target/m3_push_retry/trace.txt'
 RUST = ROOT / 'crates/lp/src/crossover.rs'
 # 작은 pivot 재진입 2차 패스는 Rust가 거부한다(계약 §1)
-REFUSED = {f'{n}-{f}' for n in ('reentry-pick', 'reentry-keep', 'reentry-refactor') for f in ('sparse', 'dense')}
+# 작은 pivot 재진입은 M3-04c-9부터 Rust가 원본대로 돈다(04c-7까지는 거부). 이 입력에는 factor 갱신 수가 없어 Rust
+# 테스트가 0을 쓴다. reentry-refactor(캡처는 20)만 그 값이 달라 여기서 빼고 push_violated_reentry_rust.py가 비교한다.
+SKIPPED = {f'reentry-refactor-{f}' for f in ('sparse', 'dense')}
+REENTRY = {f'{n}-{f}' for n in ('reentry-pick', 'reentry-keep') for f in ('sparse', 'dense')}
 bits = base.bits
 
 
@@ -67,22 +70,22 @@ def compare(cs, text, trace):
     rows = trace.splitlines()
     assert rows and rows[0] == text.splitlines()[0], 'trace의 입력 해시 불일치(오래된 trace)'
     assert len(rows) == len(cs) + 1, ('사례 수', len(cs), len(rows) - 1)
-    refused = []
+    skipped, reentry = [], 0
     for c, row in zip(cs, rows[1:], strict=True):
         t = row.split()
         assert t[0] == c['name'], ('사례 순서', c['name'], t[0])
-        if c['name'] in REFUSED:
-            assert t[1:] == ['reentry'], (c['name'], '재진입 사례는 Rust가 거부해야 함', t[1:])
-            refused.append(c['name'])
+        if c['name'] in SKIPPED:
+            skipped.append(c['name'])
             continue
-        assert t[1:] != ['reentry'], (c['name'], 'Rust 재진입 거부', '원본은 첫 패스에서 반환함')
+        reentry += c['name'] in REENTRY
         assert len(t) == 5, (c['name'], '필드 수', t)
         pos = int(t[1])
         got = dict(pos=pos, row=pos if pos < 0 or c['dense'] else c['idx'][pos], theta=t[2], pivot=t[3], work=t[4])
         for f in base.FIELDS:
             assert got[f] == c['expect'][f], (c['name'], f, '기준', c['expect'][f], '실제', got[f], '정확·비트 비교')
-    assert sorted(refused) == sorted(REFUSED), ('거부 사례 누락', refused)
-    return dict(cases=len(cs), compared=len(cs) - len(refused), refused=refused, fields=5)
+    assert sorted(skipped) == sorted(SKIPPED), ('제외 사례 불일치', skipped)
+    assert reentry == len(REENTRY), ('재진입 사례 비교 누락', reentry)
+    return dict(cases=len(cs), compared=len(cs) - len(skipped), reentry=reentry, skipped=skipped, fields=5)
 
 
 def self_test(cs, text, trace):
@@ -93,10 +96,10 @@ def self_test(cs, text, trace):
         t = rows[i].split()
         t[k] = v
         return '\n'.join(rows[:i] + [' '.join(t)] + rows[i + 1:]) + '\n'
-    ok = next(i for i, c in enumerate(cs, 1) if c['name'] not in REFUSED and c['expect']['pos'] >= 0)
-    ref = next(i for i, c in enumerate(cs, 1) if c['name'] in REFUSED)
+    ok = next(i for i, c in enumerate(cs, 1) if c['name'] not in SKIPPED and c['expect']['pos'] >= 0)
+    ref = next(i for i, c in enumerate(cs, 1) if c['name'] == 'reentry-pick-sparse')
     bad = {'theta': edit(ok, 2, bits(3.0)), 'pivot': edit(ok, 3, bits(0.0)), 'pos': edit(ok, 1, '-1'),
-           'work': edit(ok, 4, bits(1.0)), 'refused-accepted': edit(ref, 1, '1 x x x'),
+           'work': edit(ok, 4, bits(1.0)), 'reentry-theta': edit(ref, 2, bits(3.0)),
            'missing-case': '\n'.join(rows[:-1]) + '\n', 'stale-hash': '\n'.join(['input ' + '0' * 64] + rows[1:]) + '\n'}
     rejected = []
     for name, tr in bad.items():
