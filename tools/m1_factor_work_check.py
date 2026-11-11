@@ -296,6 +296,8 @@ MUTANTS = [  # (name, file, original text, mutated text)
     ('f461f k + 1', 'crates/lp/src/simplex.rs', '(k as f64 + k as f64) * X148', '((k + 1) as f64 + (k + 1) as f64) * X148'),
     ('f2a51 with local_80 = 0', 'crates/lp/src/lu.rs', 'if l == p0 {\n                w_urow', 'if true {\n                w_urow'),
     ('f1beb association', 'crates/lp/src/lu.rs', '(X148 * 3.0) * n as f64', 'X148 * (3.0 * n as f64)'),
+    # added after the first run (review): the no-store branch of a length-1 row at a position > local_40
+    ('f1f37 without local_40 test', 'crates/lp/src/lu.rs', '} else if v as i64 <= local40 {', '} else {'),
 ]
 SURVIVE_OK = {'f1beb association'}  # last-bit amount changes are absorbed by the sum (M1-02q section 6)
 

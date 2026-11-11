@@ -28,4 +28,5 @@ R f3d83 k + 1: rejected (W kb2: store 61 k 10 (Rust 10) site 0xf3d83: original p
 R f461f k + 1: rejected (W kb2: store 37 k 6 (Rust 6) site 0xf461f: original prev 40d19caccccccccf + Rust [24.0] x 1.3 = 40d1a4799999999c, original 40d1a3d333333335 (amount 21.99999999999888 x 1.3))
 R f2a51 with local_80 = 0: rejected (W degen2: store 47 site Rust 0xf2a51 k 9 original 0xf3ca4 k 9)
 R f1beb association: NOT REJECTED
+R f1f37 without local_40 test: rejected (W kb2: store 306 site Rust 0xf1f37 k 32 original 0xf1f82 k 32)
 ACCEPTANCE PASS (+ self-test)
