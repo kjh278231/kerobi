@@ -34,6 +34,7 @@ mod disagg;
 pub mod dive_rows;
 pub mod node_heap;
 pub mod node_life;
+pub mod plunge;
 pub mod pseudocost;
 mod dominate;
 mod doubleton;
