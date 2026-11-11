@@ -37,8 +37,8 @@ def factor(f, at):
     assert m > 0 and min(rowEnd, colEnd, prefixCount) >= 0, at
     lengths = [m*8, (m+1)*8, rowEnd*4, rowEnd*8, (m+1)*8, m*8, colEnd*4, colEnd*8, prefixCount*4, m*4]
     same(lengths, [len(bytes.fromhex(a)) for a in f['arrays']], at + '.lengths')
-    same(rowEnd, int.from_bytes(bytes.fromhex(f['arrays'][1])[-8:], 'little', signed=True), at+'.Uend')
-    same(colEnd, int.from_bytes(bytes.fromhex(f['arrays'][4])[-8:], 'little', signed=True), at+'.Lend')
+    same(rowEnd, int.from_bytes(bytes.fromhex(f['arrays'][1])[-8:], 'little', signed=True), at+'.rowEnd')
+    same(colEnd, int.from_bytes(bytes.fromhex(f['arrays'][4])[-8:], 'little', signed=True), at+'.colEnd')
 
 
 def acceptance(d):

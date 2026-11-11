@@ -61,3 +61,5 @@ save helper는 LU +0x20에서 0x128바이트, +0x148에서 0x30바이트를 복�
 - Rust·Python 패키지 미변경. cargo/pytest 미실행(해당 없음). Gurobi 캡처는 gurun 직렬 실행, Herdr를 사용하지 않은 짧은 개별 실행이다.
 
 독립 검토에서 `LU+0x88`은 열 방향 U, `+0xec/+0xf0/+0xf8`은 접두 행 목록임을 기존 M1 원본 필드표로 재확인했다. 첫 탐색의 l/eta 이름을 colEnd/prefixCount로 정정하고 최종 자료를 verified에 새로 캡처했다. L·eta 전체 내용은 이 helper의 배열 복사 대상이 아니며 미검증이다. 첫 double의 bound 요청/flush를 전부 지우는 누락을 검사기가 놓쳐 solve마다 flush와 현재 bounds를 연결하고 변조19번째로 추가했다.
+
+독립 재검토에서 verified 정상 비교·변조19종 거부와 첫 후보 사건 사슬 누락 거부를 확인했고, 추가 중간 이상 결함 없음. 원본 독립 재캡처는 최종 도구로 수행한 verified 3회를 사용한다.
