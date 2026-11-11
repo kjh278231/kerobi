@@ -1,7 +1,7 @@
 //! L1 replay of M2-06d/06d-3: the M2-06c-3 capture inputs of every top-level `6e8eb3` call run through `plunge`
 //! (seed, rule, pick, tail) and the results are written. Inputs are generated and compared by
 //! `tools/mip_plunge_rust.py` (docs/m2/mip_plunge_r47_rust.md); run through it, not alone.
-use rsolver_mip::plunge::{pick, rule, seed, tail, Item, RuleIn, TailIn, Thr};
+use rsolver_mip::plunge::{ancestor, pick, rule, seed, tail, Item, RuleIn, TailIn, Thr};
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -88,6 +88,15 @@ fn call(block: &[Vec<&str>], out: &mut String) {
     let mut anc = |x: i64, depth: i32, d: i32| {
         let a = answers.next();
         let res = a.and_then(|w| if w[3] == "-" { None } else { Some(num(w, 3)) });
+        // where the tail chains know every parent on the way, the Rust walk must give the injected answer
+        let mut gap = false;
+        let walk = ancestor(x, depth, d, &mut |n| {
+            par.get(&n).copied().unwrap_or_else(|| {
+                gap = true;
+                None
+            })
+        });
+        assert!(gap || a.is_none() || walk == res, "ancestor({x}, {depth}, {d}) = {walk:?}, captured {res:?}");
         asked.push(format!("anc {x} {depth} {d} {}", a.map_or("?".to_string(), |_| opt(res))));
         res
     };
