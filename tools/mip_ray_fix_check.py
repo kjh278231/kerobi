@@ -644,7 +644,8 @@ def tampers(caps, old, manifest):
     T.append(('ce rho bit', setf(cei, 'rho', bit)))
     T.append(('ce_ fail', setf(ce_i, 'fail', lambda x: 5)))
     T.append(('ce dropped', ev(lambda d: d['events'].pop(cei))))
-    T.append(('q ret flip', ev(lambda d: next(e for e in d['events'] if e['e'] == 'q').__setitem__('ret', 1))))
+    T.append(('q ret flip (call with 95ce25)', ev(lambda d: [x.__setitem__('ret', 1) for x in d['events'][ci:ri] if x['e'] == 'q'])))
+    T.append(('fx_ work null', setf(ri, 'w', lambda x: None)))
     T.append(('q dropped', ev(lambda d: d['events'].pop(next(i for i, e in enumerate(d['events']) if e['e'] == 'q')))))
     T.append(('gate l68 below', setf(ci, 'l68', lambda x: h(5e-5))))
     T.append(('fx without fk', setf(ci, 'fk', lambda x: -1)))
@@ -660,23 +661,20 @@ def tampers(caps, old, manifest):
             d['events'][ci][key] = 'tampered'
         return ev(g)
 
-    def chain_var(x):
-        nd = next(nd for nd in x if nd['rec'])
-        nd['rec'][-1][0] = GT if nd['rec'][-1][0] == LT else LT
-    T.append(('chain record sense', arr('chain', chain_var)))
+    def chain_swap(x):
+        for nd in x:
+            nd['l1'], nd['l2'] = nd['l2'], nd['l1']
+            nd['rec'] = [[GT if sg == LT else LT if sg == GT else sg, v] for sg, v in nd['rec']]
+    T.append(('chain lists 1/2 swapped, record senses flipped', arr('chain', chain_swap)))
     T.append(('chain dropped', arr('chain', lambda x: x.pop())))
 
-    def col_val(x):
-        v = next(k for k, cv in x.items() if cv and cv[1])
-        x[v][1][0] = bit(x[v][1][0])
-    T.append(('column value bit', arr('cols', col_val)))
+    T.append(('column values last bit', arr('cols', lambda x: [cv[1].__setitem__(t, bit(cv[1][t])) for cv in x.values() if cv and cv[1] for t in range(len(cv[1]))])))
 
-    def row_val(x):
-        i = next(k for k, r in x.items() if r and r['val'])
-        x[i]['val'][0] = h(f(x[i]['val'][0]) * 1.5)
-    T.append(('row value', arr('rows', row_val)))
+    T.append(('row values last bit', arr('rows', lambda x: [r['val'].__setitem__(t, bit(r['val'][t])) for r in x.values() if r and r['val'] for t in range(len(r['val']))])))
+    T.append(('row rhs last bit', arr('rows', lambda x: [r.__setitem__('rhs', bit(r['rhs'])) for r in x.values() if r])))
     T.append(('row alignment', arr('rows', lambda x: [r.__setitem__('al', 8 - r['al']) for r in x.values() if r])))
-    T.append(('lb0 entry', arr('lb0', lambda x: x.__setitem__(0, h(-1e31) if f(x[0]) > -1e30 else h(0.0)))))
+    T.append(('lb0 finite entries - 0.5', arr('lb0', lambda x: [x.__setitem__(t, h(f(x[t]) - 0.5)) for t in range(len(x)) if f(x[t]) > -1e30])))
+    T.append(('ub0 finite entries + 0.5', arr('ub0', lambda x: [x.__setitem__(t, h(f(x[t]) + 0.5)) for t in range(len(x)) if f(x[t]) < 1e30])))
 
     def mani(fn):
         def t():
@@ -728,17 +726,25 @@ def tampers(caps, old, manifest):
         return next(e for i, e in enumerate(evs) if e['e'] == 'fk' and e['rc'] == 0 and e['f'] == 0 and i not in used and e['ra5'] == site)
     T.append(('gate: stop ret 1', gate_t('fhnw-binpack4-4', lambda evs: [x.__setitem__('ret', 1) for x in evs if x['e'] == 'ck'])))
     T.append(('gate: uncalled caller unknown', gate_t('tr12-30', lambda evs: uncalled(evs, 0x7229A3).__setitem__('ra5', 0x4F0000))))
-    T.append(('gate: probe true dropped fx', gate_t('pk1', lambda evs: evs.__setitem__(slice(None), [x for x in evs if x['e'] != 'fx' or x['fk'] != next(e['fk'] for e in evs if e['e'] == 'fx')]))))
-    T.append(('gate: probe dropped', gate_t('pk1', lambda evs: evs.remove(next(x for x in evs if x['e'] == 'gt')))))
-    T.append(('gate: stop then probe', gate_t('markshare_4_0', lambda evs: (lambda e: evs.insert(evs.index(e) + 1, {'e': 'gt', 'k': evs.index(e), 'l38': 3, 'l58': e['l58'], 'l68': e['l68'], 'v70': 1}))(uncalled(evs, SITE_5FB8EC)))))
+    # gate tampers replace events in place (removing or inserting would shift the event indices the links use)
+    T.append(('gate: probe names another L', gate_t('pk1', lambda evs: next(x for x in evs if x['e'] == 'gt').__setitem__('k', -1))))
+    T.append(('gate: probe dropped', gate_t('pk1', lambda evs: evs.__setitem__(evs.index(next(x for x in evs if x['e'] == 'gt')), {'e': 'pad'}))))
+    T.append(('gate: probe false but called', gate_t('pk1', lambda evs: next(x for x in evs if x['e'] == 'gt').__setitem__('l58', -1))))
+
+    def stop_probe(evs):
+        e = uncalled(evs, SITE_5FB8EC)
+        i = evs.index(e)
+        j = next(j for j in range(i + 1, len(evs)) if evs[j]['e'] == 'c5_')
+        evs[j] = {'e': 'gt', 'k': i, 'l38': 3, 'l58': e['l58'], 'l68': e['l68'], 'v70': 1}
+    T.append(('gate: probe after the 5eda00 stop', gate_t('markshare_4_0', stop_probe)))
     bad = []
     for name, t in T:
         try:
             t()
             bad.append(name)
             print(f'  T {name}: NOT REJECTED')
-        except (Fail, KeyError, IndexError, StopIteration) as e:
-            print(f'  T {name}: rejected ({type(e).__name__}: {str(e)[:100]})')
+        except Fail as e:
+            print(f'  T {name}: rejected ({str(e)[:110]})')
     return bad
 
 
