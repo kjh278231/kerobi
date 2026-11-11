@@ -1,0 +1,7 @@
+# 탐색(판정 근거 아님): Method=0 Presolve=0 Threads=1, 5모델(afiro는 대기 시간 초과로 실행 안 됨), 원본 BTRAN 호출 집계
+# key = (wrapper, caller offset, input nnz (m = full length), 21a941 ran, output dense), value = calls
+adlittle DONE 2 104 {(288, '0xfbca8', -1, False, True): 21, (288, '0xfdc31', -1, False, True): 1, (288, '0xfebed', 1, True, False): 35, (288, '0xfebed', 1, True, True): 56, (288, '0xfebed', 3, True, False): 1, (288, '0xfebed', 4, True, False): 1}
+kb2 DONE 2 41 {(288, '0x103ac7', -1, False, True): 28, (288, '0x109289', -1, False, True): 6, (288, '0xfbca8', -1, False, True): 6, (288, '0xfebed', 1, True, False): 7, (288, '0xfebed', 1, True, True): 3, (376, '0x102e5b', 1, True, False): 21, (376, '0x102e5b', 1, True, True): 8}
+sc205 DONE 2 129 {(288, '0x103ac7', -1, False, True): 74, (288, '0x109289', -1, False, True): 9, (288, '0xe53a7', -1, False, True): 1, (288, '0xfbca8', -1, False, True): 25, (288, '0xfebed', 1, True, False): 50, (376, '0x102e5b', 1, True, False): 59, (376, '0x102e5b', 1, True, True): 15}
+sc50b DONE 2 35 {(288, '0x103ac7', -1, False, True): 17, (288, '0x109289', -1, False, True): 5, (288, '0xfbca8', -1, False, True): 11, (288, '0xfebed', 1, True, False): 15, (376, '0x102e5b', 1, True, False): 6, (376, '0x102e5b', 1, True, True): 11}
+scsd1 DONE 2 192 {(288, '0xe53a7', -1, False, True): 1, (288, '0xfbca8', -1, False, True): 20, (288, '0xfbdd0', 1, True, False): 85, (288, '0xfbdd0', 1, True, True): 86, (288, '0xfbdd0', 2, True, False): 2, (288, '0xfbdd0', 3, True, False): 1}

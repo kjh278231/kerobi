@@ -106,6 +106,8 @@ pub struct Engine<'a> {
     /// `RSOLVER_SNAP` / `RSOLVER_BFRT` dump files, read once.
     snap_path: Option<String>,
     bfrt_path: Option<String>,
+    /// `RSOLVER_BTRAN_PROBE=<spec>` (M1-02k): e_r BTRAN call count and the dump of the probe.
+    bt_probe: Option<(usize, String)>,
     /// spx+0x2c8: CHUZR tests violations with the infinite-bound guard (artificial-bound phase or x_B past 1e20).
     c8: bool,
     /// Pivot path: (iteration, entering column, leaving column); bound flips of the entering column leave −1.
@@ -179,6 +181,7 @@ impl<'a> Engine<'a> {
             last_aqo: String::new(),
             snap_path: std::env::var("RSOLVER_SNAP").ok(),
             bfrt_path: std::env::var("RSOLVER_BFRT").ok(),
+            bt_probe: std::env::var("RSOLVER_BTRAN_PROBE").ok().map(|p| (0, p)),
             c8: false,
             path: Vec::new(),
             work: Work::new(),
@@ -997,7 +1000,9 @@ impl<'a> Engine<'a> {
     fn compute_duals_only(&mut self) {
         let cb: Vec<(usize, f64)> = (0..self.m).map(|p| (p, self.c[self.head[p]])).collect();
         self.y = vec![0.0; self.m];
-        for (r, v) in self.lu.btran(&cb) {
+        let out = self.lu.btran_dense(&cb);
+        self.cb_probe(&cb, &out);
+        for (r, v) in out.0 {
             self.y[r] = v;
         }
     }
@@ -1129,7 +1134,8 @@ impl<'a> Engine<'a> {
                 return Status::Optimal;
             }
             let delta = self.primal_infeas(r);
-            let (rho_sp, dense) = self.lu.btran_dense(&[(r, 1.0)]);
+            let (rho_sp, dense) = self.lu.btran_row(r);
+            self.btran_probe(r, dense);
             // β = ‖ρ_r‖² (8b473 C:105–222) over what 28c93 C:149–163 hands it: a dense BTRAN output compacted to
             // |ρ_i| > ZERO in row order, a sparse one as it is
             let beta = sum_squares(&rho_sp.iter().map(|e| e.1).filter(|v| !dense || v.abs() > ZERO).collect::<Vec<_>>());
@@ -1467,7 +1473,9 @@ impl<'a> Engine<'a> {
                 .map(|p| (p, cost(self, self.head[p]) + if phase1 { mark[p] as f64 * BIG_M } else { 0.0 }))
                 .collect();
             let mut y = vec![0.0; m];
-            for (r, v) in self.lu.btran(&cb) {
+            let out = self.lu.btran_dense(&cb);
+            self.cb_probe(&cb, &out);
+            for (r, v) in out.0 {
                 y[r] = v;
             }
             let tol = if phase1 { tau1 * BIG_M } else { OPT_TOL };
@@ -1853,6 +1861,62 @@ impl<'a> Engine<'a> {
     /// Primal values of all n+m columns (scaled space).
     pub fn x(&self) -> Vec<f64> {
         (0..self.n + self.m).map(|j| if self.vstat[j] >= 0 { self.xb[self.vstat[j] as usize] } else { self.x_nonbasic(j) }).collect()
+    }
+
+    /// M1-02k probe of a c_B BTRAN (full-length input by basis position): the e_r count so far, the input and the
+    /// output (dense flag; values by row when dense, else (row, value) pairs) as u64 hex.
+    fn cb_probe(&self, cb: &[(usize, f64)], out: &(Vec<(usize, f64)>, bool)) {
+        let Some((k, spec)) = &self.bt_probe else { return };
+        let bits = |v: &[(usize, f64)]| v.iter().map(|e| format!("\"{:016x}\"", e.1.to_bits())).collect::<Vec<_>>().join(",");
+        let idx: Vec<usize> = out.0.iter().map(|e| e.0).collect();
+        // before M1-02k the updated/general path had no C:89 test: the U^T output count chose the eta and L^T paths,
+        // which is the forced sparse U^T path now; the diagonal path was dense (3·m > m)
+        let old = self.lu.updated() && !self.lu.btran_ut(cb, false).1;
+        let line = format!(
+            "{{\"cb\":1,\"k\":{k},\"in\":[{}],\"od\":{},\"old_sparse\":{old},\"idx\":{idx:?},\"out\":[{}]}}\n",
+            bits(cb),
+            out.1,
+            bits(&out.0)
+        );
+        use std::io::Write;
+        let f = std::fs::OpenOptions::new().create(true).append(true).open(format!("{spec}.out"));
+        f.and_then(|mut f| f.write_all(line.as_bytes())).expect("probe dump");
+    }
+
+    /// M1-02k probe after the k-th e_r BTRAN: a line with r, the row eta count, LU+0x108 + 0x110 and the paths, then for each spec line
+    /// `k<TAB>pos,bits;pos,bits;…` (bits: u64 hex) the output with the natural, forced sparse and forced dense Uᵀ.
+    /// Appends JSON lines to `<spec>.out`.
+    fn btran_probe(&mut self, r: usize, dense: bool) {
+        let Some((k, spec)) = &mut self.bt_probe else { return };
+        let (kk, spec) = (*k, spec.clone());
+        *k += 1;
+        let bits = |v: f64| format!("\"{:016x}\"", v.to_bits());
+        let show = |(o, d): (Vec<(usize, f64)>, bool)| {
+            let idx: Vec<usize> = o.iter().map(|e| e.0).collect();
+            let val: Vec<String> = o.iter().map(|e| bits(e.1)).collect();
+            format!("{{\"dense\":{d},\"idx\":{idx:?},\"val\":[{}]}}", val.join(","))
+        };
+        let lu = &self.lu;
+        let force = lu.urow_len(r) > 0;
+        let mut out =
+            format!("{{\"k\":{kk},\"r\":{r},\"e\":{},\"d\":{},\"d108\":{},\"t\":{},\"lt\":{},\"ud\":{},\"od\":{dense}}}\n", lu.n_etas(), bits(lu.dsum()), bits(lu.d108()), lu.prefix_len(), lu.lt_depth(), !force && lu.ut_dense(1));
+        let text = std::fs::read_to_string(&spec).unwrap_or_default();
+        for (i, line) in text.lines().filter(|l| l.split('\t').next() == Some(&kk.to_string())).enumerate() {
+            let x: Vec<(usize, f64)> = line.split('\t').nth(1).unwrap_or("").split(';').filter(|s| !s.is_empty()).map(|e| {
+                let (p, v) = e.split_once(',').expect("pos,bits");
+                (p.parse().expect("pos"), f64::from_bits(u64::from_str_radix(v, 16).expect("bits")))
+            }).collect();
+            let ud = lu.ut_dense(x.len());
+            out += &format!(
+                "{{\"k\":{kk},\"i\":{i},\"ud\":{ud},\"o\":[{},{},{}]}}\n",
+                show(lu.btran_dense(&x)),
+                show(lu.btran_ut(&x, false)),
+                show(lu.btran_ut(&x, true))
+            );
+        }
+        use std::io::Write;
+        let f = std::fs::OpenOptions::new().create(true).append(true).open(format!("{spec}.out"));
+        f.and_then(|mut f| f.write_all(out.as_bytes())).expect("probe dump");
     }
 }
 
