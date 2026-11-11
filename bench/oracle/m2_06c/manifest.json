@@ -71,5 +71,9 @@
   "pk1-pool_1.json.gz": "7a95437f8e7559e7e4243ed17b097a1890aaf539f52e1676f7e77d1b8bd4b762",
   "pk1-pool_2.json.gz": "7a95437f8e7559e7e4243ed17b097a1890aaf539f52e1676f7e77d1b8bd4b762",
   "pk1-pool_3.json.gz": "7a95437f8e7559e7e4243ed17b097a1890aaf539f52e1676f7e77d1b8bd4b762"
- }
+ },
+ "control_files": {
+  "control/pk1-pool_06a.json.gz": "692fe9c2ebe58b89d8561b4368c184c137f8094cf0c6daa616cc2537e83f19c6"
+ },
+ "control_note": "pk1-pool non-interference control: one run of tools/mip_node_select.js (06a tool, sha in the file) with the same params"
 }

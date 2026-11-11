@@ -24,7 +24,8 @@ VARIANTS = {
     'V4': 'tie goes to last', 'V5': 'seed from post-pop k', 'V6': 'draw cutoff 0.5', 'V7': 'delta=2 clause off',
     'V8': 'delta=6 clause off', 'V9': 'log branch rounds', 'V10': 'keep ignores ancestor', 'V11': 'keep ignores bound',
     'V12': 'removal always to heap', 'V13': 'delta=10 clause off', 'V14': 'delta=3 clause off', 'V15': "rule clause s==0 off",
-    'V16': 'k%7 ignores 5e6efd (always 4)'}
+    'V16': 'k%7 ignores 5e6efd (always 4)',
+    'V17': 'threshold set whenever 5f9a41 != 0 (pool-vs-5e8239 comparison off; added after results)'}
 E100, M100 = 1e100, -1e100
 
 
@@ -279,6 +280,7 @@ def delta(t, V):
 def check_tail(c, pk, V, st):
     t, te = one(c, 'tail'), one(c, 'tend')
     need(t is not None and te is not None, 'tail/tend missing')
+    need(t['esi'] == one(c, 'rule')['esi'], 'T: tail esi differs from the rule-step k')
     need(t['rbp_m'] == 1, 'tail: rbp is not M')
     ents = [list(e) for e in pk['list']]
     idx = pk['idx']
@@ -313,7 +315,7 @@ def check_tail(c, pk, V, st):
     for k in ('t20', 't28', 't00', 'v8239', 'f9a41'):
         need(thr_e.get(k) is not None, f'T: thr {k} null')
     thr0 = E100
-    if thr_e['f9a41'] != 0 and f(thr_e['t00']) > f(thr_e['v8239']) - 1e-10:
+    if thr_e['f9a41'] != 0 and (f(thr_e['t00']) > f(thr_e['v8239']) - 1e-10 or 'V17' in V):
         thr0 = minsd(thr0, f(thr_e['t00']))
     need(h(thr0) == thr_e['t20'], f'T: threshold {h(thr0)} != captured {thr_e["t20"]}')
     if thr0 < E100:
@@ -415,6 +417,11 @@ def load_all():
         caps[case] = runs
         if case in ('markshare_4_0', 'pk1', 'neos5', 'tr12-30'):
             old[case] = load(os.path.join(OLD, f'{case}_1.json.gz'))
+    for fn, hsh in manifest['control_files'].items():  # pk1-pool: one 06a-tool run with the same params (added after results)
+        need(sha(os.path.join(DATA, fn)) == hsh, f'{fn}: file hash differs from the manifest')
+        o = load(os.path.join(DATA, fn))
+        need(o['kind'] == 'mip_node_select' and o['params'] == dict(BASE, **CASES['pk1-pool'][1]), f'{fn}: control kind/params')
+        old['pk1-pool'] = o
     return caps, old, manifest
 
 
@@ -566,6 +573,7 @@ def tampers(caps, old, manifest):
         ('5e70c1 return where k > 16 reads it', 'caps', all_runs(s70_used)),
         ('rule 3/12 pick index', 'caps', all_runs(pick312)),
         ('selected excluded flag', 'caps', all_runs(lambda d: first(d, 'tail').__setitem__('x41', 1))),
+        ('tail esi', 'caps', all_runs(lambda d: first(d, 'tail').__setitem__('esi', first(d, 'tail')['esi'] + 1))),
     ]
     bad = 0
     for label, kind, fn in cases:
@@ -628,7 +636,7 @@ def main():
     try:
         caps, old, manifest = load_all()
         controls(caps, manifest, old)
-        print('C0 PASS (3 runs identical per case, manifest hashes, 06a projection equal for 4 cases)')
+        print('C0 PASS (3 runs identical per case, manifest hashes, 06a-tool projection equal for 5 cases)')
         stats, tot = acceptance(caps)
         print('  totals: ' + ', '.join(f'{lbl} {fn(tot)}' for lbl, fn in TARGETS) + f', drop {tot["drop"]}, thr<1e100 {tot["thr_set"]}, '
               f'removed-by-bound {tot["by_bound"]}, null-anc {tot["null"]}, delta {dict(sorted(tot["delta"].items()))}')
