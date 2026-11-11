@@ -1,6 +1,6 @@
 # pi 작업자 설계 (OpenGateway + GLM 5.3 Flash)
 
-실행 스크립트와 로그 검사기를 구현했다. pi 1.5.2에서 인증 실패를 캡처하고 검사기가 이를 거부하는지 확인했다. 스프린트 도입에는 §2의 결정과 §7의 0단계 검증이 남아 있다.
+실행 스크립트와 로그 검사기를 구현했다. pi 1.5.2에서 잘못된 주소의 인증 실패와 공식 주소의 성공 응답을 확인했다. 스프린트 도입에 필요한 출처 정책과 작업 검증은 §2와 §7에 적었다.
 
 ## 1. 목표와 범위
 
@@ -18,8 +18,8 @@
 
 확인한 사실은 다음과 같다.
 
-- 게이트웨이 소개 페이지에 운영 주체, 데이터 보존·로그 정책이 없다(미확인).
-- 요청은 "13개 라이브 제공자" 중 하나로 라우팅되고 장애 시 다른 제공자로 넘어간다. 어느 제공자가 받는지 호출자가 고르지 못한다.
+- 운영 주체는 Sionic AI다. 팀에서 요청·응답 본문 로깅을 켜면 정책상 본문은 최소 90일간 보존된다. 시험 계정의 로깅 설정은 확인하지 않았다. [OpenGateway 개인정보 처리방침](https://opengateway.ai/legal/privacy-policy)
+- 게이트웨이는 모델과 키에 허용된 제공자·리전 후보 중에서 요청을 처리한다. 모델 ID는 제공자 지정에 쓰이지 않는다. [OpenGateway 모델과 라우팅](https://opengateway.ai/docs/gateway/models-and-routing)
 
 선택지:
 
@@ -35,11 +35,7 @@ B는 공짜 기본값이 아니다. 교훈 기록에 남은 하위 에이전트 
 
 ### 2.2 게이트웨이와 모델 ID
 
-- "OpenGateway AI"를 `api.opengateway.one`으로 가정했다. 다른 서비스면 §4의 주소·키 이름이 달라진다.
-- 인증 없이 받은 `/models` 목록 29건에 GLM 5.3 Flash가 없다. GLM은 5.2, 5.1, 5만 있다. 이 목록은 Claude Code 호환 별칭만 보여주는 것으로 보이고, 전체 목록은 키가 있어야 확인할 수 있다.
-- `:ultrafast`라는 라우팅 접미사는 페이지에 없다. 있는 것은 `:preferred`, `:fastest`, `:cheapest`다. "ultrafast"가 `:fastest`를 뜻하는지, 별도 모델 변형인지 정해야 한다.
-
-모델 ID는 추측해서 적지 않는다. 아래에서는 `<MODEL_ID>`로 둔다.
+OpenGateway AI의 API 기본 주소는 `https://apis.opengateway.ai/v1`이다. 이번에 사용한 모델의 전체 ID는 `z-ai/glm-5.3-flash-ultrafast`이며 `-ultrafast`까지 모델 ID에 포함된다. [OpenGateway Pi 설정](https://opengateway.ai/docs/coding-agents/pi)
 
 ### 2.3 무엇을 대체하는가
 
@@ -67,7 +63,7 @@ B는 공짜 기본값이 아니다. 교훈 기록에 남은 하위 에이전트 
 Claude 세션 (오케스트레이터·검토자)
   └─ tools/hrun.sh -- 'tools/pi_worker.sh <프롬프트 파일>'      # Herdr pane
        └─ pi (작업자, work/<하위번호> worktree에서 실행)
-            └─ https://api.opengateway.one/oss/v1/chat/completions → <MODEL_ID>
+            └─ https://apis.opengateway.ai/v1/chat/completions → <MODEL_ID>
 ```
 
 ### 4.1 설치
@@ -82,8 +78,8 @@ npm install -g @earendil-works/pi-coding-agent@<고정 버전>
 
 공급자 예시를 `~/.pi/agent/models.json`의 기존 설정에 추가한다. `PI_CODING_AGENT_DIR`를 지정했으면 그 디렉터리의 `models.json`을 사용한다. [공급자 설정 예시](../tools/pi_models.example.json)
 
-- `0`으로 둔 값은 자리 표시다. 키로 받은 `/models` 응답과 요금표로 채운다. 2차 출처는 문맥 약 1M 토큰, 출력 최대 131,072 토큰을 말하지만 게이트웨이 경유 값은 미확인이다.
-- `authHeader`의 기본값은 `false`다. `apiKey`만으로 Bearer 헤더가 붙는지는 0단계에서 확인하고 필요 없으면 지운다.
+- 예시의 모델 ID·문맥·출력·요금은 자리 표시다. `z-ai/glm-5.3-flash-ultrafast`의 공식 Pi 설정은 `contextWindow: 1000000`, `maxTokens: 131072`다. 요금은 모델 페이지에서 확인한다. [OpenGateway Pi 설정](https://opengateway.ai/docs/coding-agents/pi)
+- `authHeader: true`로 Bearer 헤더를 보내는 동작을 로컬 대역에서 확인했다. 같은 설정으로 공식 주소에 보낸 요청도 성공했다.
 - `compat` 플래그는 넣지 않는다. pi 문서는 "OpenAI 호환"이라는 광고만 보고 켜지 말라고 한다. 0단계에서 실패한 항목만 추가한다.
 - 키는 환경변수에만 둔다. 저장소와 `models.json`에 값을 쓰지 않는다.
 
@@ -146,7 +142,7 @@ pi 작업자에게만 추가하는 금지:
 
 ### 0단계: 연결과 능력 확인 (스프린트에 쓰기 전 필수)
 
-1. 키로 `GET https://api.opengateway.one/oss/v1/models`를 호출해 `<MODEL_ID>`, 문맥 크기, 라우팅 접미사를 확인한다.
+1. 키로 `GET https://apis.opengateway.ai/v1/models`를 호출해 허용된 모델 ID와 문맥 크기를 확인한다.
 2. 도구 호출 1회 시험: `pi --mode json -p --no-session --model opengateway/<MODEL_ID> "README.md의 첫 줄을 읽어 그대로 출력"`. `tool_execution_end`가 1건 이상이고 `isError`가 false인지 본다. 게이트웨이 페이지에 도구 호출·스트리밍 지원 문구가 없다.
 3. `AGENTS.md`와 `.agents/skills`가 실제로 로드되는지 확인한다(`-a` 유무 각각).
 4. 실패 시 종료 코드를 관찰해 기록한다(잘못된 키, 없는 모델).
@@ -171,23 +167,20 @@ pi 작업자에게만 추가하는 금지:
 
 | 항목 | 상태 | 출처 |
 |---|---|---|
-| 게이트웨이 주소 `https://api.opengateway.one/oss/v1`, OpenAI 호환 chat completions, `Authorization: Bearer $OPENGATEWAY_API_KEY` | 페이지에서 확인 | https://opengateway-web.pages.dev/ |
-| 모델 ID 형식 `<org>/<Model>[:policy]`, 정책 `:preferred`·`:fastest`·`:cheapest` | 페이지에서 확인 | 위와 같음 |
-| GLM 5.3 Flash의 게이트웨이 모델 ID, `:ultrafast` | **미확인** (공개 목록·페이지에 없음) | `GET /oss/v1/models` 무인증 응답 29건 |
-| 도구 호출·스트리밍 지원, rate limit, 요금, 보존 정책, 운영 주체 | **미확인** | 페이지에 문구 없음 |
-| GLM 5.3 Flash 문맥 약 1M 토큰 | 2차 출처만 | https://pricepertoken.com/pricing-page/model/z-ai-glm-5.3-flash , https://aimlapi.com/models/glm-5-3-flash |
-| GLM 5.3 Flash 요금 | **미확인** (검색 요약에 서로 다른 값, 원문 미열람) | 없음 |
+| 게이트웨이 주소 `https://apis.opengateway.ai/v1`, Chat Completions, Bearer 인증 | 공식 문서와 실제 성공 응답에서 확인 | [API 레퍼런스](https://opengateway.ai/docs/reference/guides/overview), §8.3 |
+| 모델 ID `z-ai/glm-5.3-flash-ultrafast`, 문맥 1,000,000 토큰, 최대 출력 131,072 토큰 | ID는 실제 호출에서 확인. 토큰 한도는 공식 설정값 | [OpenGateway Pi 설정](https://opengateway.ai/docs/coding-agents/pi) |
+| 도구 호출, 스트리밍 델타, Herdr 연결 | 별도 실동작 시험 미실행 | §8.3 |
 | Herdr의 pi 지원 | `agent start --kind` 목록에 `pi` 표시. 실제 기동과 `hrun.sh` 연결은 미실행 | `herdr agent` 도움말 |
 | `models.json` 경로·필드, `apiKey`의 `$NAME` 해석, `compat` 주의 | 공식 문서에서 확인 | https://pi.dev/docs/latest/models-configuration , https://pi.dev/docs/latest/custom-provider |
 | `--mode json`, `-p`, `--no-session`, `-a`, `--provider`, `--model`, `--tools` | pi 1.5.2 도움말에서 확인. `-a`는 이번 실행의 프로젝트 파일을 신뢰하고, `--tools`는 쉼표로 구분한 도구 이름을 받는다 | `PI_CODING_AGENT_DIR=<임시 경로> pi --help` |
 | 컨텍스트 파일·스킬 탐색과 로드 여부 | 경로는 README 0.81.1 참조. `-a` 유무에 따른 실제 로드는 미확인 | https://cdn.jsdelivr.net/npm/@earendil-works/pi-coding-agent@0.81.1/README.md |
 | 재시도·압축 설정 기본값 | 공식 문서에서 확인 | https://pi.dev/docs/latest/settings.md |
-| 유효한 키 없이 실행한 pi의 종료 코드 | 잘못된 키로 HTTP 401을 받고 코드 `0`으로 종료. 키 변수를 비운 별도 실행은 생략 | [인증 실패 로그](../tools/testdata/pi_log/invalid_key.jsonl) |
-| 성공 응답과 도구 실행 이벤트 | `tool_execution_start.toolCallId`·`toolName`·`args`, `tool_execution_end.toolCallId`·`toolName`·`result`·`isError`는 설치 문서에서 확인. 인증된 실행은 미확인 | `$(npm root -g)/@earendil-works/pi-coding-agent/docs/json.md`, 같은 경로의 `message-types.md` |
+| 인증 실패 시 pi의 종료 코드 | 최초 시험 주소의 HTTP 401에도 코드 `0`으로 종료. 키 변수를 비운 별도 실행은 생략 | [인증 실패 로그](../tools/testdata/pi_log/invalid_key.jsonl) |
+| 도구 실행 이벤트 | `tool_execution_start.toolCallId`·`toolName`·`args`, `tool_execution_end.toolCallId`·`toolName`·`result`·`isError`를 설치 문서에서 확인 | `$(npm root -g)/@earendil-works/pi-coding-agent/docs/json.md`, 같은 경로의 `message-types.md` |
 
 ### 8.1 pi 1.5.2 실패 캡처
 
-저장소 밖의 임시 디렉터리에서 `PI_CODING_AGENT_DIR="$PWD/agent"`를 사용했다. 그곳의 `models.json`에 §4.2와 같은 공급자와 시험 모델 `zai-org/GLM-5.2:fastest`를 등록했다. `prompt.txt`에는 `say hi` 한 줄을 넣었다. `PI_CAPTURE_INVALID_KEY`는 시험용으로 만든 잘못된 값이다.
+저장소 밖의 임시 디렉터리에서 `PI_CODING_AGENT_DIR="$PWD/agent"`를 사용했다. 당시 `models.json`의 주소는 `https://api.opengateway.one/oss/v1`, 모델은 `zai-org/GLM-5.2:fastest`였다. `prompt.txt`에는 `say hi` 한 줄을 넣었다. `PI_CAPTURE_INVALID_KEY`는 시험용으로 만든 잘못된 값이다.
 
 ```bash
 PI_CODING_AGENT_DIR="$PWD/agent" OPENGATEWAY_API_KEY="$PI_CAPTURE_INVALID_KEY" \
@@ -198,7 +191,7 @@ PI_CODING_AGENT_DIR="$PWD/agent" OPENGATEWAY_API_KEY="$PI_CAPTURE_INVALID_KEY" \
 ```
 
 - 샌드박스에서 `getaddrinfo EAI_AGAIN api.opengateway.one`이 발생했다. JSONL 37행에 `auto_retry_start` 3건이 남았고 stderr는 비어 있었다. pi는 코드 `0`으로 종료했다. [DNS 실패 로그](../tools/testdata/pi_log/dns_failure.jsonl)
-- 네트워크가 허용된 환경에서 같은 명령을 실행하자 OpenGateway가 HTTP 401과 `Invalid or missing preview API key.`를 반환했다. JSONL은 12행이고 재시도 0건, stderr 0행, pi 종료 코드 `0`이었다. [인증 실패 로그](../tools/testdata/pi_log/invalid_key.jsonl)
+- 네트워크가 허용된 환경에서 같은 명령을 실행하자 `.one` 주소가 HTTP 401과 `Invalid or missing preview API key.`를 반환했다. JSONL은 12행이고 재시도 0건, stderr 0행, pi 종료 코드 `0`이었다. [인증 실패 로그](../tools/testdata/pi_log/invalid_key.jsonl)
 - 두 로그에서 `session`, `agent_start`, `turn_start`, `message_start`, `message_end`, `turn_end`, `agent_end`, `agent_settled`를 확인했다. `agent_settled.aborted`는 두 로그에서 `false`다. DNS 실패 로그에는 `entry_appended`, `auto_retry_start`, `auto_retry_end`도 있다. 재시도 시작 필드는 `attempt`, `maxAttempts`, `delayMs`, `errorMessage`다.
 - 마지막 `message_end.message`의 `role`은 `assistant`, `content`는 빈 배열, `stopReason`은 `error`다. `errorMessage`가 실패 원인을 담으며 `usage.input`, `output`, `cacheRead`, `cacheWrite`, `totalTokens`는 모두 0이다. 인증 실패 시 `message.model`에 시험 ID의 `:fastest` 접미사가 남았다. 게이트웨이가 요청의 접미사를 처리하는지는 인증된 실행에서 확인해야 한다.
 - 저장할 때 임시 작업 디렉터리 경로를 `/tmp/pi-capture`로 바꿨다. 두 로그에 시험용 키 값이 없음을 확인했다.
@@ -216,6 +209,12 @@ PI_CODING_AGENT_DIR="$PWD/agent" OPENGATEWAY_API_KEY="$PI_CAPTURE_INVALID_KEY" \
 | `env -u PI_WORKER_MODEL tools/pi_worker.sh docs/handoff/prompts/pi-worker.md` | 2 |
 | `python3 -c "import json;json.load(open('tools/pi_models.example.json'))"` | 0 |
 
-대역 pi로 인자, stdin, stdout·stderr 경로, `PI_WORKER_ALLOW_RE`, 검사기 종료 코드 전달을 확인했다. 실제 pi에서 성공 응답, 스트리밍, 도구 호출, 프로젝트 컨텍스트 로드, Herdr 연결은 미확인이다. 기본 설정 경로의 `pi --help`는 `trust.json.lock` 생성 중 읽기 전용 오류가 났으며 임시 `PI_CODING_AGENT_DIR`에서 도움말을 확인했다. [실행 도구 교훈](lessons/tooling.md#herdr실행)
+대역 pi로 인자, stdin, stdout·stderr 경로, `PI_WORKER_ALLOW_RE`, 검사기 종료 코드 전달을 확인했다. 기본 설정 경로의 `pi --help`는 `trust.json.lock` 생성 중 읽기 전용 오류가 났으며 임시 `PI_CODING_AGENT_DIR`에서 도움말을 확인했다. [실행 도구 교훈](lessons/tooling.md#herdr실행)
 
 선행 커밋은 `63ad22d`이며 미커밋 선행 변경은 없었다. 실제 로그는 `e5f9dc4`, 검사기는 `7939b8e`, 실행 스크립트와 공급자 예시는 `10041ed`에 있다. 브랜치는 검토 대기 상태다. 이 절에 운영 도구의 인수인계를 기록했다. 다음 검증은 출처 정책과 인증 환경이 결정된 뒤 §7의 0단계를 실행하는 것이다.
+
+### 8.3 공식 주소에서 인증 확인
+
+같은 키와 `z-ai/glm-5.3-flash-ultrafast`를 쓰고 API 주소를 바꿔 시험했다. `api.opengateway.one/oss/v1`은 HTTP 401을 반환했고, `apis.opengateway.ai/v1`은 `say hi`에 응답했다. 공식 주소의 마지막 assistant `stopReason`은 `stop`이었고 pi와 검사기 종료 코드는 각각 `0`이었다.
+
+저장소 밖에서 실행했으며 프로젝트 컨텍스트와 도구를 비활성화했다. 저장소 작업을 맡기기 전에는 출처 정책을 결정하고, 프로젝트 컨텍스트 로드·도구 호출·Herdr 연결을 확인해야 한다.
