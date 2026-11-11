@@ -29,7 +29,7 @@ pk1, Threads=1 Seed=0 NodeLimit=300 GURO_PAR_SBMAXITERS=10, 독립 3회 + 무훅
 
 ## 7. 판정과 인계
 
-오라클 수행 완료, pk1 관측 배열·bound 적용 경계는 통과. Rust 동등성·전체 L/eta·접두 행 목록 비어 있지 않은 경우·오류·x87·병렬은 미검증. 다음 M2-06h-2는 실제 LP 결과를 입력으로 후보 제어를 재생하며 전체 LP 동일성 주장을 제외한다. branch `work/m2-06h-1`, 계약13ad828·훅2d1e4ff·캡처8ffd6e3 뒤 최종 검토 반영. shared 점유가 M1-02v에 있어 main 병합과 docs/11_progress.md·12_roadmap_diagram.md 갱신은 대기한다. 작업 branch 인계만 갱신하며 상세 자료를 main에 복사하지 않는다. 교훈: docs/lessons/m2_sb_snapshot.md.
+오라클 수행 완료, pk1 관측 배열·bound 적용 경계는 통과. Rust 동등성·전체 L/eta·접두 행 목록 비어 있지 않은 경우·오류·x87·병렬은 미검증. 다음 M2-06h-2는 실제 LP 결과를 입력으로 후보 제어를 재생하며 전체 LP 동일성 주장을 제외한다. branch `work/m2-06h-1`, 계약13ad828·훅2d1e4ff·캡처8ffd6e3 뒤 최종 검토 반영. 공유 점유 해제 확인 후 M2/shared를 재점유해 docs/11_progress.md·12_roadmap_diagram.md·14_sprint_plan.md를 갱신했다. 검증 후 main에 --no-ff 병합하고 작업 worktree·branch 정리와 점유 해제를 수행한다. 교훈: docs/lessons/m2_sb_snapshot.md.
 
 ### Rust 입력 재구성 표(C·캡처)
 
