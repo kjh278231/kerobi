@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""M2-06d: L1 replay of the Rust plunge selection (crates/mip/src/plunge.rs) on the M2-06c captures.
-Contract: docs/m2/mip_plunge_rust.md section 3.
+"""M2-06d/06d-3: L1 replay of the Rust plunge selection (crates/mip/src/plunge.rs) on the M2-06c-3 captures.
+Contracts: docs/m2/mip_plunge_rust.md section 3, changed by docs/m2/mip_plunge_r47_rust.md section 3.
 
-(default)    M (run 1 captures = M2-06c manifest), X (replay input from input fields only), run
+(default)    M (run 1 captures = M2-06c-3 manifest), X (replay input from input fields only), run
              `cargo test --release -p rsolver-mip --test plunge_l1 -- --ignored`, then R/P/T against the capture and K
 --self-test  also T (Rust output tampers, one input tamper) and V (code mutants D1-D10, E1-E7 on a patched copy of the
              workspace, per-case outcome fixed in section 3 before the first run)
@@ -12,20 +12,21 @@ import copy, json, os, shutil, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mip_plunge_rule_check as R  # noqa: E402
-import mip_plunge_score_check as S  # noqa: E402
+import mip_plunge_r47_check as Q  # noqa: E402
 from mip_plunge_rule_check import Fail, need, one, calls, sha, load  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA = R.DATA
+DATA = Q.DATA
 WORK = os.path.join(ROOT, 'target/mip_plunge_rust')
 SRC = 'crates/mip/src/plunge.rs'
 TEST = 'crates/mip/tests/plunge_l1.rs'
-CASES = tuple(R.CASES)
-# section 3 K: 5-case totals from docs/m2/mip_plunge_rule.md section 6.2 and docs/m2/mip_plunge_score.md section 6
-RESOLVED = 17                          # of the 34 06c-2 unreplayable calls Rust picks (fixed after the first run, §6)
-TOTALS = {'calls': 9864, 'pick': 9445, 'pick1256': 7465, 'pick312': 1980, 'given47': 385, 'unrep': 34, 'draws': 963,
-          'kept': 32979, 'heap': 6512, 'drop': 5, 'thr_set': 1964, 'null_anc': 58}
+CASES = tuple(Q.CASES)                 # the 5 M2-06c cases + pk1 BranchDir +-1
+CASES5 = tuple(R.CASES)
+# section 3 K (docs/m2/mip_plunge_r47_rust.md): 06c-3 section 6 table and the capture tail counts, fixed before the first run
+TOTALS = {'calls': 13830, 'pick1256': 7499, 'pick312': 1980, 'pick479': 4351, 'ranc': 28245, 'x': 1023, 'r5': 239,
+          'draws': 963, 'kept': 41985, 'heap': 8834, 'drop': 5, 'thr_set': 1964, 'null_anc': 89}
 ALL, NONE = dict.fromkeys(CASES, True), dict.fromkeys(CASES, False)
+BD = ('pk1-bd1', 'pk1-bd-1')
 
 
 def but(*xs):
@@ -36,21 +37,27 @@ def only(*xs):
     return {c: c in xs for c in CASES}
 
 
-W8_OLD = """                if sc > best && ancestor(it.node, it.depth, d, parent) == top_anc {
+W8_OLD = """                if sc > best && anc(it.node, it.depth, d) == top_anc {
                     idx = Some(j);
                     best = sc;
                 }"""
 W8_NEW = """                if sc > best {
-                    if ancestor(it.node, it.depth, d, parent) == top_anc {
+                    if anc(it.node, it.depth, d) == top_anc {
                         idx = Some(j);
                     }
                     best = sc;
                 }"""
-# (name, file, [(old, new)], expected rejection per case); section 3 V
+ALL5 = only(*CASES5)
+R4 = "if it.dir == b'<' as i8 { it.val.floor() } else { it.val.ceil() }"
+R7 = '(it.dir as i32 + 10 * it.depth)'
+R9 = 'if branch_dir == -1 { base - it.dir as f64 } else { base + it.dir as f64 }'
+L2 = 'if sc > best && anc(it.node, it.depth, d) == top_anc {'
+# (name, file, [(old, new)], expected rejection per case); section 3 V. D/E: 06d table on the 5 cases (E3 changed, BranchDir
+# columns added; both from Python replays before the first run), F: 06c-3 variants X1-X15
 MUTANTS = [
-    ('D1 rule 3/12 sign swapped', SRC, [('if rule == 12 { dep + q } else { dep - q }', 'if rule == 12 { dep - q } else { dep + q }')], ALL),
+    ('D1 rule 3/12 sign swapped', SRC, [('if rule == 12 { dep + q } else { dep - q }', 'if rule == 12 { dep - q } else { dep + q }')], ALL5),
     ('D2 seed from post-pop k', TEST, [('seed(k_entry, w28)', 'seed(k, w28)')], ALL),
-    ('D3 draw cutoff 0.5', SRC, [('rng.next_f64() < 0.9', 'rng.next_f64() < 0.5')], ALL),
+    ('D3 draw cutoff 0.5', SRC, [('rng.next_f64() < 0.9', 'rng.next_f64() < 0.5')], ALL5),
     ('D4 delta=2 clause off', SRC, [('if p.k <= p.m2c {', 'if false {')], ALL),
     ('D5 delta=6 clause off', SRC, [('} else if p.k % 23 == 7 {', '} else if false {')], ALL),
     ('D6 log branch rounds', SRC, [('(x as i32).clamp(3, 10)', '(x.round() as i32).clamp(3, 10)')], only('tr12-30')),
@@ -58,13 +65,31 @@ MUTANTS = [
     ('D8 keep ignores bound', SRC, [('if same && !(it.bound > lim) {', 'if same {')], only('pk1-pool')),
     ('D9 removal always to heap', SRC, [('removed(it.node, t.cut > it.bound)', 'removed(it.node, true)')], only('neos5', 'tr12-30')),
     ('D10 rule 3/12 tie goes to last', SRC, [('if sc > best {\n', 'if sc >= best {\n')], NONE),
-    ('E1 rule 1/6 ancestor comparison off', SRC, [(' && ancestor(it.node, it.depth, d, parent) == top_anc {', ' {')], ALL),
-    ('E2 ancestor depth maxd-1', SRC, [('let d = maxd - 2;', 'let d = maxd - 1;')], ALL),
-    ('E3 null ancestor never matches', SRC, [('== top_anc {', '== top_anc && top_anc.is_some() {')], only('pk1-pool')),
-    ('E4 rule 1 depth sign +', SRC, [('(-it.depth) as f64 - (it.est - m) / 1e8', 'it.depth as f64 - (it.est - m) / 1e8')], but('markshare_4_0')),
-    ('E5 rule 1/6 best also updated on a mismatch', SRC, [(W8_OLD, W8_NEW)], ALL),
+    ('E1 rule 1/6 ancestor comparison off', SRC, [(' && anc(it.node, it.depth, d) == top_anc {', ' {')], ALL5),
+    ('E2 ancestor depth maxd-1', SRC, [('let d = maxd - 2;', 'let d = maxd - 1;')], ALL5),
+    ('E3 null ancestor never matches', SRC, [('== top_anc {', '== top_anc && top_anc.is_some() {')], ALL5),
+    ('E4 rule 1 depth sign +', SRC, [('(-it.depth) as f64 - (it.est - m) / 1e8', 'it.depth as f64 - (it.est - m) / 1e8')],
+     only('pk1', 'neos5', 'tr12-30', 'pk1-pool')),
+    ('E5 rule 1/6 best also updated on a mismatch', SRC, [(W8_OLD, W8_NEW)], ALL5),
     ('E6 rule 2 tie goes to last', SRC, [('if v > best {', 'if v >= best {')], only('neos5')),
-    ('E7 rule 5 start = trunc(u*n)', SRC, [('let s = rng.next_int() % n as i32;', 'let s = (rng.next_f64() * n as f64) as i32;')], but('tr12-30')),
+    ('E7 rule 5 start = trunc(u*n)', SRC, [('let s = rng.next_int() % n as i32;', 'let s = (rng.next_f64() * n as f64) as i32;')],
+     only('markshare_4_0', 'pk1', 'neos5', 'pk1-pool')),
+    ('F1 rule 4 floor/ceil swapped', SRC, [(R4, "if it.dir == b'<' as i8 { it.val.ceil() } else { it.val.floor() }")], ALL5),
+    ('F2 rule 4 no rounding', SRC, [(R4, "if it.dir == b'<' as i8 { it.val } else { it.val }")], ALL5),
+    ('F3 rule 4 divisor 10', SRC, [(' / 100.0', ' / 10.0')], NONE),
+    ('F4 rule 4 no depth term', SRC, [('it.depth as f64 - (x(', '0.0 - (x(')], only('markshare_4_0', 'pk1', 'neos5', 'tr12-30')),
+    ('F5 rules 4/7/9 tie goes to last', SRC, [('if s > best {', 'if s >= best {')], NONE),
+    ('F6 rule 4 root entries not skipped', SRC, [('(it.var >= 0).then(', '(it.var >= -1).then(')], NONE),
+    ('F7 rule 7 direction byte ignored', SRC, [(R7, '(10 * it.depth)')], only('markshare_4_0')),
+    ('F8 rule 7 direction byte sign -', SRC, [(R7, '(-(it.dir as i32) + 10 * it.depth)')], only('markshare_4_0')),
+    ('F9 rule 7 depth factor 1', SRC, [(R7, '(it.dir as i32 + it.depth)')], NONE),
+    ('F10 rule 9 sign flipped', SRC, [(R9, 'if branch_dir == -1 { base + it.dir as f64 } else { base - it.dir as f64 }')], only(*BD)),
+    ('F11 rule 9 direction byte ignored', SRC, [(R9, 'if branch_dir == -1 { base } else { base }')], only(*BD)),
+    ('F12 rule 1/6 first loop: last deepest entry', SRC, [('if it.depth > maxd {', 'if it.depth > maxd || (it.depth == maxd && maxd > 0) {')], ALL5),
+    ('F13 rule 1/6 second loop tie >=', SRC, [(L2, 'if sc >= best && anc(it.node, it.depth, d) == top_anc {')], ALL5),
+    ('F14 rule 1/6 second loop queries every entry', SRC, [(L2, 'if anc(it.node, it.depth, d) == top_anc && sc > best {')], ALL5),
+    ('F15 rule 5 slot not advanced', SRC, [('let s = rng.next_int() % n as i32;', 'let s = { *rng }.next_int() % n as i32;')],
+     only('markshare_4_0', 'pk1', 'neos5', 'pk1-pool')),
 ]
 
 
@@ -75,7 +100,7 @@ def load_inputs():
     for c in CASES:
         p = os.path.join(DATA, f'{c}_1.json.gz')
         h = sha(p)
-        need(man['files'].get(f'{c}_1.json.gz') == h, f'M: {p} sha256 != M2-06c manifest')
+        need(man['files'].get(f'{c}_1.json.gz') == h, f'M: {p} sha256 != M2-06c-3 manifest')
         data[c] = (h, load(p))
     return data
 
@@ -99,33 +124,23 @@ def parents(c):
     return par
 
 
-def unrep_calls(d):
-    """Calls the M2-06c-2 replay classifies as unreplayable (only the classification is used, not its picks)."""
-    out = set()
-    for i, c in enumerate(calls(d)):
-        r = one(c, 'rule')
-        if r is None or r['ecx'] not in (1, 6):
-            continue
-        try:
-            S.replay(r['ecx'], one(c, 'pick')['list'], int(r['st'], 16), S.chains(c), frozenset())
-        except S.Unrep:
-            out.add(i)
-    return out
-
-
 def export(case, h, d):
     """Replay input (input fields only) and expected lines (capture fields only). Returns (text, exp, counts)."""
     inp, exp = [f'case {case} {h}'], []
     cnt = dict.fromkeys(TOTALS, 0)
-    unrep = unrep_calls(d)
     for i, c in enumerate(calls(d)):
         r = one(c, 'rule')
         if r is None:
             need(c['ev'][-1]['node'] is None, f'X {case} call {i}: empty call returned a node')
             continue
         p, rp, pk, t, te = c['pin'], one(c, 'rpre'), one(c, 'pick'), one(c, 'tail'), one(c, 'tend')
-        drw, thr = one(c, 'drw'), one(c, 'thr')
+        drw, thr, en, x4, r5 = one(c, 'drw'), one(c, 'thr'), one(c, 'ents'), one(c, 'x4'), one(c, 'r5')
+        ranc = [e for e in c['ev'] if e['e'] == 'ranc']
         where = f'X {case} call {i}'
+        need(r['r10d'] == p['bdir'], f'{where}: rule r10d differs from pin BranchDir')
+        need(en is not None and len(en['ents']) == len(pk['list']), f'{where}: ents missing or wrong size')
+        need((x4 is not None) == (r['ecx'] == 4) and (x4 is None or x4['null'] == 0), f'{where}: x4 outside rule 4 or null')
+        need((r5 is not None) == (r['ecx'] == 5) and (not ranc or r['ecx'] in (1, 6)), f'{where}: r5/ranc outside their rules')
         need(t['k'] == t['esi'] == r['esi'] == rp['esi'], f'{where}: tail k/esi differ from the rule-step k')
         need(t['m2c'] == p['m2c'] and t['focus'] == p['focus'], f'{where}: tail m2c/focus differ from pin')
         need(p['focus'] != 4 and rp['ecx'] == r['ecx'], f'{where}: MIPFocus 4 or rule changed by the override')
@@ -141,10 +156,14 @@ def export(case, h, d):
         inp.append(f'rk {r["esi"]} {t["m2c"]} {t["t138"]} {t["t120"]} {s70[0]["r"]} '
                    f'{s70[1]["r"] if len(s70) > 1 else "-"}')
         inp.append(f'work {rp["work"]}')
-        if rule in (4, 7, 9, 11) or i in unrep:  # review: only where Rust may need it; elsewhere asking it panics
-            inp.append(f'given {pk["idx"]}')
-        for e in pk['list']:
-            inp.append(f'it {e[0]} {e[1]} {e[2]} {e[3]} {e[4]}')
+        for e, b in zip(pk['list'], en['ents']):
+            inp.append(f'it {e[0]} {e[1]} {e[2]} {e[3]} {e[4]} {b[0]} {b[1]} {b[2]}')
+        xs = {}
+        for _, j, hx in (x4['x'] if x4 else []):     # entries sharing a variable must read the same x
+            need(xs.setdefault(j, hx) == hx, f'{where}: x4 gives x[{j}] two values')
+        inp += [f'x {j} {hx}' for j, hx in xs.items()]
+        for a in ranc:
+            inp.append(f'q {a["node"]} {a["d"]} {"-" if a["res"] is None else a["res"]}')
         if thr is not None:
             inp.append(f'thr {thr["f9a41"]} {thr["t00"]} {thr["v8239"]} {thr["t28"]}')
         for x, q in parents(c).items():
@@ -154,16 +173,15 @@ def export(case, h, d):
         exp.append((i, f'call {i}'))
         exp.append((i, f'seed {drw["st"] if drw else r["st"]}'))
         exp.append((i, f'rule {rule} {r["r8b"]} {1 if drw else 0} {r["st"]} {len(s70) - 1}'))
-        if rule in (4, 7, 9, 11):
-            exp.append((i, f'given {pk["idx"]}'))
-            cnt['given47'] += 1
-        elif i in unrep:                     # Rust may resolve it (steps = 0 needs no parent); then it must equal idx
-            exp.append((i, f'unrep? {pk["idx"]}'))
-            cnt['unrep'] += 1
-        else:
-            exp.append((i, f'pick {pk["idx"]}'))
-            cnt['pick'] += 1
-            cnt['pick312' if rule in (3, 12) else 'pick1256'] += 1
+        for a in ranc:
+            exp.append((i, f'anc {a["node"]} {a["depth"]} {a["d"]} {"-" if a["res"] is None else a["res"]}'))
+        exp.append((i, f'pick {pk["idx"]} {r5["st"] if r5 else r["st"]}'))
+        if rule == 4:
+            exp.append((i, f'xr {len(x4["x"])}'))
+        cnt['pick312' if rule in (3, 12) else 'pick479' if rule in (4, 7, 9) else 'pick1256'] += 1
+        cnt['ranc'] += len(ranc)
+        cnt['x'] += len(x4['x']) if x4 else 0
+        cnt['r5'] += r5 is not None
         exp.append((i, f'work {pk["work"]}'))
         a0 = next(e for e in c['ev'] if e['e'] == 'anc')
         need(a0['w'] == 'sel', f'{where}: first 5fb13c is not the selected node')
@@ -206,10 +224,9 @@ def compare(case, head, text, exp):
     out = lines[1:]
     for k, (call, want) in enumerate(exp):
         need(k < len(out), f'{case}: Rust output ends after {k} of {len(exp)} lines (call {call}: {want!r})')
-        kind = {'call': 'X', 'seed': 'R', 'rule': 'R', 'pick': 'P', 'given': 'P', 'unrep?': 'P', 'work': 'P'}.get(
+        kind = {'call': 'X', 'seed': 'R', 'rule': 'R', 'anc': 'A', 'pick': 'P', 'xr': 'P', 'work': 'P'}.get(
             want.split()[0], 'T')
-        ok = out[k] in (f'pick {want[7:]}', f'unrep {want[7:]}') if want.startswith('unrep? ') else out[k] == want
-        need(ok, f'{kind} {case}: call {call}, output line {k}: original {want!r}, Rust {out[k]!r}')
+        need(out[k] == want, f'{kind} {case}: call {call}, output line {k}: original {want!r}, Rust {out[k]!r}')
     need(len(out) == len(exp), f'{case}: Rust output has {len(out)} lines, expected {len(exp)}')
 
 
@@ -260,7 +277,19 @@ def tampers(heads, exps, tr):
         return f'seed {flip(p[1])}' if p[:1] == ['seed'] else None
 
     def pick_(p):
-        return f'pick {int(p[1]) + 1}' if p[:1] == ['pick'] and len(p) == 2 else None
+        return f'pick {int(p[1]) + 1} {p[2]}' if p[:1] == ['pick'] else None
+
+    def pick_st(p):
+        return f'pick {p[1]} {flip(p[2])}' if p[:1] == ['pick'] else None
+
+    def anc_res(p):
+        return ' '.join(p[:4] + [str(int(p[4]) + 1)]) if p[:1] == ['anc'] and p[4] != '-' else None
+
+    def anc_del(p):
+        return False if p[:1] == ['anc'] else None
+
+    def xr(p):
+        return f'xr {int(p[1]) + 1}' if p[:1] == ['xr'] else None
 
     def work(p):
         return f'work {flip(p[1])}' if p[:1] == ['work'] else None
@@ -287,7 +316,9 @@ def tampers(heads, exps, tr):
                            ('seed', 'neos5', seed_), ('pick index', 'tr12-30', pick_), ('pick work', 'pk1-pool', work),
                            ("d'", 'pk1', dprime), ('ancestor id', 'neos5', anc), ('threshold', 'pk1-pool', thr),
                            ('rm line deleted', 'markshare_4_0', rm_del), ('heap/drop swapped', 'tr12-30', rm_swap),
-                           ('kept order', 'pk1', order)):
+                           ('kept order', 'pk1', order), ('rule 9 pick index', 'pk1-bd1', pick_),
+                           ('RNG state after the pick', 'markshare_4_0', pick_st), ('body ancestor result', 'pk1', anc_res),
+                           ('body ancestor query deleted', 'neos5', anc_del), ('rule 4 x reads', 'tr12-30', xr)):
         why = outcomes(heads, exps, edit(case, fn))[case]
         need(why is not None, f'T: tamper not rejected: {name}')
         print(f'T: rejected: {name}: {why[:200]}')
@@ -341,7 +372,7 @@ def mutants(heads, exps, din):
 def main():
     self_test = '--self-test' in sys.argv[1:]
     data = load_inputs()
-    print(f'M: run 1 captures match the M2-06c manifest ({len(data)} cases)')
+    print(f'M: run 1 captures match the M2-06c-3 manifest ({len(data)} cases)')
     din, dout = os.path.join(WORK, 'in'), os.path.join(WORK, 'out')
     shutil.rmtree(din, ignore_errors=True)
     os.makedirs(din)
@@ -359,15 +390,9 @@ def main():
     cargo(ROOT, os.path.join(ROOT, 'target'), din, dout)
     tr = traces(dout)
     res = outcomes(heads, exps, tr)
-    left = 0
     for c in CASES:
         need(res[c] is None, res[c] or '')
-        u = sum(ln.startswith('unrep ') for ln in tr[c].split('\n'))
-        left += u
-        print(f'R/P/T: {c}: {len(exps[c])} lines: rust = original (06c-2 unreplayable left unresolved by Rust: {u})')
-    need(TOTALS['unrep'] - left == RESOLVED, f'K: Rust resolved {TOTALS["unrep"] - left} of the 06c-2 unreplayable, §6 fixes {RESOLVED}')
-    print(f'K: of the {TOTALS["unrep"]} 06c-2 unreplayable rule 1/6 calls Rust picked {TOTALS["unrep"] - left} '
-          f'(compared with pick.idx), {left} still need a parent above the tail chains')
+        print(f'R/A/P/T: {c}: {len(exps[c])} lines: rust = original')
     if self_test:
         tampers(heads, exps, tr)
         truncated(heads, exps, din)
