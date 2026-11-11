@@ -19,8 +19,8 @@ C `00571770_*695bd7.c`: 317–338 저장·해 읽기, 393–442 bound 역스케�
 |---|---|---|
 | 방향·열·명령 순서 | 정확 일치 | 첫 후보 up→down, reset→restore→bound restore |
 | 분기값 | `floor(x+IntFeasTol)+1`, `floor(x+IntFeasTol)` u64 비트 | C 433–442 |
-| 목적 | 상태2: obj<=base 이면 base; 상태7: base<=dual 이면 dual | C 492–576·884–961 |
-| 비용 | up IterCount 뒤 down IterCount 순서로 더함, 비트 | C 490·881 |
+| 목적 | 상태2: obj<=base 이면 base; 상태7: base<=dual 이면 dual | C 492–576·884–961 (정정: 상태2 493–496·887–890, 상태7 565–570·957–962) |
+| 비용 | up IterCount 뒤 down IterCount 순서로 더함, 비트 | C 490·881 (정정: 484·878) |
 | bound 큐·적용과 snapshot | 기존 snapshot 검사 + 새 명령 trace 대조 | setter 직후 모델 bound 보존, flush 때 scale 적용 |
 
 정정: clamp는 asm에서 `maxsd`다(상태2 0x57271c·0x573063 `obj>base?obj:base`, 상태7 0x57267b·0x572fc2 `base>dual?base:dual`). 디컴파일의 `<=` 형태는 NaN에서 다르므로 Rust는 asm 피연산자 순서를 따른다. 1e100 판정은 asm 0x572b37 `comisd; jae`라 NaN이면 down으로 간다(Rust `>=`와 같음).
@@ -61,7 +61,7 @@ manifest는 입력 모델·바이너리·캡처 도구·캡처·재생 도구 �
 - 오류 검출: 입력·trace 변조 15종, 이 도구의 개수·묶음 비용 검사 직접 변조 2종 거부. Rust 임시 복사본 변이 6종 중 방향 역순·비용 대입·restore 삭제·분기값+2 4종 거부. 상태2·상태7 clamp 제거 2종은 원본 재생에서 생존(원본 자료에 clamp 분기 없음, 사례표 참조)하고 합성 테스트만 거부한다.
 - `1e100` 경계: C:660(asm `comisd; jae`)은 up 값이 1e100 미만일 때만 down으로 가고, 아니면 복구 뒤 down을 건너뛴다. down ≥1e100이면 원본은 stall 카운터만 0으로 하고 다음 후보로 간다(C:1066–1071). 둘 다 후속 경로 미이식이라 Rust는 복구 명령 뒤 `Error::Unported`를 반환한다. 원본 자료에는 이 경로가 없고 합성 테스트만 있다.
 - 회귀: `python3 tools/mip_sb_snapshot_check.py --self-test`·`python3 tools/mip_sb_restore_check.py --self-test` 종료 0, `cargo test --release --workspace` 127 통과·0 실패·12 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0. Python 확장 미변경으로 pytest 제외.
-- 독립 검토: (1) Codex 하위 에이전트, `1e100` 보강 전 코드, 높음·중간 없음, 정수 타입 입력 추가. (2) 병합(`64137a2`) 뒤 Claude 하위 에이전트(다른 모델) 재검토: 높음 없음, 중간 2(clamp 두 분기 원본 미판별·근거 줄 오인용), 낮음 6(work 카운터 미기재, NaN clamp가 asm과 다름, down Unported 표현, 연속 열 전제, 하네스 판별력·사례표, 비용 기대값 시작값). 모두 이 절·§2·§3 정정과 코드·하네스 수정으로 반영했다.
+- 독립 검토: (1) Codex 하위 에이전트, `1e100` 보강 전 코드, 높음·중간 없음, 정수 타입 입력 추가. (2) 병합(`64137a2`) 뒤 Claude 하위 에이전트(다른 모델) 재검토: 높음 없음, 중간 2(clamp 두 분기 원본 미판별·근거 줄 오인용), 낮음 6(work 카운터 미기재, NaN clamp가 asm과 다름, down Unported 표현, 연속 열 전제, 하네스 판별력·사례표, 비용 기대값 시작값). 모두 이 절·§2·§3 정정과 코드·하네스 수정으로 반영했다. (3) 반영 commit `0f9abbb` 재검토: 8건 중 6 반영·2 부분(trace 변조는 문자열 비교만, x+tol 정확 정수 경계 사례 없음), 새 낮음 4(단일 후보 묶음 비용 비교 개수 미검사, 합성 테스트 컴파일 실패를 거부로 셈, §3 근거 열, 교훈의 NaN 표기)를 후속 commit에서 고쳤다.
 
 ## 7. 판정과 인수인계
 

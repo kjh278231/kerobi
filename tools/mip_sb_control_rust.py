@@ -142,6 +142,7 @@ def first_candidate(d):
         traces.extend(expected)
         totals['candidates'] += 1
     same(24, totals['candidates'], 'first candidate count')
+    same(7, totals['cost1'], 'one-candidate batch cost count')
     same([6, 42], [totals['status2'], totals['status7']], 'branch coverage')
     return '\n'.join(inputs)+'\n', '\n'.join(traces)+'\n', dict(totals)
 
@@ -151,6 +152,8 @@ def synthetic(root, label):
     r = subprocess.run(['cargo', 'test', '--release', '-p', 'rsolver-mip', '--test', 'strong_branch_l1'],
                        cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     (WORK/(label+'.synthetic.log')).write_text(r.stdout)
+    # Only a failing assertion counts; a mutant that does not compile proves nothing.
+    assert r.returncode == 0 or 'panicked' in r.stdout, f'{label}: synthetic did not run'
     return r.returncode
 
 
