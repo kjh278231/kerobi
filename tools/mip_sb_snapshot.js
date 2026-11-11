@@ -47,7 +47,11 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
  Interceptor.attach(b.add(0x1690d0),{onEnter(a){this.ev=evl;if(!this.ev)return;
    this.lp=a[0];this.before=bounds(this.lp);this.n=a[1].toInt32();this.j=ints(a[2],this.n);
    this.val=doubles(a[3],this.n);this.dir=raw(a[4],this.n);
- },onLeave(r){if(this.ev)this.ev.steps.push({kind:'boundwrite',rc:r.toInt32(),j:this.j,val:this.val,dir:this.dir,before:this.before,after:bounds(this.lp)});}});
+   const d=this.lp.add(0xe8).readPointer(),sc=d.add(0x3e0).readPointer();
+   this.scales=this.j.map(j=>sc.isNull()?'3ff0000000000000':hx(sc.add(j*8)));
+   this.flip=this.j.map(j=>d.add(0x3c).readS32()!==0 && d.add(0x408).readPointer().add(j).readU8()===1);
+
+ },onLeave(r){if(this.ev)this.ev.steps.push({kind:'boundwrite',rc:r.toInt32(),j:this.j,val:this.val,dir:this.dir,scales:this.scales,flip:this.flip,before:this.before,after:bounds(this.lp)});}});
  // 62ec1d: stack arguments are &start, &count, work.
  Interceptor.attach(b.add(0x543740),{onEnter(a){ const sp=this.context.rsp;
    this.j=a[2]; this.n=a[3].toInt32(); this.extra=a[4].toInt32(); this.pp=a[5];
