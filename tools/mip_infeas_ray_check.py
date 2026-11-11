@@ -336,7 +336,8 @@ def compare(call, o, where):
         need(r[k] == o[k], f'{where}: L+0x{k[1:]} {r[k]} != {o[k]}')
     for k in ('l60', 'l68'):
         need(r[k] == h(o[k]), f'{where}: L+0x{k[1:]} {r[k]} ({f(r[k])!r}) != {h(o[k])} ({o[k]!r})')
-    if o['w'] is not None and r['w'] is not None:
+    if o['w'] is not None:
+        need(r['w'] is not None, f'{where}: work missing')
         need(r['w'] == h(o['w']), f'{where}: work {f(r["w"])!r} != {o["w"]!r}')
     if o['fail'] == 0:
         for k in ('ray', 'bnd'):
@@ -360,11 +361,18 @@ def check_capture(d, name, V=frozenset(), c=None):
         if o.get('res') is not None:
             margin = o['res'] if margin is None else max(margin, o['res'])
     c['_res_max'] = margin
-    # decay input: the vector the decay reads equals its last writer (fk_ or pp)
-    for i, e in enumerate(d['events']):
+    # decay input: the vector the decay reads equals its last writer (fk_ or pp); s and j are the fk_ values
+    ev = d['events']
+    for i, e in enumerate(ev):
         if e['e'] == 'dec':
             need(e['k'] >= 0, f'{name} event {i}: decay on an L no successful fk filled')
             need(e.get('vsame') == 1 and e.get('diff') == 0, f'{name} event {i}: decay vector differs from its last writer')
+            w = ev[e['k']]
+            need(w['e'] == ('fk_' if e['src'] == 'fk_' else 'pp'), f'{name} event {i}: writer event kind')
+            fk = w if w['e'] == 'fk_' else ev[w['k']]
+            need(fk['e'] == 'fk_', f'{name} event {i}: pp does not lead to a fk_')
+            need(e['l38'] == 3 and e['l58'] == fk['l58'] and e['l54'] == fk['l54'],
+                 f'{name} event {i}: decay L+0x38/58/54 {e["l38"]},{e["l58"]},{e["l54"]} != 3,{fk["l58"]},{fk["l54"]}')
             c['dec_' + e['src']] += 1
         elif e['e'] == 'pp' and e.get('d'):
             c['pp_changed'] += 1
@@ -386,6 +394,34 @@ def project(d):
         elif e['e'] == 'fk_':
             out.append(('fk_', e['rc'], e['f354'], e['l58'], e['l54'], e['v70']))
     return out
+
+
+def anc_check(d, o, name, c):
+    """Independent check against M2-06f-2 run 1: its dec events (L+0x58 >= 0) read the vector entries of the ancestor
+    branching columns at the same decays; they must equal the last writer's vector (fk_ ray, patched by pp)."""
+    ev = d['events']
+    mine = [e for e in ev if e['e'] == 'dec']
+    theirs = [e for e in o['events'] if e['e'] == 'dec' and 'noI' not in e and 'noL' not in e and e['l58'] >= 0]
+    need(len(mine) == len(theirs), f'{name}: {len(mine)} decays here, {len(theirs)} in M2-06f-2 run 1')
+    for t, (a, b) in enumerate(zip(mine, theirs)):
+        need((a['l38'], a['l58'], a['l54']) == (b['l38'], b['l58'], b['l54']), f'{name} decay {t}: L fields differ from M2-06f-2')
+        w = ev[a['k']]
+        fk = w if w['e'] == 'fk_' else ev[w['k']]
+        vec = dict(fk['ray'])
+        chain = []
+        if w['e'] == 'pp':
+            vec.update(w['ch'])
+        for x in b['anc']:
+            if x is None or x[0] < 0:
+                continue
+            j, got = str(x[0]), x[2]
+            need(got == vec.get(j, '0' * 16), f'{name} decay {t}: column {j} read {got}, last writer has {vec.get(j, "0" * 16)}')
+            c['anc_read'] += 1
+            if w['e'] == 'pp' and fk['ray'].get(j, '0' * 16) != got:
+                c['anc_read_changed_by_pp'] += 1
+            chain.append(j)
+        if w['e'] == 'pp' and any(fk['ray'].get(j, '0' * 16) != vec.get(j, '0' * 16) for j in chain):
+            c['dec_pp_read_changed'] += 1
 
 
 def controls(caps, manifest, old):
@@ -423,10 +459,11 @@ def load_all():
     return caps, old, manifest
 
 
-def acceptance(caps):
+def acceptance(caps, old):
     tot = collections.Counter()
     for case in CASES:
         c = check_capture(caps[(case, 1)], case)
+        anc_check(caps[(case, 1)], old[case], case, c)
         res = c.pop('_res_max')
         tot.update(c)
         print(f'  {case}: ' + ' '.join(f'{k}={v}' for k, v in sorted(c.items())) + (f' res_max={res:.3g}' if res is not None else ''))
@@ -470,6 +507,22 @@ def tampers(caps, old, manifest):
     T.append(('quad', ev(lambda d: next(e for e in d['events'] if e['e'] == 'row').__setitem__('quad', 1))))
     T.append(('decay vector', ev(lambda d: next(e for e in d['events'] if e['e'] == 'dec').__setitem__('diff', 8))))
     T.append(('decay without fk', ev(lambda d: next(e for e in d['events'] if e['e'] == 'dec').__setitem__('k', -1))))
+    T.append(('decay s', ev(lambda d: next(e for e in d['events'] if e['e'] == 'dec').__setitem__('l54', 1))))
+    T.append(('work null', setf('w', None)))
+
+    def anc_t(fn):
+        def t():
+            o2 = copy.deepcopy(old['pk1'])
+            fn(o2)
+            anc_check(base, o2, 'pk1', collections.Counter())
+        return t
+
+    def anc_bit(o2):
+        e = next(e for e in o2['events'] if e['e'] == 'dec' and e.get('l58', -1) >= 0 and any(x and x[0] >= 0 for x in e['anc']))
+        x = next(x for x in e['anc'] if x and x[0] >= 0)
+        x[2] = x[2][:-1] + format(int(x[2][-1], 16) ^ 1, 'x')
+    T.append(('06f-2 anc value', anc_t(anc_bit)))
+    T.append(('06f-2 decay dropped', anc_t(lambda o2: o2['events'].remove(next(e for e in o2['events'] if e['e'] == 'dec' and e.get('l58', -1) >= 0)))))
 
     def mani(fn):
         def t():
@@ -565,7 +618,7 @@ def main(argv):
         caps, old, manifest = load_all()
         controls(caps, manifest, old)
         print('controls: PASS (manifest, 3 runs equal, output line and fk/fk_ projection equal to M2-06f-2 run 1)')
-        tot = acceptance(caps)
+        tot = acceptance(caps, old)
     except Fail as e:
         print('FAIL', e)
         return 1
