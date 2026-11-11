@@ -139,6 +139,8 @@ In 05b257: r = `*(int*)(spx+0x2f8)` (iVar10, leaving position), nS = `*(uint*)(L
 | 0xf507a (3/13) | 2651-2674 | `acc += ((double)d+(double)d)*x148`, d = max(LU+0xdc, LU+0x100) (iVar10 after the init loops C 2650-2673) | | stored only if `d < m` (cmp 0xf0(%rsp)=m); the d>=m store at 0xf5156 was never hit | asm: `acc + ((double)d+(double)d)*x148` | `prefix`, `f8` init | asm |
 | 0xf51af (5/16) | 2725-2729 | `w += (double)((m - i) - 1)*x148`, i = final LU+0xe8: scan down from m-1 while `LU+0x88[i+1] != LU+0x88[i]` (C 2700-2715, stops at i <= LU+0x100); 0 steps if LU+0x100 >= m-1 | | param_2!=0 | asm: w reloaded, `w + (double)(m-i-1)*x148` | `e8` recompute | asm |
 
+Correction (M1-02r, docs/m1/m1_02r_ft_work.md): on the update path nS in 0xf2044/0xf207a/0xf2521/0xf2e3c is the spike list length after r is taken out (iVar33 = `*(uint*)(LU+0x1c8)` − 1 when r is listed); only 0xf461f uses the full LU+0x1c8 length. 0xf1d02 runs 19 times on kb2 (not 25). 0xf2a51 stores only when the row eta is non-empty or local_80 = 3, 0xf3ca4/0xf3d83 only when l > p; 0xf1f37 needs pos <= local_40 (else no store).
+
 Running sum order on the refactor-return path, whatever stores are skipped: `((w + m*3*LU1f8) [9e60b adds here] ) ... + m*9*x148 + x148*d1 + (d+d)*x148 + (m-i-1)*x148` (C 2574-2729; skipped stores carry the partial sum in a register).
 
 ### B. 036ade (LU factor; param_5 = nb = m, param_19 = &w, param_3 = spx)

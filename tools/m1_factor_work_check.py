@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""M1-02q: Rust dual work at the factor (036ade), refactor-return (05b257, 9e60b) and start (534f7, 1bae9c) sites
-against the original. Contract: docs/m1/m1_02q_work.md section 3. Exit 0 only when every check passes.
+"""M1-02q/M1-02r: Rust dual work at the factor (036ade), FT update and refactor-return (05b257, 9e60b) and start
+(534f7, 1bae9c) sites against the original. Contracts: docs/m1/m1_02q_work.md and docs/m1/m1_02r_ft_work.md section 3.
+Exit 0 only when every check passes.
 Run with this worktree's build: tools/build_local.sh && PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_factor_work_check.py
   --self-test   also the tampers (T)
   --mutate      also the Rust mutations (R): each is built in a scratch copy and must be rejected
@@ -19,6 +20,10 @@ NEED = {'kb2': 5, 'degen2': 9}  # refactors on the original path (contract secti
 MODEL = {n: os.path.join(ROOT, '../re/bench/data/netlib', n + '.mps.gz') for n in CAP}
 SITES = {0xe84b9, 0xc391f, 0xd4ded, 0xd5300, 0xd5e39, 0xd85e6, 0xdc7b2, 0xdcb7b, 0xf48ae, 0x1327dc, 0x1329e6, 0x1329c1,
          0xf4f9b, 0xf4ffd, 0xf507a, 0xf515b, 0xf51af}
+FT = {0xf1beb, 0xf1d02, 0xf1f37, 0xf1f82, 0xf2044, 0xf207a, 0xf2521, 0xf2969, 0xf2a51, 0xf2e3c, 0xf3ca4, 0xf3d83, 0xf3eac,
+      0xf3f71, 0xf4073, 0xf461f}  # M1-02r: 05b257 FT update path and the refactor path's spike clear
+SITES |= FT
+UPD = {'kb2': (35, 35), 'degen2': (300, 10 ** 9)}  # FT updates (0xf2e3c) in range: (min, max)
 F = lambda h: struct.unpack('<d', int(h, 16).to_bytes(8, 'little'))[0]
 H = lambda x: struct.pack('<d', x)[::-1].hex()
 sha = lambda p: hashlib.sha256(open(p, 'rb').read()).hexdigest()
@@ -72,8 +77,9 @@ def terms(ts):
 
 
 def check(caps, wcaps, runs, files_ok=True):
-    """M N A K W F on loaded data; returns (failures, report)."""
+    """M N A K W F G on loaded data; returns (failures, report)."""
     bad, rep = [], []
+    reach = collections.Counter()
     for name in CAP:
         c, wc, rust = caps[name], wcaps[name], runs[name]
         if c.get('binary_sha256') != BIN or wc.get('binary_sha256') != BIN or not c.get('ok') or c.get('errors'):
@@ -120,13 +126,18 @@ def check(caps, wcaps, runs, files_ok=True):
                 bad.append(f'K {name} refactor {i + 1}: early folds original {early}')
             kt += len(o)
             kg += sum(1 for t in o if t[0] == 'g')
-        # W: stores of the ported sites, original range = before the n-th refactor's 05b257 return
+        # W: stores of the ported sites. Range: with refactor n + 1 not aligned, every iteration before its k (the FT
+        # updates in between included, M1-02r); with all aligned, up to the n-th refactor's 05b257 return
         ev = wc['events']
+        kstop = wins[n][0]['k'] if n < len(wins) else None
         nref, stop = 0, len(ev)
         for j, e in enumerate(ev):
             if e['type'] == 'U' and e['reason'] != 0:
                 nref += 1
-            if e['type'] == 'V' and nref == n:
+            if kstop is None and e['type'] == 'V' and nref == n:
+                stop = j
+                break
+            if kstop is not None and e['k'] >= kstop:
                 stop = j
                 break
         prev, ow = None, []
@@ -135,22 +146,32 @@ def check(caps, wcaps, runs, files_ok=True):
                 prev = e['v']
             elif e['type'] == 'W':
                 if e['pc'] in SITES:
-                    ow.append((e['pc'], prev, e['v']))
+                    ow.append((e['pc'], prev, e['v'], e['k']))
                 prev = e['v']
         rw = [s for r in rust[:n] for s in r['stores']]
+        if kstop is not None and n < len(rust):
+            rw += [s for s in rust[n]['stores'] if s[3] < kstop]
         sites = collections.Counter()
         if [s[0] for s in rw] != [o[0] for o in ow]:
             j = next((j for j in range(min(len(rw), len(ow))) if rw[j][0] != ow[j][0]), min(len(rw), len(ow)))
-            bad.append(f'W {name}: store {j} site Rust {hex(rw[j][0]) if j < len(rw) else None} original {hex(ow[j][0]) if j < len(ow) else None}')
+            bad.append(f'W {name}: store {j} site Rust {hex(rw[j][0]) if j < len(rw) else None} k {rw[j][3] if j < len(rw) else None}'
+                       f' original {hex(ow[j][0]) if j < len(ow) else None} k {ow[j][3] if j < len(ow) else None}')
         else:
-            for j, ((site, val, adds), (_, p, v)) in enumerate(zip(rw, ow)):
+            for j, ((site, val, adds, k), (_, p, v, ok)) in enumerate(zip(rw, ow)):
                 x = F(p)
                 for a in adds:
                     x = F(a) + x
-                if H(x) != v:
-                    bad.append(f'W {name}: store {j} site {hex(site)}: original prev {p} + Rust {adds} = {H(x)}, original {v}')
+                if H(x) != v or k != ok:
+                    bad.append(f'W {name}: store {j} k {ok} (Rust {k}) site {hex(site)}: original prev {p} + Rust {[F(a) / 1.3 for a in adds]}'
+                               f' x 1.3 = {H(x)}, original {v} (amount {(F(v) - F(p)) / 1.3} x 1.3)')
                     break
                 sites[hex(site)] += 1
+                if site in FT:
+                    reach[site] += 1
+        # G: FT updates in range
+        nu = sites[hex(0xf2e3c)]
+        if not UPD[name][0] <= nu <= UPD[name][1]:
+            bad.append(f'G {name}: {nu} FT updates compared, need {UPD[name]}')
         # F: spx+0x158 at each 05b257 return
         v158 = [e['w158'] for e in ev if e['type'] == 'V' and e['reason'] != 0][:n]
         for i in range(n):
@@ -158,7 +179,10 @@ def check(caps, wcaps, runs, files_ok=True):
                 bad.append(f'F {name} refactor {i + 1}: 0x158 Rust {rust[i]["w158"]} original {v158[i]}')
                 break
         rep.append(f'{name}: N 05b257 entries {len(u1)}, A aligned refactors {n}/{len(wins)}, K terms {kt} (general {kg}), '
-                   f'W stores {len(rw)} {dict(sites)}, F 0x158 {n}')
+                   f'W stores {len(rw)} {dict(sites)}, F 0x158 {n}' + (f', W range k < {kstop}' if kstop is not None else ''))
+    miss = sorted(hex(s) for s in FT - set(reach))
+    if miss:
+        bad.append(f'G: FT sites never compared {miss}')
     return bad, rep
 
 
@@ -224,7 +248,26 @@ def main():
             e = next(e for e in w['kb2']['events'] if e['type'] == 'W' and e['pc'] == 0xd85e6 and e['k'] == 26)
             e['v'] = flip(e['v'])
 
-        for t in (t_bin, t_empty, t_nof, t_nwork, t_head, t_head1, t_term, t_add, t_158, t_site, t_wval):
+        def t_ftadd(c, w, r):
+            s = [s for s in r['kb2'][2]['stores'] if s[0] == 0xf1f82][1]
+            s[2][-1] = H(F(s[2][-1]) + 1.3)
+
+        def t_ftdrop(c, w, r):
+            s = r['degen2'][5]['stores']
+            s.remove(next(x for x in s if x[0] == 0xf3d83))
+
+        def t_461f(c, w, r):
+            next(s for s in r['degen2'][3]['stores'] if s[0] == 0xf461f)[0] = 0xf48ae
+
+        def t_wft(c, w, r):
+            e = [e for e in w['kb2']['events'] if e['type'] == 'W' and e['pc'] == 0xf1f82][7]
+            e['v'] = flip(e['v'])
+
+        def t_k(c, w, r):
+            next(s for s in r['kb2'][3]['stores'] if s[0] == 0xf2e3c)[3] += 1
+
+        for t in (t_bin, t_empty, t_nof, t_nwork, t_head, t_head1, t_term, t_add, t_158, t_site, t_wval, t_ftadd, t_ftdrop,
+                  t_461f, t_wft, t_k):
             c, w, r = copy.deepcopy(caps), copy.deepcopy(wcaps), copy.deepcopy(runs)
             t(c, w, r)
             b2, _ = check(c, w, r)
@@ -244,7 +287,19 @@ MUTANTS = [  # (name, file, original text, mutated text)
     ('9e60b site swapped', 'crates/lp/src/lu.rs', 'if cost_mode == 2 { 0x1329e6 } else { 0x1327dc }', 'if cost_mode != 2 { 0x1329e6 } else { 0x1327dc }'),
     ('f507a store test', 'crates/lp/src/lu.rs', 'if d < m {\n            w.add(0xf507a', 'if d <= m {\n            w.add(0xf507a'),
     ('q without U', 'crates/lp/src/lu.rs', 'lu.lcol[k].len() + lu.urow[k].len()', 'lu.lcol[k].len()'),
+    # M1-02r (contract section 3, fixed before the first run)
+    ('f1f82 row length', 'crates/lp/src/lu.rs', '(false, at_kp)', '(false, self.urow[ki].len())'),
+    ('f2044 test <=', 'crates/lp/src/lu.rs', 'if old_len < ns {', 'if old_len <= ns {'),
+    ('section start swapped', 'crates/lp/src/lu.rs', '(0xf3f71, h - *mid) } else { (0xf2969, h) }', '(0xf3f71, h) } else { (0xf2969, h - *mid) }'),
+    ('f3ca4 without 5', 'crates/lp/src/lu.rs', 'acc = (acc + self.ucol[x].len() as f64 * 2.0) + 5.0;', 'acc += self.ucol[x].len() as f64 * 2.0;'),
+    ('f3d83 k + 1', 'crates/lp/src/lu.rs', 'w_cyc = Some((acc, ll - base));', 'w_cyc = Some((acc, ll - base + 1));'),
+    ('f461f k + 1', 'crates/lp/src/simplex.rs', '(k as f64 + k as f64) * X148', '((k + 1) as f64 + (k + 1) as f64) * X148'),
+    ('f2a51 with local_80 = 0', 'crates/lp/src/lu.rs', 'if l == p0 {\n                w_urow', 'if true {\n                w_urow'),
+    ('f1beb association', 'crates/lp/src/lu.rs', '(X148 * 3.0) * n as f64', 'X148 * (3.0 * n as f64)'),
+    # added after the first run (review): the no-store branch of a length-1 row at a position > local_40
+    ('f1f37 without local_40 test', 'crates/lp/src/lu.rs', '} else if v as i64 <= local40 {', '} else {'),
 ]
+SURVIVE_OK = {'f1beb association'}  # last-bit amount changes are absorbed by the sum (M1-02q section 6)
 
 
 def mutate(caps, wcaps, seeds):
@@ -269,7 +324,7 @@ def mutate(caps, wcaps, seeds):
             runs = {n: rust_run(n, seeds[n], os.path.join(scratch, 'python')) for n in CAP}
             b2, _ = check(caps, wcaps, runs)
             print(f'R {name}: ' + (f'rejected ({b2[0]})' if b2 else 'NOT REJECTED'))
-            if not b2:
+            if not b2 and name not in SURVIVE_OK:
                 bad.append(f'R {name} not rejected')
             open(p, 'w').write(src)
     finally:

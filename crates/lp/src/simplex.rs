@@ -112,6 +112,8 @@ pub struct Engine<'a> {
     pub path: Vec<(u64, i64, i64)>,
     /// Dual work counter (06268b param_2), partial: nothing decides on it yet (docs/m1/m1_02q_work.md).
     pub work: Work,
+    /// Spike list length LU+0x1c8 pending at a refactor (`05b257` 0xf461f).
+    spike_ns: usize,
 }
 
 impl<'a> Engine<'a> {
@@ -178,6 +180,7 @@ impl<'a> Engine<'a> {
             c8: false,
             path: Vec::new(),
             work: Work::new(),
+            spike_ns: 0,
         }
     }
 
@@ -241,6 +244,11 @@ impl<'a> Engine<'a> {
                 self.vstat[self.n + i] = p as i32;
             }
         }
+        // 05b257 C:2006–2033: the spike list of an FTRAN that refactors instead of updating is cleared after 036ade
+        let k = std::mem::take(&mut self.spike_ns);
+        if k > 0 {
+            self.work.add(0xf461f, (k as f64 + k as f64) * X148);
+        }
         self.lu.refactor_work(&mut self.work, self.pr.cost_mode);
         self.work_dump(&head0);
     }
@@ -253,7 +261,9 @@ impl<'a> Engine<'a> {
         let bits = |x: f64| format!("{:016x}", x.to_bits());
         let stores: Vec<String> = log
             .drain(..)
-            .map(|(site, v, a)| format!("[{site},\"{}\",[{}]]", bits(v), a.iter().map(|x| format!("\"{}\"", bits(*x))).collect::<Vec<_>>().join(",")))
+            .map(|(site, v, a, k)| {
+                format!("[{site},\"{}\",[{}],{k}]", bits(v), a.iter().map(|x| format!("\"{}\"", bits(*x))).collect::<Vec<_>>().join(","))
+            })
             .collect();
         let terms: Vec<String> =
             self.lu.fw.terms.iter().map(|(k, v, b)| format!("[\"{k}\",{},{},{},\"{}\"]", v[0], v[1], v[2], bits(*b))).collect();
@@ -562,9 +572,13 @@ impl<'a> Engine<'a> {
                 (self.upd_cols as f64 * 1.5 + self.lu.eta_nnz() as f64 * 2.0) * m - f > 0.0
             }
         };
-        if refactor || !self.lu.update(r, q, spike, sorder, self.lu_interval) {
+        self.work.k = self.iter as usize;
+        // LU+0x1c8: the spike list `09d112` left; a completed update empties it (05b257 C:1329)
+        self.spike_ns = if sorder.is_empty() { spike.iter().filter(|v| v.abs() > ZERO).count() } else { sorder.len() };
+        if refactor || !self.lu.update(r, q, spike, sorder, self.lu_interval, &mut self.work) {
             self.reinvert();
         } else {
+            self.spike_ns = 0;
             // LU+0x190: nonzeros of the FTRAN'd entering column (pivot included)
             self.upd_cols += self.col_nnz;
         }
