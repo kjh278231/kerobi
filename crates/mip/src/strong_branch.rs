@@ -2,7 +2,7 @@
 //! saved-state backend. The backend owns the LP numbers, the propagation itself, the parent
 //! snapshot and the timer; this module owns the candidate control and the values it writes.
 //! shortcut: integer candidates on the propagation path only. Propagation contradiction and
-//! timer expiry return Unported until original cases exist (M2-06h-4).
+//! timer expiry return Unported; natural timer cases exist since M2-06h-4, port in M2-06h-5.
 
 const INF: f64 = 1e100;
 

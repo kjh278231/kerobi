@@ -39,14 +39,16 @@ def census(d):
             k = s['kind']
             if k == 'propEnter':
                 last = s
-                dirs[s['col']].add(s['dir'])
+                # By call site, not by dir: the continuous-column down path also calls with 0x3e (C:761-783).
+                dirs[s['col']].add(62 if s['ra'] == '572375' else 60)
             elif k == 'prop':
                 if s['out'] != 0:
-                    c['up contradiction' if last['dir'] == 62 else 'down contradiction'] += 1
+                    c['up contradiction' if last['ra'] == '572375' else 'down contradiction'] += 1
                 c['duplicate column'] += len(s['list']) != len(set(s['list']))
                 for col, fl, lo, up in zip(s['list'], s['flags'], s['lower'], s['upper']):
                     # C:592-647: a set flag requests a restore only when the bound moved strictly.
-                    c['restore strict'] += (fl & 1 and lo == orig['origLower'][col]) + (fl & 2 and up == orig['origUpper'][col])
+                    c['restore strict'] += (fl & 1 and not f(orig['origLower'][col]) < f(lo)) + \
+                        (fl & 2 and not f(up) < f(orig['origUpper'][col]))
             elif k == 'timer' and s['r'] != 0:
                 c['timer expired'] += 1
             elif k == 'solve' and i != len(steps) - 1:
@@ -72,9 +74,9 @@ def self_test():
          'a': [h(BIG), h(1.0)], 'z': [h(2.0), h(3.0)],
          'steps': [{'kind': 'attr', 'attr': 'ObjVal', 'value': h(5.0)},
                    {'kind': 'origLower', 'v': [h(0.0)] * 2}, {'kind': 'origUpper', 'v': [h(1.0)] * 2},
-                   {'kind': 'propEnter', 'col': 0, 'dir': 62},
+                   {'kind': 'propEnter', 'col': 0, 'dir': 62, 'ra': '572375'},
                    {'kind': 'prop', 'out': 1, 'list': [0], 'flags': [1], 'lower': [h(1.0)], 'upper': [h(1.0)]},
-                   {'kind': 'propEnter', 'col': 1, 'dir': 60},
+                   {'kind': 'propEnter', 'col': 1, 'dir': 60, 'ra': '572ca6'},
                    {'kind': 'prop', 'out': 0, 'list': [1, 1], 'flags': [2, 3], 'lower': [h(0.0)] * 2, 'upper': [h(0.0), h(1.0)]},
                    {'kind': 'solve', 'status': 7, 'dual': h(4.0)},
                    {'kind': 'timer', 'r': 1}, {'kind': 'solve', 'status': 2, 'dual': h(0.0)}]}

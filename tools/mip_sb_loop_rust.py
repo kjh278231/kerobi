@@ -302,8 +302,14 @@ def compare(expected, actual, at):
 def build(cases):
     cover = collections.Counter()
     inputs, expected = '', ''
-    for m in MODELS:
-        i, e = batches(m, cases[m][0], cover)
+    for m in cases:
+        d = cases[m][0]
+        if m == TIMER_MODEL:  # replay every batch except the expired-timer ones (Rust: Unported)
+            d = copy.deepcopy(d)
+            n = len(d['events'])
+            d['events'] = [e for e in d['events'] if not any(s['kind'] == 'timer' and s['r'] for s in e.get('steps', []))]
+            assert len(d['events']) < n, 'no expired timer left out'
+        i, e = batches(m, d, cover)
         inputs, expected = inputs + i, expected + e
     for k in REQUIRED:
         assert cover[k] > 0, 'no original case for '+k
@@ -437,7 +443,22 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--self-test', action='store_true')
     ap.add_argument('--write-manifest', action='store_true')
+    ap.add_argument('--explore', help='replay every capture in DIR (exploration, not a baseline)')
     a = ap.parse_args()
+    if a.explore:
+        tot = collections.Counter()
+        for p in sorted(Path(a.explore).glob('*.json.gz')):
+            m, cover = p.name[:-8], collections.Counter()
+            try:
+                i, e = batches(m, load(p), cover)
+                if cover['batches']:
+                    compare(e, run(ROOT, i, 'explore-'+m), m)
+                    tot += cover
+                print(m, 'MATCH' if cover['batches'] else 'no batches', cover['batches'])
+            except AssertionError as x:
+                print(m, 'REJECT', str(x)[:200])
+        print('TOTAL', dict(tot))
+        return
     files = {m: [d/f'{m}_{i}.json.gz' for i in (1, 2, 3)] + [d/f'{m}_control.json.gz']
              for m, d in {**MODELS, TIMER_MODEL: DATA4}.items()}
     cases = {m: [load(p) for p in ps] for m, ps in files.items()}
@@ -451,9 +472,8 @@ def main():
     for p, h in manifest['files'].items():
         same(h, sha(ROOT/p), 'manifest.'+p)
     controls(cases, manifest)
-    timer = cases.pop(TIMER_MODEL)
     try:
-        batches(TIMER_MODEL, timer[0], collections.Counter())
+        batches(TIMER_MODEL, cases[TIMER_MODEL][0], collections.Counter())
         raise AssertionError('timer expiry no longer rejected')
     except AssertionError as x:
         assert 'timer expired: expected=0 actual=1' in str(x), x

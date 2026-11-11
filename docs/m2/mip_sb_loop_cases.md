@@ -4,7 +4,7 @@
 
 ## 1. 범위와 주장
 
-- 작업 종류: 조사(자연 사례 탐색) + 발견 사례의 원본 재생 비교(기존 L1 하네스 확장).
+- 작업 종류: 조사(자연 사례 탐색) + 검증(발견 사례의 원본 재생 비교, 기존 L1 하네스 확장).
 - 조사 질문: M2-06h-3에서 원본 0회였던 `695bd7` 분기가 Threads=1 자연 실행에서 나오는가. 대상은 전파 모순(up·down), 타이머 만료, down ≥ 1e100(up < 1e100), 두 방향 ≥ 1e100, up 사전 채움(down만 평가), 상태7 dual < parent clamp, LP 상태 3·11·−1000, 연속 열 후보, 비전파 경로, stride > 1, 복구 루프에서 flag는 섰지만 bound가 원래 값과 같은 항목(`restore strict`), 변경 목록의 중복 열이다.
 - 답의 형식(분기마다 하나): (a) 자연 사례를 찾고 원본 재생 비교를 실행했다, (b) 자연 사례를 찾았으나 Rust가 `Unported`라 비교하지 못했다(구현은 후속 번호), (c) C·asm 근거로 계약 범위(Threads=1, 공개 파라미터) 안에서 도달 불가, (d) 탐색한 모델·설정에서 0회이고 도달 조건 미확정.
 - 비교 범위(착수 때 고정): Rust `strong_branch::run`이 이미 옮긴 분기(down ≥ 1e100, 두 방향 ≥ 1e100, up 사전 채움, 상태7·11·−1000 dual clamp, 상태 3, restore strict, 중복 열)는 자연 사례가 있으면 06h-3과 같은 비교 규칙으로 원본 재생 비교까지 한다. 전파 모순·타이머 만료는 Rust가 `Unported`를 돌려주므로 사례를 찾아도 이번에는 구현하지 않고 후속 번호로 넘긴다. 연속 열·비전파·stride > 1도 Rust 미이식이면 같다.
@@ -26,7 +26,7 @@
 
 ## 4. 사례와 원본 자료
 
-탐색은 `../re/bench/data/miplib`의 38모델 전부를 기본 파라미터(Threads=1·Seed=0·NodeLimit=300·SBMAXITERS=10)로 1회씩 캡처했다(`tools/mip_sb_census_runs.sh`, 모델당 300초 한도). 33모델 완료, 5모델(csched007·csched008·ic97_potential·neos-4338804-snowy·neos-860300)은 한도 초과로 **미캡처**다(0회가 아니다). 4모델(enlight_hard·gen-ip054 등)은 SB 묶음이 없었다. 집계 [로그](../../bench/oracle/m2_06h4/explore/census.log). 탐색 캡처 파일은 크기(약 10MB) 때문에 저장소에 넣지 않았다. 같은 명령으로 다시 만들 수 있다.
+탐색은 `../re/bench/data/miplib`의 38모델 전부를 기본 파라미터(Threads=1·Seed=0·NodeLimit=300·SBMAXITERS=10)로 1회씩 캡처했다(`tools/mip_sb_census_runs.sh`, 모델당 300초 한도). 33모델 완료, 5모델(csched007·csched008·ic97_potential·neos-4338804-snowy·neos-860300)은 한도 초과로 **미캡처**다(0회가 아니다). 2모델(enlight_hard·gen-ip054)은 SB 묶음이 없었다. 집계 [로그](../../bench/oracle/m2_06h4/explore/census.log), 검토 뒤 집계 수정판으로 다시 센 [로그](../../bench/oracle/m2_06h4/explore/census_recount.log)(합계 같음). 탐색 캡처 파일은 크기(약 10MB) 때문에 저장소에 넣지 않았다. 같은 명령으로 다시 만들 수 있다.
 
 | 분기 | 탐색 합계(33모델) | 기준 사례(final) | 답 |
 |---|---:|---|---|
@@ -34,8 +34,8 @@
 | 상태 −1000(7과 같은 clamp) | 268 | markshare_4_0 6 | (a) 비교 통과 |
 | up 사전 채움(down만 평가) | 43 | markshare_4_0 2 | (a) 비교 통과 |
 | 상태7 dual < parent clamp | 5 | neos-3627168-kasai 2 | (a) 비교 통과, `clamp7` 변이 이제 거부 |
-| 타이머 만료 | 5(ran14x18-disj-8) | ran14x18-disj-8 5 | (b) 원본 3회 재현, Rust `Unported` |
-| 비전파 경로(N = NULL) | 0(기본 설정) | — | (b) VarBranch=3에서 실행 증거, 캡처 훅·Rust 미지원 |
+| 타이머 만료 | 5(ran14x18-disj-8) | ran14x18-disj-8 5 | (b) 원본 3회 재현, Rust `Unported`(같은 모델의 나머지 89묶음은 재생 일치) |
+| 비전파 경로(N = NULL) | 0(기본 설정) | — | (b) VarBranch=3에서 실행 증거(이 설정에만 한정되는지는 미확인), 캡처 훅·Rust 미지원 |
 | 전파 모순 up·down | 0 | — | (d) 도달 조건은 정적 확인, 사례 미발견 |
 | 연속 열 후보 | 0 | — | (d) SOS 멤버 경로로만 가능(추정), 사례 미발견 |
 | 상태 11 | 0 | — | (d) |
@@ -46,8 +46,8 @@
 정적 근거(C 줄은 디컴파일 파일 기준, 하위 에이전트 조사 뒤 핵심 줄 확인):
 
 - stride: `691b56` C:68 순차 호출은 stride 리터럴 1. C:240(worker 0 인라인)과 `693469` worker 본체만 stride = worker 수이고, 이 경로는 worker ≥ 2·n ≥ 6·SBMAXCANDS ≠ −1일 때만 열린다. Threads=1 계약 밖.
-- 비전파: C:343은 N(rsi) ≠ 0이고 `N+0x18` ≠ 0일 때 전파한다. `62f909` 경로는 N과 N+0x18을 먼저 역참조하므로 항상 전파한다. `62a05d` C:785(asm 0x53882b `xor %esi,%esi`)만 N = NULL을 넘기며 VarBranch = 3에서만 열린다(예산 1e100, stall 2e9, &iters NULL). VarBranch=3 훅 실행에서 `691b56` 진입 훅이 `Node+0x18`(`tools/mip_sb_snapshot.js:70`)을 읽다 주소 0x18 접근 위반을 냈고, 사건 수에 `batch`만 없고 `double`·`kernel`은 20회였다([로그](../../bench/oracle/m2_06h4/vb3_null_node.log)). 이 실행은 탐색이며 기준 자료가 아니다. 훅을 단 VarBranch=3은 노드마다 전체 SB를 해 NodeLimit=300에서 모델마다 300초를 넘겼다.
-- 타이머: `ade736(T, work, 0)`가 T[0] = 1 − work₀, `adf1a6`가 예산 < 1e100일 때만 한도를 둔다. `adf2be`는 (T[0] + work)/예산 ≥ 1, 즉 이 호출의 work 증가 + 1 ≥ 예산이면 만료다(work 기반, 결정적). 두 번째 후보부터 검사한다. 유한 예산은 루트 사전 SB(`64da9f` C:911)뿐이다. ran14x18-disj-8에서 5회 났다.
+- 비전파: C:343은 N(rsi) ≠ 0이고 `N+0x18` ≠ 0일 때 전파한다. `62f909` 경로는 N과 N+0x18을 역참조한다는 하위 에이전트 조사가 있으나 역참조 순서는 끝까지 확인하지 않았다(기본 설정 33모델에서 비전파 0회와는 맞다). `62a05d` C:785(asm 0x538810 `xor %esi,%esi`, 호출 0x53882b)가 N = NULL을 넘긴다(예산 1e100, stall 2e9, &iters NULL). 이 블록은 VarBranch(`+0x3454`) == 3 게이트(C:474) 안에 있으나 `uVar24`가 C:472·620·766에서 다시 할당돼, 다른 진입 조건이 없는지는 확인하지 못했다(VarBranch=3에서 관측, 배타성 미확인). VarBranch=3 훅 실행에서 `691b56` 진입 훅이 `Node+0x18`(`tools/mip_sb_snapshot.js:70`)을 읽다 주소 0x18 접근 위반을 냈고, 사건 수에 `batch`만 없고 `double`·`kernel`은 20회였다([로그](../../bench/oracle/m2_06h4/vb3_null_node.log)). 이 실행은 탐색이며 기준 자료가 아니다. 훅을 단 VarBranch=3은 노드마다 전체 SB를 해 NodeLimit=300에서 모델마다 300초를 넘겼다.
+- 타이머: `ade736(T, work, 0)`가 T[0] = 1 − work₀, `adf1a6`가 예산 < 1e100일 때만 한도를 둔다. `adf2be`는 (T[0] + work)/예산 ≥ 1, 즉 이 호출의 work 증가 + 1 ≥ 예산이면 만료다(work 기반, 결정적). 두 번째 후보부터 검사한다. 하위 에이전트 조사에서 유한 예산을 넘기는 최상위 호출은 루트 사전 SB(`64da9f` C:911) 하나였다(호출자 전수 대조는 미확인). ran14x18-disj-8에서 5회 났다.
 - 전파 모순: `6953ff`는 직접 교차, SOS, 클리크(`M+0x3370`), 암시 bound 표(`694e78`)에서 모순을 세운다. 선형 행 활동 전파는 없다. 33모델 NodeLimit 300에서는 0회였다.
 - 연속 열: 후보 목록 `5d4427` 1군은 `types[j] != 'C'`로 거른다. SOS 2군만 타입 필터가 없다(`M+0x680` 출처 미추적, 추정).
 - 두 방향 ≥ 1e100: 진입 때 down/up은 −1e100이다. up ≥ 1e100(상태 3/6/clamp, up 모순)이면 down을 건너뛰고, down 모순은 결과 판정을 거치지 않는다. 그래서 C:1061–1065 가드에 닿는 경로를 찾지 못했다.
@@ -58,22 +58,25 @@
 
 - 탐색: `tools/mip_sb_census_runs.sh <OUT> '<params json>' [모델...]`(Gurobi 직렬, 모델당 300초 한도), 집계 `python3 tools/mip_sb_census.py [--self-test] <OUT>/*.json.gz`.
 - 기준 캡처: `tools/mip_sb_loop_runs.sh bench/oracle/m2_06h4/final markshare_4_0 neos-3627168-kasai ran14x18-disj-8`(12회, 약 10분).
+- 탐색 재생 명령: `python3 tools/mip_sb_loop_rust.py --explore <탐색 디렉터리>`([로그](../../bench/oracle/m2_06h4/explore/replay.log)).
 - 판정: `python3 tools/mip_sb_loop_rust.py --self-test`(06h-3 3모델 + 06h-4 2모델 재생, 타이머 모델은 거부 확인, 변조·변이).
 
 ## 6. 실행 결과
 
 - 실행 commit 기준 main `d4b0787` + 이 branch의 도구 변경. x86-64 Linux(WSL2), Node 22.23.4, 바이너리 해시는 §2.
 - 원본: 12회 모두 `ok true`. 모델마다 독립 3회 JSON이 같고 무훅 대조의 최종 출력이 같다(하네스 `controls`). `_1` gz SHA-256 앞자리는 markshare_4_0 `2f512092`, kasai `f39cf2a7`, ran14x18 `a5634ac0`.
-- 탐색 재생(기준 판정 아님): 기본 설정 33모델 중 SB 묶음이 있는 31모델 2,058묶음이 Rust 명령 trace·결과 배열·비용·work까지 같았다(상태 3 158·−1000 268·down ≥ 1e100 109·up 사전 채움 43·dual < parent 5 포함). 거부는 ran14x18-disj-8 `double[49]` 타이머 만료 1건뿐이다.
-- 판정: `python3 tools/mip_sb_loop_rust.py --self-test` 종료 0([로그](../../bench/oracle/m2_06h4/selftest.log)). 5모델 195묶음 비트 일치, 필수 사례에 상태 3·−1000·dual < parent·down ≥ 1e100·up 사전 채움을 추가했다. 타이머 모델은 `timer expired`로 거부되는지 확인한다. 변조 17·직접 3·trace 4 거부, Rust 변이 18 중 16 거부. 06h-3에서 생존하던 `clamp7`이 이제 kasai 원본 재생에서 거부된다. 남은 생존 2종: `restore strict`(원본 0회, 합성 거부), `score shift`(관측 불가).
+- 탐색 재생(기준 판정 아님): SB 묶음이 있는 31모델 중 ran14x18-disj-8을 뺀 30모델 2,058묶음이 Rust 명령 trace·결과 배열·비용·work까지 같았다(상태 3 158·−1000 268·down ≥ 1e100 109·up 사전 채움 43·dual < parent 5 포함). ran14x18-disj-8은 첫 타이머 만료(`double[49]`)에서 거부돼 그 모델 94묶음 전체가 이 탐색 재생에서 빠졌다. 기준 판정에서는 만료 5묶음만 빼고 89묶음을 재생한다.
+- 탐색 재생 명령: `python3 tools/mip_sb_loop_rust.py --explore <탐색 디렉터리>`([로그](../../bench/oracle/m2_06h4/explore/replay.log)).
+- 판정: `python3 tools/mip_sb_loop_rust.py --self-test` 종료 0([로그](../../bench/oracle/m2_06h4/selftest.log)). 6모델 284묶음 비트 일치(ran14x18은 만료 5묶음을 뺀 89묶음), 필수 사례에 상태 3·−1000·dual < parent·down ≥ 1e100·up 사전 채움을 추가했다. 타이머 모델은 전체 자료가 `timer expired`로 거부되는지도 확인한다. 변조 17·직접 3·trace 4 거부, Rust 변이 18 중 16 거부. 06h-3에서 생존하던 `clamp7`이 이제 kasai 원본 재생에서 거부된다. 남은 생존 2종: `restore strict`(원본 0회, 합성 거부), `score shift`(관측 불가).
 - 회귀: `cargo test --release --workspace` 129 통과·0 실패·12 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0. Python 미변경으로 pytest 제외.
 - 변경: `crates/mip/tests/strong_branch_l1.rs` 응답 파서가 상태 3·11·−1000을 받는다(Rust 본체 `LpValue` 대응은 06h-3 그대로). 하네스는 자료 디렉터리를 모델별로 두고, 비간섭 검사(06g-2·06h-2)는 기존 3모델에만 적용한다.
 - 실행하지 못한 것: 미캡처 5모델, VarBranch=3 캡처(훅 미지원), 깊은 NodeLimit·다른 Seed에서의 모순 탐색.
+- 독립 검토(Opus 하위 에이전트, `55bb39b`): 높음 0, 중간 1(탐색 재생 31모델 → 실제 30모델), 낮음 7(ran14x18 비타이머 묶음 미재생, SB 없는 모델 수, asm 주소, census restore strict를 비트 동일 대신 C의 `!(orig < cur)`로, 방향 분류를 호출 지점으로, 정적 주장 배타성 표현, 오래된 주석·06h-3 manifest). 모두 반영했고 반영 뒤 `--self-test`를 다시 실행해 종료 0이었다. 원본 재현성(3회 gz·내용 SHA 동일)과 하네스 PASS는 검토자가 별도로 재실행해 확인했다.
 - 사고: VarBranch=3 탐색을 멈추려고 `pkill -f`를 썼다가 자기 셸이 먼저 죽었다(교훈 `tooling.md`에 이미 있는 실패). PID를 직접 kill해 정리했다.
 
 ## 7. 판정과 인수인계
 
-- 작업 수행: **완료(조사)**. 동등성: 상태 3·−1000·dual < parent·down ≥ 1e100·up 사전 채움은 **자연 원본 사례 범위 통과**(5모델 195묶음). 타이머 만료·비전파는 자연 사례가 있으나 Rust 미이식이라 **미검증**이다. 전파 모순·연속 열·상태 11·restore strict·중복 열은 사례 미발견으로 **미검증**이다. stride > 1·두 방향 ≥ 1e100은 정적 근거로 계약 범위 밖 또는 도달 불가다.
+- 작업 수행: **완료(조사)**. 동등성: 상태 3·−1000·dual < parent·down ≥ 1e100·up 사전 채움은 **자연 원본 사례 범위 통과**(6모델 284묶음). 타이머 만료·비전파는 자연 사례가 있으나 Rust 미이식이라 **미검증**이다. 전파 모순·연속 열·상태 11·restore strict·중복 열은 사례 미발견으로 **미검증**이다. stride > 1·두 방향 ≥ 1e100은 정적 근거로 계약 범위 밖 또는 도달 불가다.
 - 후속:
   - **M2-06h-5**(구현): 타이머 만료 경로 Rust 이식. ran14x18-disj-8 기준 자료로 재생한다.
   - **M2-06h-6**(오라클·조사): VarBranch=3 N = NULL 경로. 캡처 훅을 null 안전하게 바꾸고(06h-3 자료의 도구 해시와 분리) 비전파 `d8d5f` 직접 bound 요청을 기록한다. 이어서 구현한다.
