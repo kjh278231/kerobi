@@ -173,3 +173,7 @@
 
 - **GRBgetdblattr는 PLT 주소 `0xbcc70` 대신 실제 export `0x7a3820`에 훅을 붙인다.** PLT 계측은 DONE 전 프로세스 종료를 일으켰고 export 훅으로 해결했다. 실패 캡처 `explore_pk1_final.json.gz`를 보존했다. (M2-06g-2, [§6](../m2/mip_sb_restore.md#6-실행-결과))
 - **bound 복원 검사에 실제 분기 bound 적용도 연결한다.** solve 전후와 최종 bound만 비교하면 후보 bound를 전부 부모 값으로 바꾼 기록이 통과한다. restore의 열·방향과 solve 진입 bound를 연결해 선택 열이 엄격히 조여졌는지 검사한다. 독립 검토에서 재현·수정했다. (M2-06g-2, [§7](../m2/mip_sb_restore.md#7-판정과-인수인계))
+- **`pkill -f <패턴>`이 자기 Bash 셸 명령줄에도 걸려 첫 kill에서 셸이 죽고 나머지 kill이 실행되지 않았다(실패한 접근).** 남은 node·gurun이 Gurobi를 붙잡고, 옮긴 출력 폴더를 다시 만들어 새 도구 해시로 옛 내용을 쓸 뻔했다. `pgrep -af`로 PID를 확인하고 `kill <PID>`로 끝낸다. 같은 Herdr pane을 재사용하면 `wait-output`이 이전 실행의 `HRUN_RC=` 표시에 바로 걸리므로 pane을 새로 만들거나 표시를 바꾼다. (M2-06h-3)
+- **bound 쓰기마다 전체 bound 배열을 저장하면 tr12-30 캡처가 JSON 문자열 한도(약 512MB)를 넘는다.** 이미 원시 값으로 검증한 큰 배열은 `길이:FNV-1a32` 요약으로 저장하고, 비간섭 비교 때 기존 자료에 같은 요약을 적용한다(`tools/mip_sb_loop.js`, `mip_sb_loop_rust.py summarize`). (M2-06h-3)
+- **`tools/mip_sb_snapshot.js`의 `691b56` 진입 훅은 Node가 null이 아니라고 가정한다.** VarBranch=3에서는 `Node+0x18` 읽기가 접근 위반을 내고 `batch` 사건만 빠진다(`ok false`). 이 경로를 캡처하려면 훅을 고쳐야 하는데, 06h-3 기준 자료의 도구 해시가 바뀌므로 새 도구로 분리한다. 훅을 단 VarBranch=3은 노드마다 전체 SB를 해 NodeLimit=300에서 모델당 300초를 넘긴다. NodeLimit을 수십으로 낮춘다. (M2-06h-4)
+- **`tools/mip_sb_census.py`로 기존 캡처의 분기 횟수를 오프라인으로 센다.** 새 모델 탐색 전에 기준 모델에서 0회가 재현되는지 먼저 확인하면 집계 방향(a=down, z=up) 오류를 잡는다. (M2-06h-4)

@@ -1,0 +1,103 @@
+assign1-5-8.mps.gz DONE 8 300 0x1.6db0000000000p+13 0x1.8600000000000p+7 10 0x1.aa00000000000p+7 {"partition":266,"parent":29,"budget":29,"double":29,"kernel":29,"batch":29,"cost":29} ok true 
+assign1-5-8 rc=0
+bppc4-08.mps.gz DONE 8 300 0x1.02dc000000000p+14 0x1.a000000000000p+5 10 0x1.b000000000000p+5 {"partition":295,"parent":246,"budget":246,"double":244,"kernel":244,"batch":244,"cost":244} ok true 
+bppc4-08 rc=0
+cod105.mps.gz DONE 2 7 0x1.8e7c000000000p+15 -0x1.8000000000000p+3 1 -0x1.8000000000000p+3 {"partition":5,"parent":1,"budget":1,"double":1,"kernel":1,"batch":1,"cost":1} ok true 
+cod105 rc=0
+csched007 rc=124
+csched008 rc=124
+enlight_hard.mps.gz DONE 2 0 0x0.0p+0 0x1.2800000000000p+5 1 0x1.2800000000000p+5 {} ok true 
+enlight_hard rc=0
+exp-1-500-5-5.mps.gz DONE 8 300 0x1.8230000000000p+12 0x1.c9c0000000000p+15 10 0x1.1ed2000000000p+16 {"partition":304,"parent":90,"budget":90,"double":90,"kernel":90,"batch":90,"cost":90} ok true 
+exp-1-500-5-5 rc=0
+fhnw-binpack4-4.mps.gz DONE 8 300 0x1.4960000000000p+11 0x0.0p+0 0 - {"partition":236,"parent":5,"budget":5,"double":5,"kernel":5,"batch":5,"cost":5} ok true 
+fhnw-binpack4-4 rc=0
+gen-ip002.mps.gz DONE 8 300 0x1.7400000000000p+10 -0x1.2e4e3dfdab4a3p+12 10 -0x1.27fd3add235c2p+12 {"partition":282,"parent":22,"budget":22,"double":22,"kernel":22,"batch":22,"cost":22} ok true 
+gen-ip002 rc=0
+gen-ip054.mps.gz DONE 8 300 0x1.3c00000000000p+10 0x1.a71618d73dadap+12 10 0x1.b0bf613085255p+12 {} ok true 
+gen-ip054 rc=0
+glass4.mps.gz DONE 8 300 0x1.8500000000000p+10 0x1.7d789ee7a2923p+29 8 0x1.0643319800000p+31 {"partition":296,"parent":158,"budget":158,"double":158,"kernel":158,"batch":158,"cost":158} ok true 
+glass4 rc=0
+gmu-35-40.mps.gz DONE 8 300 0x1.bbc0000000000p+11 -0x1.25d02acba4df0p+21 10 -0x1.25b28ad844d02p+21 {"partition":2381,"parent":108,"budget":578,"double":101,"kernel":101,"batch":101,"cost":101} ok true 
+gmu-35-40 rc=0
+gmu-35-50.mps.gz DONE 8 300 0x1.b900000000000p+11 -0x1.3e5e32703d09bp+21 10 -0x1.3e2b7e1b3d07dp+21 {"partition":1628,"parent":164,"budget":483,"double":153,"kernel":153,"batch":153,"cost":153} ok true 
+gmu-35-50 rc=0
+graphdraw-domain.mps.gz DONE 8 300 0x1.5778000000000p+13 0x1.9728000000001p+13 10 0x1.7bd4000000000p+14 {"partition":293,"parent":82,"budget":83,"double":82,"kernel":82,"batch":82,"cost":82} ok true 
+graphdraw-domain rc=0
+ic97_potential rc=124
+mad.mps.gz DONE 8 300 0x1.8840000000000p+10 0x0.0p+0 10 0x1.ab367a0f90922p-2 {"partition":305,"parent":121,"budget":125,"double":120,"kernel":120,"batch":120,"cost":120} ok true 
+mad rc=0
+markshare2.mps.gz DONE 8 300 0x1.7080000000000p+9 -0x0.0p+0 5 0x1.c400000000000p+6 {"partition":284,"parent":42,"budget":42,"double":42,"kernel":42,"batch":42,"cost":42} ok true 
+markshare2 rc=0
+markshare_4_0.mps.gz DONE 8 300 0x1.2e00000000000p+9 -0x0.0p+0 10 0x1.8800000000000p+5 {"partition":240,"parent":23,"budget":23,"double":23,"kernel":23,"batch":23,"cost":23} ok true 
+markshare_4_0 rc=0
+mas76.mps.gz DONE 8 300 0x1.5ee0000000000p+11 0x1.31634f937a9fbp+15 9 0x1.388a1bb8800cfp+15 {"partition":371,"parent":39,"budget":59,"double":39,"kernel":39,"batch":39,"cost":39} ok true 
+mas76 rc=0
+mik-250-20-75-4.mps.gz DONE 8 300 0x1.8e60000000000p+12 -0x1.9f0a000000000p+15 7 -0x1.989a000000000p+15 {"partition":218,"parent":50,"budget":50,"double":50,"kernel":50,"batch":50,"cost":50} ok true 
+mik-250-20-75-4 rc=0
+neos-2657525-crna.mps.gz DONE 8 300 0x1.7f80000000000p+11 0x0.0p+0 2 0x1.28431b3d73281p+4 {"partition":241,"parent":102,"budget":102,"double":102,"kernel":102,"batch":102,"cost":102} ok true 
+neos-2657525-crna rc=0
+neos-3046615-murg.mps.gz DONE 8 300 0x1.c880000000000p+10 0x1.8540000000000p+10 10 0x1.99c0000000000p+10 {"partition":273,"parent":84,"budget":84,"double":84,"kernel":84,"batch":84,"cost":84} ok true 
+neos-3046615-murg rc=0
+neos-3627168-kasai.mps.gz DONE 8 300 0x1.6de4000000000p+14 0x1.e022955c82893p+19 10 0x1.e2c967ae147abp+19 {"partition":445,"budget":47,"parent":26,"double":23,"kernel":23,"batch":23,"cost":23} ok true 
+neos-3627168-kasai rc=0
+neos-3754480-nidda.mps.gz DONE 8 300 0x1.1620000000000p+12 -0x1.ddb21c6fe24a2p+18 9 0x1.e31a8ddbf2200p+13 {"partition":269,"parent":12,"budget":12,"double":12,"kernel":12,"batch":12,"cost":12} ok true 
+neos-3754480-nidda rc=0
+neos-4338804-snowy rc=124
+neos-4954672-berkel.mps.gz DONE 8 300 0x1.bd60000000000p+13 0x1.f5f50e69eb0bfp+20 10 0x1.53fad80000000p+21 {"partition":298,"parent":55,"budget":55,"double":55,"kernel":55,"batch":55,"cost":55} ok true 
+neos-4954672-berkel rc=0
+neos-860300 rc=124
+neos-911970.mps.gz DONE 8 300 0x1.7c30000000000p+12 0x1.22147ae147ae3p+5 10 0x1.c68f5c28f5c2ap+5 {"partition":575,"parent":211,"budget":253,"double":199,"kernel":199,"batch":199,"cost":199} ok true 
+neos-911970 rc=0
+neos17.mps.gz DONE 8 300 0x1.c630000000000p+12 0x1.2b518cacf4228p-3 10 0x1.3400a42b2d6fcp-3 {"partition":248,"parent":56,"budget":56,"double":56,"kernel":56,"batch":56,"cost":56} ok true 
+neos17 rc=0
+neos5.mps.gz DONE 8 300 0x1.0530000000000p+12 0x1.b800000000002p+3 6 0x1.f000000000000p+3 {"partition":280,"parent":14,"budget":14,"double":14,"kernel":14,"batch":14,"cost":14} ok true 
+neos5 rc=0
+neos859080.mps.gz DONE 3 44 0x1.0180000000000p+9 inf 0 - {"partition":43,"parent":40,"budget":40,"double":40,"kernel":40,"batch":40,"cost":40} ok true 
+neos859080 rc=0
+pk1.mps.gz DONE 8 300 0x1.a190000000000p+12 0x0.0p+0 8 0x1.8000000000000p+4 {"partition":284,"parent":24,"budget":24,"double":24,"kernel":24,"batch":24,"cost":24} ok true 
+pk1 rc=0
+ran14x18-disj-8.mps.gz DONE 8 300 0x1.0b6c000000000p+14 0x1.b21359e0fe6e1p+11 10 0x1.d860000000000p+11 {"partition":306,"parent":94,"budget":94,"double":94,"kernel":94,"batch":94,"cost":94} ok true 
+ran14x18-disj-8 rc=0
+sp150x300d.mps.gz DONE 2 1 0x1.9200000000000p+8 0x1.1400000000000p+6 5 0x1.1400000000000p+6 {"partition":1,"parent":1,"budget":1,"double":1,"kernel":1,"batch":1,"cost":1} ok true 
+sp150x300d rc=0
+supportcase26.mps.gz DONE 8 300 0x1.22e0000000000p+12 0x1.5f139dbcc3626p+10 10 0x1.e596f5b58b8f4p+10 {"partition":280,"parent":68,"budget":68,"double":68,"kernel":68,"batch":68,"cost":68} ok true 
+supportcase26 rc=0
+timtab1.mps.gz DONE 8 300 0x1.e700000000000p+11 0x1.c01ded994300bp+18 10 0x1.e3f5bfffff89ep+19 {"partition":278,"parent":44,"budget":45,"double":44,"kernel":44,"batch":44,"cost":44} ok true 
+timtab1 rc=0
+tr12-30.mps.gz DONE 8 300 0x1.55b0000000000p+12 0x1.fa57000000000p+16 10 0x1.011f000000000p+17 {"partition":311,"parent":111,"budget":113,"double":111,"kernel":111,"batch":111,"cost":111} ok true 
+tr12-30 rc=0
+bench/oracle/m2_06h4/explore/assign1-5-8.json.gz: ok=True batches=29 cand=316 status 2=32 status 3=8 status 7=138 | down >= 1e100 only=8 up prefilled (down only)=1 other status=8
+bench/oracle/m2_06h4/explore/bppc4-08.json.gz: ok=True batches=244 cand=2378 status 2=288 status 3=19 status 7=810 | down >= 1e100 only=1 up prefilled (down only)=3 other status=19
+bench/oracle/m2_06h4/explore/cod105.json.gz: ok=True batches=1 cand=1 status 7=2 | no target
+bench/oracle/m2_06h4/explore/enlight_hard.json.gz: ok=True batches=0 cand=0  | no target
+bench/oracle/m2_06h4/explore/exp-1-500-5-5.json.gz: ok=True batches=90 cand=2156 status 2=196 status 6=2 status 7=222 | no target
+bench/oracle/m2_06h4/explore/fhnw-binpack4-4.json.gz: ok=True batches=5 cand=8 status 2=13 status 7=1 | no target
+bench/oracle/m2_06h4/explore/gen-ip002.json.gz: ok=True batches=22 cand=135 status -1000=19 status 2=66 | other status=19
+bench/oracle/m2_06h4/explore/gen-ip054.json.gz: ok=True batches=0 cand=0  | no target
+bench/oracle/m2_06h4/explore/glass4.json.gz: ok=True batches=158 cand=1086 status -1000=3 status 2=363 status 3=1 status 6=5 status 7=130 | down >= 1e100 only=1 other status=4
+bench/oracle/m2_06h4/explore/gmu-35-40.json.gz: ok=True batches=101 cand=738 status 2=203 status 3=7 status 6=3 status 7=193 | down >= 1e100 only=3 status7 dual < parent=2 other status=7
+bench/oracle/m2_06h4/explore/gmu-35-50.json.gz: ok=True batches=153 cand=765 status 2=365 status 3=12 status 7=201 | down >= 1e100 only=2 up prefilled (down only)=2 other status=12
+bench/oracle/m2_06h4/explore/graphdraw-domain.json.gz: ok=True batches=82 cand=1875 status 2=159 status 7=251 | up prefilled (down only)=4
+bench/oracle/m2_06h4/explore/mad.json.gz: ok=True batches=120 cand=272 status 2=241 status 3=1 status 6=8 status 7=80 | up prefilled (down only)=8 other status=1
+bench/oracle/m2_06h4/explore/markshare2.json.gz: ok=True batches=42 cand=76 status -1000=15 status 2=109 status 6=1 | down >= 1e100 only=1 up prefilled (down only)=4 other status=15
+bench/oracle/m2_06h4/explore/markshare_4_0.json.gz: ok=True batches=23 cand=37 status -1000=6 status 2=55 status 3=1 | down >= 1e100 only=1 up prefilled (down only)=2 other status=7
+bench/oracle/m2_06h4/explore/mas74.json.gz: ok=True batches=66 cand=225 status -1000=130 status 2=106 status 6=12 status 7=5 | up prefilled (down only)=1 other status=130
+bench/oracle/m2_06h4/explore/mas76.json.gz: ok=True batches=39 cand=168 status -1000=81 status 2=76 status 6=8 status 7=5 | other status=81
+bench/oracle/m2_06h4/explore/mik-250-20-75-4.json.gz: ok=True batches=50 cand=603 status -1000=4 status 2=148 status 6=3 status 7=62 | down >= 1e100 only=3 other status=4
+bench/oracle/m2_06h4/explore/neos-2657525-crna.json.gz: ok=True batches=102 cand=523 status 2=206 status 3=10 status 7=109 | down >= 1e100 only=1 up prefilled (down only)=9 other status=10
+bench/oracle/m2_06h4/explore/neos-3046615-murg.json.gz: ok=True batches=84 cand=264 status 2=168 status 6=18 status 7=69 | down >= 1e100 only=7 up prefilled (down only)=1
+bench/oracle/m2_06h4/explore/neos-3627168-kasai.json.gz: ok=True batches=23 cand=256 status 2=55 status 7=106 | status7 dual < parent=2
+bench/oracle/m2_06h4/explore/neos-3754480-nidda.json.gz: ok=True batches=12 cand=205 status 2=34 status 7=66 | no target
+bench/oracle/m2_06h4/explore/neos-4954672-berkel.json.gz: ok=True batches=55 cand=674 status 2=98 status 7=160 | up prefilled (down only)=2
+bench/oracle/m2_06h4/explore/neos-911970.json.gz: ok=True batches=199 cand=922 status 2=542 status 6=9 status 7=285 | down >= 1e100 only=3 up prefilled (down only)=4 status7 dual < parent=1
+bench/oracle/m2_06h4/explore/neos17.json.gz: ok=True batches=56 cand=1790 status 2=201 status 3=2 status 6=50 status 7=160 | down >= 1e100 only=47 other status=2
+bench/oracle/m2_06h4/explore/neos5.json.gz: ok=True batches=14 cand=71 status 2=17 status 6=1 status 7=52 | no target
+bench/oracle/m2_06h4/explore/neos859080.json.gz: ok=True batches=40 cand=153 status -1000=10 status 2=99 status 3=91 status 7=25 | down >= 1e100 only=26 other status=101
+bench/oracle/m2_06h4/explore/pk1.json.gz: ok=True batches=24 cand=121 status 2=10 status 7=100 | no target
+bench/oracle/m2_06h4/explore/ran14x18-disj-8.json.gz: ok=True batches=94 cand=1375 status 2=51 status 6=8 status 7=332 | timer expired=5
+bench/oracle/m2_06h4/explore/sp150x300d.json.gz: ok=True batches=1 cand=18 status 2=6 status 7=1 | no target
+bench/oracle/m2_06h4/explore/supportcase26.json.gz: ok=True batches=68 cand=510 status 2=113 status 3=1 status 7=195 | down >= 1e100 only=1 other status=1
+bench/oracle/m2_06h4/explore/timtab1.json.gz: ok=True batches=44 cand=1379 status 2=165 status 3=5 status 7=112 | down >= 1e100 only=4 up prefilled (down only)=2 other status=5
+bench/oracle/m2_06h4/explore/tr12-30.json.gz: ok=True batches=111 cand=2966 status 2=197 status 6=1 status 7=364 | no target
+TOTAL up contradiction=0 down contradiction=0 timer expired=5 down >= 1e100 only=109 both >= 1e100=0 up prefilled (down only)=43 status7 dual < parent=5 continuous candidate=0 no propagation=0 stride > 1=0 other status=426 restore strict=0 duplicate column=0

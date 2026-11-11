@@ -1,27 +1,34 @@
-//! Single integer candidate control with an external LP and saved-state backend.
-//! shortcut: only a fresh candidate whose propagation changes its own bound is supported;
-//! extra propagation, contradiction, other candidate reuse and batch cleanup need M2-06h-3.
-//! Integer (B/I) columns only: a continuous column fixes both bounds and skips the up solve.
-//! The work counter the original accumulates in this span is not modelled.
+//! One strong-branching batch: the candidate loop with an external LP, propagation and
+//! saved-state backend. The backend owns the LP numbers, the propagation itself, the parent
+//! snapshot and the timer; this module owns the candidate control and the values it writes.
+//! shortcut: integer candidates on the propagation path only. Propagation contradiction and
+//! timer expiry return Unported; natural timer cases exist since M2-06h-4, port in M2-06h-5.
+
+const INF: f64 = 1e100;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Side { Lower, Upper }
 
-#[derive(Clone, Copy, Debug)]
-pub struct Candidate {
-    pub column: usize,
-    pub x: f64,
-    pub lower: f64,
-    pub upper: f64,
+/// Inputs read before the loop. Arrays indexed by column hold the parent LP solution and the
+/// original unscaled bounds; `columns` is the candidate order (all integer columns).
+pub struct Batch<'a> {
+    pub columns: &'a [usize],
+    pub x: &'a [f64],
+    pub lower: &'a [f64],
+    pub upper: &'a [f64],
     pub int_tol: f64,
     pub parent_obj: f64,
+    pub stall_limit: i32,
 }
 
-/// Only the original statuses observed in the first-candidate fixture are accepted.
 #[derive(Clone, Copy, Debug)]
 pub enum LpValue {
+    /// Status 2: objective value.
     Optimal(f64),
+    /// Status 7, 11 or -1000: dual bound of the LP workspace.
     Limited(f64),
+    /// Status 3 or 6.
+    Infeasible,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -30,61 +37,201 @@ pub struct LpResult {
     pub iterations: f64,
 }
 
-/// The caller owns a fixed parent snapshot. Bounds are unscaled requests;
-/// flushing applies the requests to the model before the LP reads them.
-pub trait Backend {
-    type Error;
-    fn bound(&mut self, column: usize, side: Side, value: f64) -> Result<(), Self::Error>;
-    fn flush(&mut self) -> Result<(), Self::Error>;
-    fn solve(&mut self) -> Result<LpResult, Self::Error>;
-    fn reset(&mut self) -> Result<(), Self::Error>;
-    fn restore(&mut self) -> Result<(), Self::Error>;
+/// Flag bit 1: lower bound changed, bit 2: upper bound changed. `lower`/`upper` are the
+/// bounds after propagation; restoration requests the original value where it was tightened.
+#[derive(Clone, Copy, Debug)]
+pub struct Change {
+    pub column: usize,
+    pub flags: u8,
+    pub lower: f64,
+    pub upper: f64,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
+pub struct Propagation {
+    pub contradiction: bool,
+    pub changes: Vec<Change>,
+}
+
+/// Calls taking `work` may add their own work. Bounds are unscaled requests that the next
+/// flush applies.
+pub trait Backend {
+    type Error;
+    fn poll(&mut self) -> Result<(), Self::Error>;
+    fn expired(&mut self, work: &mut f64) -> Result<bool, Self::Error>;
+    fn propagate(&mut self, column: usize, side: Side, value: f64, work: &mut f64)
+        -> Result<Propagation, Self::Error>;
+    fn flush(&mut self) -> Result<(), Self::Error>;
+    fn solve(&mut self, work: &mut f64) -> Result<LpResult, Self::Error>;
+    /// Current LP solution at `columns`.
+    fn values(&mut self, columns: &[usize]) -> Result<Vec<f64>, Self::Error>;
+    fn reset(&mut self) -> Result<(), Self::Error>;
+    fn restore(&mut self, work: &mut f64) -> Result<(), Self::Error>;
+    fn bound(&mut self, column: usize, side: Side, value: f64) -> Result<(), Self::Error>;
+}
+
+#[derive(Clone, Debug)]
 pub struct Evaluation {
-    pub down: f64,
-    pub up: f64,
+    pub down: Vec<f64>,
+    pub up: Vec<f64>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error<E> {
     Backend(E),
-    /// Result reached the infeasible sentinel; the remaining candidate/batch control is unported.
     Unported,
 }
 
-/// Starts after parent snapshot/ObjVal/solution capture and ends with the final
-/// upper-bound restoration queued. The caller flushes before any next LP solve.
-/// Both direction values must stay below 1e100. Otherwise returns Unported after
-/// restoring that direction, before any down solve. Backend errors propagate
-/// immediately: an error does not guarantee restoration.
-pub fn evaluate<B: Backend>(c: &Candidate, lp: &mut B, iterations: &mut f64)
+/// maxsd(gain, 1e-10) on both gains, then the geometric mean shifted by 1e-5.
+fn score(a: f64, b: f64) -> f64 {
+    let a = if a > 1e-10 { a } else { 1e-10 };
+    let b = if b > 1e-10 { b } else { 1e-10 };
+    ((a + 1e-5) * (b + 1e-5)).sqrt() - 1e-5
+}
+
+struct Loop<'a, B: Backend> {
+    b: &'a Batch<'a>,
+    lp: &'a mut B,
+    iterations: &'a mut f64,
+    work: &'a mut f64,
+    down: Vec<f64>,
+    up: Vec<f64>,
+    down_est: Vec<f64>,
+    up_est: Vec<f64>,
+    eps: f64,
+}
+
+impl<B: Backend> Loop<'_, B> {
+    /// One direction: propagate, solve, consume, pre-fill later candidates, restore.
+    fn direction(&mut self, k: usize, side: Side, value: f64) -> Result<(), Error<B::Error>> {
+        let parent = self.b.parent_obj;
+        let p = self.lp.propagate(self.b.columns[k], side, value, self.work).map_err(Error::Backend)?;
+        if p.contradiction {
+            return Err(Error::Unported);
+        }
+        self.lp.flush().map_err(Error::Backend)?;
+        let r = self.lp.solve(self.work).map_err(Error::Backend)?;
+        *self.iterations += r.iterations;
+        let v = match r.value {
+            // maxsd operand order, as the original.
+            LpValue::Optimal(obj) => if obj > parent { obj } else { parent },
+            LpValue::Infeasible => INF,
+            LpValue::Limited(dual) => if parent > dual { parent } else { dual },
+        };
+        if side == Side::Lower { self.up[k] = v } else { self.down[k] = v }
+        if let LpValue::Optimal(_) = r.value {
+            self.prefill(k, v)?;
+        }
+        self.lp.reset().map_err(Error::Backend)?;
+        self.lp.restore(self.work).map_err(Error::Backend)?;
+        // The original clears a column's flags after its first entry, so a repeated entry is a no-op.
+        let mut done: Vec<usize> = Vec::new();
+        for c in &p.changes {
+            if done.contains(&c.column) {
+                continue;
+            }
+            done.push(c.column);
+            let (lo, up) = (self.b.lower[c.column], self.b.upper[c.column]);
+            if c.flags & 1 != 0 && lo < c.lower {
+                self.lp.bound(c.column, Side::Lower, lo).map_err(Error::Backend)?;
+            }
+            if c.flags & 2 != 0 && c.upper < up {
+                self.lp.bound(c.column, Side::Upper, up).map_err(Error::Backend)?;
+            }
+        }
+        *self.work += p.changes.len() as f64 * 6.0;
+        Ok(())
+    }
+
+    /// An optimal direction LP is feasible for a later candidate's direction when that candidate
+    /// sits at its parent floor/ceil there: cap that estimate, and take the parent value when the gain is nil.
+    fn prefill(&mut self, k: usize, obj: f64) -> Result<(), Error<B::Error>> {
+        let later = &self.b.columns[k + 1..];
+        if later.is_empty() {
+            return Ok(());
+        }
+        let v = self.lp.values(later).map_err(Error::Backend)?;
+        let parent = self.b.parent_obj;
+        let nil = self.eps > obj - parent;
+        for (i, (&j, &v)) in later.iter().zip(&v).enumerate() {
+            let kk = k + 1 + i;
+            let x = self.b.x[j];
+            if x.floor() + 1e-10 >= v {
+                if nil { self.down[kk] = parent; }
+                self.down_est[kk] = if self.down_est[kk] < obj { self.down_est[kk] } else { obj };
+            }
+            if v >= x.ceil() - 1e-10 {
+                if nil { self.up[kk] = parent; }
+                self.up_est[kk] = if self.up_est[kk] < obj { self.up_est[kk] } else { obj };
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Starts after the parent snapshot, ObjVal, solution and original bounds are read; ends after
+/// the closing flush and parent re-solve. Backend errors return immediately without restoration.
+pub fn run<B: Backend>(b: &Batch, lp: &mut B, iterations: &mut f64, work: &mut f64)
     -> Result<Evaluation, Error<B::Error>>
 {
-    let split = (c.x + c.int_tol).floor();
-    let mut values = [0.0; 2];
-    for (k, side, bound, original) in [
-        (0, Side::Lower, split + 1.0, c.lower),
-        (1, Side::Upper, split, c.upper),
-    ] {
-        lp.bound(c.column, side, bound).map_err(Error::Backend)?;
-        lp.flush().map_err(Error::Backend)?;
-        let result = lp.solve().map_err(Error::Backend)?;
-        *iterations += result.iterations;
-        values[k] = match result.value {
-            // maxsd operand order, so NaN and ±0 pick the same operand as the original.
-            LpValue::Optimal(obj) => if obj > c.parent_obj { obj } else { c.parent_obj },
-            LpValue::Limited(dual) => if c.parent_obj > dual { c.parent_obj } else { dual },
-        };
-        lp.reset().map_err(Error::Backend)?;
-        lp.restore().map_err(Error::Backend)?;
-        lp.bound(c.column, side, original).map_err(Error::Backend)?;
-        // Up: the original skips the down solve. Down: it only resets the stall counter;
-        // both continuations are unported.
-        if values[k] >= 1e100 {
+    let n = b.columns.len();
+    let parent = b.parent_obj;
+    let mut s = Loop { b, lp, iterations, work, down: vec![-INF; n], up: vec![-INF; n],
+        down_est: vec![INF; n], up_est: vec![INF; n], eps: (parent.abs() + 1.0) * 1e-15 };
+    let (mut best, mut stall) = (0.0, 0);
+    if n > 0 {
+        s.lp.poll().map_err(Error::Backend)?;
+    }
+    let mut k = 0;
+    while k < n {
+        let split = (b.x[b.columns[k]] + b.int_tol).floor();
+        // Both estimates come from earlier optimal LPs; skip the candidate if they cannot beat best.
+        let gated = s.up[k] <= -INF && s.down_est[k] < INF && s.up_est[k] < INF
+            && best >= score(s.down_est[k] - parent, s.up_est[k] - parent);
+        let mut judge = true;
+        if !gated {
+            if s.up[k] <= -INF {
+                s.up[k] = parent;
+                s.direction(k, Side::Lower, split + 1.0)?;
+            }
+            if s.up[k] >= INF {
+                judge = false;
+            } else if s.down[k] <= -INF && !(s.down_est[k] < INF
+                && best >= score(s.down_est[k] - parent, s.up[k] - parent)) {
+                s.down[k] = parent;
+                s.direction(k, Side::Upper, split)?;
+            }
+        }
+        if judge {
+            let (dn, up) = (s.down[k], s.up[k]);
+            if up >= INF && dn >= INF {
+                break;
+            }
+            if dn >= INF || up >= INF {
+                stall = 0;
+            } else {
+                let v = score(dn - parent, up - parent);
+                if v > best {
+                    best = v;
+                    stall = 0;
+                } else {
+                    stall += 1;
+                    if stall >= b.stall_limit {
+                        break;
+                    }
+                }
+            }
+        }
+        k += 1;
+        if k >= n {
+            break;
+        }
+        s.lp.poll().map_err(Error::Backend)?;
+        if s.lp.expired(s.work).map_err(Error::Backend)? {
             return Err(Error::Unported);
         }
     }
-    Ok(Evaluation { down: values[1], up: values[0] })
+    s.lp.flush().map_err(Error::Backend)?;
+    s.lp.solve(s.work).map_err(Error::Backend)?;
+    Ok(Evaluation { down: s.down, up: s.up })
 }
