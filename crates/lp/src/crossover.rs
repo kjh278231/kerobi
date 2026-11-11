@@ -93,13 +93,13 @@ pub fn feasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option
 /// below `(tol * max|val|) * scale`, the new tolerance being `tol * (max|val| * scale)` (the original's order). NaN
 /// pivots and thresholds accept, as the original's `jbe`.
 fn tightened(tol: f64, val: &[f64], pivot: f64) -> Option<f64> {
-    if !(0.1 > pivot) {
-        return None;
+    if 0.1 > pivot {
+        // maxsd: a NaN entry makes the running maximum NaN, and the next entry replaces a NaN maximum
+        let big = val.iter().fold(0.0f64, |m, v| if m > v.abs() { m } else { v.abs() });
+        let scale = pivot_scale(big);
+        return (tol * big * scale > pivot).then_some(tol * (big * scale));
     }
-    // maxsd: a NaN entry makes the running maximum NaN, and the next entry replaces a NaN maximum
-    let big = val.iter().fold(0.0f64, |m, v| if m > v.abs() { m } else { v.abs() });
-    let scale = pivot_scale(big);
-    (tol * big * scale > pivot).then(|| tol * (big * scale))
+    None
 }
 
 /// Tolerance factor of the small-pivot check by the column's largest |entry| (NaN takes the last one).

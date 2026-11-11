@@ -150,10 +150,10 @@ def self_test(cases, text, trace):
 # 재진입 분기별 Rust 소스 변이(대상 문자열은 정확히 한 번 나와야 한다). 각 변이는 어느 재생 비교에서든 실패해야 한다.
 MUTANTS = {
     # 공유 판정 tightened(): 세 ratio 모두에 영향
-    "no-reentry": ("(tol * big * scale > pivot).then(|| tol * (big * scale))", "None"),
-    "pivot-threshold-le": ("if !(0.1 > pivot) {", "if !(0.1 >= pivot) {"),
+    "no-reentry": ("(tol * big * scale > pivot).then_some(tol * (big * scale))", "None"),
+    "pivot-threshold-le": ("if 0.1 > pivot {", "if 0.1 >= pivot {"),
     "thr-tie": ("(tol * big * scale > pivot)", "(tol * big * scale >= pivot)"),
-    "mul-order": (".then(|| tol * (big * scale))", ".then(|| tol * big * scale)"),
+    "mul-order": (".then_some(tol * (big * scale))", ".then_some(tol * big * scale)"),
     "max-fmax": ("fold(0.0f64, |m, v| if m > v.abs() { m } else { v.abs() })", "fold(0.0f64, |m, v| m.max(v.abs()))"),
     "max-no-tail": ("let big = val.iter().fold", "let big = val[..val.len() & !1].iter().fold"),
     "scale-1e4": ("b if 1e4 > b => 0.01,", "b if 1e4 >= b => 0.01,"),
