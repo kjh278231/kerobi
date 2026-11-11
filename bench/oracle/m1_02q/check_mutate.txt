@@ -1,0 +1,25 @@
+warning: unnecessary parentheses around block return value
+  --> crates/lp/src/work.rs:66:54
+   |
+66 | ...<= 0.0 { d } else { (d + self.w158) };
+   |                        ^             ^
+   |
+   = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+   |
+66 -         self.w158 = if self.w158 <= 0.0 { d } else { (d + self.w158) };
+66 +         self.w158 = if self.w158 <= 0.0 { d } else { d + self.w158 };
+   |
+
+kb2: refactor 1 basis = original as a set, position order differs (start basis)
+kb2: N 05b257 entries 40, A aligned refactors 5/5, K terms 42 (general 37), W stores 43 {'0xe84b9': 1, '0xd4ded': 5, '0xd5300': 5, '0xd85e6': 5, '0xdc7b2': 5, '0xf48ae': 5, '0xf4f9b': 5, '0xf51af': 5, '0xc391f': 1, '0xf4ffd': 3, '0xf507a': 3}, F 0x158 5
+degen2: refactor 1 basis = original as a set, position order differs (start basis)
+degen2: alignment ends at refactor 10 (head: Rust iteration 359, original k 356)
+degen2: N 05b257 entries 637, A aligned refactors 9/16, K terms 157 (general 113), W stores 104 {'0xe84b9': 1, '0xd4ded': 9, '0xd5300': 9, '0xd85e6': 9, '0xdc7b2': 9, '0xdcb7b': 9, '0xf48ae': 9, '0x1327dc': 8, '0x1329c1': 9, '0xf4f9b': 9, '0xf51af': 9, '0xc391f': 1, '0xf4ffd': 6, '0xf507a': 6, '0x1329e6': 1}, F 0x158 9
+R d4ded without 100: rejected (W kb2: store 1 site 0xd4ded: original prev 40b066cccccccccd + Rust ['4072b00000000000'] = 40b191cccccccccd, original 40b213cccccccccd)
+R general term max: rejected (W kb2: store 18 site 0xd85e6: original prev 40e2ca5733333339 + Rust ['406aa66666666667'] = 40e2e4fd9999999f, original 40e2e01d9999999f)
+R 0x158 without 0.5: rejected (F kb2 refactor 2: 0x158 Rust 40aa58666666666a original 409a58666666666a)
+R 9e60b site swapped: rejected (W degen2: store 7 site Rust 0x1329e6 original 0x1327dc)
+R f507a store test: rejected (W kb2: store 7 site Rust 0xf507a original 0xf51af)
+R q without U: rejected (W kb2: store 16 site 0xd4ded: original prev 40e1d54a6666666c + Rust ['4085733333333333'] = 40e22b1733333339, original 40e234d733333339)
+ACCEPTANCE PASS

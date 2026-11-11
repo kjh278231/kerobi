@@ -35,7 +35,7 @@ impl Work {
 
     /// The original keeps this partial sum in a register; a later `add` stores it.
     pub fn carry(&mut self, amount: f64) {
-        self.w = amount + self.w;
+        self.w += amount; // = amount + w: IEEE addition commutes
         if self.log.is_some() {
             self.carried.push(amount);
         }
