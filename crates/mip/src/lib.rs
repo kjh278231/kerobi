@@ -51,6 +51,7 @@ mod parallel;
 pub mod post;
 pub mod probe;
 pub mod retry;
+pub mod strong_branch;
 mod probe0;
 mod probe_apply;
 pub mod probe_engine;
