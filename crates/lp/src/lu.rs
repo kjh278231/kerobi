@@ -62,6 +62,8 @@ pub struct Lu {
     /// L DAG level of each step (LU+0x118) and the deepest level LU+0x128 (−1 without levels), `036ade` C:5764–5830.
     llev: Option<Vec<usize>>,
     lmax: i64,
+    /// Lᵀ DAG depth LU+0x140 (−1 without levels), read by BTRAN's sparse Lᵀ test.
+    ltmax: i64,
     /// L entries in the columns of steps ≥ `n_singleton` (LU+0xe4): `21b9de`'s path test reads it.
     ltail: usize,
     /// U has off-diagonals (Markowitz part or updates): BTRAN leaves the iteration-0 emulation.
@@ -290,6 +292,7 @@ impl Lu {
             level: None,
             llev: None,
             lmax: -1,
+            ltmax: -1,
             ltail: 0,
             general: false,
             n_updates: 0,
@@ -833,6 +836,7 @@ impl Lu {
                     lev[j] = lev[j].max(lev[k] + 1);
                 }
             }
+            self.ltmax = lev.iter().copied().max().unwrap_or(0) as i64;
             self.level = Some(lev);
             // 036ade C:5764–5830: L levels forward over the columns, LU+0x128 = the deepest
             let mut lev = vec![0; m];
@@ -894,7 +898,14 @@ impl Lu {
 
     /// Lᵀ DAG depth (LU+0x140), −1 without levels (for the M1-02k probe).
     pub(crate) fn lt_depth(&self) -> i64 {
-        self.level.as_ref().map_or(-1, |l| l.iter().copied().max().unwrap_or(0) as i64)
+        self.ltmax
+    }
+
+    /// `221173` C:263–268: Lᵀ goes sparse when 0x104·nnz ≤ m and LU+0x140 < 0.1m; otherwise the dense Lᵀ (asm
+    /// 0x12fee6), which hands an empty input back as nnz 0 (C:1580), the same as the sparse path.
+    fn lt_sparse_ok(&self, nnz: usize) -> bool {
+        let m = self.head.len();
+        self.sparse_mult * nnz <= m && (nnz == 0 || (self.ltmax as f64) < m as f64 * 0.1)
     }
 
     pub(crate) fn prefix_len(&self) -> usize {
@@ -920,7 +931,7 @@ impl Lu {
                 dense[k] = t;
             }
         }
-        if !sparse_u || self.sparse_mult * xs.len() > m {
+        if !sparse_u || !self.lt_sparse_ok(xs.len()) {
             for &(k, t) in &xs {
                 dense[k] = t;
             }
@@ -1090,7 +1101,7 @@ impl Lu {
     /// BTRAN with Forrest–Tomlin updates (m1_notes §8.10): Uᵀ in U order, row etas newest first, then Lᵀ. With etas
     /// and m < 0x104·nnz(Uᵀ output) the etas are dense (`221173` C:1237–1572: |v| ≤ ZERO clears w_r and skips the
     /// eta) and so is Lᵀ (C:1573–1766); else sparse etas (v = 0.0 skips, |w| ≥ ZERO kept) and a sparse Lᵀ
-    /// (`lt_sparse`, the original's output order) when 0x104·nnz ≤ m, else dense in row order.
+    /// (`lt_sparse`, the original's output order) when `lt_sparse_ok`, else dense in row order.
     /// A dense Uᵀ (`ut_dense`, C:91–260) zeroes |x| ≤ ZERO as well as |x/d| ≤ ZERO and hands nnz −1 on, so the etas
     /// and Lᵀ are dense; a sparse one is `ut_sparse` (`21a941`).
     fn btran_updated(&self, x: &[(usize, f64)], ut_dense: bool) -> (Vec<(usize, f64)>, bool) {
@@ -1144,7 +1155,7 @@ impl Lu {
         }
         let xs: Vec<(usize, f64)> =
             list.iter().filter(|&&r| y[r].abs() >= ZERO).map(|&r| (self.prow[r] as usize, y[r])).collect();
-        if !dense_eta && !ut_dense && self.sparse_mult * xs.len() <= m {
+        if !dense_eta && !ut_dense && self.lt_sparse_ok(xs.len()) {
             return (self.lt_sparse(&xs), false);
         }
         let mut dense = vec![0.0; m]; // by step

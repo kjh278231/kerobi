@@ -19,9 +19,9 @@ NETLIB = os.path.join(ROOT, '../re/bench/data/netlib')
 BINARY = '8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c'
 MODELS = ['kb2', 'degen2', 'sc50b', 'scsd1', 'stair', 'forplan', 'fit1p', 'bnl1']
 ER = (376, 0xc51dd)  # 9e376 called back to 28c93: the dual e_r BTRAN
-# Natural e_r calls whose output form (dense or not) already differed before M1-02k (same with the U-order U^T build
-# 30e4d23); U^T path and D agree there. Kept as a pinned failure list: any other difference fails.
-KNOWN_FORM = {'stair': [102, 118]}
+# Natural e_r calls whose output form (dense or not) differs; U^T path and D agree there. M1-02k pinned stair 102, 118;
+# M1-02x ported the sparse L^T test LU+0x140 < 0.1m (221173 C:265-268) and emptied it. Any difference fails.
+KNOWN_FORM = {}
 # First e_r call after a refactor (same pivot on both sides) whose LU+0x108 differs: the tail U rows of rsolver's factor
 # hold fewer entries than the original's (stair 1411 vs 1571 over m - t = 231); LU+0x110 and t agree. Pre-existing
 # factor difference, not the U^T test: the same-state range ends there.

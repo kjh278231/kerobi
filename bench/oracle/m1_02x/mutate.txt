@@ -1,0 +1,7 @@
+REJECTED no LU+0x140 test | FAIL stair: e_r call 102: Rust output dense=False, original dense=True (LU+0x140 43, m 356, hit [7, 356, 43])
+SURVIVED < becomes <= | PASS original + rust
+REJECTED 0.1 becomes 0.2 | FAIL stair: e_r call 102: Rust output dense=False, original dense=True (LU+0x140 43, m 356, hit [7, 356, 43])
+SURVIVED no nnz 0 case | PASS original + rust
+REJECTED diagonal-U site only | FAIL stair: e_r call 102: Rust output dense=False, original dense=True (LU+0x140 43, m 356, hit [7, 356, 43])
+SURVIVED updated-U site only | PASS original + rust
+MUTATIONS 3 / 6 rejected
