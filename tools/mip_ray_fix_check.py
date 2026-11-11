@@ -498,7 +498,8 @@ def check_capture(d, name, V=frozenset(), c=None):
 
 
 SITE_5FB8EC = 0x510BC0  # return address of the 5ce67b call in 5fb8ec (C:1106)
-OTHER = {0x736C17: '8faaa4', 0x7229A3: '8e4682'}  # LP diving, sub-MIP construction: they never call 6684cd
+OTHER = {0x736C17: '8faaa4', 0x7229A3: '8e4682', 0x72F4CE: '8f39d7'}  # LP diving, sub-MIP construction, RINS-dive
+# (8f39d7 seen only in the exploratory sweep): 6684cd's only caller is 5fb8ec
 
 
 def gate_true(e):
