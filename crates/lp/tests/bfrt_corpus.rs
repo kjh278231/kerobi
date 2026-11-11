@@ -26,7 +26,7 @@ fn replay(input: &str) -> String {
                 Cand { j: t[0].parse().unwrap(), a: bits(t[1]), d: bits(t[2]), range: bits(t[3]), back: t[4] == "1", cnt: bits(t[5]), fac: bits(t[6]) }
             })
             .collect();
-        let (q, flips) = bfrt(&cands, bits(h[2]), bits(h[3]), h[1] == "1");
+        let (q, flips) = bfrt(&cands, bits(h[2]), bits(h[3]), h[1] == "1", &mut rsolver_lp::work::Work::new());
         let q = q.map_or(-1, |q| q as i64);
         writeln!(out, "{q}{}", flips.iter().map(|j| format!(" {j}")).collect::<String>()).unwrap();
     }

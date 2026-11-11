@@ -1,0 +1,16 @@
+degen2: 21b9de 695 calls, paths {'A2': 695}; 21f83a {'same': 50, 'appended/dropped': 78}; -1 rows = L output on 267 sparse-U pivots (162 with >= 2 such rows)
+kb2: 21b9de 19 calls, paths {'A1': 19}; 21f83a {'appended/dropped': 3}; -1 rows = L output on 7 sparse-U pivots (4 with >= 2 such rows)
+degen2 Rust: path = original on pivots 0-356, update count on 0-355 (pivot 356: Rust 40 updates, original 0); {'K': 356, 'U': 238, 'U >= 2': 137, 'S': 210, 'S inline R (no capture)': 146, 'tau differs': 66}
+kb2 Rust: path = original on pivots 0-37, update count on 0-37; {'K': 38, 'U': 7, 'U >= 2': 4, 'S': 34, 'S inline R (no capture)': 4, 'tau differs': 7}
+T binary hash 0: rejected (M kb2: binary 000000000000 ok True events 42)
+T no events: rejected (M degen2: binary 8e87fca221fd ok True events 0)
+T two L outputs swapped (degen2): rejected (L degen2 pivot 0 site 1261af A2: first diff at 1: orig [182, 201, 236, 6] model [201, 182,)
+T one L output value bit (kb2): rejected (L kb2 pivot 0 site 1261af A1: first diff at 1: orig [14, 36, 37, 38] model [14, 36, 37, 38)
+T 21f83a appended row moved to the front: rejected (R degen2 pivot 130 site 1279e5: L order [10, 112, 244, 332, 333, 334, 238, 50] -> [193, 11)
+T model: degen2 A2 as Kahn FIFO: rejected (L degen2 pivot 1 site 126210 A1: first diff at 1: orig [7, 223, 189, 264] model [223, 189,)
+T model: level buckets in reverse: rejected (L degen2 pivot 0 site 1261af A2: first diff at 0: orig [50, 201, 182, 236] model [6, 236, )
+T Rust L+R order: two entries swapped (degen2): rejected (S degen2 pivot 0: L+R order Rust [182, 201, 236, 6] original [201, 182, 236, 6])
+T Rust snapshots without lro: rejected (S kb2 pivot 0: Rust snapshot lacks lro)
+T Rust U kernel of kb2 pivot 21: rejected (K kb2 pivot 21: Rust inline original 21841f)
+T Rust tau of degen2 pivot 10 all 1.0: rejected (V degen2: tau differs from the capture at pivot 10, before 242)
+PASS

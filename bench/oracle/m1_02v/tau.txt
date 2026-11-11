@@ -1,0 +1,34 @@
+M: 3 runs, binary/model/params/output, pinned file sha, tool = current file b41afe7503934821, Rust LU dump and patch pinned
+B: 38 pivots, 3 runs equal
+X: one 09d112 call per pivot; its rho input = M1-02a compacted rho, beta = M1-02a, alpha_r/beta = stored oracle
+A: alpha_q list and aligned tau at the 8b473 return = 09d112 outputs with the pivot swapped out (38 pivots)
+W: 1bae9c DSE update from the captured alpha_q, tau, beta, alpha_r = next weights on 34 pivots (3 refactor boundaries not checked)
+U: Rust LU dump = original U rows (sets, values), diagonal, U order and prefix t on 22 pivots (946 rows); LU+0xf8 = -2 tail, -1 empty prefix row, >=0 prefix row
+I: Rust rho = original 09d112 rho input; Rust FTRAN of the original a_q = original alpha_q output (pivots 0-21)
+R: original rule on the dump (captured U row order) = current Rust snapshot tau (pivots 0-21, final alpha_q positions)
+T: Rust tau = original tau on all 269 alpha_q positions of pivots 0-21 (bits, signed zeros included); the pre-M1-02d all-row scatter would differ at 34 positions, first [(11, [20, 22])]
+G: original rule (tail scatter to tail rows, prefix gather over the stored U row order) = original tau on all 269 positions; 90 gathered rows with 2+ terms, 0 with 8+ (C only)
+F: Rust snapshots 0-21 w = stored oracle
+O: Rust row-wise U (column order, value bits) and prefix t = capture on pivots 0-29 (same basis as the stored oracle through snapshot 29)
+P: 0:. rho2 tau2 eta0 21b9de+21b9de+21686f+21574d; 1:. rho3 tau3 eta0 21b9de+21b9de+21686f+21574d; 2:. rho2 tau2 eta0 21b9de+21b9de+21686f+21574d; 3:. rho2 tau2 eta0 21b9de+21b9de+21686f+21574d; 4:. rho3 tau3 eta0 21b9de+21b9de+21686f+21574d; 5:. rho3 tau3 eta0 21b9de+21b9de+2126cd+21574d; 6:. rho5 tau5 eta0 inline; 7:. rho3 tau3 eta0 inline; 8:. rho3 tau3 eta0 inline; 9:. rho5 tau5 eta0 inline; 10:. rho6 tau-1 eta1 inline; 11:. rho11 tau-1 eta2 inline; 12:. rho12 tau-1 eta3 inline; 13:. rho6 tau-1 eta4 inline; 14:. rho7 tau-1 eta5 inline; 15:. rho4 tau4 eta0 inline; 16:. rho13 tau13 eta0 inline; 17:. rho16 tau16 eta0 inline; 18:. rho14 tau-1 eta1 inline; 19:. rho20 tau-1 eta2 inline; 20:. rho21 tau-1 eta3 inline; 21:. rho22 tau-1 eta4 21b9de+214344+21f83a+21841f
+self-test:
+  tamper binary sha: rejected M kb2_1.json.gz: binary sha
+  tamper run 3 differs: rejected B kb2_3.json.gz: event 5 differs from run 1
+  tamper file sha: rejected M kb2_2.json.gz: file sha 0000000000000000000000000000000000000000000000000000000000000000 != pinned
+  tamper tool sha (all runs): rejected M tool sha {'1111111111111111111111111111111111111111111111111111111111111111'} != current m1_tau_path.js
+  tamper dump sha: rejected M Rust LU dump sha 0000000000000000000000000000000000000000000000000000000000000000 != pinned
+  tamper empty events: rejected M kb2_1.json.gz: no events
+  tamper pivot 11 original tau bit: rejected G pivot 11: original rule != original tau at positions [20] (first 0x1.17369eef79f5ep+0 vs 0x1.17369eef79f5fp+0)
+  tamper pivot 11 alpha_q drops one element: rejected W pivot 11: weights at the next 8b473 differ at positions [8] (want 0x1.a3a9de25109a3p+7 got 0x1.5837f160c0e18p+8)
+  tamper pivot 11 09d112 rho bit: rejected X pivot 11: 09d112 rho input != M1-02a compacted rho (nnz 11 vs 11)
+  tamper pivot 12 w bit: rejected W pivot 11: weights at the next 8b473 differ at positions [20] (want 0x1.16ce0cd33bae7p+2 got 0x1.16ce0cd33bae6p+2)
+  tamper pivot 11 U row order swapped: rejected R pivot 11: original rule on the dump != Rust snapshot 12 tau
+  tamper Rust tau at pivot 11 replaced by the pre-M1-02d rule: rejected R pivot 11: original rule on the dump != Rust snapshot 12 tau
+  tamper original tau at pivot 11 replaced by the pre-M1-02d rule: rejected W pivot 11: weights at the next 8b473 differ at positions [20, 22] (want 0x1.16ce0cd33bae6p+2 got 0x1.16ce0cd33bae7p+2)
+  tamper Rust tau value at pivot 13: rejected R pivot 13: original rule on the dump != Rust snapshot 14 tau
+  tamper Rust U row order at pivot 15 (refactor): rejected O pivot 15 position 32: Rust U row [42, 41, 39] != original [41, 42, 39]
+  tamper Rust prefix t at pivot 14: rejected O pivot 14: Rust prefix t 37 != original 36
+  tamper dump L value bit at pivot 11: rejected R pivot 11: original rule on the dump != Rust snapshot 12 tau
+  tamper captured U value bit at pivot 11: rejected U pivot 11 position 6: U row [(16, b'\x00\x00\x00\x00\x00\x00\x90\xbf'), (18, b'\x00\x00\x00\x00\x00\x00\xa0\xbf')] != original [(16, b'\x01\x00\x00\x00\x00\x00\x90\xbf'), (18, b'\x00\x00\x00\x00\x00\x00\xa0\xbf')]
+  tamper original a_q input bit at pivot 11: rejected I pivot 11: Rust FTRAN of the original a_q != original alpha_q output
+PASS

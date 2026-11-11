@@ -1251,6 +1251,23 @@ impl Lu {
         tau
     }
 
+    /// Bound-flip FTRAN (`2207de`): keep the L/R list to distinguish a sparse U output from a dense one.
+    pub fn ftran_flip(&self, x: Vec<f64>, input: Option<&[(usize, f64)]>) -> (Vec<f64>, bool) {
+        assert!(self.complete(), "singular basis");
+        let m = self.head.len();
+        let te = m - self.prefix + self.f0.len();
+        let d2 = self.dsum * self.dsum;
+        let sparse = input.is_some_and(|i| self.sparse_mult * i.len() <= m && 0.1 * m as f64 > self.lmax as f64)
+            && {
+                // shortcut: evaluate the L/R list separately to preserve the existing dense arithmetic; M1-02t
+                // should share the verified numerical kernel and its representation instead.
+                let lr = self.ftran_lr(&mut x.clone(), input);
+                lr.is_some_and(|l| te + l.len() < m || d2 * (l.len() as f64) < 2.0 * m as f64)
+            };
+        let xb = self.ftran_dense(x);
+        (xb, !sparse)
+    }
+
     /// Dense FTRAN: x (indexed by row) := B⁻¹x, returned by basis position.
     pub fn ftran_dense(&self, mut x: Vec<f64>) -> Vec<f64> {
         assert!(self.complete(), "singular basis");

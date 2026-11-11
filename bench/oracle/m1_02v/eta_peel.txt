@@ -1,0 +1,17 @@
+P: 117 eta records: r, len = U^T^-1 e_r of the capture, idx/val offset = LU+0x160 at the update, val mod 16 = 8*offset mod 16; LU+0x150 mod 16 [0], LU+0x1d0 values mod 16 [0]
+G: LU+0x160 growth = model on 34/34 updates (row cap LU+0x188-0x18c bound 0 times); X: LU+0x160 after the factors at [0, 6, 15, 26] = 2*(nnz L + nnz U) [10, 112, 196, 338]
+S/D (orig): spike = capture on 21/21 updates with etas, new diagonal on 24/24 eta updates; fail [] / []
+T binary sha: ok
+T empty events: ok
+T run 2 va flipped: ok
+T va of the length-8 eta flipped (all runs): ok
+T vo shifted: ok
+T 02a-1 field: ok
+T new U column bit pivot 31 (all runs, 02a-1 too): ok
+T eta len: ok
+T LU+0x160 after factor: ok
+T rule peel0 (expected fails): ok
+T rule peel1 (expected fails): ok
+T rule invert (expected fails): ok
+T rule seq (expected fails): ok
+ACCEPTANCE PASS (+ self-test)

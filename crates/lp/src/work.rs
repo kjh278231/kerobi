@@ -2,9 +2,9 @@
 //! with the amount rounded first (no FMA); where the original skips a store it keeps the partial sum in a register,
 //! which rounds the same way (`carry`). Sites are the original trap pcs (instruction after the store) so a dump
 //! lines up with the M1-02p watchpoint capture. shortcut: only the factor, FT update, refactor-return, start and
-//! post-update (`1bae9c`, `1b7106`, `1ca57`, `16b0a`) sites are ported (M1-02q, M1-02r, M1-02s); the iteration
-//! kernels and LU solves follow in M1-02v, M1-02t and M1-02u, so the absolute value is not the original's yet and
-//! nothing decides on it.
+//! post-update and iteration sites are ported (M1-02q, M1-02r, M1-02s, M1-02v); LU solves and the remaining
+//! path-dependent folds follow in M1-02t and M1-02u, so the absolute value is not the original's yet and nothing
+//! decides on it.
 
 /// spx+0x148 (double precision; 1.95 in quad); LU+0x1f8 is its copy in the factor.
 pub const X148: f64 = 1.3;
