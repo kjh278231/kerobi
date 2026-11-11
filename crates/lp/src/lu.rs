@@ -43,6 +43,14 @@ pub struct Lu {
     f8: Vec<i64>,
     /// Forrest–Tomlin row etas in creation order: (row r, [(row i, μ)]) with x_r −= Σ μ·x_i.
     retas: Vec<(usize, Vec<(usize, f64)>)>,
+    /// Per row eta: its values start at an odd offset of the LU pool, i.e. 8 but not 16-byte aligned.
+    reta_odd: Vec<bool>,
+    /// LU pool fill LU+0x160: U rows, U columns and row etas share LU+0x148/0x150 (16-byte aligned base in the kb2
+    /// capture). 2·nnz(L+U) after a factor, then grown by `update` (05b257).
+    pool: usize,
+    /// Pool slots of the U rows and columns by step: their lengths after a factor, grown by `update`.
+    rcap: Vec<usize>,
+    ccap: Vec<usize>,
     /// Sparse-solve multiplier LU+0x104: a sparse Lᵀ needs `mult·nnz ≤ m` (036ade L5709).
     sparse_mult: usize,
     /// Lᵀ DAG level of each step (LU+0x130) when BTRAN takes the level path (LU+0x140 ≥ 0, 036ade L5757).
@@ -227,6 +235,10 @@ impl Lu {
             f0: Vec::new(),
             f8: Vec::new(),
             retas: Vec::new(),
+            reta_odd: Vec::new(),
+            pool: 0,
+            rcap: Vec::new(),
+            ccap: Vec::new(),
             sparse_mult: 2,
             level: None,
             general: false,
@@ -665,6 +677,10 @@ impl Lu {
             }
         }
         let lnnz: usize = self.lrow.iter().map(Vec::len).sum();
+        // pool fill after a factor: 2·nnz(L+U) (kb2 capture, 4 factors), every slot as long as its U row or column
+        self.rcap = self.urow.iter().map(Vec::len).collect();
+        self.ccap = self.ucol.iter().map(Vec::len).collect();
+        self.pool = 2 * (lnnz + self.rcap.iter().sum::<usize>());
         let t = lnnz as f64 / m as f64 + 1.0;
         let t = t * t * 5.0;
         self.sparse_mult = if lnnz <= m { 2 } else if m as f64 <= t { m } else { t as usize };
@@ -875,9 +891,10 @@ impl Lu {
 
     /// FTRAN through the row etas (x by row).
     pub fn ftran_r(&self, x: &mut [f64]) {
-        for (r, eta) in &self.retas {
-            // 2207de R phase: x_r = η·x (8 lanes), dropped at or below ZERO
-            let v = dot8(eta.iter().map(|&(i, e)| x[i] * e));
+        for ((r, eta), &odd) in self.retas.iter().zip(&self.reta_odd) {
+            // 09d112 R phase (C:1136–1355): x_r = η·x in 8 lanes, one element peeled for 8-byte aligned values;
+            // dropped at or below ZERO
+            let v = dot8_peel(eta.iter().map(|&(i, e)| x[i] * e), odd);
             x[*r] = if v.abs() <= ZERO { 0.0 } else { v };
         }
     }
@@ -1031,14 +1048,16 @@ impl Lu {
     /// eta. Returns false when the new diagonal is below ZERO (caller refactors). `sorder`: the spike rows in the
     /// order `09d112` hands them on (`ftran2`); empty for the dense collection order (position order).
     /// shortcut: callers outside the dual DSE pass an empty `sorder` (the `2207de` sparse paths are not modelled).
-    pub fn update(&mut self, pos: usize, var: usize, spike: &[f64], sorder: &[usize]) -> bool {
+    /// `interval`: the update limit LU+0x188 (LUINTERVAL), which caps the room a moved U row gets.
+    /// shortcut: the pool never outgrows its capacity LU+0x168 (05b257 C:800–860 reallocates; kb2 stays far below).
+    pub fn update(&mut self, pos: usize, var: usize, spike: &[f64], sorder: &[usize], interval: usize) -> bool {
         // Forrest–Tomlin as 5b257 stores it (m1_notes §8.10): r = the leaving index, q its U position, t the prefix
         // LU+0x100, p = max(q, t−1), l = max(p, U positions of the spike entries ≠ r). With l ≠ p and a non-empty U
         // row r the row eta is η = e_rᵀU⁻¹ (old U, r first then U order), the new diagonal η·S and row r leaves U;
         // otherwise the diagonal is S_r and U row r stays. r ends at position l (swap with ord[p], then the ord[l]
         // chain of L1101–1218 and a rotation of [p, l]).
-        // shortcut: the dot product never peels an element (pool alignment unknown)
         let kp = self.kpos[pos];
+        let off = self.pool; // a new row eta takes the pool end (05b257 C:906–918)
         let rp = self.steps[kp].0;
         let mut at = std::mem::take(&mut self.upos);
         let q = at[kp];
@@ -1079,6 +1098,8 @@ impl Lu {
                     w[j] -= u * z;
                 }
             }
+            // 05b257 C:321–372 reads the LU+0x1d0 copy of η. shortcut: those values are taken as 16-byte aligned (kb2
+            // capture, 38/38 pivots), the peel of an 8-byte aligned buffer is not modelled
             diag = dot8(eta.iter().map(|&(i, e)| spike[i] * e));
             // row r out of U; a column left empty raises the LU+0xe8 cache (L1023, position before the permutation)
             for &(j, _) in &std::mem::take(&mut self.urow[kp]) {
@@ -1087,6 +1108,8 @@ impl Lu {
                     self.e8 = self.e8.max(at[j]);
                 }
             }
+            self.pool += eta.len();
+            self.reta_odd.push(off % 2 == 1);
             self.retas.push((rp, eta));
         }
         // new prefix (L463–512): local_40, with an empty column above p taking the place of p when q < p
@@ -1187,9 +1210,23 @@ impl Lu {
                 self.f0.push(k);
             }
         }
+        // pool growth: a new column longer than its slot goes to the end (C:1224–1227), a full U row that gets an
+        // entry moves to the end with min(max(4, len/2), LU+0x188 − LU+0x18c) free places (C:1264–1282)
+        if self.ccap[kp] < others.len() {
+            self.pool += others.len();
+            self.ccap[kp] = others.len();
+        }
+        let room = interval.saturating_sub(self.n_updates);
         for &i in &others {
+            let k = self.prow[i] as usize;
+            let n = self.urow[k].len();
+            if n == self.rcap[k] {
+                let extra = (n / 2).max(4).min(room);
+                self.pool += n + extra;
+                self.rcap[k] = n + extra;
+            }
             self.ucol[kp].push((i, spike[i]));
-            self.urow[self.prow[i] as usize].push((kp, spike[i]));
+            self.urow[k].push((kp, spike[i]));
         }
         if others.is_empty() {
             self.e8 = self.e8.max(self.upos[kp]);
@@ -1285,12 +1322,19 @@ pub fn dual_start(spx: &Spx, vstat: &[i32]) -> (Vec<f64>, Vec<f64>) {
 /// Σ of products in the original 8-lane order (5b257 L318–420, 2207de R phase): in sequence below 8 terms, else
 /// lanes over the 8-aligned head combined ((0+2)+(4+6)) + ((1+3)+(5+7)), then the tail in sequence.
 pub fn dot8(terms: impl Iterator<Item = f64>) -> f64 {
+    dot8_peel(terms, false)
+}
+
+/// `dot8` over an array that may be 8 but not 16-byte aligned (`09d112` C:1149–1260, asm 0x1272d7): with `peel` the
+/// first term goes to lane 0 first, and below 9 terms the whole sum is sequential.
+fn dot8_peel(terms: impl Iterator<Item = f64>, peel: bool) -> f64 {
     let v: Vec<f64> = terms.collect();
-    if v.len() < 8 {
+    let p = peel as usize;
+    if v.len() < 8 + p {
         return v.iter().fold(0.0, |a, &t| a + t);
     }
-    let (head, tail) = v.as_chunks::<8>();
-    let mut a = [0.0; 8];
+    let (head, tail) = v[p..].as_chunks::<8>();
+    let mut a = [v[..p].iter().fold(0.0, |a, &t| a + t), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     for c in head {
         for q in 0..8 {
             a[q] += c[q];
@@ -1317,7 +1361,7 @@ pub fn sum_squares(v: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{gather, sum_squares, Lu};
+    use super::{dot8_peel, gather, sum_squares, Lu};
     use crate::scaling::Scaling;
     use crate::spx::Spx;
 
@@ -1450,11 +1494,22 @@ mod tests {
             let spike = x.clone();
             lu.ftran_upper(&mut x);
             let Some(pos) = (0..m).find(|&p| x[lu.steps[lu.kpos[p]].0].abs() > 0.5) else { continue };
-            assert!(lu.update(pos, j, &spike, &[]));
+            assert!(lu.update(pos, j, &spike, &[], usize::MAX));
             check(&spx, &lu);
             done += 1;
         }
         assert!(done >= 4);
+    }
+
+    #[test]
+    fn dot8_peel_order() {
+        // 8 terms: lanes without a peel, in sequence with one (kb2 pivot 30, row 17)
+        let t = [1e16, 1.0, 1.0, 1.0, -1e16, 1.0, 1.0, 1.0];
+        assert_eq!(dot8_peel(t.into_iter(), false), ((1e16 + 1.0) + (-1e16 + 1.0)) + ((1.0 + 1.0) + (1.0 + 1.0)));
+        assert_eq!(dot8_peel(t.into_iter(), true), t.iter().fold(0.0, |a, &x| a + x));
+        // 9 terms with a peel: the first starts lane 0, the other 8 fill the lanes
+        let t9 = [1.0, 1e16, 1.0, 1.0, 1.0, -1e16, 1.0, 1.0, 1.0];
+        assert_eq!(dot8_peel(t9.into_iter(), true), ((1.0 + 1e16 + 1.0) + (-1e16 + 1.0)) + ((1.0 + 1.0) + (1.0 + 1.0)));
     }
 
     #[test]

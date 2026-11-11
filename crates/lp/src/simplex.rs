@@ -527,7 +527,7 @@ impl<'a> Engine<'a> {
                 (self.upd_cols as f64 * 1.5 + self.lu.eta_nnz() as f64 * 2.0) * m - f > 0.0
             }
         };
-        if refactor || !self.lu.update(r, q, spike, sorder) {
+        if refactor || !self.lu.update(r, q, spike, sorder, self.lu_interval) {
             self.reinvert();
         } else {
             // LU+0x190: nonzeros of the FTRAN'd entering column (pivot included)

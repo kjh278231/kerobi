@@ -5,12 +5,14 @@ array lives in the LU pool LU+0x150 at offset LU+0x160 of its update (05b257 C:9
 offset parity. The new FT diagonal (05b257 C:321-372) reads the LU+0x1d0 buffer instead.
 Inputs: tools/m1_eta_pool.js captures (bench/oracle/m1_02l_pool, 3 runs), the 02a-1 capture (non-interference) and the
 02i Rust BTRAN dump (L, nnz(L)).
-usage: python3 tools/m1_eta_peel_check.py [--self-test]"""
+With --fresh (after the Rust change) also the DSE beta of every kb2 pivot from the rsolver on PYTHONPATH.
+usage: python3 tools/m1_eta_peel_check.py [--self-test]
+       PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_eta_peel_check.py --fresh"""
 import copy, gzip, hashlib, json, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from m1_beta_check import BIN, MODEL_SHA, PARAMS, u2f  # noqa: E402
+from m1_beta_check import BIN, MODEL_SHA, PARAMS, fh, rust_snapshot, u2f  # noqa: E402
 from m1_eta_check import Z, load as load_02i, orig_eta  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,7 +35,7 @@ def load():
         d["_sha"] = hashlib.sha256(p.read_bytes()).hexdigest()
         runs.append(d)
     tool = hashlib.sha256((ROOT / "tools/m1_eta_pool.js").read_bytes()).hexdigest()
-    return {"runs": runs, "tau1": base["tau"][0], "bt": base["bt"], "tool": tool}
+    return {"runs": runs, "tau1": base["tau"][0], "bt": base["bt"], "tool": tool, "beta": base["beta"][0]["events"]}
 
 
 def dot(t, peel):
@@ -248,6 +250,12 @@ def self_test(data):
 def main():
     data = load()
     bad, rep = check(data)
+    if "--fresh" in sys.argv:
+        mine, bev = rust_snapshot(), data["beta"]
+        diff = [k for k in range(len(bev)) if k + 1 not in mine or fh(mine[k + 1]["beta"]) != u2f(bev[k]["beta"])]
+        rep.append(f"F: fresh Rust beta = capture on {len(bev) - len(diff)}/{len(bev)} pivots; differ {diff}")
+        if diff:
+            bad.append(f"F: Rust beta != capture on pivots {diff}")
     for ln in rep:
         print(ln)
     if "--self-test" in sys.argv:
