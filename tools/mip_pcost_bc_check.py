@@ -295,12 +295,16 @@ def tampers(docs, olds):
     def b_upd(e):
         return e['e'] == 'upd' and e['from'] == '5fb8ec' and e['ra'] in (RA_UP, RA_DN)
 
-    def called(d):
-        """(bblk index, j) of the first called column whose rc is not tiny, with its full arrays reconstructed."""
-        def big(e):  # first update of that direction with g > 1e-6, so |rc| > 1e-6
+    def called(d, big=False):
+        """(bblk index, j, upd index) of the first called column; with big, the first whose |rc| > 1e-9 (None if none)."""
+        def pred(e):  # first update of that direction with g > 1e-9 means |rc| > 1e-9
+            if not b_upd(e):
+                return False
             u = e['ra'] == RA_UP
-            return b_upd(e) and e['before'][u] == 0 and f(e['after'][2 + u]) > 1e-6
-        i = idx(d, big)
+            return not big or e['before'][u] == 0 and f(e['after'][2 + u]) > 1e-9
+        i = next((k for k, e in enumerate(d['events']) if pred(e)), None)
+        if i is None:
+            return None
         j = d['events'][i]['j']
         b = max(k for k in range(i) if d['events'][k]['e'] == 'bblk')
         return b, j, i
@@ -353,7 +357,9 @@ def tampers(docs, olds):
         d['events'][g]['st'] = 1
 
     def t6(d):
-        b, j, _ = called(d)
+        if called(d, big=True) is None:
+            return False  # no call with |rc| > 1e-10 (fhnw: every table B delta is 0)
+        b, j, _ = called(d, big=True)
         orig['rc'] = arr_at(d, b, 'rc')[j]
         setcol(d, b, 'rc', j, neg(orig['rc']))
 
@@ -371,6 +377,10 @@ def tampers(docs, olds):
 
     def t10(d):  # target zero times: no table B traffic at all (applied to every case and its 06e reference)
         d['events'] = [e for e in d['events'] if e['e'] not in NEW_EV and not b_upd(e)]
+        tb = {e['t'] for e in d['events'] if e['e'] == 'new' and e.get('slot') == 0x3258}
+        for e in d['events']:
+            if e['e'] == 'free' and e['t'] in tb:
+                e['nz'] = []
 
     def t11(d):
         b, j, _ = called(d)
@@ -380,21 +390,33 @@ def tampers(docs, olds):
     def t12(d):
         d['events'][idx(d, lambda e: e['e'] == 'ins')]['heap_n'] += 1
 
-    plan = [('T1 upd after bit', t1), ('T2 drop upd', t2), ('T3 basis -1<->-2', t3), ('T4 work bit', t4),
-            ('T5 gate state', t5), ('T6 rc sign', t6), ('T7 upd outside window', t7), ('T8 binary sha', t8),
-            ('T9 no bblk', t9), ('T11 ub = lb', t11), ('T12 06e event', t12)]
-    for name, fn in plan:
+    # (name, tamper, check that must reject). Tampers of 06e events (upd) are run through the B3-B6 replay
+    # directly, because B2 (06e projection) would reject them first and hide whether B4 can.
+    plan = [('T1 upd after bit', t1, 'B4'), ('T2 drop upd', t2, 'B4'), ('T3 basis -1<->-2', t3, 'B4'),
+            ('T4 work bit', t4, 'B5'), ('T5 gate state', t5, 'B3'), ('T6 rc sign', t6, 'B4'),
+            ('T7 upd outside window', t7, 'B4'), ('T8 binary sha', t8, 'B1'), ('T9 no bblk', t9, 'B'),
+            ('T11 ub = lb', t11, 'B4'), ('T12 06e event', t12, 'B2')]
+    for name, fn, code in plan:
+        na = []
         for c in CASES:
             d = copy.deepcopy(docs[c])
             orig.clear()
-            fn(d)
+            if fn(d) is False:
+                na.append(c)
+                continue
             try:
-                check_case(c, d, olds[c])
+                if name[:3] in ('T1 ', 'T2 ', 'T7 '):
+                    replay(d, name=c)
+                else:
+                    check_case(c, d, olds[c])
             except Fail as ex:
                 msg = str(ex)
+                need(msg.startswith(code), f'{name} ({c}): rejected by the wrong check: {msg[:160]}')
                 continue
             raise Fail(f'{name} ({c}): tampered capture passed')
-        print(f'{name}: rejected in all 6 cases (e.g. {msg[:140]})')
+        need(len(na) < len(CASES), f'{name}: applicable to no case')
+        print(f'{name}: rejected by {code} in {len(CASES) - len(na)} cases' + (f', not applicable in {na}' if na else '')
+              + f' (e.g. {msg[:140]})')
     # T10: the same zero-target input on both sides (so B2 still holds) must fail B7
     td, to = {}, {}
     for c in CASES:
