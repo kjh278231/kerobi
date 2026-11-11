@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M2-06f-5 infeasible ray 수정 `6684cd`(조상 사슬의 bound 변경 기록으로 행을 더해 ray 칸을 지우고 `95ce25`로 재정규화)를 원본 캡처 재생으로 확정했다(조사·오라클). 6사례 115호출이 비트까지 같고, 미호출 92회는 휴리스틱 LP 3종과 sub-MIP 종료 검사로 모두 분류됐다. `bnb.rs` 연결에는 노드의 bound 변경 기록·cut 행 나이와 M1 경계(infeasible 행의 tableau 행)가 더 필요하다. [계약과 결과](m2/mip_infeas_ray_fix.md).
+
 M1-02i kb2 반복 23 d·w 끝자리 차이를 BTRAN 행 eta 단계로 특정하고 고쳤다(조사·구현, 통과). 원본은 eta가 많은 쪽(`m < 0x104·nnz`)에서 `|v| ≤ ZERO`인 eta를 건너뛰고, Rust는 0만 건너뛰었다. 고친 뒤 kb2 ρ·β 피벗 0–30과 statecmp 0–30이 원본과 같다. 피벗 31 이후는 피벗 30 갱신의 spike 끝자리(M1-02l). [계약과 결과](m1/m1_02i_eta.md).
 
 M2-06f-4 infeasible 노드 벡터 `95da98`(이탈 행의 Farkas 행)을 원본 캡처 재생으로 확정했다(조사·오라클). 6사례 131호출의 출력이 비트까지 같다. 감쇠 117회 중 45회는 `6684cd`가 고친 칸을 읽으므로 `bnb.rs` 연결에는 06f-5와 M1 경계(infeasible 행의 tableau 행)가 더 필요하다. [계약과 결과](m2/mip_infeas_ray.md).
