@@ -477,21 +477,20 @@ impl<'a> Engine<'a> {
     }
 
     /// FTRAN of column j: (B⁻¹a_j by position, spike by row, nonzeros after L).
-    fn ftran_col(&self, j: usize) -> (Vec<f64>, Vec<f64>, i64) {
+    fn ftran_col(&self, j: usize) -> (Vec<f64>, Vec<f64>, Option<Vec<usize>>) {
         let mut x = vec![0.0; self.m];
-        for (i, a) in self.spx.col(j) {
+        let input: Vec<(usize, f64)> = self.spx.col(j).collect();
+        for &(i, a) in &input {
             x[i] = a;
         }
-        self.lu.ftran_l(&mut x);
-        let nl = x.iter().filter(|v| v.abs() > ZERO).count() as i64;
-        self.lu.ftran_r(&mut x);
+        let lr = self.lu.ftran_lr(&mut x, Some(&input));
         let spike = x.clone();
         self.lu.ftran_upper(&mut x);
         let mut col = vec![0.0; self.m];
         for &(r, pos, _) in &self.lu.steps {
             col[pos] = x[r];
         }
-        (col, spike, nl)
+        (col, spike, lr)
     }
 
     /// Replace basis position r by column q (status of the leaving variable given), update the LU or refactor.
@@ -1006,7 +1005,7 @@ impl<'a> Engine<'a> {
             for &(i, v) in &rho_sp {
                 rho[i] = v;
             }
-            let rho_in = if dense { -1 } else { rho_sp.len() as i64 };
+            let rho_input = (!dense).then(|| rho_sp.clone()); // 09d112's ρ side as 28c93 hands it
             let rho_sp: Vec<(usize, f64)> = rho_sp.into_iter().filter(|e| e.1.abs() > ZERO).collect();
 
             let (alpha, order) = self.pivot_row(&rho_sp);
@@ -1106,7 +1105,7 @@ impl<'a> Engine<'a> {
             }
             retried = false;
 
-            let (col, spike, a_l) = self.ftran_col(q);
+            let (col, spike, lr) = self.ftran_col(q);
 
             let arq = col[r];
             if arq * alpha[q] <= 0.0 || (arq - alpha[q]).abs() > BIG_TOL * (1.0 + arq.abs()) || arq.abs() <= ZERO {
@@ -1142,12 +1141,14 @@ impl<'a> Engine<'a> {
             // DSE weights with τ = B⁻¹ρ
             let supp: Vec<usize> = (0..self.m).filter(|&p| col[p] != 0.0).collect(); // α_q support, position order
             let mut tau = rho.clone();
-            let nz = |v: &[f64]| v.iter().filter(|x| x.abs() > ZERO).count() as i64;
-            self.lu.ftran_l(&mut tau);
-            let rho_l = nz(&tau);
-            self.lu.ftran_r(&mut tau);
-            let a_in: Vec<usize> = self.spx.col(q).map(|e| e.0).collect();
-            let (uk, mut aq_list, sorder, fill) = self.lu.ftran2(&a_in, a_l, &spike, [rho_in, rho_l, nz(&tau)], &col, r);
+            let nb = self.lu.ftran_lr(&mut tau, rho_input.as_deref()).map_or(-1, |l| l.len() as i64);
+            let (uk, mut aq_list, sorder) = self.lu.ftran2(lr.as_deref(), &spike, nb, &col, r);
+            // snapshots: the sparse side's L + row-eta order as positions (empty when dense)
+            let lro: Vec<usize> = if self.snap_path.is_some() && lr.is_some() {
+                sorder.iter().map(|&i| self.lu.steps[self.lu.prow[i] as usize].1).collect()
+            } else {
+                Vec::new()
+            };
             // 8b473 C:466–482: the pivot's place in the α_q list takes its last entry
             if let Some(i) = aq_list.iter().position(|&p| p == r) {
                 aq_list.swap_remove(i);
@@ -1228,7 +1229,7 @@ impl<'a> Engine<'a> {
                 self.price_touch(&changed, Some(r), true);
             }
             if self.snap_path.is_some() {
-                self.last_aqo = format!("\"aqo\":{:?},\"uk\":\"{}\",\"fill\":{},", aq_list, uk, fill);
+                self.last_aqo = format!("\"aqo\":{:?},\"uk\":\"{}\",\"lro\":{:?},", aq_list, uk, lro);
             }
 
             self.log();
