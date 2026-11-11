@@ -42,10 +42,12 @@ pub struct TailIn {
     /// `M+0x2c`.
     pub m2c: i32,
     pub focus: i32,
-    /// `T+0x138`.
-    pub t138: i64,
-    /// `T+0x120` (global heap size).
-    pub t120: i64,
+    /// `T+0x138` (compared unsigned).
+    pub t138: u64,
+    /// `T+0x120` (global heap size, compared unsigned).
+    pub t120: u64,
+    /// r8b of the rule step; its sibling swap before the tail is not ported.
+    pub hint: bool,
 }
 
 /// Values the tail reads only when the selected node has an ancestor at depth d'.
@@ -234,7 +236,7 @@ pub fn pick<T: Copy + PartialEq>(
 /// Tail (asm 0x5b44a9-0x5b49d6): take `list[idx]` out (the last entry fills its slot), then, when the selected node
 /// has an ancestor at d', keep in order only the entries under the same ancestor with bound not above the threshold.
 /// Each other entry goes to `removed(node, to_heap)`: to_heap = stage 4 + global heap insert, else stage 0 (dropped).
-/// shortcut: hint sibling swap (r8b) and the parallel worker heap (5e2919 != 0) are not ported; single thread, no hint.
+/// shortcut: the parallel worker heap (5e2919 != 0) is not ported (single thread); a hint (r8b) call panics.
 pub fn tail<T: Copy + PartialEq>(
     list: &mut Vec<Item<T>>,
     idx: usize,
@@ -244,6 +246,7 @@ pub fn tail<T: Copy + PartialEq>(
     mut removed: impl FnMut(T, bool),
     work: &mut f64,
 ) -> Tail<T> {
+    assert!(!p.hint, "plunge tail: hint sibling swap (0x5b44ba) not ported");
     let sel = list.swap_remove(idx);
     let delta = if p.k <= p.m2c {
         2

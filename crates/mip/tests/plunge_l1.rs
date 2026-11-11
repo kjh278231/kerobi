@@ -73,26 +73,27 @@ fn call(block: &[Vec<&str>], out: &mut String) {
         }
     };
     let mut work = hx(line("work")[1]);
-    let given = num(line("given"), 1) as usize;
+    // the captured pick, present only where the original rule's score is not ported or the 06c-2 replay had no chain
+    let given = || line("given")[1].parse::<usize>().unwrap();
     let idx = match pick(r, &items, &mut rng, &mut parent, &mut work) {
         // a rule 1/6 pick that asked a parent above the tail chains is not replayable: continue from the capture
         Some(_) if unknown.get() => {
-            writeln!(out, "unrep {given}").unwrap();
-            given
+            writeln!(out, "unrep {}", given()).unwrap();
+            given()
         }
         Some(i) => {
             writeln!(out, "pick {i}").unwrap();
             i
         }
         None => {
-            writeln!(out, "given {given}").unwrap();
-            given
+            writeln!(out, "given {}", given()).unwrap();
+            given()
         }
     };
     writeln!(out, "work {}", bits(work)).unwrap();
 
     unknown.set(false);
-    let tin = TailIn { k, m2c: num(rk, 2) as i32, focus: rin.focus, t138: num(rk, 3), t120: num(rk, 4) };
+    let tin = TailIn { k, m2c: num(rk, 2) as i32, focus: rin.focus, t138: rk[3].parse().unwrap(), t120: rk[4].parse().unwrap(), hint };
     let thr = || {
         let w = line("thr");
         Thr { f9a41: num(w, 1) as i32, pool: hx(w[2]), v8239: hx(w[3]), cut: hx(w[4]) }

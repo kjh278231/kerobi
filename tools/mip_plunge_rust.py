@@ -22,6 +22,7 @@ SRC = 'crates/mip/src/plunge.rs'
 TEST = 'crates/mip/tests/plunge_l1.rs'
 CASES = tuple(R.CASES)
 # section 3 K: 5-case totals from docs/m2/mip_plunge_rule.md section 6.2 and docs/m2/mip_plunge_score.md section 6
+RESOLVED = 17                          # of the 34 06c-2 unreplayable calls Rust picks (fixed after the first run, §6)
 TOTALS = {'calls': 9864, 'pick': 9445, 'pick1256': 7465, 'pick312': 1980, 'given47': 385, 'unrep': 34, 'draws': 963,
           'kept': 32979, 'heap': 6512, 'drop': 5, 'thr_set': 1964, 'null_anc': 58}
 ALL, NONE = dict.fromkeys(CASES, True), dict.fromkeys(CASES, False)
@@ -140,7 +141,8 @@ def export(case, h, d):
         inp.append(f'rk {r["esi"]} {t["m2c"]} {t["t138"]} {t["t120"]} {s70[0]["r"]} '
                    f'{s70[1]["r"] if len(s70) > 1 else "-"}')
         inp.append(f'work {rp["work"]}')
-        inp.append(f'given {pk["idx"]}')
+        if rule in (4, 7, 9, 11) or i in unrep:  # review: only where Rust may need it; elsewhere asking it panics
+            inp.append(f'given {pk["idx"]}')
         for e in pk['list']:
             inp.append(f'it {e[0]} {e[1]} {e[2]} {e[3]} {e[4]}')
         if thr is not None:
@@ -363,7 +365,7 @@ def main():
         u = sum(ln.startswith('unrep ') for ln in tr[c].split('\n'))
         left += u
         print(f'R/P/T: {c}: {len(exps[c])} lines: rust = original (06c-2 unreplayable left unresolved by Rust: {u})')
-    need(left <= TOTALS['unrep'], f'K: Rust unreplayable {left} > 06c-2 {TOTALS["unrep"]}')
+    need(TOTALS['unrep'] - left == RESOLVED, f'K: Rust resolved {TOTALS["unrep"] - left} of the 06c-2 unreplayable, §6 fixes {RESOLVED}')
     print(f'K: of the {TOTALS["unrep"]} 06c-2 unreplayable rule 1/6 calls Rust picked {TOTALS["unrep"] - left} '
           f'(compared with pick.idx), {left} still need a parent above the tail chains')
     if self_test:
