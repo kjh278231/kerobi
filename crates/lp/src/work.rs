@@ -1,9 +1,9 @@
 //! Dual simplex work counter (`06268b` param_2, docs/m1/m1_02p_work.md). Each original store is `w = amount + w`
 //! with the amount rounded first (no FMA); where the original skips a store it keeps the partial sum in a register,
 //! which rounds the same way (`carry`). Sites are the original trap pcs (instruction after the store) so a dump
-//! lines up with the M1-02p watchpoint capture. shortcut: only the factor, refactor-return and two start sites are
-//! ported (M1-02q); the iteration kernels follow in M1-02r–u, so the absolute value is not the original's yet and
-//! nothing decides on it.
+//! lines up with the M1-02p watchpoint capture. shortcut: only the factor, FT update, refactor-return and two start
+//! sites are ported (M1-02q, M1-02r); the iteration kernels follow in M1-02s–u, so the absolute value is not the
+//! original's yet and nothing decides on it.
 
 /// spx+0x148 (double precision; 1.95 in quad); LU+0x1f8 is its copy in the factor.
 pub const X148: f64 = 1.3;
@@ -15,8 +15,10 @@ pub struct Work {
     /// spx+0x158: moving average of the factorization's own work (`036ade` C:5753–5772).
     pub w158: f64,
     carried: Vec<f64>,
-    /// `RSOLVER_WORK`: (site, value after, amounts folded since the previous store).
-    pub log: Option<Vec<(u32, f64, Vec<f64>)>>,
+    /// Iteration the stores belong to (the original's `8b473` count k), set by the caller.
+    pub k: usize,
+    /// `RSOLVER_WORK`: (site, value after, amounts folded since the previous store, k).
+    pub log: Option<Vec<(u32, f64, Vec<f64>, usize)>>,
     /// `RSOLVER_WORK_SEED`: work at each refactor entry, taken from an original capture (verification input).
     seed: std::collections::VecDeque<f64>,
 }
@@ -30,7 +32,7 @@ impl Work {
             .split_whitespace()
             .map(|h| f64::from_bits(u64::from_str_radix(h, 16).expect("RSOLVER_WORK_SEED: hex bits per line")))
             .collect();
-        Work { w: 0.0, w150: 0.0, w158: 0.0, carried: Vec::new(), log: std::env::var("RSOLVER_WORK").ok().map(|_| Vec::new()), seed }
+        Work { w: 0.0, w150: 0.0, w158: 0.0, carried: Vec::new(), k: 0, log: std::env::var("RSOLVER_WORK").ok().map(|_| Vec::new()), seed }
     }
 
     /// The original keeps this partial sum in a register; a later `add` stores it.
@@ -44,7 +46,7 @@ impl Work {
     pub fn add(&mut self, site: u32, amount: f64) {
         self.carry(amount);
         if let Some(l) = &mut self.log {
-            l.push((site, self.w, std::mem::take(&mut self.carried)));
+            l.push((site, self.w, std::mem::take(&mut self.carried), self.k));
         }
     }
 

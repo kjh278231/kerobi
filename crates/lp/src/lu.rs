@@ -1349,7 +1349,9 @@ impl Lu {
     /// `interval`: the update limit LU+0x188 (LUINTERVAL), which caps the room a moved U row gets.
     /// shortcut: the pool never outgrows its capacity LU+0x168 (05b257 C:800–860 reallocates; kb2 stays far below).
     /// shortcut: the pool growth rules are checked on kb2 (34/34 updates) and maros pivots 0–388 only.
-    pub fn update(&mut self, pos: usize, var: usize, spike: &[f64], sorder: &[usize], interval: usize) -> bool {
+    /// `w`: the work stores of 05b257 (docs/m1/m1_02r_ft_work.md), gathered where Rust computes them and stored at the
+    /// end in the original's order. shortcut: of the early exits only the small diagonal is modelled (0xf1beb only).
+    pub fn update(&mut self, pos: usize, var: usize, spike: &[f64], sorder: &[usize], interval: usize, w: &mut crate::work::Work) -> bool {
         // Forrest–Tomlin as 5b257 stores it (m1_notes §8.10): r = the leaving index, q its U position, t the prefix
         // LU+0x100, p = max(q, t−1), l = max(p, U positions of the spike entries ≠ r). With l ≠ p and a non-empty U
         // row r the row eta is η = e_rᵀU⁻¹ (old U, r first then U order), the new diagonal η·S and row r leaves U;
@@ -1369,6 +1371,14 @@ impl Lu {
         if let Some(i) = sp.iter().position(|&i| i == rp) {
             sp.swap_remove(i);
         }
+        // work amounts by site group (05b257 C:316–1316): η length (0xf1beb), LU+0xe8 scan (0xf1d02), column r's rows
+        // (0xf1f37 when a length-1 row at a position ≤ local_40 leaves the list, else 0xf1f82 = place of r in the row),
+        // row r's columns (0xf3f71 / 0xf2969 / 0xf4073 = place of r in the column section, then 0xf2a51), the moved p's
+        // row (0xf3eac), the cycle (0xf3ca4, 0xf3d83)
+        let (mut w_eta, mut w_e8) = (None, None);
+        let mut w_col: Vec<(bool, usize)> = Vec::new();
+        let (mut w_row, mut w_urow): (Vec<(u32, usize)>, Option<usize>) = (Vec::new(), None);
+        let (mut w_moved, mut w_cyc): (Vec<usize>, Option<(f64, usize)>) = (Vec::new(), None);
         let old_len = self.ucol[kp].len(); // 05b257 C:529 local_150: the new column fits in place up to this
         // old column kp out of U; rows it leaves with an empty U row leave the LU+0xf0 list below (C:535–551)
         let mut emptied = Vec::new();
@@ -1376,6 +1386,7 @@ impl Lu {
             // 05b257 C:556–567: the row's last entry takes the removed one's place
             let ki = self.prow[i] as usize;
             let at_kp = self.urow[ki].iter().position(|e| e.0 == kp).expect("U row entry");
+            w_col.push(if self.urow[ki].len() == 1 { (true, at[ki]) } else { (false, at_kp) });
             self.urow[ki].swap_remove(at_kp);
             if self.urow[ki].is_empty() {
                 emptied.push((ki, at[ki]));
@@ -1403,6 +1414,7 @@ impl Lu {
                     }
                 }
             }
+            w_e8 = Some(self.e8 as i64 - e);
             self.e8 = e as usize;
             if found {
                 p = e as usize;
@@ -1437,12 +1449,15 @@ impl Lu {
             // 05b257 C:321–372 reads the LU+0x1d0 copy of η. shortcut: those values are taken as 16-byte aligned (kb2
             // capture, 38/38 pivots), the peel of an 8-byte aligned buffer is not modelled
             diag = dot8(eta.iter().map(|&(i, e)| spike[i] * e));
+            w_eta = Some(eta.len());
+            w_urow = Some(self.urow[kp].len());
             // row r out of U; a column left empty raises the LU+0xe8 cache (L1023, position before the permutation)
             for &(j, _) in &std::mem::take(&mut self.urow[kp]) {
                 // C:979–1019: from a prefix part the column's last entry fills the hole; from a tail part the last
                 // tail entry does, and the last prefix entry moves to the front of the prefix part
                 let (v, mid) = (&mut self.ucol[j], &mut self.umid[j]);
                 let h = v.iter().position(|e| e.0 == rp).expect("U column entry");
+                w_row.push(if q < t { (0xf3f71, h - *mid) } else { (0xf2969, h) });
                 if q < t {
                     v.swap_remove(h);
                 } else {
@@ -1461,10 +1476,15 @@ impl Lu {
             self.reta_odd.push(off % 2 == 1);
             self.retas.push((rp, eta));
         } else if !others.is_empty() && q < t {
-            // C:871–899 (no row eta, r leaves the prefix): r swaps with the first prefix entry of its columns
+            // C:871–899 (no row eta, r leaves the prefix): r swaps with the first prefix entry of its columns. The
+            // original stores work here only with l = p (local_80 = 3); with l ≠ p U row r is empty
+            if l == p0 {
+                w_urow = Some(self.urow[kp].len());
+            }
             for &(j, _) in &self.urow[kp] {
                 let mid = self.umid[j];
                 let h = mid + self.ucol[j][mid..].iter().position(|e| e.0 == rp).expect("U column entry");
+                w_row.push((0xf4073, h - mid));
                 self.ucol[j].swap(h, mid);
                 self.umid[j] += 1;
             }
@@ -1482,6 +1502,7 @@ impl Lu {
             let rk = self.steps[k].0;
             for &(j, _) in &self.urow[k] {
                 let h = self.ucol[j][..self.umid[j]].iter().position(|e| e.0 == rk).expect("U column entry");
+                w_moved.push(h);
                 self.umid[j] -= 1;
                 self.ucol[j].swap(h, self.umid[j]);
             }
@@ -1511,11 +1532,13 @@ impl Lu {
             }
             let base = p;
             let mut ll = l;
+            let mut acc = 0.0;
             loop {
                 let x = self.order[ll];
                 if ll - base <= self.ucol[x].len() {
                     break;
                 }
+                acc = (acc + self.ucol[x].len() as f64 * 2.0) + 5.0;
                 let m2 = self.ucol[x]
                     .iter()
                     .map(|&(i, _)| at[self.prow[i] as usize])
@@ -1524,6 +1547,7 @@ impl Lu {
                 swap(&mut self.order, &mut at, base, ll);
                 ll = m2;
             }
+            w_cyc = Some((acc, ll - base));
             self.order[base..=ll].rotate_left(1);
             for i in base..=ll {
                 at[self.order[i]] = i;
@@ -1565,6 +1589,48 @@ impl Lu {
         if others.is_empty() {
             self.e8 = self.e8.max(self.upos[kp]);
         }
+        // work stores in the original's order (05b257 C:417 … C:1316, docs/m1/m1_02r_ft_work.md §2)
+        use crate::work::X148;
+        if let Some(n) = w_eta.filter(|&n| n > 0) {
+            w.add(0xf1beb, (X148 * 3.0) * n as f64);
+        }
+        if diag.abs() <= ZERO || diag.is_nan() {
+            return false; // C:445–455: 05b257 leaves before any other store and the caller refactors
+        }
+        if let Some(d) = w_e8 {
+            w.add(0xf1d02, (d as f64 * 3.0) * X148);
+        }
+        for (len1, v) in w_col {
+            if !len1 {
+                w.add(0xf1f82, v as f64 * X148);
+            } else if v as i64 <= local40 {
+                w.add(0xf1f37, X148 * 3.0);
+            }
+        }
+        let ns = sp.len();
+        let a = (old_len as f64 * 5.0) * X148;
+        if old_len < ns {
+            w.add(0xf2044, a);
+        } else if ns > 0 {
+            w.add(0xf207a, a);
+        } else {
+            w.carry(a);
+        }
+        w.add(0xf2521, (ns as f64 * 3.0) * X148);
+        for (site, v) in w_row {
+            w.add(site, v as f64 * X148);
+        }
+        if let Some(n) = w_urow {
+            w.add(0xf2a51, (n as f64 * 3.0) * X148);
+        }
+        for v in w_moved {
+            w.add(0xf3eac, v as f64 * X148);
+        }
+        if let Some((acc, k)) = w_cyc {
+            w.add(0xf3ca4, acc * X148);
+            w.add(0xf3d83, (k as f64 * 2.0) * X148);
+        }
+        w.add(0xf2e3c, (ns as f64 * 5.0) * X148);
         self.steps[kp].2 = diag;
         self.head[pos] = var;
         self.general = true;
@@ -1579,7 +1645,7 @@ impl Lu {
             .iter()
             .enumerate()
             .all(|(h, e)| (h < self.umid[k]) == (self.upos[self.prow[e.0] as usize] >= self.prefix))));
-        diag.abs() > ZERO
+        true
     }
 }
 
@@ -1833,7 +1899,7 @@ mod tests {
             let spike = x.clone();
             lu.ftran_upper(&mut x);
             let Some(pos) = (0..m).find(|&p| x[lu.steps[lu.kpos[p]].0].abs() > 0.5) else { continue };
-            assert!(lu.update(pos, j, &spike, &[], usize::MAX));
+            assert!(lu.update(pos, j, &spike, &[], usize::MAX, &mut crate::work::Work::new()));
             check(&spx, &lu);
             done += 1;
         }
