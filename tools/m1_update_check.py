@@ -260,6 +260,13 @@ def main():
         tamper('returned t + 1 (degen2 pivot 313)', tplus)
         tamper('refactor reason 10 -> 0 (degen2 before pivot 356)', reason)
         tamper('work one bit (degen2 decision before pivot 356)', workbit)
+        def nswap(c2):
+            # the 05b257 return before a 02m kernel pivot: only N reads its LU+0xf0 list
+            ks = {e['k'] for e in uss['degen2']['events'] if e['type'] == 'P' and e['ft'] and e['ft'][0]['calls']}
+            e = [e for e in c2['degen2']['events'] if e['type'] == 'U' and e['k'] in ks and len(e['out']['f0']) >= 2][-1]
+            e['out']['f0'][0], e['out']['f0'][1] = e['out']['f0'][1], e['out']['f0'][0]
+
+        tamper('05b257 return LU+0xf0: two entries swapped (degen2, N)', nswap)
         tamper('model: work constant 14 -> 8', lambda c2: None, 'w8')
         tamper('model: no k % 10 == 9 gate', lambda c2: None, 'nomod')
         # list count = value count unless a listed spike entry is <= ZERO: the variant is undiscriminated (not a failure)
