@@ -52,12 +52,23 @@
 - 캡처: `tools/hrun.sh --timeout 580000 -- 'tools/mip_sb_loop_runs.sh bench/oracle/m2_06h3/final'`.
 - 재생·비교: `python3 tools/mip_sb_loop_rust.py`(`--self-test`는 변조·Rust 변이 포함).
 - 변조: 바이너리/모델 해시 0, 사건 비우기, 목표 0회(전파·values·통째 건너뛰기·목록>1 각각), 입력 x·tol·원래 bound·values·work 변조, trace 순서·값 변조. Rust 변이: 사전 채움 방향·eps·min, 게이트 비교, stall 비교·초기화, 6·개수, 복구 엄격 부등, up 1e100 판정, 점수 상수.
-- 회귀: `python3 tools/mip_sb_control_rust.py --self-test`(06h-2 첫 후보, 새 API로 갱신), snapshot/restore self-test, `cargo test --release --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`. Python 확장 미변경이면 pytest 제외.
+- 회귀: 06h-2 첫 후보 하네스 `tools/mip_sb_control_rust.py`는 `evaluate` API와 함께 삭제했다. 06h-2 캡처는 이 하네스가 pk1 비간섭 투영으로 다시 비교하고, 첫 후보 명령은 루프 trace에 포함된다. snapshot/restore self-test, `cargo test --release --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`. Python 확장 미변경이면 pytest 제외.
 
 ## 6. 실행 결과
 
-(작성 예정)
+- 실행 commit `94954dd`(도구 해시는 `bench/oracle/m2_06h3/final/manifest.json`). x86-64 Linux(WSL2), Node 22, Frida 17.23.2.
+- 원본: `tools/mip_sb_loop_runs.sh bench/oracle/m2_06h3/final` 종료 0. 모델마다 독립 3회 JSON 동일, 무훅 대조 최종 출력 동일(Status·NodeCount·IterCount·ObjBound·SolCount·ObjVal). 첫 시도(`final_v0/`)는 void getter의 rax를 기록해 반복 실행이 그 필드만 달랐다. 기록을 빼고 다시 캡처했다(다른 필드는 v0 반복 간에도 같았다).
+- 비간섭: 새 사건·필드를 뺀 투영이 pk1 06h-2 캡처 전체(요약 적용)와 같고, 세 모델의 커널 결과·풀이 상태·dual·IterCount/ObjVal·저장/복원 상태·solve 전후 bound 요약이 06g-2 `*_iters10_1`과 같다.
+- 재생: `python3 tools/mip_sb_loop_rust.py` 종료 0. 149묶음(pk1 24·neos5 14·tr12-30 111) 명령 trace 7,750줄이 원본과 같다. 전파 742회(목록 > 1 459), 복구 요청 2,664, values 147, 상태 2/6/7 = 224/2/516, 평가 후보 382, 후보 통째 건너뛰기 3, down 추정 게이트 20, up ≥ 1e100 2, stall 조기 종료 66, 루프 밖 사전 채움 값 1, 상태2 obj < parent 1. 최종 down/up 배열·반복 비용·Rust work 덧셈 직후 값이 비트로 같다.
+- 0회 분기(미검증): 상태7 dual < parent, 전파 모순, 타이머 만료, down ≥ 1e100, 두 방향 ≥ 1e100, up 사전 채움(down만 평가), 연속 열·비전파·stride > 1.
+- 오류 검출: `--self-test` 종료 0([로그](../../bench/oracle/m2_06h3/selftest.log)). 변조 22종 거부(해시 0, 빈 사건, 커널 없음, 목표 0회 3종, 해·tol·원래 bound·values·work·stall·reset 누락·타이머·모순·상태, 직접 3종, trace 4종). Rust 변이 18종 중 15종이 원본 재생에서 거부됐다. 생존 3종: `clamp7`(원본 0회)과 `restore strict`(flag는 있으나 bound가 같은 사례 0회)는 합성 테스트가 거부하고, `score shift`(점수 전체 −1e-5 제거)는 best 초기값 0과의 비교를 포함해 모든 판정이 같아 관측할 수 없다.
+- 회귀: `cargo test --release --workspace` 128 통과·0 실패·12 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0, `python3 tools/mip_sb_snapshot_check.py --self-test`·`python3 tools/mip_sb_restore_check.py --self-test` `ACCEPTANCE PASS`. Python 확장 미변경으로 pytest 제외.
+- 계약 변경: 06h-2 하네스 삭제(위 §5). 0회 분기 처리 문구를 구현에 맞게 고쳤다(§1).
 
 ## 7. 판정과 인수인계
 
-(작성 예정)
+- 작업 수행: 완료. 동등성: 계약 범위(정수 후보·전파 경로·무모순·상태 2/6/7·타이머 0)의 관측 분기에서 통과. §6의 0회 분기는 미검증.
+- 남은 한계: LP 수치·전파 내부·저장 객체는 backend가 원본 값을 준다(Rust LP와 미연결). work는 Rust가 더하는 6·개수만 판정한다. `bnb.rs` 미연결.
+- 후속: **M2-06h-4**(0회 분기 원본 사례 탐색), M2-06i(reliability 후보 판정).
+- branch `work/m2-06h-3`, worktree `../rsolver-m2-06h-3`.
+- 교훈: `docs/lessons/m2_sb_snapshot.md`(사전 채움 게이트, 전파 복구·void getter), `docs/lessons/tooling.md`(`pkill -f` 자기 셸, pane 재사용 표시, 큰 배열 요약).
