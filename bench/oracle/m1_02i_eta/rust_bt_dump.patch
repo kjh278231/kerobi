@@ -1,0 +1,54 @@
+diff --git a/crates/lp/src/lu.rs b/crates/lp/src/lu.rs
+index 2607352..89adbf2 100644
+--- a/crates/lp/src/lu.rs
++++ b/crates/lp/src/lu.rs
+@@ -806,6 +806,7 @@ impl Lu {
+                 w[j] -= u * t;
+             }
+         }
++        let tmp_y0 = y.clone(); // TEMP M1-02i
+         for (r, eta) in self.retas.iter().rev() {
+             // 221173 eta phase (newest first): v = w_r; w_r = η_r·v, w_i = η_i·v + w_i
+             let v = y[*r];
+@@ -821,6 +822,22 @@ impl Lu {
+         }
+         let xs: Vec<(usize, f64)> =
+             list.iter().filter(|&&r| y[r].abs() >= ZERO).map(|&r| (self.prow[r] as usize, y[r])).collect();
++        if let Ok(path) = std::env::var("RSOLVER_BTDUMP") {
++            // TEMP M1-02i
++            use std::io::Write;
++            let h = |x: f64| format!("\"{:016x}\"", x.to_bits());
++            let hv = |v: &[f64]| v.iter().map(|&x| h(x)).collect::<Vec<_>>().join(",");
++            let vv = |v: &Vec<(usize, f64)>| format!("[{}]", v.iter().map(|&(i, x)| format!("[{},{}]", i, h(x))).collect::<Vec<_>>().join(","));
++            let line = format!("{{\"x\":{:?},\"y0\":[{}],\"y1\":[{}],\"steps\":[{}],\"order\":{:?},\"urow\":[{}],\"retas\":[{}],\"lrow\":[{}]}}",
++                x.iter().map(|e| e.0).collect::<Vec<_>>(), hv(&tmp_y0), hv(&y),
++                self.steps.iter().map(|&(r, p, d)| format!("[{},{},{}]", r, p, h(d))).collect::<Vec<_>>().join(","),
++                self.order, self.urow.iter().map(vv).collect::<Vec<_>>().join(","),
++                self.retas.iter().map(|(r, e)| format!("[{},{}]", r, vv(e))).collect::<Vec<_>>().join(","),
++                self.lrow.iter().map(vv).collect::<Vec<_>>().join(","));
++            if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
++                let _ = writeln!(f, "{}", line);
++            }
++        }
+         if self.sparse_mult * xs.len() <= m {
+             return (self.lt_sparse(&xs), false);
+         }
+diff --git a/crates/lp/src/simplex.rs b/crates/lp/src/simplex.rs
+index 4013a20..7d1dae8 100644
+--- a/crates/lp/src/simplex.rs
++++ b/crates/lp/src/simplex.rs
+@@ -999,6 +999,14 @@ impl<'a> Engine<'a> {
+             }
+             let delta = self.primal_infeas(r);
+             let (rho_sp, dense) = self.lu.btran_dense(&[(r, 1.0)]);
++            if let Ok(path) = std::env::var("RSOLVER_RHODUMP") {
++                // TEMP M1-02i
++                use std::io::Write;
++                let rh: Vec<String> = rho_sp.iter().map(|&(i, x)| format!("[{},\"{:016x}\"]", i, x.to_bits())).collect();
++                if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
++                    let _ = writeln!(f, "{{\"iter\":{},\"r\":{},\"dense\":{},\"nup\":{},\"rho\":[{}]}}", self.iter, r, dense, self.lu.n_updates, rh.join(","));
++                }
++            }
+             // β = ‖ρ_r‖² (8b473 C:105–222) over what 28c93 C:149–163 hands it: a dense BTRAN output compacted to
+             // |ρ_i| > ZERO in row order, a sparse one as it is
+             let beta = sum_squares(&rho_sp.iter().map(|e| e.1).filter(|v| !dense || v.abs() > ZERO).collect::<Vec<_>>());
