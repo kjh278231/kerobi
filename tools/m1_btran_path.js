@@ -6,6 +6,7 @@
 // forced, (int)0*nnz <= m) and LU+0x110 := m + 2 (dense forced); LU+0x110 is read only by the C:89 test and 21a941
 // reads LU+0x108 only. Each output and LU+0x200 is recorded; LU+0x110 and LU+0x200 get their bits back afterwards.
 // NativeFunction calls from a hook are not intercepted, so the natural event stream only sees state effects.
+// Natural 9e288 calls with a dense input (nnz -1, c_B) also keep their input and output arrays (`cb`, with the e_r count).
 // usage: tools/gurun.sh node tools/m1_btran_path.js MODEL OUTPUT.json.gz [Method] [SPEC]
 const fs = require('fs'), path = require('path'), crypto = require('crypto'), zlib = require('zlib');
 const frida = require(process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida');
@@ -27,6 +28,9 @@ const agent = `const spec = ${JSON.stringify(spec)};
 Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') return; const b = m.base;
  const hx8 = p => { const v = new DataView(p.readByteArray(8)); return v.getUint32(4, true).toString(16).padStart(8, '0') + v.getUint32(0, true).toString(16).padStart(8, '0'); };
  const off = p => p.sub(b).toUInt32();
+ const hexa = (p, n) => { if (n <= 0) return []; const v = new DataView(p.readByteArray(8 * n)), r = [];
+   for (let j = 0; j < n; j++) r.push(v.getUint32(8 * j + 4, true).toString(16).padStart(8, '0') + v.getUint32(8 * j, true).toString(16).padStart(8, '0'));
+   return r; };
  let wrap = null, k941 = 0, batch = [], ker = 0;
  const bt = new NativeFunction(b.add(0x12de10), 'void', ['pointer', 'pointer', 'pointer', 'pointer']);
  const vec = (m, xs) => { const v = Memory.alloc(24), idx = Memory.alloc(4 * (m + 8)), val = Memory.alloc(8 * (m + 8));
@@ -54,12 +58,18 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
  Interceptor.attach(b.add(0x130b70), {onEnter() { k941++; }});
  Interceptor.attach(b.add(0x12de60), {
   onEnter(a) { const LU = a[0]; this.o = a[2]; k941 = 0;
+   // c_B-like calls (9e288 with a dense input, nnz -1): the input array by LU row before the call
+   this.cb = wrap[0] === 288 && a[1].readS32() < 0 ? {cb: wrap[1], ker, in: hexa(a[1].add(16).readPointer(), LU.add(8).readS32())} : null;
+   this.m = LU.add(8).readS32();
    let p4 = null, r = null;
    if (!a[3].isNull()) { r = a[1].add(8).readPointer().readS32(); const rb = LU.add(0xb0).readPointer(), re = LU.add(0xb8).readPointer();
      p4 = re.add(8 * r).readS64().toNumber() - rb.add(8 * r).readS64().toNumber(); }  // U row r length (0: general test)
    this.e = [wrap, LU.add(8).readS32(), a[1].readS32(), hx8(LU.add(0x108)), hx8(LU.add(0x110)), LU.add(0x180).readS32(),
      LU.add(0x104).readS32(), p4, r]; },
-  onLeave() { this.e.push(k941, this.o.readS32()); batch.push(this.e); if (batch.length >= 2000) flush(); }});
+  onLeave() { this.e.push(k941, this.o.readS32()); batch.push(this.e);
+   if (this.cb) { const n = this.o.readS32(); this.cb.out_nnz = n; this.cb.out = n < 0 ? hexa(this.o.add(16).readPointer(), this.m) : [];
+     batch.push(this.cb); }
+   if (batch.length >= 2000) flush(); }});
  Interceptor.attach(Module.getGlobalExportByName('getppid'), {onEnter() { flush(); }});
 }});`;
 (async () => {
@@ -76,7 +86,8 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
      binary_sha256: expected, tool_sha256: hash(__filename), params, output: outputText.trim(), errors, ok, detach_reason: reason,
      spec_sha256: specFile ? hash(specFile) : null,
      fields: ['wrap[w,ret,in_nnz]', 'm', 'nnz', 'x108', 'x110', 'x180', 'x104', 'p4_urow', 'r', 'k941', 'out_nnz'],
-     events: events.filter(Array.isArray), synth: events.filter(e => !Array.isArray(e))}) + '\n'));
+     events: events.filter(Array.isArray), synth: events.filter(e => !Array.isArray(e) && !e.cb),
+     cb: events.filter(e => !Array.isArray(e) && e.cb)}) + '\n'));
    console.log(path.basename(model), outputText.trim(), events.length, 'ok', ok, errors.join(' ').slice(0, 300)); process.exit(ok ? 0 : 1); });
  await script.load(); await device.resume(pid);
 })().catch(e => { console.error(e); process.exit(1); });

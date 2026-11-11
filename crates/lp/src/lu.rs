@@ -882,6 +882,11 @@ impl Lu {
         self.dsum
     }
 
+    /// BTRAN leaves the diagonal-U emulation (Markowitz kernel or FT updates).
+    pub(crate) fn updated(&self) -> bool {
+        self.n_updates > 0 || self.general
+    }
+
     /// LU+0x108 and the prefix t = LU+0x100 (for the M1-02k probe).
     pub(crate) fn d108(&self) -> f64 {
         self.d108
@@ -894,7 +899,7 @@ impl Lu {
     /// BTRAN with the Uᵀ path given: dense Uᵀ outputs nnz −1, so the row etas and Lᵀ are dense too.
     pub(crate) fn btran_ut(&self, x: &[(usize, f64)], ut_dense: bool) -> (Vec<(usize, f64)>, bool) {
         assert!(self.complete(), "singular basis");
-        if self.n_updates > 0 || self.general {
+        if self.updated() {
             // Markowitz kernel or FT updates: U is no longer diagonal, the same phase order applies
             return self.btran_updated(x, ut_dense);
         }
@@ -950,7 +955,7 @@ impl Lu {
                 if ZERO < t.abs() {
                     out.push((k, t));
                     for &(j, u) in &self.urow[k] {
-                        w[j] = -(u * t) + w[j];
+                        w[j] -= u * t; // = −(u·t) + w (21a941), same bits
                     }
                 }
                 w[k] = 0.0;
@@ -971,7 +976,7 @@ impl Lu {
                         _ => {
                             out.push((k, t));
                             for &(j, u) in &self.urow[k] {
-                                w[j] = -(u * t) + w[j];
+                                w[j] -= u * t; // = −(u·t) + w (21a941), same bits
                                 lo = lo.min(self.upos[j]);
                             }
                         }
@@ -990,7 +995,7 @@ impl Lu {
                 if ZERO < t.abs() {
                     out.push((k, t));
                     for &(j, u) in &self.urow[k] {
-                        w[j] = -(u * t) + w[j];
+                        w[j] -= u * t; // = −(u·t) + w (21a941), same bits
                         if !mark[j] {
                             mark[j] = true;
                             heap.push(std::cmp::Reverse(self.upos[j]));

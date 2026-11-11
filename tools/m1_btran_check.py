@@ -6,7 +6,9 @@ Reads bench/oracle/m1_02k (tools/m1_btran_runs.sh): per model a plain capture an
             a non-empty U row r: forced sparse), and each model has a case where 3*nnz <= m < D*nnz (old test differs)
   --rust    rsolver (PYTHONPATH) with RSOLVER_BTRAN_PROBE: e_r calls k <= the last spec k have the original r, D bits,
             path and output form; every synthetic case has the original path and the natural / forced sparse / forced
-            dense outputs (dense flag, order, value bits)
+            dense outputs (dense flag, order, value bits); natural c_B calls (original input nnz -1) inside the same
+            state range pair with Rust c_B calls of the same e_r count and input bits and have the same dense output
+            bits, and some paired call would have gone sparse under the pre-M1-02k rule
   --self-test  also tampers with the loaded data and requires each tamper to be rejected
 usage: python3 tools/m1_btran_check.py [--rust] [--self-test] [--rust-out DIR]"""
 import copy, gzip, hashlib, json, os, struct, subprocess, sys, tempfile
@@ -15,7 +17,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIR = os.path.join(ROOT, 'bench/oracle/m1_02k')
 NETLIB = os.path.join(ROOT, '../re/bench/data/netlib')
 BINARY = '8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c'
-MODELS = ['kb2', 'degen2', 'sc50b', 'scsd1', 'stair', 'forplan', 'fit1p']
+MODELS = ['kb2', 'degen2', 'sc50b', 'scsd1', 'stair', 'forplan', 'fit1p', 'bnl1']
 ER = (376, 0xc51dd)  # 9e376 called back to 28c93: the dual e_r BTRAN
 # Natural e_r calls whose output form (dense or not) already differed before M1-02k (same with the U-order U^T build
 # 30e4d23); U^T path and D agree there. Kept as a pinned failure list: any other difference fails.
@@ -23,7 +25,10 @@ KNOWN_FORM = {'stair': [102, 118]}
 # First e_r call after a refactor (same pivot on both sides) whose LU+0x108 differs: the tail U rows of rsolver's factor
 # hold fewer entries than the original's (stair 1411 vs 1571 over m - t = 231); LU+0x110 and t agree. Pre-existing
 # factor difference, not the U^T test: the same-state range ends there.
-KNOWN_D = {'stair': 185, 'forplan': 82}
+KNOWN_D = {'stair': 185, 'forplan': 82, 'bnl1': 174}
+
+
+CB = {}
 
 
 class Fail(Exception):
@@ -70,11 +75,13 @@ def controls(n, d):
             need(c['spec_sha256'] == d['spec_sha'], f'{n} {k}: spec sha')
     need(caps['plain']['spec_sha256'] is None and not caps['plain']['synth'], f'{n}: plain capture has synthetic calls')
     for k in ('syn_2', 'syn_3'):
-        for f in ('events', 'synth'):
+        for f in ('events', 'synth', 'cb'):
             a, b = caps['syn_1'][f], caps[k][f]
             i = next((i for i, (x, y) in enumerate(zip(a, b)) if x != y), None if len(a) == len(b) else min(len(a), len(b)))
             need(i is None, f'{n}: {k} {f}[{i}] differs from syn_1: {b[i] if i is not None and i < len(b) else None} '
                             f'vs {a[i] if i is not None and i < len(a) else None}')
+    need(caps['plain']['cb'] == caps['syn_1']['cb'], f'{n}: synthetic run c_B calls differ from plain (interference)')
+    need(caps['plain']['cb'], f'{n}: no c_B calls')
     a, b = caps['plain']['events'], caps['syn_1']['events']
     i = next((i for i, (x, y) in enumerate(zip(a, b)) if x != y), None if len(a) == len(b) else min(len(a), len(b)))
     need(i is None, f'{n}: synthetic run natural event {i} differs from plain (interference)')
@@ -94,6 +101,8 @@ def original(n, d):
         if w == 376:
             dense = dense and not p4  # 9e376: a non-empty U row r forces 21a941
         need(dense == (k941 == 0), f'{n}: natural call {j} {e}: 21a941 ran {k941} times, C:89 test says dense={dense}')
+    for j, c in enumerate(d['caps']['plain']['cb']):
+        need(c['out_nnz'] < 0 and len(c['out']) == len(c['in']), f'{n}: c_B call {j}: output nnz {c["out_nnz"]} (dense input must give dense U^T, L^T)')
     paths, band = [], 0
     for c, (k, xs) in zip(d['caps']['syn_1']['synth'], d['spec']):
         need(str(c['k']) == k, f'{n}: synthetic case k {c["k"]} vs spec {k}')
@@ -123,7 +132,7 @@ def rust_run(n, d, outdir):
 
 def rust(n, d, paths, out):
     er = [e for e in d['caps']['syn_1']['events'] if tuple(e[0][:2]) == ER]
-    nat, syn = [r for r in out if 'r' in r], [r for r in out if 'i' in r]
+    nat, syn, rcb = [r for r in out if 'r' in r], [r for r in out if 'i' in r], [r for r in out if 'cb' in r]
     last = max(int(k) for k, _ in d['spec'])
     need(len(nat) > last and len(er) > last, f'{n}: {len(nat)} Rust / {len(er)} original e_r calls, spec needs k {last}')
     # same input state while the leaving position r and the row eta count LU+0x180 agree (a refactor only one side
@@ -148,6 +157,20 @@ def rust(n, d, paths, out):
         f'r {nat[matched]["r"]}/{er[matched][8]}' if nat[matched]['r'] != er[matched][8] else
         f'etas {nat[matched]["e"]}/{er[matched][5]}')
     need(form == KNOWN_FORM.get(n, []), f'{n}: e_r output form differs at calls {form}, known {KNOWN_FORM.get(n, [])}')
+    # natural c_B: pair each original call inside the range with the next Rust call of the same e_r count and input
+    j, pairs, lone, old = 0, 0, 0, 0
+    for i, c in enumerate(x for x in d['caps']['syn_1']['cb'] if x['ker'] < matched):
+        q = next((q for q in range(j, len(rcb)) if rcb[q]['k'] == c['ker'] and rcb[q]['in'] == c['in']), None)
+        if q is None:
+            lone += 1
+            continue
+        r, j = rcb[q], q + 1
+        need(r['od'], f'{n}: c_B call {i} (e_r count {c["ker"]}): Rust output sparse, original dense')
+        k = next((k for k, (a, b) in enumerate(zip(c['out'], r['out'])) if a != b), None)
+        need(k is None and len(c['out']) == len(r['out']), f'{n}: c_B call {i} (e_r count {c["ker"]}) output row {k}: '
+                                                        f'original {c["out"][k] if k is not None else None} Rust {r["out"][k] if k is not None else None}')
+        pairs, old = pairs + 1, old + r['old_sparse']
+    need(pairs > 0, f'{n}: no natural c_B call paired inside the same-state range')
     need(len(syn) == len(paths), f'{n}: {len(syn)} Rust synthetic cases vs {len(paths)}')
     for c, r, dense in zip(d['caps']['syn_1']['synth'], syn, paths):
         need((r['k'], r['i']) == (c['k'], c['i']), f'{n}: Rust case {r["k"]}/{r["i"]} vs {c["k"]}/{c["i"]}')
@@ -160,7 +183,8 @@ def rust(n, d, paths, out):
                 i = 0 if f == 'dense' else next((i for i, (x, y) in enumerate(zip(a[1 if f == 'idx' else 2], b[1 if f == 'idx' else 2])) if x != y), None)
                 raise Fail(f'{n} k {c["k"]} case {c["i"]} {name}: field {f} index {i}: original {a[0], a[1][:8], a[2][:4]} '
                            f'Rust {b[0], b[1][:8], b[2][:4]}')
-    return f'{matched}/{len(er)} ({end})' + (f' known form diff {form}' if form else '')
+    CB[n] = (pairs, lone, old)
+    return f'{matched}/{len(er)} ({end}) c_B {pairs} paired ({old} old-sparse) {lone} unpaired' + (f' known form diff {form}' if form else '')
 
 
 def check(data, routs):
@@ -171,6 +195,8 @@ def check(data, routs):
         res[n] = [len(data[n]['caps']['plain']['events']), len(paths), sum(paths), band]
         if routs is not None:
             res[n].append(rust(n, data[n], paths, routs[n]))
+    if routs is not None:
+        need(sum(v[2] for v in CB.values()) > 0, 'no paired c_B call where the pre-M1-02k rule went sparse')
     hi = sum(dval(c['x108']) > 5 for n in MODELS for c in data[n]['caps']['syn_1']['synth'])
     need(hi > 0, 'no synthetic case with LU+0x108 > 5 (the linear 21a941 path)')
     res['LU+0x108 > 5 cases'] = [hi]
@@ -220,6 +246,9 @@ def tampers(data, routs):
         'undetermined path': t(undetermined),
         'D bits (path vs C:89)': t(lambda d, r: [x.update(x110='3ff0000000000000') for k in runs for x in syn(d, k=k)]),
         'no band case': t(no_band),
+        'c_B sparse original output': t(lambda d, r: [d['sc50b']['caps'][k]['cb'][1].update(out_nnz=3) for k in d['sc50b']['caps']]),
+        'c_B interference': t(lambda d, r: [d['kb2']['caps'][k]['cb'][2]['out'].__setitem__(0, 'deadbeef00000000') for k in runs]),
+        'no c_B calls': t(lambda d, r: [d['degen2']['caps'][k].update(cb=[]) for k in d['degen2']['caps']]),
     }
     if routs is not None:
         out.update({
@@ -229,6 +258,10 @@ def tampers(data, routs):
             'Rust D bits': t(lambda d, r: next(x for x in r['degen2'] if 'r' in x and x['k'] == 40).update(d='4010000000000000')),
             'Rust e_r r': t(lambda d, r: next(x for x in r['forplan'] if 'r' in x and x['k'] == 3).update(r=-1)),
             'Rust etas': t(lambda d, r: next(x for x in r['kb2'] if 'r' in x and x['k'] == 5).update(e=99)),
+            'Rust c_B output value': t(lambda d, r: [x for x in r['sc50b'] if 'cb' in x][1]['out'].__setitem__(4, 'deadbeef00000000')),
+            'Rust c_B sparse output': t(lambda d, r: [x for x in r['forplan'] if 'cb' in x][2].update(od=False)),
+            'no c_B pairs (input bits)': t(lambda d, r: [x['in'].__setitem__(0, 'deadbeef00000000') for x in r['kb2'] if 'cb' in x]),
+            'no old-sparse c_B call': t(lambda d, r: [x.update(old_sparse=False) for n in MODELS for x in r[n] if 'cb' in x]),
             'Rust new form diff': t(lambda d, r: next(x for x in r['degen2'] if 'r' in x and x['k'] == 50).update(od=not next(x for x in r['degen2'] if 'r' in x and x['k'] == 50)['od'])),
         })
     return out

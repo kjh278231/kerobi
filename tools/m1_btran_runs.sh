@@ -20,5 +20,6 @@ scsd1 10
 stair 17,66
 forplan 12
 fit1p 21,90
+bnl1 0,85
 CASES
 echo RUNS_DONE

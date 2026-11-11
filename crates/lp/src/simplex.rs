@@ -1000,7 +1000,9 @@ impl<'a> Engine<'a> {
     fn compute_duals_only(&mut self) {
         let cb: Vec<(usize, f64)> = (0..self.m).map(|p| (p, self.c[self.head[p]])).collect();
         self.y = vec![0.0; self.m];
-        for (r, v) in self.lu.btran(&cb) {
+        let out = self.lu.btran_dense(&cb);
+        self.cb_probe(&cb, &out);
+        for (r, v) in out.0 {
             self.y[r] = v;
         }
     }
@@ -1471,7 +1473,9 @@ impl<'a> Engine<'a> {
                 .map(|p| (p, cost(self, self.head[p]) + if phase1 { mark[p] as f64 * BIG_M } else { 0.0 }))
                 .collect();
             let mut y = vec![0.0; m];
-            for (r, v) in self.lu.btran(&cb) {
+            let out = self.lu.btran_dense(&cb);
+            self.cb_probe(&cb, &out);
+            for (r, v) in out.0 {
                 y[r] = v;
             }
             let tol = if phase1 { tau1 * BIG_M } else { OPT_TOL };
@@ -1857,6 +1861,26 @@ impl<'a> Engine<'a> {
     /// Primal values of all n+m columns (scaled space).
     pub fn x(&self) -> Vec<f64> {
         (0..self.n + self.m).map(|j| if self.vstat[j] >= 0 { self.xb[self.vstat[j] as usize] } else { self.x_nonbasic(j) }).collect()
+    }
+
+    /// M1-02k probe of a c_B BTRAN (full-length input by basis position): the e_r count so far, the input and the
+    /// output (dense flag; values by row when dense, else (row, value) pairs) as u64 hex.
+    fn cb_probe(&self, cb: &[(usize, f64)], out: &(Vec<(usize, f64)>, bool)) {
+        let Some((k, spec)) = &self.bt_probe else { return };
+        let bits = |v: &[(usize, f64)]| v.iter().map(|e| format!("\"{:016x}\"", e.1.to_bits())).collect::<Vec<_>>().join(",");
+        let idx: Vec<usize> = out.0.iter().map(|e| e.0).collect();
+        // before M1-02k the updated/general path had no C:89 test: the U^T output count chose the eta and L^T paths,
+        // which is the forced sparse U^T path now; the diagonal path was dense (3·m > m)
+        let old = self.lu.updated() && !self.lu.btran_ut(cb, false).1;
+        let line = format!(
+            "{{\"cb\":1,\"k\":{k},\"in\":[{}],\"od\":{},\"old_sparse\":{old},\"idx\":{idx:?},\"out\":[{}]}}\n",
+            bits(cb),
+            out.1,
+            bits(&out.0)
+        );
+        use std::io::Write;
+        let f = std::fs::OpenOptions::new().create(true).append(true).open(format!("{spec}.out"));
+        f.and_then(|mut f| f.write_all(line.as_bytes())).expect("probe dump");
     }
 
     /// M1-02k probe after the k-th e_r BTRAN: a line with r, the row eta count, LU+0x108 + 0x110 and the paths, then for each spec line

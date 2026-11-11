@@ -10,6 +10,8 @@ MUT = {
     'no LU+0x108 > 5 path': ('if self.d108 > 5.0 {', 'if self.d108 > 5e300 {'),
     'prefix inputs as tail': ('if self.upos[k] < self.prefix {', 'if self.upos[k] < 0 {'),
     'never switch to the linear scan': ('if (m - top) as f64 <= heap.len() as f64 * 6.0 {', 'if (m - top) as f64 <= heap.len() as f64 * 0.0 {'),
+    'dense U^T does not force dense L^T': ('if !dense_eta && !ut_dense && self.sparse_mult * xs.len() <= m {', 'if !dense_eta && self.sparse_mult * xs.len() <= m {'),
+    'dense U^T hands L^T the listed values only': ('        if dense_eta || ut_dense {', '        if dense_eta {'),
     '9e376 force ignored': ('self.urow_len(r) == 0 && self.ut_dense(1)', 'self.ut_dense(1)'),
 }
 src = open(LU).read()
