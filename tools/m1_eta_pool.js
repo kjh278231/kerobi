@@ -1,7 +1,8 @@
 // M1-02l: tools/m1_tau_path.js (M1-02a-1, unchanged fields) plus, at each 09d112 entry, the row-eta pool the R phase
 // reads (docs/m1/m1_02l_eta_peel.md section 2): LU+0x148 (idx pool) and LU+0x150 (value pool) mod 16, LU+0x158,
 // LU+0x160 (used), LU+0x168 (capacity), LU+0x184, and per eta record LU+0x198 {r, len, idx*, val*} the pool offsets
-// (idx - LU+0x148)/4, (val - LU+0x150)/8 and idx, val mod 16. Read-only; no address is stored, only offsets and mod 16.
+// (idx - LU+0x148)/4, (val - LU+0x150)/8 and idx, val mod 16; LU+0x188, LU+0x18c and the LU+0x1d0 value array mod 16
+// (the buffer the 05b257 new-diagonal product reads). Read-only; no address is stored, only offsets and mod 16.
 // usage: tools/gurun.sh node tools/m1_eta_pool.js MODEL OUTPUT.json.gz
 const fs = require('fs'), path = require('path'), crypto = require('crypto'), zlib = require('zlib');
 const frida = require(process.env.FRIDA_NODE || '/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida');
@@ -52,7 +53,8 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
     const p148 = lp(0x148), p150 = lp(0x150), ne = LU.add(0x180).readS32(), rec = lp(0x198);
     const off = (p, b, w) => p.sub(b).toInt32() / w, lo = p => p.and(0xf).toInt32();
     ft.pool = {b148: lo(p148), b150: lo(p150), x158: LU.add(0x158).readS64().toNumber(), x160: LU.add(0x160).readS64().toNumber(),
-      x168: LU.add(0x168).readS64().toNumber(), x184: LU.add(0x184).readS32(), etas: []};
+      x168: LU.add(0x168).readS64().toNumber(), x184: LU.add(0x184).readS32(), x188: LU.add(0x188).readS32(),
+      x18c: LU.add(0x18c).readS32(), a1d0: lo(lp(0x1d0).add(0x10).readPointer()), etas: []};
     for (let q = 0; q < ne; q++) { const e = rec.add(0x18 * q), ip = e.add(8).readPointer(), vp = e.add(0x10).readPointer();
       ft.pool.etas.push({r: e.readS32(), len: e.add(4).readS32(), io: off(ip, p148, 4), vo: off(vp, p150, 8), ia: lo(ip), va: lo(vp)}); }
     ft.urow = [];
