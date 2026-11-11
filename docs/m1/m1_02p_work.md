@@ -138,13 +138,33 @@ Rust에는 dual work 누적이 없다(`crossover.rs`에만 같은 꼴 `*work += 
 
 ### 6.5 정적 상위 집합
 
-(전파 분석 결과 반영 예정)
+`06268b` param_2에서 asm 수준 오염 추적으로 work 포인터를 받는 함수를 따라갔다([부록 B](m1_02p_propagation.md), 정적 분석). 관측한 69지점은 모두 다시 찾았다.
+
+| 층 | 함수 | 저장(offset 0) | 관측 | 비고 |
+|---|---|---|---|---|
+| T1 일반 dual 나무 | 72 | 152 | 69 | 미관측 83 |
+| TQ quad 초기화(`12f4f3` → `1eca78`) | 14 | 64 | 0 | spx+0x28 조건으로 double에서는 죽은 경로 |
+| T2 `534f7` → `1e7531`(C:551, 조건 없음) → `390989`·`cda5b` | 약 829 | 2239 | 0 | 기계 생성 폐포, 미확인 |
+
+핵심 dual 경로의 미관측 쓰기(두 모델에서 0회):
+
+- 저장이 하나도 실행되지 않은 함수: `17248`(2, `05b257` C:2472), `1c090a`(1, `28c93` C:225), `9e47c`(1, `05b257` C:316), `118d6a`(3, `1ca57` C:483·`48d5f` C:221), `1876a1`(3, `06268b` → `2a264`).
+- 일부만 실행된 함수의 미관측 저장: `05b257` 1/22, `534f7` 1/2, `1ca57` 3/5, `1bae9c` 7/17, `1c35c5` 3/10, `036ade` 4/9. 주소는 부록 B §3.
+- `9a91f3` 아래 14함수 54저장(MIP 콜백·해 다듬기로 추정). `9a91f3`이 포인터를 구조체 +0x298에 넣는데 그 필드를 읽는 곳은 따라가지 않았다.
+- 풀지 못한 곳: 꼬리 점프·함수 포인터 대상(`a7aa8f`·`a7a18c`·`b406ca`·`ac661f`·`ac64e6`), `memcpy`·`memset`·`DGETRF`에 실린 포인터(오래된 레지스터로 추정). work 객체는 작은 구조체이고 `a83b2f`가 +0x10·+0x18에도 쓴다(watchpoint는 +0 8바이트만 본다).
+
+이 미관측 지점들은 다른 모델·설정에서 실행될 수 있다. 후속 구현은 S 검사(표에 없는 pc는 실패)로 새 지점이 나타나면 바로 알 수 있다.
 
 ## 7. 판정과 인수인계
 
 - 작업 수행 상태: 완료(조사·오라클).
 - 동등성: 조사라 구현 동등성 판정 없음. 오라클 범위(쓰기 집합·사슬·필드·모델 상수 식)는 통과.
-- 남은 한계: Q2 식 대부분은 C·asm 해석이며 캡처로 확인한 식은 6지점이다. 두 모델 밖(quad, m > 10000, presolve 켬, Threads > 1)과 미실행 쓰기(§6.5)는 미검증. watchpoint 예외 처리기는 장착 중 `breakpoint`·`single-step` 예외를 모두 work 쓰기로 받는다(다른 int3가 섞이면 S가 실패한다).
+- 남은 한계: Q2 식 대부분은 C·asm 해석이며 캡처로 확인한 식은 6지점이다. 두 모델 밖(quad, m > 10000, presolve 켬, Threads > 1)과 미실행 쓰기(§6.5, T1 미관측 83저장)는 미검증. 정적 상위 집합은 asm 오염 추적이라 과대·과소 추정 가능성이 있다. watchpoint 예외 처리기는 장착 중 `breakpoint`·`single-step` 예외를 모두 work 쓰기로 받는다(다른 int3가 섞이면 S가 실패한다).
+
+- 회귀: `tools/build_local.sh` 뒤 M1 검사기 12종 `--self-test` PASS, `m1_bfrt_rust` ACCEPTANCE PASS. Rust·Python 코드 변경이 없어 cargo test·clippy·pytest는 실행하지 않았다.
+- branch `work/m1-02p`(기준 main `97b1d44`), worktree `../rsolver-m1-02p`. 미커밋 선행 변경 없음. 병합은 main의 `Merge M1-02p` 이력.
+- 갱신: `docs/handoff/M1.md`, `docs/14_sprint_plan.md`(02p 완료, 02q–u 추가), `docs/11_progress.md`, `docs/12_roadmap_diagram.md`.
+- 교훈: `docs/lessons/original.md`(dual work 누적 절 신설, 재분해 판정 필드 캡처 확인), `docs/lessons/tooling.md`(watchpoint 기준 캡처 조건, backtrace 대신 Interceptor 스택).
 
 ## 8. 후속 작업
 
