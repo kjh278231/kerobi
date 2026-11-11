@@ -109,10 +109,14 @@ for i in 1 2 3; do tools/gurun.sh ../.venv/bin/python tools/primal_push_reentry_
 python3 tools/primal_push_reentry_oracle.py --controls $D/reentry-{1,2,3}.json     # 대조군: 04c 29사례 불변·3회 일치
 python3 tools/primal_push_reentry_oracle.py --acceptance $D/reentry-{1,2,3}.json   # 목표: 사전 기대·재진입·요청 2
 python3 tools/primal_push_reentry_oracle.py --self-test $D/reentry-{1,2,3}.json    # 변조 거부
-python3 tools/primal_push_ratio_rust.py --write && cargo test -p rsolver-lp --test push_ratio && python3 tools/primal_push_ratio_rust.py --compare
-python3 tools/primal_push_ratio_rust.py --self-test
-python3 tools/primal_push_ratio_rust.py --mutate-rust <새 경로>.json
+python3 tools/primal_push_reentry_cli_check.py <새 경로>.json                # CLI 종료 코드 변조
+python3 tools/primal_push_reentry_rust.py --write && cargo test -p rsolver-lp --test push_ratio && python3 tools/primal_push_reentry_rust.py --compare
+python3 tools/primal_push_reentry_rust.py --self-test
+python3 tools/primal_push_reentry_rust.py --mutate-rust <새 경로>.json        # 04c 재생과 이 재생을 함께 실행
+python3 tools/primal_push_ratio_rust.py --mutate-rust <새 경로>.json          # 04c 변이 14종
 ```
+
+(Rust 재생 도구는 실행 전 계획의 `primal_push_ratio_rust.py` 확장 대신 새 파일로 나눴다. §6 참조.)
 
 회귀: `cargo test -p rsolver-lp`, 04c·04c-2·04c-7·04c-8 재생 비교(각 기록 §5), `cargo test --release --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, `git diff --check`.
 
@@ -120,8 +124,28 @@ python3 tools/primal_push_ratio_rust.py --mutate-rust <새 경로>.json
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: x86-64 Linux(WSL2, glibc 2.35), rustc 1.99.1, Gurobi 13.0.3(SHA-256 위와 같음, 체험판 라이선스. 직접 호출이라 라이선스 오류 없음).
+- 계약 뒤 바꾼 것: §5의 Rust 재생 명령을 새 도구 `tools/primal_push_reentry_rust.py`로 나눴다. 04c 입력(`bench/oracle/m3_push_ratio_rust/input.txt`, 본문 `04d3d252…`)은 그대로 두어 04c 재생을 대조군으로 남기기 위해서다. 비교 규칙·사례는 바꾸지 않았다.
+- 첫 하네스 동작: scratch 시험 캡처 1회에서 목표 62사례가 사전 기대(위치·theta·pivot·work·요청)와 모두 일치했다(근거로 쓰지 않음). 기대값은 그 뒤에도 고치지 않았다.
+- 원본 캡처: `tools/gurun.sh ../.venv/bin/python tools/primal_push_reentry_oracle.py --capture bench/oracle/m3_reentry/reentry-{1,2,3}.json` 3회 순차, 각 종료 0. 세 파일이 바이트 동일(SHA-256 `408b9d28df38876038615a50b67aac4f703d81caa7ff03d6abb35f055cad7c19`). 도구 `4c5df556…`, 입력 `cd3205cd…`, C `055f68` `bebc9eec…`·`12dd49` `968b6176…`.
+- 대조군: `--controls` 종료 0. 04c 29사례가 3회 모두 04b 저장 `ratio-1.json`과 9필드 같고 S·factor 보존.
+- 목표 합격: `--acceptance` 종료 0. 목표 62사례(31종×sparse·dense) 전부 사전 기대와 일치. 재진입 44사례(2패스 work 비트 일치), 요청 2 22사례(`S+0x294=2`·`S+0x2f8=-1`), 나머지 40사례는 `0`·`7` 유지. S(두 칸 밖)·factor·입력 보존 모두 참. skip·누락 0.
+  - 확인한 원본 동작: 2차 선택 pivot 2e-8(0.1·2차 임계 1e-7보다 작음)에서도 3차 패스 없음; 2차 패스의 유한 cap flip; 후보 있는 상한 I에서 반환이 2차 패스의 마지막 기록 위치(1)이고 theta·pivot은 1차 값; `12dd49` 우선순위(470=0이면 498=20을 보지 않음)·signed 비교(-5, 2147483647)·포인터 둘 다 0이면 요청 없음; 계수 경계 1e4·1e7·1e10·1e13은 경계 값이 다음 구간; 임계·0.1 동률은 반환; 새 tol이 `tol·(max·coef)`(`mul-order`가 THR 크기 행을 고름); max의 홀수 꼬리·음수 alpha; NaN 마지막이면 재진입 안 함·가운데 NaN은 다음 원소가 max·NaN alpha는 dense 시험 수에서 빠짐; 1차 패스 2차 선택의 `ratio == bound` 포함; 1차 패스 후보 있는 상한 I는 -1·theta=I.
+- 검사기 변조: `--self-test` 종료 0, 21종 거부([기록](../../bench/oracle/m3_reentry/self-test.json)). 해시 0(ELF·입력·도구·C), 사건 배열 비움, 출처 natural, 필드 누락, 3회 중 1회만 변경, 2회만, 대조군 theta, 목표 theta·위치·1패스 work·NaN pivot, 요청 지움, `S+0x2f8` 미기록, 거짓 요청, S·factor 변경, 재진입 사례 0, 요청 2 사례 0. 마지막 두 개는 사례 정의와 기록에서 함께 빼 메타 검사를 거치지 않고 목표 검사(`재진입 사례 0`·`요청 2 사례 0`)가 거부함을 확인했다.
+- CLI 변조: `python3 tools/primal_push_reentry_cli_check.py bench/oracle/m3_reentry/cli-mutation.json` 종료 0([기록](../../bench/oracle/m3_reentry/cli-mutation.json)). 기준 두 검사 0, 변조 9종에서 해당 검사 종료 1. 목표 변조(요청 지움·1패스 work)는 `--controls`가 0, 대조군 theta 변조는 `--acceptance`가 0으로 두 검사가 분리돼 있다.
+- Rust 재생: `python3 tools/primal_push_reentry_rust.py --write && cargo test -p rsolver-lp --test push_ratio && python3 tools/primal_push_reentry_rust.py --compare` 종료 0. 91사례(대조군 29 + 목표 62) 위치·행·theta·pivot·work·요청 6필드 비트·정확 일치, 재진입 44·요청 22. 입력 `bench/oracle/m3_reentry/rust_input.txt` 본문 SHA-256 `f02c3356…`(첫 줄). `12dd49` 조회 수도 비교하지만 원본에서 호출 자체는 관측하지 않았고 asm(`0xeff6d`)으로 정한 기대다.
+- 비교기 변조: `--self-test` 종료 0, 12종 거부(위치·theta·pivot·1패스 work·요청 누락·거짓 요청·조회 수·사례 누락·오래된 해시·빈 trace·입력 변경·갱신 수 변경).
+- Rust 변이 22종([기록](../../bench/oracle/m3_reentry/rust-mutation.json)): 21종 거부(04c 재생은 모두 통과하고 04c-5 재생이 거부). 생존 1종은 `scale-10`(계수 경계 10의 `>=`)으로 §2.3의 판별 불가 경계다. `ask-always`(조회 수)는 asm 파생 기대로만 거부된다. 04c 변이 14종을 새 코드 문자열로 다시 돌린 [기록](../../bench/oracle/m3_reentry/rust-mutation-04c.json)은 04c와 같게 10 거부·4 생존(`second-bound`·`no-candidate`·`pivot-threshold`·`small-scale`)이며, 이 넷은 04c-5 재생의 `second-bound-strict`·`cand-inf-bound`·`pivot-threshold-le`·`scale-1e4`…`1e13`이 거부한다. `small-check-strict`의 대상 문자열은 04c와 같은 방향(재진입을 늘림)이 되게 고쳤다.
+- 회귀(모두 종료 0): `cargo test -p rsolver-lp`; 04c `primal_push_ratio_rust.py --compare`·`--self-test`(47사례 불변); 04c-6·04c-8 `cargo test -p rsolver-lp --test push_decision --test push_ratio && python3 tools/primal_push_decision_rust.py --compare`; 04c-2 `push_violated_rust.py --compare`(재진입 2사례 거부 그대로); 04c-7 `push_retry_rust.py --compare`(재진입 6사례 거부 그대로); `primal_push_ratio_oracle.py`·`push_infeasible_ratio_oracle.py`·`push_retry_ratio_oracle.py --check … --selftest`; `cargo test --release --workspace`(128 통과·13 ignored); `cargo clippy --workspace --all-targets -- -D warnings`; `git diff --check`.
+- 실행하지 않은 검사: maturin·pytest. `crates/py`·Python API를 바꾸지 않았고 `feasible_ratio`는 아직 push 루프 호출자가 없다. `tests/test_header.py` 102건 실패는 커밋된 로그의 `/home/sds` 절대경로 때문인 기존 문제라 실행·수정하지 않았다.
+- 해시: `crates/lp/src/crossover.rs` `ada19c8f…`, `crates/lp/tests/push_ratio.rs` `b97c8ab4…`.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: 완료.
+- 동등성: 계약 범위 **통과**(원본 합성 직접 호출, 저장 기준 재생, 비트·정확 비교). 스프린트 행 조건(재진입·2차 상한 동률·후보 있는 I 상한의 원본 합성 3회와 Rust 비교)을 충족했다.
+- 미검증·제외: 계수 경계 10(판별 불가, §2.3), `12dd49` 호출 여부 자체(부수효과 없음, asm 파생), 자연 crossover에서의 재진입(합성만), 열길이 가중, `054eef`·`056973` 재진입(Rust 계속 거부), push 루프의 요청 2 적용.
+- Rust API 변경: `feasible_ratio`가 `factor_updates: &mut dyn FnMut() -> i32`와 `refactor: &mut bool`을 받고 `i32`를 반환한다(더는 `Err(Reentry)` 없음). 기존 재생 테스트는 조회 시 panic하는 래퍼로 감쌌다.
+- 후속: push 루프 연결 때 `refactor`가 참이면 `S+0x294=2`·`S+0x2f8=-1`을 적용한다. `054eef`·`056973` 재진입 Rust는 같은 방식(이번 하네스 형식)으로 별도 행을 둔다.
+- branch `work/m3-04c-5`, worktree `../rsolver-m3-04c-5`. 병합은 마스터.
+- 교훈: `docs/lessons/original.md`(재진입 반환·곱 순서·maxsd NaN·12dd49), `docs/lessons/tooling.md`(git 신원 없는 worktree 커밋).

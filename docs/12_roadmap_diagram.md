@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M3-04c-5 `055f68` 작은 pivot 재진입과 `12dd49` 요청 2를 원본 합성 3회(91사례, 바이트 동일)와 Rust 재생으로 범위 한정 완료했다. 04c에서 생존한 2차 상한 동률·후보 있는 상한 I·0.1·계수표 변이를 모두 거부하게 됐다. 남은 것은 push 루프에서 요청 2 적용과 `054eef`·`056973` 재진입 Rust다.
+
 M1-02v 반복 커널 work 19지점(`a4109`·`1c35c5`·`28c93`·`1c8477`·`2896a3`·`15d2d`)을 Rust에 복원했다(구현, 계약 범위 통과). 기존 02p·02q 캡처를 재생해 kb2 저장 758·degen2 피벗 0–355 저장 6,459회가 지점·순서·k·값 비트까지 같다(기존 지점 포함, 새 지점 저장 2,592회). 원본 직전 work + Rust 양 비교이며 전체 work 일치는 아직 아니다. 후보 1개는 BFRT 후속 저장을 건너뛰고, flip FTRAN의 조밀 반환에만 압축 비용을 저장한다. 기존 수치 풀이를 유지해 Netlib 경로 64개 출력·LP 273행이 기준 `27bbda9`와 같다. Rust 125·Clippy·pytest 657, M1 검사기 12종·BFRT 코퍼스 통과. 변조 28종 거부, 새 Rust 변이 14종 전부 거부(전체 38종 중 34 거부·기존 4 판별 불가). Gurobi 새 실행 0회. work 재분해 판정 미연결, 다음은 M1-02k → M1-02t와 M1-02u다. [계약과 결과](m1/m1_02v_iteration_work.md).
 
 M2-06h-2 strong branching 첫 정수 후보의 up/down 제어를 Rust `crates/mip/src/strong_branch.rs`에 옮겼다(구현 L1, 조건부 통과). `695bd7`의 분기 bound 요청(`floor(x+IntFeasTol)+1`/`floor`)·flush·LP 호출·목적 clamp·반복 비용 누적·reset→basis restore→bound 복원 요청 순서를 외부 backend trait로 재생한다. pk1(Threads=1·Seed=0·NodeLimit=300·SBMAXITERS=10) 새 원본 독립 3회와 무훅 대조가 같고, 첫 후보 24개·48방향(상태7 42·상태2 6)의 명령·값이 u64 비트로 일치한다. 변조 17종·Rust 변이 4종 거부. 목적 clamp(base 선택) 두 분기는 원본 자료에 없어 미검증이며 합성 테스트만 잡는다. clamp는 asm `maxsd` 피연산자 순서로 맞췄다. 병합 뒤 사후 독립 재검토(중간 2·낮음 6)를 반영해 근거 줄·사례표·work 카운터 미이식을 정정했다. up 값 ≥ 1e100이면 원본은 down을 건너뛰는데(C:660), 이후 경로는 미이식이라 복구 뒤 `Unported`를 돌려준다. cargo workspace 127·clippy 0. 전체 LP 수치·추가 전파·모순·오류·후보 루프·부모 재풀이·B&B 연결은 미검증·미연결이며 M2-06h-3으로 넘긴다. [계약과 결과](m2/mip_sb_control_rust.md).
