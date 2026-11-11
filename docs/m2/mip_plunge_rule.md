@@ -161,7 +161,7 @@ Threads=1, Seed=0, 06a와 같은 파라미터. 사례 4개는 06a 기준 자료�
 
 ### 6.2 공식 캡처와 판정
 
-- 실행 commit `065667f`(도구), 판정 commit `0a971c5`. 도구 SHA-256은 manifest `tool_sha256`이다. Gurobi SHA-256 `8e87fca2…`, x86-64 WSL2, Threads=1, Seed=0, NodeLimit=2000. 캡처는 `tools/mip_plunge_rule_runs.sh bench/oracle/m2_06c`(Herdr `tools/hrun.sh`)로 돌렸다.
+- 실행 commit `451a94f`(도구, rebase 전 `065667f`), 판정 commit `9fa8b31`(rebase 전 `0a971c5`). 도구 파일 내용은 rebase로 바뀌지 않았다. 도구 SHA-256은 manifest `tool_sha256`이다. Gurobi SHA-256 `8e87fca2…`, x86-64 WSL2, Threads=1, Seed=0, NodeLimit=2000. 캡처는 `tools/mip_plunge_rule_runs.sh bench/oracle/m2_06c`(Herdr `tools/hrun.sh`)로 돌렸다.
 - C0: 사례마다 3회 gz가 바이트까지 같다(markshare_4_0 `2e4dffbd…` 등 5종, manifest). 출력은 모두 `DONE 8 2000`이다. 06a의 4사례는 새 사건 11종을 빼면 사건 JSON과 counts가 `bench/oracle/m2_06a` run 1과 전부 같다(비간섭).
 - 재생(`python3 tools/mip_plunge_rule_check.py`, 종료 0, `ACCEPTANCE PASS`): 9,864호출 전부에서 R·G·S·T가 일치했다.
 
