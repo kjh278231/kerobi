@@ -373,7 +373,7 @@ MUTANTS = [  # (name, file, original text, mutated text)
      '        if self.in_dual {\n            self.work_xb();\n            if flip {\n                if self.make_dual_feasible() {\n                    self.compute_xb();\n                }\n            } else {\n                self.shift_costs();\n            }\n            self.pt_rc += 1;\n            self.perturb_trigger();\n            // 48d5f C:2106-2111, after the perturbation; it stays on\n            // shortcut: the spx+0x178 != 0 disjunct is left out (no spx+0x178 here; 0 in every M1-02e capture)\n            if !self.nondeg_flip && (self.pt_lvl > 2 || (self.m as u64) < 3 * self.iter) {\n                self.nondeg_flip = true;\n                if std::env::var("RSOLVER_DEBUG").is_ok() {\n                    eprintln!("nondegflip on at it {}", self.iter);\n                }\n            }\n'),
     ('c1fe3 nInf = listed', 'crates/lp/src/simplex.rs', 'let ninf = viol.iter().flatten().count();', 'let ninf = self.pr.list.len();'),
     ('bf981 flag 0', 'crates/lp/src/simplex.rs', '((self.pt_lvl != 0) as i32 as f64 + 2.0)', '(0.0 + 2.0)'),
-    ('c2761 k + s', 'crates/lp/src/simplex.rs', '((r.kept as f64 + r.kept as f64) + r.scanned as f64)', '(r.kept as f64 + r.scanned as f64)'),
+    ('c2761 k + s', 'crates/lp/src/simplex.rs', 'self.work.add(0xc2761, ((r.kept as f64 + r.kept as f64) + r.scanned as f64) * X148);', 'self.work.add(0xc2761, (r.kept as f64 + r.scanned as f64) * X148);'),
     ('c26ec stored with an empty old list', 'crates/lp/src/simplex.rs', 'if r.scanned > 0 {\n                    self.work.add(0xc26ec', 'if true {\n                    self.work.add(0xc26ec'),
     ('be793 association', 'crates/lp/src/simplex.rs', '(X148 * 3.0) * n as f64', '(n as f64 * 3.0) * X148'),
 ]
@@ -386,7 +386,7 @@ MUTANTS += [
     ('partition always store', 'crates/lp/src/bfrt.rs', 'if run < -feas_tol {', 'if true {'),
     ('single candidate store', 'crates/lp/src/bfrt.rs', 'if c.len() != 1 && thr <= -amin {', 'if thr <= -amin {'),
     ('second filter cost', 'crates/lp/src/bfrt.rs', '(c.len() - lo) as f64 * 3.0', '(c.len() - lo) as f64 * 2.0'),
-    ('reselection cost', 'crates/lp/src/bfrt.rs', '(lo as f64 * 4.0 + flips.len() as f64)', '(lo as f64 * 4.0)'),
+    ('reselection cost', 'crates/lp/src/bfrt.rs', '(lo as f64 * 4.0 + flips.len() as f64)', '(lo as f64 * 3.0 + flips.len() as f64)'),
     ('full pricing feasible cost', 'crates/lp/src/pricing.rs', 'scanned - feasible', 'scanned'),
     ('full pricing rescan cost', 'crates/lp/src/pricing.rs', '((self.list.len() as f64 + m) + m)', '(self.list.len() as f64 + m)'),
     ('CHUZR rebuild scan', 'crates/lp/src/simplex.rs', 'self.work.add(0xbe0a1, a);', 'self.work.add(0xbe0a1, a + X148);'),

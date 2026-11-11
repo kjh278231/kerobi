@@ -165,3 +165,5 @@
 
 - **GRBgetdblattr는 PLT 주소 `0xbcc70` 대신 실제 export `0x7a3820`에 훅을 붙인다.** PLT 계측은 DONE 전 프로세스 종료를 일으켰고 export 훅으로 해결했다. 실패 캡처 `explore_pk1_final.json.gz`를 보존했다. (M2-06g-2, [§6](../m2/mip_sb_restore.md#6-실행-결과))
 - **bound 복원 검사에 실제 분기 bound 적용도 연결한다.** solve 전후와 최종 bound만 비교하면 후보 bound를 전부 부모 값으로 바꾼 기록이 통과한다. restore의 열·방향과 solve 진입 bound를 연결해 선택 열이 엄격히 조여졌는지 검사한다. 독립 검토에서 재현·수정했다. (M2-06g-2, [§7](../m2/mip_sb_restore.md#7-판정과-인수인계))
+
+- **work만 복원하는 작업에서 반환 목록을 얻으려고 수치 커널을 바꾸면 전체 경로가 달라질 수 있다.** M1-02v에서 bound flip의 dense L 풀이를 sparse L로 바꾸니 kb2·degen2 저장 비교는 통과했지만 maros·perold 반복 수가 달라졌다. 기존 수치 결과를 보존하고 반환 표현 판별용 L/R 목록 계산을 분리했다. 커널과 표현의 통합은 해당 커널 검증 작업에서 수행한다. (M1-02v, [실패와 수정](../m1/m1_02v_iteration_work.md#6-실행-결과))

@@ -44,7 +44,11 @@ NaN·무한대는 사례에 없음. x148=1.3. 원본 캡처는 각 사례 독립
 - 변조 28종 모두 거부. Rust 변이는 실행 중이다. 원본 Gurobi 실행 0회다.
 - 최초 실패와 수정: `bench/oracle/m1_02v/first_failure.txt`. 후보 1개는 `1c35c5` C:788의 `uVar46 != 1` 바깥으로 가서 0xc82ee·0xc8b67·0xc92bd를 저장하지 않는다. `1c8477` C:239–256은 FTRAN의 반환 표현이 조밀할 때만 0xce316을 저장한다. 같은 함수의 k는 정상 피벗에서 이미 증가한 상태다(`28c93` C:820–834).
 - 첫 회귀에서는 희소 L/R의 수치 출력을 그대로 사용해 maros 반복 수 1802 → 1744, perold 1191 → 1211이 됐다. 첫 차이 피벗 475·165는 기준선과 같았지만 이번 범위를 넘는 변화라 실패로 보존했다(`before_dense_preservation_pathcmp.txt`). 최종 구현은 기존 `ftran_dense` 수치 결과를 유지한다. 희소 진입인 경우만 별도 L/R 계산으로 반환 표현을 판별하며, 이 중복 계산은 M1-02t에서 검증한 커널·반환 표현을 함께 사용하는 것으로 정리한다. 이번 작업은 시간 성능을 주장하지 않는다.
-- Rust LP·workspace·clippy 통과. Netlib·pytest·기존 검사기 최종 회귀는 진행 중이다.
+- 최종 회귀: `cargo test -p rsolver-lp` 42 통과·1 무시, `cargo test --release --workspace` 125 통과·11 무시, `cargo clippy --workspace --all-targets -- -D warnings` 종료 0. `PYTHONPATH=$PWD/python ../.venv/bin/python -m pytest` 657 통과.
+- 기존 M1 검사기 12종(새 factor work 포함) `--self-test` 통과. `lsolve`·`update`·`usolve`는 `--rust`도 실행했고, BFRT 3,112호출 코퍼스 재생 `tools/m1_bfrt_rust.py --self-test`도 통과했다. 각 출력은 `bench/oracle/m1_02v/`에 저장했다.
+- Netlib: `tools/proto/pathcmp.py all`의 64개 모델 출력이 기준 `27bbda9` 독립 빌드와 바이트 동일하다(완전 일치 27/64, 중앙 첫 차이 비율 0.752). `tools/lp_check.py --methods 1,0,-1 --timeout 120 --csv bench/oracle/m1_02v/lp_check.csv`의 273행 상태·목적값·반복 수·오류도 기준 빌드와 정확히 같다. 두 빌드 모두 정답 90/91 ×3, IterCount 일치 31/0/31이다. 시간은 비교 대상이 아니다. 기준 출력은 `base_pathcmp.txt`·`base_lp_check.csv`에 보존했다.
+- 최종 회귀의 입력과 기준선은 변경하지 않았다. Rust 변이 검사는 21종을 실행한 뒤 22번째 기존 `c2761 k + s` 치환 대상이 새 CHUZR 식에도 들어가 중복 assert로 중단됐다. 통과로 세지 않고 `mutate_first21.txt`에 보존했다. 치환에 `self.work.add(0xc2761, …)`를 포함해 대상을 한정하고, `PYTHONPATH=$PWD/python ../.venv/bin/python -u bench/oracle/m1_02v/resume_mutations.py`로 나머지 17종을 실행한다. 기본 `--mutate`는 여전히 전체 38종을 실행한다.
+- 새 0xc9436 변이의 사전 정의를 실행 전에 정정했다. 원래 안은 Kp 항을 없애는 것이었으나 저장된 kb2 유일 사건에서 Kp = 0이라 판별력이 없었다. 원본 0xc92bd·0xc9436의 양이 모두 4 단위인 것을 확인하고, 관측되는 prefix 계수 4 → 3 변이로 교체했다. 검사기의 합격 조건과 원본 자료·비트 비교 규칙은 유지했다.
 
 ### 지점별 비교 횟수
 
@@ -74,4 +78,9 @@ NaN·무한대는 사례에 없음. x148=1.3. 원본 캡처는 각 사례 독립
 
 ## 7. 판정과 인수인계
 
-진행 중. branch `work/m1-02v`, worktree `../rsolver-m1-02v`. shared 문서는 다른 세션이 점유 중이므로 점유를 얻은 뒤 갱신한다. 원격 작업 없음.
+- 구현 commit `5008420`(계약 `4785ce0`), branch `work/m1-02v`, worktree `../rsolver-m1-02v`.
+- 다른 세션의 M2-06g-2 완료 뒤 shared 점유를 얻었고, main `04bb80e`를 작업 branch에 통합했다. 선행 미커밋 변경·원격 작업 없음.
+- 다음 M1 작업: M1-02k(BTRAN Uᵀ 희소 판정의 dsum) → M1-02t(LU 풀이 work). M1-02u(48d5f·8b473 fold)도 남았다.
+- 미검증: 0행, 빈 후보 오류·특이 basis·quad·Threads > 1·다른 호출자·degen2 k ≥ 356. 희소 U 수치 커널 전체의 동등성은 이 작업이 주장하지 않는다. row-copy multiplier가 −1이 아닌 big-M 문맥, BFRT 반복 재시도·원본 RNG cost shift, 인공 bound 목록 carry의 미관측 분기도 포함하지 않는다.
+- 교훈: `docs/lessons/original.md`(후보 1개 저장 건너뛰기·FTRAN 반환 표현), `docs/lessons/tooling.md`(work 복원 중 수치 커널 변경의 회귀).
+- 작업 완료·동등성 최종 판정과 상세 검증 결과는 실행 종료 뒤 기록한다.
