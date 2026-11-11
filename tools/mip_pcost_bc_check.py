@@ -52,6 +52,8 @@ def predict(a, ent, V, st=None):
         lb, ub, rc = f(a['lb'][j]), f(a['ub'][j]), a['rc'][j]
         c_ok = vt != C_TYPE or 'V4' in V
         bnd = (ub >= lb) if 'V5' in V else (ub > lb)
+        if st is not None and b == -3:
+            st['basis_m3'] += 1
         if st is not None and b in (-1, -2):  # branch counts of the original rule (V uses None)
             d = 1 if b == -1 else 0
             cnt = ent(j)[d]
@@ -92,6 +94,10 @@ def predict(a, ent, V, st=None):
                 st['up_rc_le0'] += 1
             if not up and not f(neg(rc)) > 0:
                 st['dn_rc_ge0'] += 1
+            if up and f(rc) < 0:
+                st['up_rc_neg'] += 1  # report only: rc sign against the bound (delta floors to 1e-10)
+            if not up and f(rc) > 0:
+                st['dn_rc_pos'] += 1
             if not up and maxsd(maxsd(f(rc), 0.0), 1e-10) != maxsd(maxsd(f(neg(rc)), 0.0), 1e-10):
                 st['dn_rc_big'] += 1
     return calls
@@ -105,8 +111,11 @@ def replay(d, V=frozenset(), name=''):
     arrs = {}                 # table B serial -> reconstructed column arrays
     gate = blk = None
     exp = None                # predicted calls still expected in the open window
+    last_gate = None          # 06e node-update gate (report only: same node as the next bgate)
     for i, e in enumerate(d['events']):
         k = e['e']
+        if k == 'gate':
+            last_gate = e
         where = f'{name} event {i} ({k})'
         if k == 'new' and e.get('t', -2) >= 0:
             slot[e['t']] = e.get('slot') if e['f'] == '6ec3da' else 'copy'
@@ -118,6 +127,11 @@ def replay(d, V=frozenset(), name=''):
             need(gate is None, f'B3 {where}: bgate inside an open block')
             gate, blk, exp = e, None, None
             st['bgate'] += 1
+            same = last_gate is not None and (last_gate['id'], last_gate['nest'], last_gate['st']) == (e['id'], e['nest'], e['st'])
+            st['bgate_same_node' if same else 'bgate_other_node'] += 1
+            last_gate = None
+            if e['work'] is None:
+                st['work_null'] += 1
             if e['st'] != 2:
                 st['gate_st_ne2'] += 1
             elif not e['has98']:
@@ -139,6 +153,9 @@ def replay(d, V=frozenset(), name=''):
             exp = collections.deque(calls)
             blk = (e, len(calls))
             st['bblk'] += 1
+            st['bblk_nest%d' % e['nest']] += 1
+            if e['n'] <= 0:
+                st['n_le0'] += 1
             if not calls:
                 st['blk_nocall'] += 1
             if len(calls) >= 2:
@@ -238,7 +255,7 @@ def check_case(c, d, old):
 
 
 REQUIRED = ('call_up', 'call_dn', 'skip_cap', 'cnt4', 'skip_C', 'skip_bound', 'skip_basic', 'up_rc_le0', 'dn_rc_ge0',
-            'gate_st_ne2', 'blk_nocall', 'c_67eb3e', 'c_6755af_int')
+            'gate_st_ne2', 'blk_nocall', 'C_pass', 'fixed_pass', 'dn_rc_big', 'blk_2calls', 'c_67eb3e', 'c_6755af_int')
 VARIANTS = {'V1': ('cnt4',), 'V2': ('skip_cap',), 'V3': ('call_up', 'call_dn'), 'V4': ('C_pass',),
             'V5': ('fixed_pass',), 'V6': ('call_up', 'call_dn'), 'V7': ('dn_rc_big',), 'V8': (),
             'V9': ('calls_ne_n',), 'V10': ('blk_2calls',)}
@@ -387,6 +404,22 @@ def tampers(docs, olds):
         orig['ub'] = arr_at(d, b, 'ub')[j]
         setcol(d, b, 'ub', j, arr_at(d, b, 'lb')[j])
 
+    def t13(d):  # free snapshot of a table B
+        tb = {e['t'] for e in d['events'] if e['e'] == 'new' and e.get('slot') == 0x3258}
+        e = d['events'][idx(d, lambda e: e['e'] == 'free' and e['t'] in tb and e['nz'])]
+        e['nz'][0][2] += 1
+
+    def c_upd(fr):
+        def g(d):
+            tc = {e['t'] for e in d['events'] if e['e'] == 'new' and e.get('slot') == 0x3260}
+            i = next((k for k, e in enumerate(d['events']) if e['e'] == 'upd' and e['t'] in tc and e['from'] == fr), None)
+            if i is None:
+                return False
+            e = d['events'][i]
+            u = 1 if e['after'][1] != e['before'][1] else 0
+            e['after'][2 + u] = hx(f(e['after'][2 + u]) * 1.5 + 0.25)  # off any integer or 2e9 delta
+        return g
+
     def t12(d):
         d['events'][idx(d, lambda e: e['e'] == 'ins')]['heap_n'] += 1
 
@@ -394,8 +427,9 @@ def tampers(docs, olds):
     # directly, because B2 (06e projection) would reject them first and hide whether B4 can.
     plan = [('T1 upd after bit', t1, 'B4'), ('T2 drop upd', t2, 'B4'), ('T3 basis -1<->-2', t3, 'B4'),
             ('T4 work bit', t4, 'B5'), ('T5 gate state', t5, 'B3'), ('T6 rc sign', t6, 'B4'),
-            ('T7 upd outside window', t7, 'B4'), ('T8 binary sha', t8, 'B1'), ('T9 no bblk', t9, 'B'),
-            ('T11 ub = lb', t11, 'B4'), ('T12 06e event', t12, 'B2')]
+            ('T7 upd outside window', t7, 'B4'), ('T8 binary sha', t8, 'B1'), ('T9 no bblk', t9, 'B4'),
+            ('T11 ub = lb', t11, 'B4'), ('T12 06e event', t12, 'B2'), ('T13 free snapshot B', t13, 'B6'),
+            ('T14 67eb3e after', c_upd('67eb3e'), 'C1'), ('T15 6755af after', c_upd('6755af'), 'C2')]
     for name, fn, code in plan:
         na = []
         for c in CASES:
@@ -405,8 +439,8 @@ def tampers(docs, olds):
                 na.append(c)
                 continue
             try:
-                if name[:3] in ('T1 ', 'T2 ', 'T7 '):
-                    replay(d, name=c)
+                if name[:3] in ('T1 ', 'T2 ', 'T7 ', 'T13', 'T14', 'T15'):  # 06e events: bypass B2
+                    table_c(d, c, replay(d, name=c))
                 else:
                     check_case(c, d, olds[c])
             except Fail as ex:
@@ -441,7 +475,9 @@ def variants(docs, stats):
             except Fail:
                 got = True
             need(got == want, f'V {v} ({c}): rejected {got}, expected {want} from {keys}')
-        print(f'V {v}: rejected in {[c for c in CASES if sum(stats[c][k] for k in keys) > 0]}')
+        rej = [c for c in CASES if sum(stats[c][k] for k in keys) > 0]
+        need(bool(rej) == (v != 'V8'), f'V {v}: rejected in {rej}; only V8 may survive everywhere')
+        print(f'V {v}: rejected in {rej}')
 
 
 def main():
