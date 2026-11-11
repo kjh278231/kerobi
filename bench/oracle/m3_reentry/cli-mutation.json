@@ -1,0 +1,44 @@
+{
+  "baseline": {
+    "--controls": 0,
+    "--acceptance": 0
+  },
+  "mutations": {
+    "binary-hash-0": {
+      "--controls": 1,
+      "--acceptance": 1
+    },
+    "inputs-hash-0": {
+      "--controls": 1,
+      "--acceptance": 1
+    },
+    "tool-hash-0": {
+      "--controls": 1,
+      "--acceptance": 1
+    },
+    "events-empty": {
+      "--controls": 1,
+      "--acceptance": 1
+    },
+    "missing-field": {
+      "--controls": 1,
+      "--acceptance": 1
+    },
+    "reentry-events-removed": {
+      "--controls": 1,
+      "--acceptance": 1
+    },
+    "request-cleared": {
+      "--controls": 0,
+      "--acceptance": 1
+    },
+    "target-work-1pass": {
+      "--controls": 0,
+      "--acceptance": 1
+    },
+    "control-theta": {
+      "--controls": 1,
+      "--acceptance": 0
+    }
+  }
+}

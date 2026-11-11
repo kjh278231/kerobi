@@ -1,0 +1,16 @@
+{
+  "accept-strict": "거부: ('synthetic-flip-tie-sparse', 'work', '기준', '000000000000fc3f', '실제', '000000000000f03f', '정확·비트 비교')",
+  "harris-sign": "거부: ('primal-c1s1', 'theta', '기준', 'c0e37f4eb3bfe73f', '실제', '000000000000f87f', '정확·비트 비교')",
+  "second-tie": "거부: ('synthetic-tie-sparse', 'pos', '기준', 0, '실제', 1, '정확·비트 비교')",
+  "second-bound": "생존",
+  "width-inf": "거부: ('synthetic-upper-infinite-sparse', 'work', '기준', '000000000000f03f', '실제', '000000000000fc3f', '정확·비트 비교')",
+  "free-mark": "거부: ('synthetic-free-sparse', 'pos', '기준', -1, '실제', 0, '정확·비트 비교')",
+  "lower-num": "거부: ('primal-c1s2', 'pos', '기준', 6, '실제', 0, '정확·비트 비교')",
+  "cap-return": "거부: ('synthetic-finite-flip-sparse', 'theta', '기준', '000000000000f03f', '실제', 'ea8ca039593e2946', '정확·비트 비교')",
+  "no-candidate": "생존",
+  "pivot-threshold": "생존",
+  "small-scale": "생존",
+  "small-check-strict": "거부: ('synthetic-pivot-above-tol-sparse', 'work', '기준', '000000000000fc3f', '실제', '0000000000000c40', '정확·비트 비교')",
+  "work-dense": "거부: ('synthetic-lower-dense', 'work', '기준', '000000000000f83f', '실제', '000000000000f43f', '정확·비트 비교')",
+  "work-sparse": "거부: ('synthetic-lower-sparse', 'work', '기준', '000000000000fc3f', '실제', '000000000000f83f', '정확·비트 비교')"
+}

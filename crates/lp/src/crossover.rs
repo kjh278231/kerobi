@@ -2,55 +2,115 @@
 //! (docs/m3/primal_push_violated.md) with its retry (docs/m3/primal_push_retry.md), and the step decisions around them
 //! (docs/m3/primal_push_decision_rust.md, docs/m3/primal_push_recall.md). No push loop calls them yet.
 
-/// The small-pivot second pass with a tightened pivot tolerance was never observed in the original; it is refused
-/// instead of guessed.
+/// The small-pivot second pass of the violated-basis ratio tests (`054eef`, `056973`) was never compared with the
+/// original; it is refused instead of guessed. The feasible ratio test runs its second pass (docs/m3/primal_push_reentry.md).
 #[derive(Debug, PartialEq, Eq)]
 pub struct Reentry;
 
-/// Feasible-basis ratio test of the primal push on the FTRAN column `(idx, val)`: `idx = None` is the dense form with
-/// `val.len() == x.len()`. `x` is the lower-shifted basic value, `width` the bound width, `marks` the basic class.
-/// Returns the position in `val` of the leaving entry (-1 for none) and writes `theta`/`pivot` only where the
-/// original does; `work += units * work_coef`.
+/// Feasible-basis ratio test (`055f68`) of the primal push on the FTRAN column `(idx, val)`: `idx = None` is the dense
+/// form with `val.len() == x.len()`. `x` is the lower-shifted basic value, `width` the bound width, `marks` the basic
+/// class. Returns the position in `val` of the leaving entry (-1 for none) and writes `theta`/`pivot` only where the
+/// original does; `work += units * work_coef` once per pass.
+///
+/// A chosen pivot below 0.1 and below `(piv_tol * max|val|) * scale` re-runs the first pass once with the tolerance
+/// `piv_tol * (max|val| * scale)` (the original's multiplication order). When that second pass finds no row or only a
+/// bound of `inf`, `theta`/`pivot` keep the first pass's values, the position is the last row the second pass recorded
+/// (else the first pass's pick), and `factor_updates()` (`12dd49`: the factor's update count, -1 without a factor) is
+/// asked; above 16 `*refactor` is set: the caller then writes refactor request 2 (S+0x294) and leaving -1 (S+0x2f8).
 /// shortcut: no column-length weighting of the second pass (the push passes 0); add it for the other callers.
 #[allow(clippy::too_many_arguments)]
 pub fn feasible_ratio(harris: f64, piv_tol: f64, inf: f64, cap: f64, idx: Option<&[i32]>, val: &[f64], x: &[f64],
-                      width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64)
-                      -> Result<i32, Reentry> {
+                      width: &[f64], marks: &[u8], work_coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64,
+                      factor_updates: &mut dyn FnMut() -> i32, refactor: &mut bool) -> i32 {
     let count = idx.map_or(x.len(), |i| i.len());
     let row = |k: usize| idx.map_or(k, |i| i[k] as usize);
-    let (mut ratios, mut cands) = (Vec::new(), Vec::new());
+    let mut tol = piv_tol;
     let mut chosen = -1i32;
-    let mut tested = 0i32;
-    let mut bound = cap;
-    for k in 0..count {
-        let (a, r) = (val[k], row(k));
-        let num = if a <= piv_tol || marks[r] == b'F' {
-            if !(a < -piv_tol && width[r] < inf) {
-                continue;
-            }
-            x[r] - width[r]
-        } else {
-            x[r]
-        };
-        tested += 1;
-        let ratio = num / a;
-        if ratio <= bound {
-            ratios.push(ratio);
-            cands.push(k);
-            chosen = k as i32;
-            let relaxed = if a > piv_tol && marks[r] != b'F' { (num + harris) / a } else { (num - harris) / a };
-            if relaxed < bound {
-                bound = relaxed;
+    let mut first = true;
+    loop {
+        let (mut ratios, mut cands) = (Vec::new(), Vec::new());
+        let mut tested = 0i32;
+        let mut bound = cap;
+        for k in 0..count {
+            let (a, r) = (val[k], row(k));
+            let up = a > tol && marks[r] != b'F'; // NaN entries are neither up nor down
+            let num = if up {
+                x[r]
+            } else {
+                if !(-tol > a && inf > width[r]) {
+                    continue;
+                }
+                x[r] - width[r]
+            };
+            tested += 1;
+            let ratio = num / a;
+            if ratio <= bound {
+                ratios.push(ratio);
+                cands.push(k);
+                chosen = k as i32;
+                let relaxed = if up { (num + harris) / a } else { (num - harris) / a };
+                if relaxed < bound {
+                    bound = relaxed;
+                }
             }
         }
+        let units = if idx.is_none() {
+            tested as f64 + tested as f64 + count as f64 + cands.len() as f64 * 3.0
+        } else {
+            count as f64 * 4.0 + cands.len() as f64 * 3.0
+        };
+        *work += units * work_coef;
+        if cap < inf && cap <= bound {
+            *pivot = 0.0;
+            *theta = cap;
+            return -1;
+        }
+        if bound == inf || cands.is_empty() {
+            if first {
+                *pivot = 0.0;
+                *theta = inf;
+                return -1;
+            }
+            if factor_updates() > 16 {
+                *refactor = true;
+            }
+            return chosen;
+        }
+        let mut best = 0.0;
+        for (&ratio, &k) in ratios.iter().zip(&cands) {
+            if ratio <= bound && best < val[k].abs() {
+                *theta = ratio;
+                chosen = k as i32;
+                best = val[k].abs();
+            }
+        }
+        *pivot = val[chosen as usize].abs();
+        let small = first && 0.1 > *pivot; // NaN returns, as the original's jbe
+        if !small {
+            return chosen;
+        }
+        // maxsd: a NaN entry makes the running maximum NaN, and the next entry replaces a NaN maximum
+        let big = val[..count].iter().fold(0.0f64, |m, v| if m > v.abs() { m } else { v.abs() });
+        let scale = pivot_scale(big);
+        let reenter = tol * big * scale > *pivot;
+        if !reenter {
+            return chosen;
+        }
+        tol *= big * scale;
+        first = false;
     }
-    let units = if idx.is_none() {
-        tested as f64 + tested as f64 + count as f64 + cands.len() as f64 * 3.0
-    } else {
-        count as f64 * 4.0 + cands.len() as f64 * 3.0
-    };
-    *work += units * work_coef;
-    ratio_tail(piv_tol, inf, cap, &val[..count], bound, &ratios, &cands, chosen, theta, pivot)
+}
+
+/// Tolerance factor of the small-pivot check by the column's largest |entry| (NaN takes the last one).
+fn pivot_scale(big: f64) -> f64 {
+    match big {
+        b if 10.0 > b => 0.1,
+        b if 1e4 > b => 0.01,
+        b if 1e7 > b => 0.001,
+        b if 1e10 > b => 1e-4,
+        b if 1e13 > b => 1e-5,
+        _ => 1e-6,
+    }
 }
 
 /// Violated-basis ratio test (`054eef`): like [`feasible_ratio`] but each basic row's class decides which bound it
@@ -133,15 +193,7 @@ fn small_pivot(piv_tol: f64, val: &[f64], pivot: f64, chosen: i32) -> Result<i32
         return Ok(chosen);
     }
     let big = val.iter().fold(0.0f64, |m, v| m.max(v.abs()));
-    let scale = match big {
-        b if b < 10.0 => 0.1,
-        b if b < 1e4 => 0.01,
-        b if b < 1e7 => 0.001,
-        b if b < 1e10 => 1e-4,
-        b if b < 1e13 => 1e-5,
-        _ => 1e-6,
-    };
-    if piv_tol * big * scale <= pivot { Ok(chosen) } else { Err(Reentry) }
+    if piv_tol * big * pivot_scale(big) <= pivot { Ok(chosen) } else { Err(Reentry) }
 }
 
 /// The push's ratio test on a violated basis: [`infeasible_ratio`], then [`retry_ratio`] on the same column when that

@@ -1,0 +1,26 @@
+{
+ "rejected": 21,
+ "detail": {
+  "binary-hash-0": "거부: ('메타', 'binary_sha256', '8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', '00000000000000000000000000000000000000000000000",
+  "inputs-hash-0": "거부: ('메타', 'inputs_sha256', 'cd3205cdc74ec04b772731d42d1b30cad5afa8d054eaed721a13678c49866425', '00000000000000000000000000000000000000000000000",
+  "tool-hash-0": "거부: ('메타', 'tool_sha256', '4c5df556b3dad69f9619f163f0931488fe9269d947dc82ec2422a12988fdda86', '0000000000000000000000000000000000000000000000000",
+  "source-hash-0": "거부: ('메타', 'source_sha256', ['bebc9eec4c74cd5abaec3454c3495a23aedeab276c0ccf03710dd517c4360649', '968b6176ccbb47922dd75d6887b770851d8690c7edee03",
+  "events-empty": "거부: 필수 사건 누락",
+  "provenance-natural": "거부: ('메타', 'provenance', 'original-synthetic', 'natural')",
+  "missing-field": "거부: ('reentry-pick-sparse', '필수 필드 불일치', ['refactor'])",
+  "run-differs": "거부: ('3회 불일치', 'reentry-pick-sparse', 'work')",
+  "two-runs": "거부: 독립 캡처 3회 필요",
+  "control-theta": "거부: ('대조군 변화', 'control-lower-sparse', 'theta', '0000000000000040', '0000000000000840')",
+  "target-theta": "거부: ('사전 기대 불일치', 'reentry-pick-sparse', 'theta', '0100000000408f40', '0000000000000840')",
+  "target-pos": "거부: ('사전 기대 불일치', 'reentry-pick-sparse', 'chosen', 1, 0)",
+  "target-work-1pass": "거부: ('사전 기대 불일치', 'reentry-pick-sparse', 'work', '0000000000001e40', '0000000000000640')",
+  "target-pivot-nan": "거부: ('사전 기대 불일치', 'reentry-pick-sparse', 'pivot', '3a8c30e28e79553e', '000000000000f87f')",
+  "request-cleared": "거부: ('reentry-inf-bound-sparse', 'S+0x294/0x2f8', (2, -1), (0, -1))",
+  "leaving-unwritten": "거부: ('reentry-inf-bound-sparse', 'S+0x294/0x2f8', (2, -1), (2, 7))",
+  "spurious-request": "거부: ('reentry-pick-sparse', 'S+0x294/0x2f8', (0, 7), (2, 7))",
+  "workspace-changed": "거부: ('reentry-pick-sparse', 'S 변경(요청 칸 밖)')",
+  "factor-changed": "거부: ('reentry-pick-sparse', 'factor 변경')",
+  "reentry-0": "거부: 재진입 사례 0",
+  "request-0": "거부: 요청 2 사례 0"
+ }
+}

@@ -162,6 +162,7 @@
 
 ## git worktree
 
+- **이 컴퓨터(coco0912)의 worktree에는 git 사용자 신원이 설정돼 있지 않아 `git commit`이 `Author identity unknown`으로 실패했다.** 전역 설정을 바꾸지 않고 기존 이력과 같은 신원을 `git -c user.name=… -c user.email=… commit`으로 커밋마다 넘겼다. (M3-04c-5)
 - **`session.py claim … && claim shared && git worktree add …` 한 줄은 shared 점유 실패에서 멈춰 worktree가 생기지 않는다.** 그 뒤 Write 도구로 worktree 경로에 파일을 쓰면 git 저장소가 아닌 일반 디렉터리가 생긴다. 점유와 worktree 생성을 나눠 실행하고 `git -C <worktree> status`로 확인한다. (M2-03d-5)
 - **ignore된 `target/`(재생성할 수 있는 탐색 출력)이 남아 있으면 `git worktree remove`에 `--force`가 필요하다.** 미커밋·미추적 파일이 그것뿐인지 먼저 확인한다. (M2-03c-2)
 
