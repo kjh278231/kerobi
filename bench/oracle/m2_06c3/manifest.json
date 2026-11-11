@@ -1,0 +1,102 @@
+{
+ "task": "M2-06c-3",
+ "schema": 1,
+ "tool": "tools/mip_plunge_score.js",
+ "tool_sha256": "b469c8c29775aec7f0d5c716563bb2210c777c60774a571ee8281c00e61df567",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "base_params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "NodeLimit": 2000
+ },
+ "cases": {
+  "markshare_4_0": {
+   "model": "markshare_4_0.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000
+  },
+  "pk1": {
+   "model": "pk1.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000
+  },
+  "neos5": {
+   "model": "neos5.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000
+  },
+  "tr12-30": {
+   "model": "tr12-30.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000
+  },
+  "pk1-pool": {
+   "model": "pk1.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000,
+   "PoolSearchMode": 2
+  },
+  "pk1-bd1": {
+   "model": "pk1.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000,
+   "BranchDir": 1
+  },
+  "pk1-bd-1": {
+   "model": "pk1.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000,
+   "BranchDir": -1
+  }
+ },
+ "models": {
+  "markshare_4_0": "1a1feb04f5637db9f69be53bd6224fcd9fe5b8d750870d9b2002b535d25f4353",
+  "pk1": "6c64530538b254a8ae648f8f8f188847366ae52da560fdec0ad290c642973ba0",
+  "neos5": "2888e9aeb10a4cf16d3b9ad221302fd3de815ce1454b31e660ebd060589c1072",
+  "tr12-30": "94f8cf2fd2fc920ed6ea2452b0755aeec110eb8404716554485c25e7a1e06a3d"
+ },
+ "model_paths": "../re/bench/data/miplib/<model>.mps.gz",
+ "files": {
+  "markshare_4_0_1.json.gz": "f2c756ce7478a3c0ccc4f0cce3ed1849c208831b049e9a3504e6608d9ca295f9",
+  "markshare_4_0_2.json.gz": "f2c756ce7478a3c0ccc4f0cce3ed1849c208831b049e9a3504e6608d9ca295f9",
+  "markshare_4_0_3.json.gz": "f2c756ce7478a3c0ccc4f0cce3ed1849c208831b049e9a3504e6608d9ca295f9",
+  "pk1_1.json.gz": "bd3cf181c81bbfd6a2cfe9e7d1b91e3467075bcd1e4cd31d6e74298beab515ed",
+  "pk1_2.json.gz": "bd3cf181c81bbfd6a2cfe9e7d1b91e3467075bcd1e4cd31d6e74298beab515ed",
+  "pk1_3.json.gz": "bd3cf181c81bbfd6a2cfe9e7d1b91e3467075bcd1e4cd31d6e74298beab515ed",
+  "neos5_1.json.gz": "6f4b00bf0736aa9b02314556cbd608651bc906fb8dbf20292ed75708b26b2329",
+  "neos5_2.json.gz": "6f4b00bf0736aa9b02314556cbd608651bc906fb8dbf20292ed75708b26b2329",
+  "neos5_3.json.gz": "6f4b00bf0736aa9b02314556cbd608651bc906fb8dbf20292ed75708b26b2329",
+  "tr12-30_1.json.gz": "172835c27232ab329ec2399610f5d3667cc33b774724c181d307c39214dd4217",
+  "tr12-30_2.json.gz": "172835c27232ab329ec2399610f5d3667cc33b774724c181d307c39214dd4217",
+  "tr12-30_3.json.gz": "172835c27232ab329ec2399610f5d3667cc33b774724c181d307c39214dd4217",
+  "pk1-pool_1.json.gz": "fcc2bf9404260b459a2d45c1ef1f41ddf0109148dde6312ed2b8e257d10d8ce7",
+  "pk1-pool_2.json.gz": "fcc2bf9404260b459a2d45c1ef1f41ddf0109148dde6312ed2b8e257d10d8ce7",
+  "pk1-pool_3.json.gz": "fcc2bf9404260b459a2d45c1ef1f41ddf0109148dde6312ed2b8e257d10d8ce7",
+  "pk1-bd1_1.json.gz": "b14eb4f90bd6e8c93eb39efb64c33a944a57e62abe807d788b1965f0b7ede2d5",
+  "pk1-bd1_2.json.gz": "b14eb4f90bd6e8c93eb39efb64c33a944a57e62abe807d788b1965f0b7ede2d5",
+  "pk1-bd1_3.json.gz": "b14eb4f90bd6e8c93eb39efb64c33a944a57e62abe807d788b1965f0b7ede2d5",
+  "pk1-bd-1_1.json.gz": "f3c4dd2ea220e6e50023e4efd653414b9fd86a9505ff3a429259d3a45b323619",
+  "pk1-bd-1_2.json.gz": "f3c4dd2ea220e6e50023e4efd653414b9fd86a9505ff3a429259d3a45b323619",
+  "pk1-bd-1_3.json.gz": "f3c4dd2ea220e6e50023e4efd653414b9fd86a9505ff3a429259d3a45b323619"
+ },
+ "control_tool": "tools/mip_plunge_rule.js (06c, pinned)",
+ "control_files": {
+  "control/pk1-bd1_06c.json.gz": "225a56e235b996c7f0814f28e669c401ca60108a0756e1e5a3cb641e29a9b734",
+  "control/pk1-bd-1_06c.json.gz": "5412e00858658576e841e466792a7466e18acae9cebe4911888fde1b4b3bb36f"
+ }
+}
