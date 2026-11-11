@@ -847,16 +847,42 @@ impl Lu {
         self.btran_dense(x).0
     }
 
-    /// `btran` and whether the output is dense (the original's output nnz < 0), which `28c93` reads.
+    /// `btran` and whether the output is dense (the original's output nnz < 0), which `28c93` reads (`9e288`).
     pub fn btran_dense(&self, x: &[(usize, f64)]) -> (Vec<(usize, f64)>, bool) {
+        self.btran_ut(x, self.ut_dense(x.len()))
+    }
+
+    /// BTRAN of e_r as `9e376` hands it (dual ρ_r): a non-empty U row r forces the sparse Uᵀ kernel, an empty one
+    /// takes the general test (`221173` C:1196–1206).
+    pub fn btran_row(&self, r: usize) -> (Vec<(usize, f64)>, bool) {
+        self.btran_ut(&[(r, 1.0)], self.urow_len(r) == 0 && self.ut_dense(1))
+    }
+
+    /// Length of the U row of basis position r (LU+0xb8[r] − LU+0xb0[r]).
+    pub(crate) fn urow_len(&self, r: usize) -> usize {
+        self.urow.get(self.kpos[r]).map_or(0, Vec::len)
+    }
+
+    /// `221173` C:88–90: the Uᵀ phase is dense unless (int)(LU+0x108 + LU+0x110)·nnz ≤ m (32-bit product).
+    pub(crate) fn ut_dense(&self, nnz: usize) -> bool {
+        (self.dsum as i32).wrapping_mul(nnz as i32) > self.head.len() as i32
+    }
+
+    /// LU+0x108 + LU+0x110 (for the M1-02k probe).
+    pub(crate) fn dsum(&self) -> f64 {
+        self.dsum
+    }
+
+    /// BTRAN with the Uᵀ path given: dense Uᵀ outputs nnz −1, so the row etas and Lᵀ are dense too.
+    pub(crate) fn btran_ut(&self, x: &[(usize, f64)], ut_dense: bool) -> (Vec<(usize, f64)>, bool) {
         assert!(self.complete(), "singular basis");
         if self.n_updates > 0 || self.general {
             // Markowitz kernel or FT updates: U is no longer diagonal, the same phase order applies
-            return self.btran_updated(x);
+            return self.btran_updated(x, ut_dense);
         }
         let m = self.head.len();
-        // Uᵀ is the diagonal: sparse (21a941, inputs in order) when (int)(LU+0x108 + LU+0x110)·nnz ≤ m, both 1.5 here
-        let sparse_u = 3 * x.len() <= m;
+        // Uᵀ is the diagonal: sparse (21a941, inputs in order) or dense (C:91–260)
+        let sparse_u = !ut_dense;
         let mut xs: Vec<(usize, f64)> = Vec::with_capacity(x.len());
         let mut dense = vec![0.0; m]; // by step
         for &(pos, v) in x {
@@ -944,9 +970,10 @@ impl Lu {
     /// and m < 0x104·nnz(Uᵀ output) the etas are dense (`221173` C:1237–1572: |v| ≤ ZERO clears w_r and skips the
     /// eta) and so is Lᵀ (C:1573–1766); else sparse etas (v = 0.0 skips, |w| ≥ ZERO kept) and a sparse Lᵀ
     /// (`lt_sparse`, the original's output order) when 0x104·nnz ≤ m, else dense in row order.
-    /// shortcut: the Uᵀ phase is computed densely and C:89's dense/sparse Uᵀ choice is not modelled (the eta path
-    /// follows the Uᵀ output count; differs only for inputs with (int)(0x108 + 0x110)·nnz > m, M1-02k).
-    fn btran_updated(&self, x: &[(usize, f64)]) -> (Vec<(usize, f64)>, bool) {
+    /// A dense Uᵀ (`ut_dense`, C:91–260) zeroes |x| ≤ ZERO as well as |x/d| ≤ ZERO and hands nnz −1 on, so the etas
+    /// and Lᵀ are dense. shortcut: the sparse Uᵀ kernel `21a941` is computed in U order, its own output order
+    /// (heap / linear scan, LU+0x108 > 5 path) is not modelled; upgrade when a level-path Lᵀ needs it.
+    fn btran_updated(&self, x: &[(usize, f64)], ut_dense: bool) -> (Vec<(usize, f64)>, bool) {
         let m = self.head.len();
         let mut w = vec![0.0; m]; // by step
         for &(pos, v) in x {
@@ -958,7 +985,7 @@ impl Lu {
         for &k in &self.order {
             let (r, _, d) = self.steps[k];
             let t = w[k] / d;
-            if t.abs() <= ZERO {
+            if t.abs() <= ZERO || ut_dense && w[k].abs() <= ZERO {
                 continue;
             }
             y[r] = t;
@@ -968,7 +995,7 @@ impl Lu {
                 w[j] -= u * t;
             }
         }
-        let dense_eta = !self.retas.is_empty() && m < self.sparse_mult * list.len();
+        let dense_eta = !self.retas.is_empty() && (ut_dense || m < self.sparse_mult * list.len());
         for (r, eta) in self.retas.iter().rev() {
             // 221173 eta phase (newest first): v = w_r; w_r = η_r·v, w_i = η_i·v + w_i
             let v = y[*r];
@@ -986,11 +1013,11 @@ impl Lu {
         }
         let xs: Vec<(usize, f64)> =
             list.iter().filter(|&&r| y[r].abs() >= ZERO).map(|&r| (self.prow[r] as usize, y[r])).collect();
-        if !dense_eta && self.sparse_mult * xs.len() <= m {
+        if !dense_eta && !ut_dense && self.sparse_mult * xs.len() <= m {
             return (self.lt_sparse(&xs), false);
         }
         let mut dense = vec![0.0; m]; // by step
-        if dense_eta {
+        if dense_eta || ut_dense {
             // the dense eta output goes to Lᵀ whole, values below ZERO included
             for (r, &v) in y.iter().enumerate() {
                 dense[self.prow[r] as usize] = v;
