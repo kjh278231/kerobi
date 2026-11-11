@@ -24,6 +24,9 @@ pub struct Lu {
     /// (later step, u).
     ucol: Vec<Vec<(usize, f64)>>,
     urow: Vec<Vec<(usize, f64)>>,
+    /// Column k's entries in rows of tail steps come first, `umid[k]` of them, then the prefix rows (U+0x78 of the
+    /// `21686f` view; 05b257 keeps the split as rows cross t).
+    umid: Vec<usize>,
     /// U order of the steps (LU+0x48 ord: position → step); identity after a factor, permuted by FT updates.
     order: Vec<usize>,
     /// U position of each step (LU+0x40 pos), the inverse of `order`.
@@ -183,6 +186,17 @@ impl Lu {
         (rows, self.prefix)
     }
 
+    /// Tail U columns by descending U position as (position, prefix-row positions in storage order) (snapshots).
+    pub fn u_prefix_parts(&self) -> Vec<(usize, Vec<usize>)> {
+        let t = self.prefix;
+        self.order[t..].iter().rev().map(|&k| (self.steps[k].1, self.prefix_part(k).map(|j| self.steps[j].1).collect())).collect()
+    }
+
+    /// Steps of the prefix rows in column k in storage order (`21686f` [+0x78, +0x70)).
+    fn prefix_part(&self, k: usize) -> impl Iterator<Item = usize> + '_ {
+        self.ucol[k][self.umid[k]..].iter().map(|&(i, _)| self.prow[i] as usize)
+    }
+
     pub fn complete(&self) -> bool {
         self.steps.len() == self.head.len()
     }
@@ -230,6 +244,7 @@ impl Lu {
             lrow: Vec::new(),
             ucol: Vec::new(),
             urow: Vec::new(),
+            umid: Vec::new(),
             order: Vec::new(),
             upos: Vec::new(),
             prefix: 0,
@@ -666,6 +681,18 @@ impl Lu {
             self.e8 -= 1;
         }
         self.general = self.ucol.iter().any(|c| !c.is_empty());
+        // U columns after a factor hold their rows by descending U position (so the tail rows lead): all degen2
+        // refactors captured in M1-02m. shortcut: there U position = basis position; a model where they differ
+        // after a factor (kb2 refactors have no capture at 0 updates) would tell the two orders apart
+        let (t, prow) = (self.prefix, &self.prow);
+        self.umid = self
+            .ucol
+            .iter_mut()
+            .map(|c| {
+                c.sort_by_key(|e| std::cmp::Reverse(prow[e.0]));
+                c.iter().filter(|e| prow[e.0] >= t as i64).count()
+            })
+            .collect();
         // 05b257 C:2595–2690: LU+0xf8 = −1 below 0xdc, the prefix rows [0xdc, t) listed in position order, −2 in the
         // tail; 036ade C:5725–5740: LU+0x108/0x110 (1.5 for an empty range)
         let (t, dc) = (self.prefix, self.dc);
@@ -1159,7 +1186,8 @@ impl Lu {
     /// the row etas (by row), `nb` the ρ side's count (−1 dense), `aq` α_q by position, `r` the pivot position.
     /// Returns the U kernel ("21686f", "2126cd", "21841f" or "inline"), the α_q output order (positions; M1-02g P3 on
     /// the sparse-U kernels: rows with LU+0xf8 = −1 in `lr` order, tail rows by U position descending, listed prefix
-    /// rows by LU+0xf8; else position order with the pivot last, C:1812–1832) and the spike order for `update`.
+    /// rows in section 2 or LU+0xf0 order (M1-02m); else position order with the pivot last, C:1812–1832) and the
+    /// spike order for `update`.
     pub fn ftran2(&self, lr: Option<&[usize]>, spike: &[f64], nb: i64, aq: &[f64], r: usize) -> (&'static str, Vec<usize>, Vec<usize>) {
         let m = self.head.len() as i64;
         let na = lr.map_or(-1, |l| l.len() as i64);
@@ -1185,10 +1213,24 @@ impl Lu {
             sorder.iter().map(|&i| self.prow[i] as usize).filter(|&k| self.upos[k] < t && self.f8[k] < 0 && aq[pos(k)] != 0.0).collect();
         let mut tail: Vec<usize> = supp.iter().map(|&p| self.kpos[p]).filter(|&k| self.upos[k] >= t).collect();
         tail.sort_by_key(|&k| std::cmp::Reverse(self.upos[k]));
-        let mut pre: Vec<usize> = supp.iter().map(|&p| self.kpos[p]).filter(|&k| self.upos[k] < t && self.f8[k] >= 0).collect();
-        pre.sort_by_key(|&k| self.f8[k]);
+        // prefix rows (21686f C:89–507, 21841f C:201–552): in "section 2" order (listed input rows in input order, then
+        // rows first reached from the tail outputs' prefix parts) when the input is sparse and those parts are short,
+        // else in LU+0xf0 list order
+        let lr: Vec<usize> = lr.expect("sparse-U input").iter().map(|&i| self.prow[i] as usize).collect();
+        let (np, nt) = (lr.iter().filter(|&&k| self.f8[k] >= 0).count(), lr.iter().filter(|&&k| self.f8[k] == -2).count());
+        let sec2 = m as f64 > lr.len() as f64 * d2 && d2 * ((np + nt) as f64) <= te as f64 && {
+            let b8 = np + tail.iter().map(|&k| self.ucol[k].len() - self.umid[k]).sum::<usize>();
+            b8 as f64 * 2.5 <= self.f0.len() as f64
+        };
+        let pre: Vec<usize> = if sec2 {
+            let mut seen = vec![false; self.steps.len()];
+            let first = lr.iter().copied().filter(|&k| self.f8[k] >= 0).chain(tail.iter().flat_map(|&k| self.prefix_part(k)));
+            first.filter(|&k| !std::mem::replace(&mut seen[k], true)).collect()
+        } else {
+            self.f0.clone()
+        };
         out.extend(tail);
-        out.extend(pre);
+        out.extend(pre.into_iter().filter(|&k| aq[pos(k)] != 0.0));
         debug_assert_eq!(out.len(), supp.len(), "sparse-U output covers the support");
         (kernel, out.into_iter().map(pos).collect(), sorder)
     }
@@ -1260,7 +1302,20 @@ impl Lu {
             diag = dot8(eta.iter().map(|&(i, e)| spike[i] * e));
             // row r out of U; a column left empty raises the LU+0xe8 cache (L1023, position before the permutation)
             for &(j, _) in &std::mem::take(&mut self.urow[kp]) {
-                self.ucol[j].retain(|e| e.0 != rp);
+                // C:979–1019: from a prefix part the column's last entry fills the hole; from a tail part the last
+                // tail entry does, and the last prefix entry moves to the front of the prefix part
+                let (v, mid) = (&mut self.ucol[j], &mut self.umid[j]);
+                let h = v.iter().position(|e| e.0 == rp).expect("U column entry");
+                if q < t {
+                    v.swap_remove(h);
+                } else {
+                    *mid -= 1;
+                    v[h] = v[*mid];
+                    let last = v.pop().expect("U column entry");
+                    if *mid < v.len() {
+                        v[*mid] = last;
+                    }
+                }
                 if self.ucol[j].is_empty() {
                     self.e8 = self.e8.max(at[j]);
                 }
@@ -1268,6 +1323,14 @@ impl Lu {
             self.pool += eta.len();
             self.reta_odd.push(off % 2 == 1);
             self.retas.push((rp, eta));
+        } else if !others.is_empty() && q < t {
+            // C:871–899 (no row eta, r leaves the prefix): r swaps with the first prefix entry of its columns
+            for &(j, _) in &self.urow[kp] {
+                let mid = self.umid[j];
+                let h = mid + self.ucol[j][mid..].iter().position(|e| e.0 == rp).expect("U column entry");
+                self.ucol[j].swap(h, mid);
+                self.umid[j] += 1;
+            }
         }
         // new prefix (L463–512): local_40, with an empty column above p taking the place of p when q < p
         let (tm1, nz) = (t as i64 - 1, !others.is_empty());
@@ -1313,6 +1376,13 @@ impl Lu {
         if p != p0 {
             // the empty column at p takes the place of p0: its row enters the prefix
             let k = self.order[p];
+            // C:1040–1069: its entries swap with the last tail entry of their columns
+            let rk = self.steps[k].0;
+            for &(j, _) in &self.urow[k] {
+                let h = self.ucol[j][..self.umid[j]].iter().position(|e| e.0 == rk).expect("U column entry");
+                self.umid[j] -= 1;
+                self.ucol[j].swap(h, self.umid[j]);
+            }
             if self.urow[k].is_empty() {
                 self.f8[k] = -1;
             } else {
@@ -1381,9 +1451,15 @@ impl Lu {
                 self.pool += n + extra;
                 self.rcap[k] = n + extra;
             }
-            self.ucol[kp].push((i, spike[i]));
             self.urow[k].push((kp, spike[i]));
         }
+        // C:1228–1260: the new column takes the spike rows in list order, tail rows from the front and prefix rows
+        // from the back
+        let (tl, pre): (Vec<usize>, Vec<usize>) =
+            sp.iter().filter(|&&i| spike[i].abs() > ZERO).partition(|&&i| self.upos[self.prow[i] as usize] as i64 > local40);
+        debug_assert_eq!(tl.len() + pre.len(), others.len(), "spike list = spike support");
+        self.umid[kp] = tl.len();
+        self.ucol[kp] = tl.iter().chain(pre.iter().rev()).map(|&i| (i, spike[i])).collect();
         if others.is_empty() {
             self.e8 = self.e8.max(self.upos[kp]);
         }
@@ -1396,6 +1472,11 @@ impl Lu {
         debug_assert!(self.f0.iter().enumerate().all(|(i, &k)| self.f8[k] == i as i64 && self.upos[k] < self.prefix));
         debug_assert!((0..self.f8.len()).all(|k| (self.f8[k] == -2) == (self.upos[k] >= self.prefix)));
         debug_assert!((0..self.f8.len()).all(|k| self.f8[k] != -1 || self.urow[k].is_empty()));
+        // and every column is [tail rows | prefix rows]
+        debug_assert!((0..self.ucol.len()).all(|k| self.ucol[k]
+            .iter()
+            .enumerate()
+            .all(|(h, e)| (h < self.umid[k]) == (self.upos[self.prow[e.0] as usize] >= self.prefix))));
         diag.abs() > ZERO
     }
 }

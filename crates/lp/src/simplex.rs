@@ -1149,6 +1149,7 @@ impl<'a> Engine<'a> {
             } else {
                 Vec::new()
             };
+            let aqk = if self.snap_path.is_some() { format!("\"aqk\":{:?},", aq_list) } else { String::new() };
             // 8b473 C:466–482: the pivot's place in the α_q list takes its last entry
             if let Some(i) = aq_list.iter().position(|&p| p == r) {
                 aq_list.swap_remove(i);
@@ -1167,7 +1168,9 @@ impl<'a> Engine<'a> {
                     .iter()
                     .map(|r| format!("[{}]", r.iter().map(|&(c, u)| format!("[{},\"{}\"]", c, hexf(u))).collect::<Vec<_>>().join(",")))
                     .collect();
-                self.last_urow = format!("\"urow\":[{}],\"t\":{},", rows.join(","), t);
+                let ucp: Vec<String> = self.lu.u_prefix_parts().iter().map(|(p, r)| format!("[{},{:?}]", p, r)).collect();
+                self.last_urow =
+                    format!("\"urow\":[{}],\"t\":{},\"ucp\":[{}],\"f0k\":{:?},", rows.join(","), t, ucp.join(","), self.lu.listed());
             }
             self.w[r] = if beta == 0.0 { 1e-8 } else { (beta / ar) / ar };
             for &p in &supp {
@@ -1229,7 +1232,7 @@ impl<'a> Engine<'a> {
                 self.price_touch(&changed, Some(r), true);
             }
             if self.snap_path.is_some() {
-                self.last_aqo = format!("\"aqo\":{:?},\"uk\":\"{}\",\"lro\":{:?},", aq_list, uk, lro);
+                self.last_aqo = format!("\"aqo\":{:?},\"uk\":\"{}\",\"lro\":{:?},{}", aq_list, uk, lro, aqk);
             }
 
             self.log();

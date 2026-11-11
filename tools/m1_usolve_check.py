@@ -196,13 +196,15 @@ def check_rust(caps, runs):
                 continue
             n['K'] += 1
             gcols = [[col[0], col[2]] for col in reversed(c['cols'])]
-            if s1['ucp'] != gcols or s1['f0k'] != c['f0'] or s1['t'] != c['t']:
-                n['C differs'] += 1
+            if s1['f0k'] != c['f0'] or s1['t'] != c['t']:
+                # the prefix t or the LU+0xf0 list differs (05b257 prefix rule, M1-02n): out of this contract
+                n['C excluded (t / f0)'] += 1
                 if firstC is None:
-                    firstC = k
-                    w = 't' if s1['t'] != c['t'] else 'f0' if s1['f0k'] != c['f0'] else 'columns'
-                    j = next((j for j, (a, b) in enumerate(zip(s1['ucp'], gcols)) if a != b), None)
-                    n_first = f'{w}' + (f' at tail column {j}: Rust {s1["ucp"][j]} original {gcols[j]}' if w == 'columns' and j is not None else '')
+                    firstC = f'{k} (t Rust {s1["t"]} original {c["t"]}, LU+0xec Rust {len(s1["f0k"])} original {c["ec"]})'
+                continue
+            if s1['ucp'] != gcols:
+                j = next((j for j, (a, b) in enumerate(zip(s1['ucp'], gcols)) if a != b), min(len(s1['ucp']), len(gcols)))
+                bad.append(f'C {name} pivot {k}: tail column {j}: Rust {s1["ucp"][j:j + 1]} original {gcols[j:j + 1]}')
                 continue
             n['C'] += 1
             if s1['aqk'] != c['out']['idx']:
@@ -214,7 +216,7 @@ def check_rust(caps, runs):
                 bad.append(f'I {name} pivot {k}: kernel input Rust {s1["lro"][:6]} original {c["in"]["idx"][:6]}')
             n['I'] += 1
         stop = f' (pivot {R}: Rust {mine[R]["klast"]} updates, original {cs[R][0]["upd"]})' if R < P and R in cs else ''
-        cdiff = f'; C first differs at pivot {firstC}: {n_first}' if firstC is not None else ''
+        cdiff = f'; first excluded pivot {firstC}' if firstC is not None else ''
         rep.append(f'{name} Rust: path = original on pivots 0-{P - 1}, update count on 0-{R - 1}{stop}; {dict(n)}{cdiff}')
     return bad, rep
 
@@ -284,6 +286,13 @@ def main():
 
             rtamper('Rust kernel output: first and last swapped (degen2)', aqk_swap)
             rtamper('Rust snapshots without ucp', lambda r2: [s.pop('ucp', None) for s in r2['kb2'][0].values()])
+
+            def ucp_swap(r2):
+                s = next(s for k, s in sorted(r2['degen2'][0].items()) if any(len(c[1]) >= 2 for c in s.get('ucp', [])))
+                c = next(c for c in s['ucp'] if len(c[1]) >= 2)
+                c[1][0], c[1][1] = c[1][1], c[1][0]
+
+            rtamper('Rust U column prefix part: two entries swapped (degen2)', ucp_swap)
     for x in bad:
         print('FAIL', x)
     print('PASS' if not bad else f'FAIL ({len(bad)})')
