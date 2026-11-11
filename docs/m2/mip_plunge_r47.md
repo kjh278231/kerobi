@@ -84,7 +84,7 @@
 
 ## 6. 실행 결과
 
-- 실행 commit `e49abe8`(도구 `tools/mip_plunge_score.js` SHA-256 `b469c8c29775aec7…`, manifest에 전체), main `b5c118a` 위. Threads=1, Seed=0, NodeLimit 2000.
+- 실행 commit `e49abe8`(rebase 뒤 `5cbe563`, 내용 같음, main `97b1d44` 위에서 검사기·회귀를 다시 실행; 도구 `tools/mip_plunge_score.js` SHA-256 `b469c8c29775aec7…`, manifest에 전체), main `b5c118a` 위. Threads=1, Seed=0, NodeLimit 2000.
 - 탐색(판정 근거 아님): pk1 1회(약 4초). 새 사건을 뺀 투영이 `bench/oracle/m2_06c/pk1_1`과 사건·`counts`까지 같았다. `I+0x40` 값은 60(`<`)·62(`>`)·78(`N`), 규칙 4 호출 37개의 x는 모두 null이 아니었다. 필드표는 바꾸지 않았다.
 - 공식 캡처: `tools/hrun.sh --timeout 580000 -- 'tools/mip_plunge_score_runs.sh bench/oracle/m2_06c3'` 종료 0(`RUNS-DONE`). 7사례 × 3회 + BranchDir 06c 도구 대조 2회, 모두 `DONE 8 2000`(노드 한도).
 - `python3 tools/mip_plunge_r47_check.py --self-test` 종료 0(`ACCEPTANCE PASS (+ self-test)`), 첫 실행에서 전부 일치:
@@ -149,5 +149,5 @@
   - **M2-06d-3**(구현, 가칭): `plunge::pick`에 규칙 4·7·9를 더한다(입력: `ents`·`x4`·`r10d`). `tools/mip_plunge_rust.py`가 `bench/oracle/m2_06c3`를 읽어 `given` 385를 0으로, 규칙 1·6 부모 표 대신 `ranc` 결과로 남은 재생 불가 17을 0으로 줄인다.
   - `bnb.rs` 연결(가칭 M2-06d-2)은 `(*W)+0x60`·k 갱신·plunge 목록 삽입 규칙 확인 뒤.
   - 다음 명령: `python3 tools/session.py status` 뒤 M2-06d-3. 검사기를 바꾸면 `python3 tools/mip_plunge_r47_check.py --self-test`.
-- 작업 branch `work/m2-06c-3`, 기준 main `b5c118a`. 커밋·병합 상태는 M2 인수인계를 따른다.
+- 작업 branch `work/m2-06c-3`, 착수 기준 main `b5c118a`, M1-02n 병합 뒤 main `97b1d44`로 rebase(문서 충돌은 맨 위 문단 추가뿐). 커밋·병합 상태는 M2 인수인계를 따른다.
 - 교훈: `docs/lessons/original.md`(규칙 4·7·9 식과 `I+0x40` 값), `docs/lessons/tooling.md`(질의 순서 비교는 선택만 비교할 때 생존한 변종을 가른다; 변조 값은 큰 값에 더하지 말고 고정값으로).
