@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M1-02q/M1-02r/M1-02s: Rust dual work at the factor (036ade), FT update and refactor-return (05b257, 9e60b), start
+"""M1-02q/M1-02r/M1-02s/M1-02v: Rust dual work at the factor (036ade), FT update and refactor-return (05b257, 9e60b), start
 (534f7, 1bae9c) and post-05b257 (1bae9c, 1b7106, 1ca57, 16b0a) sites against the original. Contracts:
 docs/m1/m1_02q_work.md, docs/m1/m1_02r_ft_work.md and docs/m1/m1_02s_post_work.md section 3.
 Exit 0 only when every check passes.
@@ -27,6 +27,9 @@ SITES |= FT
 POST = {0xc0410, 0xc06c7, 0xc0c24, 0xc09bd, 0xc26ec, 0xc2761, 0xc2842, 0xc2ad4, 0xc142b, 0xc4329, 0xc1fe3, 0xbf981, 0xbfed2,
         0xbe793}  # M1-02s: 1bae9c per pivot / list rebuild / after a refactor, 1b7106, 1ca57, 16b0a
 SITES |= POST
+ITER = {0x135e92, 0xc7bcd, 0xc7c4f, 0xc82ee, 0xc8b67, 0xc92bd, 0xc9436, 0xcbcae, 0xc561a,
+        0xcce72, 0xcd052, 0xcd191, 0xbe039, 0xbe0a1, 0xbe17e, 0xbe34d, 0xcdbb5, 0xce1ef, 0xce316}
+SITES |= ITER
 POST_RUN = POST - {0xc09bd}  # 0xc09bd (mode 1 with spx+0x2c8 set) is not expected to run (contract section 1)
 UPD = {'kb2': (35, 35), 'degen2': (300, 10 ** 9)}  # FT updates (0xf2e3c) in range: (min, max)
 F = lambda h: struct.unpack('<d', int(h, 16).to_bytes(8, 'little'))[0]
@@ -171,7 +174,7 @@ def check(caps, wcaps, runs, files_ok=True):
                                f' x 1.3 = {H(x)}, original {v} (amount {(F(v) - F(p)) / 1.3} x 1.3)')
                     break
                 sites[hex(site)] += 1
-                if site in FT or site in POST:
+                if site in FT or site in POST or site in ITER:
                     reach[site] += 1
         # G: FT updates in range
         nu = sites[hex(0xf2e3c)]
@@ -194,6 +197,9 @@ def check(caps, wcaps, runs, files_ok=True):
     miss = sorted(hex(s) for s in POST_RUN - set(reach))
     if miss:
         bad.append(f'G2: post-05b257 sites never compared {miss}')
+    miss = sorted(hex(s) for s in ITER - set(reach))
+    if miss:
+        bad.append(f'G3: iteration sites never compared {miss}')
     return bad, rep
 
 
@@ -297,7 +303,34 @@ def main():
             s = r['degen2'][3]['stores']
             s.remove(next(x for x in s if x[0] == 0xbe793))
 
-        for t in (t_bin, t_empty, t_nof, t_nwork, t_head, t_head1, t_term, t_add, t_158, t_site, t_wval, t_ftadd, t_ftdrop,
+        def t_iter_add(c, w, r):
+            s = next(s for f in r['degen2'] for s in f['stores'] if s[0] == 0x135e92)
+            s[2][-1] = H(F(s[2][-1]) + 1.3)
+
+        def t_iter_drop(c, w, r):
+            s = next(f['stores'] for f in r['kb2'] if any(s[0] == 0xcbcae for s in f['stores']))
+            s.remove(next(s for s in s if s[0] == 0xcbcae))
+
+        def t_iter_zero(c, w, r):
+            for n in CAP:
+                w[n]['events'] = [e for e in w[n]['events'] if e['type'] != 'W' or e['pc'] not in ITER]
+                for f in r[n]:
+                    f['stores'] = [s for s in f['stores'] if s[0] not in ITER]
+
+        def t_iter_k(c, w, r):
+            next(s for f in r['degen2'] for s in f['stores'] if s[0] == 0xce1ef)[3] -= 1
+
+        def t_iter_site(c, w, r):
+            next(s for f in r['kb2'] for s in f['stores'] if s[0] == 0xcd052)[0] = 0xcce72
+
+        def t_iter_val(c, w, r):
+            e = next(e for e in w['kb2']['events'] if e['type'] == 'W' and e['pc'] == 0xc9436)
+            e['v'] = flip(e['v'])
+
+        def t_model(c, w, r):
+            c['kb2']['model_sha256'] = w['kb2']['model_sha256'] = '0' * 64
+
+        for t in (t_iter_add, t_iter_drop, t_iter_zero, t_iter_k, t_iter_site, t_iter_val, t_model, t_bin, t_empty, t_nof, t_nwork, t_head, t_head1, t_term, t_add, t_158, t_site, t_wval, t_ftadd, t_ftdrop,
                   t_461f, t_wft, t_k, t_c0410, t_c142b, t_mode, t_wc1fe3, t_be793):
             c, w, r = copy.deepcopy(caps), copy.deepcopy(wcaps), copy.deepcopy(runs)
             t(c, w, r)
@@ -340,9 +373,26 @@ MUTANTS = [  # (name, file, original text, mutated text)
      '        if self.in_dual {\n            self.work_xb();\n            if flip {\n                if self.make_dual_feasible() {\n                    self.compute_xb();\n                }\n            } else {\n                self.shift_costs();\n            }\n            self.pt_rc += 1;\n            self.perturb_trigger();\n            // 48d5f C:2106-2111, after the perturbation; it stays on\n            // shortcut: the spx+0x178 != 0 disjunct is left out (no spx+0x178 here; 0 in every M1-02e capture)\n            if !self.nondeg_flip && (self.pt_lvl > 2 || (self.m as u64) < 3 * self.iter) {\n                self.nondeg_flip = true;\n                if std::env::var("RSOLVER_DEBUG").is_ok() {\n                    eprintln!("nondegflip on at it {}", self.iter);\n                }\n            }\n'),
     ('c1fe3 nInf = listed', 'crates/lp/src/simplex.rs', 'let ninf = viol.iter().flatten().count();', 'let ninf = self.pr.list.len();'),
     ('bf981 flag 0', 'crates/lp/src/simplex.rs', '((self.pt_lvl != 0) as i32 as f64 + 2.0)', '(0.0 + 2.0)'),
-    ('c2761 k + s', 'crates/lp/src/simplex.rs', '((r.kept as f64 + r.kept as f64) + r.scanned as f64)', '(r.kept as f64 + r.scanned as f64)'),
+    ('c2761 k + s', 'crates/lp/src/simplex.rs', 'self.work.add(0xc2761, ((r.kept as f64 + r.kept as f64) + r.scanned as f64) * X148);', 'self.work.add(0xc2761, (r.kept as f64 + r.scanned as f64) * X148);'),
     ('c26ec stored with an empty old list', 'crates/lp/src/simplex.rs', 'if r.scanned > 0 {\n                    self.work.add(0xc26ec', 'if true {\n                    self.work.add(0xc26ec'),
     ('be793 association', 'crates/lp/src/simplex.rs', '(X148 * 3.0) * n as f64', '(n as f64 * 3.0) * X148'),
+]
+# M1-02v: every new mutant is expected to be rejected; fixed before executing mutations.
+MUTANTS += [
+    ('a4109 sparse cost', 'crates/lp/src/simplex.rs', 'wf * 3.5', 'wf * 3.0'),
+    ('a4109 single cost', 'crates/lp/src/simplex.rs', '((a + len) + 5.0) + len', '((a + len) + 4.0) + len'),
+    ('a4109 big-M tail', 'crates/lp/src/simplex.rs', 'amount = (((rf + rf) + amount) + rf) + rf;', 'amount = ((rf + rf) + amount) + rf;'),
+    ('partition length', 'crates/lp/src/bfrt.rs', '(hi - lo + 4) as f64', '(hi - lo + 3) as f64'),
+    ('partition always store', 'crates/lp/src/bfrt.rs', 'if run < -feas_tol {', 'if true {'),
+    ('single candidate store', 'crates/lp/src/bfrt.rs', 'if c.len() != 1 && thr <= -amin {', 'if thr <= -amin {'),
+    ('second filter cost', 'crates/lp/src/bfrt.rs', '(c.len() - lo) as f64 * 3.0', '(c.len() - lo) as f64 * 2.0'),
+    ('reselection cost', 'crates/lp/src/bfrt.rs', '(lo as f64 * 4.0 + flips.len() as f64)', '(lo as f64 * 3.0 + flips.len() as f64)'),
+    ('full pricing feasible cost', 'crates/lp/src/pricing.rs', 'scanned - feasible', 'scanned'),
+    ('full pricing rescan cost', 'crates/lp/src/pricing.rs', '((self.list.len() as f64 + m) + m)', '(self.list.len() as f64 + m)'),
+    ('CHUZR rebuild scan', 'crates/lp/src/simplex.rs', 'self.work.add(0xbe0a1, a);', 'self.work.add(0xbe0a1, a + X148);'),
+    ('flip matrix cost', 'crates/lp/src/simplex.rs', 'sum as f64 * 4.0', 'sum as f64 * 3.0'),
+    ('flip result always dense', 'crates/lp/src/lu.rs', '(xb, !sparse)', '(xb, true || !sparse)'),
+    ('flip result count', 'crates/lp/src/simplex.rs', '(X148 * 7.0) * nnz as f64', '(X148 * 7.0) * (nnz + 1) as f64'),
 ]
 SURVIVE_OK = {'f1beb association', 'c142b before the perturbation', 'c1fe3 nInf = listed', 'c26ec stored with an empty old list',
               'be793 association'}  # survivors expected in the contract tables (last bit absorbed / branch maybe not run)  # last-bit amount changes are absorbed by the sum (M1-02q section 6)

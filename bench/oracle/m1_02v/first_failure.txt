@@ -1,0 +1,12 @@
+kb2: refactor 1 basis = original as a set, position order differs (Rust start.rs renumbers before it)
+kb2: N 05b257 entries 40, A aligned refactors 5/5, K terms 42 (general 37), W stores 773 {}, F 0x158 5
+degen2: refactor 1 basis = original as a set, position order differs (Rust start.rs renumbers before it)
+degen2: alignment ends at refactor 10 (head: Rust iteration 359, original k 356)
+degen2: N 05b257 entries 637, A aligned refactors 9/16, K terms 157 (general 113), W stores 6607 {}, F 0x158 9, W range k < 356
+W kb2: store 403 site Rust 0xc82ee k 23 original 0xf1beb k 24
+G kb2: 0 FT updates compared, need (35, 35)
+W degen2: store 76 site Rust 0xce316 k 3 original 0xce1ef k 4
+G degen2: 0 FT updates compared, need (300, 1000000000)
+G: FT sites never compared ['0xf1beb', '0xf1d02', '0xf1f37', '0xf1f82', '0xf2044', '0xf207a', '0xf2521', '0xf2969', '0xf2a51', '0xf2e3c', '0xf3ca4', '0xf3d83', '0xf3eac', '0xf3f71', '0xf4073', '0xf461f']
+G2: post-05b257 sites never compared ['0xbe793', '0xbf981', '0xbfed2', '0xc0410', '0xc06c7', '0xc0c24', '0xc142b', '0xc1fe3', '0xc26ec', '0xc2761', '0xc2842', '0xc2ad4', '0xc4329']
+G3: iteration sites never compared ['0x135e92', '0xbe039', '0xbe0a1', '0xbe17e', '0xbe34d', '0xc561a', '0xc7bcd', '0xc7c4f', '0xc82ee', '0xc8b67', '0xc92bd', '0xc9436', '0xcbcae', '0xcce72', '0xcd052', '0xcd191', '0xcdbb5', '0xce1ef', '0xce316']
