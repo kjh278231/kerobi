@@ -171,6 +171,9 @@ def check(data, routs):
         res[n] = [len(data[n]['caps']['plain']['events']), len(paths), sum(paths), band]
         if routs is not None:
             res[n].append(rust(n, data[n], paths, routs[n]))
+    hi = sum(dval(c['x108']) > 5 for n in MODELS for c in data[n]['caps']['syn_1']['synth'])
+    need(hi > 0, 'no synthetic case with LU+0x108 > 5 (the linear 21a941 path)')
+    res['LU+0x108 > 5 cases'] = [hi]
     return res
 
 

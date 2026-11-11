@@ -17,8 +17,8 @@ kb2 0,17,30
 degen2 0,100,300
 sc50b 0,10
 scsd1 10
-stair 17
+stair 17,66
 forplan 12
-fit1p 21
+fit1p 21,90
 CASES
 echo RUNS_DONE
