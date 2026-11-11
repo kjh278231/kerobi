@@ -42,13 +42,13 @@
   r = a7b4d6(&slot)   # slot = 0x70(%rsp), LCG 1회, tempering 31비트 정수
   s = r mod n (idiv);  j = s, s+1, …(mod n) 중 첫 !skip → idx;  모두 skip이면 0.  work 없음
 규칙 4 (0x5b3e1e–0x5b3fa6, asm만)
-  x = 5e6f57(M)   # 해 풀 최선해 x (M+0x3220, +0x50 첨자)
+  x = 5e6f57(M)   # 해 풀 최선해 x (M+0x3220, +0x50 첨자). 원래·축약 열 공간인지, 해가 없을 때(null)의 보호는 미확인
   for j !skip and I+0x34 ≥ 0: b = (I+0x40 == '<') ? floor(I+0x38) : ceil(I+0x38)
      sc = (double)depth_j − |x[I+0x34] − b| / 100;  엄격 최대
   work += 7.0·n
 규칙 7 (0x5b39fc–0x5b3bbc, asm만)
   sc = (double)((int8)I+0x40 + 10·depth_j) − (est_j − m)/1e8;  엄격 최대;  work += 5.0·n
-규칙 9 (0x5b3910–0x5b39f7, asm만, r10d = env+0x27e0 BranchDir)
+규칙 9 (0x5b3910–0x5b39f7, asm만, r10d = env+0x27e0 BranchDir: 0x5b2a54에서 로드, 0x40(%rsp) 저장·복원 일부만 추적, 캡처는 모두 0)
   base = (double)(10·depth_j) − (est_j − m)/1e8;  sc = (r10d == −1) ? base − (double)(int8)I+0x40 : base + (double)(int8)I+0x40
   엄격 최대;  work += 5.0·n
 규칙 11 (0x5b37ca–0x5b390b, asm만)
@@ -58,7 +58,7 @@
 
 - `5fb13c(N, d)`: `(d | depth_N − d) < 0`이면 null, 아니면 부모(`N+0x10`)를 depth_N − d번 걷는다(널에서 멈춤). 시작 노드의 I만 읽는다. null == null도 일치다(maxd < 2).
 - 상수: `0x2a6e410` 3.0, `0x2a6e418` 1e8, `0x2a6e428` 4.0, `0x2a6e430` 5.0, `0x2a6e438` 7.0, `0x2a6e3d0` 100.0, `0x2a6e370` 부호 비트.
-- `a7b4d6` = 06c의 `a7b54f` 앞단과 같은 LCG·tempering(`crates/lp/src/common.rs` `Rng::next_int`). 규칙 5는 k % 13 = 0 절에서만 정해지므로 같은 호출에서 홀수 k 뽑기와 겹치지 않고, `rule.st`가 곧 시드다.
+- `a7b4d6` = 06c의 `a7b54f` 앞단과 같은 LCG·tempering(`crates/lp/src/common.rs` `Rng::next_int`). 관측한 실행(MIPFocus ≠ 4)에서 규칙 5는 k % 13 = 0 절에서만 정해지므로 홀수 k 뽑기와 겹치지 않고 `rule.st`가 곧 시드다. MIPFocus = 4 덮어쓰기(06c §2.2)로 규칙 5가 되면 홀수 k 뽑기 뒤라 슬롯이 LCG(seed)일 수 있다(asm만). 재생은 어느 경우든 `rule.st`를 읽는다.
 
 ## 3. 비교 계약(판정 규칙, 첫 재생 전 고정)
 
@@ -119,6 +119,7 @@
 
 - self-test(변조 11종 모두 거부): 규칙 1·2·5·6 `pick.idx`, 규칙 6 꼬리 사슬의 조상 id, 규칙 1 est, 규칙 5 RNG 슬롯, 규칙 4·7 work, 규칙 1·6 호출 전부 삭제(합격 0회), 06c 바이너리 해시 0. 첫 판에서 RNG 슬롯 변조가 생존했다. 고른 첫 규칙 5 호출에서 LCG 한 단계를 더해도 r mod n이 같았다. 변조 대상을 "한 단계 더하면 시작이 바뀌는 첫 규칙 5 호출"로 바꿨다(판정 규칙은 그대로).
 - 실행하지 않은 검사: cargo·pytest(Rust·Python 미변경), 원본 재캡처(06c 자료 재사용, 3회 동일은 06c C0로 다시 확인).
+- 독립 검토(새 에이전트, 결론을 주지 않고 asm 범위·§2·검사기만 전달): 규칙 1·2·4·5·6·7·9·11을 asm에서 다시 유도해 §2와 다른 점 없음. r10d는 `0x5b2a54` `mov 0x27e0(%r15),%r10d`(BranchDir) 로드. 검사기 구멍은 work 포인터 null 호출을 조용히 건너뛰는 점 하나(자료에서는 0회, 경미)이고 고치지 않았다. 검토 지적으로 §2의 규칙 5 시드 서술(MIPFocus 4 경우)과 규칙 4의 x 공간·null 미확인을 고쳤다.
 - 계약 변경: 없음. 검사기에서 규칙 1·6의 첫 반복(maxd 탐색)은 새 최댓값마다 `5fb13c`를 부르지만 마지막 결과만 남는다. 재생은 마지막 최심 항목에서 한 번만 조상을 구한다(중간 호출은 꼬리 사슬보다 얕은 깊이를 물어 재생 불가가 되므로).
 
 ## 7. 판정과 인수인계
