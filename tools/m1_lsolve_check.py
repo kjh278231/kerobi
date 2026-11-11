@@ -204,6 +204,85 @@ def check(caps, taus, var=None):
     return bad, rep
 
 
+def rust_run(name):
+    """This worktree's build on the model with RSOLVER_SNAP: (first snapshot per iteration, pivot path)."""
+    import subprocess, tempfile
+    fd, snap = tempfile.mkstemp(suffix='.jsonl')
+    os.close(fd)
+    fd, pth = tempfile.mkstemp(suffix='.json')
+    os.close(fd)
+    model = os.path.join(ROOT, '../re/bench/data/netlib', name + '.mps.gz')
+    code = (f"import json, rsolver; m = rsolver.read({model!r}); m.Params['Method'] = 1; m.Params['Presolve'] = 0; "
+            f"m.Params['OutputFlag'] = 0; m.optimize(); json.dump([[q, o] for (_, q, o) in m._path], open({pth!r}, 'w'))")
+    subprocess.run([sys.executable, '-c', code], env=dict(os.environ, RSOLVER_SNAP=snap), check=True)
+    mine = {}
+    for line in open(snap):
+        s = json.loads(line)
+        mine.setdefault(s['iter'], s)['klast'] = s['k']  # a refactor writes the iteration again: the FTRAN state
+    path = json.load(open(pth))
+    os.unlink(snap)
+    os.unlink(pth)
+    return mine, path
+
+
+def check_rust(caps, taus, runs):
+    """Rust (RSOLVER_SNAP) vs the captures on the pivots before the first path difference: U kernel (K), the
+    alpha_q list's LU+0xf8 = -1 rows (U) and the alpha_q side's L + row-eta order (S)."""
+    bad, rep = [], []
+    for name, (mine, path) in runs.items():
+        g = json.load(gzip.open(os.path.join(ROOT, 'bench/oracle/path1', name + '.json.gz')))
+        gp = [[e[0], l[0]] for _, e, l, *_ in g['path'][1:] if e or l]
+        P = next((k for k, (a, b) in enumerate(zip(gp, path)) if a != b), min(len(gp), len(path)))
+        tau = {e['k']: e for e in taus[name]['events']}
+        ls = {e['k']: e for e in caps[name]['events'] if e['type'] == 'P'}
+        # the same factor state: LU+0x18c at the 09d112 entry = Rust's update count before the pivot
+        R = next((k for k in range(P) if ls.get(k, {}).get('ft') and k in mine and mine[k]['klast'] != ls[k]['ft'][0]['upd']), P)
+        n = collections.Counter()
+        for k in range(R):
+            if k + 1 not in mine or 'aqo' not in mine[k + 1] or not ls.get(k, {}).get('ft') or tau.get(k, {}).get('ft') is None:
+                n['no record'] += 1
+                continue
+            s1, ft, tf = mine[k + 1], ls[k]['ft'][0], tau[k]['ft']
+            ck = [c for c in ft['calls']]
+            uk = next((c['f'] for c in ck if c['f'] in ('21686f', '21841f', '2126cd')), 'inline')
+            if s1['uk'] != uk:
+                bad.append(f'K {name} pivot {k}: Rust {s1["uk"]} original {uk}')
+                continue
+            n['K'] += 1
+            f8 = tf['f8']
+            if uk in ('21686f', '21841f'):
+                g1 = [i for i in tau[k]['aq']['idx'] if f8[i] == -1]
+                m1 = [i for i in s1['aqo'] if f8[i] == -1]
+                n['U'] += 1
+                n['U >= 2'] += len(g1) >= 2
+                if g1 != m1:
+                    bad.append(f'U {name} pivot {k}: -1 rows Rust {m1[:6]} original {g1[:6]}')
+            aqL = next((c for c in ck if c['f'] == '21b9de' and c['site'] in ('1261af', '126284')), None)
+            r1 = next((c for c in ck if c['f'] == '21f83a' and c['site'] == '1279e5'), None)
+            dense = aqL is None or any(c['f'] == '21f83a' and c['site'] == '127a7e' for c in ck)
+            if dense:
+                want = []
+            elif ft['x180'] <= 0:
+                want = aqL['out']['idx']
+            elif r1 is not None:
+                want = r1['after'][1]['idx']
+            else:
+                n['S inline R (no capture)'] += 1
+                continue
+            got = s1.get('lro')
+            if got is None:
+                bad.append(f'S {name} pivot {k}: Rust snapshot lacks lro')
+                break
+            n['S'] += 1
+            if got != want:
+                t = next((t for t in range(min(len(got), len(want))) if got[t] != want[t]), None)
+                bad.append(f'S {name} pivot {k}: L+R order Rust {got[t:t + 4] if t is not None else len(got)} '
+                           f'original {want[t:t + 4] if t is not None else len(want)}')
+        stop = f' (pivot {R}: Rust {mine[R]["klast"]} updates, original {ls[R]["ft"][0]["upd"]})' if R < P else ''
+        rep.append(f'{name} Rust: path = original on pivots 0-{P - 1}, update count on 0-{R - 1}{stop}; {dict(n)}')
+    return bad, rep
+
+
 def main():
     st = '--self-test' in sys.argv
     caps, taus, bad = {}, {}, []
@@ -219,6 +298,12 @@ def main():
     b, rep = check(caps, taus)
     bad += b
     print('\n'.join(rep))
+    runs = {}
+    if '--rust' in sys.argv:
+        runs = {name: rust_run(name) for name in CAP}
+        b, rep = check_rust(caps, taus, runs)
+        bad += b
+        print('\n'.join(rep))
     if st:
         def tamper(desc, f, var=None):
             c2 = copy.deepcopy(caps)
@@ -251,6 +336,22 @@ def main():
         tamper('21f83a appended row moved to the front', rorder)
         tamper('model: degen2 A2 as Kahn FIFO', lambda c2: None, 'kahn')
         tamper('model: level buckets in reverse', lambda c2: None, 'lifo')
+        if runs:
+            def rtamper(desc, f):
+                r2 = copy.deepcopy(runs)
+                f(r2)
+                b2, _ = check_rust(caps, taus, r2)
+                print(f'T {desc}: {"rejected" if b2 else "NOT rejected"}' + (f' ({b2[0][:90]})' if b2 else ''))
+                if not b2:
+                    bad.append(f'T {desc} not rejected')
+
+            def lro_swap(r2):
+                s = next(s for k, s in sorted(r2['degen2'][0].items()) if len(s.get('lro') or []) >= 3)
+                s['lro'][1], s['lro'][2] = s['lro'][2], s['lro'][1]
+
+            rtamper('Rust L+R order: two entries swapped (degen2)', lro_swap)
+            rtamper('Rust snapshots without lro', lambda r2: [s.pop('lro', None) for s in r2['kb2'][0].values()])
+            rtamper('Rust U kernel of kb2 pivot 21', lambda r2: r2['kb2'][0][22].__setitem__('uk', 'inline'))
     for x in bad:
         print('FAIL', x)
     print('PASS' if not bad else f'FAIL ({len(bad)})')

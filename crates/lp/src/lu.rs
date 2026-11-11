@@ -54,6 +54,11 @@ pub struct Lu {
     sparse_mult: usize,
     /// Lᵀ DAG level of each step (LU+0x130) when BTRAN takes the level path (LU+0x140 ≥ 0, 036ade L5757).
     level: Option<Vec<usize>>,
+    /// L DAG level of each step (LU+0x118) and the deepest level LU+0x128 (−1 without levels), `036ade` C:5764–5830.
+    llev: Option<Vec<usize>>,
+    lmax: i64,
+    /// L entries in the columns of steps ≥ `n_singleton` (LU+0xe4): `21b9de`'s path test reads it.
+    ltail: usize,
     /// U has off-diagonals (Markowitz part or updates): BTRAN leaves the iteration-0 emulation.
     general: bool,
     pub n_updates: usize,
@@ -239,6 +244,9 @@ impl Lu {
             rcap: Vec::new(),
             sparse_mult: 2,
             level: None,
+            llev: None,
+            lmax: -1,
+            ltail: 0,
             general: false,
             n_updates: 0,
             n_singleton: 0,
@@ -689,7 +697,18 @@ impl Lu {
                 }
             }
             self.level = Some(lev);
+            // 036ade C:5764–5830: L levels forward over the columns, LU+0x128 = the deepest
+            let mut lev = vec![0; m];
+            for k in 0..m {
+                for &(i, _) in &self.lcol[k] {
+                    let j = self.prow[i] as usize;
+                    lev[j] = lev[j].max(lev[k] + 1);
+                }
+            }
+            self.lmax = lev.iter().copied().max().unwrap_or(0) as i64;
+            self.llev = Some(lev);
         }
+        self.ltail = self.lcol[self.n_singleton.min(m)..].iter().map(Vec::len).sum();
     }
 
     /// BTRAN `221173`: yᵀ = xᵀB⁻¹ for x given as (basis position, value) in input order. Returns (row, value) in the
@@ -888,12 +907,160 @@ impl Lu {
 
     /// FTRAN through the row etas (x by row).
     pub fn ftran_r(&self, x: &mut [f64]) {
+        self.ftran_r_list(x, None);
+    }
+
+    /// `ftran_r` keeping a sparse side's row list as `09d112` C:1376–1553 (and `21f83a`) does: an eta row that gets
+    /// a value above ZERO joins the end of the list, and rows below ZERO leave it at the end.
+    fn ftran_r_list(&self, x: &mut [f64], mut list: Option<&mut Vec<usize>>) {
+        let mut on = vec![false; if list.is_some() { x.len() } else { 0 }];
+        if let Some(l) = list.as_deref() {
+            l.iter().for_each(|&i| on[i] = true);
+        }
         for ((r, eta), &odd) in self.retas.iter().zip(&self.reta_odd) {
             // 09d112 R phase (C:1136–1355): x_r = η·x in 8 lanes, one element peeled for 8-byte aligned values;
             // dropped at or below ZERO
             let v = dot8_peel(eta.iter().map(|&(i, e)| x[i] * e), odd);
             x[*r] = if v.abs() <= ZERO { 0.0 } else { v };
+            if let Some(l) = list.as_deref_mut() {
+                if v.abs() > ZERO && !on[*r] {
+                    on[*r] = true;
+                    l.push(*r);
+                }
+            }
         }
+        if let Some(l) = list {
+            if !self.retas.is_empty() {
+                l.retain(|&i| x[i].abs() >= ZERO);
+            }
+        }
+    }
+
+    /// L and row etas of one `09d112` right-hand side (`input`: rows and values in input order, None when the side
+    /// comes in dense). The L phase is the sparse kernel `21b9de` when 0x104·nnz ≤ m and 0.1m > LU+0x128
+    /// (C:659–700), else dense; the row etas keep a sparse side's list while 0x104·nnz ≤ m. Returns the side's rows
+    /// in the order the U phase gets them, None for a dense side.
+    pub fn ftran_lr(&self, x: &mut [f64], input: Option<&[(usize, f64)]>) -> Option<Vec<usize>> {
+        let m = self.head.len();
+        let fits = |n: usize| self.sparse_mult * n <= m;
+        let sparse = input.filter(|i| fits(i.len()) && 0.1 * m as f64 > self.lmax as f64).and_then(|i| Some((i, self.l_sparse(i)?)));
+        let mut list = match sparse {
+            Some((input, out)) => {
+                for &(i, _) in input {
+                    x[i] = 0.0;
+                }
+                for &(i, v) in &out {
+                    x[i] = v;
+                }
+                Some(out.into_iter().map(|(i, _)| i).collect::<Vec<_>>())
+            }
+            None => {
+                self.ftran_l(x);
+                None
+            }
+        };
+        if !self.retas.is_empty() && list.as_ref().is_some_and(|l| !fits(l.len())) {
+            list = None;
+        }
+        self.ftran_r_list(x, list.as_mut());
+        list
+    }
+
+    /// The sparse L kernel `21b9de` on (row, value) inputs in input order: (row, value) in its output order, values
+    /// as it computes them. LU+0x128 < 0 (no levels): Kahn FIFO over the reached steps (C:81–257); else level
+    /// buckets from the lowest input level, each in insertion order (C:259–605). Values below ZERO are dropped and
+    /// not propagated.
+    /// shortcut: path B (Kahn below LU+0xe4, then the tail swept in step order, C:607–893) is not ported and
+    /// returns None (dense instead); 0 calls on degen2/kb2 (M1-02j). Port it when a capture takes it.
+    fn l_sparse(&self, input: &[(usize, f64)]) -> Option<Vec<(usize, f64)>> {
+        let m = self.head.len();
+        let dm = (m - self.n_singleton.min(m)) as f64;
+        if !(dm < 6.0 || dm * (10.0 * dm) <= m as f64 || self.ltail as f64 <= 10.0 * dm) {
+            return None;
+        }
+        let row = |k: usize| self.steps[k].0;
+        let mut x = vec![0.0; m]; // by step
+        let mut out = Vec::new();
+        match &self.llev {
+            None => {
+                let mut cnt = vec![0u32; m];
+                let mut lst: Vec<usize> = input.iter().map(|&(i, _)| self.prow[i] as usize).collect();
+                lst.iter().for_each(|&k| cnt[k] += 1);
+                let mut p = 0;
+                while p < lst.len() {
+                    for &(i, _) in &self.lcol[lst[p]] {
+                        let j = self.prow[i] as usize;
+                        if cnt[j] == 0 {
+                            lst.push(j);
+                        }
+                        cnt[j] += 1;
+                    }
+                    p += 1;
+                }
+                let mut q = Vec::with_capacity(lst.len());
+                for &(i, v) in input {
+                    let k = self.prow[i] as usize;
+                    x[k] = v;
+                    cnt[k] -= 1;
+                    if cnt[k] == 0 {
+                        q.push(k);
+                    }
+                }
+                let mut p = 0;
+                while p < q.len() {
+                    let k = q[p];
+                    p += 1;
+                    let v = std::mem::take(&mut x[k]);
+                    let big = v.abs() >= ZERO;
+                    if big {
+                        out.push((row(k), v));
+                    }
+                    for &(i, l) in &self.lcol[k] {
+                        let j = self.prow[i] as usize;
+                        cnt[j] -= 1;
+                        if big {
+                            x[j] = -(l * v) + x[j];
+                        }
+                        if cnt[j] == 0 {
+                            q.push(j);
+                        }
+                    }
+                }
+            }
+            Some(lev) => {
+                let mut bk: Vec<Vec<usize>> = vec![Vec::new(); self.lmax as usize + 1];
+                let mut mark = vec![false; m];
+                let mut lo = bk.len();
+                for &(i, v) in input {
+                    let k = self.prow[i] as usize;
+                    bk[lev[k]].push(k);
+                    mark[k] = true;
+                    lo = lo.min(lev[k]);
+                    x[k] = v;
+                }
+                for l in lo..bk.len() {
+                    let mut t = 0;
+                    while t < bk[l].len() {
+                        let k = bk[l][t];
+                        t += 1;
+                        mark[k] = false;
+                        let v = std::mem::take(&mut x[k]);
+                        if v.abs() >= ZERO {
+                            out.push((row(k), v));
+                            for &(i, lv) in &self.lcol[k] {
+                                let j = self.prow[i] as usize;
+                                if !mark[j] {
+                                    mark[j] = true;
+                                    bk[lev[j]].push(j);
+                                }
+                                x[j] = -(lv * v) + x[j];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Some(out)
     }
 
     /// FTRAN through U (x by row in, by row out: x_{r_k} holds the value of basis position p_k).
@@ -975,35 +1142,15 @@ impl Lu {
         rows
     }
 
-    /// The two-RHS FTRAN `09d112` of the entering column for the dual DSE (C:150–1884), on the dense results:
-    /// `a_in` the column's rows in storage order, `a_l` its nonzeros after L, `spike` the column after L and the row
-    /// etas (by row), `rho` the nonzeros of ρ on input (−1 dense), after L and after the row etas, `aq` α_q by
-    /// position, `r` the pivot position. Returns the U kernel ("21686f", "2126cd", "21841f" or "inline"), the α_q
-    /// output order (positions; M1-02g P3 on the sparse-U kernels: rows with LU+0xf8 = −1 in input order, tail rows
-    /// by U position descending, listed prefix rows by LU+0xf8; else position order with the pivot last, C:1812–1832)
-    /// the spike order for `update` and the number of its rows placed by the shortcut fill order below (0 when the
-    /// spike is collected densely; snapshots mark those pivots as outside the checked rule).
-    /// shortcut: the counts after L and the row etas are nonzeros of the dense solve (a sparse kernel's list may also
-    /// hold cancelled entries), a sparse side's order is its input rows then the other rows in position order (the
-    /// `21b9de` Kahn FIFO and `21f83a` orders are not modelled), the LU+0x128 level path is left out and a side that
-    /// `21f83a` takes densely counts as dense; checked on kb2 pivots 0–37 only (M1-02h). Upgrade when a capture
-    /// disagrees.
-    pub fn ftran2(&self, a_in: &[usize], a_l: i64, spike: &[f64], rho: [i64; 3], aq: &[f64], r: usize) -> (&'static str, Vec<usize>, Vec<usize>, usize) {
+    /// The two-RHS FTRAN `09d112` of the entering column for the dual DSE (C:150–1884) after `ftran_lr` on both
+    /// sides: `lr` the α_q side's rows in the order the U phase gets them (None: dense), `spike` that side after L and
+    /// the row etas (by row), `nb` the ρ side's count (−1 dense), `aq` α_q by position, `r` the pivot position.
+    /// Returns the U kernel ("21686f", "2126cd", "21841f" or "inline"), the α_q output order (positions; M1-02g P3 on
+    /// the sparse-U kernels: rows with LU+0xf8 = −1 in `lr` order, tail rows by U position descending, listed prefix
+    /// rows by LU+0xf8; else position order with the pivot last, C:1812–1832) and the spike order for `update`.
+    pub fn ftran2(&self, lr: Option<&[usize]>, spike: &[f64], nb: i64, aq: &[f64], r: usize) -> (&'static str, Vec<usize>, Vec<usize>) {
         let m = self.head.len() as i64;
-        let s = self.sparse_mult as i64;
-        let dense = |n: i64| n < 0 || m < s * n;
-        let mut seen = vec![false; spike.len()];
-        let mut lr: Vec<usize> = a_in.iter().copied().filter(|&i| spike[i].abs() > ZERO).collect();
-        for &i in a_in {
-            seen[i] = true;
-        }
-        lr.extend(self.dense_order(spike).into_iter().filter(|&i| !seen[i]));
-        let a_r = lr.len() as i64;
-        // L: 0x104·nnz ≤ m keeps a side sparse; row etas: a dense side stays dense, a sparse one sparse
-        let (mut na, mut nb) = (if dense(a_in.len() as i64) { -1 } else { a_l }, if dense(rho[0]) { -1 } else { rho[1] });
-        if !self.retas.is_empty() {
-            (na, nb) = (if dense(na) { -1 } else { a_r }, if dense(nb) { -1 } else { rho[2] });
-        }
+        let na = lr.map_or(-1, |l| l.len() as i64);
         let te = m - self.prefix as i64 + self.f0.len() as i64;
         let (d2, m2) = (self.dsum * self.dsum, 2.0 * m as f64);
         let sparse_u = |n: i64| n >= 0 && (te + n < m || d2 * (n as f64) < m2);
@@ -1013,18 +1160,17 @@ impl Lu {
             (false, true) => "21841f",
             (false, false) => "inline",
         };
-        let sorder = if na < 0 { self.dense_order(spike) } else { lr.clone() };
-        let fill = if na < 0 { 0 } else { lr.iter().filter(|&&i| !seen[i]).count() };
+        let sorder = lr.map_or_else(|| self.dense_order(spike), <[usize]>::to_vec);
         let supp: Vec<usize> = (0..aq.len()).filter(|&p| aq[p] != 0.0).collect();
         if !matches!(kernel, "21686f" | "21841f") {
             let mut out: Vec<usize> = supp.into_iter().filter(|&p| p != r).collect();
             out.push(r);
-            return (kernel, out, sorder, fill);
+            return (kernel, out, sorder);
         }
         let t = self.prefix;
         let pos = |k: usize| self.steps[k].1;
         let mut out: Vec<usize> =
-            lr.iter().map(|&i| self.prow[i] as usize).filter(|&k| self.upos[k] < t && self.f8[k] < 0 && aq[pos(k)] != 0.0).collect();
+            sorder.iter().map(|&i| self.prow[i] as usize).filter(|&k| self.upos[k] < t && self.f8[k] < 0 && aq[pos(k)] != 0.0).collect();
         let mut tail: Vec<usize> = supp.iter().map(|&p| self.kpos[p]).filter(|&k| self.upos[k] >= t).collect();
         tail.sort_by_key(|&k| std::cmp::Reverse(self.upos[k]));
         let mut pre: Vec<usize> = supp.iter().map(|&p| self.kpos[p]).filter(|&k| self.upos[k] < t && self.f8[k] >= 0).collect();
@@ -1032,7 +1178,7 @@ impl Lu {
         out.extend(tail);
         out.extend(pre);
         debug_assert_eq!(out.len(), supp.len(), "sparse-U output covers the support");
-        (kernel, out.into_iter().map(pos).collect(), sorder, fill)
+        (kernel, out.into_iter().map(pos).collect(), sorder)
     }
 
     /// LU+0xf0 list as basis positions (snapshots).
