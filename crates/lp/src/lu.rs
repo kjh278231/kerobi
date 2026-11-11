@@ -1019,7 +1019,7 @@ impl Lu {
                         let j = self.prow[i] as usize;
                         cnt[j] -= 1;
                         if big {
-                            x[j] = -(l * v) + x[j];
+                            x[j] -= l * v;
                         }
                         if cnt[j] == 0 {
                             q.push(j);
@@ -1053,7 +1053,7 @@ impl Lu {
                                     mark[j] = true;
                                     bk[lev[j]].push(j);
                                 }
-                                x[j] = -(lv * v) + x[j];
+                                x[j] -= lv * v;
                             }
                         }
                     }

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """M1-02j: the sparse-L kernel 21b9de and the row-eta order of 09d112 vs the original (degen2, kb2 dual pivots).
 Contract: docs/m1/m1_02j_lsolve.md section 3. Exit 0 only when every check passes.
+  --rust        also this worktree's build (RSOLVER_SNAP): U kernel, alpha_q -1 rows and L+R order (contract section 7)
   --self-test   also the tampers and model variants (T), each must be rejected
 """
 import collections, copy, gzip, hashlib, json, os, struct, sys
