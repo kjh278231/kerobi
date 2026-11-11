@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M2-06h-3 strong-branching candidate loop: original backend responses -> Rust -> original command trace."""
+"""M2-06h-3/06h-4 strong-branching candidate loop: original backend responses -> Rust -> original command trace."""
 import argparse
 import collections
 import copy
@@ -15,13 +15,20 @@ from mip_sb_restore_check import BINARY, bits, value, same, sha
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / 'bench/oracle/m2_06h3/final'
+# M2-06h-4: natural cases of branches the 06h-3 models never took; the manifest here covers both sets.
+DATA4 = ROOT / 'bench/oracle/m2_06h4/final'
 WORK = ROOT / 'target/mip_sb_loop'
 SOURCE = 'crates/mip/src/strong_branch.rs'
 TEST = 'crates/mip/tests/strong_branch_l1.rs'
-MODELS = ['pk1', 'neos5', 'tr12-30']
+# Smallest explore captures covering status 3/-1000, down >= 1e100, up prefill (markshare_4_0), dual < parent (kasai).
+NEW_MODELS = ['markshare_4_0', 'neos-3627168-kasai']
+# Original timer expiry: Rust returns Unported, so only reproducibility and the rejection are checked.
+TIMER_MODEL = 'ran14x18-disj-8'
+OLD_MODELS = ['pk1', 'neos5', 'tr12-30']
+MODELS = {**{m: DATA for m in OLD_MODELS}, **{m: DATA4 for m in NEW_MODELS}}
 OLD_06H2 = ROOT / 'bench/oracle/m2_06h2/capture/1.json.gz'
 OLD_06G2 = str(ROOT / 'bench/oracle/m2_06g2/final') + '/{}_iters10_1.json.gz'
-TOOLS = ['tools/mip_sb_loop.js', 'tools/mip_sb_snapshot.js', 'tools/mip_sb_loop_runs.sh',
+TOOLS = ['tools/mip_sb_loop.js', 'tools/mip_sb_snapshot.js', 'tools/mip_sb_loop_runs.sh', 'tools/mip_sb_census.py',
          'tools/mip_sb_loop_rust.py', 'tools/mip_sb_restore_check.py', SOURCE, TEST]
 PARAMS = dict(Threads=1, Seed=0, LogToConsole=0, NodeLimit=300, GURO_PAR_SBMAXITERS=10)
 NEW_KINDS = {'origLower', 'origUpper', 'propEnter', 'prop', 'values', 'poll', 'timer', 'input', 'reset'}
@@ -106,6 +113,8 @@ def controls(cases, manifest):
         same(ds[0]['output'], ds[3]['output'], m+'.control.output')
         for d in ds[1:3]:
             same(ds[0], d, m+'.repeat')
+        if m not in OLD_MODELS:
+            continue
         # Non-interference: earlier captures of the same setting, with this capture's additions removed.
         d = project(ds[0])
         old = summarize(load(Path(OLD_06G2.format(m))))
@@ -179,7 +188,7 @@ def batches(m, d, cover):
                 exp.append('flush')
             elif k == 'solve':
                 same(0, s['rc'], at+'.solve.rc')
-                assert s['status'] in (2, 6, 7), at+'.uncovered status'
+                assert s['status'] in (2, 3, 6, 7, 11, -1000), at+'.uncovered status'
                 exp.append(f'solve {prev["w"]}')
                 v, it = '-', '-'
                 if i+1 < len(steps) and steps[i+1]['kind'] == 'attr':
@@ -191,7 +200,7 @@ def batches(m, d, cover):
                         same(['attr', 'ObjVal', 0], [o['kind'], o['attr'], o['rc']], at+'.obj')
                         v = o['value']
                         cover['optimal below parent'] += value(v) < value(pre['attr']['value'])
-                    elif s['status'] == 7:
+                    elif s['status'] in (7, 11, -1000):  # C:562-569 one clamp path
                         v = s['dual']
                         cover['limited below parent'] += value(v) < value(pre['attr']['value'])
                     cover[f'status {s["status"]}'] += 1
@@ -252,6 +261,7 @@ def branches(e, cover):
             cover['up prefilled'] += 1
         else:
             same([62, 60], d, 'direction order')
+            cover['down >= 1e100'] += e['a'][k] == INF
     cover['early exit'] += last < len(cols) - 1
     parent = next(s['value'] for s in steps if s['kind'] == 'attr')
     cover['prefilled value'] += sum(1 for k, v in enumerate(e['a'] + e['z'])
@@ -259,7 +269,9 @@ def branches(e, cover):
 
 
 REQUIRED = ['prop', 'extra propagation', 'values', 'restore request', 'status 2', 'status 6', 'status 7',
-            'optimal below parent', 'whole candidate skipped', 'down gate', 'up >= 1e100', 'early exit', 'prefilled value']
+            'optimal below parent', 'whole candidate skipped', 'down gate', 'up >= 1e100', 'early exit', 'prefilled value',
+            # M2-06h-4 natural cases.
+            'status 3', 'status -1000', 'limited below parent', 'down >= 1e100', 'up prefilled']
 
 
 def run(root, text, label):
@@ -405,9 +417,10 @@ def self_test(cases, manifest, inputs, expected, actual):
                 print('SURVIVED', name, '(original unverified; synthetic', 'rejects)' if caught else 'misses)')
             else:
                 print('REJECT Rust', name)
-    # No original case: status 7 dual below parent, a set flag on an unchanged bound.
+    # No original case: a set flag on an unchanged bound (0 in the 06h-4 census too).
     # A constant score shift keeps every comparison against best (initially 0) unchanged.
-    same([('restore strict', True), ('score shift', False), ('clamp7', True)], survivors, 'surviving mutants')
+    # clamp7 is rejected since 06h-4 (neos-3627168-kasai status 7 dual below parent).
+    same([('restore strict', True), ('score shift', False)], survivors, 'surviving mutants')
 
 
 def synthetic(root, label):
@@ -425,18 +438,25 @@ def main():
     ap.add_argument('--self-test', action='store_true')
     ap.add_argument('--write-manifest', action='store_true')
     a = ap.parse_args()
-    files = {m: [DATA/f'{m}_{i}.json.gz' for i in (1, 2, 3)] + [DATA/f'{m}_control.json.gz'] for m in MODELS}
+    files = {m: [d/f'{m}_{i}.json.gz' for i in (1, 2, 3)] + [d/f'{m}_control.json.gz']
+             for m, d in {**MODELS, TIMER_MODEL: DATA4}.items()}
     cases = {m: [load(p) for p in ps] for m, ps in files.items()}
     if a.write_manifest:
-        paths = [p for ps in files.values() for p in ps] + [ROOT/p for p in TOOLS] + [OLD_06H2] + [Path(OLD_06G2.format(m)) for m in MODELS]
-        manifest = dict(binary=BINARY, models={m: cases[m][0]['model_sha256'] for m in MODELS},
+        paths = [p for ps in files.values() for p in ps] + [ROOT/p for p in TOOLS] + [OLD_06H2] + [Path(OLD_06G2.format(m)) for m in OLD_MODELS]
+        manifest = dict(binary=BINARY, models={m: cases[m][0]['model_sha256'] for m in files},
                         files={str(p.relative_to(ROOT)): sha(p) for p in paths})
-        (DATA/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
-    manifest = json.loads((DATA/'manifest.json').read_text())
+        (DATA4/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
+    manifest = json.loads((DATA4/'manifest.json').read_text())
     same(BINARY, manifest['binary'], 'manifest.binary')
     for p, h in manifest['files'].items():
         same(h, sha(ROOT/p), 'manifest.'+p)
     controls(cases, manifest)
+    timer = cases.pop(TIMER_MODEL)
+    try:
+        batches(TIMER_MODEL, timer[0], collections.Counter())
+        raise AssertionError('timer expiry no longer rejected')
+    except AssertionError as x:
+        assert 'timer expired: expected=0 actual=1' in str(x), x
     inputs, expected, cover = build(cases)
     actual = run(ROOT, inputs, 'original')
     compare(expected, actual, 'Rust')

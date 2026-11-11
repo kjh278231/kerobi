@@ -1,0 +1,8 @@
+# M2-06h-4: VarBranch=3 hooked run. 691b56 onEnter reads Node+0x18 (tools/mip_sb_snapshot.js:70); Node=NULL from 62a05d makes it fault.
+$ tools/gurun.sh node tools/mip_sb_loop.js markshare_4_0 <scratch> '{"NodeLimit":20,"GURO_PAR_SBMAXITERS":10,"VarBranch":3}'
+markshare_4_0.mps.gz DONE 8 20 0x1.6400000000000p+6 -0x0.0p+0 6 0x1.0c00000000000p+6 {"parent":20,"double":20,"kernel":20} ok false Error: access violation accessing 0x18
+    at onEnter (/script1.js:57) Error: access violation accessing 0x0
+    at hx (/script1.js:2)
+    at onLeave (/script1.js:62) Error: access violation accessing 0x18
+    at onEnter (/script1.js:57) Error: access violation accessing 0x0
+    at hx (/script1.js:2

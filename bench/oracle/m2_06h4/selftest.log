@@ -1,0 +1,44 @@
+REJECT binary
+REJECT model
+REJECT empty
+REJECT no kernel
+REJECT no propagation
+REJECT no extra propagation
+REJECT no values
+REJECT solution
+REJECT tolerance
+REJECT original bound
+REJECT later values
+REJECT work
+REJECT stall
+REJECT missing reset
+REJECT timer
+REJECT contradiction
+REJECT status
+REJECT direct values
+REJECT direct stall
+REJECT direct work
+REJECT trace order
+REJECT trace bound
+REJECT trace values
+REJECT trace result
+REJECT Rust prefill floor
+REJECT Rust prefill ceil
+REJECT Rust prefill nil
+REJECT Rust prefill min
+REJECT Rust eps
+REJECT Rust gate
+REJECT Rust down gate
+REJECT Rust stall
+REJECT Rust best
+REJECT Rust work
+SURVIVED restore strict (original unverified; synthetic rejects)
+REJECT Rust restore upper
+REJECT Rust up skip
+SURVIVED score shift (original unverified; synthetic misses)
+REJECT Rust score floor
+REJECT Rust clamp2
+REJECT Rust clamp7
+REJECT Rust split
+PASS {'prop': 965, 'extra propagation': 536, 'limited below parent': 2, 'status 7': 622, 'restore request': 4218, 'batches': 195, 'candidates evaluated': 497, 'whole candidate skipped': 3, 'down >= 1e100': 1, 'early exit': 82, 'prefilled value': 11, 'optimal below parent': 17, 'status 2': 334, 'values': 209, 'down gate': 20, 'status 6': 2, 'up >= 1e100': 2, 'status -1000': 6, 'up prefilled': 2, 'down prefilled': 5, 'status 3': 1}
+rc=0

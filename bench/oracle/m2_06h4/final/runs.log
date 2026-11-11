@@ -1,0 +1,12 @@
+markshare_4_0.mps.gz DONE 8 300 0x1.2e00000000000p+9 -0x0.0p+0 10 0x1.8800000000000p+5 {} ok true 
+markshare_4_0.mps.gz DONE 8 300 0x1.2e00000000000p+9 -0x0.0p+0 10 0x1.8800000000000p+5 {"partition":240,"parent":23,"budget":23,"double":23,"kernel":23,"batch":23,"cost":23} ok true 
+markshare_4_0.mps.gz DONE 8 300 0x1.2e00000000000p+9 -0x0.0p+0 10 0x1.8800000000000p+5 {"partition":240,"parent":23,"budget":23,"double":23,"kernel":23,"batch":23,"cost":23} ok true 
+markshare_4_0.mps.gz DONE 8 300 0x1.2e00000000000p+9 -0x0.0p+0 10 0x1.8800000000000p+5 {"partition":240,"parent":23,"budget":23,"double":23,"kernel":23,"batch":23,"cost":23} ok true 
+neos-3627168-kasai.mps.gz DONE 8 300 0x1.6de4000000000p+14 0x1.e022955c82893p+19 10 0x1.e2c967ae147abp+19 {} ok true 
+neos-3627168-kasai.mps.gz DONE 8 300 0x1.6de4000000000p+14 0x1.e022955c82893p+19 10 0x1.e2c967ae147abp+19 {"partition":445,"budget":47,"parent":26,"double":23,"kernel":23,"batch":23,"cost":23} ok true 
+neos-3627168-kasai.mps.gz DONE 8 300 0x1.6de4000000000p+14 0x1.e022955c82893p+19 10 0x1.e2c967ae147abp+19 {"partition":445,"budget":47,"parent":26,"double":23,"kernel":23,"batch":23,"cost":23} ok true 
+neos-3627168-kasai.mps.gz DONE 8 300 0x1.6de4000000000p+14 0x1.e022955c82893p+19 10 0x1.e2c967ae147abp+19 {"partition":445,"budget":47,"parent":26,"double":23,"kernel":23,"batch":23,"cost":23} ok true 
+ran14x18-disj-8.mps.gz DONE 8 300 0x1.0b6c000000000p+14 0x1.b21359e0fe6e1p+11 10 0x1.d860000000000p+11 {} ok true 
+ran14x18-disj-8.mps.gz DONE 8 300 0x1.0b6c000000000p+14 0x1.b21359e0fe6e1p+11 10 0x1.d860000000000p+11 {"partition":306,"parent":94,"budget":94,"double":94,"kernel":94,"batch":94,"cost":94} ok true 
+ran14x18-disj-8.mps.gz DONE 8 300 0x1.0b6c000000000p+14 0x1.b21359e0fe6e1p+11 10 0x1.d860000000000p+11 {"partition":306,"parent":94,"budget":94,"double":94,"kernel":94,"batch":94,"cost":94} ok true 
+ran14x18-disj-8.mps.gz DONE 8 300 0x1.0b6c000000000p+14 0x1.b21359e0fe6e1p+11 10 0x1.d860000000000p+11 {"partition":306,"parent":94,"budget":94,"double":94,"kernel":94,"batch":94,"cost":94} ok true 
