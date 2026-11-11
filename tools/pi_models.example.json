@@ -1,0 +1,22 @@
+{
+  "$schema": "https://pi.dev/schemas/models.schema.json",
+  "providers": {
+    "opengateway": {
+      "baseUrl": "https://apis.opengateway.ai/v1",
+      "api": "openai-completions",
+      "apiKey": "$OPENGATEWAY_API_KEY",
+      "authHeader": true,
+      "models": [
+        {
+          "id": "<MODEL_ID>",
+          "name": "GLM 5.3 Flash",
+          "reasoning": false,
+          "input": ["text"],
+          "contextWindow": 0,
+          "maxTokens": 0,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
+        }
+      ]
+    }
+  }
+}

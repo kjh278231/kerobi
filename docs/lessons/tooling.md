@@ -52,6 +52,7 @@
 
 ## Herdr·실행
 
+- **pi 1.5.2의 JSON 모드는 인증 실패에도 종료 코드 `0`을 반환한다.** 마지막 assistant `message_end.message.stopReason`을 읽어 실패를 판정한다. OpenGateway AI에서는 같은 키와 모델이 `.one` 주소에서 401, 공식 `apis.opengateway.ai/v1`에서 성공했다. 도움말만 실행해도 신뢰 파일 잠금을 만들므로 기존 설정을 보존하려면 `PI_CODING_AGENT_DIR`를 임시 디렉터리로 지정한다. (pi-worker, [인증 확인](../16_pi_worker_design.md#83-공식-주소에서-인증-확인))
 - **`pane wait-output --match`는 화면에 다시 찍힌 명령줄에도 맞는다.** 끝 표시는 `--regex "EXIT=[0-9]"`처럼 숫자까지 넣어 기다린다. (M2-03c-2)
 - **`pane wait-output --regex`에 끝 앵커 `$`를 넣었더니 즉시 종료코드 1로 끝났다(실패한 접근).** 시작 앵커를 쓴 `--regex "^ALL_DONE_RC=[0-9]"`는 화면에 다시 찍힌 명령줄과 구분되고 정상으로 기다렸다. (M2-03d-2)
 - **같은 pane을 재사용하면 `clear` 뒤에도 `wait-output`·`read`가 이전 실행의 끝 표시에 맞는다(실패한 접근).** 실행마다 다른 끝 표시를 쓰거나 표시 개수를 세며 기다린다. (M3-04b-2)
