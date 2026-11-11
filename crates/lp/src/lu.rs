@@ -1047,8 +1047,7 @@ impl Lu {
     /// shortcut: callers outside the dual DSE pass an empty `sorder` (the `2207de` sparse paths are not modelled).
     /// `interval`: the update limit LU+0x188 (LUINTERVAL), which caps the room a moved U row gets.
     /// shortcut: the pool never outgrows its capacity LU+0x168 (05b257 C:800–860 reallocates; kb2 stays far below).
-    /// shortcut: the pool growth rules are those seen on kb2 (34/34 updates); maros grows more on some updates
-    /// (M1-02m), so later eta parities there can be wrong.
+    /// shortcut: the pool growth rules are checked on kb2 (34/34 updates) and maros pivots 0–388 only.
     pub fn update(&mut self, pos: usize, var: usize, spike: &[f64], sorder: &[usize], interval: usize) -> bool {
         // Forrest–Tomlin as 5b257 stores it (m1_notes §8.10): r = the leaving index, q its U position, t the prefix
         // LU+0x100, p = max(q, t−1), l = max(p, U positions of the spike entries ≠ r). With l ≠ p and a non-empty U
