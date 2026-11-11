@@ -152,7 +152,7 @@ Rust·Python 패키지는 변경하지 않아 cargo/pytest는 실행 대상이 �
 
 검사기 `--self-test`는 종료 0(`ACCEPTANCE PASS (+ self-test)`), 기존 `python3 tools/mip_sb_read_check.py`도 종료 0(`ACCEPTANCE PASS`)이다. [판정 로그](../../bench/oracle/m2_06g2/check.log)와 [회귀 로그](../../bench/oracle/m2_06g2/regression.log)를 보존했다.
 
-독립 검토는 정적 C/asm 재유도와 검사기 실행, 원본 neos5 iters10 재캡처 1회를 포함한다. 검토에서 분기 bound를 적용하지 않은 기록이 통과하는 결함을 찾았다. solve의 입력 LB/UB가 부모보다 느슨해지지 않고 선택 열의 방향 bound가 엄격히 조여졌는지 검사해 수정했고, 변조 15번째로 추가해 거부했다. 상태 2 clamp까지 제거하는 변이도 추가해 neos5에서 거부했다. 검토자가 만든 [재캡처](../../bench/oracle/m2_06g2/review_neos5_iters10.json.gz)는 final/neos5_iters10_1과 JSON·gz 바이트가 같다(SHA-256 `d1fa4f3703670267b363ad95a272a073ed262da9d7f47b76f2bc869bcef4eae2`). 
+독립 검토는 정적 C/asm 재유도와 검사기 실행, 원본 neos5 iters10 재캡처 1회를 포함한다. 검토에서 분기 bound를 적용하지 않은 기록이 통과하는 결함을 찾았다. solve의 입력 LB/UB가 부모보다 느슨해지지 않고 선택 열의 방향 bound가 엄격히 조여졌는지 검사해 수정했고, 변조 15번째로 추가해 거부했다. 상태 2 clamp까지 제거하는 변이도 추가해 neos5에서 거부했다. 검토자가 만든 [재캡처](../../bench/oracle/m2_06g2/review_neos5_iters10.json.gz)는 final/neos5_iters10_1과 JSON·gz 바이트가 같다(SHA-256 `d1fa4f3703670267b363ad95a272a073ed262da9d7f47b76f2bc869bcef4eae2`).
 
 작업 branch는 `work/m2-06g-2`, worktree는 `../rsolver-m2-06g-2`다. 계약 `60622bd`, 첫 훅 `93ddf79`, 캡처 `8ab7565`, 검사기·최종 결과 `8eeeb72`로 단계를 보존했다. 미커밋 선행 변경은 없다. 병합은 main의 `Merge M2-06g-2`로 확인한다. 병합 뒤 작업 worktree와 branch를 정리하고 점유를 해제한다.
 
