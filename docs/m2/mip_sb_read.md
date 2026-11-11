@@ -190,4 +190,6 @@ pk1 NodeLimit 300에서 첫 `62f909`의 W에 하드웨어 watchpoint를 걸었�
 - 후속:
   - **M2-06g-2**(조사): `691453`·`691b56` SB 풀이의 결과 소비와 임시 bound·basis 복원표, `62ec1d` 후보 목록·SBMAXCANDS, `T+0x68` 누적, `62f909`의 SB 목적 배열·`[rsp+0xc8]`·`[rsp+0xd8]` 출처. 06h의 선행.
   - 다음 명령: `python3 tools/session.py status` 뒤 M2-06g-2. 이번 자료 재검사는 `python3 tools/mip_sb_read_check.py --self-test`(Herdr, 2–3분).
+- 작업 위치: branch `work/m2-06g`(착수 기준 main `c195957`, 병합 전 최신 main으로 rebase), worktree `../rsolver-m2-06g`. 병합은 main의 `Merge M2-06g` 이력으로 확인하고 병합과 함께 worktree·branch를 정리한다. 미커밋 변경 없음.
+- 갱신 위치: `docs/handoff/M2.md`, `docs/m2/sprint_design.md`, `docs/11_progress.md`·`12_roadmap_diagram.md`·`13_work_units.md`·`14_sprint_plan.md`(06g 완료, 06g-2 추가, 06h·10b 선행 06g-2).
 - 교훈: `docs/lessons/tooling.md`(4바이트 함수 가로채기 불가, call 명령 probe가 반환 주소를 바꿈, 인라인 setter는 값 사슬로 찾음), `docs/lessons/original.md`(η 수명·SB 캐시·읽는 쪽 식).
