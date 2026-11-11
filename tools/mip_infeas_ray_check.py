@@ -86,8 +86,8 @@ def calls(d):
 
 
 class Out(Exception):
-    def __init__(self, code):
-        self.code = code
+    def __init__(self, code, site):
+        self.code, self.site = code, site
 
 
 def replay(call, arrays, V=frozenset(), c=None):
@@ -145,7 +145,7 @@ def replay(call, arrays, V=frozenset(), c=None):
     try:
         above = ub[j] + delta <= x
         if not above and not (x <= lb[j] - delta):
-            raise Out(1)
+            raise Out(1, 'inside')
         s = -1 if above else 1
         if 'sign' in V:
             s = -s
@@ -159,11 +159,11 @@ def replay(call, arrays, V=frozenset(), c=None):
             if j < n:
                 xs = x * C[j]
                 if C[j] > 1e7:
-                    raise Out(3)
+                    raise Out(3, 'cscale')
             else:
                 xs = x / R[j - n]
                 if R[j - n] < 1e-7:
-                    raise Out(3)
+                    raise Out(3, 'rscale')
         bnd = [0.0] * N
         for k in range(n):
             b = lb[k] if status[k] in (-1, -4) else ub[k] if status[k] in (-2, -5) else None
@@ -208,25 +208,25 @@ def replay(call, arrays, V=frozenset(), c=None):
                     c['q'] += 1
                     qi += 1
                     if qs[qi - 1]['ret']:
-                        raise Out(4)
+                        raise Out(4, 'q')
                 if d > 1e7:
-                    raise Out(3)
+                    raise Out(3, 'big')
                 if TOL < d or ('tol0' in V and a != 0.0):
                     if not TOL < d:
                         c['ray_small'] += 1
                     if status[k] < 0:
                         ray[k] = fl * a
                         if status[k] in (-3, -6):
-                            raise Out(2)
+                            raise Out(2, 'free')
                         if k >= n:
                             c['ray_slack'] += 1
                     elif k == j:
                         ray[k] = fl * a if 'basic1' in V else 1.0
                         if abs(a - fl) > TOL:
-                            raise Out(2)
+                            raise Out(2, 'pivot')
                     else:
                         ray[k] = fl * a
-                        raise Out(2)
+                        raise Out(2, 'basic')
                 else:
                     if a != 0.0:
                         c['ray_small'] += 1
@@ -243,7 +243,7 @@ def replay(call, arrays, V=frozenset(), c=None):
             y = ray[n + i]
             rho = rho + ((rhs[i] * y) / R[i] if R and 'rhs_noR' not in V else rhs[i] * y)
             if abs(y) > (100.0 if 'f6_100' in V else 1000.0):
-                raise Out(6)
+                raise Out(6, 'y1000')
         if m > 0:
             w = m * 3.0 + w if R else (m + m) + w
         o['l60'] = rho
@@ -254,7 +254,7 @@ def replay(call, arrays, V=frozenset(), c=None):
         if N > 0:
             w = (N + N) + w
         if abs(res / 100.0) > TOL:
-            raise Out(2)
+            raise Out(2, 'res')
         sg = float(s)
         nu2 = 1e-200 if fm == 2 and 'tiny200' not in V else 0.0
         act = 0.0
@@ -283,7 +283,7 @@ def replay(call, arrays, V=frozenset(), c=None):
         if n > 0:
             w = n * (4.0 if C else 3.0) + w
         if nu2 < 1e-4:
-            raise Out(5)
+            raise Out(5, 'norm')
         nu = math.sqrt(nu2)
         o['l68'] = (sg * (act - rho)) / nu
         for k in range(N):
@@ -324,6 +324,7 @@ def replay(call, arrays, V=frozenset(), c=None):
         o.update(fail=e.code, l58=-1, l54=0, l60=0.0, l5c=0, l68=0.0)
         o['w'] = w
         c[f'fail{e.code}'] += 1
+        c[f'fail{e.code}_{e.site}'] += 1
     return o
 
 

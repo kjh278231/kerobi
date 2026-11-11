@@ -103,7 +103,8 @@ M2-01의 G6 완료 범위는 유지한다. 실제 실행되지 않은 presolve �
 | M2-06f | 구현 완료(L1) | 06e의 갱신 경로 | 06e | [완료](m2/mip_pseudocost_rust.md). `pseudocost::Pseudocost`(새 표·시드, 갱신, 노드 갱신 판정·w, 감쇠 판정·감쇠, 대칭 전파). 06e 6사례 사건 재생에서 판정 24,892·노드 갱신 11,157·감쇠 8,972·대칭 4·표 A 212개 새 표·해제 스냅숏이 원본과 비트 일치(표 B·C는 주입 사슬만). 변조 5종·변이 16종 기대대로. `bnb.rs` 미연결 |
 | M2-06f-2 | 조사 완료 | `bnb.rs` 연결 전 pseudocost 입력 | 06f | [완료](m2/mip_node_life.md). 해제 연쇄 `5f9d4e`→`5fa560`(부모 `I+0x6c` = 단계 5 자식 수, 자식 수 `N+0x22` 연쇄, 루트 예외)을 새 `tools/mip_node_life.js`·`_check.py`로 6사례×3회 캡처해 재생 일치, 감쇠 조상 열 7,404회·06e 감쇠 사건 일치. `L+0x28` = 최적 LP 환산비용(`12ef7f`/`1121ad`), `L+0x70` = cutoff LP 같은 출력 또는 `95da98`. 노드 N realloc(`ac6569`) 발견. 변조 6종·변이 W1–W6 기대대로. Rust 입력 판정표(§7.1): 아직 불가 |
 | M2-06f-3 | 구현 완료(L1) | 노드 수명 모형(L1) | 06f-2 | [완료](m2/mip_node_life_rust.md). `node_life::NodeLife`(`create`·`release`·`ancestors`). 06f-2 6사례 run 1 재생 110,753줄(`5fa560` 40,496, 감쇠 사슬 7,404)이 캡처와 같음. 변조 7종 거부, 변이 W1·W3–W6 거부·W2 생존. `bnb.rs` 미연결 |
-| M2-06f-4 | 조사 | infeasible 노드 벡터 `95da98` | 06f-2 | `L+0x70`·`+0x54`·`+0x58` 계산과 실패 조건 |
+| M2-06f-4 | 조사 완료 | infeasible 노드 벡터 `95da98` | 06f-2 | [완료](m2/mip_infeas_ray.md). 이탈 행 r의 Farkas 행(`12ea3f` tableau 행, s·정규화·ρ·`L+0x68`·cut 최댓값). 6사례 131호출의 출력·ray·bnd·work가 재생과 비트까지 같음(새 `tools/mip_infeas_ray.js`·`_check.py`, `bench/oracle/m2_06f4`). 감쇠 벡터 117회 중 69회는 `6684cd`가 제자리에서 고친 값. fail 1·4·5·flip·재시도는 실행 0회 |
+| M2-06f-5 | 조사 | `6684cd` infeasible ray 수정 | 06f-4 | `5fb8ec` C:2210 게이트와 ray·`L+0x5c`·`+0x60`·`+0x68` 수정 규칙. 06f-4 자료의 `pp` 69회 재생 |
 | M2-06g | 조사 | strong branching 예산·복원 계약 | 06e | LP 결과 소비와 임시 bound·basis 복원표 |
 | M2-06h | 구현 | 후보 하나의 strong branching 평가 | 06g, LP 상태 저장 기능 | 양방향 결과와 원상 복구 확인 |
 | M2-06i | 조사·구현 | reliability 후보 판정 한 경로 | 06f·06h | 원본 후보 집합·점수·동률 순서 비교 |
