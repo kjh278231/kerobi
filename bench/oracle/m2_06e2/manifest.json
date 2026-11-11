@@ -1,0 +1,34 @@
+{
+ "task": "M2-06e-2",
+ "schema": 1,
+ "tool": "tools/mip_pcost_bc.js",
+ "tool_sha256": "8918b7c5c914a8c290cbd935d8483dbf9286ec5ae43514173c812ff63cc70ce8",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "NodeLimit": 2000
+ },
+ "models": "../re/bench/data/miplib/<case>.mps.gz",
+ "files": {
+  "markshare_4_0_1.json.gz": "36a042febff6e90a2d8c24cd3e02fa64253ae182bc4580e3ef2838069ef7ce40",
+  "markshare_4_0_2.json.gz": "36a042febff6e90a2d8c24cd3e02fa64253ae182bc4580e3ef2838069ef7ce40",
+  "markshare_4_0_3.json.gz": "36a042febff6e90a2d8c24cd3e02fa64253ae182bc4580e3ef2838069ef7ce40",
+  "pk1_1.json.gz": "12f077e363f440f706e08244699ad20d5b0cd0899c6a5e79426e5b7ce9e7c70b",
+  "pk1_2.json.gz": "12f077e363f440f706e08244699ad20d5b0cd0899c6a5e79426e5b7ce9e7c70b",
+  "pk1_3.json.gz": "12f077e363f440f706e08244699ad20d5b0cd0899c6a5e79426e5b7ce9e7c70b",
+  "neos5_1.json.gz": "21fc2e92cdcec6258a091c671c6fd60e418122f767fa293b8af4e1956e6ac925",
+  "neos5_2.json.gz": "21fc2e92cdcec6258a091c671c6fd60e418122f767fa293b8af4e1956e6ac925",
+  "neos5_3.json.gz": "21fc2e92cdcec6258a091c671c6fd60e418122f767fa293b8af4e1956e6ac925",
+  "tr12-30_1.json.gz": "f232c915dd46815ce951c6f10446b5f059890c9361b519959906220779d825ba",
+  "tr12-30_2.json.gz": "f232c915dd46815ce951c6f10446b5f059890c9361b519959906220779d825ba",
+  "tr12-30_3.json.gz": "f232c915dd46815ce951c6f10446b5f059890c9361b519959906220779d825ba",
+  "fhnw-binpack4-4_1.json.gz": "7abb9b91e5ed4b446769b95750032b9ebada1f1ae75a2b702c809aa106ec8fdc",
+  "fhnw-binpack4-4_2.json.gz": "7abb9b91e5ed4b446769b95750032b9ebada1f1ae75a2b702c809aa106ec8fdc",
+  "fhnw-binpack4-4_3.json.gz": "7abb9b91e5ed4b446769b95750032b9ebada1f1ae75a2b702c809aa106ec8fdc",
+  "neos-860300_1.json.gz": "598021e96b2bc847fc06849aebfcb7584430dd04c03fb58ea51e465f1e1b2ec9",
+  "neos-860300_2.json.gz": "598021e96b2bc847fc06849aebfcb7584430dd04c03fb58ea51e465f1e1b2ec9",
+  "neos-860300_3.json.gz": "598021e96b2bc847fc06849aebfcb7584430dd04c03fb58ea51e465f1e1b2ec9"
+ }
+}
