@@ -10,7 +10,7 @@ from pathlib import Path
 from mip_sb_restore_check import BINARY, sha, same, rules
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / 'bench/oracle/m2_06h1/scaled'
+DATA = ROOT / 'bench/oracle/m2_06h1/verified'
 OLD = ROOT / 'bench/oracle/m2_06g2/final/pk1_iters10_1.json.gz'
 NEW = {'factorSave', 'boundwrite', 'flush'}
 
@@ -33,12 +33,12 @@ def projection(d):
 
 def factor(f, at):
     assert isinstance(f, dict), at + '.missing'
-    m, u, l, eta = (f[k] for k in ('m', 'u', 'l', 'eta'))
-    assert m > 0 and min(u, l, eta) >= 0, at
-    lengths = [m*8, (m+1)*8, u*4, u*8, (m+1)*8, m*8, l*4, l*8, eta*4, m*4]
+    m, rowEnd, colEnd, prefixCount = (f[k] for k in ('m', 'rowEnd', 'colEnd', 'prefixCount'))
+    assert m > 0 and min(rowEnd, colEnd, prefixCount) >= 0, at
+    lengths = [m*8, (m+1)*8, rowEnd*4, rowEnd*8, (m+1)*8, m*8, colEnd*4, colEnd*8, prefixCount*4, m*4]
     same(lengths, [len(bytes.fromhex(a)) for a in f['arrays']], at + '.lengths')
-    same(u, int.from_bytes(bytes.fromhex(f['arrays'][1])[-8:], 'little', signed=True), at+'.Uend')
-    same(l, int.from_bytes(bytes.fromhex(f['arrays'][4])[-8:], 'little', signed=True), at+'.Lend')
+    same(rowEnd, int.from_bytes(bytes.fromhex(f['arrays'][1])[-8:], 'little', signed=True), at+'.Uend')
+    same(colEnd, int.from_bytes(bytes.fromhex(f['arrays'][4])[-8:], 'little', signed=True), at+'.Lend')
 
 
 def acceptance(d):
@@ -49,6 +49,8 @@ def acceptance(d):
         baseline = None
         pending = {}
         bounds = copy.deepcopy(e['bounds0'])
+        flushed = False
+        requests = 0
         for si, s in enumerate(e['steps']):
             at = f'double[{ei}].steps[{si}]'
             k = s['kind']
@@ -67,6 +69,8 @@ def acceptance(d):
                 same(baseline, s['factorDst'], at+'.restored')
                 totals['up' if s['branch'][1] == 62 else 'down'] += 1
             elif k == 'boundwrite':
+                requests += 1
+                flushed = False
                 same(0, s['rc'], at+'.rc')
                 same(bounds, s['before'], at+'.before')
                 same(bounds, s['after'], at+'.deferred')
@@ -85,6 +89,12 @@ def acceptance(d):
                     bounds[side] = row[:j*16] + val + row[(j+1)*16:]
                 same(bounds, s['bounds'], at+'.applied')
                 pending.clear()
+                flushed = True
+            elif k == 'solve':
+                assert flushed and requests > 0, at+'.flush/request missing'
+                same(bounds, s['before'], at+'.solve bounds')
+                flushed = False
+        assert requests > 0, f'double[{ei}].requests missing'
         assert not pending, f'double[{ei}].pending'
     for k in ('factorSave', 'restore', 'up', 'down', 'flush', 'boundwrite'):
         assert totals[k] > 0, 'zero target: '+k
@@ -127,6 +137,10 @@ def self_test(original, manifest):
         ('bound', lambda d:step(d,'flush')['bounds'].__setitem__(1,'00')),
         ('request', lambda d:step(d,'boundwrite')['val'].__setitem__(0,'0000000000000000')),
     ]
+    def missing_chain(d):
+        e=next(e for e in d['events'] if e['e']=='double')
+        e['steps']=[s for s in e['steps'] if s['kind'] not in ('boundwrite','flush')]
+    tests.append(('missing chain', missing_chain))
     for i in range(10):
         tests.append((f'array {i}', lambda d,i=i:step(d,'restore')['factorDst']['arrays'].__setitem__(i,'00')))
     for name, mutate in tests:

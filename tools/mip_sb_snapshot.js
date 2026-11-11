@@ -33,14 +33,14 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
      vec:raw(s.add(v?0x1e0:0x230).readPointer(),n*(v?8:16)), basic:raw(lu.add(0x18).readPointer(),nr*4)}; };
  const factor = (p,m,saved) => {
    const at = o=>p.add(o).readPointer();
-   const u=at(saved?0x90:0xb0).add(m*8).readS64().toNumber();
-   const l=at(saved?0x68:0x88).add(m*8).readS64().toNumber();
-   const eta=p.add(saved?0xcc:0xec).readS32();
-   if(m<0 || u<0 || l<0 || eta<0 || Math.max(m,u,l,eta)>10000000)throw Error('factor length');
-   const specs=[[0x30,0x50,m,8],[0x90,0xb0,m+1,8],[0xb0,0xd0,u,4],[0xa8,0xc8,u,8],
-     [0x68,0x88,m+1,8],[0x78,0x98,m,8],[0x88,0xa8,l,4],[0x80,0xa0,l,8],
-     [0xd0,0xf0,eta,4],[0xd8,0xf8,m,4]];
-   return {m,u,l,eta,arrays:specs.map(([a,b,n,w])=>raw(at(saved?a:b),n*w))};
+   const rowEnd=at(saved?0x90:0xb0).add(m*8).readS64().toNumber();
+   const colEnd=at(saved?0x68:0x88).add(m*8).readS64().toNumber();
+   const prefixCount=p.add(saved?0xcc:0xec).readS32();
+   if(m<0 || rowEnd<0 || colEnd<0 || prefixCount<0 || Math.max(m,rowEnd,colEnd,prefixCount)>10000000)throw Error('factor length');
+   const specs=[[0x30,0x50,m,8],[0x90,0xb0,m+1,8],[0xb0,0xd0,rowEnd,4],[0xa8,0xc8,rowEnd,8],
+     [0x68,0x88,m+1,8],[0x78,0x98,m,8],[0x88,0xa8,colEnd,4],[0x80,0xa0,colEnd,8],
+     [0xd0,0xf0,prefixCount,4],[0xd8,0xf8,m,4]];
+   return {m,rowEnd,colEnd,prefixCount,arrays:specs.map(([a,b,n,w])=>raw(at(saved?a:b),n*w))};
  };
  Interceptor.attach(b.add(0x576220),{onEnter(a){this.ev=evl;if(!this.ev)return;this.out=a[1];this.m=a[0].add(0x64).readS32();this.src=factor(a[0].add(0x470).readPointer(),this.m,false);},onLeave(r){if(this.ev && !r.isNull())this.ev.steps.push({kind:'factorSave',src:this.src,dst:factor(this.out.readPointer(),this.m,true)});}});
  Interceptor.attach(b.add(0x184e60),{onEnter(a){this.ev=evl;if(this.ev)this.lp=a[0];},onLeave(r){if(this.ev)this.ev.steps.push({kind:'flush',rc:r.toInt32(),bounds:bounds(this.lp)});}});
