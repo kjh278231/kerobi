@@ -493,16 +493,56 @@ def check_capture(d, name, V=frozenset(), c=None):
             c['d_pos'] += 1
         else:
             c['d_zero'] += 1
-    # gate: successful 95da98 calls with L+0x68 >= 1e-4 and the 6684cd calls that read them
-    used = {call['fx']['fk'] for call in cs}
-    for i, e in enumerate(ev):
-        if e['e'] == 'fk' and e['rc'] == 0 and e['f'] == 0 and f(e['l68']) >= GATE:
-            c['fk_gate'] += 1
-            if i in used:
-                c['fk_called'] += 1
-            else:
-                c[f'fk_not_called_ra_{e["ra5"]:#x}'] += 1
+    gate(ev, used={call['fx']['fk'] for call in cs}, name=name, c=c)
     return c
+
+
+SITE_5FB8EC = 0x510BC0  # return address of the 5ce67b call in 5fb8ec (C:1106)
+OTHER = {0x736C17: '8faaa4', 0x7229A3: '8e4682'}  # LP diving, sub-MIP construction: they never call 6684cd
+
+
+def gate_true(e):
+    return e['l38'] == 3 and e['l58'] >= 0 and f(e['l68']) >= GATE and e['v70'] == 1
+
+
+def gate(ev, used, name, c):
+    """Contract Q2. Every successful 95da98 with L+0x68 >= 1e-4 is either read by a 6684cd call, or comes from a 5ce67b
+    caller other than 5fb8ec, or its 5fb8ec call returned at C:802-804 (5eda00 != 1) before the gate probe.
+    Every gate probe (0x5124b4) with the gate fields true is followed by 6684cd on the same L, and only then."""
+    for i, e in enumerate(ev):
+        if e['e'] == 'gt':
+            nxt = next((x for x in ev[i + 1:] if x['e'] in ('fx', 'gt', 'nb_')), None)
+            if gate_true(e):
+                need(nxt is not None and nxt['e'] == 'fx' and e['k'] >= 0 and nxt['fk'] == e['k'], f'{name} event {i}: gate true, no 6684cd on that L')
+                c['gt_true'] += 1
+            else:
+                need(nxt is None or nxt['e'] != 'fx', f'{name} event {i}: gate false, 6684cd called')
+                c['gt_false'] += 1
+        elif e['e'] == 'fx':
+            prv = next((x for x in reversed(ev[:i]) if x['e'] in ('gt', 'fx', 'nb_')), None)
+            need(prv is not None and prv['e'] == 'gt' and prv['k'] == e['fk'], f'{name} event {i}: 6684cd without the gate probe')
+        if not (e['e'] == 'fk' and e['rc'] == 0 and e['f'] == 0 and f(e['l68']) >= GATE):
+            continue
+        c['fk_gate'] += 1
+        if i in used:
+            c['fk_called'] += 1
+            continue
+        if e['ra5'] != SITE_5FB8EC:
+            need(e['ra5'] in OTHER, f'{name} event {i}: uncalled 95da98 from 5ce67b caller {e["ra5"]:#x}')
+            c[f'nc_{OTHER[e["ra5"]]}'] += 1
+            continue
+        end = next((j for j in range(i + 1, len(ev)) if ev[j]['e'] == 'nb_'), None)
+        need(end is not None, f'{name} event {i}: no 5fb8ec leave after the fk')
+        win = ev[i + 1:end]
+        stop = [x for x in win if x['e'] == 'ck' and x['ret'] != 1]
+        need(stop and stop[0]['ra'] == 0x511AA9 or (stop and stop[0]['ra'] == 0x510C53),
+             f'{name} event {i}: uncalled in 5fb8ec without a 5eda00 stop')
+        need(not any(x['e'] in ('gt', 'fx') for x in win), f'{name} event {i}: gate probe or 6684cd after the 5eda00 stop')
+        need(all(x['ret'] == 1 for x in win if x['e'] == 'ck' and x is not stop[0] and win.index(x) < win.index(stop[0])),
+             f'{name} event {i}: 5eda00 stop is not the first non-1 return')
+        need(ev[end]['rc'] == 0 and any(gate_true(x) for x in ev[end]['ls'] if x['k'] == i),
+             f'{name} event {i}: 5fb8ec leave rc or L state')
+        c[f'nc_5eda00_{stop[0]["ret"]}_d8_{e["d8"]}'] += 1
 
 
 def pp_check(d, o, name, c):
@@ -565,6 +605,7 @@ def acceptance(caps, old):
         tot.update(c)
     need(tot['calls'] > 0 and tot['changed'] > 0 and tot['accept'] > 0, 'no 6684cd call changed the ray')
     need(tot['fk_gate'] > tot['fk_called'], 'no uncalled 95da98 success (gate question has no event)')
+    need(any(k.startswith('nc_5eda00') for k in tot) and tot['nc_8faaa4'] + tot['nc_8e4682'] > 0, 'an uncalled class has no event')
     return tot
 
 
@@ -674,6 +715,22 @@ def tampers(caps, old, manifest):
         tot = check_capture(d, 'pk1')
         need(tot['calls'] > 0 and tot['changed'] > 0 and tot['accept'] > 0, 'no 6684cd call changed the ray')
     T.append(('no 6684cd calls', no_call))
+
+    def gate_t(case, fn):
+        def t():
+            d = copy.deepcopy(caps[(case, 1)])
+            fn(d['events'])
+            check_capture(d, case)
+        return t
+
+    def uncalled(evs, site):
+        used = {e['fk'] for e in evs if e['e'] == 'fx'}
+        return next(e for i, e in enumerate(evs) if e['e'] == 'fk' and e['rc'] == 0 and e['f'] == 0 and i not in used and e['ra5'] == site)
+    T.append(('gate: stop ret 1', gate_t('fhnw-binpack4-4', lambda evs: [x.__setitem__('ret', 1) for x in evs if x['e'] == 'ck'])))
+    T.append(('gate: uncalled caller unknown', gate_t('tr12-30', lambda evs: uncalled(evs, 0x7229A3).__setitem__('ra5', 0x4F0000))))
+    T.append(('gate: probe true dropped fx', gate_t('pk1', lambda evs: evs.__setitem__(slice(None), [x for x in evs if x['e'] != 'fx' or x['fk'] != next(e['fk'] for e in evs if e['e'] == 'fx')]))))
+    T.append(('gate: probe dropped', gate_t('pk1', lambda evs: evs.remove(next(x for x in evs if x['e'] == 'gt')))))
+    T.append(('gate: stop then probe', gate_t('markshare_4_0', lambda evs: (lambda e: evs.insert(evs.index(e) + 1, {'e': 'gt', 'k': evs.index(e), 'l38': 3, 'l58': e['l58'], 'l68': e['l68'], 'v70': 1}))(uncalled(evs, SITE_5FB8EC)))))
     bad = []
     for name, t in T:
         try:

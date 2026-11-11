@@ -1,6 +1,15 @@
 // M2-06f-5 (docs/m2/mip_infeas_ray_fix.md): read-only trace of 6684cd, the in-place fix of the infeasible-node ray.
 //   fk    95da98 leave at the 5ce67b site (0x4f46cb): rc, fail, L+0x58/68, and the return address of the enclosing
-//         5ce67b call (gate classification, contract section 3)
+//         5ce67b call (gate classification, contract section 3);
+//         d8 = nesting depth of 5bbf7f (B&B driver; 1 = the main MIP, 2+ = a sub-MIP)
+//   c5_   5ce67b leave after a fk inside it: rc, that L and its L+0x38/58/68 then
+//         (an L is named by k = index of the fk event that last wrote it, -1 if its L+0x58/68 no longer match that fk;
+//         heap addresses are reused differently from run to run, so no address or address ordinal is stored)
+//   nb_   5fb8ec leave after a fk inside it: rc and, per L a fk inside wrote, L+0x38/58/68 and ray pointer then
+//   gt    probe at 0x5124b4 inside 5fb8ec (C:2209, the L check before the 6684cd gate; N = [rsp+0x130]): the L of N
+//         (ordinal) and its L+0x38/58/68, only when L+0x38 == 3
+//   ck    5eda00 (termination check) leave, called from 5fb8ec at 0x510c4e or 0x511aa4 after a fk inside the same
+//         5fb8ec call: call site and return (1 = continue; C:802-804 returns 0 otherwise, before the gate)
 //   fx    6684cd entry (only caller 5fb8ec C:2217): the gate fields and every replay input (L fields, ray, work, the
 //         ancestor chain records, node bounds, types, scales, senses, the chain columns of the node LP, the rows those
 //         columns touch, cut ages, 95ce25 inputs); fk = index of the fk event that last filled this L (-1 if none)
@@ -36,23 +45,41 @@ const nz = (p, n) => { const d = new BigUint64Array(p.readByteArray(8 * n)), o =
 let seq = 0; const emit = ev => { send(ev); return seq++; };
 Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') return;
  const b = m.base, off = p => p.sub(b).toUInt32();
- const st5 = [];                          // return addresses of the active 5ce67b calls
+ const st5 = [];                          // active 5ce67b calls: {ra, L}
+ const st8 = [];                          // active 5fb8ec calls: L addresses a fk inside wrote
+ let d8 = 0;                              // 5bbf7f nesting depth
+ const kk = L => { const t = last.get(L.toString());
+   return t && t.l58 === L.add(0x58).readS32() && t.l68 === hx(L.add(0x68)) ? t.k : -1; };
+ const lst = L => ({k: kk(L), l38: L.add(0x38).readS32(), l58: L.add(0x58).readS32(), l68: hx(L.add(0x68)),
+   v70: L.add(0x70).readPointer().isNull() ? 0 : 1});
  const last = new Map();                  // L address -> index of the fk event that filled it
  let fx = null;                           // the active 6684cd call
- Interceptor.attach(b.add(0x4f0e10), {onEnter() { st5.push(off(this.returnAddress)); }, onLeave() { st5.pop(); }});
+ Interceptor.attach(b.add(0x4f0e10), {onEnter() { st5.push({ra: off(this.returnAddress), L: null}); },
+  onLeave(r) { const t = st5.pop(); if (t && t.L) emit(Object.assign({e: 'c5_', rc: r.toInt32()}, lst(t.L))); }});
+ Interceptor.attach(b.add(0x5101d0), {onEnter() { st8.push(new Map()); },
+  onLeave(r) { const t = st8.pop(); if (t && t.size) emit({e: 'nb_', rc: r.toInt32(), ls: Array.from(t.values()).map(lst)}); }});
+ Interceptor.attach(b.add(0x5124b4), function () { if (!st8.length) return;
+   const I = this.context.rsp.add(0x130).readPointer().add(0x18).readPointer(), L = I.add(8).readPointer();
+   if (L.isNull() || L.add(0x38).readS32() !== 3) return; emit(Object.assign({e: 'gt'}, lst(L))); });
+ Interceptor.attach(b.add(0x4e36e0), {onEnter() { d8++; }, onLeave() { d8--; }});
+ Interceptor.attach(b.add(0x50e200), {onEnter() { this.ra = off(this.returnAddress); },
+  onLeave(r) { if ((this.ra === 0x510c53 || this.ra === 0x511aa9) && st8.length && st8[st8.length - 1].size)
+   emit({e: 'ck', ra: this.ra, ret: r.toInt32()}); }});
  Interceptor.attach(b.add(0x781170), {onEnter(a) { this.ra = off(this.returnAddress); if (this.ra !== 0x4f46cb) return;
    this.L = a[4].sub(0x58); this.fail = a[12]; },
   onLeave(r) { if (this.ra !== 0x4f46cb) return; const L = this.L;
    const ev = {e: 'fk', rc: r.toInt32(), f: this.fail.readS32(), l58: L.add(0x58).readS32(), l68: hx(L.add(0x68)),
-     v70: L.add(0x70).readPointer().isNull() ? 0 : 1, ra5: st5.length ? st5[st5.length - 1] : null, d5: st5.length};
-   const k = emit(ev); last.set(L.toString(), k); }});
+     v70: L.add(0x70).readPointer().isNull() ? 0 : 1, ra5: st5.length ? st5[st5.length - 1].ra : null, d5: st5.length, d8};
+   if (st5.length) st5[st5.length - 1].L = L;
+   if (st8.length) st8[st8.length - 1].set(L.toString(), L);
+   const k = emit(ev); last.set(L.toString(), {k, l58: ev.l58, l68: ev.l68}); }});
  Interceptor.attach(b.add(0x554ee0), {onEnter(a) {
    const P = a[0], N = a[1], w = a[2], M = P.readPointer(), S = P.add(8).readPointer();
    const I = N.add(0x18).readPointer(), L = I.add(8).readPointer(), lp = S.add(0xe8).readPointer();
    const lp0 = M.add(8).readPointer().add(0xe8).readPointer(), env = S.add(0x100).readPointer();
    const n = lp.add(0xc).readS32(), mm = lp.add(8).readS32(), n0 = lp0.add(0xc).readS32(), m0 = lp0.add(8).readS32();
    const ray = L.add(0x70).readPointer(), fm = lp.add(0x3c).readS32();
-   const ev = {e: 'fx', fk: last.has(L.toString()) ? last.get(L.toString()) : -1, n, m: mm, n0, m0, fm,
+   const ev = {e: 'fx', fk: last.has(L.toString()) ? last.get(L.toString()).k : -1, n, m: mm, n0, m0, fm,
      l38: L.add(0x38).readS32(), l54: L.add(0x54).readS32(), l58: L.add(0x58).readS32(), l5c: L.add(0x5c).readS32(),
      l60: hx(L.add(0x60)), l68: hx(L.add(0x68)), v70: ray.isNull() ? 0 : 1, g2a48: env.add(0x2a48).readS32(),
      w: w.isNull() ? null : hx(w), depth: I.add(0x2c).readS32(), I0M: I.readPointer().equals(M) ? 1 : 0,
