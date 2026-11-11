@@ -1,0 +1,178 @@
+{
+  "no-reentry": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-pick-sparse', 'pos', '기준', 1, '실제', 0, '정확·비트 비교')"
+    ]
+  },
+  "pivot-threshold-le": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('pivot-at-0.1-sparse', 'work', '기준', '0000000000000640', '실제', '0000000000001340', '정확·비트 비교')"
+    ]
+  },
+  "third-pass": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-pick-sparse', 'work', '기준', '0000000000001e40', '실제', '0000000000002540', '정확·비트 비교')"
+    ]
+  },
+  "thr-tie": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('thr-equal-sparse', 'work', '기준', '0000000000000640', '실제', '0000000000001640', '정확·비트 비교')"
+    ]
+  },
+  "mul-order": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('mul-order-sparse', 'pos', '기준', 1, '실제', 0, '정확·비트 비교')"
+    ]
+  },
+  "scale-10": {
+    "verdict": "생존",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 통과"
+    ]
+  },
+  "scale-1e4": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('scale-at-1e04-sparse', 'work', '기준', '0000000000000640', '실제', '0000000000001340', '정확·비트 비교')"
+    ]
+  },
+  "scale-1e7": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('scale-at-1e07-sparse', 'work', '기준', '0000000000000640', '실제', '0000000000001340', '정확·비트 비교')"
+    ]
+  },
+  "scale-1e10": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('scale-at-1e10-sparse', 'work', '기준', '0000000000000640', '실제', '0000000000001340', '정확·비트 비교')"
+    ]
+  },
+  "scale-1e13": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('scale-at-1e13-sparse', 'work', '기준', '0000000000000640', '실제', '0000000000001340', '정확·비트 비교')"
+    ]
+  },
+  "max-fmax": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('nan-max-last-sparse', 'work', '기준', '0000000000000e40', '실제', '0000000000001b40', '정확·비트 비교')"
+    ]
+  },
+  "max-no-tail": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-pick-sparse', 'pos', '기준', 1, '실제', 0, '정확·비트 비교')"
+    ]
+  },
+  "nan-up": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('nan-max-last-dense', 'work', '기준', '0000000000000040', '실제', '0000000000000440', '정확·비트 비교')"
+    ]
+  },
+  "keep-first-pick": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-inf-bound-sparse', 'pos', '기준', 1, '실제', 0, '정확·비트 비교')"
+    ]
+  },
+  "request-ge16": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-none-470-16-sparse', 'refactor', '기준', 0, '실제', 1, '정확·비트 비교')"
+    ]
+  },
+  "request-never": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-inf-bound-sparse', 'refactor', '기준', 1, '실제', 0, '정확·비트 비교')"
+    ]
+  },
+  "theta-reset": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-inf-bound-sparse', 'theta', '기준', '000000000000f03f', '실제', 'ea8ca039593e2946', '정확·비트 비교')"
+    ]
+  },
+  "ask-always": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-inf-bound-sparse', '12dd49 조회 수(asm 파생)', 1, '2')"
+    ]
+  },
+  "second-bound-strict": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('second-bound-tie-sparse', 'pos', '기준', 1, '실제', 0, '정확·비트 비교')"
+    ]
+  },
+  "cand-inf-bound": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-inf-bound-sparse', 'theta', '기준', '000000000000f03f', '실제', 'ea8ca039593e2946', '정확·비트 비교')"
+    ]
+  },
+  "work-once": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-pick-sparse', 'work', '기준', '0000000000001e40', '실제', '0000000000000e40', '정확·비트 비교')"
+    ]
+  },
+  "flip-first-pass-only": {
+    "verdict": "거부",
+    "cargo_rc": 0,
+    "detail": [
+      "04c 통과",
+      "04c-5 거부: ('reentry-flip-sparse', 'pos', '기준', -1, '실제', 0, '정확·비트 비교')"
+    ]
+  }
+}

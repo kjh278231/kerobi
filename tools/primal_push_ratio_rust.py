@@ -155,7 +155,7 @@ MUTANTS = {  # M3-04c-5에서 feasible_ratio 재진입 구현에 맞춰 대상 �
     'no-candidate': ('if bound == inf || cands.is_empty() {\n            if first', 'if cands.is_empty() {\n            if first'),
     'pivot-threshold': ('let small = first && 0.1 > *pivot;', 'let small = first && 1e-12 > *pivot;'),
     'small-scale': ('b if 10.0 > b => 0.1,', 'b if 10.0 > b => 1e-12,'),
-    'small-check-strict': ('let reenter = tol * big * scale > *pivot;', 'let reenter = tol * big * scale * 1e-12 > *pivot;'),
+    'small-check-strict': ('let reenter = tol * big * scale > *pivot;', 'let reenter = tol * big * scale * 1e12 > *pivot;'),
     'work-dense': ('tested as f64 + tested as f64 + count', 'tested as f64 + count'),
     'work-sparse': ('count as f64 * 4.0', 'count as f64 * 3.0'),
 }
