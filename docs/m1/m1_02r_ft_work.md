@@ -75,8 +75,43 @@
 
 ## 6. 실행 결과
 
-(작성 예정)
+- 실행: worktree `../rsolver-m1-02r`(branch `work/m1-02r`, 기준 main `51156d3`), 기준선 빌드 `../rsolver-m1-02r-base`(detached `51156d3`). 원본 자료는 02p `bench/oracle/m1_02p/{kb2,degen2}_w_1.json.gz`(검사기가 SHA-256 고정)와 02q `fw` 캡처. Gurobi 실행 0회.
+- Rust 변경:
+  - `Lu::update`가 `&mut Work`를 받는다. 양을 계산하는 곳(열 r 루프, LU+0xe8 탐색, η, 행 r 제거, C:871 맞바꿈, p 이동, 순환 이동)에서 지점 묶음별로 모으고, 끝에서 원본 순서로 저장한다. 갱신 상태를 바꾸는 코드의 순서는 그대로다(pathcmp 불변). 새 대각이 ZERO 이하이면 0xf1beb만 저장하고 false(원본 C:445–455 종료와 같음. 전에는 상태를 끝까지 바꾼 뒤 false였는데 호출자가 곧 재분해하므로 결과 같음).
+  - 0xf2a51은 원본 local_80을 따른다: η가 있을 때, 또는 η 없이 l = p이고 q < t이며 spike가 있을 때. Rust의 C:871 맞바꿈 분기(`!others.is_empty() && q < t`)는 l ≠ p이고 U 행 r이 빈 경우도 들어오지만 그때는 저장하지 않는다.
+  - `Simplex::pivot`이 FTRAN spike 목록 길이(`sorder.len()`, 없으면 ZERO 넘는 원소 수)를 `spike_ns`에 두고, 갱신이 끝나면 0. 재분해(`refactor`)는 `036ade` 저장 뒤 `spike_ns` > 0이면 0xf461f를 저장한다.
+  - `Work.k`(pivot의 `iter`)를 저장마다 덤프한다(`RSOLVER_WORK` 저장 항목 `[지점, 값, [양], k]`).
+- 검사기 `tools/m1_factor_work_check.py`(02q 검사기를 넓힘): `--self-test` 종료 0.
+
+```text
+kb2: N 05b257 entries 40, A aligned refactors 5/5, K terms 42 (general 37), W stores 422 {… 0xf1beb 25, 0xf1d02 19,
+     0xf1f37 1, 0xf1f82 53, 0xf2044 33, 0xf207a 2, 0xf2521 35, 0xf2969 19, 0xf2a51 35, 0xf2e3c 35, 0xf3ca4 25,
+     0xf3d83 25, 0xf3eac 1, 0xf3f71 63, 0xf4073 5, 0xf461f 3 …}, F 0x158 5
+degen2: alignment ends at refactor 10 (head: Rust iteration 359, original k 356)
+degen2: … A aligned refactors 9/16, W stores 3184 {… 0xf1beb 177, 0xf1d02 203, 0xf1f37 79, 0xf1f82 349, 0xf2044 337,
+     0xf207a 10, 0xf2521 348, 0xf2969 140, 0xf2a51 283, 0xf2e3c 348, 0xf3ca4 237, 0xf3d83 237, 0xf3eac 18,
+     0xf3f71 266, 0xf4073 41, 0xf461f 7 …}, F 0x158 9, W range k < 356
+ACCEPTANCE PASS (+ self-test)
+```
+
+- W: kb2 전 구간 저장 422개(갱신 35회), degen2 k < 356 저장 3,184개(갱신 348회, 재분해 9회)의 지점 순서·k·값 비트가 첫 실행부터 원본과 같다. 0xf2044·0xf207a·0xf2521 수의 차(337 + 10 = 347 < 348)는 cU = nS′ = 0의 carry 1회다. 16지점 모두 비교됐다(G).
+- 이것으로 확인한 상태: 행 U 안 순서(0xf1f82, 행마다 r의 자리), U 열 구간 경계와 구간 안 순서(0xf3f71·0xf2969·0xf4073·0xf3eac), η 길이, LU+0xe8 탐색 거리, 순환 이동 단계의 열 길이와 칸 수, spike 목록 길이 nS′(≤ ZERO 원소 없음), 재분해 이유 10의 spike 길이. 02m·02n이 순서를 맞춘 상태를 work 양으로 다시 판별한 셈이다.
+- T(`bench/oracle/m1_02q/check_mutate_02r.txt`): 02q 11종 + 갱신 양 한 단위(t_ftadd), 갱신 저장 하나 삭제(t_ftdrop), 0xf461f 지점 바꿈(t_461f), 원본 0xf1f82 쓰기 한 비트(t_wft), 저장 k + 1(t_k) 모두 거부.
+- R(`--mutate`, 같은 파일): 02q 6종 + 이번 8종 중 7종 거부, 결합 변이(`3·(x148·n)`) 생존(사전 표의 예상대로 판별 불가). 거부 위치: f1f82 행 길이 kb2 저장 92, f2044 `<=` degen2 저장 544(carry 사례), 구간 시작 바꿈 kb2 77, f3ca4 +5 생략 kb2 192, f3d83 + 1 kb2 61, f461f + 1 kb2 37, f2a51 local_80 = 0 degen2 47.
+- 회귀(worktree 빌드):
+  - `cargo test -p rsolver-lp` 42 통과(1 무시), `cargo test --release --workspace` 125 통과·11 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0(첫 실행 `type_complexity` 1건 → `work::Store` 별칭).
+  - M1 검사기 12종 `--self-test`(`m1_lsolve`·`m1_update`·`m1_usolve`는 `--rust`) 종료 0, `m1_bfrt_rust` ACCEPTANCE PASS, pytest 657 통과.
+  - Netlib: `tools/proto/pathcmp.py all` 출력이 기준선 빌드와 바이트 동일(64모델, 완전 일치 27/64, 중앙 0.752). `tools/lp_check.py --methods 1,0,-1 --timeout 120`: 정답 90/91 ×3, IterCount 31/0/31, 273행의 상태·목적값·반복 수가 기준선과 같다(시간 열만 다름. 총 153.4 → 161.3초, 부하 통제 없는 참고값).
+- 계약 변경: 없음.
 
 ## 7. 판정과 인수인계
 
-(작성 예정)
+- 작업 수행 상태: 완료.
+- 동등성: **통과**(계약 범위). kb2 전 구간·degen2 피벗 0–355에서 FT 갱신 15지점과 재분해 경로 0xf461f의 저장 순서·값이 원본과 비트 같고, 02q 지점도 그대로 같다. 재분해 진입 work(0x150)는 원본 값을 입력으로 넣었다.
+- 미검증: 새 대각 |S_r| < 1e-13 종료(실행 0회, Rust는 0xf1beb만 저장하도록 옮김), l ≠ p에서 η가 비고 U 행 r이 남은 오류 종료, 풀 용량 초과 종료, `9e47c` 호출(r ≠ LU+0x1d8), spike 목록의 ≤ ZERO 원소, primal 호출자(`sorder` 없음, spike 길이를 ZERO 넘는 원소 수로 둠), 재분해 이유 10 밖에서 spike가 남는 재분해, 0xf1beb 곱 결합(변이 생존), degen2 피벗 356 이후.
+- 후속:
+  - **M1-02s**: 반복 커널(`1bae9c`·`1b7106`·`28c93`·`8b473`·`a4109` 등)·`05b257` 뒤 처리, `1ca57` 0xbf981/0xbfed2, `16b0a` 0xbe793. 같은 검사기에 지점을 더한다.
+  - **M1-02t**(02k 뒤)·**M1-02u** 그대로. 모두 끝나면 work를 재분해 판정에 연결하고 `RSOLVER_WORK_SEED` 없이 degen2 피벗 356을 대조.
+- 다음 명령: `tools/build_local.sh && PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_factor_work_check.py --self-test`, 새 지점은 `SITES`(또는 묶음 집합)와 G에 더한다.
+- 갱신: `docs/handoff/M1.md`, `docs/14_sprint_plan.md`, `docs/11_progress.md`, `docs/12_roadmap_diagram.md`.
+- 교훈: `docs/lessons/original.md`(dual work 누적 절: FT 갱신 저장 순서와 local_80, 0xf461f), `docs/lessons/tooling.md`(코드 순서와 저장 순서가 다르면 버퍼로 모아 원본 순서로 내보내기, 덤프에 반복 표식).

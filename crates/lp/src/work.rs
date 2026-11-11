@@ -8,6 +8,9 @@
 /// spx+0x148 (double precision; 1.95 in quad); LU+0x1f8 is its copy in the factor.
 pub const X148: f64 = 1.3;
 
+/// `RSOLVER_WORK` log entry: (site, value after, amounts folded since the previous store, k).
+pub type Store = (u32, f64, Vec<f64>, usize);
+
 pub struct Work {
     pub w: f64,
     /// spx+0x150: work at the start of the last factorization (`036ade` C:531–539).
@@ -17,8 +20,7 @@ pub struct Work {
     carried: Vec<f64>,
     /// Iteration the stores belong to (the original's `8b473` count k), set by the caller.
     pub k: usize,
-    /// `RSOLVER_WORK`: (site, value after, amounts folded since the previous store, k).
-    pub log: Option<Vec<(u32, f64, Vec<f64>, usize)>>,
+    pub log: Option<Vec<Store>>,
     /// `RSOLVER_WORK_SEED`: work at each refactor entry, taken from an original capture (verification input).
     seed: std::collections::VecDeque<f64>,
 }
