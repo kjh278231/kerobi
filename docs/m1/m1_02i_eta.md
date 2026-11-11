@@ -85,7 +85,8 @@ T 변조 4종 거부, 규칙 변이 rust·sparse·fma 거부, dense 생존(기�
 
 - 작업 수행: 완료. 동등성: 원인 규칙이 kb2 eta 피벗 17/17에서 캡처 ρ를 비트 재현(저장 기준). 희소 eta·조밀 eta 뒤 Lᵀ 강제는 C만.
 - 후속: Rust 수정(§8), **M1-02l**(조사, 새 행): 피벗 30 spike 행 17·36 끝자리(FTRAN R 단계 내적 선처리 정렬 후보). 첫 명령 `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_eta_check.py`(U 첫 차이 31 출력), 그다음 `09d112` R 단계(인라인, C:700–1372)의 8레인 내적 정렬 조건을 C로 읽는다.
-- 교훈: [docs/lessons/tooling.md](../lessons/tooling.md)·[original.md](../lessons/original.md)에 추가(§8 뒤 기록).
+- 교훈: [original.md](../lessons/original.md) "LP BTRAN 행 eta", [tooling.md](../lessons/tooling.md) 검사기(β 첫 차이에서 ρ·합산 가르기), [process.md](../lessons/process.md) 점유 owner 항목에 이번 관측 추가.
+- branch `work/m1-02i`: 조사 커밋 `e8c9de8`, 수정 커밋 `8ae74dd`, 기록 커밋(진행·로드맵·스프린트 표·M1 인수인계·교훈). 미커밋 없음.
 
 ## 8. Rust 수정(범위 확대)
 
