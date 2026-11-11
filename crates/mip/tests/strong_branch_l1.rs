@@ -52,8 +52,8 @@ fn replay() {
 
 // Synthetic C boundary checks; these do not extend the original-run coverage.
 #[test]
-fn tolerance_clamp_and_signed_zero() {
-    let c = Candidate { column: 2, x: 0.999999, lower: -0.0, upper: 3.0,
+fn clamp_and_signed_zero() {
+    let c = Candidate { column: 2, x: 1.5, lower: -0.0, upper: 3.0,
         int_tol: 0.00001, parent_obj: 1.0 };
     let mut lp = Replay { outcomes: [
         LpResult { value: LpValue::Optimal(0.0), iterations: 4.0 },
@@ -72,6 +72,13 @@ fn tolerance_clamp_and_signed_zero() {
     let result = evaluate(&c, &mut lp, &mut cost).unwrap();
     assert_eq!(result.up.to_bits(), (-0.0f64).to_bits());
     assert_eq!(result.down.to_bits(), 0.0f64.to_bits());
+    lp.outcomes = [
+        LpResult { value: LpValue::Optimal(f64::NAN), iterations: 0.0 },
+        LpResult { value: LpValue::Limited(f64::NAN), iterations: 0.0 },
+    ].into();
+    let result = evaluate(&c, &mut lp, &mut cost).unwrap();
+    assert_eq!(result.up.to_bits(), (-0.0f64).to_bits());
+    assert!(result.down.is_nan());
 }
 
 #[test]

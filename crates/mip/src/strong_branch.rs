@@ -1,6 +1,8 @@
 //! Single integer candidate control with an external LP and saved-state backend.
 //! shortcut: only a fresh candidate whose propagation changes its own bound is supported;
 //! extra propagation, contradiction, other candidate reuse and batch cleanup need M2-06h-3.
+//! Integer (B/I) columns only: a continuous column fixes both bounds and skips the up solve.
+//! The work counter the original accumulates in this span is not modelled.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Side { Lower, Upper }
@@ -71,12 +73,15 @@ pub fn evaluate<B: Backend>(c: &Candidate, lp: &mut B, iterations: &mut f64)
         let result = lp.solve().map_err(Error::Backend)?;
         *iterations += result.iterations;
         values[k] = match result.value {
-            LpValue::Optimal(obj) => if obj <= c.parent_obj { c.parent_obj } else { obj },
-            LpValue::Limited(dual) => if c.parent_obj <= dual { dual } else { c.parent_obj },
+            // maxsd operand order, so NaN and ±0 pick the same operand as the original.
+            LpValue::Optimal(obj) => if obj > c.parent_obj { obj } else { c.parent_obj },
+            LpValue::Limited(dual) => if c.parent_obj > dual { c.parent_obj } else { dual },
         };
         lp.reset().map_err(Error::Backend)?;
         lp.restore().map_err(Error::Backend)?;
         lp.bound(c.column, side, original).map_err(Error::Backend)?;
+        // Up: the original skips the down solve. Down: it only resets the stall counter;
+        // both continuations are unported.
         if values[k] >= 1e100 {
             return Err(Error::Unported);
         }

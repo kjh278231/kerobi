@@ -129,9 +129,12 @@ def first_candidate(d):
                 raise AssertionError(at+'.unexpected '+k)
         same(2, restores, at+'.restores')
         same(13, len(args), at+'.args')
-        args.append('0000000000000000')
+        args.append(e['cost0'])
         # Independent sum of original IterCount attributes (not Rust-generated).
-        cost = bits(value(args[9]) + value(args[12]))
+        cost = bits(value(e['cost0']) + value(args[9]) + value(args[12]))
+        if e['n'] == 1:
+            same(e['cost1'], cost, at+'.batch cost')  # one-candidate batch: original total
+        totals['cost1'] += e['n'] == 1
         expected.append(f'result {consumed[0]} {consumed[1]} {cost}')
         for x in args[2:7] + [args[8], args[9], args[11], args[12]]:
             bits(value(x))  # reject IEEE NaN/inf rather than accepting both
@@ -139,8 +142,19 @@ def first_candidate(d):
         traces.extend(expected)
         totals['candidates'] += 1
     same(24, totals['candidates'], 'first candidate count')
+    same(7, totals['cost1'], 'one-candidate batch cost count')
     same([6, 42], [totals['status2'], totals['status7']], 'branch coverage')
     return '\n'.join(inputs)+'\n', '\n'.join(traces)+'\n', dict(totals)
+
+
+def synthetic(root, label):
+    env = dict(os.environ, CARGO_TARGET_DIR=str(ROOT/'target/mip_sb_control_mutants'))
+    r = subprocess.run(['cargo', 'test', '--release', '-p', 'rsolver-mip', '--test', 'strong_branch_l1'],
+                       cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    (WORK/(label+'.synthetic.log')).write_text(r.stdout)
+    # Only a failing assertion counts; a mutant that does not compile proves nothing.
+    assert r.returncode == 0 or 'panicked' in r.stdout, f'{label}: synthetic did not run'
+    return r.returncode
 
 
 def run(root, input_text, label):
@@ -201,6 +215,16 @@ def self_test(ds, manifest, expected, actual, inputs):
             ip, ex, _ = first_candidate(bad[0])
             compare(ex, actual if ip == inputs else run(ROOT, ip, 'tamper-'+name.replace(' ', '-')), name)
         reject(name, check_bad)
+    # Direct hits on this tool's own count and batch-cost checks (controls() would reject first).
+    def drop_one(d):
+        i = next(i for i,e in enumerate(d['events']) if e['e']=='double')
+        del d['events'][i]
+    def batch_cost(d):
+        next(e for e in d['events'] if e['e']=='double' and e['n']==1)['cost1'] = bits(1e9)
+    for name, mutate in [('count', drop_one), ('batch cost', batch_cost)]:
+        bad = copy.deepcopy(ds[0])
+        mutate(bad)
+        reject(name, lambda bad=bad:first_candidate(bad))
     for name, old, new in [('order', 'flush\nsolve', 'solve\nflush'),
                            ('restore', 'restore\n', ''), ('bound', 'bound ', 'wrong '),
                            ('result', 'result ', 'wrong '), ('cost', actual.splitlines()[-1], 'result 0 0 0')]:
@@ -212,7 +236,8 @@ def self_test(ds, manifest, expected, actual, inputs):
         ('cost', '*iterations += result.iterations;', '*iterations = result.iterations;'),
         ('restore', 'lp.restore().map_err(Error::Backend)?;', ''),
         ('split', 'split + 1.0', 'split + 2.0'),
-        ('clamp', 'if obj <= c.parent_obj { c.parent_obj } else { obj }', 'obj'),
+        ('clamp2', 'if obj > c.parent_obj { obj } else { c.parent_obj }', 'obj'),
+        ('clamp7', 'if c.parent_obj > dual { c.parent_obj } else { dual }', 'dual'),
     ]
     with tempfile.TemporaryDirectory(prefix='sb-control-') as td:
         root = Path(td)
@@ -225,8 +250,10 @@ def self_test(ds, manifest, expected, actual, inputs):
             (root/SOURCE).write_text(original.replace(old,new,1))
             trace = run(root, inputs, 'mutant-'+name)
             if trace == expected:
-                print('SURVIVED', name, '(unverified boundary)')
-                assert name == 'clamp', 'unexpected surviving mutant '+name
+                # Original data has no branch for it; report whether the synthetic tests catch it.
+                caught = synthetic(root, 'mutant-'+name) != 0
+                print('SURVIVED', name, '(original unverified; synthetic', 'rejects)' if caught else 'misses)')
+                assert name in ('clamp2', 'clamp7') and caught, 'unexpected surviving mutant '+name
             else:
                 print('REJECT Rust', name)
 
