@@ -506,7 +506,7 @@ impl<'a> Engine<'a> {
     /// in BTRAN output order, kept where |α| > ZERO, in ascending columns when n < 1.8·Σ row counts (dense
     /// scatter) and in first-touch order otherwise (one ρ row: row order); then the slacks of ρ's rows in ρ order.
     /// Returns the dense α (0 off the vector) and the vector order.
-    fn pivot_row(&self, rho: &[(usize, f64)]) -> (Vec<f64>, Vec<usize>) {
+    fn pivot_row(&mut self, rho: &[(usize, f64)]) -> (Vec<f64>, Vec<usize>) {
         let mut alpha = vec![0.0; self.n + self.m];
         let mut touched = vec![false; self.n];
         let mut order = Vec::new();
@@ -530,6 +530,25 @@ impl<'a> Engine<'a> {
                     alpha[j] += r * a;
                 }
             }
+        }
+        let nf = self.n as f64;
+        let rf = rho.len() as f64;
+        let wf = work as f64;
+        let mut amount = if rho.len() == 1 {
+            let len = self.rc[rho[0].0].len() as f64;
+            let a = if rho[0].1.abs() < 1.0 { len * 3.0 } else { len + len };
+            ((a + len) + 5.0) + len
+        } else if nf < wf * 1.8 {
+            ((work * 2) as f64 + nf * 1.5) + nf + rf * 3.0
+        } else {
+            (wf * 3.5 + rf * 6.0) + order.len() as f64 * 3.0
+        };
+        amount = (rf * 1.5 + amount) + rf * 4.0;
+        if self.big_m {
+            amount = (((rf + rf) + amount) + rf) + rf;
+        }
+        if self.in_dual {
+            self.work.add(0x135e92, amount * X148);
         }
         order.retain(|&j| {
             let keep = alpha[j].abs() > ZERO;
@@ -773,7 +792,7 @@ impl<'a> Engine<'a> {
     /// refactor); mode 1 takes the best score. None: no violated row.
     fn chuzr(&mut self) -> Option<usize> {
         if self.pr.mode == 1 {
-            return self.pr.full_pick();
+            return self.pr.full_pick(&mut self.work);
         }
         if let Some(p) = self.pr.next_listed() {
             return Some(p);
@@ -788,7 +807,22 @@ impl<'a> Engine<'a> {
             self.reinvert();
             return self.chuzr();
         }
-        self.price_rebuild();
+        let r = self.price_rebuild();
+        let c0 = if self.c8 { r.feasible } else { self.m } as f64;
+        let a = (c0 * 3.0 + ((self.pr.cost_mode == 1) as u8 as f64 + 5.0) * (self.m as f64 - c0)) * X148;
+        if r.scanned > 0 {
+            self.work.add(0xbe039, a);
+        } else {
+            self.work.carry(a);
+        }
+        let a = ((r.kept as f64 + r.kept as f64) + r.scanned as f64) * X148;
+        if self.m > 0 {
+            self.work.add(0xbe0a1, a);
+        } else {
+            self.work.carry(a);
+        }
+        self.work.add(0xbe17e, X148 * (r.added as f64 + r.added as f64));
+        self.work.add(0xbe34d, self.pr.list.len() as f64 * X148);
         if self.pr.list.is_empty() {
             return None;
         }
@@ -1141,7 +1175,8 @@ impl<'a> Engine<'a> {
                 cands.push(Cand { j, a: ag, d: dg, range: self.spx.u[j] - self.spx.l[j], back: j >= self.n, cnt, fac });
             }
             let feas = if self.big_m { BIG_M_TOL } else { FEAS_TOL };
-            let (qq, flips) = bfrt(&cands, -delta.abs(), feas, self.nondeg_flip);
+            self.work.add(0xc7bcd, (order.len() as f64 * 3.0) * X148);
+            let (qq, flips) = bfrt(&cands, -delta.abs(), feas, self.nondeg_flip, &mut self.work);
             let q = qq.unwrap_or(usize::MAX);
 
             if q == usize::MAX && flips.is_empty() {
@@ -1157,8 +1192,11 @@ impl<'a> Engine<'a> {
                 return if artificial { Status::Unbounded } else { Status::Infeasible };
             }
             if !flips.is_empty() {
+                self.work.add(0xc561a, ((flips.len() as f64 + flips.len() as f64) + flips.len() as f64 * 5.0) * X148);
                 // move the flipped columns to their other bound; x_B absorbs the change with one FTRAN (1c8477)
                 let mut dx = vec![0.0; self.m];
+                let mut touched = vec![false; self.m];
+                let mut input = Vec::new();
                 let mut huge = false;
                 for &j in &flips {
                     let old = self.x_nonbasic(j);
@@ -1167,10 +1205,24 @@ impl<'a> Engine<'a> {
                     let step = self.x_nonbasic(j) - old;
                     huge |= step.abs() >= 1e20;
                     for (i, a) in self.spx.col(j) {
+                        if !touched[i] {
+                            touched[i] = true;
+                            input.push(i);
+                        }
                         dx[i] += a * step;
                     }
                 }
-                let dxb = self.lu.ftran_dense(dx);
+                let sum: usize = flips.iter().map(|&j| if j < self.n { self.spx.len[j] as usize } else { 1 }).sum();
+                let dv = if self.m < sum * 2 { self.m as f64 + self.m as f64 } else { sum as f64 * 4.0 };
+                self.work.k = self.iter as usize + 1;
+                self.work.add(0xcdbb5, (dv + dv) * X148);
+                let input: Vec<(usize, f64)> = input.into_iter().map(|i| (i, dx[i])).collect();
+                let input = (self.m >= sum * 2).then_some(input.as_slice());
+                let (dxb, dense) = self.lu.ftran_flip(dx, input);
+                let nnz = dxb.iter().filter(|v| v.abs() > ZERO).count();
+                if dense {
+                    self.work.add(0xce316, (self.m as f64 + nnz as f64) * X148);
+                }
                 let changed: Vec<usize> = (0..self.m).filter(|&p| dxb[p] != 0.0).collect();
                 if huge && !self.big_m {
                     // outside the artificial-bound phase a 1e30-scale move would leave residue: recompute
@@ -1181,6 +1233,8 @@ impl<'a> Engine<'a> {
                     }
                 }
                 self.price_touch(&changed, None, q == usize::MAX);
+                self.work.add(0xce1ef, (X148 * 7.0) * nnz as f64);
+                self.work.k = self.iter as usize;
                 if q == usize::MAX {
                     self.iter += 1;
                     self.log();

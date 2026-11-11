@@ -3,6 +3,7 @@
 //! Mode 1 (Full pricing) keeps an unordered list of positions whose stored score P+0x18 is at least the threshold
 //! P+0x30; marks then mean bit 0 = listed, bit 1 = feasible.
 use crate::common::sort_desc;
+use crate::work::{Work, X148};
 
 /// Feasibility tolerance of CHUZR during the artificial-bound phase (spx+0x2cc): FeasTol·1e30·1e-5.
 pub const BIG_M_TOL: f64 = 1e-6 * 1e30 * 1e-5;
@@ -168,10 +169,12 @@ impl Pricing {
 
     /// Mode-1 CHUZR (`2896a3` P+0x40 ≠ 0): drop listed positions that turned feasible or fell under the threshold,
     /// take the best stored score; if none, lower the threshold tenfold and scan the unlisted violated positions.
-    pub fn full_pick(&mut self) -> Option<usize> {
+    pub fn full_pick(&mut self, work: &mut Work) -> Option<usize> {
         let mut best = self.thr * 0.5;
         let mut r = None;
-        let mut kept = Vec::with_capacity(self.list.len());
+        let scanned = self.list.len();
+        let feasible = self.list.iter().filter(|&&p| self.mark[p] >= 2).count();
+        let mut kept = Vec::with_capacity(scanned);
         for &p in &self.list {
             if self.mark[p] < 2 {
                 if self.score[p] >= self.thr {
@@ -188,8 +191,15 @@ impl Pricing {
             }
         }
         self.list = kept;
+        let a = ((self.list.len() as f64 * 0.5 + feasible as f64) + (scanned - feasible) as f64 * 2.0) * X148;
         if r.is_some() {
+            work.add(0xcce72, a);
             return r;
+        }
+        if !self.mark.is_empty() {
+            work.add(0xcd052, a);
+        } else {
+            work.carry(a);
         }
         let lower = self.thr / 10.0;
         let mut mx = 0.0;
@@ -205,6 +215,8 @@ impl Pricing {
                 }
             }
         }
+        let m = self.mark.len() as f64;
+        work.add(0xcd191, ((self.list.len() as f64 + m) + m) * X148);
         if !self.list.is_empty() {
             self.thr = lower;
         } else if let Some(p) = r {
