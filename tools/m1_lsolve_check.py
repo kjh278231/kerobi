@@ -15,6 +15,11 @@ CAP = {'degen2': ('db3454311c46f9cffbe41b84000c212c1c84af2d9b1aa199e989783568709
                'fd4e89375a650a3a5eb25c1d57c293e1cf9b1791e0d6fa61a0d586b76ba5d516')}
 # 02a-1 format captures (tools/m1_tau_path.js) of the same runs: N projection
 TAU = {'degen2': os.path.join(D, 'degen2_tau_1.json.gz'), 'kb2': os.path.join(ROOT, 'bench/oracle/m1_02a1_tau/kb2_1.json.gz')}
+TAU_SHA = {'degen2': '28f2a3c89108c58ea7a08b95327d89548247fb411f5f46897e9b3b144db4db3e',
+           'kb2': '64cc9dea89f809b601f7cb2e11636cc632f382318ceeaec0273a599687bdf393'}
+# first pivot whose tau differs from the capture with main faae34d as well (docs/m1/m1_02j_lsolve.md section 7): a
+# difference before it is new
+TAU_FIRST = {'degen2': 242, 'kb2': 30}
 TOL = 1e-13  # Rust ZERO; 21b9de's tol arrives in xmm0, which the hooks cannot read
 F = lambda h: struct.unpack('<d', int(h, 16).to_bytes(8, 'little'))[0]
 sha = lambda p: hashlib.sha256(open(p, 'rb').read()).hexdigest()
@@ -238,7 +243,7 @@ def check_rust(caps, taus, runs):
         ls = {e['k']: e for e in caps[name]['events'] if e['type'] == 'P'}
         # the same factor state: LU+0x18c at the 09d112 entry = Rust's update count before the pivot
         R = next((k for k in range(P) if ls.get(k, {}).get('ft') and k in mine and mine[k]['klast'] != ls[k]['ft'][0]['upd']), P)
-        n = collections.Counter()
+        n, tdiff = collections.Counter(), []
         for k in range(R):
             if k + 1 not in mine or 'aqo' not in mine[k + 1] or not ls.get(k, {}).get('ft') or tau.get(k, {}).get('ft') is None:
                 n['no record'] += 1
@@ -250,6 +255,11 @@ def check_rust(caps, taus, runs):
                 bad.append(f'K {name} pivot {k}: Rust {s1["uk"]} original {uk}')
                 continue
             n['K'] += 1
+            # tau values (aligned with the 8b473 alpha_q list) against the Rust snapshot's tau by position
+            idx = tau[k]['aq']['idx']
+            mt = [float.fromhex(v) for v in s1['tau']]
+            if len(mt) > max(idx, default=-1) and any(F(h) != mt[p] for h, p in zip(tau[k]['tau'], idx)):
+                tdiff.append(k)
             f8 = tf['f8']
             if uk in ('21686f', '21841f'):
                 g1 = [i for i in tau[k]['aq']['idx'] if f8[i] == -1]
@@ -279,6 +289,10 @@ def check_rust(caps, taus, runs):
                 t = next((t for t in range(min(len(got), len(want))) if got[t] != want[t]), None)
                 bad.append(f'S {name} pivot {k}: L+R order Rust {got[t:t + 4] if t is not None else len(got)} '
                            f'original {want[t:t + 4] if t is not None else len(want)}')
+        first = TAU_FIRST.get(name)
+        if tdiff and (first is None or tdiff[0] < first):
+            bad.append(f'V {name}: tau differs from the capture at pivot {tdiff[0]}, before {first}')
+        n['tau differs'] = len(tdiff)
         stop = f' (pivot {R}: Rust {mine[R]["klast"]} updates, original {ls[R]["ft"][0]["upd"]})' if R < P else ''
         rep.append(f'{name} Rust: path = original on pivots 0-{P - 1}, update count on 0-{R - 1}{stop}; {dict(n)}')
     return bad, rep
@@ -295,6 +309,8 @@ def main():
         caps[name] = load(os.path.join(D, f'{name}_ls_1.json.gz'))
         if caps[name]['model_sha256'] != mh:
             bad.append(f'M {name}: model sha {caps[name]["model_sha256"][:12]}')
+        if sha(TAU[name]) != TAU_SHA[name]:
+            bad.append(f'M {os.path.basename(TAU[name])}: sha {sha(TAU[name])[:12]}')
         taus[name] = load(TAU[name])
     b, rep = check(caps, taus)
     bad += b
@@ -353,6 +369,7 @@ def main():
             rtamper('Rust L+R order: two entries swapped (degen2)', lro_swap)
             rtamper('Rust snapshots without lro', lambda r2: [s.pop('lro', None) for s in r2['kb2'][0].values()])
             rtamper('Rust U kernel of kb2 pivot 21', lambda r2: r2['kb2'][0][22].__setitem__('uk', 'inline'))
+            rtamper('Rust tau of degen2 pivot 10 all 1.0', lambda r2: r2['degen2'][0][11].__setitem__('tau', ['0x1p+0'] * len(r2['degen2'][0][11]['tau'])))
     for x in bad:
         print('FAIL', x)
     print('PASS' if not bad else f'FAIL ({len(bad)})')

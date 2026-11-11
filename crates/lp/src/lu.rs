@@ -943,17 +943,29 @@ impl Lu {
     pub fn ftran_lr(&self, x: &mut [f64], input: Option<&[(usize, f64)]>) -> Option<Vec<usize>> {
         let m = self.head.len();
         let fits = |n: usize| self.sparse_mult * n <= m;
-        let sparse = input.filter(|i| fits(i.len()) && 0.1 * m as f64 > self.lmax as f64).and_then(|i| Some((i, self.l_sparse(i)?)));
-        let mut list = match sparse {
-            Some((input, out)) => {
-                for &(i, _) in input {
-                    x[i] = 0.0;
+        let mut list = match input.filter(|i| fits(i.len()) && 0.1 * m as f64 > self.lmax as f64) {
+            Some(input) => match self.l_sparse(input) {
+                Some(out) => {
+                    for &(i, _) in input {
+                        x[i] = 0.0;
+                    }
+                    for &(i, v) in &out {
+                        x[i] = v;
+                    }
+                    Some(out.into_iter().map(|(i, _)| i).collect::<Vec<_>>())
                 }
-                for &(i, v) in &out {
-                    x[i] = v;
+                None => {
+                    // shortcut: path B keeps the side sparse in the M1-02h order (input rows, then the other nonzeros
+                    // of the dense solve in position order); it is taken on maros-r7, pilot, pilot87 and wood1p
+                    // (outside the license, no capture). Port C:607–893 when a capture takes it.
+                    self.ftran_l(x);
+                    let mut seen = vec![false; m];
+                    let mut l: Vec<usize> = input.iter().map(|e| e.0).filter(|&i| x[i].abs() > ZERO).collect();
+                    input.iter().for_each(|e| seen[e.0] = true);
+                    l.extend(self.dense_order(x).into_iter().filter(|&i| !seen[i]));
+                    Some(l)
                 }
-                Some(out.into_iter().map(|(i, _)| i).collect::<Vec<_>>())
-            }
+            },
             None => {
                 self.ftran_l(x);
                 None
@@ -970,8 +982,8 @@ impl Lu {
     /// as it computes them. LU+0x128 < 0 (no levels): Kahn FIFO over the reached steps (C:81–257); else level
     /// buckets from the lowest input level, each in insertion order (C:259–605). Values below ZERO are dropped and
     /// not propagated.
-    /// shortcut: path B (Kahn below LU+0xe4, then the tail swept in step order, C:607–893) is not ported and
-    /// returns None (dense instead); 0 calls on degen2/kb2 (M1-02j). Port it when a capture takes it.
+    /// Path B (Kahn below LU+0xe4, then the tail swept in step order, C:607–893) is not ported: None (see
+    /// `ftran_lr`); 0 calls on the degen2/kb2/boeing1 captures (M1-02j).
     fn l_sparse(&self, input: &[(usize, f64)]) -> Option<Vec<(usize, f64)>> {
         let m = self.head.len();
         let dm = (m - self.n_singleton.min(m)) as f64;
