@@ -20,7 +20,7 @@ SOURCE = 'crates/mip/src/strong_branch.rs'
 TEST = 'crates/mip/tests/strong_branch_l1.rs'
 MODELS = ['pk1', 'neos5', 'tr12-30']
 OLD_06H2 = ROOT / 'bench/oracle/m2_06h2/capture/1.json.gz'
-OLD_06G2 = ROOT / 'bench/oracle/m2_06g2/final/{}_iters10_1.json.gz'
+OLD_06G2 = str(ROOT / 'bench/oracle/m2_06g2/final') + '/{}_iters10_1.json.gz'
 TOOLS = ['tools/mip_sb_loop.js', 'tools/mip_sb_snapshot.js', 'tools/mip_sb_loop_runs.sh',
          'tools/mip_sb_loop_rust.py', 'tools/mip_sb_restore_check.py', SOURCE, TEST]
 PARAMS = dict(Threads=1, Seed=0, LogToConsole=0, NodeLimit=300, GURO_PAR_SBMAXITERS=10)
@@ -108,7 +108,7 @@ def controls(cases, manifest):
             same(ds[0], d, m+'.repeat')
         # Non-interference: earlier captures of the same setting, with this capture's additions removed.
         d = project(ds[0])
-        old = summarize(load(OLD_06G2.format(m)))
+        old = summarize(load(Path(OLD_06G2.format(m))))
         same(kernel_view(old), kernel_view(d), m+'.06g2 kernel')
         for k in ('output', 'counts', 'params', 'model_sha256', 'binary_sha256'):
             same(old[k], d[k], m+'.06g2.'+k)
@@ -334,7 +334,7 @@ def self_test(cases, manifest, inputs, expected, actual):
         ('solution', lambda d: step(d, 'input')['x'].__setitem__(kernels(d)[0]['j'][0], bits(2.0))),
         ('tolerance', set_step('input', 'tol', bits(1.0))),
         ('original bound', lambda d: step(d, 'origUpper')['v'].__setitem__(step(d, 'prop')['list'][0], bits(1e9))),
-        ('later values', lambda d: step(d, 'values')['v'].__setitem__(0, bits(0.5))),
+        ('later values', lambda d: [s.__setitem__('v', [bits(0.5)]*len(s['v'])) for e in kernels(d) for s in e['steps'] if s['kind'] == 'values']),
         ('work', set_step('restore', 'w', bits(-1.0))),
         ('stall', lambda d: kernels(d)[0].__setitem__('stall', 1)),
         ('missing reset', drop('reset', lambda s: True)),
@@ -354,7 +354,7 @@ def self_test(cases, manifest, inputs, expected, actual):
             compare(e, actual if i == inputs else run(ROOT, i, 'tamper-'+name.replace(' ', '-')), name)
         reject(name, check)
     # The stored repeats are identical, so also hit the builder directly (controls() would stop first).
-    for name, mutate in [('direct values', lambda d: step(d, 'values')['v'].__setitem__(0, bits(0.5))),
+    for name, mutate in [('direct values', lambda d: [s.__setitem__('v', [bits(0.5)]*len(s['v'])) for e in kernels(d) for s in e['steps'] if s['kind'] == 'values']),
                          ('direct stall', lambda d: [e.__setitem__('stall', 1) for e in kernels(d)]),
                          ('direct work', set_step('restore', 'w', bits(-1.0)))]:
         bad = {m: [copy.deepcopy(cases[m][0])] for m in MODELS}
@@ -384,6 +384,7 @@ def self_test(cases, manifest, inputs, expected, actual):
         ('restore upper', 'if c.flags & 2 != 0 && c.upper < up {', 'if c.flags & 2 != 0 && false {'),
         ('up skip', 'if s.up[k] >= INF {\n                judge = false;', 'if false {\n                judge = false;'),
         ('score shift', '((a + 1e-5) * (b + 1e-5)).sqrt() - 1e-5', '((a + 1e-5) * (b + 1e-5)).sqrt()'),
+        ('score floor', 'let a = if a > 1e-10 { a } else { 1e-10 };', 'let a = if a > 1e-2 { a } else { 1e-2 };'),
         ('clamp2', 'LpValue::Optimal(obj) => if obj > parent { obj } else { parent },', 'LpValue::Optimal(obj) => obj,'),
         ('clamp7', 'LpValue::Limited(dual) => if parent > dual { parent } else { dual },', 'LpValue::Limited(dual) => dual,'),
         ('split', 's.direction(k, Side::Lower, split + 1.0)?;', 's.direction(k, Side::Lower, split + 2.0)?;'),
@@ -399,12 +400,24 @@ def self_test(cases, manifest, inputs, expected, actual):
             assert old in original, name
             (root/SOURCE).write_text(original.replace(old, new, 1))
             if run(root, inputs, 'mutant-'+name.replace(' ', '-')) == expected:
-                survivors.append(name)
-                print('SURVIVED', name)
+                caught = synthetic(root, 'mutant-'+name.replace(' ', '-')) != 0
+                survivors.append((name, caught))
+                print('SURVIVED', name, '(original unverified; synthetic', 'rejects)' if caught else 'misses)')
             else:
                 print('REJECT Rust', name)
-    # Status 7 with the dual below the parent never occurs in the original captures.
-    same(['clamp7'], survivors, 'surviving mutants')
+    # No original case: status 7 dual below parent, a set flag on an unchanged bound.
+    # A constant score shift keeps every comparison against best (initially 0) unchanged.
+    same([('restore strict', True), ('score shift', False), ('clamp7', True)], survivors, 'surviving mutants')
+
+
+def synthetic(root, label):
+    env = dict(os.environ, CARGO_TARGET_DIR=str(ROOT/'target/mip_sb_loop_mutants'))
+    r = subprocess.run(['cargo', 'test', '--release', '-p', 'rsolver-mip', '--test', 'strong_branch_l1'],
+                       cwd=root, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    (WORK/(label+'.synthetic.log')).write_text(r.stdout)
+    # Only a failing assertion counts; a mutant that does not compile proves nothing.
+    assert r.returncode == 0 or 'panicked' in r.stdout, f'{label}: synthetic did not run'
+    return r.returncode
 
 
 def main():
@@ -415,7 +428,7 @@ def main():
     files = {m: [DATA/f'{m}_{i}.json.gz' for i in (1, 2, 3)] + [DATA/f'{m}_control.json.gz'] for m in MODELS}
     cases = {m: [load(p) for p in ps] for m, ps in files.items()}
     if a.write_manifest:
-        paths = [p for ps in files.values() for p in ps] + [ROOT/p for p in TOOLS] + [OLD_06H2] + [OLD_06G2.format(m) for m in MODELS]
+        paths = [p for ps in files.values() for p in ps] + [ROOT/p for p in TOOLS] + [OLD_06H2] + [Path(OLD_06G2.format(m)) for m in MODELS]
         manifest = dict(binary=BINARY, models={m: cases[m][0]['model_sha256'] for m in MODELS},
                         files={str(p.relative_to(ROOT)): sha(p) for p in paths})
         (DATA/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')

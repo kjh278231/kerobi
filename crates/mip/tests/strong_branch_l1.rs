@@ -132,3 +132,18 @@ fn unobserved_paths_are_unported() {
     assert!(matches!(run(&b, &mut lp, &mut 0.0, &mut 0.0), Err(Error::Unported)));
     assert!(lp.trace.ends_with("poll\ntimer 0000000000000000\n"));
 }
+
+#[test]
+fn restore_requests_only_tightened_bounds() {
+    // Column 1 keeps its original bounds although both flags are set; column 2 was tightened.
+    let x = [0.5, 0.0, 0.0];
+    let b = Batch { columns: &[0], x: &x, lower: &[0.0, 0.0, 0.0], upper: &[1.0, 4.0, 4.0], int_tol: 1e-5,
+        parent_obj: 0.0, stall_limit: 2 };
+    let mut lp = script(&["prop 0 3 0 1 3ff0000000000000 3ff0000000000000 1 3 0000000000000000 4010000000000000 2 3 3ff0000000000000 4000000000000000 0",
+        "solve 7 0000000000000000 - 0", "restore 0",
+        "prop 0 1 0 2 0000000000000000 0000000000000000 0", "solve 7 0000000000000000 - 0", "restore 0", "solve 2 - - 0"]);
+    run(&b, &mut lp, &mut 0.0, &mut 0.0).unwrap();
+    let requests: Vec<_> = lp.trace.lines().filter(|l| l.starts_with("bound")).collect();
+    assert_eq!(requests, ["bound 0 62 0000000000000000", "bound 2 62 0000000000000000", "bound 2 60 4010000000000000",
+        "bound 0 60 3ff0000000000000"]);
+}

@@ -32,7 +32,8 @@ replace(' // Copy and restore:', `
  // Original-bound getters (lp, 0, n, 0, out): the propagation restore loop compares against these.
  for(const [addr,tag] of [[0x1a7fc0,'origLower'],[0x1a8070,'origUpper']])
  Interceptor.attach(b.add(addr),{onEnter(a){this.ev=evl;if(!this.ev)return;this.n=a[2].toInt32();this.out=a[4];},
-  onLeave(r){if(this.ev)this.ev.steps.push({kind:tag,rc:r.toInt32(),v:this.out.isNull()?null:doubles(this.out,this.n)});}});
+  // void functions (C:368-369 ignore the return), so rax is not recorded.
+  onLeave(){if(this.ev)this.ev.steps.push({kind:tag,v:this.out.isNull()?null:doubles(this.out,this.n)});}});
  // 6953ff(xmm0 value, lp, ?, lower, upper, col, dir; +8 &count, +16 list, +24 flags, +32 &out, +40 work).
  Interceptor.attach(b.add(0x573d30),{onEnter(a){this.ev=evl;if(!this.ev)return;const sp=this.context.rsp;
    this.lo=a[2];this.up=a[3];this.cnt=sp.add(8).readPointer();this.list=sp.add(16).readPointer();
