@@ -120,3 +120,31 @@ python3 tools/push_violated_reentry_rust.py --mutate-rust <새 경로>.json
 회귀: 04c-2 `push_violated_rust.py --compare`·04c-7 `push_retry_rust.py --compare`(재진입 사례가 이제 거부 대신 원본과 비교돼야 한다), 04c·04c-5 재생, `cargo test -p rsolver-lp --test push_decision --test push_ratio && python3 tools/primal_push_decision_rust.py --compare`, `cargo test --release --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, `git diff --check`.
 
 목표 합격 검사는 다음이면 0이 아닌 값으로 끝나야 한다: 함수별 재진입 사례 0, 함수별 요청 2 사례 0, 필수 필드 누락, 해시 0, 사건 배열 비움, 3회 미만, 합성 출처가 아닌 기록.
+
+## 6. 실행 결과
+
+- 환경: x86-64 Linux(WSL2, glibc 2.35), Gurobi 13.0.3(SHA-256 위와 같음, 체험판 라이선스. 직접 호출이라 라이선스 오류 없음), 기준 main `dcc8c0a`.
+- 계약 뒤 바꾼 것: 없음. 사례·비교 규칙·사전 기대를 계약대로 유지했다.
+- 첫 하네스 동작: scratch 시험 캡처 1회(근거로 쓰지 않음)에서 대조군 131사례가 저장 자료와 같고 목표 100사례가 사전 기대와 모두 일치했다. 기대값은 그 뒤에도 고치지 않았다.
+- 원본 캡처: `tools/gurun.sh ../.venv/bin/python tools/push_violated_reentry_oracle.py --capture bench/oracle/m3_violated_reentry/reentry-{1,2,3}.json` 3회 순차, 각 종료 0. 세 파일 바이트 동일(SHA-256 `3bbbbac88a85176481d51f53b2564cbb8dfb0979f30ed50030084b66eef4417e`). 도구 `7aa92927…`.
+- 대조군: `--controls` 종료 0. 04c-2 `054eef` 57사례와 04c-7 `056973` 74사례가 3회 모두 저장 `ratio-1.json`과 8필드 같고 S·factor 보존.
+- 목표 합격: `--acceptance` 종료 0. 목표 100사례(054eef 27종·056973 23종 × sparse·dense) 전부 사전 기대와 일치. 재진입 054eef 36·056973 32사례(2반복 work 비트 일치), 요청 2 054eef 20·056973 4사례(`S+0x294=2`·`S+0x2f8=-1`), 나머지는 `0`·`7` 유지. 입력·S(두 칸 밖)·factor 보존 참. skip·누락 0.
+  - 확인한 원본 동작: `054eef` 재진입이 `055f68`과 같다(2차 패스 선택·B 음수 alpha, 유한 cap flip, 후보 있는 상한 I이면 2차 마지막 기록 위치·1차 theta·pivot, 후보 없으면 1차 선택, 요청은 `12dd49`>16만, 3차 패스 없음, 계수 경계·임계·0.1 동률은 반환, 새 tol `tol·(max·coef)`, maxsd NaN). `056973` 재진입은 반복 전체(1단계·quickselect·2단계·대체)를 다시 돈다: 1회째 t=max breakpoint에서 작은 pivot → 2회째 quickselect·2단계 선택(`ret-reentry-qs`), 2회째 대체 최소 ratio(`ret-reentry-pick`), 2회째 후보 0·기울기 0이면 대체가 theta=I·pivot 0·-1(`ret-reentry-empty`·경계 직전 사례들), 2회째 후보 0·기울기<0이면 `12dd49`>16일 때 요청 2와 **-1**, 아니면 1회째 선택 0과 1회째 theta·pivot(`ret-reentry-none-*`).
+- 검사기 변조: `--self-test` 종료 0, 30종 거부([기록](../../bench/oracle/m3_violated_reentry/self-test.json)): 해시 0(ELF·입력·도구·C·기반 도구), 사건 비움, 출처 natural, 필드 누락, 1회만 변경, 2회만, 대조군 theta·요청, 목표 위치·theta·1반복 work·NaN pivot, 요청 지움(두 함수), 요청에서 prev 반환, 유지에서 -1 반환, `S+0x2f8` 미기록, 거짓 요청, S·factor 변경, 함수별 재진입 0·요청 2 0(사례 정의와 기록에서 함께 빼 목표 검사만 거부).
+- Rust: `infeasible_ratio`·`retry_ratio`·`violated_ratio`가 `factor_updates: &mut dyn FnMut() -> i32`·`refactor: &mut bool`을 받고 `i32`를 반환한다. `Reentry` 형식과 `ratio_tail`·`small_pivot`을 없애고 세 ratio가 공유 판정 `tightened()`(maxsd max, `(tol·max)·coef` 임계, 새 tol `tol·(max·coef)`)를 쓴다. `feasible_ratio`의 동작은 바꾸지 않았다(04c-5 재생 통과).
+- Rust 재생: `python3 tools/push_violated_reentry_rust.py --write && cargo test -p rsolver-lp --test push_ratio && python3 tools/push_violated_reentry_rust.py --compare` 종료 0. 231사례(대조군 131 + 목표 100) 위치·행·theta·pivot·work·요청 6필드 비트·정확 일치, `12dd49` 조회 수(asm `0xef671`·`0xf0a32` 파생 기대) 일치. 입력 `bench/oracle/m3_violated_reentry/rust_input.txt` 본문 SHA-256 `c8e81e2b…`(첫 줄).
+- 비교기 변조: `--self-test` 종료 0, 14종 거부(위치·theta·pivot·1반복 work·요청 누락·요청에서 prev·유지에서 -1·거짓 요청·조회 수·사례 누락·오래된 해시·빈 trace·입력 변경·갱신 수 변경).
+- Rust 변이 21종([기록](../../bench/oracle/m3_violated_reentry/rust-mutation.json)): 21종 모두 거부, 모두 컴파일 성공(cargo 0)이며 모두 04c-9 재생이 거부했다. 공유 판정 8종(재진입 없음·0.1 `>=`·임계 동률·곱 순서·`f64::max`·홀수 꼬리 없음·계수 1e4·1e13)은 04c-5 재생도 거부한다. `054eef` 7종(3차 패스·옛 tol·`>=16`·-1 반환·theta 초기화·후보 있는 상한 I·work 한 번), `056973` 6종(3차 패스·요청에서 prev·유지에서 -1·`>=16`·1회째처럼 처리·prev 미갱신).
+- 기존 재생의 재진입 사례: 04c-2 `push_violated_rust.py --compare`가 재진입 2사례를 이제 거부 대신 원본과 비교해 57사례 전부 통과. 04c-7 `push_retry_rust.py --compare`는 재진입 4사례(`reentry-pick`·`reentry-keep`)를 비교해 88사례 통과하고, 입력에 factor 갱신 수가 없어 `reentry-refactor` 2사례만 빼고 04c-9 재생이 비교한다. 두 도구의 self-test 변조 `refused-accepted`를 `reentry-theta`로 바꿨다.
+- 회귀(모두 종료 0): `cargo test -p rsolver-lp --test push_decision --test push_ratio && python3 tools/primal_push_decision_rust.py --compare`(175단계·연결 불일치 0)·`--self-test`; 04c `primal_push_ratio_rust.py --compare`·`--self-test`; 04c-5 `primal_push_reentry_rust.py --compare`·`--self-test`(91사례); 04c-2·04c-7 `--compare`·`--self-test`; `primal_push_ratio_oracle.py`·`push_infeasible_ratio_oracle.py`·`push_retry_ratio_oracle.py --check … --selftest`; `cargo test --release --workspace`(129 통과·12 ignored); `cargo clippy --workspace --all-targets -- -D warnings`; `git diff --check`.
+- 실행하지 않은 검사: maturin·pytest(`crates/py`·Python API 변경 없음, ratio 호출자 없음). 04c·04c-2·04c-5·04c-7 도구의 `--mutate-rust`는 재실행하지 않았다. 이번 리팩터링으로 그 변이 대상 문자열(`ratio_tail`·`small_pivot`·`let small = …` 등)이 코드에 없어 그대로는 돌지 않는다. 같은 판정 변이는 이번 기록이 네 재생을 함께 돌려 대신한다. 기존 변이 기록 파일은 당시 코드의 결과로 남긴다.
+- 해시: `crates/lp/src/crossover.rs` `45a3987d…`, `crates/lp/tests/push_ratio.rs` `6046bae2…`.
+
+## 7. 판정과 인수인계
+
+- 작업 수행: 완료.
+- 동등성: 계약 범위 **통과**(원본 합성 직접 호출, 저장 기준 재생, 비트·정확 비교). `054eef`·`056973` 재진입이 더는 Rust에서 거부되지 않는다.
+- 미검증·제외: `056973` 재진입 2회째의 cap 종료(§1, 합성 설계 불가·1회째와 같은 코드), 계수 경계 10(판별 불가), `12dd49` 호출 여부 자체(asm 파생), 자연 crossover의 재진입(합성만), push 루프 연결(요청 2 뒤 push가 반환값을 `S+0x2f8`에 덮어쓰는 순서 포함).
+- 후속: push 루프 연결(Rust push 루프. `Recall` 뒤 열 재반전·ratio·`push_recall_step`, `refactor`면 `S+0x294=2`, 반환값을 leaving으로 기록하는 `0x1c2655` 순서), 또는 M3-04d(dual push 조사).
+- branch `work/m3-04c-9`, worktree `../rsolver-m3-04c-9`.
+- 교훈: `docs/lessons/original.md`(crossover: `056973` 재진입 요청 반환 -1·push의 `S+0x2f8` 덮어쓰기), `docs/lessons/tooling.md`(공유 함수 리팩터링 뒤 변이 앵커 겹침).
