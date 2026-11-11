@@ -134,7 +134,7 @@ def rule_eb(e, V, st):
     """62f909 eta block (asm 0x543677-0x543736): (site, value, sbit set to -1)."""
     _, t, eta0, cost, it, t0, run, w, m8c0 = e
     tm = f(t0) + f(w) if run else f(t0)
-    if 0.01 * f(m8c0) > tm:
+    if 'V16' not in V and 0.01 * f(m8c0) > tm:
         st['eb_2e9'] += 1
         return EB_SITE['2e9'], 2000000000, True
     if f(cost) == 0.0:
@@ -300,7 +300,8 @@ def replay(d, V=frozenset(), name=''):
                 pend_eb = None
             elif ra == RESTORE:
                 need(sb_stack and v == sb_stack[-1][4], f'H: {where}: restore value {v} != 62f909 entry eta')
-                sbit[t] = sb_stack[-1][5]  # 0x542fba: T+0x64 = saved value right after this call
+                if 'V17' not in V:
+                    sbit[t] = sb_stack[-1][5]  # 0x542fba: T+0x64 = saved value right after this call
             else:
                 need(ra not in EB_SITE.values(), f'EB: {where}: eta block 6edd89 without the block probe')
             if t in eta:
@@ -466,8 +467,10 @@ FOUR = frozenset({'pk1', 'neos5', 'tr12-30', 'fhnw-binpack4-4'})
 VARIANTS = {
     'V1': ALL, 'V2': NO_MS, 'V3': frozenset(), 'V4': ALL - {'fhnw-binpack4-4'}, 'V5': ALL - {'fhnw-binpack4-4'},
     'V6': FOUR, 'V7': frozenset({'neos5', 'tr12-30', 'fhnw-binpack4-4'}), 'V8': ALL, 'V9': FOUR, 'V10': ALL, 'V11': ALL,
-    'V12': FOUR, 'V13': frozenset({'neos5', 'tr12-30', 'fhnw-binpack4-4'}), 'V14': frozenset(), 'V15': ALL}
-SURVIVORS = ('V3', 'V14')  # undiscriminable in these cases (section 3)
+    'V12': FOUR, 'V13': frozenset({'neos5', 'tr12-30', 'fhnw-binpack4-4'}), 'V14': frozenset(), 'V15': ALL,
+    # added after the reference capture (independent review): clauses the cases never decide
+    'V16': frozenset(), 'V17': frozenset()}
+SURVIVORS = ('V3', 'V14', 'V16', 'V17')  # undiscriminable in these cases (section 3)
 
 
 def variants(docs):
