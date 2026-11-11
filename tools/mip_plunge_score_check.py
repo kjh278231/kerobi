@@ -144,6 +144,7 @@ def check_capture(d, name, V=frozenset()):
             continue
         try:
             rule, pk = r['ecx'], one(c, 'pick')
+            need(r['r10d'] == c['pin']['bdir'], 'rule r10d differs from BranchDir (env+0x27e0)')  # rule 9 sign input
             ents = pk['list']
             need(len(ents) == r['n'], 'list size')
             if r['work'] is None:
@@ -270,6 +271,9 @@ def tampers(caps, old, manifest):
             pk['work'] = h(f(pk['work']) + 1.0)
         return g
 
+    def r10d(d):                      # added after the review: rule 9's sign input must be BranchDir
+        one(calls(d)[0], 'rule')['r10d'] = -1
+
     def drop16(d):
         keep, cur = [], []
         for e in d['events']:
@@ -291,7 +295,7 @@ def tampers(caps, old, manifest):
              ('rule 5 pick index', 'markshare_4_0', bump_idx(5)), ('rule 6 pick index', 'pk1', bump_idx(6)),
              ('rule 6 ancestor id in a tail chain', None, chain_anc), ('rule 1 est', None, est1),
              ('rule 5 RNG slot', 'markshare_4_0', slot5), ('rule 4 work', 'markshare_4_0', work(4)),
-             ('rule 7 work', 'markshare_4_0', work(7)), ('rule 1/6 calls deleted', 'all', drop16)]
+             ('rule 7 work', 'markshare_4_0', work(7)), ('rule 1/6 calls deleted', 'all', drop16), ('rule r10d (after review)', 'pk1', r10d)]
     bad = []
     for label, case, fn in cases:
         c2 = {k: [copy.deepcopy(v[0])] for k, v in caps.items()}
