@@ -118,8 +118,9 @@ M2-01의 G6 완료 범위는 유지한다. 실제 실행되지 않은 presolve �
 | M2-06f-3 | 구현 완료(L1) | 노드 수명 모형(L1) | 06f-2 | [완료](m2/mip_node_life_rust.md). `node_life::NodeLife`(`create`·`release`·`ancestors`). 06f-2 6사례 run 1 재생 110,753줄(`5fa560` 40,496, 감쇠 사슬 7,404)이 캡처와 같음. 변조 7종 거부, 변이 W1·W3–W6 거부·W2 생존. `bnb.rs` 미연결 |
 | M2-06f-4 | 조사 완료 | infeasible 노드 벡터 `95da98` | 06f-2 | [완료](m2/mip_infeas_ray.md). 이탈 행 r의 Farkas 행(`12ea3f` tableau 행, s·정규화·ρ·`L+0x68`·cut 최댓값). 6사례 131호출의 출력·ray·bnd·work가 재생과 비트까지 같음(새 `tools/mip_infeas_ray.js`·`_check.py`, `bench/oracle/m2_06f4`). 감쇠 117회 중 69회는 `6684cd`가 제자리에서 고친 벡터(읽는 칸이 다른 것 45회). fail 1·4·5·flip·재시도는 실행 0회 |
 | M2-06f-5 | 조사 완료 | `6684cd` infeasible ray 수정 | 06f-4 | [완료](m2/mip_infeas_ray_fix.md). 조상 사슬의 bound 변경 기록으로 행을 더해 ray 칸을 지우고 `95ce25`로 재정규화. 6사례 115호출의 ray·L 칸·work가 재생과 비트까지 같음(새 `tools/mip_ray_fix.js`·`_check.py`, `bench/oracle/m2_06f5`). 게이트는 `5fb8ec`의 `5eda00` 뒤 C:2209만, 미호출 92회 모두 분류. `95ce25` fail 5·flip 방식 1·2는 실행 0회 |
-| M2-06g | 조사 | strong branching 예산·복원 계약 | 06e | LP 결과 소비와 임시 bound·basis 복원표 |
-| M2-06h | 구현 | 후보 하나의 strong branching 평가 | 06g, LP 상태 저장 기능 | 양방향 결과와 원상 복구 확인 |
+| M2-06g | 조사 완료 | pseudocost 읽는 쪽 식·SB 캐시·η/반복 한도(06g 원래 행을 06g-2와 나눔) | 06e-2 | [완료](m2/mip_sb_read.md). `6ef12f`(캐시·T2 합산·1e-6 하한)·`6eed2e`(루트·캐시 예외, cnt < η)·`6ee4ac`·`6ee5d1`(캐시 `max(Δ,1e-10)/(|f|+0.001)`) 6사례 101만여 호출 비트·정확 일치. η는 `62f909` 안 자동 조정·반환 복원, 루트 반복 인라인 η = 1, `T+0x64`는 `6edda1`. 새 `tools/mip_sb_read.js`·`_check.py`, `bench/oracle/m2_06g`. 변조 15·변이 17 기대대로. η 2e9·1 분기·`T+0x64` 복원·병렬 미검증 |
+| M2-06g-2 | 조사 | strong branching 결과 소비·복원 계약 | 06g | `691453`·`691b56` LP 결과 소비와 임시 bound·basis 복원표, `62ec1d` 후보 목록·SBMAXCANDS, `T+0x68` 누적, `62f909` SB 목적 배열·배율 출처 |
+| M2-06h | 구현 | 후보 하나의 strong branching 평가 | 06g-2, LP 상태 저장 기능 | 양방향 결과와 원상 복구 확인 |
 | M2-06i | 조사·구현 | reliability 후보 판정 한 경로 | 06f·06h | 원본 후보 집합·점수·동률 순서 비교 |
 | M2-06j | 조사 | 재시작 조건·보존 상태·재구성 범위 | 06a, 06 설계 §8 | 조건별 호출표와 구현 하위 번호 |
 | M2-06k | 조사·구현 | 노드 진행 로그의 한 행과 카운터 | 06a | 같은 노드 사건의 출력 값·순서 비교 |
@@ -152,7 +153,7 @@ M2-01의 G6 완료 범위는 유지한다. 실제 실행되지 않은 presolve �
 | M2-09f | 조사 | 부분·복수 MIP start 처리 분할 | 09e | completion·우선순위·예산의 후속 작업표 |
 | M2-09g | 조사·구현 | cbSetSolution·cbUseSolution의 완전 후보 한 개 | 09b | 제출·검증·적용 시점과 반환값 비교 |
 | M2-10a | 조사 완료 | 노드별 복사·LP 준비·풀이 비용 계측 | 현재 5초 실행 | [완료](m2/mip_bnb_node_cost.md). 12모델 NodeLimit 500(+2모델 2만)에서 노드 LP 91–99%(dual 풀이 80–95%), 복사 ≤2.7%, 선택 ≤0.8%(열린 노드 2만이면 6–19%). 개선 대상: 노드 basis 재사용. 부모 basis dual warm 반사실이 반복 1.5–138배·시간 1.4–7.9배 감소. `solve_warm` 내부·메모리·원래 모델 경로 미측정 |
-| M2-10b | 조사 | 노드 LP basis 재사용 설계 | 10a·06g | 저장·복구·재풀이·오류 처리와 구현 분할. 첫 LP warm start는 기존 dual warm으로 가능하다. 재풀이 실제 경로(M2-03d-4)는 M1의 primal warm start·LP cutoff도 필요하다 |
+| M2-10b | 조사 | 노드 LP basis 재사용 설계 | 10a·06g-2 | 저장·복구·재풀이·오류 처리와 구현 분할. 첫 LP warm start는 기존 dual warm으로 가능하다. 재풀이 실제 경로(M2-03d-4)는 M1의 primal warm start·LP cutoff도 필요하다 |
 | M2-10c | 검증 | 38개 60초 상태·원본 해 위반 | 설정 고정·필요 기능 연결 | 상태·목적·경계·위반·감시 중단 표 |
 | M2-10d | 검증 | 루트 반복·cut 수·노드 수 P1 | 10c | 첫 분기점과 기준별 판정 |
 | M2-10e | 검증 | job-shop 5개와 최종 속도 관문 | 10c·10d | 정답·속도표와 M2 합격 여부 |
