@@ -1,0 +1,75 @@
+{
+ "task": "M2-06c",
+ "schema": 1,
+ "tool": "tools/mip_plunge_rule.js",
+ "tool_sha256": "21905a4af709fb54d9e1d0afe5158c73279b1d4282b80cd9ca906083f653c889",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "base_params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "NodeLimit": 2000
+ },
+ "cases": {
+  "markshare_4_0": {
+   "model": "markshare_4_0.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000
+  },
+  "pk1": {
+   "model": "pk1.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000
+  },
+  "neos5": {
+   "model": "neos5.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000
+  },
+  "tr12-30": {
+   "model": "tr12-30.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000
+  },
+  "pk1-pool": {
+   "model": "pk1.mps.gz",
+   "Threads": 1,
+   "Seed": 0,
+   "LogToConsole": 0,
+   "NodeLimit": 2000,
+   "PoolSearchMode": 2
+  }
+ },
+ "models": {
+  "markshare_4_0": "1a1feb04f5637db9f69be53bd6224fcd9fe5b8d750870d9b2002b535d25f4353",
+  "pk1": "6c64530538b254a8ae648f8f8f188847366ae52da560fdec0ad290c642973ba0",
+  "neos5": "2888e9aeb10a4cf16d3b9ad221302fd3de815ce1454b31e660ebd060589c1072",
+  "tr12-30": "94f8cf2fd2fc920ed6ea2452b0755aeec110eb8404716554485c25e7a1e06a3d"
+ },
+ "model_paths": "../re/bench/data/miplib/<model>.mps.gz",
+ "files": {
+  "markshare_4_0_1.json.gz": "9d5aee70e069f8cdd7118f9f67e3a1dd51ae05a3423ff0f79539de176c83eb35",
+  "markshare_4_0_2.json.gz": "9d5aee70e069f8cdd7118f9f67e3a1dd51ae05a3423ff0f79539de176c83eb35",
+  "markshare_4_0_3.json.gz": "9d5aee70e069f8cdd7118f9f67e3a1dd51ae05a3423ff0f79539de176c83eb35",
+  "pk1_1.json.gz": "2e4dffbd70c9b6ef8efd8fca34521c89d5111286f07c379ced9c6b8948f971bb",
+  "pk1_2.json.gz": "2e4dffbd70c9b6ef8efd8fca34521c89d5111286f07c379ced9c6b8948f971bb",
+  "pk1_3.json.gz": "2e4dffbd70c9b6ef8efd8fca34521c89d5111286f07c379ced9c6b8948f971bb",
+  "neos5_1.json.gz": "8f75b83220e3eee08b467d2d1d071073882caf699744febbc1740eb1636ef1a3",
+  "neos5_2.json.gz": "8f75b83220e3eee08b467d2d1d071073882caf699744febbc1740eb1636ef1a3",
+  "neos5_3.json.gz": "8f75b83220e3eee08b467d2d1d071073882caf699744febbc1740eb1636ef1a3",
+  "tr12-30_1.json.gz": "9c441f7ec9ea7df3530705c4601e31d4bfa273acccf862d6f420e8f2fdce4881",
+  "tr12-30_2.json.gz": "9c441f7ec9ea7df3530705c4601e31d4bfa273acccf862d6f420e8f2fdce4881",
+  "tr12-30_3.json.gz": "9c441f7ec9ea7df3530705c4601e31d4bfa273acccf862d6f420e8f2fdce4881",
+  "pk1-pool_1.json.gz": "7a95437f8e7559e7e4243ed17b097a1890aaf539f52e1676f7e77d1b8bd4b762",
+  "pk1-pool_2.json.gz": "7a95437f8e7559e7e4243ed17b097a1890aaf539f52e1676f7e77d1b8bd4b762",
+  "pk1-pool_3.json.gz": "7a95437f8e7559e7e4243ed17b097a1890aaf539f52e1676f7e77d1b8bd4b762"
+ }
+}
