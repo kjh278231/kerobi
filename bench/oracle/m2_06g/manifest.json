@@ -1,0 +1,34 @@
+{
+ "task": "M2-06g",
+ "schema": 1,
+ "tool": "tools/mip_sb_read.js",
+ "tool_sha256": "be7daa51479f4d41cad0eb9fd591b21088130434f96787e66b5934581ae2a2ef",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "NodeLimit": 2000
+ },
+ "models": "../re/bench/data/miplib/<case>.mps.gz",
+ "files": {
+  "markshare_4_0_1.json.gz": "64e4531d84721d75f7034d504acce833348236311609fa7208b2f80d0d96ac3b",
+  "markshare_4_0_2.json.gz": "64e4531d84721d75f7034d504acce833348236311609fa7208b2f80d0d96ac3b",
+  "markshare_4_0_3.json.gz": "64e4531d84721d75f7034d504acce833348236311609fa7208b2f80d0d96ac3b",
+  "pk1_1.json.gz": "8d8f0f0937f05d3560a4dba89e8d34c754fe8cdba8f6bd200921d188c78d4b17",
+  "pk1_2.json.gz": "8d8f0f0937f05d3560a4dba89e8d34c754fe8cdba8f6bd200921d188c78d4b17",
+  "pk1_3.json.gz": "8d8f0f0937f05d3560a4dba89e8d34c754fe8cdba8f6bd200921d188c78d4b17",
+  "neos5_1.json.gz": "a9458590228c213ac32a8e6ca1181b1acec240ba10bd0f9dc61892388d135824",
+  "neos5_2.json.gz": "a9458590228c213ac32a8e6ca1181b1acec240ba10bd0f9dc61892388d135824",
+  "neos5_3.json.gz": "a9458590228c213ac32a8e6ca1181b1acec240ba10bd0f9dc61892388d135824",
+  "tr12-30_1.json.gz": "7b226b595b5098d5ce53b3a2790213f668e5bda9dacfa24f5bf8c2619e745d9a",
+  "tr12-30_2.json.gz": "7b226b595b5098d5ce53b3a2790213f668e5bda9dacfa24f5bf8c2619e745d9a",
+  "tr12-30_3.json.gz": "7b226b595b5098d5ce53b3a2790213f668e5bda9dacfa24f5bf8c2619e745d9a",
+  "fhnw-binpack4-4_1.json.gz": "7e452eee06c26603488aea858c8dc0d16a4b348bc9696560886b148f592d2e1f",
+  "fhnw-binpack4-4_2.json.gz": "7e452eee06c26603488aea858c8dc0d16a4b348bc9696560886b148f592d2e1f",
+  "fhnw-binpack4-4_3.json.gz": "7e452eee06c26603488aea858c8dc0d16a4b348bc9696560886b148f592d2e1f",
+  "neos-860300_1.json.gz": "2d93d55a3a2b2534ea619879965966e1e5cec484d6dd6d0bd70a433461fac216",
+  "neos-860300_2.json.gz": "2d93d55a3a2b2534ea619879965966e1e5cec484d6dd6d0bd70a433461fac216",
+  "neos-860300_3.json.gz": "2d93d55a3a2b2534ea619879965966e1e5cec484d6dd6d0bd70a433461fac216"
+ }
+}
