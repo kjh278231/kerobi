@@ -12,6 +12,7 @@ use crate::common::Rng;
 use crate::pricing::{Pricing, BIG_M_TOL};
 use crate::spx::Spx;
 use crate::start::start_basis;
+use crate::work::{Work, X148};
 use rsolver_model::INFINITY;
 
 pub const FEAS_TOL: f64 = 1e-6; // spx+0x380
@@ -109,6 +110,8 @@ pub struct Engine<'a> {
     c8: bool,
     /// Pivot path: (iteration, entering column, leaving column); bound flips of the entering column leave −1.
     pub path: Vec<(u64, i64, i64)>,
+    /// Dual work counter (06268b param_2), partial: nothing decides on it yet (docs/m1/m1_02q_work.md).
+    pub work: Work,
 }
 
 impl<'a> Engine<'a> {
@@ -174,6 +177,7 @@ impl<'a> Engine<'a> {
             bfrt_path: std::env::var("RSOLVER_BFRT").ok(),
             c8: false,
             path: Vec::new(),
+            work: Work::new(),
         }
     }
 
@@ -198,8 +202,11 @@ impl<'a> Engine<'a> {
     /// Factor the current basis; a singular basis gets slacks of the unpivoted rows in its unpivoted positions.
     fn refactor(&mut self) {
         self.upd_cols = 0;
+        self.work.enter_refactor();
+        let head0 = self.head.clone();
         loop {
             self.lu = Lu::factor_tol(self.spx, &self.head, self.markowitz_tol);
+            self.work.factor(&self.lu.factor_work());
             self.fac_nnz = self.lu.factor_nnz();
             if self.lu.complete() {
                 {
@@ -233,6 +240,35 @@ impl<'a> Engine<'a> {
                 self.head[p] = self.n + i;
                 self.vstat[self.n + i] = p as i32;
             }
+        }
+        self.lu.refactor_work(&mut self.work, self.pr.cost_mode);
+        self.work_dump(&head0);
+    }
+
+    /// `RSOLVER_WORK=<file>`: one JSON line per refactor with the factored basis, Markowitz tol, spx+0x150/0x158, the
+    /// Markowitz terms and the work stores since the previous line (tools/m1_factor_work_check.py).
+    fn work_dump(&mut self, head: &[usize]) {
+        let (Some(log), Ok(path)) = (&mut self.work.log, std::env::var("RSOLVER_WORK")) else { return };
+        use std::io::Write;
+        let bits = |x: f64| format!("{:016x}", x.to_bits());
+        let stores: Vec<String> = log
+            .drain(..)
+            .map(|(site, v, a)| format!("[{site},\"{}\",[{}]]", bits(v), a.iter().map(|x| format!("\"{}\"", bits(*x))).collect::<Vec<_>>().join(",")))
+            .collect();
+        let terms: Vec<String> =
+            self.lu.fw.terms.iter().map(|(k, v, b)| format!("[\"{k}\",{},{},{},\"{}\"]", v[0], v[1], v[2], bits(*b))).collect();
+        let line = format!(
+            "{{\"iter\":{},\"head\":{:?},\"tol\":\"{}\",\"w150\":\"{}\",\"w158\":\"{}\",\"terms\":[{}],\"stores\":[{}]}}\n",
+            self.iter,
+            head,
+            bits(self.markowitz_tol),
+            bits(self.work.w150),
+            bits(self.work.w158),
+            terms.join(","),
+            stores.join(",")
+        );
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = f.write_all(line.as_bytes());
         }
     }
 
@@ -797,6 +833,10 @@ impl<'a> Engine<'a> {
     /// Dual start: crash basis, free columns pivoted in, first factorization, x_B, d, exact DSE norms.
     pub fn dual_start(&mut self) {
         self.set_basis(start_basis(self.spx));
+        // 534f7 C:1512–1514 (end of the spx+0x3ec > 1 start). shortcut: placed before the first factor as observed
+        // without free columns; with free columns the original order is unchecked
+        let nnz: i64 = self.spx.len.iter().map(|&l| l as i64).sum();
+        self.work.add(0xe84b9, (nnz as f64 * 2.0) * X148);
         self.refactor();
         // free-column loop (0534f7 L700-1300): in column order each free nonbasic enters at the first position of
         // largest |α| whose basic has a finite lower bound; every pivot is an iteration. Columns left out (max |α| <
@@ -832,6 +872,8 @@ impl<'a> Engine<'a> {
         self.make_dual_feasible();
         self.compute_xb();
         self.exact_weights();
+        // 1bae9c C:2150–2205: the DSE weight init loop over the m basis positions
+        self.work.add(0xc391f, self.m as f64 * X148);
         self.big_m = (0..self.n + self.m).any(|j| self.vstat[j] < 0 && self.x_nonbasic(j).abs() >= INFINITY);
         self.rc_build();
         self.pt_rc = factors;
