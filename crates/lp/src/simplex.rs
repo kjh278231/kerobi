@@ -1169,8 +1169,16 @@ impl<'a> Engine<'a> {
                     .map(|r| format!("[{}]", r.iter().map(|&(c, u)| format!("[{},\"{}\"]", c, hexf(u))).collect::<Vec<_>>().join(",")))
                     .collect();
                 let ucp: Vec<String> = self.lu.u_prefix_parts().iter().map(|(p, r)| format!("[{},{:?}]", p, r)).collect();
-                self.last_urow =
-                    format!("\"urow\":[{}],\"t\":{},\"ucp\":[{}],\"f0k\":{:?},", rows.join(","), t, ucp.join(","), self.lu.listed());
+                let (e8, emp) = self.lu.empty_cols();
+                self.last_urow = format!(
+                    "\"urow\":[{}],\"t\":{},\"ucp\":[{}],\"f0k\":{:?},\"e8\":{},\"emp\":{:?},",
+                    rows.join(","),
+                    t,
+                    ucp.join(","),
+                    self.lu.listed(),
+                    e8,
+                    emp
+                );
             }
             self.w[r] = if beta == 0.0 { 1e-8 } else { (beta / ar) / ar };
             for &p in &supp {
