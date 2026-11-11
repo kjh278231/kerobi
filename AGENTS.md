@@ -10,7 +10,7 @@
 
 새 세션에서 이어서 작업하거나 컴퓨터를 옮겼으면 반드시 `docs/handoff/README.md`의 시작 절차를 따른다. `python3 tools/session.py status`와 해당 영역의 `docs/handoff/M1.md`·`M2.md`·`M3.md`에서 다음 작업, 선행 변경과 검증 상태를 복구한다. `docs/13_work_units.md`는 상위 범위, `docs/14_sprint_plan.md`는 1주 하위 작업이며 구현 전에 해당 `docs/m*/sprint_design.md`를 읽는다.
 
-작업은 하위 번호로 점유하고 독립 branch·worktree에서 수행한다. 같은 영역은 한 세션이 맡고 공유 파일 변경은 추가 shared 점유를 얻는다. 점유는 같은 git common-dir 안에서만 유효하므로 다른 컴퓨터의 담당 영역은 이동 절차에 따라 인계한다. 원격 동기화 허용 여부와 오프라인 패키지 절차도 `docs/handoff/README.md`를 따른다.
+작업은 하위 번호로 점유하고 독립 branch·worktree에서 수행한다. 점유 단위는 `M2-06`처럼 영역 번호와 두 자리 하위 번호다. 같은 단위는 한 세션이 맡고 다른 단위는 동시에 진행할 수 있다(파일이 겹치는 범위는 피한다). 11·12·13·14와 인수인계 맨 위는 작업 branch에서 고치지 않고 `docs/progress/<작업번호>.md` 한 파일만 쓴다(양식 `docs/progress/README.md`). 병합은 `tools/merge_task.py`가 shared 점유를 짧게 얻어 처리하고 이 문서들을 다시 만든다. 그 밖의 공유 파일 변경은 추가 shared 점유를 얻는다. 점유는 같은 git common-dir 안에서만 유효하므로 다른 컴퓨터의 담당 영역은 이동 절차에 따라 인계한다. 원격 동기화 허용 여부와 오프라인 패키지 절차도 `docs/handoff/README.md`를 따른다.
 
 브랜치 생성·검증·병합·미커밋 선행 변경 정리에는 [verified-task-branches 스킬](.agents/skills/verified-task-branches/SKILL.md)을 먼저 읽는다. 하위 작업별로 최신 main에서 분기하고 검증 후 `--no-ff`로 병합한다. 스프린트는 일정 단위이며 브랜치 수명을 결정하지 않는다.
 
@@ -45,7 +45,7 @@
 
 # 작업 완료 기록
 
-작업을 마치기 전에 현재 worktree와 main의 `docs/11_progress.md`, `docs/12_roadmap_diagram.md`를 구현·검증 결과와 비교한다. 상세 결과와 변경 상태는 작업 branch에서 갱신해 병합으로 main에 반영한다. 미병합이면 shared 점유를 얻은 병합 담당자가 main 인수인계에 branch·commit·위치·검증 상태만 기록한다. 상세 파일을 main에 미리 복사하지 않는다. worktree의 미커밋·미병합 상태와 남은 한계를 명시하며, 갱신할 수 없으면 완료 보고에 이유와 누락된 문서를 적는다.
+작업을 마치기 전에 현재 worktree와 main의 `docs/11_progress.md`, `docs/12_roadmap_diagram.md`를 구현·검증 결과와 비교한다. 상세 결과와 변경 상태는 작업 branch의 `docs/progress/<작업번호>.md`에 쓰고 병합으로 main에 반영한다(11·12는 병합 때 자동 갱신). 미병합이면 shared 점유를 얻은 병합 담당자가 main 인수인계에 branch·commit·위치·검증 상태만 기록한다. 상세 파일을 main에 미리 복사하지 않는다. worktree의 미커밋·미병합 상태와 남은 한계를 명시하며, 갱신할 수 없으면 완료 보고에 이유와 누락된 문서를 적는다.
 
 종료 전 이번 작업의 교훈을 `docs/lessons/`에 기록한다. 대상은 새로 확인한 원본 사실, 실패한 접근과 그 대안, 다음 작업에서 재사용할 도구·절차다. 형식은 `docs/lessons/README.md`를 따른다. 기록이 없으면 작업 기록 §7에 "교훈 없음"과 이유를 적는다.
 
