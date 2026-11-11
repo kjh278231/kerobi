@@ -60,10 +60,64 @@
 - 원본 캡처(작업 worktree 루트, Gurobi 한 프로세스씩): `for r in 1 2 3; do for m in degen2 kb2; do tools/gurun.sh node tools/m1_usolve.js ../re/bench/data/netlib/$m.mps.gz bench/oracle/m1_02m/${m}_us_$r.json.gz; done; done`.
 - 판정: `python3 tools/m1_usolve_check.py --self-test`. Rust: `tools/build_local.sh && PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_usolve_check.py --rust --self-test`.
 
-## 6. 실행 결과
+## 6. 실행 결과(조사)
 
-(작성 예정)
+- 원본 캡처(`tools/m1_usolve.js` 첫 판, Gurobi 6회): degen2 634사건·kb2 38사건, 각 3회 gz 바이트 동일(degen2 `33740783…`, kb2 `f0d201e8…`). U 구조 포인터는 LU+0x20(`uoff`)이다.
+- `python3 tools/m1_usolve_check.py --self-test` 종료 0:
 
-## 7. 판정과 인수인계
+```
+degen2: kernels {'21686f': 162, '21841f': 105}, paths {'21686f H1': 1, '21686f H2': 127, '21686f S1': 5, '21686f S2': 29, '21841f H1': 20, '21841f H2': 15, '21841f S1': 42, '21841f S2': 28}, prefix not in slot order 70, |x| <= tol < |x/d| 0, columns split-checked 12327
+kb2: kernels {'21686f': 5, '21841f': 2}, paths {'21686f H2': 1, '21686f S1': 4, '21841f S1': 2}, prefix not in slot order 0, |x| <= tol < |x/d| 0, columns split-checked 32
+T 변조 4종·모델 변이 3종 모두 거부
+```
 
-(작성 예정)
+  - A: 두 커널 274회 전부 α_q 출력 순서·값이 §2 모델과 비트까지 같다. 네 경로가 degen2에서 두 커널 모두 실행됐다. 접두 순서가 슬롯 순이 아닌 호출은 degen2 70회이고 모두 H2(구간 2)다. degen2 피벗 8(`21686f` H2) 원본 `[239, 183, 202, 50]`이 모델과 같다(목록 순 변이는 거기서 거부).
+  - P: 꼬리 열 12,359개에서 [+0x68, +0x78) 행은 모두 U 위치 ≥ t, [+0x78, +0x70) 행은 모두 < t이고 f8 ≥ 0. t 아래 열은 모두 비었다.
+  - 값 함정: `|x| ≤ tol < |x/d|`인 출력은 0회라 Rust α_q 값(조밀 규칙)의 출력 집합과 어긋나는 사례가 없다.
+  - N: 피벗별 `aq_out` = M1-02j 캡처.
+- **답.** 접두 행 순서는 경로가 정한다. S1·S2·H1은 LU+0xf0 목록 순, H2(`2.5·b8 ≤ ec`)는 "구간 2" 순(접두 입력을 입력 순으로, 이어 꼬리 출력 순 × 열 접두 부분 저장 순으로 처음 닿은 행)이다. 그래서 H2의 순서는 U 열 안의 저장 순서라는 **상태**에 달려 있다.
+- 첫 Rust 대조((b), 스냅숏 필드 `ucp`·`f0k`·`aqk`만 더한 빌드): degen2·kb2 모두 피벗 1부터 접두 부분 순서가 달랐다(degen2 열 6 Rust `[50, 182, 201, 236]` 대 원본 `[236, 182, 201, 50]`). Rust `ucol`은 새 열을 인덱스 오름차순으로 채우고 꼬리/접두 경계를 두지 않는다. 계약 §1에 따라 이 시점의 판정은 "열 유지 복원 필요"다. 아래 §7에서 그 규칙을 C로 확정해 범위를 넓혔다.
+
+## 7. 구현(같은 branch 둘째 단계, 범위 확대)
+
+U 열 저장 규칙이 C에서 모두 읽혔고 필요한 상태(spike 목록 순서, 행의 꼬리/접두 소속, 분해 단계 순서)가 Rust 값으로 정해져 구현을 넣었다. 계약 §3의 (b) C·(c) O·I를 그대로 쓰고, C는 "t·f0가 같은데 접두 부분 순서가 다르면 실패"로 조였다. t·f0 자체가 다른 피벗은 `05b257` 접두 판정(이 계약 밖)이라 제외로 센다. 줄인 판정은 없다.
+
+| 원본 | 규칙(열 = [꼬리 부분 \| 접두 부분]) |
+|---|---|
+| `05b257` C:1228–1260 | 새 열: 대각 자리를 마지막 원소로 채운 spike 목록 순으로, 꼬리 행은 앞에서부터, 접두 행은 끝에서부터 쓴다 |
+| C:979–1019 (행 eta 있음) | 행 r 제거: r이 접두(q < t)면 열의 마지막 원소가 빈칸을 채운다. 꼬리면 꼬리 끝 원소가 빈칸을, 접두 끝 원소가 접두 맨 앞을 채운다 |
+| C:871–899 (eta 없음, r이 접두에서 나감) | r을 접두 첫 원소와 맞바꾸고 경계 +1 |
+| C:1040–1069 (빈 열이 p를 대신함) | 접두로 들어오는 행을 꼬리 끝 원소와 맞바꾸고 경계 −1 |
+| 분해 직후(`036ade`, 캡처) | 열 원소가 U 위치 내림차순(꼬리가 자연히 앞). `05b257` C:2570–2600은 끝(LU+0x90)만 다시 쓰고 경계는 건드리지 않는다 |
+
+- `lu.rs`: `umid`(열별 꼬리 원소 수, U+0x78), `finish`가 분해 직후 순서, `update`가 위 네 연산, `prefix_part`. `ftran2`가 S1·S2·H 판정과 b8로 구간 2 순서를 낸다(값은 그대로 조밀 규칙). 스냅숏 `ucp`(꼬리 열별 접두 부분), `f0k`(FTRAN 시점 LU+0xf0), `aqk`(피벗 제거 전 커널 출력).
+- 분해 직후 순서: degen2 분해 9회(피벗 82–536, 열 582개 이상)의 모든 열이 U 위치 내림차순이다. 그 모델에서는 분해 직후 U 위치 = 기저 위치라 "기저 위치 내림차순"과 구별되지 않는다(kb2 분해는 갱신 0에서 커널 호출이 없어 캡처 0회).
+- `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_usolve_check.py --rust --self-test`(worktree 빌드) 종료 0:
+
+```
+degen2 Rust: path = original on pivots 0-356, update count on 0-355 (pivot 356: Rust 40 updates, original 0); {'K': 238, 'C': 231, 'O': 231, 'I': 231, 'I inline R': 79, 'C excluded (t / f0)': 7}; first excluded pivot 314 (t Rust 357 original 356, LU+0xec Rust 176 original 175)
+kb2 Rust: path = original on pivots 0-37, update count on 0-37; {'K': 7, 'C': 7, 'O': 7, 'I': 7, 'I inline R': 0}
+T 변조 4종·모델 변이 3종·Rust 변조 3종 모두 거부
+```
+
+  - degen2: 같은 경로·같은 갱신 수인 피벗 0–355의 희소 U 238피벗 중 231에서 C(접두 부분·f0·t)·O(커널 출력 순서)·I(커널 입력 = L+R 순서)가 원본과 같다. I 중 인라인 희소 R 피벗 79회는 02j가 캡처 없이 둔 순서를 이번에 원본과 대조했다(02j가 센 146회 중 희소 U 커널이 없는 나머지는 커널 입력 캡처가 없어 그대로 미검증). 제외 7피벗은 피벗 314부터 t(Rust 357 대 원본 356)·LU+0xec(176 대 175)가 다른 것이고, 그 뒤 f0 목록 차이가 이어진다(`05b257` 접두 판정, 후속).
+  - kb2: 희소 U 7피벗 전부 C·O·I 같음(인라인 R 0회).
+  - Rust 변조 3종(커널 출력 교환, `ucp` 없음, 접두 부분 두 원소 교환) 거부.
+- 코드 변이(임시 빌드, 되돌림 `cmp` 확인): 새 열 접두 역순 제거 → degen2 피벗 1 C, 구간 2 끄기 → degen2 피벗 8 O, 꼬리 제거에서 접두 끝 이동 생략 → degen2 피벗 112 C, 접두 제거를 순서 보존 삭제로 → degen2 피벗 11 C, 접두에서 나가는 행을 회전으로 → degen2 피벗 96 C, 분해 직후 오름차순 → degen2 피벗 82 C. 모두 거부. 꼬리 부분 안의 순서만 바꾼 변이 하나는 생존했다. 꼬리 부분 순서는 접두 부분·출력·값 어디에도 닿지 않아 관측할 수 없다.
+- 비회귀: `m1_lsolve_check --rust`의 K 356·U 238·S 210과 τ 다른 피벗 66(첫 242), kb2 K 38·τ 7 그대로. `m1_aq_order_check` F·A 38/38(접두 비슬롯순 피벗 21·24 포함). M1 검사기 10종(`m1_usolve`·`m1_lsolve` 포함) PASS.
+- 회귀: `cargo test --release --workspace` 125 통과·10 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0, worktree 빌드 pytest 657 passed, `cargo test -p rsolver-lp`(디버그 단언 포함) 통과.
+- Netlib(기준선 main `497233f`를 `../rsolver-m1-02m-base`에 따로 빌드, `tools/lp_check.py --methods 1,0,-1 --timeout 120`, `tools/proto/pathcmp.py all`): 모델·Method별 상태·목적·반복 수와 pathcmp 첫 차이가 기준선과 **모두 같다**. 정답 90/91 ×3, IterCount 일치 Method 1·−1 31/64, Method 0 0/64, pathcmp 완전 일치 27/64·중앙 첫 차이 0.752. degen2 첫 차이 357은 피벗 356 재분해 판정(M1-02n)이라 이번 순서 변경이 경로를 바꾸지 않았다.
+
+## 8. 판정과 인수인계
+
+- 작업 수행 상태: **완료(조사·구현)**.
+- 동등성:
+  - 조사: 질문에 답했다. 접두 행 순서는 커널 경로(S1·S2·H1 목록 순, H2 구간 2 순)가 정하고, H2는 U 열 저장 순서에 달려 있다. 커널 모델은 원본 캡처와 **통과**(degen2·kb2 274호출, 순서·값 비트, 네 경로).
+  - 구현: **통과**(계약 범위: degen2 피벗 0–355의 희소 U 238피벗 중 t·f0가 같은 231, kb2 7피벗의 U 열 접두 부분 순서·커널 출력 순서·커널 입력 순서). 인라인 희소 R 순서도 이 범위의 79피벗에서 **통과**(나머지 02j 인라인 피벗은 미검증).
+- 남은 한계: 분해 직후 순서는 degen2(U 위치 = 기저 위치)에서만 확인했다. 꼬리 부분 안의 순서는 관측 불가라 미검증이다. degen2 피벗 314부터 t·LU+0xec가 다른 7피벗은 제외했다. ρ 쪽 U(`21574d`)·τ 값은 범위 밖이다. dual DSE 밖 FTRAN·`2207de`의 U 커널은 미대조다.
+- 후속:
+  - **M1-02n**(조사): degen2 피벗 313 갱신 뒤 t(Rust 357 대 원본 356)·LU+0xec 차이(`05b257` 접두 판정 C:463–512), 피벗 13 → 14 LU+0xf0 여러 행 이탈 순서, 피벗 356 재분해 판정. 첫 명령 `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_usolve_check.py --rust`(제외 피벗 314).
+  - **M1-02o**(조사): τ 값(첫 피벗 242)과 반복 275 mode 0 목록.
+- branch `work/m1-02m`(기준 main `497233f`), worktree `../rsolver-m1-02m`, 기준선 빌드 `../rsolver-m1-02m-base`(병합 뒤 정리). 미커밋 선행 변경 없음.
+- 인수인계·진행: `docs/handoff/M1.md`, `docs/11_progress.md`·`docs/12_roadmap_diagram.md` 맨 위, `docs/14_sprint_plan.md` M1-02m·02n 행.
+- 교훈: `docs/lessons/original.md`(희소 U 커널 네 경로와 구간 2, U 열 [꼬리 \| 접두] 저장 규칙), `docs/lessons/tooling.md`(관측 불가한 상태 변이의 생존).

@@ -172,7 +172,7 @@ def rust_run(name):
     return mine, path
 
 
-def check_rust(caps, runs):
+def check_rust(caps, runs, lss):
     """Rust snapshots vs the captures on the pivots before the first path difference with the same update count:
     U columns' prefix parts and the LU+0xf0 list (C), kernel output order (O, only where C holds), input order (I)."""
     bad, rep = [], []
@@ -181,6 +181,7 @@ def check_rust(caps, runs):
         gp = [[e[0], l[0]] for _, e, l, *_ in g['path'][1:] if e or l]
         P = next((k for k, (a, b) in enumerate(zip(gp, path)) if a != b), min(len(gp), len(path)))
         cs = {k: (ft, c) for k, ft, c in calls(caps[name])}
+        ls = {e['k']: e['ft'][0] for e in lss[name]['events'] if e['type'] == 'P' and e['ft']}
         R = next((k for k in range(P) if k in cs and k in mine and mine[k]['klast'] != cs[k][0]['upd']), P)
         n, firstC = collections.Counter(), None
         for k in range(R):
@@ -215,6 +216,10 @@ def check_rust(caps, runs):
             if s1['lro'] != c['in']['idx']:
                 bad.append(f'I {name} pivot {k}: kernel input Rust {s1["lro"][:6]} original {c["in"]["idx"][:6]}')
             n['I'] += 1
+            # the alpha_q side's row etas ran inline (sparse L, LU+0x180 > 0, no 21f83a): M1-02j had no capture of it
+            lc = ls[k]['calls']
+            n['I inline R'] += (ls[k]['x180'] > 0 and any(x['f'] == '21b9de' and x['site'] in ('1261af', '126284') for x in lc)
+                                and not any(x['f'] == '21f83a' for x in lc))
         stop = f' (pivot {R}: Rust {mine[R]["klast"]} updates, original {cs[R][0]["upd"]})' if R < P and R in cs else ''
         cdiff = f'; first excluded pivot {firstC}' if firstC is not None else ''
         rep.append(f'{name} Rust: path = original on pivots 0-{P - 1}, update count on 0-{R - 1}{stop}; {dict(n)}{cdiff}')
@@ -241,7 +246,7 @@ def main():
     runs = {}
     if '--rust' in sys.argv:
         runs = {name: rust_run(name) for name in CAP}
-        b, rep = check_rust(caps, runs)
+        b, rep = check_rust(caps, runs, lss)
         bad += b
         print('\n'.join(rep))
     if st:
@@ -275,7 +280,7 @@ def main():
             def rtamper(desc, f):
                 r2 = copy.deepcopy(runs)
                 f(r2)
-                b2, _ = check_rust(caps, r2)
+                b2, _ = check_rust(caps, r2, lss)
                 print(f'T {desc}: {"rejected" if b2 else "NOT rejected"}' + (f' ({b2[0][:100]})' if b2 else ''))
                 if not b2:
                     bad.append(f'T {desc} not rejected')
