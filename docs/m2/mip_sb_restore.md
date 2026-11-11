@@ -35,6 +35,10 @@ Gurobi 13.0.3 lib SHA-256 `8e87fca221fdffc922331c8619426031b3e72dfd419446422f88a
 
 작업 worktree에서 `tools/hrun.sh --timeout 50000 -- 'tools/mip_sb_restore_runs.sh bench/oracle/m2_06g2'`(124면 --wait). Gurobi는 `tools/gurun.sh`로 직렬 실행한다. 판정 `python3 tools/mip_sb_restore_check.py --self-test`, 회귀 `python3 tools/mip_sb_read_check.py`. 비교기에는 바이너리/모델 해시 변조·빈 사건·0회 목표·후보/배열/work/복원/비용 값 변조를 넣어 모두 거부시킨다. Rust·Python 패키지 불변이므로 cargo/pytest는 해당 없음.
 
+### 탐색 뒤 사례 보완(판정 완화 아님)
+
+기본 설정 3개 모델은 NodeLimit=300에서 `691b56`이 0회였다. `T+0x64 == 1`일 때 `129879 → 12ec93` tableau penalty만 쓰기 때문이다. 탐색 파일 `explore_*.json.gz`를 보존한다. 후보 LP 풀이 필수 사건은 그대로 유지하고, 같은 세 모델에 원본 파라미터 `GURO_PAR_SBMAXITERS=10`을 명시한 사례를 추가한다. Frida로 원본 상태를 쓰지 않는다. pk1 탐색에서 batch 24·double kernel 24·restore 110회를 확인했다. 기본 설정 사례는 후보 분할·예산만, iters10 사례는 평가·복원·비용을 판정한다. helper에서 실제 복사하는 basis 상태·flags·수치 벡터·basic index를 비교하고, factor 내부 전부의 내용은 후속이다.
+
 ## 6. 실행 결과
 
 미실행. 계약과 도달성 확인 뒤 첫 탐색 캡처를 만든다.
