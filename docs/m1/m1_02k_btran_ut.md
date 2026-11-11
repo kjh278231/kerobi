@@ -60,4 +60,35 @@ RHS는 피벗마다 nnz ∈ {1, ⌊m/D⌋, ⌊m/D⌋+1, ⌊m/3⌋, ⌊m/3⌋+1, 
 
 ## 5. 재실행 명령
 
-실행 뒤 확정한다.
+- 원본 캡처(Gurobi 한 프로세스, 약 10분): `tools/hrun.sh --timeout 580000 -- 'tools/m1_btran_runs.sh bench/oracle/m1_02k'`. 모델마다 평범 캡처 1회 → `tools/m1_btran_spec.py`로 RHS 생성 → 합성 캡처 3회. 사례 k는 스크립트 안 목록.
+- 비교: `tools/build_local.sh && PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_btran_check.py --self-test`(원본만이면 인자 없이 `python3 tools/m1_btran_check.py`).
+- Rust 변이: `python3 bench/oracle/m1_02k/mutate.py`(결과 `mutate.txt`).
+- 회귀 전체: `bench/oracle/m1_02k/regress.sh`(cargo·clippy·pytest·M1 검사기 13종·이 검사기·pathcmp·lp_check, 출력은 같은 폴더).
+
+## 6. 실행 결과
+
+- 실행: branch `work/m1-02k`, 최종 코드 commit은 인수인계 참조. Gurobi 13.0.3 SHA-256 위와 같음. 모델은 `../re/bench/data/netlib/{kb2,degen2,sc50b,scsd1,stair,forplan,fit1p,bnl1}.mps.gz`(해시는 각 캡처의 `model_sha256`, 검사기가 대조).
+- 원본 재현성: 8모델 × 합성 3회가 gz 바이트 동일. 합성 실행의 자연 사건·c_B 배열·`DONE` 줄이 합성 없는 실행과 같다(비간섭).
+- 원본 판정 식별: 합성 100사례(kb2 18, degen2 18, sc50b 11, scsd1 7, stair 14, forplan 7, fit1p 14, bnl1 11) 모두 자연 결과가 강제 결과 중 정확히 하나와 같았다. 조밀 68·희소 32이고 모두 `(int)D·nnz ≤ m`과 일치한다. 옛 `3·nnz`와 판정이 갈리는 대역 사례 36, LU+0x108 > 5 사례 14. 자연 호출의 `21a941` 사용도 전부 C:89 판정(9e376은 U 행 r 강제 포함)과 같다.
+- Rust 합성: 100사례 × 3출력(자연·희소 강제·조밀 강제) 300개가 조밀 여부·순서·값 비트까지 같다. 판정도 100/100.
+- Rust 자연 e_r(같은 입력 상태 = r·eta 수 일치 범위): kb2 38/38, degen2 356/634(r 차이), sc50b 36/36, scsd1 42/89(r), stair 185/356, forplan 82/150, fit1p 117/568(원본만 재분해), bnl1 174/1050. 범위 안의 D 비트·Uᵀ 판정 전부 같다. 출력 형태는 stair 102·118만 다르다(아래).
+- Rust 자연 c_B: 범위 안 44호출이 입력·출력 비트까지 같다. 이 중 21호출은 옛 Rust 규칙이면 희소 Lᵀ로 갔다(kb2 1, sc50b 5, scsd1 3, stair 2, forplan 5, fit1p 4, bnl1 1). 짝 없는 2호출(scsd1 e_r 40, bnl1 e_r 126)은 같은 자리 Rust 호출의 c_B 입력이 2·21칸 달라 입력 상태가 다르다.
+- 변조 self-test 23종 전부 거부.
+- Rust 변이 9종(`mutate.txt`): 거부 4 — 옛 `3·nnz` 판정, 조밀 Uᵀ의 `|x| ≤ ZERO` 0 처리 제거, 접두 입력을 꼬리처럼 처리, 조밀 Uᵀ가 조밀 Lᵀ를 강제하지 않음(자연 c_B가 잡음). 생존 5 — LU+0x108 > 5 경로 제거·선형 훑기 전환 제거(두 경로 모두 U 위치 오름차순으로 같은 값과 순서를 내고 work만 다름, M1-02t), 조밀 Uᵀ가 조밀 eta를 강제하지 않음·조밀 Uᵀ의 Lᵀ 입력을 목록 값만으로(0 < |v| ≤ ZERO 값에서만 다름, 사례에 없음), `9e376` 강제 무시(m ≥ D라 결과 같음). 판별 불가로 둔다.
+- 회귀: `cargo test -p rsolver-lp` 42 통과·1 무시, `cargo test --release --workspace` 125 통과·11 무시, clippy 종료 0, worktree 확장 pytest 657, 기존 M1 검사기 13종(`aq_order`·`beta`·`eta`·`eta_peel`·`list_order`·`tau`·`urow`·`work`·`factor_work`·`lsolve`/`update`/`usolve --rust`·`m1_bfrt_rust`) 통과.
+- Netlib(바꾼 규칙): pathcmp는 bnl1만 바뀌었고 첫 차이가 187 → 220으로 늦어졌다. 앞당겨진 모델 0, 완전 일치 27/64·중앙 0.752 그대로. lp_check 정답 Method 1·−1이 90 → 91(pilot), Method 0 90 그대로, IterCount 일치 31/0/31 그대로. 반복 수가 바뀐 24행(80bau3b, bnl1, d6cube, dfl001, fit2p, greenbea, greenbeb, nesm, pilot, pilot87, sc205, sctap1, sctap3, sierra; Method 0 포함)은 경로 오라클이 없는 미검증 궤적 변화다.
+
+### 6.1 첫 실패와 추가로 드러난 차이
+
+- 첫 Rust 대조에서 kb2 k 17 희소 강제 출력이 한 칸 달랐다. Rust 희소 Uᵀ가 입력을 먼저 모두 더한 뒤 U 순서로 흩뿌렸기 때문이다. 원본 `21a941`은 입력 순서로 접두 입력을 바로 내보내고 꼬리 입력을 그 순간 `w += x`로 더한다. 커널을 옮긴 뒤 15건 모두 같아졌다(희소 강제 15 + stair 자연 1).
+- stair e_r 102·118: 출력 형태(원본 조밀, Rust 희소)가 다르다. 커널 이식 전 빌드 `30e4d23`에서도 같으며 D·판정은 같다. eta 단계 값 차이로 보이며 이번 범위 밖이다(검사기 고정 목록).
+- stair 185·forplan 82·bnl1 174: 양쪽이 같은 피벗에서 재분해했는데 LU+0x108만 다르다. stair는 m − t = 231로 같고 꼬리 U 원소가 원본 1,571 · Rust 1,411이다. LU+0x110·t는 같다. Rust 분해의 꼬리 U 구조 차이이며 FTRAN U 단계 판정도 같은 `dsum`을 읽는다. 후속 **M1-02w**(새 번호). 검사기는 이 지점을 고정하고 같은 입력 상태 범위를 거기서 끝낸다.
+
+## 7. 판정과 인수인계
+
+- 작업 수행: 완료.
+- 동등성: **통과(계약 범위, 바꾼 회귀 규칙 기준)**. 원래 회귀 규칙 "기준 빌드와 동일"은 실패했고 그 출력은 `first_regress/`에 보존했다.
+- 통과 범위: C:89 판정(대각·갱신 경로), 조밀 Uᵀ의 0 처리와 조밀 eta·Lᵀ 연결, `9e376` 강제 분기 구조, `21a941` 두 경로의 출력 순서·값. 8모델의 실제 LU에서 합성 RHS 100사례, 같은 입력 상태 범위의 자연 e_r·c_B 호출.
+- 남은 한계: 합성 RHS는 실제 실행이 넘기지 않는 입력이다(Netlib Method 1·0 원본 BTRAN 입력 nnz는 −1·1, primal에서 2–3원소 입력 소수). `9e376` 강제가 결과를 바꾸는 m < D 모델 없음. LU 풀이 work(LU+0x200)는 M1-02t. Method 0 c_B 표현은 원본도 nnz −1(6모델 탐색)이라 Rust 전체 길이 c_B와 같은 판정이 되지만 primal 궤적 일치는 미검증. stair 102·118 출력 형태, M1-02w의 LU+0x108 차이.
+- 다음: **M1-02w**(재분해 꼬리 U 원소 수, `036ade`) → M1-02t(LU 풀이 work) → M1-02u.
+- 교훈: `docs/lessons/original.md`(BTRAN Uᵀ 판정·`21a941` 경로), `docs/lessons/tooling.md`(판정 강제 차분, 탐색의 "자연 0회" 함정), `docs/lessons/process.md`(회귀 규칙은 실행 전 고정).

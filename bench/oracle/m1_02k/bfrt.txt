@@ -1,0 +1,8 @@
+calls 3112: entering equal 3108, flip list equal 3112; vs prototype 3112 equal; differs from the original at [('tuff', 31), ('tuff', 33), ('tuff', 36), ('tuff', 37)]
+M1 nondeg off: differs from the original at 18 calls, from the BFRT_RESCAN=0 prototype at 0
+calls 3112: entering equal 3108, flip list equal 3111; vs prototype 3112 equal; differs from the original at [('25fv47', 0), ('tuff', 31), ('tuff', 33), ('tuff', 36), ('tuff', 37)]
+T1 rejected: FAIL: Rust vs original differences [('25fv47', 0), ('tuff', 31), ('tuff', 33), ('tuff', 36), ('tuff', 37)], expected [('tuff', 31), ('tuff', 33), ('tuff', 36), ('tuff', 37)]
+T2 rejected: truncated input makes the Rust replay fail
+T3 rejected: FAIL: 25fv47.jsonl.gz sha256 != SHA256SUMS
+SELF-TEST PASS
+ACCEPTANCE PASS

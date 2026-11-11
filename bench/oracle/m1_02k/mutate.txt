@@ -4,5 +4,7 @@ REJECTED dense U^T without |x| <= ZERO | FAIL kb2 k 30 case 0 forced dense: fiel
 SURVIVED no LU+0x108 > 5 path | PASS original + rust
 REJECTED prefix inputs as tail | FAIL kb2 k 17 case 4 forced sparse: field val index 7: original (True, [], ['c01da06ffcbe8d40', '3ff6000000000000', '0000000000000000', '3ff8000000000000']) Rust (True, [], ['c01da06ffcbe8d40', '3ff60
 SURVIVED never switch to the linear scan | PASS original + rust
+REJECTED dense U^T does not force dense L^T | FAIL kb2: c_B call 2 (e_r count 15): Rust output sparse, original dense
+SURVIVED dense U^T hands L^T the listed values only | PASS original + rust
 SURVIVED 9e376 force ignored | PASS original + rust
-MUTATIONS 3 / 7 rejected
+MUTATIONS 4 / 9 rejected
