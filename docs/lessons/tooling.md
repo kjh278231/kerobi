@@ -162,3 +162,6 @@
 
 - **`session.py claim … && claim shared && git worktree add …` 한 줄은 shared 점유 실패에서 멈춰 worktree가 생기지 않는다.** 그 뒤 Write 도구로 worktree 경로에 파일을 쓰면 git 저장소가 아닌 일반 디렉터리가 생긴다. 점유와 worktree 생성을 나눠 실행하고 `git -C <worktree> status`로 확인한다. (M2-03d-5)
 - **ignore된 `target/`(재생성할 수 있는 탐색 출력)이 남아 있으면 `git worktree remove`에 `--force`가 필요하다.** 미커밋·미추적 파일이 그것뿐인지 먼저 확인한다. (M2-03c-2)
+
+- **GRBgetdblattr는 PLT 주소 `0xbcc70` 대신 실제 export `0x7a3820`에 훅을 붙인다.** PLT 계측은 DONE 전 프로세스 종료를 일으켰고 export 훅으로 해결했다. 실패 캡처 `explore_pk1_final.json.gz`를 보존했다. (M2-06g-2, [§6](../m2/mip_sb_restore.md#6-실행-결과))
+- **bound 복원 검사에 실제 분기 bound 적용도 연결한다.** solve 전후와 최종 bound만 비교하면 후보 bound를 전부 부모 값으로 바꾼 기록이 통과한다. restore의 열·방향과 solve 진입 bound를 연결해 선택 열이 엄격히 조여졌는지 검사한다. 독립 검토에서 재현·수정했다. (M2-06g-2, [§7](../m2/mip_sb_restore.md#7-판정과-인수인계))
