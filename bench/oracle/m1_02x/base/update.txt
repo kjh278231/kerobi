@@ -1,0 +1,19 @@
+degen2: {'B e8 searched = returned': 360, 'B l=p': 111, 'B q<p empty column': 66, 'B q<p no empty column': 307, 'B q>=p other': 135, 'B q>=p, p=t-1<l': 2, 'B spike entries |v| <= ZERO': 0, 'N': 267, 'R decisions': 635, 'R fill': 7, 'R k%10=9, work false': 53, 'R last decision (no 05b257 after)': 1, 'R reason 0': 622, 'R reason 10': 13, 'R work': 6}
+kb2: {'B e8 searched = returned': 19, 'B l=p': 10, 'B q<p empty column': 1, 'B q<p no empty column': 18, 'B q>=p other': 6, 'B spike entries |v| <= ZERO': 0, 'N': 7, 'R decisions': 39, 'R fill': 3, 'R k%10=9, work false': 2, 'R last decision (no 05b257 after)': 1, 'R reason 0': 36, 'R reason 10': 3, 'R work': 0}
+Q degen2 pivot 313 update 35: r 365 q 140 t 357 LU+0xe8 357 n' 40, U row r 5 entries, q<p no empty column, searched to 356, new t 356 (LU+0xe8 after 358)
+Q degen2 pivot 326 update 10: r 256 q 256 t 364 LU+0xe8 388 n' 20, U row r 1 entries, q<p empty column, searched to 388, new t 364 (LU+0xe8 after 388)
+Q degen2 decision before pivot 356: update count 39, reason 10 (fill False, work True): work since factor start 1066922.2725842702 > 14*32951.871874999786 + 100*3978
+degen2 Rust: first path difference 357, same update count on 0-355 (stop: pivot 356: Rust 40 updates, original 0); {'state equal': 356}
+kb2 Rust: first path difference 38, same update count on 0-37 (stop: path difference); {'state equal': 38}
+T binary hash 0: rejected (M kb2: binary 000000000000 ok True events 79)
+T no events: rejected (M degen2: binary 8e87fca221fd ok True events 0)
+T returned t + 1 (degen2 pivot 313): rejected (B degen2 pivot 313 update 35 (q<p no empty column): model t 356 original 357)
+T refactor reason 10 -> 0 (degen2 before pivot 356): rejected (R degen2 pivot 356: update count 39, probe reason 0, model 10 (fill False work True), next 05b257 reason 0)
+T work one bit (degen2 decision before pivot 356): rejected (R degen2 pivot 356: update count 39, probe reason 0, model 0 (fill False work False), next 05b257 reason 10)
+T 05b257 return LU+0xf0: two entries swapped (degen2, N): rejected (N degen2 pivot 624: 05b257 return t 242 ec 121 upd 38, 02m kernel t 242 ec 121 upd 38)
+T model: work constant 14 -> 8: rejected (R degen2 pivot 346: update count 29, probe reason 0, model 10 (fill False work True), next 05b257 reason 0)
+T model: no k % 10 == 9 gate: rejected (R degen2 pivot 315: update count 36, probe reason 0, model 10 (fill False work True), next 05b257 reason 0)
+T model: n' and l from spike values > ZERO: survives (listed spike entries <= ZERO: 0, undiscriminated)
+T Rust LU+0xf0: two entries swapped (degen2 pivot 314): rejected (degen2 pivot 314: LU+0xf0 Rust 175 original 175 (first at 0))
+T Rust LU+0xe8 + 1 (degen2 pivot 327): rejected (degen2 pivot 327: LU+0xe8 Rust 389 original 388)
+PASS

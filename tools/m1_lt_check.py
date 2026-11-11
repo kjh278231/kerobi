@@ -8,7 +8,8 @@ Reads bench/oracle/m1_02x (tools/m1_lt_runs.sh): three captures of tools/m1_lt_p
             0 <= LU+0x140 < 0.1m)
   --rust    rsolver (PYTHONPATH) with RSOLVER_BTRAN_PROBE: inside the M1-02k same-state range (leaving r and row eta
             count agree, ends at the pinned LU+0x108 difference) every dual e_r call has Rust `lt` = LU+0x140 and the
-            same output form, idx order and value bits; the range holds at least one target call
+            same output form, idx order and value bits (pinned pre-existing differences: KNOWN_VAL, KNOWN_IDX); the
+            range holds at least one target call
   --self-test  also tampers with the loaded data and requires each tamper to be rejected
 usage: python3 tools/m1_lt_check.py [--rust] [--self-test]"""
 import copy, gzip, hashlib, json, os, subprocess, sys, tempfile
@@ -22,6 +23,16 @@ MODELS = ['stair', 'degen2', 'fit1p', 'bnl1']
 ER = (376, 0xc51dd)
 # M1-02k pinned first e_r call whose LU+0x108 differs after a refactor (M1-02w): the same-state range ends there
 KNOWN_D = {'stair': 185, 'bnl1': 174}
+# where the r / row eta count match ends without a pinned LU+0x108 call (a shorter range fails)
+RANGE = {'degen2': 356, 'fit1p': 117}
+# Pre-existing e_r output differences inside the range, the same with the LU+0x140 test removed (M1-02x §6): stair
+# values (last bits, from call 31, updated U with row etas), bnl1 level-path order (same rows; the moved row 587
+# differs in the last bits in 4 of 7). Pinned
+# exactly: a pinned call that agrees or any other difference fails. Form and LU+0x140 are compared on every call.
+KNOWN_VAL = {'stair': [31, 41, 45, 47, 49, 50, 51, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 71, 75, 76, 77, 78, 79, 80, 81,
+                       82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 101, 103, 107, 108, *range(119, 139), 140, 141,
+                       *range(143, 185)]}
+KNOWN_IDX = {'bnl1': [130, 134, 144, 153, 159, 162, 173]}
 WRAP, M, NNZ, X180, R, OUT, X140, HIT, IDX, VAL = 0, 1, 2, 5, 8, 10, 11, 12, 13, 14
 
 
@@ -102,6 +113,8 @@ def rust(n, d, nat):
     if n in KNOWN_D:
         need(KNOWN_D[n] <= matched, f'{n}: same-state range ends at e_r call {matched}, before the pinned LU+0x108 call {KNOWN_D[n]}')
         matched = KNOWN_D[n]
+    else:
+        need(matched == RANGE[n], f'{n}: same-state range ends at e_r call {matched}, pinned {RANGE[n]}')
     tgt = 0
     for k in range(matched):
         e, r = er[k], nat[k]
@@ -109,12 +122,21 @@ def rust(n, d, nat):
         dense = e[OUT] < 0
         need(r['od'] == dense, f'{n}: e_r call {k}: Rust output dense={r["od"]}, original dense={dense} '
                                f'(LU+0x140 {e[X140]}, m {e[M]}, hit {e[HIT]})')
+        if k in KNOWN_IDX.get(n, []):
+            need(not dense and e[IDX] != r['idx'] and sorted(e[IDX]) == sorted(r['idx']),
+                 f'{n}: e_r call {k}: pinned order difference not seen (same order, or other rows)')
+            continue
+        if k in KNOWN_VAL.get(n, []):
+            need(e[VAL] != r['val'], f'{n}: e_r call {k}: pinned value difference not seen')
+            continue
         if not dense:
             i = first(e[IDX], r['idx'])
-            need(i is None, f'{n}: e_r call {k} output idx {i}: original {e[IDX][i:i + 4]} Rust {r["idx"][i:i + 4]}')
+            if i is not None:
+                raise Fail(f'{n}: e_r call {k} output idx {i}: original {e[IDX][i:i + 4]} Rust {r["idx"][i:i + 4]}')
         i = first(e[VAL], r['val'])
-        need(i is None, f'{n}: e_r call {k} output value {i}: original {e[VAL][i] if i < len(e[VAL]) else None} '
-                        f'Rust {r["val"][i] if i < len(r["val"]) else None}')
+        if i is not None:
+            raise Fail(f'{n}: e_r call {k} output value {i}: original {e[VAL][i] if i < len(e[VAL]) else None} '
+                       f'Rust {r["val"][i] if i < len(r["val"]) else None}')
         h = e[HIT]
         tgt += h is not None and h[0] > 0 and h[2] >= 0.1 * e[M]
     return matched, len(er), tgt
@@ -161,6 +183,10 @@ def tampers(data, routs):
         e[HIT][2] = -1
 
     stair = lambda r, k: r['stair'][k]
+
+    def pinned_agrees(d, r):  # the original's stair e_r 31 output set to Rust's in every run
+        for c in d['stair']['caps']:
+            [e for e in c['events'] if tuple(e[WRAP][:2]) == ER][31][VAL] = list(stair(r, 31)['val'])
     out = {
         'binary sha': t(lambda d, r: d['degen2']['caps'][1].update(binary_sha256='0' * 64)),
         'empty events': t(lambda d, r: [c.update(events=[]) for c in d['fit1p']['caps']]),
@@ -178,6 +204,8 @@ def tampers(data, routs):
             'Rust value bits': t(lambda d, r: stair(r, 118)['val'].__setitem__(5, 'deadbeef00000000')),
             'Rust idx order': t(lambda d, r: next(x for x in r['degen2'] if not x['od'] and len(x['idx']) > 1)['idx'].reverse()),
             'Rust etas': t(lambda d, r: r['fit1p'][3].update(e=99)),
+            'pinned value call agrees': t(pinned_agrees),
+            'pinned order call: other rows': t(lambda d, r: r['bnl1'][130]['idx'].__setitem__(0, 9999)),
             'no target in range': t(lambda d, r: [e.__setitem__(HIT, None) for n in MODELS for c in d[n]['caps']
                                                   for e in c['events'][:1 + max(i for i, x in enumerate(c['events'])
                                                                                    if tuple(x[WRAP][:2]) == ER)]
