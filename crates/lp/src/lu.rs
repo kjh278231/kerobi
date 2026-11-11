@@ -72,6 +72,22 @@ pub struct Lu {
     /// Singular factor: (position, row) pairs of the empty columns and rows in discovery order (tail steps m−1,
     /// m−2, … of `036ade`); 5b257 puts the row's slack at that position.
     pub singular: Vec<(usize, usize)>,
+    /// Work inputs of this factorization (`036ade`, docs/m1/m1_02q_work.md).
+    pub fw: FactorWork,
+}
+
+/// What `036ade` adds to the dual work counter: q = singleton-phase L + U entries ((P0 + local_100) − local_110 after
+/// `1da0b2`), nnzB, act = active entries after the singleton phases (at least 1), the Markowitz accumulator and its
+/// terms (kind `c`/`r` singleton count, `g` general pivot (ns, Σ column counts along the pivot row, Σ row counts
+/// down the pivot column, bound)), and folds of acc > 1e8 before a pivot.
+#[derive(Default)]
+pub struct FactorWork {
+    pub q: usize,
+    pub nnz_b: usize,
+    pub act: usize,
+    pub acc: f64,
+    pub early: Vec<f64>,
+    pub terms: Vec<(char, [i64; 3], f64)>,
 }
 
 /// Count buckets of the `036ade` kernel: circular doubly linked lists; insert goes after the head and becomes the
@@ -272,7 +288,10 @@ impl Lu {
             n_singleton: 0,
             kernel_u: Vec::new(),
             singular: Vec::new(),
+            fw: FactorWork::default(),
         };
+        // 036ade C:296–330: basis entries, a slack counts 1
+        lu.fw.nnz_b = head.iter().map(|&j| if j < n { spx.len[j] as usize } else { 1 }).sum();
         let mut ppos = vec![-1i64; m];
         let pivot = |lu: &mut Lu, ppos: &mut Vec<i64>, r: usize, pos: usize, d: f64| {
             let k = lu.steps.len() as i64;
@@ -379,6 +398,12 @@ impl Lu {
 
         let ns = lu.steps.len();
         lu.n_singleton = ns;
+        // 036ade C:543–585: entries of the unpivoted columns in unpivoted rows (any value), slacks 1, at least 1
+        lu.fw.act = (0..m)
+            .filter(|&p| ppos[p] < 0)
+            .map(|p| if head[p] < n { spx.col(head[p]).filter(|&(i, _)| lu.prow[i] < 0).count() } else { 1 })
+            .sum::<usize>()
+            .max(1);
         lu.lcol = vec![Vec::new(); m];
         lu.ucol = vec![Vec::new(); m];
         if ns < m && !lu.kernel(spx, &mut ppos, tol) {
@@ -418,8 +443,63 @@ impl Lu {
             }
         }
 
+        // 1da0b2 emits the singleton steps' L columns and U rows (including entries in kernel columns)
+        lu.fw.q = (0..ns).map(|k| lu.lcol[k].len() + lu.urow[k].len()).sum();
         lu.finish();
         lu
+    }
+
+    /// `036ade` work stores in order: 0xd4ded, 0xd5300, early acc folds 0xd5e39, 0xd85e6, 0xdc7b2 and with L levels
+    /// 0xdcb7b (C:535–541, C:762–764, C:813–822, C:1531–1533, C:5741–5754, C:5934–5936).
+    pub fn factor_work(&self) -> Vec<(u32, f64)> {
+        use crate::work::X148;
+        let nb = self.head.len() as f64;
+        let fw = &self.fw;
+        let (l, u) = self.factor_nnz();
+        let (l, u) = (l - self.head.len(), u - self.head.len());
+        let mut v = vec![
+            (0xd4ded, ((nb * 5.0 + 100.0) + fw.q as f64 * 3.0) * X148),
+            (0xd5300, ((nb * 10.0 + fw.nnz_b as f64 * 3.0) + fw.act as f64 * 7.0) * X148),
+        ];
+        v.extend(fw.early.iter().map(|&a| (0xd5e39, a * X148)));
+        v.push((0xd85e6, fw.acc * X148));
+        let big = (l + u) as f64 * 24.0;
+        let f = if big <= 2_000_000.0 { 1.0 } else if big < 4_000_000.0 { ((big - 2_000_000.0) * 9.0) / 2_000_000.0 + 1.0 } else { 10.0 };
+        v.push((0xdc7b2, ((((nb + nb) + l as f64) + u as f64) * 2.0 * f) * X148));
+        if self.level.is_some() {
+            v.push((0xdcb7b, ((l + self.head.len()) as f64 * 2.0) * X148));
+        }
+        v
+    }
+
+    /// `05b257` after a refactor (C:2545–2729) with `9e60b` (C:246–251, C:345–347) when the cost mode is on:
+    /// the stores the original skips carry their partial sum to the next one.
+    pub fn refactor_work(&self, w: &mut crate::work::Work, cost_mode: i32) {
+        use crate::work::X148;
+        let (m, f1f8) = (self.head.len(), X148);
+        let mf = m as f64;
+        w.add(0xf48ae, (mf * 3.0) * f1f8);
+        if cost_mode >= 1 {
+            // shortcut: 05b257 turns the cost mode off instead when env+0xe8 = 4, env+0x2504 = −1 and iterations > 2m
+            let unnz: usize = self.urow.iter().map(Vec::len).sum();
+            w.add(if cost_mode == 2 { 0x1329e6 } else { 0x1327dc }, unnz as f64 * f1f8);
+            w.add(0x1329c1, (f1f8 * 3.0) * mf);
+        }
+        let a = (mf * 9.0) * X148;
+        if self.dc > 0 { w.add(0xf4f9b, a) } else { w.carry(a) }
+        let (i, t) = (self.dc, self.prefix);
+        let a = X148 * i as f64;
+        if i < t { w.add(0xf4ffd, a) } else { w.carry(a) }
+        let d = i.max(t);
+        let a = (d as f64 + d as f64) * X148;
+        if d < m {
+            w.add(0xf507a, a);
+        } else if t + 1 < m {
+            w.add(0xf515b, a);
+        } else {
+            w.carry(a);
+        }
+        w.add(0xf51af, (m - self.e8 - 1) as f64 * X148);
     }
 
     /// Sparse Markowitz kernel of `036ade` (L546–2570, docs/m1/m1_notes.md §6.7) on the rows and positions the singleton
@@ -494,13 +574,20 @@ impl Lu {
             ppos[pos] = k;
             lu.steps.push((r, pos, d));
         };
+        let mut acc = 0.0f64;
         loop {
+            if 100000000.0 < acc {
+                self.fw.early.push(acc);
+                acc = 0.0;
+            }
             if cb.head[0] >= 0 {
                 // column singleton (L1003–1140): no threshold
                 let c = cb.head[0] as usize;
                 cb.rem(c, 0);
                 let e = first_alive(&cl[c], &ec);
                 let r = er[e];
+                acc += (rcs[r] as f64 + 1.0) * 10.0;
+                self.fw.terms.push(('c', [rcs[r], 0, 0], 0.0));
                 rb.rem(r, rcs[r] as usize);
                 ec[e] = DEAD;
                 pivot(self, ppos, r, c, ev[e]);
@@ -521,6 +608,8 @@ impl Lu {
                 rb.rem(r, 0);
                 let e = first_alive(&rl[r], &ec);
                 let c = ec[e];
+                acc += (ccs[c] as f64 + 1.0) * 10.0;
+                self.fw.terms.push(('r', [ccs[c], 0, 0], 0.0));
                 cb.rem(c, ccs[c] as usize);
                 let d = ev[e];
                 ec[e] = DEAD;
@@ -604,6 +693,12 @@ impl Lu {
                 cb.rem(c, ccs[c] as usize);
                 rb.rem(r, rcs[r] as usize);
                 ec[best] = DEAD;
+                // asm 0xd7157: ecx = column counts along the pivot row, r10d = row counts down the pivot column
+                // (other live entries, counts as in the search); the smaller one enters
+                let rsum: i64 = rl[r].iter().filter(|&&f| ec[f] != DEAD).map(|&f| ccs[ec[f]]).sum();
+                let csum: i64 = cl[c].iter().filter(|&&f| ec[f] != DEAD).map(|&f| rcs[er[f]]).sum();
+                acc = (acc + (ns as f64 * 6.0) * bound) + rsum.min(csum) as f64 * 10.0;
+                self.fw.terms.push(('g', [ns as i64, rsum, csum], bound));
                 pivot(self, ppos, r, c, v);
                 let sk = self.steps.len() - 1;
                 let mut u_row = Vec::new();
@@ -663,6 +758,7 @@ impl Lu {
                 self.kernel_u[sk] = u_row;
             }
         }
+        self.fw.acc = acc;
         if self.steps.len() < m {
             self.singular = ecols.into_iter().zip(erows).collect();
             return false;
