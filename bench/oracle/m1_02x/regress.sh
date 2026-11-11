@@ -15,6 +15,7 @@ for c in aq_order beta eta eta_peel list_order tau urow work factor_work; do run
 for c in lsolve update usolve; do run $c $PY tools/m1_${c}_check.py --rust --self-test; done
 run bfrt $PY tools/m1_bfrt_rust.py --self-test
 run btran $PY tools/m1_btran_check.py --self-test
+run lt $PY tools/m1_lt_check.py --self-test
 run pathcmp $PY tools/proto/pathcmp.py all
 run lp_check $PY tools/lp_check.py --methods 1,0,-1 --timeout 120 --csv $O/lp_check.csv
 echo REGRESS_DONE

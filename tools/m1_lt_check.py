@@ -25,9 +25,10 @@ ER = (376, 0xc51dd)
 KNOWN_D = {'stair': 185, 'bnl1': 174}
 # where the r / row eta count match ends without a pinned LU+0x108 call (a shorter range fails)
 RANGE = {'degen2': 356, 'fit1p': 117}
-# Pre-existing e_r output differences inside the range, the same with the LU+0x140 test removed (M1-02x §6): stair
-# values (last bits, from call 31, updated U with row etas), bnl1 level-path order (same rows; the moved row 587
-# differs in the last bits in 4 of 7). Pinned
+# Pre-existing e_r output differences inside the range, the same with the LU+0x140 test removed (M1-02x §6,
+# bench/oracle/m1_02x/diffs_*.txt): stair values (1 ulp at call 31 growing to 1.1e-9 relative by call 172, updated U
+# with row etas; 165 entries below 1e-12 differ in zero/sign), bnl1 level-path order (same rows; the moved row 587
+# differs by <= 9e-16 relative in 4 of 7). Pinned
 # exactly: a pinned call that agrees or any other difference fails. Form and LU+0x140 are compared on every call.
 KNOWN_VAL = {'stair': [31, 41, 45, 47, 49, 50, 51, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 71, 75, 76, 77, 78, 79, 80, 81,
                        82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 101, 103, 107, 108, *range(119, 139), 140, 141,
@@ -127,6 +128,7 @@ def rust(n, d, nat):
                  f'{n}: e_r call {k}: pinned order difference not seen (same order, or other rows)')
             continue
         if k in KNOWN_VAL.get(n, []):
+            need(dense or e[IDX] == r['idx'], f'{n}: e_r call {k}: output idx differs at a value-only pinned call')
             need(e[VAL] != r['val'], f'{n}: e_r call {k}: pinned value difference not seen')
             continue
         if not dense:
@@ -182,6 +184,13 @@ def tampers(data, routs):
         e[X140] = -1
         e[HIT][2] = -1
 
+    def no_control(d, r):  # every control's LU+0x140 set to -1, and the Rust lt of the same e_r calls with it
+        each(d, is_ctl, neg_x140)
+        for n in MODELS:
+            er = [e for e in d[n]['caps'][0]['events'] if tuple(e[WRAP][:2]) == ER]
+            for e, x in zip(er, r[n]):
+                x['lt'] = e[X140]
+
     stair = lambda r, k: r['stair'][k]
 
     def pinned_agrees(d, r):  # the original's stair e_r 31 output set to Rust's in every run
@@ -194,7 +203,7 @@ def tampers(data, routs):
         'projection (interference)': t(lambda d, r: [c['events'][3].__setitem__(9, 99) for c in d['stair']['caps']]),
         'LU+0x140 zeroed': t(lambda d, r: each(d, lambda e: True, zero_x140)),
         'no target event': t(lambda d, r: each(d, is_tgt, lambda e: e.__setitem__(HIT, None))),
-        'no control event': t(lambda d, r: each(d, is_ctl, neg_x140)),
+        'no control event': t(no_control),
         'hit m': t(lambda d, r: each(d, is_ctl, lambda e: e[HIT].__setitem__(1, e[M] + 1))),
     }
     if routs is not None:
@@ -206,10 +215,9 @@ def tampers(data, routs):
             'Rust etas': t(lambda d, r: r['fit1p'][3].update(e=99)),
             'pinned value call agrees': t(pinned_agrees),
             'pinned order call: other rows': t(lambda d, r: r['bnl1'][130]['idx'].__setitem__(0, 9999)),
-            'no target in range': t(lambda d, r: [e.__setitem__(HIT, None) for n in MODELS for c in d[n]['caps']
-                                                  for e in c['events'][:1 + max(i for i, x in enumerate(c['events'])
-                                                                                   if tuple(x[WRAP][:2]) == ER)]
-                                                  if tuple(e[WRAP][:2]) == ER and e[HIT] is not None and is_tgt(e)]),
+            'no target in range': t(lambda d, r: [[e.__setitem__(HIT, None) for e in
+                                                   [x for x in c['events'] if tuple(x[WRAP][:2]) == ER][:KNOWN_D['stair']]
+                                                   if e[HIT] is not None and is_tgt(e)] for c in d['stair']['caps']]),
         })
     return out
 
