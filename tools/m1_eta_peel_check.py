@@ -8,12 +8,13 @@ Inputs: tools/m1_eta_pool.js captures (bench/oracle/m1_02l_pool, 3 runs), the 02
 With --fresh (after the Rust change) also the DSE beta of every kb2 pivot from the rsolver on PYTHONPATH.
 usage: python3 tools/m1_eta_peel_check.py [--self-test]
        PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_eta_peel_check.py --fresh"""
-import copy, gzip, hashlib, json, sys
+import copy, gzip, hashlib, json, struct, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from m1_beta_check import BIN, MODEL_SHA, PARAMS, fh, rust_snapshot, u2f  # noqa: E402
 from m1_eta_check import Z, load as load_02i, orig_eta  # noqa: E402
+from m1_tau_check import DUMP_SHA as LU_DUMP_SHA  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 DIR = ROOT / "bench/oracle/m1_02l_pool"
@@ -23,7 +24,7 @@ DIAG = [9, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30, 3
 # fixed before the capture from the stored 02a-1 data (section 3 V); None = must pass everywhere
 EXPECT = {"orig": ([], []), "peel0": ([30, 32, 35], []), "peel1": ([], [33, 35]), "invert": ([30, 32, 35], [33, 35]),
           "seq": ([], [33])}
-LNNZ_OLD = {0: 5, 6: 56}  # nnz(L) of the slack-only factors (02a-1 Rust LU dump, before the code diverged at pivot 12)
+bits = lambda x: struct.pack("<d", x)
 
 
 def load():
@@ -35,7 +36,16 @@ def load():
         d["_sha"] = hashlib.sha256(p.read_bytes()).hexdigest()
         runs.append(d)
     tool = hashlib.sha256((ROOT / "tools/m1_eta_pool.js").read_bytes()).hexdigest()
-    return {"runs": runs, "tau1": base["tau"][0], "bt": base["bt"], "tool": tool, "beta": base["beta"][0]["events"]}
+    # nnz(L) of the factors at pivots 0 and 6 (slack-only U; the 02i dump starts at pivot 1): the pinned 02a-1 Rust LU
+    # dump, whose code matched the capture up to pivot 11
+    p = ROOT / "bench/oracle/m1_02a1_tau/rust_lu_kb2.jsonl.gz"
+    lnnz = {}
+    for ln in gzip.open(p, "rt"):
+        d = json.loads(ln)
+        if d["iter"] in (0, 6) and d["iter"] not in lnnz:
+            lnnz[d["iter"]] = sum(len(c) for c in d["lu"]["lcol"])
+    return {"runs": runs, "tau1": base["tau"][0], "bt": base["bt"], "tool": tool, "beta": base["beta"][0]["events"],
+            "lnnz_old": lnnz, "lu_dump_sha": hashlib.sha256(p.read_bytes()).hexdigest()}
 
 
 def dot(t, peel):
@@ -78,10 +88,11 @@ def l_forward(d, x, m):
     return row
 
 
-def pool_growth(ev, k, cap, ccap, m):
+def pool_growth(ev, k, cap, m):
     """LU+0x160 growth of the update at pivot k (05b257): the new eta (C:906-918), the new U column at the pool end
-    when it exceeds its slot (C:1224-1227), and each full U row that takes a new entry moved to the end with
-    len + min(max(4, len/2), LU+0x188 - LU+0x18c) places (C:1264-1282). Capacities right after a factor = lengths."""
+    when it is longer than the old column (C:529 local_150, C:1224-1227), and each full U row that takes a new entry
+    moved to the end with len + min(max(4, len/2), LU+0x188 - LU+0x18c) places (C:1264-1282). Row capacities right
+    after a factor = lengths."""
     a, b = ev[k]["ft"], ev[k + 1]["ft"]
     col = a["r"]
     de = b["pool"]["x184"] - a["pool"]["x184"]
@@ -99,9 +110,8 @@ def pool_growth(ev, k, cap, ccap, m):
             grow += lens[i] + extra
             cap[i] = lens[i] + extra
         lens[i] += 1
-    if ccap[col] < len(newc):
+    if sum(1 for r in a["urow"] if col in r["idx"]) < len(newc):
         grow += len(newc)
-        ccap[col] = len(newc)
     return de + grow, bound
 
 
@@ -119,6 +129,8 @@ def check(data, rule="orig"):
     if any(d["events"] != ev for d in runs) or [e.get("k") for e in ev] != list(range(38)):
         bad.append("M: the three runs differ or pivots != 0..37")
         return bad, rep
+    if data["lu_dump_sha"] != LU_DUMP_SHA or sorted(data["lnnz_old"]) != [0, 6]:
+        bad.append("M: 02a-1 Rust LU dump sha / pivots 0, 6")
     m = ev[0]["ft"]["m"]
     # N: without ft.pool the capture is the 02a-1 capture
     proj = copy.deepcopy(ev)
@@ -151,15 +163,11 @@ def check(data, rule="orig"):
         if ev[k]["lu_upd"] == 0:
             u = [len(r["idx"]) for r in ev[k]["ft"]["urow"]]
             cap = u[:]
-            ccap = [0] * m
-            for r in ev[k]["ft"]["urow"]:
-                for j in r["idx"]:
-                    ccap[j] += 1
-            lnnz = LNNZ_OLD[k] if k in LNNZ_OLD else sum(len(r) for r in bt[k]["lrow"])
+            lnnz = data["lnnz_old"].get(k) if k in (0, 6) else sum(len(r) for r in bt[k]["lrow"])
             xs.append((k, ev[k]["ft"]["pool"]["x160"], 2 * (lnnz + sum(u))))
         if k == 37 or ev[k + 1]["lu_upd"] == 0:
             continue
-        g, bound = pool_growth(ev, k, cap, ccap, m)
+        g, bound = pool_growth(ev, k, cap, m)
         gn += 1
         binds += bound
         if g == ev[k + 1]["ft"]["pool"]["x160"] - ev[k]["ft"]["pool"]["x160"]:
@@ -201,11 +209,11 @@ def check(data, rule="orig"):
         col = e["r"]
         if k in SPIKE:
             ent = [(i, u2f(h)) for i in range(m) for j, h in zip(nxt["urow"][i]["idx"], nxt["urow"][i]["val"]) if j == col]
-            if not ent or any(x[row[i]] != v for i, v in ent):
+            if not ent or any(bits(x[row[i]]) != bits(v) for i, v in ent):
                 sf.append(k)
         if k in DIAG:
             t = [x[row[i]] * z for i, z in orig_eta(ev[k], m)]
-            if sm(t, peel(e["pool"]["a1d0"], "D")) != u2f(nxt["diag"][col]):
+            if bits(sm(t, peel(e["pool"]["a1d0"], "D"))) != bits(u2f(nxt["diag"][col])):
                 df.append(k)
     rep.append(f"S/D ({rule}): spike = capture on {len(SPIKE) - len(sf)}/{len(SPIKE)} updates with etas, new diagonal on "
                f"{len(DIAG) - len(df)}/{len(DIAG)} eta updates; fail {sf} / {df}")
@@ -252,10 +260,13 @@ def main():
     bad, rep = check(data)
     if "--fresh" in sys.argv:
         mine, bev = rust_snapshot(), data["beta"]
-        diff = [k for k in range(len(bev)) if k + 1 not in mine or fh(mine[k + 1]["beta"]) != u2f(bev[k]["beta"])]
-        rep.append(f"F: fresh Rust beta = capture on {len(bev) - len(diff)}/{len(bev)} pivots; differ {diff}")
-        if diff:
-            bad.append(f"F: Rust beta != capture on pivots {diff}")
+        diff = [k for k in range(len(bev)) if k + 1 not in mine or bits(fh(mine[k + 1]["beta"])) != bits(u2f(bev[k]["beta"]))]
+        ev = data["runs"][0]["events"]
+        pdiff = [k for k in range(len(ev)) if k not in mine or mine[k].get("pool") != ev[k]["ft"]["pool"]["x160"]]
+        rep.append(f"F: fresh Rust beta = capture on {len(bev) - len(diff)}/{len(bev)} pivots; differ {diff}; Rust pool "
+                   f"(LU+0x160, snapshot k) = capture x160 at pivot k on {len(ev) - len(pdiff)}/{len(ev)}; differ {pdiff}")
+        if diff or pdiff:
+            bad.append(f"F: Rust beta != capture on pivots {diff}, pool on {pdiff}")
     for ln in rep:
         print(ln)
     if "--self-test" in sys.argv:

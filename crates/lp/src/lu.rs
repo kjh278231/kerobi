@@ -47,10 +47,9 @@ pub struct Lu {
     reta_odd: Vec<bool>,
     /// LU pool fill LU+0x160: U rows, U columns and row etas share LU+0x148/0x150 (16-byte aligned base in the kb2
     /// capture). 2·nnz(L+U) after a factor, then grown by `update` (05b257).
-    pool: usize,
-    /// Pool slots of the U rows and columns by step: their lengths after a factor, grown by `update`.
+    pub pool: usize,
+    /// Pool slots of the U rows by step: their lengths after a factor, grown by `update`.
     rcap: Vec<usize>,
-    ccap: Vec<usize>,
     /// Sparse-solve multiplier LU+0x104: a sparse Lᵀ needs `mult·nnz ≤ m` (036ade L5709).
     sparse_mult: usize,
     /// Lᵀ DAG level of each step (LU+0x130) when BTRAN takes the level path (LU+0x140 ≥ 0, 036ade L5757).
@@ -238,7 +237,6 @@ impl Lu {
             reta_odd: Vec::new(),
             pool: 0,
             rcap: Vec::new(),
-            ccap: Vec::new(),
             sparse_mult: 2,
             level: None,
             general: false,
@@ -677,9 +675,8 @@ impl Lu {
             }
         }
         let lnnz: usize = self.lrow.iter().map(Vec::len).sum();
-        // pool fill after a factor: 2·nnz(L+U) (kb2 capture, 4 factors), every slot as long as its U row or column
+        // pool fill after a factor: 2·nnz(L+U) (kb2 capture, 4 factors), every U row slot as long as the row
         self.rcap = self.urow.iter().map(Vec::len).collect();
-        self.ccap = self.ucol.iter().map(Vec::len).collect();
         self.pool = 2 * (lnnz + self.rcap.iter().sum::<usize>());
         let t = lnnz as f64 / m as f64 + 1.0;
         let t = t * t * 5.0;
@@ -1050,6 +1047,8 @@ impl Lu {
     /// shortcut: callers outside the dual DSE pass an empty `sorder` (the `2207de` sparse paths are not modelled).
     /// `interval`: the update limit LU+0x188 (LUINTERVAL), which caps the room a moved U row gets.
     /// shortcut: the pool never outgrows its capacity LU+0x168 (05b257 C:800–860 reallocates; kb2 stays far below).
+    /// shortcut: the pool growth rules are those seen on kb2 (34/34 updates); maros grows more on some updates
+    /// (M1-02m), so later eta parities there can be wrong.
     pub fn update(&mut self, pos: usize, var: usize, spike: &[f64], sorder: &[usize], interval: usize) -> bool {
         // Forrest–Tomlin as 5b257 stores it (m1_notes §8.10): r = the leaving index, q its U position, t the prefix
         // LU+0x100, p = max(q, t−1), l = max(p, U positions of the spike entries ≠ r). With l ≠ p and a non-empty U
@@ -1070,6 +1069,7 @@ impl Lu {
         if let Some(i) = sp.iter().position(|&i| i == rp) {
             sp.swap_remove(i);
         }
+        let old_len = self.ucol[kp].len(); // 05b257 C:529 local_150: the new column fits in place up to this
         // old column kp out of U; rows it leaves with an empty U row leave the LU+0xf0 list below (C:535–551)
         let mut emptied = Vec::new();
         for &(i, _) in &std::mem::take(&mut self.ucol[kp]) {
@@ -1210,11 +1210,10 @@ impl Lu {
                 self.f0.push(k);
             }
         }
-        // pool growth: a new column longer than its slot goes to the end (C:1224–1227), a full U row that gets an
-        // entry moves to the end with min(max(4, len/2), LU+0x188 − LU+0x18c) free places (C:1264–1282)
-        if self.ccap[kp] < others.len() {
+        // pool growth: a new column longer than the old one goes to the end (C:1224–1227), a full U row that gets
+        // an entry moves to the end with min(max(4, len/2), LU+0x188 − LU+0x18c) free places (C:1264–1282)
+        if old_len < others.len() {
             self.pool += others.len();
-            self.ccap[kp] = others.len();
         }
         let room = interval.saturating_sub(self.n_updates);
         for &i in &others {
