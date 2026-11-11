@@ -16,6 +16,7 @@ CAP = {'kb2': '61dc54471404280e5eb53c10d3442c1873d770277ce40a8e334c401e25c9890d'
 WCAP = {'kb2': 'f4dfd4ba946a43b13e90cf73cd235b33d70932fe877c7caae2d567f3480e168b',
         'degen2': 'c476371aeb7317374cde3a43fc5bccb1299d0b788fe10f7cba67bd716f4d4401'}  # M1-02p watchpoint captures
 NEED = {'kb2': 5, 'degen2': 9}  # refactors on the original path (contract section 1)
+MODEL = {n: os.path.join(ROOT, '../re/bench/data/netlib', n + '.mps.gz') for n in CAP}
 SITES = {0xe84b9, 0xc391f, 0xd4ded, 0xd5300, 0xd5e39, 0xd85e6, 0xdc7b2, 0xdcb7b, 0xf48ae, 0x1327dc, 0x1329e6, 0x1329c1,
          0xf4f9b, 0xf4ffd, 0xf507a, 0xf515b, 0xf51af}
 F = lambda h: struct.unpack('<d', int(h, 16).to_bytes(8, 'little'))[0]
@@ -26,7 +27,7 @@ load = lambda p: json.loads(gzip.decompress(open(p, 'rb').read()))
 
 def rust_run(name, seeds, pyroot=None):
     """Rust lines (one per refactor) on the model with the original refactor-entry work as the seed."""
-    model = os.path.join(ROOT, '../re/bench/data/netlib', name + '.mps.gz')
+    model = MODEL[name]
     with tempfile.TemporaryDirectory() as td:
         out, seed = os.path.join(td, 'work.jsonl'), os.path.join(td, 'seed.txt')
         open(seed, 'w').write('\n'.join(seeds) + '\n')
@@ -77,8 +78,8 @@ def check(caps, wcaps, runs, files_ok=True):
         c, wc, rust = caps[name], wcaps[name], runs[name]
         if c.get('binary_sha256') != BIN or wc.get('binary_sha256') != BIN or not c.get('ok') or c.get('errors'):
             bad.append(f'M {name}: binary hash / ok / errors')
-        if c.get('model_sha256') != wc.get('model_sha256'):
-            bad.append(f'M {name}: model sha differs from the M1-02p capture')
+        if c.get('model_sha256') != wc.get('model_sha256') or (files_ok and sha(MODEL[name]) != c.get('model_sha256')):
+            bad.append(f'M {name}: model sha differs (file Rust reads, this capture, M1-02p capture)')
         # N: refactor and update entries from 06268b with the work bits equal M1-02p
         u1 = [(e['k'], e['reason'], e['work']) for e in c['events'] if e['type'] == 'U']
         u0 = [(e['k'], e['reason'], e['work']) for e in wc['events'] if e['type'] == 'U']
@@ -91,11 +92,11 @@ def check(caps, wcaps, runs, files_ok=True):
         wins = windows(c['events'])
         n = 0
         for (f, _), r in zip(wins, rust):
-            # the first factor's input order is the start basis' position order, which Rust's start.rs assigns
-            # differently (same set; the factor renumbers positions, F2 on are equal in order): reported, not compared
+            # the original factors the crash basis by row at refactor 1 and renumbers after it; Rust's start.rs applies
+            # that renumbering before (start.rs first factorization), so only the set is compared there (F2 on: order)
             same = r['head'] == f['head'] or (n == 0 and sorted(r['head']) == sorted(f['head']))
             if n == 0 and same and r['head'] != f['head']:
-                rep.append(f'{name}: refactor 1 basis = original as a set, position order differs (start basis)')
+                rep.append(f'{name}: refactor 1 basis = original as a set, position order differs (Rust start.rs renumbers before it)')
             if not same or r['iter'] != f['k'] or r['tol'] != f['x390'] or not f['work']:
                 why = 'head' if not same else 'iteration' if r['iter'] != f['k'] else 'tol' if r['tol'] != f['x390'] else 'work'
                 rep.append(f'{name}: alignment ends at refactor {n + 1} ({why}: Rust iteration {r["iter"]}, original k {f["k"]})')
@@ -199,6 +200,11 @@ def main():
         def t_head(c, w, r):
             [e for e in c['degen2']['events'] if e['type'] == 'F'][4]['head'][7] += 1
 
+        def t_head1(c, w, r):
+            # refactor 1 is compared as a set: a different member must still fail
+            f = next(e for e in c['kb2']['events'] if e['type'] == 'F')
+            f['head'][3] = max(f['head']) + 1
+
         def t_term(c, w, r):
             [e for e in c['degen2']['events'] if e['type'] == 'T' and e['pc'] == 0xd647b][3]['cnt'] += 1
 
@@ -218,7 +224,7 @@ def main():
             e = next(e for e in w['kb2']['events'] if e['type'] == 'W' and e['pc'] == 0xd85e6 and e['k'] == 26)
             e['v'] = flip(e['v'])
 
-        for t in (t_bin, t_empty, t_nof, t_nwork, t_head, t_term, t_add, t_158, t_site, t_wval):
+        for t in (t_bin, t_empty, t_nof, t_nwork, t_head, t_head1, t_term, t_add, t_158, t_site, t_wval):
             c, w, r = copy.deepcopy(caps), copy.deepcopy(wcaps), copy.deepcopy(runs)
             t(c, w, r)
             b2, _ = check(c, w, r)

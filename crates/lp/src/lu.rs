@@ -499,7 +499,7 @@ impl Lu {
         } else {
             w.carry(a);
         }
-        w.add(0xf51af, (m - self.e8 - 1) as f64 * X148);
+        w.add(0xf51af, m.saturating_sub(self.e8 + 1) as f64 * X148);
     }
 
     /// Sparse Markowitz kernel of `036ade` (L546–2570, docs/m1/m1_notes.md §6.7) on the rows and positions the singleton

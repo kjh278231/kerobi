@@ -77,35 +77,37 @@ kb2: N 05b257 entries 40, A aligned refactors 5/5, K terms 42 (general 37), W st
 degen2: alignment ends at refactor 10 (head: Rust iteration 359, original k 356)
 degen2: N 05b257 entries 637, A aligned refactors 9/16, K terms 157 (general 113), W stores 104 {0xe84b9 1, 0xd4ded 9, 0xd5300 9,
      0xd85e6 9, 0xdc7b2 9, 0xdcb7b 9, 0xf48ae 9, 0x1327dc 8, 0x1329c1 9, 0xf4f9b 9, 0xf51af 9, 0xc391f 1, 0xf4ffd 6, 0xf507a 6, 0x1329e6 1}, F 0x158 9
-(both) refactor 1 basis = original as a set, position order differs (start basis)
-T: 10 tampers rejected (binary hash, empty events, no F events, 05b257 entry work, head entry, term cnt + 1, Rust amount + 1 unit,
-   0x158 bit, store site swapped, original write bit)
+(both) refactor 1 basis = original as a set, position order differs (Rust start.rs renumbers before it)
+T: 11 tampers rejected (binary hash, empty events, no F events, 05b257 entry work, head entry, refactor 1 head member,
+   term cnt + 1, Rust amount + 1 unit, 0x158 bit, store site swapped, original write bit)
 ```
 
 - `--mutate`(`bench/oracle/m1_02q/check_mutate.txt`): 변이 6종 모두 거부. 0xd4ded 100 생략(W kb2 저장 1), 일반 항 min → max(W kb2 0xd85e6), 0x158 0.5 생략(F kb2 재분해 2), 9e60b 지점 반대(W degen2 저장 7), 0xf507a 조건 `d ≤ m`(W kb2 저장 7), q에서 U 생략(W kb2 0xd4ded).
 - N: 새 도구의 `05b257` 진입 40·637회 (k, 이유, work 비트)와 출력 줄이 02p 캡처와 같다. 명령 probe가 경로·work를 바꾸지 않았다.
-- A: kb2 5/5, degen2 9/16(F10은 원본 k 356, Rust 반복 359: 02n의 work 조건 재분해, 이번 범위 밖). F2부터 head는 위치 순서까지, Markowitz tol(0.0078125)·반복 번호가 같다. **F1(dual 시작 첫 분해)은 같은 basis 집합이지만 위치 순서가 다르다**: 원본은 crash 구조 열을 바꾼 행의 위치에 두고(`[22, 23, 24, 25, 45, 27, …]`), Rust `start.rs`는 구조 열을 앞에 몰아 둔다(`[38, 37, 29, 27, …]`). 분해 뒤 위치를 다시 매기므로 F2의 head·W·K는 같다. F1 W(5지점)도 같다(Markowitz 항 0개). 위치 순서는 F1 분해의 피벗 순서를 바꿀 수 있으므로 별도 기록(§7 후속).
+- A: kb2 5/5, degen2 9/16(F10은 원본 k 356, Rust 반복 359: 02n의 work 조건 재분해, 이번 범위 밖). F2부터 head는 위치 순서까지, Markowitz tol(0.0078125)·반복 번호가 같다. **F1(dual 시작 첫 분해)은 같은 basis 집합이지만 위치 순서가 다르다**: 원본은 crash basis를 행 순서(바꾼 slack의 행 위치, `[22, 23, 24, 25, 45, 27, …]`)로 F1에서 분해하고 그 뒤 위치를 다시 매긴다. Rust `start.rs:159–165`는 그 재번호(구조 열 피벗 순 + slack 행 순)를 미리 적용해 두고 `dual_start`에서 다시 분해하므로 F1 입력이 원본 F1의 출력 순서(`[38, 37, 29, 27, …]` = 원본 F2 입력)다(코드 확인). F2부터 head·W·K가 같고 F1 W(5지점)도 같다(Markowitz 항 0개). F1에 커널이 있는 모델에서는 피벗 순서가 달라질 수 있다(§7 후속).
 - K: 일반 피벗 항 150개(ns, `ecx`, `r10d`)와 singleton 항 49개가 순서까지 같다. 첫 비교에서 일반 항이 모두 (`ecx`, `r10d`) 짝만 뒤바뀌어 나와(min이라 W는 이미 통과) 의미를 바로잡았다: `ecx` = 피벗 행 다른 원소의 열 카운트 합, `r10d` = 피벗 열 다른 원소의 행 카운트 합. 1e8 중간 반영 0회.
 - W: kb2 43·degen2 104 저장이 지점 순서와 값 비트까지 같다(원본 직전 쓰기 + Rust 양). F1–F9 0xd85e6이 같으므로 bound(캡처 불가)를 쓴 Σ ns·6·bound도 합으로 같다.
 - F: spx+0x158 kb2 5·degen2 9회 비트 일치. 0x150은 넣은 값(입력)이다.
 - 판별력 한계: 더한 양의 마지막 비트 하나 차이는 work 합(10⁴–10⁶)의 반올림에 묻혀 관측되지 않는다(첫 변조 `t_add`가 통과). 실제 식 오류는 정수 단위 × 1.3로 달라지므로 변조를 "양 + 1단위"로 바꿨다.
+- 검토 반영(advisor): m = 0이면 `m − e8 − 1`이 usize 아래로 넘어가 `saturating_sub`로 고침(원본은 0을 더함), 검사기에 Rust가 읽는 모델 파일 해시 대조와 F1 집합 변조(`t_head1`) 추가, F1 원인을 `start.rs` 코드로 확인해 서술 정정.
 - 회귀(worktree 빌드):
   - `cargo test -p rsolver-lp` 42 통과(1 무시), `cargo test --release --workspace` 125 통과·11 무시, `cargo clippy --workspace --all-targets -- -D warnings` 0(첫 실행은 `assign_op_pattern` 1건 → `w += a`로 고침. IEEE 덧셈 교환이라 비트 같음, 검사기 재통과).
   - M1 검사기 11종 `--self-test`(`m1_lsolve`·`m1_update`·`m1_usolve`는 `--rust`) 종료 0, `m1_bfrt_rust` ACCEPTANCE PASS.
   - worktree 빌드 pytest 657 통과.
-  - Netlib: `tools/proto/pathcmp.py all` 출력이 기준선 빌드와 바이트 동일(64모델, 완전 일치 27/64, 중앙 0.752). `tools/lp_check.py --methods 1,0,-1 --timeout 120`: 정답 90/91 ×3, IterCount 31/0/31(기준선 결과는 아래 줄).
+  - Netlib: `tools/proto/pathcmp.py all` 출력이 기준선 빌드와 바이트 동일(64모델, 완전 일치 27/64, 중앙 0.752). `tools/lp_check.py --methods 1,0,-1 --timeout 120`: 정답 90/91 ×3, IterCount 31/0/31. 기준선 빌드로 같은 명령을 돌려 91모델 × 3방식 273행의 상태·목적값(출력 repr)·반복 수·정답 판정이 모두 같다(총 시간 161.7 → 162.8초, 비 1.006, 부하 통제 없는 참고값).
 - 계약 변경(착수 뒤, 이유): A의 F1을 집합 비교로 둠(위 F1 위치 순서. 범위 축소가 아니라 기존 start.rs 차이의 보고), 변조 `t_add`를 1비트에서 1단위로(위 판별력 한계), K의 `ecx`/`r10d` 의미 정정(도구 주석은 캡처 해시 고정 때문에 그대로 두고 여기서 정정).
 
 ## 7. 판정과 인수인계
 
 - 작업 수행 상태: 완료.
 - 동등성: **통과**(계약 범위). kb2 재분해 5회·degen2 재분해 F1–F9에서 이번에 옮긴 17지점 중 관측된 15지점의 저장 순서·값과 spx+0x158이 원본과 비트 같고, 036ade Markowitz 항이 순서까지 같다. 재분해 진입 work(0x150)는 원본 값을 입력으로 넣었다.
-- 미검증: 0xd5e39(acc > 1e8)·0xf515b(d ≥ m, t < m − 1) 실행 0회, f ≠ 1, 9e60b mode 끄기, 특이 basis 재시도, 조밀 전환, quad, env+0x2454 = 0, 여유 열 있는 dual 시작의 0xe84b9 순서, degen2 F10–F16. bound는 합으로만. Rust work 절대값(반복 커널·LU 풀이·`1ca57`·`16b0a`·0xf461f 등 미구현)과 재분해 판정 연결은 범위 밖.
+- 미검증: 0xd5e39(acc > 1e8)·0xf515b(d ≥ m, t < m − 1) 실행 0회, LU+0xdc = 0의 0xf4f9b carry(14/14 저장), m ≥ 250인데 L 레벨 없음(0xdcb7b 생략), m = 0, f ≠ 1, 9e60b mode 끄기, 특이 basis 재시도, 조밀 전환, quad, env+0x2454 = 0, 여유 열 있는 dual 시작의 0xe84b9 순서, degen2 F10–F16. bound는 합으로만. Rust work 절대값(반복 커널·LU 풀이·`1ca57`·`16b0a`·0xf461f 등 미구현)과 재분해 판정 연결은 범위 밖.
 - 후속:
   - **M1-02r**(구현): FT 갱신 `05b257` 16지점(재분해 경로의 spike 지우기 0xf461f 포함, 02p 분류).
   - **M1-02s**: 02p 목록에 더해 `1ca57` 0xbf981/0xbfed2(spx+0x2cc 지점 선택, spx+0x338 섭동 단계 = Rust `pt_lvl` 대응 확인)와 재분해 경로 `16b0a` 0xbe793.
-  - dual 시작 basis의 위치 순서(Rust `start.rs`, F1 head)는 M1-02c 또는 새 조사 번호에서 원본 crash 위치 배정을 확인한다(현재 F1 분해 결과·work는 같다).
+  - dual 시작 F1 입력 순서: Rust `start.rs`가 첫 분해의 재번호를 미리 적용한다. F1을 원본처럼 행 순서로 분해하게 바꾸는 일은 M1-02c 또는 새 번호(현재 두 모델에서 F1 결과·work는 같다).
   - M1-02t·u 그대로. 모두 끝나면 Rust work를 재분해 판정에 연결하고 `RSOLVER_WORK_SEED` 없이 degen2 피벗 356을 02n 검사기 `--rust`로 대조.
+- 주의: `RSOLVER_WORK_SEED`는 재분해 진입에서 w를 덮어쓴다. work를 판정에 연결하기 전에 검증용으로만 남기거나 없앤다. main worktree 공유 `.venv` 확장은 이 변경 전 빌드다.
 - 다음 명령: `tools/build_local.sh && PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_factor_work_check.py --self-test`(Rust work를 바꾸면), 새 지점은 `SITES`와 W 비교에 더한다.
 - branch `work/m1-02q`, worktree `../rsolver-m1-02q`. 병합은 main의 `Merge M1-02q` 이력.
 - 갱신: `docs/handoff/M1.md`, `docs/14_sprint_plan.md`(02q 완료, 02r·02s 범위 추가), `docs/11_progress.md`, `docs/12_roadmap_diagram.md`.
