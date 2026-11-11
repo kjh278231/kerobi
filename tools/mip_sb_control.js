@@ -16,6 +16,7 @@ replace(' // Copy and restore:', `
   }}});
  Interceptor.attach(b.add(0x575ce0),{onEnter(){this.ev=evl;},onLeave(r){if(this.ev)this.ev.steps.push({kind:'reset',rc:r.toInt32()});}});
  // Copy and restore:`);
+replace('steps:[]};this.ev._a', 'steps:[],types:raw(a[5],this.lp.add(0xe8).readPointer().add(0xc).readS32())};this.ev._a');
 const capture = new Module(__filename, module);
 capture.filename = __filename;
 capture.paths = module.paths;
