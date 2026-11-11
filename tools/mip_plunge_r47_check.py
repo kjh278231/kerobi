@@ -51,8 +51,11 @@ def load_all():
             fn = CONTROL[case]
             need(manifest['control_files'][fn] == sha(os.path.join(DATA, fn)), f'{fn}: file hash differs from the manifest')
             base[case] = load(os.path.join(DATA, fn))
-        else:
-            base[case] = load(os.path.join(R.DATA, f'{case}_1.json.gz'))
+        else:                         # 06c run 1, checked against the 06c manifest (added after the review)
+            fn = os.path.join(R.DATA, f'{case}_1.json.gz')
+            need(json.load(open(os.path.join(R.DATA, 'manifest.json')))['files'][f'{case}_1.json.gz'] == sha(fn),
+                 f'{case}: 06c baseline hash differs from the 06c manifest')
+            base[case] = load(fn)
     return caps, base, manifest
 
 
@@ -79,6 +82,8 @@ def controls(caps, base, manifest):
         o = base[case]
         need(o['tool_sha256'] == old_tool and o['params'] == params and o['output'] == runs[0]['output'],
              f'{case}: 06c-tool baseline tool/params/output')
+        need(o['binary_sha256'] == R.BINARY and o['model_sha256'] == manifest['models'][model] and o['ok'] and not o['errors'],
+             f'{case}: 06c-tool baseline binary/model/ok')
         need(runs[0]['counts'] == o['counts'], f'{case}: counts differ from the 06c-tool run')
         ev = proj(runs[0])
         for i, (a, b) in enumerate(zip(ev, o['events'])):
