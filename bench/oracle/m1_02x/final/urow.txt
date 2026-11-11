@@ -1,0 +1,20 @@
+M: 3 captures (pinned gz sha256, equal events), stored oracle, Rust factor dump and its patch pinned
+G: 05b257 rule = next captured rows on all 34 updates (row etas 24, stable removal would differ on 6)
+V: stable: rejected (G pivot 13->14 (r 18, eta 1): rows [9, 10, 17, 19] differ, first rule [6, 15] vs capture [)
+V: prepend: rejected (G pivot 1->2 (r 14, eta 0): rows [29, 36, 37, 38] differ, first rule [14, 12] vs capture [)
+V: keep_r: rejected (G pivot 9->10 (r 24, eta 1): rows [24] differ, first rule [16, 30] vs capture [])
+L: pivots (15, 26): Rust factor of the pre-factor basis renumbers to the snapshot positions; U sets, value bits and diagonal = capture; singleton steps = prefix t
+F: initial order rule = captured rows at pivots (15, 26) (multi-entry rows: singleton 23, kernel 8; not ascending in step 18)
+F variant rust_now: rejected (F pivot 15: steps [32, 33, 40] differ, rule [39, 41, 42] vs capture [41, 42, 39])
+F variant all_singleton: rejected (F pivot 15: steps [40] differ, rule [41, 42] vs capture [42, 41])
+F variant kernel_desc: NOT DISCRIMINATED
+T: targets met; kernel rows whose list order differs from descending position (fill): 0
+rejected: capture sha256: M: bench/oracle/m1_02a1_tau/kb2_2.json.gz sha256 0000000000000000000000000000000000000000000000000000000000000
+rejected: update: two entries of a pivot 12 row exchanged: G pivot 11->12 (r 6, eta 1): rows [9] differ, first rule [18, 6] vs capture [6, 18]
+rejected: update: row eta flag dropped: G pivot 9->10 (r 24, eta 0): rows [24] differ, first rule [16, 30] vs capture []
+rejected: update: value bit of a carried entry at pivot 14: G pivot 13->14 (r 18, eta 1): rows [6] differ, first rule [15, 18] vs capture [15, 18]
+rejected: dump: one U value bit: L pivot 15: U sets/values != capture
+rejected: dump: two step positions exchanged: L pivot 26: Rust step order != snapshot 26 positions
+rejected: refactor: two entries of a pivot 26 row exchanged (G 26->27 sees it first): G pivot 26->27 (r 41, eta 1): rows [10] differ, first rule [32, 33, 34, 41] vs capture [33, 32, 34, 41]
+rejected: dump: kernel list order of a pivot 15 row reversed (F only): F pivot 15: steps [40] differ, rule [41, 42] vs capture [42, 41]
+PASS

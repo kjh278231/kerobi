@@ -1,0 +1,41 @@
+{
+ "task": "M1-02x",
+ "gurobi": "13.0.3",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "params": {
+  "Threads": 1,
+  "Method": 1,
+  "Presolve": 0
+ },
+ "tools": {
+  "tools/m1_lt_path.js": "1154b1055fe03624e5cff5f515350705e056668f8a851e0f7f4da3fa8e4404ea",
+  "tools/m1_lt_runs.sh": "a50c390501f5a0d35799a94ad12691afed5b0d50f8f8ac33ea69088d24fe2689",
+  "tools/m1_lt_check.py": "f6be40146c7917e608d0250167d19f3a5cda6b45c9cb43af016f5b11c2a8c643"
+ },
+ "captures": {
+  "bnl1_1.json.gz": "9f173a3493d390a3a5e3208773900a94cfca31b34678beeabc1fe09bad687e68",
+  "bnl1_2.json.gz": "9f173a3493d390a3a5e3208773900a94cfca31b34678beeabc1fe09bad687e68",
+  "bnl1_3.json.gz": "9f173a3493d390a3a5e3208773900a94cfca31b34678beeabc1fe09bad687e68",
+  "degen2_1.json.gz": "125cc6501ba75f6c977268f488ffd94bb78bc7ddf0b649bcbc5e98ed17ff1ec0",
+  "degen2_2.json.gz": "125cc6501ba75f6c977268f488ffd94bb78bc7ddf0b649bcbc5e98ed17ff1ec0",
+  "degen2_3.json.gz": "125cc6501ba75f6c977268f488ffd94bb78bc7ddf0b649bcbc5e98ed17ff1ec0",
+  "fit1p_1.json.gz": "af8d84aefbf2f572ed241984ca2dc4c3c6298783c19775346bd14de4779098f9",
+  "fit1p_2.json.gz": "af8d84aefbf2f572ed241984ca2dc4c3c6298783c19775346bd14de4779098f9",
+  "fit1p_3.json.gz": "af8d84aefbf2f572ed241984ca2dc4c3c6298783c19775346bd14de4779098f9",
+  "stair_1.json.gz": "cfde043939bea6e8e9b3d24f3bf97655cdae3a24fe6f173bddf7f1739619209a",
+  "stair_2.json.gz": "cfde043939bea6e8e9b3d24f3bf97655cdae3a24fe6f173bddf7f1739619209a",
+  "stair_3.json.gz": "cfde043939bea6e8e9b3d24f3bf97655cdae3a24fe6f173bddf7f1739619209a"
+ },
+ "models": {
+  "stair": "5e93434e32ad5ceac61abe7fedbd6a85a2db2813d6fa70f68e96102f3c47cc6c",
+  "degen2": "47ad212b08b5c517cbe169bd6711cdc1051391bf1b30531bcf9893abae498346",
+  "fit1p": "7312a940d24b10a1728424578bd010e46d08a81e367046c228e7c59b8967730c",
+  "bnl1": "30269766d1d3baa5ed876e3cca02e3ff19df69b504fc0f3918fc1978fb5001f1"
+ },
+ "commands": {
+  "capture": "tools/hrun.sh --timeout 580000 -- 'tools/m1_lt_runs.sh bench/oracle/m1_02x'",
+  "check": "tools/build_local.sh && PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_lt_check.py --self-test",
+  "mutate": "python3 bench/oracle/m1_02x/mutate.py",
+  "regress": "bench/oracle/m1_02x/regress.sh <base|final>"
+ }
+}

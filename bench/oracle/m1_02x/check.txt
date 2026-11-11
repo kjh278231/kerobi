@@ -1,0 +1,23 @@
+model events target control rust_matched/er target_in_range
+stair 725 6 423 185 356 2
+degen2 1094 0 735 356 634 0
+fit1p 1214 0 1195 117 568 0
+bnl1 1723 0 1317 174 1050 0
+PASS original + rust
+rejected binary sha | degen2 run 2: binary sha 0000000000000000000000000000000000000000000000000000000000000000
+rejected empty events | fit1p: no events
+rejected run 3 event | bnl1 run 3: event 7 differs from run 1
+rejected projection (interference) | stair: event 3 projected to the M1-02k fields differs from M1-02k plain [[288, 800497, 1], 356, 1, '3ff8000000000000', '3ff8000000000000', 0, 2, None,
+rejected LU+0x140 zeroed | stair: event 463: LU+0x140 0 m 356 says sparse=True, output nnz -1
+rejected no target event | no target event (hit, nnz > 0, LU+0x140 >= 0.1m)
+rejected no control event | stair: e_r call 0: Rust LU+0x140 4, original -1
+rejected hit m | stair: event 1: hit m 357 / LU+0x140 4 vs entry 356 / 4
+rejected Rust LU+0x140 | stair: e_r call 102: Rust LU+0x140 40, original 43
+rejected Rust target form (old rule) | stair: e_r call 102: Rust output dense=False, original dense=True (LU+0x140 43, m 356, hit [7, 356, 43])
+rejected Rust value bits | stair: e_r call 118 output value 5: original 0000000000000000 Rust deadbeef00000000
+rejected Rust idx order | degen2: e_r call 1 output idx 0: original [1, 166] Rust [166, 1]
+rejected Rust etas | fit1p: same-state range ends at e_r call 3, pinned 117
+rejected pinned value call agrees | stair: e_r call 31: pinned value difference not seen
+rejected pinned order call: other rows | bnl1: e_r call 130: pinned order difference not seen (same order, or other rows)
+rejected no target in range | no target event (hit, nnz > 0, LU+0x140 >= 0.1m)
+SELF-TEST PASS
