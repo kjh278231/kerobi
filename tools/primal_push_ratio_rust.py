@@ -141,19 +141,21 @@ def self_test(cases, text, trace):
 
 # Rust 분기별 오류 주입. 각 변조는 원본 대조에서 실패해야 한다(최종 코드에는 남기지 않는다).
 RUST = ROOT / 'crates/lp/src/crossover.rs'
-MUTANTS = {
+MUTANTS = {  # M3-04c-5에서 feasible_ratio 재진입 구현에 맞춰 대상 문자열만 바꿨다(의미는 04c와 같음)
     'accept-strict': ('if ratio <= bound {', 'if ratio < bound {'),
     'harris-sign': ('{ (num + harris) / a }', '{ (num - harris) / a }'),
-    'second-tie': ('best < val[k].abs()', 'best <= val[k].abs()'),
-    'second-bound': ('if ratio <= bound && best', 'if ratio < bound && best'),
-    'width-inf': ('width[r] < inf', 'width[r] <= inf'),
-    'free-mark': ("if a <= piv_tol || marks[r] == b'F' {", 'if a <= piv_tol {'),
+    'second-tie': ('.zip(&cands) {\n            if ratio <= bound && best < val[k].abs()',
+                   '.zip(&cands) {\n            if ratio <= bound && best <= val[k].abs()'),
+    'second-bound': ('.zip(&cands) {\n            if ratio <= bound && best', '.zip(&cands) {\n            if ratio < bound && best'),
+    'width-inf': ('-tol > a && inf > width[r]', '-tol > a && inf >= width[r]'),
+    'free-mark': ("let up = a > tol && marks[r] != b'F';", 'let up = a > tol;'),
     'lower-num': ('x[r] - width[r]', 'width[r] - x[r]'),
-    'cap-return': ('cap < inf && cap <= bound', 'cap < inf && cap < bound'),
-    'no-candidate': ('if bound == inf || cands.is_empty()', 'if cands.is_empty()'),
-    'pivot-threshold': ('if pivot >= 0.1 {', 'if pivot >= 1e-12 {'),
-    'small-scale': ('b if b < 10.0 => 0.1,', 'b if b < 10.0 => 1e-12,'),
-    'small-check-strict': ('piv_tol * big * scale <= pivot', 'piv_tol * big * scale * 1e12 <= pivot'),
+    'cap-return': ('if cap < inf && cap <= bound {\n            *pivot = 0.0;\n            *theta = cap;\n            return -1;',
+                   'if cap < inf && cap < bound {\n            *pivot = 0.0;\n            *theta = cap;\n            return -1;'),
+    'no-candidate': ('if bound == inf || cands.is_empty() {\n            if first', 'if cands.is_empty() {\n            if first'),
+    'pivot-threshold': ('let small = first && 0.1 > *pivot;', 'let small = first && 1e-12 > *pivot;'),
+    'small-scale': ('b if 10.0 > b => 0.1,', 'b if 10.0 > b => 1e-12,'),
+    'small-check-strict': ('let reenter = tol * big * scale > *pivot;', 'let reenter = tol * big * scale * 1e-12 > *pivot;'),
     'work-dense': ('tested as f64 + tested as f64 + count', 'tested as f64 + count'),
     'work-sparse': ('count as f64 * 4.0', 'count as f64 * 3.0'),
 }

@@ -3,7 +3,18 @@
 //! M3-04c-8: a line ends with the captured opposite-direction ratio result (`R pos theta pivot`) when the original
 //! recalled, else `-`.
 use rsolver_lp::crossover::{feasible_ratio, push_direction, push_flip_state, push_leave_state, push_recall_step,
-                            push_step, PushStep, PushTol, violated_ratio};
+                            push_step, PushStep, PushTol, Reentry, violated_ratio};
+
+/// The feasible ratio test as the 04b captures saw it: their columns never reach the small-pivot second pass's
+/// `12dd49` call (M3-04c-5), so asking for the factor's update count is a replay failure.
+#[allow(clippy::too_many_arguments)]
+fn feasible(h: f64, piv: f64, inf: f64, cap: f64, idx: Option<&[i32]>, val: &[f64], x: &[f64], width: &[f64],
+            marks: &[u8], coef: f64, work: &mut f64, theta: &mut f64, pivot: &mut f64) -> Result<i32, Reentry> {
+    let mut refactor = false;
+    let pos = feasible_ratio(h, piv, inf, cap, idx, val, x, width, marks, coef, work, theta, pivot,
+                             &mut || panic!("12dd49 asked: not captured"), &mut refactor);
+    Ok(pos)
+}
 
 fn f(token: &str) -> f64 {
     f64::from_bits(u64::from_str_radix(token, 16).unwrap().swap_bytes()) // captures store little-endian bytes
@@ -45,7 +56,7 @@ fn decision_trace() {
         let entry = push_direction(j, &x, &slack, &lb, &ub, &cost, &header, &idx, &mut val, &tol, inf,
                                    violated.then_some(&marks[..]));
         // Link check: the ratio test on the Rust-flipped column, compared against the captured ratio output.
-        let ratio = if violated { violated_ratio } else { feasible_ratio }; // violated: 054eef, then the 056973 retry
+        let ratio = if violated { violated_ratio } else { feasible }; // violated: 054eef, then the 056973 retry
         let link = |val: &[f64]| {
             let (mut work, mut ltheta, mut lpivot) = (0.0, f64::NAN, f64::NAN);
             match ratio(h, piv_tol, inf, inf, Some(&idx), val, &basic, &width, &marks, 0.0, &mut work, &mut ltheta,
