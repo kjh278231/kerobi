@@ -5,7 +5,7 @@ Entry file: header lines `date: ISO`, `area: M1|M2|M3`, then optional sections
   ## 11 / ## 12      paragraph put (newest first) between <!-- progress:begin/end --> in docs/11_progress.md / 12_roadmap_diagram.md
   ## 13 / ## 14      table rows; a row whose first cell equals an existing row's replaces it, else it is added after the area's last row
   ## handoff         newest 3 per area between <!-- handoff:begin/end --> in docs/handoff/<area>.md
-  python3 tools/progress_index.py [--check] [--self-test]
+  python3 tools/progress_index.py [--check] [--self-test] [--init]   # --init: add markers once to the existing docs
 """
 import re, sys, tempfile
 from pathlib import Path
@@ -86,6 +86,18 @@ def run(root, check):
     return int(bool(changed) and check)
 
 
+def init(root):
+    """Insert empty markers after the title of the generated docs (legacy text stays below them)."""
+    for name, tag in [('docs/11_progress.md', 'progress'), ('docs/12_roadmap_diagram.md', 'progress')] + \
+                     [(f'docs/handoff/{a}.md', 'handoff') for a in ('M1', 'M2', 'M3')]:
+        path = root / name
+        text = path.read_text()
+        if f'<!-- {tag}:begin -->' not in text:
+            head, _, rest = text.partition('\n\n')
+            path.write_text(head + '\n\n' + BLOCK.format(tag, '') + '\n\n' + rest)
+            print('markers added:', name)
+
+
 def self_test():
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -118,5 +130,7 @@ def self_test():
 if __name__ == '__main__':
     if '--self-test' in sys.argv:
         self_test()
+    elif '--init' in sys.argv:
+        init(Path(__file__).resolve().parents[1])
     else:
         sys.exit(run(Path(__file__).resolve().parents[1], '--check' in sys.argv))
