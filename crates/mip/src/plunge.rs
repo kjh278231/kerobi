@@ -3,7 +3,9 @@
 //! keeps only the siblings under the same ancestor. Float comparisons are the original `comisd`/`minsd`/`maxsd` selects.
 use rsolver_lp::common::Rng;
 
-/// One plunge-list entry (`W+0x3fb0`): node, est `I+0x20`, depth `I+0x2c`, excluded `I+0x41`, bound `I+0x18`.
+/// One plunge-list entry (`W+0x3fb0`): node, est `I+0x20`, depth `I+0x2c`, excluded `I+0x41`, bound `I+0x18`, and the
+/// branching record read by rules 4/7/9: variable `I+0x34` (-1 at the root), value `I+0x38`, direction byte `I+0x40`
+/// (`<` 60, `>` 62, root `N` 78; sign-extended by `movsbl`).
 #[derive(Clone, Copy, Debug)]
 pub struct Item<T> {
     pub node: T,
@@ -11,6 +13,9 @@ pub struct Item<T> {
     pub depth: i32,
     pub excluded: bool,
     pub bound: f64,
+    pub var: i32,
+    pub val: f64,
+    pub dir: i8,
 }
 
 /// Inputs of the rule step.
@@ -138,13 +143,31 @@ pub fn ancestor<T: Copy>(node: T, depth: i32, d: i32, parent: &mut impl FnMut(T)
     Some(a)
 }
 
-/// minEst and the rule body (asm 0x5b3541-0x5b44a0): adds the work and returns the picked index, or None for the
-/// rules whose score is not ported (4, 7, 9, 11; their work is added).
+/// Strict maximum over the live entries (`comisd`/`cmova` on the old best, best by `maxsd`); None scores are skipped.
+fn argmax<T>(items: &[Item<T>], mut score: impl FnMut(&Item<T>) -> Option<f64>) -> Option<usize> {
+    let mut idx = None;
+    let mut best = -1e100;
+    for (j, it) in items.iter().enumerate().filter(|(_, it)| !it.excluded) {
+        if let Some(s) = score(it) {
+            if s > best {
+                idx = Some(j);
+            }
+            best = maxsd(s, best);
+        }
+    }
+    idx
+}
+
+/// minEst and the rule body (asm 0x5b3541-0x5b44a0): adds the work and returns the picked index, or None for rule 11
+/// (score not ported; its work is added). `anc(node, depth, d)` is the body's `5fb13c` query (rules 1/6), `x(j)` reads
+/// the pool's best solution `5e6f57` (rule 4; the body has no null check), `branch_dir` is r10d (rule 9).
 pub fn pick<T: Copy + PartialEq>(
     rule: u8,
     items: &[Item<T>],
+    branch_dir: i32,
     rng: &mut Rng,
-    parent: &mut impl FnMut(T) -> Option<T>,
+    anc: &mut impl FnMut(T, i32, i32) -> Option<T>,
+    x: &mut impl FnMut(usize) -> f64,
     work: &mut f64,
 ) -> Option<usize> {
     let n = items.len();
@@ -191,20 +214,19 @@ pub fn pick<T: Copy + PartialEq>(
             *work = nf * 4.0 + *work;
         }
         1 | 6 => {
-            // the asm asks 5fb13c at every new maximum and keeps the last; it is pure, so ask once for the first deepest
-            let (mut maxd, mut top) = (0, None);
+            // 5fb13c at every new maximum (the first deepest entry's answer stays), then only for scores above best
+            let (mut maxd, mut top_anc) = (0, None);
             for (_, it) in live() {
                 if it.depth > maxd {
                     maxd = it.depth;
-                    top = Some(it);
+                    top_anc = anc(it.node, it.depth, maxd - 2);
                 }
             }
             let d = maxd - 2;
-            let top_anc = top.and_then(|it| ancestor(it.node, it.depth, d, parent));
             *work = nf * 3.0 + *work;
             for (j, it) in live() {
                 let sc = if rule == 6 { -it.est } else { (-it.depth) as f64 - (it.est - m) / 1e8 };
-                if sc > best && ancestor(it.node, it.depth, d, parent) == top_anc {
+                if sc > best && anc(it.node, it.depth, d) == top_anc {
                     idx = Some(j);
                     best = sc;
                 }
@@ -217,12 +239,26 @@ pub fn pick<T: Copy + PartialEq>(
         }
         8 | 10 => {}
         4 => {
+            // root entries (I+0x34 < 0) are skipped; '<' rounds the branching value down, anything else up
+            idx = argmax(items, |it| {
+                (it.var >= 0).then(|| {
+                    let b = if it.dir == b'<' as i8 { it.val.floor() } else { it.val.ceil() };
+                    it.depth as f64 - (x(it.var as usize) - b).abs() / 100.0
+                })
+            });
             *work = nf * 7.0 + *work;
-            return None;
         }
-        7 | 9 => {
+        7 => {
+            // the direction byte is added before the conversion
+            idx = argmax(items, |it| Some((it.dir as i32 + 10 * it.depth) as f64 - (it.est - m) / 1e8));
             *work = nf * 5.0 + *work;
-            return None;
+        }
+        9 => {
+            idx = argmax(items, |it| {
+                let base = (10 * it.depth) as f64 - (it.est - m) / 1e8;
+                Some(if branch_dir == -1 { base - it.dir as f64 } else { base + it.dir as f64 })
+            });
+            *work = nf * 5.0 + *work;
         }
         11 => {
             *work = nf * 3.0 + *work;
