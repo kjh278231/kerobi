@@ -63,7 +63,7 @@ rule = 11 if objective_step 미정 && ncols == nint
      if k > 8 && k % 19 != 0: 7 if k % 43 == 9 ; k 홀수 → (rand < 0.9 ? 3 : 12) ; 짝수 → 3
      else (M.flag_808 == 0 ? 6 : 1)
      5 if MIPFocus == 4 (ImproveStart 내부 모드)
-점수(최대 선택): 2 −est ; 3 depth − (est−minEst)/1e8 ; 12 depth + (est−minEst)/1e8 ; 9 10·depth − (est−minEst)/1e8 ± BranchDir 방향 ; 5 무작위(`a7b4d6`) ; 4·1·6·7·11은 `6e8eb3` 점프 테이블 대상(0x5b3e1e, 0x5b4274, 0x5b3bc1, 0x5b39fc, 0x5b37ca)과 조상 탐색 `5fb13c`를 objdump로 읽어 포팅한다. 3으로 대신하지 않는다. 선택 뒤 조상 깊이 계산(0x5b451b–0x5b4656)도 옮긴다
+점수(최대 선택): 2 −est ; 3 depth − (est−minEst)/1e8 ; 12 depth + (est−minEst)/1e8 ; 9 10·depth − (est−minEst)/1e8 ± BranchDir 방향 ; 5 무작위(`a7b4d6`) ; 6 첫 최심 항목의 조부모(`5fb13c`, maxd − 2)와 조상이 같은 항목 중 −est ; 1 같은 조상 제한으로 −depth − (est−minEst)/1e8 ; 4·7·11은 asm 식만 확인([M2-06c-2 §2](m2/mip_plunge_score.md#2-원본과-상태-경계)). 3으로 대신하지 않는다. 선택 뒤 조상 깊이 계산(0x5b451b–0x5b4656)도 옮긴다
 선택 뒤: VarHint가 있으면 hint와 맞는 방향의 자식 우선
 ```
 요약: 전역 best-bound, 지역 depth-first(다이빙)에 best-estimate·무작위를 소수 주기로 섞는다.
