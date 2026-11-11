@@ -1,6 +1,6 @@
 # M1-02p 부록 B: work 포인터 전파의 정적 상위 집합
 
-[M1-02p](m1_02p_work.md) §6.5의 부록이다. 하위 에이전트가 `06268b` param_2에서 asm 수준 오염 추적(디컴파일 C는 레지스터·스택 인자를 빠뜨려서 쓰지 않음)으로 만든 결과를 그대로 옮겼다(영어). 정적 분석이고 원본 실행으로 확인한 것은 "OBSERVED" 지점(캡처 69곳)뿐이다. 오래된 레지스터를 통한 과대 추정이 있을 수 있다.
+[M1-02p](m1_02p_work.md) §6.5의 부록이다. 하위 에이전트가 `06268b` param_2에서 asm 수준 오염 추적(디컴파일 C는 레지스터·스택 인자를 빠뜨려서 쓰지 않음)으로 만든 결과를 그대로 옮겼다(영어). 정적 분석이고 원본 실행으로 확인한 것은 "OBSERVED" 지점(캡처 69곳)뿐이다. 오래된 레지스터를 통한 과대 추정이 있을 수 있다. `sites.tsv`는 `bench/oracle/m1_02p/sites.tsv`, 보조 표(간선·조건·T2 목록)는 `bench/oracle/m1_02p/static/`에 있다.
 
 ## Work-counter writer propagation from dual driver 06268b (Gurobi 13.0.3, double engine)
 
@@ -19,11 +19,11 @@ Static superset of code that can write `*work` (offset 0 of the pointer passed a
 
 - T1 = reachable from `06268b` without entering a "gateway": 72 functions (about half are store-free helpers: log/alloc/time/mutex/limit-check trampolines).
 - TQ = reachable only through `12f4f3 -> 1eca78` (the quad/x87 init). `12f4f3` is `if (spx->+0x28 == 0) 534f7 else 1eca78`, and `12ed7c` (caller of 06268b) already requires `spx+0x28 == 0`, so TQ is statically reachable but contradicted by the caller's guard (dead for a double dual run). 14 extra functions.
-- T2 / gateways = functions below `534f7 -> 1e7531` (C:551, unguarded in C), `1eca78 -> 1e7531(quad)` and anything reaching `cda5b` (`1e7531` C:1741 calls it with the work pointer; `12ed7c`, `12e738`, `12e6ec`, `12e790` are the dispatch stubs it uses, i.e. a nested full simplex re-solve). `1e7531` forwards the pointer (its param 18, asm 16) to LP presolve `390989` and then to essentially the whole solver (829 further functions). Not hand-verified; machine list in `propagation_t2.tsv`. None of T2 executed in kb2/degen2 (no sites there).
+- T2 / gateways = functions below `534f7 -> 1e7531` (C:551, unguarded in C), `1eca78 -> 1e7531(quad)` and anything reaching `cda5b` (`1e7531` C:1741 calls it with the work pointer; `12ed7c`, `12e738`, `12e6ec`, `12e790` are the dispatch stubs it uses, i.e. a nested full simplex re-solve). `1e7531` forwards the pointer (its param 18, asm 16) to LP presolve `390989` and then to essentially the whole solver (829 further functions). Not hand-verified; machine list in `bench/oracle/m1_02p/static/propagation_t2.tsv`. None of T2 executed in kb2/degen2 (no sites there).
 
 ### 2. Tree (first-discovery path; asm int param idx carrying work; call-site asm address)
 
-Only the first discovery parent is shown; the full edge list is in `propagation_edges.tsv`. `[N store(s): a obs / b NOT]` = offset-0 stores of that function reached through that parameter.
+Only the first discovery parent is shown; the full edge list is in `bench/oracle/m1_02p/static/propagation_edges.tsv`. `[N store(s): a obs / b NOT]` = offset-0 stores of that function reached through that parameter.
 
 ```
 - 6268b @0xf6a00 param(asm int idx)=1
@@ -142,18 +142,18 @@ Columns: function | asm idx / C idx | C line(s) | asm store instruction address(
 | T1 | 15d2d @0xbdc10 | 24 / C26 | 108, 163, 166, 485 | 0xbe035 0xbe09d 0xbe17a 0xbe349 | - | OBSERVED | - |
 | T1 | 16b0a @0xbe6b0 | 5 / C7 | 51 | 0xbe78e | - | OBSERVED | - |
 | T1 | 17248 @0xbe7b0 | 1 / C1 | 138, 293 | - | 0xbea13 0xbec94 | NOT OBSERVED | store guard (first line): if ((dVar28 / (double)iVar15 <= 5.0) && (*(int *)(param_1 + 0x414) < 10)) {; caller 5b257 C:L2472 [if (*(int *)(param_1 + 0x3ec) == 2) {; if (-1 < iVar35) {; if ((*(int *)(param_1 + 0x290) == 0) && (-1 < *(int *)(param_1 + 0x2fc))) {] |
-| T1 | 1ca57 @0xbf5b0 | 1 / C1 | 140, 316, 321, 360, 393 | 0xbf97b 0xbfecc | 0xbf7c2 0xbf84a 0xbfbe1 | MIXED 2 obs / 3 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in propagation_guards.tsv |
-| T1 | 1bae9c @0xc0050 | 2 / C2 | 353, 415, 461, 642, 727, 778, 1037, 1044, 1048, 1260, 1591, 1714, 1969, 2206, 2253, 2469, 2506 | 0xc040b 0xc06c2 0xc0c1f 0xc1426 0xc1fde 0xc26e7 0xc275c 0xc283d 0xc2acf 0xc391a | 0xc09b8 0xc1779 0xc2117 0xc3232 0xc34f5 0xc362a 0xc3d35 | MIXED 10 obs / 7 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in propagation_guards.tsv |
+| T1 | 1ca57 @0xbf5b0 | 1 / C1 | 140, 316, 321, 360, 393 | 0xbf97b 0xbfecc | 0xbf7c2 0xbf84a 0xbfbe1 | MIXED 2 obs / 3 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in `bench/oracle/m1_02p/static/propagation_guards.tsv` |
+| T1 | 1bae9c @0xc0050 | 2 / C2 | 353, 415, 461, 642, 727, 778, 1037, 1044, 1048, 1260, 1591, 1714, 1969, 2206, 2253, 2469, 2506 | 0xc040b 0xc06c2 0xc0c1f 0xc1426 0xc1fde 0xc26e7 0xc275c 0xc283d 0xc2acf 0xc391a | 0xc09b8 0xc1779 0xc2117 0xc3232 0xc34f5 0xc362a 0xc3d35 | MIXED 10 obs / 7 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in `bench/oracle/m1_02p/static/propagation_guards.tsv` |
 | T1 | 1b7106 @0xc3f80 | 21 / C23 | 146 | 0xc4324 | - | OBSERVED | - |
 | T1 | 28c93 @0xc4fe0 | 2 / C2 | 294 | 0xc5614 | - | OBSERVED | - |
-| T1 | 1c35c5 @0xc74a0 | 5 / C5 | 438, 689, 752, 873, 1026, 1472, 1564, 1617, 1838, 2140 | 0xc7bc8 0xc7c4a 0xc82e9 0xc8b62 0xc92b8 0xc9431 0xcbca9 | 0xc856d 0xc8e73 0xca68a | MIXED 7 obs / 3 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in propagation_guards.tsv |
+| T1 | 1c35c5 @0xc74a0 | 5 / C5 | 438, 689, 752, 873, 1026, 1472, 1564, 1617, 1838, 2140 | 0xc7bc8 0xc7c4a 0xc82e9 0xc8b62 0xc92b8 0xc9431 0xcbca9 | 0xc856d 0xc8e73 0xca68a | MIXED 7 obs / 3 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in `bench/oracle/m1_02p/static/propagation_guards.tsv` |
 | T1 | 1c090a @0xcc6a0 | 2 / C2 | 197 | - | 0xccb00 | NOT OBSERVED | store guard (first line): if (param_3 != (double *)0x0) {; caller 28c93 C:L225 [else {] |
 | T1 | 2896a3 @0xccbc0 | 1 / C1 | 252, 259, 263 | 0xcce6d 0xcd04d 0xcd18c | - | OBSERVED | - |
 | T1 | 1c8477 @0xcd720 | 3 / C3 | 158, 256, 470 | 0xcdbb1 0xce1eb 0xce312 | - | OBSERVED | - |
-| T1 | 36ade @0xd4190 | 16 / C18 | 538, 762, 819, 1158, 1533, 2817, 3401, 5753, 5934 | 0xd4de9 0xd52fc 0xd85e2 0xdc7ae 0xdcb77 | 0xd5489 0xd5e35 0xd896f 0xd93db | MIXED 5 obs / 4 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in propagation_guards.tsv |
+| T1 | 36ade @0xd4190 | 16 / C18 | 538, 762, 819, 1158, 1533, 2817, 3401, 5753, 5934 | 0xd4de9 0xd52fc 0xd85e2 0xdc7ae 0xdcb77 | 0xd5489 0xd5e35 0xd896f 0xd93db | MIXED 5 obs / 4 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in `bench/oracle/m1_02p/static/propagation_guards.tsv` |
 | T1 | 48d5f @0xe45c0 | 1 / C1 | 2188 | 0xe6ffc | - | OBSERVED | - |
-| T1 | 534f7 @0xe7c50 | 2 / C2 | 1373, 1513 | 0xe84b5 | 0xea700 | MIXED 1 obs / 1 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in propagation_guards.tsv |
-| T1 | 5b257 @0xf15c0 | 1 / C1 | 418, 492, 551, 560, 596, 794, 798, 884, 987, 1006, 1040, 1065, 1176, 1208, 1317, 2029, 2546, 2615, 2633, 2669, 2674, 2729 | 0xf1be6 0xf1cfd 0xf1f32 0xf1f7d 0xf203f 0xf2075 0xf251c 0xf2964 0xf2a4c 0xf2e37 0xf3c9f 0xf3d7e 0xf3ea7 0xf3f6c 0xf406e 0xf461a 0xf48a9 0xf4f96 0xf4ff8 0xf5075 0xf51aa | 0xf5156 | MIXED 21 obs / 1 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in propagation_guards.tsv |
+| T1 | 534f7 @0xe7c50 | 2 / C2 | 1373, 1513 | 0xe84b5 | 0xea700 | MIXED 1 obs / 1 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in `bench/oracle/m1_02p/static/propagation_guards.tsv` |
+| T1 | 5b257 @0xf15c0 | 1 / C1 | 418, 492, 551, 560, 596, 794, 798, 884, 987, 1006, 1040, 1065, 1176, 1208, 1317, 2029, 2546, 2615, 2633, 2669, 2674, 2729 | 0xf1be6 0xf1cfd 0xf1f32 0xf1f7d 0xf203f 0xf2075 0xf251c 0xf2964 0xf2a4c 0xf2e37 0xf3c9f 0xf3d7e 0xf3ea7 0xf3f6c 0xf406e 0xf461a 0xf48a9 0xf4f96 0xf4ff8 0xf5075 0xf51aa | 0xf5156 | MIXED 21 obs / 1 NOT | per-store guard not resolved (C<->asm pairing ambiguous), C-line guards in `bench/oracle/m1_02p/static/propagation_guards.tsv` |
 | T1 | 8b473 @0x11f620 | 1 / C1 | 485 | 0x12010f | - | OBSERVED | - |
 | T1 | 2207de @0x120740 | 10 / C10 | 1047 | 0x1219d2 | - | OBSERVED | - |
 | T1 | 9d112 @0x125f50 | 7 / C7 | 2437 | 0x12966d | - | OBSERVED | - |
@@ -229,4 +229,4 @@ Other-offset stores on the work object (not the counter): a83b2f (asm 0x88eed0) 
 - TQ: 14 extra functions, 64 stores, 0 observed.
 - T2 (gateway closure): 829 functions, 2239 offset-0 stores (unverified), 0 observed.
 
-Side files (same directory): propagation_guards.tsv (every C store line with enclosing conditions), propagation_edges.tsv (all call edges carrying work), propagation_t2.tsv (gateway closure).
+Side files (same directory): `bench/oracle/m1_02p/static/propagation_guards.tsv` (every C store line with enclosing conditions), propagation_edges.tsv (all call edges carrying work), propagation_t2.tsv (gateway closure).

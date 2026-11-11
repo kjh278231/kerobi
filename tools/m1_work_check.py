@@ -2,6 +2,7 @@
 """M1-02p: every write to the dual simplex work double during the 06268b run (degen2, kb2) and the refactor-time fields
 spx+0x150 / 0x158 / 0x3d0. Contract: docs/m1/m1_02p_work.md section 3. Exit 0 only when every check passes.
   --self-test   also the tampers and model variants (T)
+  --write-sites rewrite bench/oracle/m1_02p/sites.tsv from the run-1 captures (the inventory S compares against)
 """
 import collections, copy, gzip, hashlib, json, os, struct, sys
 
@@ -197,6 +198,37 @@ def groups(cap):
     return out
 
 
+def write_sites(caps):
+    c, calls = collections.defaultdict(collections.Counter), collections.defaultdict(set)
+    for name, cap in caps.items():
+        for e in cap['events']:
+            if e['type'] == 'W':
+                c[(e['pc'], e['f'])][name] += 1
+                calls[(e['pc'], e['f'])].add(e['c'])
+    with open(os.path.join(D, 'sites.tsv'), 'w') as o:
+        o.write('pc\tfn_off\tfn\tdegen2\tkb2\tcall_sites\n')
+        for k in sorted(c, key=lambda k: (NAMES[k[1]], k[0])):
+            o.write('%#x\t%#x\t%s\t%d\t%d\t%s\n' % (k[0], k[1], NAMES[k[1]], c[k]['degen2'], c[k]['kb2'],
+                                                  ','.join('%#x' % x for x in sorted(calls[k]))))
+
+
+def units(cap):
+    """G (information): per write site, increments that are not a multiple of 0.5 * x148 (the LU solve folds)."""
+    n, tot, prev = collections.Counter(), collections.Counter(), None
+    x = F(next(e for e in cap['events'] if e['type'] == 'D')['x148'])
+    for e in cap['events']:
+        if e['type'] == 'E':
+            prev = F(e['v'])
+        elif e['type'] == 'W':
+            v = F(e['v'])
+            a = 2.0 * (v - prev) / x
+            key = NAMES.get(e['f'], hex(e['f']))
+            tot[key] += 1
+            n[key] += abs(a - round(a)) > 1e-6 * max(1.0, abs(a))
+            prev = v
+    return {k: (v, tot[k]) for k, v in n.items() if v}
+
+
 def main():
     st = '--self-test' in sys.argv
     caps, ups, nz, bad = {}, {}, {}, []
@@ -211,6 +243,8 @@ def main():
         if sha(UP[name]) != UP_SHA[name]:
             bad.append(f'M {os.path.basename(UP[name])}: sha {sha(UP[name])[:12]}')
         ups[name], nz[name] = load(UP[name]), dims(MODEL[name])
+    if '--write-sites' in sys.argv:
+        write_sites(caps)
     table = sites()
     b, rep = check(caps, ups, nz, table)
     bad += b
@@ -219,6 +253,7 @@ def main():
         for seg, acc in groups(caps[name]):
             top = ', '.join(f'{k} {v:.0f}' for k, v in acc.most_common(6))
             print(f'G {name} from pivot {seg[0]} (reason {seg[1]}): total {sum(acc.values()):.0f}: {top}')
+        print(f'G {name} increments not a multiple of 0.5*x148 (count, writes): {units(caps[name])}')
     if st:
         def tamper(desc, f, var=None):
             c2 = copy.deepcopy(caps)
