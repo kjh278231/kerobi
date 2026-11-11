@@ -1,0 +1,65 @@
+warning: unnecessary parentheses around block return value
+  --> crates/lp/src/work.rs:71:54
+   |
+71 | ...0.0 { d } else { (d + self.w158) };
+   |                     ^             ^
+   |
+   = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+   |
+71 -         self.w158 = if self.w158 <= 0.0 { d } else { (d + self.w158) };
+71 +         self.w158 = if self.w158 <= 0.0 { d } else { d + self.w158 };
+   |
+
+kb2: refactor 1 basis = original as a set, position order differs (Rust start.rs renumbers before it)
+kb2: N 05b257 entries 40, A aligned refactors 5/5, K terms 42 (general 37), W stores 507 {'0xe84b9': 1, '0xd4ded': 5, '0xd5300': 5, '0xd85e6': 5, '0xdc7b2': 5, '0xf48ae': 5, '0xf4f9b': 5, '0xf51af': 5, '0xc142b': 4, '0xc391f': 1, '0xc4329': 1, '0xbf981': 4, '0xf2044': 33, '0xf2521': 35, '0xf2a51': 35, '0xf2e3c': 35, '0xc0410': 35, '0xc06c7': 5, '0xf4073': 5, '0xf461f': 3, '0xbe793': 3, '0xc1fe3': 3, '0xc0c24': 30, '0xf1beb': 25, '0xf1d02': 19, '0xf3f71': 63, '0xf3ca4': 25, '0xf3d83': 25, '0xf1f82': 53, '0xf207a': 2, '0xf2969': 19, '0xf4ffd': 3, '0xf507a': 3, '0xf1f37': 1, '0xf3eac': 1}, F 0x158 5
+degen2: refactor 1 basis = original as a set, position order differs (Rust start.rs renumbers before it)
+degen2: alignment ends at refactor 10 (head: Rust iteration 359, original k 356)
+degen2: N 05b257 entries 637, A aligned refactors 9/16, K terms 157 (general 113), W stores 4118 {'0xe84b9': 1, '0xd4ded': 9, '0xd5300': 9, '0xd85e6': 9, '0xdc7b2': 9, '0xdcb7b': 9, '0xf48ae': 9, '0x1327dc': 8, '0x1329c1': 9, '0xf4f9b': 9, '0xf51af': 9, '0xc142b': 9, '0xc391f': 1, '0xc4329': 7, '0xbfed2': 4, '0xf2044': 337, '0xf2521': 348, '0xf2a51': 283, '0xf2e3c': 348, '0xc0410': 348, '0xc06c7': 272, '0xc26ec': 51, '0xc2761': 51, '0xc2842': 51, '0xc2ad4': 51, '0xf1d02': 203, '0xf3ca4': 237, '0xf3d83': 237, '0xf1beb': 177, '0xf3f71': 266, '0xf1f37': 79, '0xf207a': 10, '0xf461f': 7, '0xbe793': 7, '0xf1f82': 349, '0xf4ffd': 6, '0xf507a': 6, '0xf4073': 41, '0xf2969': 140, '0xbf981': 5, '0xc1fe3': 2, '0xc0c24': 76, '0xf3eac': 18, '0x1329e6': 1}, F 0x158 9, W range k < 356
+T t_bin: rejected (M kb2: binary hash / ok / errors)
+T t_empty: rejected (N degen2: 05b257 entry 0: new None 02p (0, 1, '40eb94f99999999a'))
+T t_nof: rejected (A kb2: 0 aligned refactors, need 5)
+T t_nwork: rejected (N degen2: 05b257 entry 50: new (50, 0, '0000000000000000') 02p (50, 0, '4119d327a3613922'))
+T t_head: rejected (A degen2: 4 aligned refactors, need 9)
+T t_head1: rejected (A kb2: 0 aligned refactors, need 5)
+T t_term: rejected (K degen2 refactor 7 term 31: original ('r', 4, 0, 0) Rust ('r', 3, 0, 0))
+T t_add: rejected (W degen2: store 1628 k 167 (Rust 167) site 0xc142b: original prev 412ea5a9831b44ae + Rust [1777.0000000000002] x 1.3 = 412eb7b5b64e77e1, original 412eb7b31cb4de48 (amount 1776.0000000000357 x 1.3))
+T t_158: rejected (F kb2 refactor 4: 0x158 Rust 40a9c0f33333332c original 40a9c0f33333332d)
+T t_site: rejected (W degen2: store 3550 site Rust 0x1327dc k 316 original 0x1329e6 k 316)
+T t_wval: rejected (W kb2: store 283 k 26 (Rust 26) site 0xd85e6: original prev 40f2911d45d1745f + Rust [788.0] x 1.3 = 40f2d123ac37dac5, original 40f2d123ac37dac4 (amount 787.9999999999843 x 1.3))
+T t_ftadd: rejected (W kb2: store 124 k 14 (Rust 14) site 0xf1f82: original prev 40e0af2a6666666a + Rust [1.0] x 1.3 = 40e0af5400000004, original 40e0af2a6666666a (amount 0.0 x 1.3))
+T t_ftdrop: rejected (W degen2: store 1157 site Rust 0xf2e3c k 134 original 0xf3d83 k 134)
+T t_461f: rejected (W degen2: store 661 site Rust 0xf48ae k 82 original 0xf461f k 82)
+T t_wft: rejected (W kb2: store 130 k 14 (Rust 14) site 0xf1f82: original prev 40e0afa733333338 + Rust [1.0] x 1.3 = 40e0afd0ccccccd2, original 40e0afd0ccccccd3 (amount 1.0000000000078355 x 1.3))
+T t_k: rejected (W kb2: store 160 k 16 (Rust 17) site 0xf2e3c: original prev 40e55b46c37dac3c + Rust [90.0] x 1.3 = 40e569e6c37dac3c, original 40e569e6c37dac3c (amount 90.0 x 1.3))
+T t_c0410: rejected (W kb2: store 68 k 8 (Rust 8) site 0xc0410: original prev 40d6c9d904a7904e + Rust [30.999999999999996] x 1.3 = 40d6d3ec37dac381, original 40d6d39904a7904e (amount 30.0 x 1.3))
+T t_c142b: rejected (W degen2: store 670 site Rust 0xc4329 k 82 original 0xc142b k 82)
+T t_mode: rejected (W kb2: store 17 site Rust 0xc0c24 k 1 original 0xc06c7 k 1)
+T t_wc1fe3: rejected (W kb2: store 56 k 6 (Rust 6) site 0xc1fe3: original prev 40d39ea99999999b + Rust [271.0] x 1.3 = 40d3f6bcccccccce, original 40d3f6bccccccccf (amount 271.0000000000022 x 1.3))
+T t_be793: rejected (W degen2: store 662 site Rust 0xf48ae k 82 original 0xbe793 k 82)
+R d4ded without 100: rejected (W kb2: store 1 k 0 (Rust 0) site 0xd4ded: original prev 40b066cccccccccd + Rust [230.0] x 1.3 = 40b191cccccccccd, original 40b213cccccccccd (amount 330.0 x 1.3))
+R general term max: rejected (W kb2: store 145 k 15 (Rust 15) site 0xd85e6: original prev 40e2ca5733333339 + Rust [164.0] x 1.3 = 40e2e4fd9999999f, original 40e2e01d9999999f (amount 133.99999999999775 x 1.3))
+R 0x158 without 0.5: rejected (F kb2 refactor 2: 0x158 Rust 40aa58666666666a original 409a58666666666a)
+R 9e60b site swapped: rejected (W degen2: store 7 site Rust 0x1329e6 k 0 original 0x1327dc k 0)
+R f507a store test: rejected (W kb2: store 7 site Rust 0xf507a k 0 original 0xf51af k 0)
+R q without U: rejected (W kb2: store 143 k 15 (Rust 15) site 0xd4ded: original prev 40e1d54a6666666c + Rust [528.0] x 1.3 = 40e22b1733333339, original 40e234d733333339 (amount 588.0000000000011 x 1.3))
+R f1f82 row length: rejected (W kb2: store 123 k 14 (Rust 14) site 0xf1f82: original prev 40e0af2a6666666a + Rust [3.0] x 1.3 = 40e0afa733333337, original 40e0af2a6666666a (amount 0.0 x 1.3))
+R f2044 test <=: rejected (W degen2: store 837 site Rust 0xf2044 k 107 original 0xf2521 k 107)
+R section start swapped: rejected (W kb2: store 104 k 12 (Rust 12) site 0xf3f71: original prev 40dcfa519999999f + Rust [10.0] x 1.3 = 40dcfd919999999f, original 40dcfd3e6666666c (amount 9.00000000000056 x 1.3))
+R f3ca4 without 5: rejected (W kb2: store 243 k 23 (Rust 23) site 0xf3ca4: original prev 40eedde64129e416 + Rust [6.0] x 1.3 = 40eededfdac37db0, original 40eedfafdac37db0 (amount 11.000000000002238 x 1.3))
+R f3d83 k + 1: rejected (W kb2: store 84 k 10 (Rust 10) site 0xf3d83: original prev 40d9399e6666666a + Rust [4.0] x 1.3 = 40d93aeb33333337, original 40d93a44ccccccd0 (amount 1.9999999999988805 x 1.3))
+R f461f k + 1: rejected (W kb2: store 50 k 6 (Rust 6) site 0xf461f: original prev 40d19caccccccccf + Rust [24.0] x 1.3 = 40d1a4799999999c, original 40d1a3d333333335 (amount 21.99999999999888 x 1.3))
+R f2a51 with local_80 = 0: rejected (W degen2: store 86 site Rust 0xf2a51 k 9 original 0xf3ca4 k 9)
+R f1beb association: NOT REJECTED
+R f1f37 without local_40 test: rejected (W kb2: store 377 site Rust 0xf1f37 k 32 original 0xf1f82 k 32)
+R c0410 N with the pivot: rejected (W kb2: store 16 k 1 (Rust 1) site 0xc0410: original prev 40c3bf82e8ba2e8d + Rust [30.0] x 1.3 = 40c3d302e8ba2e8d, original 40c3d10fb586fb5a (amount 27.00000000000028 x 1.3))
+R x_B site mode test flipped: rejected (W kb2: store 17 site Rust 0xc0c24 k 1 original 0xc06c7 k 1)
+R c142b S with zero bounds: rejected (W kb2: store 8 k 0 (Rust 0) site 0xc142b: original prev 40bc34a666666668 + Rust [718.0] x 1.3 = 40bfda0cccccccce, original 40bd16d99999999b (amount 173.99999999999986 x 1.3))
+R c142b before the perturbation: NOT REJECTED
+R c1fe3 nInf = listed: rejected (W kb2: store 155 k 15 (Rust 15) site 0xc1fe3: original prev 40e45768ccccccd2 + Rust [235.0] x 1.3 = 40e47d98ccccccd2, original 40e47e3f33333338 (amount 238.99999999999775 x 1.3))
+R bf981 flag 0: rejected (W kb2: store 156 k 15 (Rust 15) site 0xbf981: original prev 40e47e3f33333338 + Rust [168.0] x 1.3 = 40e4998c00000005, original 40e4a7326666666b (amount 251.99999999999886 x 1.3))
+R c2761 k + s: rejected (W degen2: store 22 k 1 (Rust 1) site 0xc2761: original prev 40ff7c7521f10b91 + Rust [476.00000000000006] x 1.3 = 40ffa321eebdd85e, original 40ffb2bb885771f7 (amount 667.9999999999955 x 1.3))
+R c26ec stored with an empty old list: NOT REJECTED
+R be793 association: NOT REJECTED
+ACCEPTANCE PASS (+ self-test)
+RC=0
