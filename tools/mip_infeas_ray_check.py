@@ -24,7 +24,7 @@ VARIANTS = {
     'sign': 'ok',          # s = +1 above the upper bound
     'noflipj': 'flip_j',   # ignore flip of the basic variable
     'nobndflip': 'flip_k', # do not negate bnd of flipped columns
-    'nomin1': 'scale_lt1', # divide by the scale itself, not min(1, scale)
+    'nomin1': 'min1_flip', # divide by the scale itself, not min(1, scale): entries whose tol / 1e7 test changes
     'tol0': 'ray_small',   # keep entries with |alpha| <= tol
     'basic1': 'ok',        # basic entry keeps f*alpha instead of 1
     'norm_all': 'ok',      # norm over n+m instead of n
@@ -33,7 +33,7 @@ VARIANTS = {
     'act_swap': 'ok',      # lb/ub choice swapped in the activity
     'act_inf': 'ub_inf',   # infinite ub kept instead of 1e100
     'age_first': 'age_multi',  # first cut value instead of the max
-    'age_all': 'age_zero',     # max also over zero ray entries
+    'age_all': 'age_zero',     # max also over zero ray entries: calls whose max changes
     'f6_100': 'ok',        # fail 6 threshold 100 instead of 1000
     'work_bnd3': 'colscale',   # bnd fill work 3 per column even with column scales
     'tiny200': 'fm2',      # no 1e-200 start for flip mode 2
@@ -197,9 +197,12 @@ def replay(call, arrays, V=frozenset(), c=None):
                     sc = R[k - n] if R else 1.0
                 if sc < 1.0:
                     c['scale_lt1'] += 1
+                d_raw = abs(a) / sc
                 if 'nomin1' not in V and 1.0 <= sc:
                     sc = 1.0
                 d = abs(a) / sc
+                if (TOL < d) != (TOL < d_raw) or (d > 1e7) != (d_raw > 1e7):
+                    c['min1_flip'] += 1
                 if k >= n and d != 0.0:
                     need(qi < len(qs) and qs[qi]['row'] == k - n, f'7889ec call {qi} for row {k - n} missing')
                     c['q'] += 1
@@ -292,10 +295,11 @@ def replay(call, arrays, V=frozenset(), c=None):
         mx = 0
         if m > m0:
             nzc = 0
+            mx_all = 0
             for t in range(m - m0):
+                if cut[t] is not None and cut[t] > mx_all:
+                    mx_all = cut[t]
                 if abs(ray[n + m0 + t]) > 1e-10 or 'age_all' in V:
-                    if abs(ray[n + m0 + t]) <= 1e-10:
-                        c['age_zero'] += 1
                     nzc += 1
                     need(cut[t] is not None, f'cut {t} unreadable')
                     if 'age_first' in V:
@@ -305,6 +309,8 @@ def replay(call, arrays, V=frozenset(), c=None):
                         mx = cut[t]
             if nzc > 1:
                 c['age_multi'] += 1
+            if 'age_all' not in V and mx_all != mx:
+                c['age_zero'] += 1
             if nzc:
                 c['age_cut'] += 1
             cnt = m

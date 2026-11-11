@@ -1,0 +1,42 @@
+{
+ "task": "M2-06f-4",
+ "schema": 1,
+ "tool": "tools/mip_infeas_ray.js",
+ "tool_sha256": "78e4b0ff90754f71e71f4c7fd40543589b0aa69a22d69632457c088fa23fc96c",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "params": {
+  "Threads": 1,
+  "Seed": 0,
+  "LogToConsole": 0,
+  "NodeLimit": 2000
+ },
+ "models": {
+  "markshare_4_0": "1a1feb04f5637db9f69be53bd6224fcd9fe5b8d750870d9b2002b535d25f4353",
+  "pk1": "6c64530538b254a8ae648f8f8f188847366ae52da560fdec0ad290c642973ba0",
+  "neos-860300": "d1b2a0a0500834ef6e3a97a6dbfc17c48226c6619056edfedf990e4d83c01504",
+  "tr12-30": "94f8cf2fd2fc920ed6ea2452b0755aeec110eb8404716554485c25e7a1e06a3d",
+  "fhnw-binpack4-4": "cc1774a71077208f5c26d2340e813519730999c0f2733610a3b0aa0c5e2871fb",
+  "neos5": "2888e9aeb10a4cf16d3b9ad221302fd3de815ce1454b31e660ebd060589c1072"
+ },
+ "model_paths": "../re/bench/data/miplib/<case>.mps.gz",
+ "files": {
+  "markshare_4_0_1.json.gz": "d7fc3adcb71f2de7591d6804bf7795719909e0e2f7611094843a1fdb8e0549ce",
+  "markshare_4_0_2.json.gz": "d7fc3adcb71f2de7591d6804bf7795719909e0e2f7611094843a1fdb8e0549ce",
+  "markshare_4_0_3.json.gz": "d7fc3adcb71f2de7591d6804bf7795719909e0e2f7611094843a1fdb8e0549ce",
+  "pk1_1.json.gz": "bf47fdf38abf41db57041854f8185e5642d5c9fbdcd9dad681c685dc92323c71",
+  "pk1_2.json.gz": "bf47fdf38abf41db57041854f8185e5642d5c9fbdcd9dad681c685dc92323c71",
+  "pk1_3.json.gz": "bf47fdf38abf41db57041854f8185e5642d5c9fbdcd9dad681c685dc92323c71",
+  "neos-860300_1.json.gz": "6b5176ccb7566ba1a849a2d8d0c46f2dfe69cd3794900614fc6f051c402638b3",
+  "neos-860300_2.json.gz": "6b5176ccb7566ba1a849a2d8d0c46f2dfe69cd3794900614fc6f051c402638b3",
+  "neos-860300_3.json.gz": "6b5176ccb7566ba1a849a2d8d0c46f2dfe69cd3794900614fc6f051c402638b3",
+  "tr12-30_1.json.gz": "98f72c28588234be282c5fa6acca8fcb8f7b8b6809f98e475b875aca3349e82d",
+  "tr12-30_2.json.gz": "98f72c28588234be282c5fa6acca8fcb8f7b8b6809f98e475b875aca3349e82d",
+  "tr12-30_3.json.gz": "98f72c28588234be282c5fa6acca8fcb8f7b8b6809f98e475b875aca3349e82d",
+  "fhnw-binpack4-4_1.json.gz": "0b1f8277d7d30dd4b93c860abe0ad82d3fcf1af70c662b39c5b4d243ab4709aa",
+  "fhnw-binpack4-4_2.json.gz": "0b1f8277d7d30dd4b93c860abe0ad82d3fcf1af70c662b39c5b4d243ab4709aa",
+  "fhnw-binpack4-4_3.json.gz": "0b1f8277d7d30dd4b93c860abe0ad82d3fcf1af70c662b39c5b4d243ab4709aa",
+  "neos5_1.json.gz": "125bf75c2b01050361da746595f003e7bdc258bd37ec61cd05eae4c41ac80254",
+  "neos5_2.json.gz": "125bf75c2b01050361da746595f003e7bdc258bd37ec61cd05eae4c41ac80254",
+  "neos5_3.json.gz": "125bf75c2b01050361da746595f003e7bdc258bd37ec61cd05eae4c41ac80254"
+ }
+}
