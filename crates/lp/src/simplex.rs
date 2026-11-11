@@ -1859,7 +1859,7 @@ impl<'a> Engine<'a> {
         (0..self.n + self.m).map(|j| if self.vstat[j] >= 0 { self.xb[self.vstat[j] as usize] } else { self.x_nonbasic(j) }).collect()
     }
 
-    /// M1-02k probe after the k-th e_r BTRAN: a line with r, LU+0x108 + 0x110 and the paths, then for each spec line
+    /// M1-02k probe after the k-th e_r BTRAN: a line with r, the row eta count, LU+0x108 + 0x110 and the paths, then for each spec line
     /// `k<TAB>pos,bits;pos,bits;…` (bits: u64 hex) the output with the natural, forced sparse and forced dense Uᵀ.
     /// Appends JSON lines to `<spec>.out`.
     fn btran_probe(&mut self, r: usize, dense: bool) {
@@ -1875,7 +1875,7 @@ impl<'a> Engine<'a> {
         let lu = &self.lu;
         let force = lu.urow_len(r) > 0;
         let mut out =
-            format!("{{\"k\":{kk},\"r\":{r},\"d\":{},\"ud\":{},\"od\":{dense}}}\n", bits(lu.dsum()), !force && lu.ut_dense(1));
+            format!("{{\"k\":{kk},\"r\":{r},\"e\":{},\"d\":{},\"d108\":{},\"t\":{},\"ud\":{},\"od\":{dense}}}\n", lu.n_etas(), bits(lu.dsum()), bits(lu.d108()), lu.prefix_len(), !force && lu.ut_dense(1));
         let text = std::fs::read_to_string(&spec).unwrap_or_default();
         for (i, line) in text.lines().filter(|l| l.split('\t').next() == Some(&kk.to_string())).enumerate() {
             let x: Vec<(usize, f64)> = line.split('\t').nth(1).unwrap_or("").split(';').filter(|s| !s.is_empty()).map(|e| {
