@@ -154,6 +154,8 @@
 
 ## Rust 비용 계측
 
+- **work만 복원하는 작업에서 반환 목록을 얻으려고 수치 커널을 바꾸면 전체 경로가 달라질 수 있다.** M1-02v에서 bound flip의 dense L 풀이를 sparse L로 바꾸니 kb2·degen2 저장 비교는 통과했지만 maros·perold 반복 수가 달라졌다. 기존 수치 결과를 보존하고 반환 표현 판별용 L/R 목록 계산을 분리했다. 커널과 표현의 통합은 해당 커널 검증 작업에서 수행한다. (M1-02v, [실패와 수정](../m1/m1_02v_iteration_work.md#6-실행-결과))
+
 - **이 기계(WSL2)에는 perf·valgrind가 없다. Rust 구간 비용은 `Instant` 누적을 넣은 임시 패치로 잰다.** 계측 없는 실행의 상태·노드·반복·경계 비트와 같은지 먼저 확인하고, 시간 종료 대신 NodeLimit로 같은 일을 시킨다. (M2-10a, [기록](../m2/mip_bnb_node_cost.md#6-실행-결과))
 - **다른 영역 크레이트(`crates/lp`)를 고치지 않고 내부 단계를 나눠 재려면 래퍼 함수를 pub 조각으로 재생하고 매 호출 결과를 비트 비교로 `assert`한다.** `solve_model_run`은 `Spx::new`·`Engine::new`·`solve`/`solve_warm`·`Spx::unscaled`·`resolve_unscaled`로 재생돼 status·iter·obj·x가 비트까지 같았다. `Engine::new`는 `trace_on`이 기본 true이므로 꺼야 같은 일을 한다. (M2-10a)
 - **`cargo test`의 작업 디렉터리는 크레이트 폴더다.** 하네스에 넘기는 모델 경로는 절대경로로 만든다. 상대경로면 첫 실행이 파일 없음으로 바로 실패한다. (M2-10a)
@@ -165,5 +167,3 @@
 
 - **GRBgetdblattr는 PLT 주소 `0xbcc70` 대신 실제 export `0x7a3820`에 훅을 붙인다.** PLT 계측은 DONE 전 프로세스 종료를 일으켰고 export 훅으로 해결했다. 실패 캡처 `explore_pk1_final.json.gz`를 보존했다. (M2-06g-2, [§6](../m2/mip_sb_restore.md#6-실행-결과))
 - **bound 복원 검사에 실제 분기 bound 적용도 연결한다.** solve 전후와 최종 bound만 비교하면 후보 bound를 전부 부모 값으로 바꾼 기록이 통과한다. restore의 열·방향과 solve 진입 bound를 연결해 선택 열이 엄격히 조여졌는지 검사한다. 독립 검토에서 재현·수정했다. (M2-06g-2, [§7](../m2/mip_sb_restore.md#7-판정과-인수인계))
-
-- **work만 복원하는 작업에서 반환 목록을 얻으려고 수치 커널을 바꾸면 전체 경로가 달라질 수 있다.** M1-02v에서 bound flip의 dense L 풀이를 sparse L로 바꾸니 kb2·degen2 저장 비교는 통과했지만 maros·perold 반복 수가 달라졌다. 기존 수치 결과를 보존하고 반환 표현 판별용 L/R 목록 계산을 분리했다. 커널과 표현의 통합은 해당 커널 검증 작업에서 수행한다. (M1-02v, [실패와 수정](../m1/m1_02v_iteration_work.md#6-실행-결과))

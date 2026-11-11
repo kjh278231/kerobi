@@ -1,0 +1,28 @@
+kb2: refactor 1 basis = original as a set, position order differs (Rust start.rs renumbers before it)
+kb2: N 05b257 entries 40, A aligned refactors 5/5, K terms 42 (general 37), W stores 758 {'0xe84b9': 1, '0xd4ded': 5, '0xd5300': 5, '0xd85e6': 5, '0xdc7b2': 5, '0xf48ae': 5, '0xf4f9b': 5, '0xf51af': 5, '0xc142b': 4, '0xc391f': 1, '0xc4329': 1, '0xbf981': 4, '0x135e92': 38, '0xc7bcd': 38, '0xc7c4f': 38, '0xc82ee': 33, '0xc8b67': 33, '0xf2044': 33, '0xf2521': 35, '0xf2a51': 35, '0xf2e3c': 35, '0xc0410': 35, '0xc06c7': 5, '0xbe039': 2, '0xbe0a1': 2, '0xbe17e': 2, '0xbe34d': 2, '0xf4073': 5, '0xcbcae': 3, '0xf461f': 3, '0xbe793': 3, '0xc1fe3': 3, '0xcce72': 29, '0xc0c24': 30, '0xf1beb': 25, '0xf1d02': 19, '0xf3f71': 63, '0xf3ca4': 25, '0xf3d83': 25, '0xf1f82': 53, '0xf207a': 2, '0xf2969': 19, '0xf4ffd': 3, '0xf507a': 3, '0xc92bd': 18, '0xc9436': 1, '0xf1f37': 1, '0xf3eac': 1, '0xc561a': 1, '0xcdbb5': 1, '0xce316': 1, '0xce1ef': 1, '0xcd052': 4, '0xcd191': 4}, F 0x158 5
+degen2: refactor 1 basis = original as a set, position order differs (Rust start.rs renumbers before it)
+degen2: alignment ends at refactor 10 (head: Rust iteration 359, original k 356)
+degen2: N 05b257 entries 637, A aligned refactors 9/16, K terms 157 (general 113), W stores 6459 {'0xe84b9': 1, '0xd4ded': 9, '0xd5300': 9, '0xd85e6': 9, '0xdc7b2': 9, '0xdcb7b': 9, '0xf48ae': 9, '0x1327dc': 8, '0x1329c1': 9, '0xf4f9b': 9, '0xf51af': 9, '0xc142b': 9, '0xc391f': 1, '0xc4329': 7, '0xbfed2': 4, '0x135e92': 356, '0xc7bcd': 356, '0xc7c4f': 356, '0xc82ee': 333, '0xc8b67': 333, '0xc561a': 97, '0xcdbb5': 97, '0xce316': 3, '0xce1ef': 97, '0xf2044': 337, '0xf2521': 348, '0xf2a51': 283, '0xf2e3c': 348, '0xc0410': 348, '0xc06c7': 272, '0xc26ec': 51, '0xc2761': 51, '0xc2842': 51, '0xc2ad4': 51, '0xcbcae': 46, '0xf1d02': 203, '0xf3ca4': 237, '0xf3d83': 237, '0xf1beb': 177, '0xf3f71': 266, '0xf1f37': 79, '0xf207a': 10, '0xf461f': 7, '0xbe793': 7, '0xf1f82': 349, '0xf4ffd': 6, '0xf507a': 6, '0xf4073': 41, '0xf2969': 140, '0xbe039': 2, '0xbe0a1': 2, '0xbe17e': 2, '0xbe34d': 2, '0xbf981': 5, '0xc92bd': 181, '0xc1fe3': 2, '0xcce72': 78, '0xc0c24': 76, '0xf3eac': 18, '0x1329e6': 1}, F 0x158 9, W range k < 356
+R d4ded without 100: rejected (W kb2: store 1 k 0 (Rust 0) site 0xd4ded: original prev 40b066cccccccccd + Rust [230.0] x 1.3 = 40b191cccccccccd, original 40b213cccccccccd (amount 330.0 x 1.3))
+R general term max: rejected (W kb2: store 238 k 15 (Rust 15) site 0xd85e6: original prev 40e2ca5733333339 + Rust [164.0] x 1.3 = 40e2e4fd9999999f, original 40e2e01d9999999f (amount 133.99999999999775 x 1.3))
+warning: unnecessary parentheses around block return value
+  --> crates/lp/src/work.rs:71:54
+   |
+71 |         self.w158 = if self.w158 <= 0.0 { d } else { (d + self.w158) };
+   |                                                      ^             ^
+   |
+   = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+   |
+71 -         self.w158 = if self.w158 <= 0.0 { d } else { (d + self.w158) };
+71 +         self.w158 = if self.w158 <= 0.0 { d } else { d + self.w158 };
+   |
+
+R 0x158 without 0.5: rejected (F kb2 refactor 2: 0x158 Rust 40aa58666666666a original 409a58666666666a)
+R 9e60b site swapped: rejected (W degen2: store 7 site Rust 0x1329e6 k 0 original 0x1327dc k 0)
+R f507a store test: rejected (W kb2: store 7 site Rust 0xf507a k 0 original 0xf51af k 0)
+R q without U: rejected (W kb2: store 236 k 15 (Rust 15) site 0xd4ded: original prev 40e1d54a6666666c + Rust [528.0] x 1.3 = 40e22b1733333339, original 40e234d733333339 (amount 588.0000000000011 x 1.3))
+R f1f82 row length: rejected (W kb2: store 210 k 14 (Rust 14) site 0xf1f82: original prev 40e0af2a6666666a + Rust [3.0] x 1.3 = 40e0afa733333337, original 40e0af2a6666666a (amount 0.0 x 1.3))
+R f2044 test <=: rejected (W degen2: store 1689 site Rust 0xf2044 k 107 original 0xf2521 k 107)
+R section start swapped: rejected (W kb2: store 179 k 12 (Rust 12) site 0xf3f71: original prev 40dcfa519999999f + Rust [10.0] x 1.3 = 40dcfd919999999f, original 40dcfd3e6666666c (amount 9.00000000000056 x 1.3))
+R f3ca4 without 5: rejected (W kb2: store 394 k 23 (Rust 23) site 0xf3ca4: original prev 40eedde64129e416 + Rust [6.0] x 1.3 = 40eededfdac37db0, original 40eedfafdac37db0 (amount 11.000000000002238 x 1.3))

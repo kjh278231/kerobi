@@ -1,0 +1,34 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.12, pytest-9.2.0, pluggy-1.7.0
+rootdir: /home/sds/workspace/gurobi-sandbox/rsolver-m1-02v
+configfile: pyproject.toml
+testpaths: tests
+collected 657 items
+
+tests/test_barrier.py ..                                                 [  0%]
+tests/test_bnb.py ...................................................... [  8%]
+........................................................................ [ 19%]
+........................................................................ [ 30%]
+........................................................................ [ 41%]
+........................................................................ [ 52%]
+...............................................................          [ 61%]
+tests/test_dc.py ....                                                    [ 62%]
+tests/test_driver.py ........                                            [ 63%]
+tests/test_header.py ................................................... [ 71%]
+...................................................                      [ 79%]
+tests/test_max.py ..................                                     [ 82%]
+tests/test_mip_root.py ................................                  [ 86%]
+tests/test_model.py ...                                                  [ 87%]
+tests/test_outer_b.py ..........................                         [ 91%]
+tests/test_params.py .                                                   [ 91%]
+tests/test_pdhg.py ..                                                    [ 91%]
+tests/test_postsolve.py .......                                          [ 92%]
+tests/test_presolve.py .......                                           [ 93%]
+tests/test_presolve_mip.py ......                                        [ 94%]
+tests/test_read.py ..                                                    [ 95%]
+tests/test_scaling.py ....                                               [ 95%]
+tests/test_status.py ............                                        [ 97%]
+tests/test_symmetry.py .....                                             [ 98%]
+tests/test_uncrush159.py ...........                                     [100%]
+
+======================= 657 passed in 187.75s (0:03:07) ========================

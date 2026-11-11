@@ -1,0 +1,94 @@
+{
+  "task": "M1-02v",
+  "source_revision": "d4c2258b73f709b5bb7f4c2d8517e778518ec1f0",
+  "baseline": "27bbda9",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "original_runs_this_task": 0,
+  "reused_captures": {
+    "m1_02p": {
+      "kb2": "f4dfd4ba946a43b13e90cf73cd235b33d70932fe877c7caae2d567f3480e168b",
+      "degen2": "c476371aeb7317374cde3a43fc5bccb1299d0b788fe10f7cba67bd716f4d4401"
+    },
+    "m1_02q": {
+      "kb2": "61dc54471404280e5eb53c10d3442c1873d770277ce40a8e334c401e25c9890d",
+      "degen2": "b0dd087a2a1ad67d828b189c600dd41ea2dd0fe2b406c6bb4b9dd3ba20ec8b73"
+    }
+  },
+  "environment": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.13.12 (main, Mar 20 2026, 00:34:08) [Clang 22.1.1 ]",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+  },
+  "scope": {
+    "kb2_stores": 758,
+    "degen2_stores_before_pivot_356": 6459,
+    "new_sites": 19,
+    "new_stores": 2592,
+    "comparison": "original previous work plus Rust amounts, site/order/k and value bits"
+  },
+  "tampers": {
+    "rejected": 28
+  },
+  "mutants": {
+    "completed": 38,
+    "rejected": 34,
+    "survived": [
+      "f1beb association",
+      "c142b before the perturbation",
+      "c26ec stored with an empty old list",
+      "be793 association"
+    ],
+    "new_rejected": 14,
+    "resumed_after": "c2761 target duplicated by CHUZR; first 21 plus remaining 17"
+  },
+  "regression": {
+    "cargo_workspace_passed": 125,
+    "cargo_workspace_ignored": 11,
+    "pytest_passed": 657,
+    "pathcmp_byte_identical_models": 64,
+    "lp_rows_equal": 273,
+    "clippy": "PASS"
+  },
+  "sources": {
+    "crates/lp/src/bfrt.rs": "f0b70f6119f528474806d0d54f681c01ce7ee805a62abc475f9c0f2d530dfd58",
+    "crates/lp/src/lu.rs": "7fb8059152878642529e5dfa9c7aa52862fcbd87399535fa3ea5bc26626c2b5d",
+    "crates/lp/src/pricing.rs": "9bd45b70f1c75599a6cf30e0173586bc21f8feed58dd9a0b18f0a3f87d6088ee",
+    "crates/lp/src/simplex.rs": "e0d91876500e50ce0f669ecaeb549cb74e70e8497c2721ed897ace0b3905d832",
+    "crates/lp/src/work.rs": "3a8b02c4eb53c6d634ac744ea68ee2c23a55c951a705b29c8b244a708f7efa59",
+    "tools/m1_factor_work_check.py": "5980272259f46ca45257300011bcadf28712a0ed87c385a8dff1295b9881ce20"
+  },
+  "artifacts": {
+    "aq_order.txt": "303e511a59d9cb955bdcd307f26bb65c6a6de281cb1b73103c06b006f8e9a02e",
+    "base_lp_check.csv": "8e9e88b2b6d3b0fd2087baee2411c011e9331d1ce5a81e6ed2b90c1c86869fbd",
+    "base_lp_check.txt": "2d11741a54e710a0490f9738e2e1054bfab4fa3bff469c23305e5510fe2c8584",
+    "base_pathcmp.txt": "d773417683876d63033c6f5dcd21f321f8afe7aedcbf4e1fd14c1a6f729f5778",
+    "before_dense_preservation_lp_check.txt": "6f22e0362e98c82825f36bede52d1da34ffcf43475b901e0f84d97e165cea830",
+    "before_dense_preservation_mutate.txt": "1d5cda7415faba63246e190e1ca84d1ecb3f3b8856eccb77c549915387ca2e97",
+    "before_dense_preservation_pathcmp.txt": "a869f66e4bace4ea1def8e23754c4d8c579587d8e48823dacc4b11abfd08caec",
+    "before_dense_preservation_pytest.txt": "020e2e34986c1bb90b5f4e5270def8c29fc7bc9c085b48059628499325e56772",
+    "beta.txt": "79bc8fd6965c140b72f8195d4aa2e05beab4d8d2fd03d08c5aa884f98f33ca86",
+    "bfrt.txt": "74c055f432c8ac0457f00cceee399b38cc4b0ea104d41f605c0cb9ce2a3a310f",
+    "cargo_lp.txt": "cccf759e5ce86c7646a9d08e44c87fabd10348c00fcbf7f27ef45e7f0915b594",
+    "cargo_workspace.txt": "0938d42d2c13d24535ccedd8c2b5c2c6e4ce5a583b2718082a79fa3b42016d07",
+    "clippy.txt": "c66deaaadd2551d1fe4a6871908305f2d837561f97450106362308fd1bb651f1",
+    "eta.txt": "fead421381179cede4734a2995330e20c6977791a2ea65431213f6949660c663",
+    "eta_peel.txt": "84bf04be9258308ab0095bf4837ad04fece4e880a5b569398e55a2550c3bac4e",
+    "first_failure.txt": "9af0153a399ac9edd2756d98b024db493cebb1966817a533601f8031c9d7050c",
+    "first_pass.txt": "15b91f4f5cb40e9749b7afed8eeb4e2a0f7dbc1ca2476a53e3066e3eb99da983",
+    "list_order.txt": "203f751bc412a5399f568e98841f42c13fc52796882da314a451c5fc4d428c46",
+    "lp_check.csv": "0f0a34eeb8dceefcb47475be4651ef6a2d835015f0463f645fc0c30a8f408187",
+    "lp_check.txt": "2ad97ffbd045eed1640042282e6cc427283ef5cd21b2db3bfa48de251bb36891",
+    "lsolve.txt": "7b38e7afa9028691823be5d7c1829cf4fc13f55c6349d65036710116670f0c5e",
+    "mutate_first21.txt": "633b91d26580be3d3a640174e451c165f1ddbe7c4e67a64b9f4b2d7af025721e",
+    "mutate_remaining17.txt": "8f7ffc7d779b1afe75e843f8b6d696b074d08cf38485ebd41422cf514b9bd215",
+    "pathcmp.txt": "d773417683876d63033c6f5dcd21f321f8afe7aedcbf4e1fd14c1a6f729f5778",
+    "pytest.txt": "c843180a08231dd1baee66330d174a0c4fd33427adf346531323484b11b1c26d",
+    "resume_mutations.py": "5fb96a2e3e9c0286a432158a74d939a151f75efd1c961563d25ec371bf65d56b",
+    "self_test.txt": "6ce3e23ccd7a7306beaeb256291b9bad7fdcd2c33d8367a45bff43e93b7c55b3",
+    "tau.txt": "79edcbd953ef80270e9915ec2acef2a6f24e53cd7f5575076caae468eaed958f",
+    "update.txt": "1b9058b38781fc56f207a8854b45163438af6f3e6eb866b6c544e1a961b07b53",
+    "urow.txt": "52bf1dd4a134bc9c6e7258e3cf4449e2b81625ecc9de65587ff88414bea6e44d",
+    "usolve.txt": "603aa8eb5b64dc31051db45093d669cb3d78408904a8bda4e36590c9a8a57622",
+    "work.txt": "5093576b989b635fa973505135b1f1e3c72edc9a03acda5730f04cf0651c2dd7"
+  }
+}
