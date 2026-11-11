@@ -14,7 +14,7 @@ const funcs = fs.readFileSync(path.join(root, 're/decomp/index.tsv'), 'utf8').tr
   .map(r => [parseInt(r[0], 16), parseInt(r[2], 10), r[1].replace(/^PRIVATE0+/, '')]).sort((a, b) => a[0] - b[0]);
 const params = Object.assign({Threads: 1, Seed: 0, LogToConsole: 0}, JSON.parse(extra || '{}'));
 const code = `import gurobipy as gp\ne=gp.Env(params=${JSON.stringify(params)})\nm=gp.read(${JSON.stringify(path.resolve(model))}, e)\n` +
-  `m.optimize()\nprint('DONE',m.Status,int(m.NodeCount),flush=True)`;
+  `m.optimize()\nprint('DONE',m.Status,int(m.NodeCount),float(m.IterCount).hex(),float(m.ObjBound).hex(),m.SolCount,float(m.ObjVal).hex() if m.SolCount else '-',flush=True)`;
 const agent = mode === 'control' ? '' : `
 const hx = p => p.readU64().toString(16).padStart(16, '0');
 const ints = (p, n) => n ? Array.from(new Int32Array(p.readByteArray(n * 4))) : [];
@@ -47,7 +47,9 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
  Interceptor.attach(b.add(0x56faf0),{onEnter(a){const sp=this.context.rsp;this.lp=a[0];this.n=a[3].toInt32();this.j=a[4];
    this.a=sp.add(24).readPointer();this.z=sp.add(32).readPointer();this.cost=sp.add(40).readPointer();
    const I=a[1].add(0x18).readPointer(), M=I.readPointer(); this.T=M.add(0x3250).readPointer();this.e=env(this.lp);
-   this.ev={e:'batch',id:serial++,ra:off(this.returnAddress),n:this.n,j:ints(this.j,this.n),threads:a[5].toInt32(),stall:sp.add(16).readS32(),
+   const sym=a[2], types=sp.add(8).readPointer(), js=ints(this.j,this.n);
+   const orbit=!sym.isNull() && sym.add(4).readS32()>0?sym.add(0x40).readPointer():ptr(0);
+   this.ev={e:'batch',id:serial++,ra:off(this.returnAddress),n:this.n,j:js,groups:js.map(j=>!orbit.isNull() && types.add(j).readU8()===66?orbit.add(j*4).readS32():null),threads:a[5].toInt32(),stall:sp.add(16).readS32(),
      cost0:hx(this.T.add(0x68)),limit0:hx(this.e.add(0x2960)),limitSaved:off(this.returnAddress)==='542623'?hx(sp.add(56)):null,p0:pars(this.lp)};batch=this.ev;},
   onLeave(r){Object.assign(this.ev,{rc:r.toInt32(),a:doubles(this.a,this.n),z:doubles(this.z,this.n),iters:hx(this.cost),p1:pars(this.lp)});send(this.ev);batch=null;}});
  // Probe after 62f909 has added the returned iteration sum and restored IterationLimit.
@@ -61,17 +63,21 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
  Interceptor.attach(b.add(addr),{onEnter(a){const sp=this.context.rsp;this.prev=evl;this.lp=a[0];this.n=a[2].toInt32();this.stride=a[3].toInt32();
    this.a=sp.add(16).readPointer();this.z=sp.add(24).readPointer();this.cost=sp.add(32).readPointer();
    this.ev={e:tag,id:serial++,batch:batch?batch.id:null,n:this.n,stride:this.stride,j:ints(a[4],this.n),
-     p0:pars(this.lp),bounds0:bounds(this.lp),status0:this.lp.add(0x64).readS32(),cost0:hx(this.cost),steps:[]};evl=this.ev;},
+     p0:pars(this.lp),bounds0:bounds(this.lp),status0:this.lp.add(0x64).readS32(),cost0:hx(this.cost),steps:[]};this.ev._a=this.a;this.ev._z=this.z;evl=this.ev;},
   onLeave(r){Object.assign(this.ev,{rc:r.toInt32(),p1:pars(this.lp),bounds1:bounds(this.lp),status1:this.lp.add(0x64).readS32(),
-    cost1:hx(this.cost),a:doubles(this.a,this.n),z:doubles(this.z,this.n)});send(this.ev);evl=this.prev;}});
+    cost1:hx(this.cost),a:doubles(this.a,this.n),z:doubles(this.z,this.n)});delete this.ev._a;delete this.ev._z;delete this.ev._br;send(this.ev);evl=this.prev;}});
  // Copy and restore: capture only fields that are explicitly copied by both C variants.
  for(const [addr,tag,v] of [[0x29ff60,'save',0],[0x2a49a0,'restore',0],[0x576a30,'save',1],[0x5754e0,'restore',1]])
  Interceptor.attach(b.add(addr),{onEnter(a){this.ev=evl;if(!this.ev)return;this.dst=a[1];this.src=state(a[0],v);},
-  onLeave(){if(this.ev)this.ev.steps.push({kind:tag,addr:addr.toString(16),src:this.src,dst:state(this.dst,v)});}});
- Interceptor.attach(b.add(0xbcc70),{onEnter(a){this.ev=evl;if(!this.ev)return;this.attr=a[1].readUtf8String();this.out=a[2];},
+  onLeave(){if(this.ev){const br=this.ev._br,k=br?this.ev.j.indexOf(br[0]):-1;
+    this.ev.steps.push({kind:tag,addr:addr.toString(16),src:this.src,dst:state(this.dst,v),branch:br||null,
+      result:k<0?null:[hx(this.ev._a.add(8*k)),hx(this.ev._z.add(8*k))]});}}});
+ for(const addr of [0x2a31f0,0x573d30])
+ Interceptor.attach(b.add(addr),{onEnter(a){if(evl)evl._br=[a[4].toInt32(),a[5].toInt32()];}});
+ Interceptor.attach(b.add(0x7a3820),{onEnter(a){this.ev=evl;if(!this.ev)return;this.attr=a[1].readUtf8String();this.out=a[2];},
   onLeave(r){if(this.ev && ['IterCount','ObjVal'].includes(this.attr))this.ev.steps.push({kind:'attr',attr:this.attr,rc:r.toInt32(),value:hx(this.out)});}});
  // Iteration/LP status consumption is recorded at the actual solve boundary inside the candidate kernel.
- Interceptor.attach(b.add(0x153cc0),{onEnter(a){this.ev=evl;if(this.ev){this.lp=a[0];this.b0=bounds(this.lp);}},onLeave(r){if(this.ev)this.ev.steps.push({kind:'solve',rc:r.toInt32(),status:this.lp.add(0x64).readS32(),before:this.b0,after:bounds(this.lp)});}});
+ Interceptor.attach(b.add(0x153cc0),{onEnter(a){this.ev=evl;if(this.ev){this.lp=a[0];this.b0=bounds(this.lp);}},onLeave(r){if(this.ev)this.ev.steps.push({kind:'solve',rc:r.toInt32(),status:this.lp.add(0x64).readS32(),dual:hx(this.lp.add(0xe0).readPointer().add(0x138)),before:this.b0,after:bounds(this.lp)});}});
 }});
 `;
 (async () => {
@@ -87,7 +93,7 @@ Process.attachModuleObserver({onAdded(m) { if (m.name !== 'libgurobi130.so') ret
    const ok = outputText.includes('DONE') && !errors.length;
    fs.mkdirSync(path.dirname(output), {recursive: true});
    fs.writeFileSync(output, zlib.gzipSync(JSON.stringify({schema: 1, kind: 'mip_sb_restore', control: mode === 'control', model: path.basename(model), model_sha256: hash(model),
-     binary_sha256: expected, tool_sha256: hash(__filename), params, output: outputText.trim(), errors, ok,
+     binary_sha256: expected, tool_sha256: hash(__filename), params, runtime: {arch:process.arch,os:require('os').release(),node:process.version}, output: outputText.trim(), errors, ok,
      detach_reason: reason, counts, events})));
    const c = {}; for (const e of events) { const k = Array.isArray(e) ? e[0] + (e[0] === 'sb' ? ':' + e[1] : '') : e.e; c[k] = (c[k] || 0) + 1; }
    console.log(path.basename(model), outputText.trim(), JSON.stringify(c), 'ok', ok, errors.join(' ').slice(0, 300));
