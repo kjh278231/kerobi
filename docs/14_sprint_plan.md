@@ -119,8 +119,10 @@ M2-01의 G6 완료 범위는 유지한다. 실제 실행되지 않은 presolve �
 | M2-06f-4 | 조사 완료 | infeasible 노드 벡터 `95da98` | 06f-2 | [완료](m2/mip_infeas_ray.md). 이탈 행 r의 Farkas 행(`12ea3f` tableau 행, s·정규화·ρ·`L+0x68`·cut 최댓값). 6사례 131호출의 출력·ray·bnd·work가 재생과 비트까지 같음(새 `tools/mip_infeas_ray.js`·`_check.py`, `bench/oracle/m2_06f4`). 감쇠 117회 중 69회는 `6684cd`가 제자리에서 고친 벡터(읽는 칸이 다른 것 45회). fail 1·4·5·flip·재시도는 실행 0회 |
 | M2-06f-5 | 조사 완료 | `6684cd` infeasible ray 수정 | 06f-4 | [완료](m2/mip_infeas_ray_fix.md). 조상 사슬의 bound 변경 기록으로 행을 더해 ray 칸을 지우고 `95ce25`로 재정규화. 6사례 115호출의 ray·L 칸·work가 재생과 비트까지 같음(새 `tools/mip_ray_fix.js`·`_check.py`, `bench/oracle/m2_06f5`). 게이트는 `5fb8ec`의 `5eda00` 뒤 C:2209만, 미호출 92회 모두 분류. `95ce25` fail 5·flip 방식 1·2는 실행 0회 |
 | M2-06g | 조사 완료 | pseudocost 읽는 쪽 식·SB 캐시·η/반복 한도(06g 원래 행을 06g-2와 나눔) | 06e-2 | [완료](m2/mip_sb_read.md). `6ef12f`(캐시·T2 합산·1e-6 하한)·`6eed2e`(루트·캐시 예외, cnt < η)·`6ee4ac`·`6ee5d1`(캐시 `max(Δ,1e-10)/(|f|+0.001)`) 6사례 101만여 호출 비트·정확 일치. η는 `62f909` 안 자동 조정·반환 복원, 루트 반복 인라인 η = 1, `T+0x64`는 `6edda1`. 새 `tools/mip_sb_read.js`·`_check.py`, `bench/oracle/m2_06g`. 변조 15·변이 17 기대대로. η 2e9·1 분기·`T+0x64` 복원·병렬 미검증 |
-| M2-06g-2 | 조사 | strong branching 결과 소비·복원 계약 | 06g | `691453`·`691b56` LP 결과 소비와 임시 bound·basis 복원표, `62ec1d` 후보 목록·SBMAXCANDS, `T+0x68` 누적, `62f909` SB 목적 배열·배율 출처 |
-| M2-06h | 구현 | 후보 하나의 strong branching 평가 | 06g-2, LP 상태 저장 기능 | 양방향 결과와 원상 복구 확인 |
+| M2-06g-2 | 조사 완료 | strong branching 결과 소비·복원 계약 | 06g | [완료](m2/mip_sb_restore.md). 부모 확인 `691453`·평가 `691b56 → 266b6a/695bd7`, 자동 후보 cap 100·stall 2·worker 1. 6사례 × 3회, 분할 1,754·SB 149·방향 결과/상태 복사 742·반복 비용 일치. 변조 15 거부. 전체 factor·오류·x87·병렬 미검증 |
+| M2-06h | 분할 | 후보 하나의 strong branching 평가 | 06g-2, LP 상태 저장 기능 | 전체 factor 입력 부족으로 06h-1·06h-2로 나눔 |
+| M2-06h-1 | 오라클 | SB 한 후보의 LP 저장·복구 경계 | 06g-2 | `695bd7` 첫 정상 후보의 up/down·LP 결과·bound 복원 직후 상태와 factor 저장 배열을 포착. helper 복사 필드·유효 길이를 C/asm으로 고정하고 Rust에서 재구성 가능한 입력 명세 작성. 오류·x87·병렬은 별도 후속 |
+| M2-06h-2 | 구현 | 후보 하나의 SB 제어 재생(L1) | 06h-1 | 실제 LP 결과를 명시적 입력으로 두고 결과 소비·복구 명령 순서 비교. 전체 LP 포함 일치는 별도 관문 |
 | M2-06i | 조사·구현 | reliability 후보 판정 한 경로 | 06f·06h | 원본 후보 집합·점수·동률 순서 비교 |
 | M2-06j | 조사 | 재시작 조건·보존 상태·재구성 범위 | 06a, 06 설계 §8 | 조건별 호출표와 구현 하위 번호 |
 | M2-06k | 조사·구현 | 노드 진행 로그의 한 행과 카운터 | 06a | 같은 노드 사건의 출력 값·순서 비교 |

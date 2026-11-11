@@ -1,0 +1,8 @@
+pk1_default {"partition": 286, "parent": 5, "budget": 23}
+neos5_default {"partition": 283, "parent": 6, "budget": 19}
+tr12-30_default {"partition": 310, "parent": 44, "budget": 111}
+pk1_iters10 {"partition": 284, "parent": 24, "budget": 24, "double": 24, "kernel": 24, "batch": 24, "cost": 24}
+neos5_iters10 {"partition": 280, "parent": 14, "budget": 14, "double": 14, "kernel": 14, "batch": 14, "cost": 14}
+tr12-30_iters10 {"partition": 311, "parent": 111, "budget": 113, "double": 111, "kernel": 111, "batch": 111, "cost": 111}
+SELF-TEST rejected 15 tampers; {"omit_vectors": [], "omit_swap_work": ["pk1_default", "neos5_default", "tr12-30_default", "pk1_iters10", "neos5_iters10", "tr12-30_iters10"], "wrong_exponent": ["pk1_default", "neos5_default", "tr12-30_default", "pk1_iters10", "neos5_iters10", "tr12-30_iters10"], "omit_cost": ["pk1_iters10", "neos5_iters10", "tr12-30_iters10"], "no_base_clamp": ["neos5_iters10"], "no_status7_clamp": []}
+ACCEPTANCE PASS (+ self-test)
