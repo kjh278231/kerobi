@@ -18,8 +18,8 @@ def main():
     ap.add_argument('branch')
     ap.add_argument('--owner', required=True)
     args = ap.parse_args()
-    if sh('git', 'branch', '--show-current').stdout.strip() != 'main' or sh('git', 'status', '--porcelain').stdout.strip():
-        sys.exit('main worktree must be on main with a clean status')
+    if sh('git', 'branch', '--show-current').stdout.strip() != 'main' or sh('git', 'status', '--porcelain', '-uno').stdout.strip():
+        sys.exit('main worktree must be on main with no tracked changes')
     claim = sh('python3', 'tools/session.py', 'claim', 'shared', '--owner', args.owner, check=False)
     if claim.returncode:
         sys.exit('shared is held, retry in a minute: ' + claim.stderr.strip())
@@ -29,8 +29,8 @@ def main():
             sh('git', 'merge', '--abort', check=False)
             sys.exit('merge conflict, aborted: rebase the branch on main first\n' + merged.stdout)
         sh('python3', 'tools/progress_index.py')
-        if sh('git', 'status', '--porcelain').stdout.strip():
-            sh('git', 'add', '-A', 'docs')
+        if sh('git', 'status', '--porcelain', '-uno').stdout.strip():
+            sh('git', 'add', '-u', 'docs')
             sh('git', 'commit', '-qm', 'docs: regenerate shared index after ' + args.branch)
         print('merged', args.branch, 'at', sh('git', 'rev-parse', '--short', 'HEAD').stdout.strip())
     finally:
