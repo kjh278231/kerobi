@@ -527,7 +527,7 @@ impl<'a> Engine<'a> {
                 (self.upd_cols as f64 * 1.5 + self.lu.eta_nnz() as f64 * 2.0) * m - f > 0.0
             }
         };
-        if refactor || !self.lu.update(r, q, spike, sorder) {
+        if refactor || !self.lu.update(r, q, spike, sorder, self.lu_interval) {
             self.reinvert();
         } else {
             // LU+0x190: nonzeros of the FTRAN'd entering column (pivot included)
@@ -592,10 +592,10 @@ impl<'a> Engine<'a> {
             .map(|j| self.d[j])
             .collect();
         let line = format!(
-            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",{}{}\"f0\":{:?},\"bt_dense\":{},\"aqrow\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
+            "{{\"iter\":{},\"vstat\":{:?},\"xB\":[{}],\"d\":[{}],\"w\":[{}],\"mode\":{},\"list\":{:?},\"cursor\":{},\"thr\":\"{}\",\"allow\":{},\"k\":{},\"avg\":{},\"score\":[{}],\"cost_mode\":{},\"row_cost\":[{}],\"var_cost\":[{}],\"ns\":{},\"eta\":{},\"pool\":{},\"cols\":{},\"tau\":[{}],\"ar\":\"{}\",\"beta\":\"{}\",{}{}\"f0\":{:?},\"bt_dense\":{},\"aqrow\":\"{}\",\"pt\":{{\"rc\":{},\"deg\":{},\"deg0\":{},\"it0\":{}}}}}\n",
             self.iter, self.vstat, hex(&self.xb), hex(&dn), hex(&self.w), self.pr.mode, self.pr.list, self.pr.cursor, hexf(self.pr.thr),
             self.pr.allow, self.lu.n_updates, self.pr.avg, hex(&self.pr.score), self.pr.cost_mode, hex(&self.pr.row_cost),
-            hex(&self.pr.var_cost), self.lu.n_singleton, self.lu.eta_nnz(), self.upd_cols,
+            hex(&self.pr.var_cost), self.lu.n_singleton, self.lu.eta_nnz(), self.lu.pool, self.upd_cols,
             hex(&self.last_dse.0), hexf(self.last_dse.1), hexf(self.last_dse.2), self.last_urow, self.last_aqo, self.lu.listed(), self.bt_dense, hexf(self.last_aq_row), self.pt_rc, self.pt_deg, self.pt_deg0,
             self.pt_it0
         );
