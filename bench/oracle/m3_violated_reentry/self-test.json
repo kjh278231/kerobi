@@ -1,0 +1,69 @@
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+원본 합성 infeasible ratio: 57사례 × 3회, 사건 필드 9개 일치
+원본 합성 재시도 ratio: 74사례 × 3회, 사건 필드 9개 일치
+{
+ "rejected": 30,
+ "detail": {
+  "binary-hash-0": "거부: ('메타', 'binary_sha256', '8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', '00000000000000000000000000000000000000000000000",
+  "inputs-hash-0": "거부: ('메타', 'inputs_sha256', 'cbd73e342abbe75394eca783dca03f44ddbfce598e68acd6bb70efbc337897e2', '00000000000000000000000000000000000000000000000",
+  "tool-hash-0": "거부: ('메타', 'tool_sha256', '7aa92927b0bc1e6e0d246bfd125344884f1a26d3810ca8923296466e7de2c87d', '0000000000000000000000000000000000000000000000000",
+  "source-hash-0": "거부: ('메타', 'source_sha256', ['6bd16a64442cf643ce92869e82d815963fdae0e16f8582db6ef9d710cc0068f0', 'cb7946343603608ec265492ef35060d7e24e64fbe31545",
+  "base-tool-hash-0": "거부: ('메타', 'base_tool_sha256', ['953af3373bbdbc4a93af4926425b9c2a2ee2e33383f341d4ffaa6edc5022d256', '7d3040771a983dfb1ec501a367dc53a8484091f25e6",
+  "events-empty": "거부: 필수 사건 누락",
+  "provenance-natural": "거부: ('메타', 'provenance', 'original-synthetic', 'natural')",
+  "missing-field": "거부: ('inf-reentry-pick-sparse', '필수 필드 불일치', ['refactor'])",
+  "run-differs": "거부: ('3회 불일치', 'ret-reentry-qs-dense', 'work', '0000000000000000', '0000000000002b40')",
+  "two-runs": "거부: 독립 캡처 3회 필요",
+  "control-inf-theta": "거부: ('대조군 변화', 'control-inf-pos-N-sparse', 'theta', '0000000000000040', '0000000000000840')",
+  "control-ret-refactor": "거부: ('대조군 변화', 'control-ret-reentry-refactor-sparse', 'refactor', 2, 0)",
+  "inf-theta": "거부: ('사전 기대 불일치', 'inf-reentry-pick-sparse', 'theta', '0100000000408f40', '0000000000000840')",
+  "inf-pos": "거부: ('사전 기대 불일치', 'inf-reentry-pick-sparse', 'chosen', 1, 0)",
+  "inf-work-1pass": "거부: ('사전 기대 불일치', 'inf-reentry-pick-sparse', 'work', '0000000000001c40', '0000000000000c40')",
+  "ret-pos": "거부: ('사전 기대 불일치', 'ret-reentry-qs-dense', 'chosen', 2, 3)",
+  "ret-work-1pass": "거부: ('사전 기대 불일치', 'ret-reentry-qs-dense', 'work', '0000000000002b40', '0000000000002040')",
+  "ret-pivot-nan": "거부: ('사전 기대 불일치', 'ret-reentry-qs-dense', 'pivot', '3a8c30e28e79553e', '000000000000f87f')",
+  "inf-request-cleared": "거부: ('inf-reentry-none-470-17-sparse', 'S+0x294/0x2f8', (2, -1), (0, -1))",
+  "ret-request-cleared": "거부: ('ret-reentry-none-470-17-dense', 'S+0x294/0x2f8', (2, -1), (0, -1))",
+  "ret-request-returns-prev": "거부: ('사전 기대 불일치', 'ret-reentry-none-470-17-dense', 'chosen', -1, 0)",
+  "ret-keep-returns-minus1": "거부: ('사전 기대 불일치', 'ret-reentry-none-470-16-sparse', 'chosen', 0, -1)",
+  "leaving-unwritten": "거부: ('inf-reentry-none-470-17-sparse', 'S+0x294/0x2f8', (2, -1), (2, 7))",
+  "spurious-request": "거부: ('inf-reentry-pick-sparse', 'S+0x294/0x2f8', (0, 7), (2, 7))",
+  "workspace-changed": "거부: ('ret-reentry-qs-dense', 'S 변경(요청 칸 밖)')",
+  "factor-changed": "거부: ('inf-reentry-pick-sparse', 'factor 변경')",
+  "054eef-reentry-0": "거부: ('054eef', '재진입 사례 0')",
+  "056973-reentry-0": "거부: ('056973', '재진입 사례 0')",
+  "054eef-request-0": "거부: ('054eef', '요청 2 사례 0')",
+  "056973-request-0": "거부: ('056973', '요청 2 사례 0')"
+ }
+}
