@@ -124,7 +124,13 @@ impl<B: Backend> Loop<'_, B> {
         }
         self.lp.reset().map_err(Error::Backend)?;
         self.lp.restore(self.work).map_err(Error::Backend)?;
+        // The original clears a column's flags after its first entry, so a repeated entry is a no-op.
+        let mut done: Vec<usize> = Vec::new();
         for c in &p.changes {
+            if done.contains(&c.column) {
+                continue;
+            }
+            done.push(c.column);
             let (lo, up) = (self.b.lower[c.column], self.b.upper[c.column]);
             if c.flags & 1 != 0 && lo < c.lower {
                 self.lp.bound(c.column, Side::Lower, lo).map_err(Error::Backend)?;

@@ -147,3 +147,23 @@ fn restore_requests_only_tightened_bounds() {
     assert_eq!(requests, ["bound 0 62 0000000000000000", "bound 2 62 0000000000000000", "bound 2 60 4010000000000000",
         "bound 0 60 3ff0000000000000"]);
 }
+
+#[test]
+fn repeated_change_and_up_prefill() {
+    // A repeated list entry requests nothing more but still counts 6 work.
+    let x = [0.5, 0.5];
+    let b = Batch { columns: &[0, 1], x: &x, lower: &[0.0; 2], upper: &[1.0; 2], int_tol: 1e-5,
+        parent_obj: 0.0, stall_limit: 9 };
+    // Up LP of candidate 0 is optimal at the parent value with candidate 1 at 1.0 (its ceil): up[1] = parent.
+    let mut lp = script(&["prop 0 2 0 1 3ff0000000000000 3ff0000000000000 0 1 3ff0000000000000 3ff0000000000000 0",
+        "solve 2 0000000000000000 - 0", "values 3ff0000000000000", "restore 0",
+        "prop 0 0 0", "solve 7 0000000000000000 - 0", "restore 0", "timer 0 0",
+        "prop 0 0 0", "solve 7 0000000000000000 - 0", "restore 0", "solve 2 - - 0"]);
+    let mut work = 0.0;
+    let r = run(&b, &mut lp, &mut 0.0, &mut work).unwrap();
+    assert_eq!(lp.trace.matches("bound 0 62").count(), 1);
+    assert!(lp.trace.contains("prop 0 60 0000000000000000 prop 4028000000000000"));
+    // Candidate 1 skips its up solve: only the down propagation follows the timer.
+    assert!(lp.trace.contains("timer 0000000000000000\nprop 1 60 "));
+    assert_eq!((r.up[1], r.down[1]), (0.0, 0.0));
+}
