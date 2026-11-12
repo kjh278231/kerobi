@@ -361,16 +361,28 @@ def self_test(data,m):
         en,lv,body,i=ft_call(d,'capri');en['factor']['x1d8']=en['leave']
     test('R4-cache-reuse-predicate',cache_claim,acc)
     def span_pred(d,mm):
-        en,lv,body,i=ft_call(d,'adlittle');f=en['factor'];r=en['leave'];f['perm']['x40']=[0]*len(f['perm']['x40']);f['scalars']['x100']=1
+        # F100을 m+1로 올리면 i52=m ≥ 모든 F40이라 i35=i52, 행 eta를 부르지 않아야 한다(순열은 그대로).
+        en,lv,body,i=ft_call(d,'adlittle');f=en['factor'];f['scalars']['x100']=f['m']+1
     test('R4-span-predicate',span_pred,acc)
     test('R4-x18c',lambda d,mm:ft_call(d,'interior')[1]['factor']['scalars'].update(x18c=0),acc)
     test('R4-spike-left',lambda d,mm:ft_call(d,'capri',k=3)[1]['factor']['spike'].update(count=1,indices=[0],values=['000000000000f03f']),acc)
     def ft_header(d,mm):
         lv=ft_call(d,'adlittle',k=2)[1];lv['header'][0],lv['header'][1]=lv['header'][1],lv['header'][0];lv['factor']['header']=list(lv['header'])
     test('R4-header-changed',ft_header,acc)
-    test('R4-eta-delta',lambda d,mm:ft_call(d,'capri',k=1)[1]['factor']['scalars'].update(x180=ft_call(d,'capri',k=1)[0]['factor']['scalars']['x180']+2),acc)
+    def pop_eta(f):
+        e=f['etas'].pop();f['scalars']['x180']-=1;f['scalars']['x184']-=e['len']
+    def eta_delta(d,mm):
+        # 진입 eta 하나를 협조 변조로 빼 증가가 2가 되게 한다(eta 수·길이 합 무결성은 유지).
+        for en,lv,body,i in [ft_call(d,'capri',k=k) for k in range(10)]:
+            if lv['factor']['scalars']['x180']>en['factor']['scalars']['x180'] and en['factor']['etas']:pop_eta(en['factor']);return
+        raise Fail('대상 없음')
+    test('R4-eta-delta',eta_delta,acc)
     def eta_trivial(d,mm):
-        en,lv,body,i=ft_call(d,'capri',with_roweta=False);lv['factor']['scalars']['x180']+=1
+        for k in range(10):
+            en,lv,body,i=ft_call(d,'capri',with_roweta=False,k=k)
+            i35,i52=spike_span(en['factor'],en['leave'])
+            if i35==i52 and en['factor']['etas']:pop_eta(en['factor']);return
+        raise Fail('대상 없음')
     test('R4-eta-without-span',eta_trivial,acc)
     test('R4-buffer',lambda d,mm:ft_call(d,'interior')[1]['buffers'].update(spike_idx_same=False),acc)
     # 규칙5 재분해·재번호

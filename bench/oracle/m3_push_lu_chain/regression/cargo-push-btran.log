@@ -1,0 +1,15 @@
+   Compiling crc32fast v1.5.4
+   Compiling adler2 v2.0.1
+   Compiling cfg-if v1.0.5
+   Compiling simd-adler32 v0.3.10
+   Compiling miniz_oxide v0.9.1
+   Compiling flate2 v1.1.10
+   Compiling rsolver-model v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-21e/crates/model)
+   Compiling rsolver-lp v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-21e/crates/lp)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.08s
+     Running tests/push_btran.rs (target/debug/deps/push_btran-c63e3f600a0f6d2c)
+
+running 1 test
+test btran_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s

@@ -177,6 +177,7 @@
 - **FT 갱신 뒤 BTRAN의 행 eta 단계는 Uᵀ 출력 nnz로 경로가 갈린다: `m < LU+0x104·nnz`(또는 Uᵀ 조밀)이면 조밀 eta로 `|v| ≤ ZERO`(LU+0x10)인 `w_r`을 0으로 지우고 그 eta를 건너뛰며, 뒤의 Lᵀ도 조밀(출력 −1)이다. 아니면 희소 eta로 `v ≠ 0.0`만 본다.** 소거 잔차(kb2 피벗 22 `−1.11e−16`)가 어느 쪽이냐에 따라 ρ 끝자리가 갈린다. kb2 eta 피벗 17개는 모두 조밀 쪽이었다(희소 eta는 C만). C·캡처 재생. (M1-02i, [§6](../m1/m1_02i_eta.md#6-실행-결과조사))
 
 - **BTRAN의 0 비교 방향은 경로마다 다르다: 커널 `21a941`·경로 B·조밀 Lᵀ는 `ZERO < |x|`, 희소 Lᵀ heap·level과 희소 eta 압축은 `ZERO ≤ |x|`, 희소 eta 적용 여부는 `v ≠ 0.0`.** 커널은 F+0x108 > 5이면 heap 없이 순차로 가고 접두(F+0xf8 ≥ 0) 행만 바로 낸다. level Lᵀ는 시작에 F+0x1a8[m..m+F140]을 0으로 지우고 끝에 되돌리지 않아 bucket 수가 반환 뒤에 남는다. 연산은 스칼라 SSE(FMA 없음)라 `-(a·b)+c`는 `c−a·b`와 비트가 같다. push 자연 32호출에서 F+0x200 work까지 비트 일치했다. (M3-04c-21d, C+캡처 재생, [근거](../m3/primal_push_btran_rust.md#6-실행-결과))
+- **push 안 factor(L/U/eta/순열/접두)는 FTRAN·BTRAN·factor 처리 사이에서 header 말고는 바뀌지 않는다. FT 갱신(`05b257` 요청0)은 spike 목록으로 `i52=max(F40[r],F100−1)`, `i35=max(i52, F40[s≠r])`를 구해 `i35≠i52`이고 `r≠F+0x1d8`일 때만 `09e47c`로 Uᵀ 행을 다시 구하고, 재분해는 `036ade`가 F+0x28/0x38에 둔 old_of_new/new_of_old로 header·이탈 위치·vstat를 재번호한 뒤 spike idx 버퍼와 header 버퍼를 교환하고 순열을 identity로 덮는다.** `036ade`는 시작에 F+0x180/0x184/0x18c를 0으로 둔다. 모든 종료는 cache count=0·F+0x1d8=−1이다. push 자연 7사례에서 지원 BTRAN 32회는 모두 직전 factor 처리가 재분해라 eta=0이고, 그래서 FT의 cache 재사용(F1d8=r)도 0회였다. C:263–320·C:2006–2090·C:2570–2595·C:2765–2770 + 캡처 55호출·188연결. (M3-04c-21e, [§6](../m3/primal_push_lu_chain_oracle.md#6-실행-결과))
 
 ## LP 행 eta 내적 정렬과 LU 풀 (`09d112`·`05b257`)
 

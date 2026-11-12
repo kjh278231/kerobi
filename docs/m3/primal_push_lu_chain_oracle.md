@@ -69,8 +69,36 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: WSL2 x86-64 Linux 6.6.87.2, Node v22.22.1, Python 3.10(검사기)·3.13(gurobipy venv). 바이너리 해시는 매 캡처에서 위 값과 일치했다. 정식 도구 해시 agent `159da25a…`, capture `06eae883…`(전체 값은 [manifest](../../bench/oracle/m3_push_lu_chain/manifest.json)). 계약 `30e1d03`, 도구·탐색·계약 보강 `09202ef`, 정식1차 실패 보존·agent 수정 `d0c8bbf` 이후 정식 캡처.
+- 원본 실행: Gurobi 프로세스 총 50회. 탐색 실패 1회(`history/explore-fail1/`), 탐색 7회(`history/explore/`), 정식1차 21회(재현성 거부, `history/formal-fail1/`), 정식 21회. 탐색·정식1차 자료는 판정에 쓰지 않았다.
+- **재현성·비간섭**(`--controls` 종료0): arms 662사건(새 16)·retry 249(12)·interior 288(32)·adlittle 547(52)·scsd1 237(8)·capri 832(80)·대조군 0사건이 각각 독립 pid/run_id 3회에서 동일하다. 새 `lu:*` 사건을 빼면 21c 정식 캡처(`m3_push_btran/*-1`)와 사건·최종 결과·출력 전체가 같다.
+- **판정 규칙**(`--acceptance` 종료0, [보고](../../bench/oracle/m3_push_lu_chain/verification.json)): push 안 `05b257` **55호출**(arms4·retry3·interior9·adlittle14·scsd1 2·capri23) 전부 규칙 1–6 통과, 연산 사이 연결 188개 전부 규칙3 통과.
+
+| 분기 | 관측 수 | 비고 |
+|---|---:|---|
+| FT 갱신(요청0) / 재분해(요청10) | 36 / 19 | FT는 interior5·adlittle11·capri20. 재분해 19 = push 초기화(`0x1c07c6`) 6 + 라운드(`0x1c3d31`)·pivot 13 |
+| FT: 행 eta `09e47c` 호출 / cache 재사용(F1d8=r) / 구간 자명(i35=i52) | 26 / **0** / 10 | cache 재사용 0: 지원 BTRAN 뒤에 FT 갱신이 오는 사례가 없다 |
+| FT: F180 +1 / +0 | 23 / 13 | +1은 모두 i35≠i52. 행 eta를 불렀지만 eta가 늘지 않은 3회 포함 |
+| 재분해: `036ade` 호출 / 반환0·오류 칸0 | 19 / 19 | 반환≠0·반복 호출·singular 0 |
+| 재분해: header 순서 변경 / 옛 순열 비identity / 이탈 위치 재번호 | 15 / 15 / 18 | 모든 재분해에서 pricing 객체 null, header 재번호식·vstat·identity·F1a0·버퍼 교환 성립 |
+| 연산 사이 연결 / header만 바뀐 연결 | 188 / 68 | header만 바뀐 연결이 지원 생략 등 factor 갱신 없는 pivot이다. factor는 header 외 전부 보존 |
+| 연결 중 bucket(F1a8) 변화 | 19 | 모두 capri(레벨 L/Lᵀ scratch), 판정 제외 |
+| 지원 BTRAN 직전 factor 처리 | 재분해 32/32 | 그래서 BTRAN eta>0은 여전히 0회 |
+| 공급 FTRAN eta>0 | 41 | interior5·adlittle14·capri22(21a는 interior5만) |
+
+- **변조 거부**(`--self-test` 종료0): 54종. 출처·재현·비간섭9(바이너리·manifest·모델 해시, 빈 사건, 회차 차이, 21c 투영 차이 2종, 기준 결과, 새 사건0), 규칙1 6(lu enter/leave 누락, null-null, 반환, 요청, factor 밖 사건, 재분해 안 행 eta), 규칙2 4, 규칙3 8(지원 생략 연결 factor 변경, **pivot마다 재분해**·**pivot마다 FT 갱신** 변이, FT·재분해 뒤 factor 변경, spike 연결, F1d8 연결), 규칙4 11(행 eta 누락/추가/인자, cache 재사용 판정, 구간 판정, F18c, spike 잔류, header 변경, eta 증가 2, 구간 자명인데 eta 증가, 버퍼), 규칙5 14(header 재번호·옛 순열·이탈 위치·new_of_old·vstat·identity·F40/F48·버퍼 교환·F1a0·F18c 초기화·`036ade` 반환/오류·pricing·spike 잔류), 규칙6 2. 처음 세 변조(구간 판정·eta 증가2·자명 구간 eta)가 목표 규칙보다 앞선 무결성 검사(순열·eta 수)에서 거부돼, 협조 변조로 고쳐 목표 규칙에서 거부됨을 확인했다.
+- **회귀**([요약](../../bench/oracle/m3_push_lu_chain/regression/summary.txt), 14명령 모두 종료0): 21c `push_btran_check.py --controls`·`--acceptance`, 21a `push_ftran_check.py --controls`·`--acceptance`, `cargo test -p rsolver-lp --test push_btran`·`push_btran_rust.py --compare`(21d), `--test push_ftran`·`push_ftran_rust.py --compare`(21b), `push_lu_survey.py --check`, py_compile·`node --check` 3종, 이번 검사기 전체 실행, `git diff --check`.
+- 실행하지 않은 검사: Rust·확장 코드 변경이 없어 workspace 전체·clippy·확장 설치·pytest·Netlib 풀이 비교·P3는 제외했다. 21a/21c의 self-test는 그 검사기가 바뀌지 않아 다시 돌리지 않았다. 독립 검토자는 쓰지 않았다(사용자 지시로 이 세션이 작업자·마스터를 겸함).
+- 계약 변경: §4 "탐색 뒤 계약 변경" (1)–(4). 판정 규칙 문구는 그대로이고, 필드표에서 미초기화 칸(요청≠0 진입 factor, `036ade` 진입 순열)을 뺐다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **오라클 구축 완료**(계약 범위). 원본 식별·독립3회·21c 비간섭·C 규칙 판정·변조 54종 거부를 확인했다. 독립 검토는 미실시다.
+- 확인한 원본 동작(캡처 근거): 같은 push 안에서 factor는 FTRAN·BTRAN·factor 처리 사이에 header 외 전부 보존된다(188연결). 요청0 FT 갱신은 C:263–320의 구간 식대로 `09e47c`를 부르고 F18c+1·spike 비움·header 불변이다(36). 재분해는 `036ade` 반환 순열로 header·이탈 위치·vstat를 재번호하고 spike idx/header 버퍼를 교환한 뒤 순열을 identity로 덮는다(19). 모든 종료에서 cache count=0·F1d8=−1이다.
+- 동등성: Rust 구현을 포함하지 않는다. FT 갱신 수치(U/eta/접두 갱신)·`036ade` 분해 수치·재번호의 Rust 비트 비교는 **미검증**(21f).
+- 기록만 하고 판정하지 않는 필드: work·F190·F1f0, `lu:enter` vstat의 비기저 부분, 재분해 뒤 L/U 값 자체(무결성만).
+- 남은 한계(자연 미관측): FT 갱신의 cache 재사용(F1d8=r), 요청0·S+0x290≠0 경로, factor 반환≠0·`036ade` 반복/실패·singular, pricing/QP 객체 경로, 지원 BTRAN eta>0(32회 모두 직전이 재분해). 지원 BTRAN이 항상 재분해 뒤에 오는지는 push C로 확인하지 않았다.
+- 다음: **M3-04c-21f**(직렬 numeric backend의 factor 수명·FT·재분해·재번호·rhs). `python3 tools/session.py claim M3-04c-21f --owner <새-owner>` → 이 문서 §2·§6, `primal_push_ftran_rust.md`·`primal_push_btran_rust.md`, M1-02l/m/n(FT 갱신)·M1 분해 기록을 읽고, `bench/oracle/m3_push_lu_chain/*-1.json(.gz)`의 push 첫 `lu:leave` factor를 초기 상태로 같은 push의 FTRAN·BTRAN·FT 갱신·재분해 연쇄를 원본 중간 factor 재주입 없이 비교한다. 재분해 수치(`036ade`)를 원본 입력으로 둘지 Rust 생성으로 둘지 계약에서 먼저 정한다. 기준 재검사 `python3 tools/push_lu_check.py --controls --acceptance`.
+- 재실행: `python3 tools/push_lu_check.py --controls --acceptance --self-test`. 새 캡처 `tools/hrun.sh --timeout 580000 -- 'python3 tools/push_lu_runs.py <새-출력디렉터리>'`.
+- branch `work/m3-04c-21e`, worktree `../rsolver-m3-04c-21e`, 선행 미커밋 없음. 최종 commit·병합은 main `Merge M3-04c-21e` 이력을 따른다. main 미추적 `.claude/settings.local.json` 보존. 원격/업로드 없음.
+- 교훈: `docs/lessons/original.md`(push 안 factor 보존·FT 행 eta 판정·재분해 재번호, 지원 BTRAN은 재분해 뒤), `tooling.md`(push 초기화 첫 factor 호출과 `036ade` 출력 칸의 미초기화 메모리).
