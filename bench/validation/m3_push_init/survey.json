@@ -1,0 +1,314 @@
+{
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "cases": {
+  "adlittle": {
+   "adjusted": false,
+   "alias_contiguous": true,
+   "attempt": 0,
+   "basic_renumbered": 56,
+   "candidates": 22,
+   "capped": 20,
+   "compared_fields": 196,
+   "diag_residual_max": "000000000000403d",
+   "factor_ret": 0,
+   "failures": [],
+   "first": 1,
+   "key_ties": 18,
+   "limit_after": 20,
+   "limit_enter": 20,
+   "m": 56,
+   "markowitz_after": "9a9999999999b93f",
+   "markowitz_enter": "9a9999999999b93f",
+   "markowitz_tightened": false,
+   "marks": {
+    "4c": 5,
+    "4e": 49,
+    "58": 2
+   },
+   "model_status": 2,
+   "n": 97,
+   "numeric_after": 0,
+   "numeric_enter": 0,
+   "pinf": "0000000000000000",
+   "pinf_le_1": true,
+   "push_leave": {
+    "ret": 0,
+    "retry": 0
+   },
+   "quick_path": false,
+   "slack_m2_stale_nonzero": 0,
+   "stable_sort_differs": true,
+   "support": 1,
+   "violations": 0,
+   "vstat_changes": 0,
+   "vstat_cols": {
+    "-1": 36,
+    "-3": 22,
+    "basic": 39
+   },
+   "vstat_slacks": {
+    "-1": 26,
+    "-4": 13,
+    "basic": 17
+   }
+  },
+  "arms": {
+   "adjusted": false,
+   "alias_contiguous": true,
+   "attempt": 0,
+   "basic_renumbered": 18,
+   "candidates": 23,
+   "capped": 17,
+   "compared_fields": 104,
+   "diag_residual_max": "000000000010a83c",
+   "factor_ret": 0,
+   "failures": [],
+   "first": 1,
+   "key_ties": 21,
+   "limit_after": 20,
+   "limit_enter": 20,
+   "m": 25,
+   "markowitz_after": "9a9999999999b93f",
+   "markowitz_enter": "9a9999999999b93f",
+   "markowitz_tightened": false,
+   "marks": {
+    "4c": 3,
+    "4e": 21,
+    "58": 1
+   },
+   "model_status": 1,
+   "n": 42,
+   "numeric_after": 0,
+   "numeric_enter": 0,
+   "pinf": "0000000000000000",
+   "pinf_le_1": true,
+   "push_leave": {
+    "ret": 0,
+    "retry": 0
+   },
+   "quick_path": false,
+   "slack_m2_stale_nonzero": 0,
+   "stable_sort_differs": true,
+   "support": 1,
+   "violations": 0,
+   "vstat_changes": 0,
+   "vstat_cols": {
+    "-1": 18,
+    "-3": 21,
+    "-4": 1,
+    "basic": 2
+   },
+   "vstat_slacks": {
+    "-3": 2,
+    "basic": 23
+   }
+  },
+  "capri": {
+   "adjusted": false,
+   "alias_contiguous": true,
+   "attempt": 0,
+   "basic_renumbered": 271,
+   "candidates": 31,
+   "capped": 14,
+   "compared_fields": 850,
+   "diag_residual_max": "000000000000643d",
+   "factor_ret": 0,
+   "failures": [],
+   "first": 1,
+   "key_ties": 11,
+   "limit_after": 28,
+   "limit_enter": 28,
+   "m": 271,
+   "markowitz_after": "9a9999999999b93f",
+   "markowitz_enter": "9a9999999999b93f",
+   "markowitz_tightened": false,
+   "marks": {
+    "46": 14,
+    "4c": 17,
+    "4e": 232,
+    "58": 8
+   },
+   "model_status": 2,
+   "n": 353,
+   "numeric_after": 0,
+   "numeric_enter": 0,
+   "pinf": "0000000000000000",
+   "pinf_le_1": true,
+   "push_leave": {
+    "ret": 0,
+    "retry": 0
+   },
+   "quick_path": false,
+   "slack_m2_stale_nonzero": 0,
+   "stable_sort_differs": true,
+   "support": 1,
+   "violations": 0,
+   "vstat_changes": 0,
+   "vstat_cols": {
+    "-1": 58,
+    "-2": 49,
+    "-3": 31,
+    "-4": 16,
+    "basic": 199
+   },
+   "vstat_slacks": {
+    "-1": 65,
+    "-4": 134,
+    "basic": 72
+   }
+  },
+  "interior": {
+   "adjusted": false,
+   "alias_contiguous": true,
+   "attempt": 0,
+   "basic_renumbered": 0,
+   "candidates": 9,
+   "capped": 8,
+   "compared_fields": 39,
+   "diag_residual_max": "000000000000d83c",
+   "factor_ret": 0,
+   "failures": [],
+   "first": 1,
+   "key_ties": 7,
+   "limit_after": 20,
+   "limit_enter": 20,
+   "m": 8,
+   "markowitz_after": "9a9999999999b93f",
+   "markowitz_enter": "9a9999999999b93f",
+   "markowitz_tightened": false,
+   "marks": {
+    "4c": 1,
+    "4e": 7
+   },
+   "model_status": 2,
+   "n": 12,
+   "numeric_after": 0,
+   "numeric_enter": 0,
+   "pinf": "0000000000000000",
+   "pinf_le_1": true,
+   "push_leave": {
+    "ret": 0,
+    "retry": 0
+   },
+   "quick_path": false,
+   "slack_m2_stale_nonzero": 0,
+   "stable_sort_differs": true,
+   "support": 1,
+   "violations": 0,
+   "vstat_changes": 0,
+   "vstat_cols": {
+    "-1": 2,
+    "-2": 1,
+    "-3": 9
+   },
+   "vstat_slacks": {
+    "basic": 8
+   }
+  },
+  "retry": {
+   "adjusted": false,
+   "alias_contiguous": true,
+   "attempt": 0,
+   "basic_renumbered": 5,
+   "candidates": 6,
+   "capped": 6,
+   "compared_fields": 42,
+   "diag_residual_max": "0000000000000000",
+   "factor_ret": 0,
+   "failures": [],
+   "first": 1,
+   "key_ties": 6,
+   "limit_after": 20,
+   "limit_enter": 20,
+   "m": 10,
+   "markowitz_after": "9a9999999999b93f",
+   "markowitz_enter": "9a9999999999b93f",
+   "markowitz_tightened": false,
+   "marks": {
+    "41": 2,
+    "42": 3,
+    "4c": 2,
+    "4e": 3
+   },
+   "model_status": 1,
+   "n": 18,
+   "numeric_after": 0,
+   "numeric_enter": 0,
+   "pinf": "d02406819543d33f",
+   "pinf_le_1": true,
+   "push_leave": {
+    "ret": 0,
+    "retry": 0
+   },
+   "quick_path": false,
+   "slack_m2_stale_nonzero": 0,
+   "stable_sort_differs": false,
+   "support": 1,
+   "violations": 5,
+   "vstat_changes": 0,
+   "vstat_cols": {
+    "-1": 6,
+    "-2": 2,
+    "-3": 6,
+    "basic": 4
+   },
+   "vstat_slacks": {
+    "-4": 4,
+    "basic": 6
+   }
+  },
+  "scsd1": {
+   "adjusted": false,
+   "alias_contiguous": true,
+   "attempt": 0,
+   "basic_renumbered": 77,
+   "candidates": 12,
+   "capped": 0,
+   "compared_fields": 249,
+   "diag_residual_max": "000000000000803c",
+   "factor_ret": 0,
+   "failures": [],
+   "first": 1,
+   "key_ties": 0,
+   "limit_after": 20,
+   "limit_enter": 20,
+   "m": 77,
+   "markowitz_after": "9a9999999999b93f",
+   "markowitz_enter": "9a9999999999b93f",
+   "markowitz_tightened": false,
+   "marks": {
+    "4e": 19,
+    "58": 58
+   },
+   "model_status": 2,
+   "n": 760,
+   "numeric_after": 0,
+   "numeric_enter": 0,
+   "pinf": "0000000000000000",
+   "pinf_le_1": true,
+   "push_leave": {
+    "ret": 0,
+    "retry": 0
+   },
+   "quick_path": false,
+   "slack_m2_stale_nonzero": 0,
+   "stable_sort_differs": false,
+   "support": 1,
+   "violations": 0,
+   "vstat_changes": 0,
+   "vstat_cols": {
+    "-1": 729,
+    "-3": 12,
+    "basic": 19
+   },
+   "vstat_slacks": {
+    "-4": 19,
+    "basic": 58
+   }
+  }
+ },
+ "errors": [],
+ "source": "bench/oracle/m3_push_block",
+ "task": "M3-04c-1",
+ "tool_sha256": "8908c9f0a71816f6e55aa38cb1e1b12a1f1fe580775108188041c60e819c0b4b"
+}
