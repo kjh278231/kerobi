@@ -36,7 +36,7 @@
 - **노드 LP의 호출 문맥(본 탐색 노드·휴리스틱·루트·sub-MIP)은 backtrace 대신 `5ce67b` 진입의 반환 주소와 `5bbf7f` 중첩 깊이로 판별한다.** 반환 주소를 `../re/decomp/index.tsv` 함수 범위로 이름화하고 `5ce67b` 중첩 스택을 둔다. `5fb8ec`(노드)·`8e4682`·`8f39d7`·`8faaa4`(휴리스틱)·`654502`·`6dec7d`(루트)가 바로 갈린다. FUZZY backtrace는 오래된 스택 칸도 읽는다. 예: `tools/mip_retry_bnb_scan.js`. (M2-03d-5)
 - **Python venv에는 frida 모듈이 없다.** Node Frida(`tools/mip_retry_basis.js`의 require 경로)를 쓴다. (M2-03b-1)
 
-- **함수 중간 지점 훅은 objdump로 명령 경계, 그 지점으로 가는 jmp 전부의 출처, 레지스터 쓰기를 확인한 뒤 붙인다.** `0x1c3004`는 jmp 9개가 모두 단계 구간 안에서 왔고 r14 쓰기가 없었다. 새 훅의 사건만 빼서 이전 캡처와 같으면 비간섭 증거가 된다. (M3-04b-1, [§3](../m3/primal_push_step_oracle.md#3-캡처-경계-보완))
+- **함수 중간 지점 훅은 objdump로 명령 경계, 그 지점으로 가는 jmp 전부의 출처, 레지스터 쓰기를 확인한 뒤 붙인다.** `0x1c3004`는 jmp 9개가 모두 단계 구간 안에서 왔고 r14 쓰기가 없었다. 새 훅의 사건만 빼서 이전 캡처와 같으면 비간섭 증거가 된다. (M3-04b-1, [§3](../m3/primal_push_step_oracle.md#3-캡처-경계-보완)) **범위 disassembly도 함수 시작부터 확인한 명령 경계로 좁힌다.** 임의0xf44d0부터 objdump를 시작해 거짓 디코드가 섞였고, 실제 경계0xf44cf로 고쳤다(첫 산출물 history 보존). `dc.py --asm --range`는 C 줄 번호가 아닌 hex 주소다. (M3-04c-21, [실행 기록](../m3/primal_push_lu_survey.md#6-실행-결과))
 
 - **push 판단 arm을 노릴 때는 barrier 해 대신 `PStart`·`DStart`(Method=2, LPWarmStart=2)로 시작 상태를 직접 정한다.** 실행당 1초 미만이라 묶음별 탐색을 빨리 돌릴 수 있다. ScaleFlag=0으로 두면 내부 값이 모델 값과 같다. 캡처 도구는 시작 벡터를 기록하고 검사기가 manifest와 대조해야 한다. (M3-04b-3, [§4.1](../m3/primal_push_arms_oracle.md#41-탐색합격-근거-아님))
 - **LP 파일의 열 순서는 처음 나온 순서이고 목적 줄이 먼저다.** 목적 계수가 0이 아닌 변수만 적으면 열 순서가 바뀌어 이름 대응이 틀린다. 목적에 모든 변수를 0 계수까지 적는다(`tools/push_arm_lp.py`). (M3-04b-3)

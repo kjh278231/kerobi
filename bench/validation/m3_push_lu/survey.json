@@ -1,0 +1,189 @@
+{
+  "task": "M3-04c-21",
+  "kind": "stored-capture-survey",
+  "new_original_runs": 0,
+  "numerical_equivalence": "unverified",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "survey_tool_sha256": "a9028fd00650116de84807b39b48da6dc7ffa3de91d7ad01e23c20d43ddd0865",
+  "sources": {
+    "../re/decomp/c/00120680_PRIVATE000000000009d008.c": "26aec435ba5288663a23a0670ad59fac818bc3afd932162cd7cd0b948d89d348",
+    "../re/decomp/c/00120740_PRIVATE00000000002207de.c": "5124f10fccc1eb5e85d57f781b2a97c28f8d8d1ef94b221e84583dbb4ece5baa",
+    "../re/decomp/c/0012bd30_PRIVATE0000000000214344.c": "ecb79a46f71c1bbe6dd33a5423a45ce8feace792721719559b1c8f2031804795",
+    "../re/decomp/c/0012a990_PRIVATE000000000021b9de.c": "4fd5d5772905ca520224ca0f1446cd4272f96c9582bcd01341ce6d610b53e6c7",
+    "../re/decomp/c/001223e0_PRIVATE000000000021686f.c": "fdd332440e4912fedb7abae96eae187472eefeb045ceaf10b1c4669aba155398",
+    "../re/decomp/c/001205d0_PRIVATE000000000009cf9b.c": "56ca286a9f131998eb974d6a4ad78daeb66f14404c8ad525993c3853b592be80",
+    "../re/decomp/c/00131710_PRIVATE000000000009e376.c": "9a8a6fc9f8e73a7c4f62bb52d38bd66fb8d7210000914e1857e344aa4e3525fb",
+    "../re/decomp/c/0012de60_PRIVATE0000000000221173.c": "2770a43287349d418883e6af6610e330089223b6651944d56afe343d2c558898",
+    "../re/decomp/c/000f15c0_PRIVATE000000000005b257.c": "f4bc6293c44b0374816f05a8b09318a046fccef96db8e0b81c7ae2ced0e77183",
+    "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb",
+    "../re/decomp/c/001c5310_PRIVATE000000000025615c.c": "acbf6b5539de8967b02005efd5bb3581e1487d56b2881508ad4309a4305793bd",
+    "crates/lp/src/lu.rs": "7fb8059152878642529e5dfa9c7aa52862fcbd87399535fa3ea5bc26626c2b5d",
+    "crates/lp/src/simplex.rs": "e0d91876500e50ce0f669ecaeb549cb74e70e8497c2721ed897ace0b3905d832",
+    "docs/m1/m1_02i_eta.md": "136a9305db8e68cfedcdadd4d4a00a360ceb66a6a44d21ba488c327671214172",
+    "docs/m1/m1_02l_eta_peel.md": "2ef9868583b9d28395df2bc34fccf969be5909e7a19b3d715b174eb52e0f7b74",
+    "docs/m1/m1_02m_usolve.md": "f5c893290e25ebda2405ca6ee6b50390f16e0497295491bee4087ba7f27d5723",
+    "docs/m1/m1_02n_update.md": "7e1250fa3b592eacb3399624dd1714503e198258c6c2d84bc6b6371dad6c922a"
+  },
+  "assembly": {
+    "bench/validation/m3_push_lu/btran-body.asm": "6be60aed7c4c09b09dc02d4e512ac487586dfab70849178cce2cbe6a1d0bb31b",
+    "bench/validation/m3_push_lu/btran-wrapper.asm": "44d157a95bc1184040c819be3bb6d5b7857121fb17f3b5314c072ee449d26306",
+    "bench/validation/m3_push_lu/factor-renumber.asm": "518ac31c56493f8177bc4ea5df3f9f990cb46affbf220d5928e09aa5bb306fca",
+    "bench/validation/m3_push_lu/ftran-body.asm": "4f6ed20d6fd51bdc049e1680c9f80bd0febf3adae75ac143f8bcf1cede0aef52",
+    "bench/validation/m3_push_lu/ftran-wrappers.asm": "9dc28243810ba35866282a25451861b03f3ecbf5d09820d9c4aca2a8757c08b6"
+  },
+  "upstream_manifest_sha256": "ca0e6083ec572a9b7abaeea031b44dce9f850b53372504a514896845130b2802",
+  "representative_captures": {
+    "bench/oracle/m3_push_round/arms-1.json": "ffab573cfcdefb260ebb0dc92ec2b26f28dc3356e562d6c256f0550bb43cd344",
+    "bench/oracle/m3_push_round/retry-1.json": "7a4c20c863fb94523c23c1c131c7f7034646332e239b9668bd23eeb91e8fd082",
+    "bench/oracle/m3_push_round/interior-1.json": "75a486ec597c2290a6a893774587106433a46f0b2d7a7f1e6a6ad0a40f951a37",
+    "bench/oracle/m3_push_round/control-1.json": "2d85e8f4c06b48825504781b73a4067c4c14f2bf1429814a1717e94cc07c2f89"
+  },
+  "totals": {
+    "events": 751,
+    "supplier_ftran": 42,
+    "spike_null": 33,
+    "support_btran": 22,
+    "pivot_factor_calls": 6,
+    "pivot_factor_skips": 22,
+    "factor_calls": 16,
+    "header_reordered": 7,
+    "recompute_ftran": 8
+  },
+  "datasets": [
+    {
+      "name": "arms",
+      "events": 410,
+      "supplier_ftran": 25,
+      "raw_count": {
+        "1": 16,
+        "2": 9
+      },
+      "spike_null": 25,
+      "spike_count": {},
+      "support_btran": 17,
+      "btran_count": {
+        "1": 17
+      },
+      "approved": {
+        "flip": 5,
+        "pivot": 17
+      },
+      "pivot_factor_calls": 0,
+      "pivot_factor_skips": 17,
+      "factor_calls": 4,
+      "requests": {
+        "10": 4
+      },
+      "factor_returns": {
+        "0": 4
+      },
+      "max_factor_updates": 0,
+      "header_reordered": 2,
+      "recompute_ftran": 3,
+      "recompute_sites": {
+        "round": 3
+      },
+      "observations": {
+        "input_after_supplier": false,
+        "lr_stage": false,
+        "u_kernel": false,
+        "factor_arrays": false,
+        "buffer_swap_identity": false,
+        "btran_eta_scratch": false
+      }
+    },
+    {
+      "name": "retry",
+      "events": 161,
+      "supplier_ftran": 8,
+      "raw_count": {
+        "1": 5,
+        "2": 3
+      },
+      "spike_null": 7,
+      "spike_count": {
+        "1": 1
+      },
+      "support_btran": 4,
+      "btran_count": {
+        "1": 4
+      },
+      "approved": {
+        "flip": 1,
+        "pivot": 4
+      },
+      "pivot_factor_calls": 0,
+      "pivot_factor_skips": 4,
+      "factor_calls": 3,
+      "requests": {
+        "10": 3
+      },
+      "factor_returns": {
+        "0": 3
+      },
+      "max_factor_updates": 0,
+      "header_reordered": 2,
+      "recompute_ftran": 2,
+      "recompute_sites": {
+        "round": 2
+      },
+      "observations": {
+        "input_after_supplier": false,
+        "lr_stage": false,
+        "u_kernel": false,
+        "factor_arrays": false,
+        "buffer_swap_identity": false,
+        "btran_eta_scratch": false
+      }
+    },
+    {
+      "name": "interior",
+      "events": 180,
+      "supplier_ftran": 9,
+      "raw_count": {
+        "-1": 9
+      },
+      "spike_null": 1,
+      "spike_count": {
+        "8": 8
+      },
+      "support_btran": 1,
+      "btran_count": {
+        "1": 1
+      },
+      "approved": {
+        "flip": 2,
+        "pivot": 7
+      },
+      "pivot_factor_calls": 6,
+      "pivot_factor_skips": 1,
+      "factor_calls": 9,
+      "requests": {
+        "0": 5,
+        "10": 4
+      },
+      "factor_returns": {
+        "0": 9
+      },
+      "max_factor_updates": 3,
+      "header_reordered": 3,
+      "recompute_ftran": 3,
+      "recompute_sites": {
+        "pivot": 1,
+        "round": 2
+      },
+      "observations": {
+        "input_after_supplier": false,
+        "lr_stage": false,
+        "u_kernel": false,
+        "factor_arrays": false,
+        "buffer_swap_identity": false,
+        "btran_eta_scratch": false
+      }
+    },
+    {
+      "name": "control",
+      "events": 0
+    }
+  ]
+}

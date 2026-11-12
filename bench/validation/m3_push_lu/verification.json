@@ -1,0 +1,83 @@
+{
+  "task": "M3-04c-21",
+  "base": "6b371c0",
+  "contract": "befcbe9",
+  "first_survey": "d471ab3",
+  "kind": "investigation",
+  "new_original_runs": 0,
+  "numerical_equivalence": "unverified",
+  "independent_reviewer": false,
+  "environment": {
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "python": "3.10.12"
+  },
+  "replay": [
+    {
+      "command": [
+        "python3",
+        "tools/push_lu_survey.py"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "026472ff828c6ced13c67c9bde49045aa3d6dedcdca1f7a9eaa06196d49dadae",
+      "bytes": 6577
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_lu_survey.py"
+      ],
+      "exit_code": 0,
+      "stdout_sha256": "026472ff828c6ced13c67c9bde49045aa3d6dedcdca1f7a9eaa06196d49dadae",
+      "bytes": 6577
+    }
+  ],
+  "input_integrity_rejected": 8,
+  "new_numerical_mutations": 0,
+  "regression_commands": 8,
+  "document_links": [
+    "../../bench/validation/m3_push_lu/ftran-wrappers.asm",
+    "../../bench/validation/m3_push_lu/ftran-body.asm",
+    "../../bench/validation/m3_push_lu/btran-wrapper.asm",
+    "../../bench/validation/m3_push_lu/btran-body.asm",
+    "../../bench/validation/m3_push_lu/factor-renumber.asm",
+    "../../bench/validation/m3_push_lu/survey.json",
+    "../../bench/validation/m3_push_lu/regression.json"
+  ],
+  "registered_followups": [
+    "M3-04c-21a",
+    "M3-04c-21b",
+    "M3-04c-21c",
+    "M3-04c-21d",
+    "M3-04c-21e",
+    "M3-04c-21f"
+  ],
+  "omitted": [
+    "cargo",
+    "clippy",
+    "extension-install",
+    "pytest",
+    "Netlib",
+    "P3"
+  ],
+  "omitted_reason": "Rust/확장 변경이 없는 저장 자료 조사",
+  "artifacts": {
+    "bench/validation/m3_push_lu/btran-body.asm": "6be60aed7c4c09b09dc02d4e512ac487586dfab70849178cce2cbe6a1d0bb31b",
+    "bench/validation/m3_push_lu/btran-wrapper.asm": "44d157a95bc1184040c819be3bb6d5b7857121fb17f3b5314c072ee449d26306",
+    "bench/validation/m3_push_lu/factor-renumber.asm": "518ac31c56493f8177bc4ea5df3f9f990cb46affbf220d5928e09aa5bb306fca",
+    "bench/validation/m3_push_lu/ftran-body.asm": "4f6ed20d6fd51bdc049e1680c9f80bd0febf3adae75ac143f8bcf1cede0aef52",
+    "bench/validation/m3_push_lu/ftran-wrappers.asm": "9dc28243810ba35866282a25451861b03f3ecbf5d09820d9c4aca2a8757c08b6",
+    "bench/validation/m3_push_lu/history/factor-renumber-mid-instruction.asm": "a988adfbb7cc88abb2b78edf6c11837b2db0417f7237714840076e6d74d15c37",
+    "bench/validation/m3_push_lu/initial-cli-error.log": "aa135e83212a3f91c425a30d79bbbf22540b7880c021decfc266dbe3e7376450",
+    "bench/validation/m3_push_lu/input-integrity.json": "f489a3531cc96e425212c22e6e8b58d99b98359aa2e02e0130ad15ce999cb954",
+    "bench/validation/m3_push_lu/regression-1.log": "972596c5ccb69388743ec67ade5b6b2386ba24be6829818ef686f49191170cab",
+    "bench/validation/m3_push_lu/regression-2.log": "e316906192678b5d0cd1f75fd60a75e1e5979c0b4148ba42ef691fecdf71c3ef",
+    "bench/validation/m3_push_lu/regression-3.log": "f90873fe3954bbed4853ab7f48fef0696ccc4d0d1eb711e51b17026846ff99fe",
+    "bench/validation/m3_push_lu/regression-4.log": "575c272b94e33aca441cbe35aad5fd8bb9ac40af086065a20bf26f54529d4fe0",
+    "bench/validation/m3_push_lu/regression-5.log": "0ea712d8e503694d6fdccb3d211233d9f1a434e53de867d7d2a763fa4e7ae825",
+    "bench/validation/m3_push_lu/regression-6.log": "c7364edf03e1cd0fc88c59ddb78e1e14e5df8ac22ea7c2c7897189d8aa479b75",
+    "bench/validation/m3_push_lu/regression-7.log": "32c9a2014238433cf97ffffe3a1b31964d2a11acabfa87abd468b35d3617281f",
+    "bench/validation/m3_push_lu/regression-8.log": "3f532f7f9c801054fcc0d7e832eac6f981db98b916552723cb32bc36c15a2509",
+    "bench/validation/m3_push_lu/regression.json": "29d4768cec64513f5dbc10cd0f56ccb38a814f10cf3b1d199f71914d81b2c1d8",
+    "bench/validation/m3_push_lu/survey.json": "026472ff828c6ced13c67c9bde49045aa3d6dedcdca1f7a9eaa06196d49dadae"
+  }
+}

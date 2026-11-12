@@ -1,5 +1,7 @@
 # 11. 진행 기록과 운영
 
+M3-04c-21 직렬 수치 backend 연결 조사를 완료했다(신규 수치 동등성 미검증). 한 RHS FTRAN의 입력 변환·L/R 뒤 spike·버퍼 교환, 지원 BTRAN의 Uᵀ cache, 지연 factor와 현재 header·재분해 순열을 C/asm·M1 Rust API로 대조했다. 선행19 대표 자연3모델751사건에서 FTRAN42·BTRAN22·factor16(FT5)·재계산8·pivot factor 생략22를 집계했고 source/asm 해시·재생·입력 무결성8종 거부·선행4검사기/chain 회귀가 통과했다. 새 원본0회·Rust 코드 변경0·독립 검토자 미사용. 다음은 **M3-04c-21a FTRAN 수치 오라클**이며, FTRAN21a→b·BTRAN21c→d·지연 LU/재분해21e→f로 나눴다. 루프22·품질15a·batch23·x87·전체work/P3는 별도다. [계약과 결과](m3/primal_push_lu_survey.md).
+
 M3-04c-20 보류·지원·라운드 제어를 Rust L1으로 완료했다(계약 범위 통과). 자연110+합성106, 총216경계·14,365필드의 후보/실패·지원 표시·승인수·압축·요청10·종료·round factor/retry가 원본 저장 자료와 정확/비트 일치했다. trace변조4,093종·임시 사본 Rust변이39종을 전부 거부했다. workspace134통과·기존 ignored12·clippy0, 선행 재계산/factor/supplier/chain 회귀도 통과했다. 원본19 독립3회 자료 재사용·새 원본 실행0회·독립 검토자 미사용이다. 수치 BTRAN/factor는 외부 backend이며 solver 루프·실제LU21·연결22·batch23·x87·전체work/P3는 미검증이다. 다음은 **M3-04c-21 직렬 수치 backend 연결 조사**다. [계약과 결과](m3/primal_push_round_rust.md).
 
 M3-04c-19 보류·지원·라운드 오라클을 완료했다(계약 범위 통과). 자연3모델751사건 중 새207사건과 합성106경계를 각각 독립3회 재현·제어 재생하고 선행17 전체사건·최종 출력과 비간섭을 확인했다. 자연 승인36·보류6·고갈9·round factor7·BTRAN22회(모두count1)이며 count0/다수/dense·오류 경계는 합성 증거다. 독립검토에서 생존한 BTRAN caller 연결3종을 보강해 변조157종·직접9종을 거부했고 검토자의 원본2회 재캡처도 일치한다. 선행 회귀·Rust236단계/5,144필드 비트 일치가 유지된다. 신규 Rust·실제LU21·루프22·batch23·x87·전체work/P3는 미검증이다. 다음은 **M3-04c-20 round Rust L1**이다. [계약과 결과](m3/primal_push_round_oracle.md).

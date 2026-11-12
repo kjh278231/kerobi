@@ -1,0 +1,77 @@
+{
+ "natural": {
+  "calls": 51,
+  "support-positive": 39,
+  "support-negative": 0,
+  "failure-two": 2,
+  "success": 42,
+  "structural": 40,
+  "sparse": 33,
+  "slack": 2,
+  "skip-conflict": 13,
+  "skip-structural": 14,
+  "exhausted": 9,
+  "support-zero": 12,
+  "skip-failure": 1,
+  "dense": 9
+ },
+ "synthetic": {
+  "calls": 18,
+  "support-zero": 14,
+  "support-negative": 1,
+  "failure-two": 1,
+  "success": 14,
+  "structural": 12,
+  "sparse": 10,
+  "slack": 2,
+  "support-positive": 4,
+  "skip-conflict": 4,
+  "skip-structural": 6,
+  "skip-slack": 2,
+  "skip-failure": 4,
+  "exhausted": 4,
+  "dense": 4
+ },
+ "cases": {
+  "arms": {
+   "calls": 29,
+   "support-positive": 28,
+   "support-negative": 0,
+   "failure-two": 1,
+   "success": 25,
+   "structural": 23,
+   "sparse": 25,
+   "slack": 2,
+   "skip-conflict": 5,
+   "skip-structural": 6,
+   "exhausted": 4,
+   "support-zero": 1,
+   "skip-failure": 1
+  },
+  "retry": {
+   "calls": 11,
+   "support-positive": 9,
+   "support-negative": 0,
+   "failure-two": 1,
+   "success": 8,
+   "structural": 8,
+   "sparse": 8,
+   "exhausted": 3,
+   "support-zero": 2
+  },
+  "interior": {
+   "calls": 11,
+   "support-positive": 2,
+   "support-negative": 0,
+   "failure-two": 0,
+   "success": 9,
+   "structural": 9,
+   "dense": 9,
+   "skip-conflict": 8,
+   "skip-structural": 8,
+   "exhausted": 2,
+   "support-zero": 9
+  },
+  "control": {}
+ }
+}

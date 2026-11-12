@@ -195,7 +195,13 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-18 | 구현 L1 완료(범위 한정) | FTRAN 결과의 shift·분류·PInf·retry | 04c-17 | [자연8+합성130, 138입력·289행·2,958필드 비트 일치, trace변조84종·Rust변이33종 거부, workspace133·clippy0·독립검토 통과](m3/primal_push_recompute_rust.md). FTRAN 외부 입력, 실제LU21·루프22 별도 |
 | M3-04c-19 | 오라클 완료(범위 한정) | 보류·지원 BTRAN·고갈·재처리 라운드 | 04c-12 | [자연새207사건·합성106경계 각3회·비간섭·제어 재생·변조157종·독립검토 통과](m3/primal_push_round_oracle.md). 자연BTRAN22회 모두count1, count0/다수/dense·오류는 합성, Rust20·실제LU21·루프22 별도 |
 | M3-04c-20 | 구현 L1 완료(범위 한정) | 보류·지원 표시·라운드 제어(BTRAN 외부 backend) | 04c-19 | [자연110+합성106, 216경계·14,365필드 정확/비트 일치, trace변조4,093종·Rust변이39종 거부·workspace134·clippy0](m3/primal_push_round_rust.md). 실제LU21·루프22·batch23 별도 |
-| M3-04c-21 | 조사 | 직렬 수치 backend와 Rust Lu 연결 | 04c-12, M1 LU 계약 | FTRAN/BTRAN 목록·spike·지연 LU·재분해 번호 대응을 수치 오라클/구현 하위 번호로 분할 |
+| M3-04c-21 | 조사 완료 | 직렬 수치 backend와 Rust Lu 연결 | 04c-12, M1 LU 계약 | [C/asm·자연751사건 집계, FTRAN42·BTRAN22·factor16·재계산8](m3/primal_push_lu_survey.md). 수치 동등성 미검증, 후속21a–f 분할 |
+| M3-04c-21a | 오라클 구축 | 한 RHS FTRAN의 factor 입력·L/R·spike·U·raw/입력 후상태·alias | 04c-21, 13, 17 | [§4.2/4.3](m3/primal_push_lu_survey.md): 자연42/8회 시작, sparse/dense·save0·spike null/저장·eta/순열/희소 U의 실제 경계. 원본3회·비간섭·동작 변조 거부 |
+| M3-04c-21b | 구현 | Rust 한 RHS FTRAN의 수치·표현·spike·clear adapter | 04c-21a | 같은 초기 factor 상태에서 raw/목록/값·입력 후상태·spike/alias 비트 비교. 실제 수치 커널, M1 공유 변경은 조율·회귀 |
+| M3-04c-21c | 오라클 구축 | 지원 BTRAN의 수치·표현·F1d0/F1d8 cache | 04c-21, 19 | 자연22회는count1만. U 행 빈/비영·강제 Uᵀ·eta/Lᵀ sparse/dense의 실제 계산과 지원 좌표·cache 비교 |
+| M3-04c-21d | 구현 | Rust BTRAN 결과·dense flag·cache adapter | 04c-21c | raw/지원 행·cache·입력 변화 비교. M1-02k 일반 밀도 근사를 적용 범위에서 해결하거나 제외 명시 |
+| M3-04c-21e | 오라클 구축 | 지연 LU→FT/재분해→재번호·rhs FTRAN의 수치 연쇄 | 04c-21a·21c | support 생략22·요청0 갱신5·header 변경7의 내부 상태/순열·버퍼 수명 확보. 실패/singular는 실제 증거 전 미검증 |
+| M3-04c-21f | 구현 | 직렬 numeric backend의 factor 수명·FT·재분해·재번호·rhs 계산 | 04c-21b·21d·21e | 같은 초기 factor 뒤 중간 상태 재주입 없이 수치 연쇄 일치. 매번 재분해/무조건 갱신 변이 거부. 전체 루프 설치는 별도 |
 | M3-04c-22 | 구현 L1 | 초기화된 직렬 push 루프 연결(수치 backend 외부) | 04c-14·16·18·20·10 | 중간 원본 상태 재주입 없이 여러 round의 호출·상태·후보 비교. 초기화·최종 해 설치·수치 LU 제외 |
 | M3-04c-23 | 조사 | batch 공급·worker·factor 별칭·무효화 | 04c-12 | Threads>1 도달성·재현성·record·work·미소비 후보의 후속 오라클/구현 분할 |
 | M3-04d | 조사 | dual push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |
