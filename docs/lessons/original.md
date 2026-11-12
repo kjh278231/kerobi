@@ -120,6 +120,8 @@
 - **ub=I 열을 방향 0으로 보내려면 feasible은 r<0과 허용오차(3e-8) 미만 계수의 유계 행, 위반은 자기 B 행의 ∓2e-8 계수(σ 부호 절)를 쓴다.** r=0이면 feasible 방향식 첫 절이 방향 1을 낸다. 자유 열은 r=0이면 두 경로 모두 방향 0이고, 위반 경로에서 σ=+2e-8이면 방향 1(자유 절 단독 판별)이다. 캡처. (M3-04c-8, [§4](../m3/primal_push_recall.md#4-사례와-원본-자료))
 - **push 단계 적용의 이동량은 flip이면 진입 열의 gap(방향 0은 dU, 1은 dL; -3 자유 열은 ∓x), pivot이면 `(basic[r]-(이탈 상태≠-1이면 ub-lb 보정))/a`이고, 남은 희소 원소마다 `basic -= 이동량·alpha`(방향 반전된 alpha) 뒤 표시를 다시 매긴다.** pivot 행 표시는 진입 열 lb>-I일 때만 분류하고 아니면 `F`다. rhs는 진입 구조 열(flip은 새 bound를 뺀 값, pivot은 x 그대로)과 pivot 이탈 구조 열(-bound)의 CSC를 `rhs += d·a`로, slack 진입은 `rhs[j-n] += slack`으로 보정한다. 요청 0(factor 갱신)은 basis 배열·basic 값을 바꾸지 않았다(166단계 연쇄 재생). C·캡처. (M3-04c-10, [§6](../m3/primal_push_step_chain.md#6-실행-결과))
 - **push의 theta·pivot 지역 변수는 단계 사이로 새지 않는다.** 세 ratio가 후보 없음에도 theta·pivot을 쓰고, feasible -1이면 push가 theta=I를 쓴다. 연쇄 재생을 NaN으로 시작해도 일치했다. 캡처. (M3-04c-10)
+- **basic 표시 `F`(자유 basic) 행은 `055f68` 후보에서 빠지므로, 자유 basic 행에만 계수가 있는 자유 열은 양방향 ratio가 -1이고 theta=I 재호출 뒤 -3 flip(이동량 ±x)으로 간다.** 등식 하나를 공유하는 자유 변수 두 개(시작 0.5·0.7)로 자연 push에서 재현했다. 루프는 F 행의 basic 값만 바꾸고 표시는 그대로 둔다. C 47·105줄·캡처. (M3-04c-11, [§6](../m3/primal_push_chain_oracle.md#6-실행-결과))
+- **04c-2 위반 묶음은 영구 위반 행 W를 빼도 위반이 풀리지 않는다.** c5·c6·bD1–bD4 등의 B 행에는 고칠 후보가 없어 push 끝까지 B 7개가 남았다. 위반 해소(V→F)는 SA(A, 등식 행의 내부 구조 변수)와 feasible 묶음만 둔 LP에서 나왔고, 해소는 pivot 행에서 일어났다. 캡처. (M3-04c-11, history/resolve-v1)
 
 ## dual simplex DSE β (`28c93`·`8b473`)
 

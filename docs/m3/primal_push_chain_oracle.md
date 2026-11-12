@@ -49,3 +49,23 @@
 - 캡처: `tools/gurun.sh node tools/primal_push_recall_capture.js <primal|dual> bench/oracle/m3_push_chain/<lp>.lp bench/oracle/m3_push_chain/<lp>-<kind>-<i>.json "$(cat bench/oracle/m3_push_chain/<lp>.extra.json)"`, i=1..3, 한 번에 한 프로세스.
 - 검사: `python3 tools/push_chain_oracle.py --check`(재현성·출처·목표 태그, 실패 시 종료 1), `--self-test`(변조 거부).
 - Rust: `python3 tools/push_step_chain_rust.py --write && cargo test -p rsolver-lp --test push_chain && python3 tools/push_step_chain_rust.py --compare`, `--self-test`, `--mutate-rust <새 경로>`.
+
+## 6. 실행 결과
+
+- 실행 commit: 계약 `15bb3ec`, 캡처 `4eb5af3`(기준 main `47e29f7`). WSL2 x86-64, Node v22.22.1, Frida 17.26.2, Gurobi 13.0.3 체험판 라이선스.
+- 원본: shift primal 192·dual 190사건, resolve primal 71·dual 69사건. 네 사례 모두 독립 3회의 사건·결과·출력이 같았다. `python3 tools/push_chain_oracle.py --check` 종료 0. manifest `bench/oracle/m3_push_chain/manifest.json`.
+- 목표 태그(run 1): shift primal `lb-enter` 16·`lb-leave-shift` 3·`free-flip` 1·`f-row-loop` 1, dual 15·3·1·1. resolve primal·dual `v-then-f` 각 1. 5태그 모두 발생.
+- 검사기 판별력: `--self-test` 변조 8종 거부(바이너리 해시 0, 사건 비움, lb 0으로 목표 0회, feasible 경로 제거로 `v-then-f` 0회, 실행 간 차이, 도구 해시, 모델 해시, x87 사건).
+- Rust 재비교(Rust 코드 변경 없음): 사례를 더한 `python3 tools/push_step_chain_rust.py --write && cargo test -p rsolver-lp --test push_chain && python3 tools/push_step_chain_rust.py --compare` 종료 0. **236단계(flip 70·pivot 148·보류 18), 42구간, 필드 5,144개 전부 일치.** 새 사례만 72단계(flip 25·pivot 39·보류 6), 재분해 건너뜀 0. 기대 집계는 Rust 실행 전에 투영에서 세어 고정했다. `--self-test` 변조 24종 거부.
+- 변이 재실행(`bench/oracle/m3_push_step_chain/rust-mutation-v2.json`, 04c-10 기록은 그대로 보존): 31종 중 **21 거부**(04c-10은 15). 생존→거부: `pivot-no-lb-shift`·`pivot-shift-order`(shift), `flip-free-shift-sign`·`rhs-flip-free-shift`·`loop-free-classified`(FZ), `pivot-viol-no-decrement`(resolve, 위반 해소 뒤 원본은 F 경로인데 변이는 V).
+- 남은 생존 10: 동치 6(04c-10 §6), 분류 동률 3(범위 밖), `loop-viol-keep` 1. resolve의 위반 행(SA의 A)은 pivot 행에서 해소됐고, 반복 루프에서 B/A 행이 다시 분류되는 단계가 위반 해소 전에 없었다. 그래서 루프의 감소 누락이 경로를 바꾸지 않는다.
+- 회귀: `cargo test --release --workspace` 130 통과, `cargo clippy --workspace --all-targets -- -D warnings` 0, `git diff --check`. 재생 비교 `primal_push_decision_rust`·`primal_push_ratio_rust`·`push_violated_rust`·`push_retry_rust`·`primal_push_reentry_rust`·`push_violated_reentry_rust`·`push_step_chain_rust`의 `--compare`와 `push_chain_oracle.py --check` 모두 종료 0.
+
+## 7. 판정과 인수인계
+
+- 작업 수행: 완료.
+- 오라클: 계약 범위 **통과**(독립 3회 재현, 목표 5태그 발생, 변조 거부). 구현 재검증: 04c-10 계약 범위에 새 자연 사례를 더해 **통과**(Rust 변경 없음).
+- 미검증: `loop-viol-keep`(루프 안 B/A 행이 해소 전에 분류되는 자연 사례), 분류 동률 3종, 04c-10 §7의 범위 밖 항목.
+- 후속: M3-04c-12(push 루프 본체 조사), M3-04d. `loop-viol-keep`은 위반 행을 고치지 않는 pivot이 그 행을 지나가는 묶음(위반 행 계수가 다른 열에도 있음)을 resolve에 더하면 판별할 수 있다. 필요하면 별도 행으로 둔다.
+- branch `work/m3-04c-11`, worktree `../rsolver-m3-04c-11`.
+- 교훈: `docs/lessons/original.md`(F 행은 ratio 후보에서 빠져 자유 열이 양방향 -1 → -3 flip, 위반 묶음의 후보 없는 B 행은 W 없이도 해소되지 않음).
