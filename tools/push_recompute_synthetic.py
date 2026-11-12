@@ -123,6 +123,7 @@ def capture():
             for off, value in ((0x2068, m), (0x1fa0, x['attempt']), (0x1f98, x['model_status'])):
                 put(frame, off, c.c_int, value)
             put(frame, 0x1f50, c.c_int64, m)
+            put(frame, 0x1f10, c.c_int64, m*8)
             for off, key in ((0x1fc8, 'I'), (0x1f00, 'minus_I'), (0x2070, 'h'), (0x1f08, 'minus_h')):
                 c.memmove(frame+off, bytes.fromhex(x[key]), 8)
             put(s, 0x294, c.c_int, x['request'])

@@ -42,7 +42,10 @@
 
 ## 6. 실행 결과
 
-착수 계약. 아직 새 원본 캡처나 동등성 검증을 실행하지 않았다.
+- 자연 arms/retry/interior/대조군 각각 독립3회, 283/112/149/0사건이 동일하고 선행15 투영·최종 출력과 일치했다. 자연 재계산8회(pivot1/round7), 119행에서 N89/L21/U3/A2/B4를 관측했다.
+- 합성120사례·152행 독립3회 및 재생 일치. F8/X14/L16/N36/U14/A18/B46, retry2회(두 진입점 각각1회). 자연 별칭은 모두 false이며 별칭 true와 free/fixed·정확 경계·retry는 합성 증거다.
+- 초기 합성 frame의 복사 길이 슬롯 +0x1f10 누락은 basic 비트 비교 실패로 잡았다. history/missing-copy-bytes-synthetic-{1,2,3}.json에 보존하고 m*8을 설정한 뒤 독립3회 재캡처했다. shifted 경계는 raw 좌표에서 nextafter를 적용한다.
+- `python3 tools/push_recompute_check.py --write-manifest --controls --acceptance --self-test --report bench/oracle/m3_push_recompute/verification.json` 종료0. 변조82종을 모두 거부했다. 회귀·독립 검토는 진행 중이다.
 
 ## 7. 판정과 인수인계
 
