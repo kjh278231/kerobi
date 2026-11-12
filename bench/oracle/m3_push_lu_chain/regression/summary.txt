@@ -1,0 +1,14 @@
+btran-controls exit=0 : python3 tools/push_btran_check.py --controls
+btran-acceptance exit=0 : python3 tools/push_btran_check.py --acceptance
+ftran-controls exit=0 : python3 tools/push_ftran_check.py --controls
+ftran-acceptance exit=0 : python3 tools/push_ftran_check.py --acceptance
+cargo-push-btran exit=0 : cargo test -p rsolver-lp --test push_btran
+btran-rust-compare exit=0 : python3 tools/push_btran_rust.py --compare
+cargo-push-ftran exit=0 : cargo test -p rsolver-lp --test push_ftran
+ftran-rust-compare exit=0 : python3 tools/push_ftran_rust.py --compare
+lu-survey exit=0 : python3 tools/push_lu_survey.py --check
+py-compile exit=0 : python3 -m py_compile tools/push_lu_check.py tools/push_lu_runs.py
+node-check exit=0 : node --check tools/push_lu_agent.js
+node-check-capture exit=0 : node --check tools/push_lu_capture.js
+lu-check-full exit=0 : python3 tools/push_lu_check.py --write-manifest --controls --acceptance --self-test --report bench/oracle/m3_push_lu_chain/verification.json (자체 변조54 거부)
+diff-check exit=0 : git diff --check

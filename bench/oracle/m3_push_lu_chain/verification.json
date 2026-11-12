@@ -1,0 +1,417 @@
+{
+  "controls": {
+    "arms": {
+      "events": 662,
+      "lu": 16
+    },
+    "retry": {
+      "events": 249,
+      "lu": 12
+    },
+    "interior": {
+      "events": 288,
+      "lu": 32
+    },
+    "control": {
+      "events": 0,
+      "lu": 0
+    },
+    "adlittle": {
+      "events": 547,
+      "lu": 52
+    },
+    "scsd1": {
+      "events": 237,
+      "lu": 8
+    },
+    "capri": {
+      "events": 832,
+      "lu": 80
+    }
+  },
+  "acceptance": {
+    "models": {
+      "arms": {
+        "calls": 4,
+        "ft": 0,
+        "roweta": 0,
+        "cache_reuse": 0,
+        "span_trivial": 0,
+        "eta_added": 0,
+        "refactor": 4,
+        "refactor_calls": 4,
+        "init": 1,
+        "refactor_push": 3,
+        "leave_renumbered": 4,
+        "header_reordered": 2,
+        "old_perm_nonid": 2,
+        "links": 45,
+        "links_header_changed": 17,
+        "links_bucket_changed": 0,
+        "links_after_lu": 4,
+        "links_into_lu": 0
+      },
+      "retry": {
+        "calls": 3,
+        "ft": 0,
+        "roweta": 0,
+        "cache_reuse": 0,
+        "span_trivial": 0,
+        "eta_added": 0,
+        "refactor": 3,
+        "refactor_calls": 3,
+        "init": 1,
+        "refactor_push": 2,
+        "leave_renumbered": 3,
+        "header_reordered": 2,
+        "old_perm_nonid": 2,
+        "links": 14,
+        "links_header_changed": 4,
+        "links_bucket_changed": 0,
+        "links_after_lu": 3,
+        "links_into_lu": 0
+      },
+      "interior": {
+        "calls": 9,
+        "ft": 5,
+        "roweta": 3,
+        "cache_reuse": 0,
+        "span_trivial": 2,
+        "eta_added": 3,
+        "refactor": 4,
+        "refactor_calls": 4,
+        "init": 1,
+        "refactor_push": 3,
+        "leave_renumbered": 3,
+        "header_reordered": 3,
+        "old_perm_nonid": 3,
+        "links": 18,
+        "links_header_changed": 6,
+        "links_bucket_changed": 0,
+        "links_after_lu": 9,
+        "links_into_lu": 5
+      },
+      "control": {
+        "calls": 0,
+        "ft": 0,
+        "roweta": 0,
+        "cache_reuse": 0,
+        "span_trivial": 0,
+        "eta_added": 0,
+        "refactor": 0,
+        "refactor_calls": 0,
+        "init": 0,
+        "refactor_push": 0,
+        "leave_renumbered": 0,
+        "header_reordered": 0,
+        "old_perm_nonid": 0,
+        "links": 0,
+        "links_header_changed": 0,
+        "links_bucket_changed": 0,
+        "links_after_lu": 0,
+        "links_into_lu": 0
+      },
+      "adlittle": {
+        "calls": 14,
+        "ft": 11,
+        "roweta": 9,
+        "cache_reuse": 0,
+        "span_trivial": 2,
+        "eta_added": 6,
+        "refactor": 3,
+        "refactor_calls": 3,
+        "init": 1,
+        "refactor_push": 2,
+        "leave_renumbered": 3,
+        "header_reordered": 3,
+        "old_perm_nonid": 3,
+        "links": 37,
+        "links_header_changed": 13,
+        "links_bucket_changed": 0,
+        "links_after_lu": 13,
+        "links_into_lu": 11
+      },
+      "scsd1": {
+        "calls": 2,
+        "ft": 0,
+        "roweta": 0,
+        "cache_reuse": 0,
+        "span_trivial": 0,
+        "eta_added": 0,
+        "refactor": 2,
+        "refactor_calls": 2,
+        "init": 1,
+        "refactor_push": 1,
+        "leave_renumbered": 2,
+        "header_reordered": 2,
+        "old_perm_nonid": 2,
+        "links": 14,
+        "links_header_changed": 1,
+        "links_bucket_changed": 0,
+        "links_after_lu": 2,
+        "links_into_lu": 0
+      },
+      "capri": {
+        "calls": 23,
+        "ft": 20,
+        "roweta": 14,
+        "cache_reuse": 0,
+        "span_trivial": 6,
+        "eta_added": 14,
+        "refactor": 3,
+        "refactor_calls": 3,
+        "init": 1,
+        "refactor_push": 2,
+        "leave_renumbered": 3,
+        "header_reordered": 3,
+        "old_perm_nonid": 3,
+        "links": 60,
+        "links_header_changed": 27,
+        "links_bucket_changed": 19,
+        "links_after_lu": 22,
+        "links_into_lu": 20
+      }
+    },
+    "total": {
+      "calls": 55,
+      "ft": 36,
+      "roweta": 26,
+      "cache_reuse": 0,
+      "span_trivial": 10,
+      "eta_added": 23,
+      "refactor": 19,
+      "refactor_calls": 19,
+      "init": 6,
+      "refactor_push": 13,
+      "leave_renumbered": 18,
+      "header_reordered": 15,
+      "old_perm_nonid": 15,
+      "links": 188,
+      "links_header_changed": 68,
+      "links_bucket_changed": 19,
+      "links_after_lu": 53,
+      "links_into_lu": 36
+    }
+  },
+  "self_test": {
+    "rejected": 54,
+    "details": [
+      {
+        "name": "binary-hash",
+        "error": "arms/2.binary: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "manifest-hash",
+        "error": "manifest.tools/push_lu_agent.js: 기준='0000000000000000000000000000000000000000000000000000000000000000', 실제='159da25a6c5831f318aa64ec59aba99731b4b9c4447f919409e7e721db4ff146'"
+      },
+      {
+        "name": "empty-events",
+        "error": "retry/1.projection: 길이 기준=237, 실제=0"
+      },
+      {
+        "name": "run-diff",
+        "error": "capri/3.events[279].factor.diag[0]: 기준='4777103b5308ecbf', 실제='4677103b5308ecbf'"
+      },
+      {
+        "name": "projection-diff",
+        "error": "arms/1.projection[2].ret: 기준=0, 실제=1"
+      },
+      {
+        "name": "netlib-projection-diff",
+        "error": "adlittle/1.projection[41].output.count: 기준=4, 실제=9"
+      },
+      {
+        "name": "baseline-result",
+        "error": "scsd1/1.baseline_result.status: 기준=2, 실제=3"
+      },
+      {
+        "name": "no-new-events",
+        "error": "interior: 새 LU 사건0"
+      },
+      {
+        "name": "model-hash",
+        "error": "capri/1.model: 기준='7d87ac34aad7f5e377efcf61e2cfb332ac255c91af36cce272fb595e47d6b780', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "R1-missing-lu-leave",
+        "error": "#5 factor:leave 뒤 lu:leave 없음"
+      },
+      {
+        "name": "R1-missing-lu-enter",
+        "error": "#1 factor:enter 뒤 lu:enter 없음"
+      },
+      {
+        "name": "R1-null-null",
+        "error": "'NoneType' object is not subscriptable"
+      },
+      {
+        "name": "R1-ret",
+        "error": "interior#3.ret: 기준=0, 실제=1"
+      },
+      {
+        "name": "R1-request",
+        "error": "adlittle#5.request: 기준=0, 실제=7"
+      },
+      {
+        "name": "R1-lu-outside",
+        "error": "#1 factor 밖 LU 사건 lu:refactor"
+      },
+      {
+        "name": "R1-roweta-in-refactor",
+        "error": "capri#2: 요청≠0에 행 eta: 길이 기준=0, 실제=2"
+      },
+      {
+        "name": "R2-zero",
+        "error": "arms#2.leave.factor.zero: 기준='82764968c2253c3d', 실제='0000000000000000'"
+      },
+      {
+        "name": "R2-perm",
+        "error": "capri#6.leave.factor.F20/F30: 역순열[0]: 기준=0, 실제=250"
+      },
+      {
+        "name": "R2-Lrow",
+        "error": "adlittle#7.leave.factor.Lrow 전치[2]: 기준=(8, 7, '30bb270f0bb5cebf'), 실제=(8, 7, '31bb270f0bb5cebf')"
+      },
+      {
+        "name": "R2-scratch",
+        "error": "interior#5.leave.factor.scratch.x1b8: 길이 기준=0, 실제=1"
+      },
+      {
+        "name": "R3-support-skip-factor-changed",
+        "error": "arms#26 btran:enter.factor.perm 연산 사이 보존(직전 ftran:leave).x40[0]: 기준=0, 실제=24"
+      },
+      {
+        "name": "R3-refactor-every-pivot",
+        "error": "retry#28 btran:enter.factor.perm 연산 사이 보존(직전 ftran:leave).x20[0]: 기준=6, 실제=9"
+      },
+      {
+        "name": "R3-update-every-pivot",
+        "error": "capri#26 btran:enter.factor.scalars.x18c 연산 사이 보존(직전 ftran:leave): 기준=0, 실제=1"
+      },
+      {
+        "name": "R3-after-ft",
+        "error": "adlittle#202 ftran:enter.factor.diag 연산 사이 보존(직전 lu:leave)[0]: 기준='9a9999999999c9bf', 실제='9b9999999999c9bf'"
+      },
+      {
+        "name": "R3-after-refactor-eta",
+        "error": "interior#50 ftran:enter.factor.etas 연산 사이 보존(직전 lu:leave): 길이 기준=0, 실제=1"
+      },
+      {
+        "name": "R3-spike-into-ft",
+        "error": "capri#248 lu:enter.factor.spike 연산 사이 보존(직전 ftran:leave).values[0]: 기준='2ac6f99b5008ccbf', 실제='2bc6f99b5008ccbf'"
+      },
+      {
+        "name": "R3-x1d8-between",
+        "error": "capri#78 btran:enter.factor.x1d8 연산 사이 보존(직전 ftran:leave): 기준=159, 실제=5"
+      },
+      {
+        "name": "R4-roweta-missing",
+        "error": "capri#3.행 eta 호출(기준=True, i35=202, i52=168, r=157, F1d8=-1): 기준=True, 실제=False"
+      },
+      {
+        "name": "R4-roweta-extra",
+        "error": "adlittle#3.행 eta 호출(기준=False, i35=41, i52=41, r=41, F1d8=-1): 기준=False, 실제=True"
+      },
+      {
+        "name": "R4-roweta-row",
+        "error": "interior#4.행 eta 인자: 기준=7, 실제=8"
+      },
+      {
+        "name": "R4-cache-reuse-predicate",
+        "error": "capri#3.행 eta 호출(기준=False, i35=202, i52=168, r=157, F1d8=157): 기준=False, 실제=True"
+      },
+      {
+        "name": "R4-span-predicate",
+        "error": "adlittle#4.행 eta 호출(기준=False, i35=56, i52=56, r=37, F1d8=-1): 기준=False, 실제=True"
+      },
+      {
+        "name": "R4-x18c",
+        "error": "interior#4.F18c+1: 기준=2, 실제=0"
+      },
+      {
+        "name": "R4-spike-left",
+        "error": "capri#6.spike count0: 기준=0, 실제=1"
+      },
+      {
+        "name": "R4-header-changed",
+        "error": "adlittle#6.header 불변[0]: 기준=30, 실제=94"
+      },
+      {
+        "name": "R4-eta-delta",
+        "error": "capri#4.F180 증가 2"
+      },
+      {
+        "name": "R4-eta-without-span",
+        "error": "capri#7: 행 eta 생성인데 i35=i52"
+      },
+      {
+        "name": "R4-buffer",
+        "error": "interior#4.버퍼 불변: 기준=True, 실제=False"
+      },
+      {
+        "name": "R5-header-renumber",
+        "error": "arms#2.header 재번호[0]: 기준=36, 실제=34"
+      },
+      {
+        "name": "R5-old-of-new",
+        "error": "capri#2.header 재번호[0]: 기준=239, 실제=282"
+      },
+      {
+        "name": "R5-leave",
+        "error": "retry#2.이탈 위치 재번호: 기준=1, 실제=2"
+      },
+      {
+        "name": "R5-new-of-old",
+        "error": "interior#2.이탈 위치 재번호: 기준=1, 실제=0"
+      },
+      {
+        "name": "R5-vstat",
+        "error": "scsd1#1.vstat[header[0]]: 기준=0, 실제=1"
+      },
+      {
+        "name": "R5-identity",
+        "error": "adlittle#2.F28 identity[0]: 기준=0, 실제=1"
+      },
+      {
+        "name": "R5-buffers-alias",
+        "error": "capri#2.F40/F48 버퍼: 기준=True, 실제=False"
+      },
+      {
+        "name": "R5-buffer-swap",
+        "error": "arms#3.spike idx/header 버퍼 교환: 기준=True, 실제=False"
+      },
+      {
+        "name": "R5-eta-oldest",
+        "error": "interior#5.F1a0[0]: 기준=2000000000, 실제=0"
+      },
+      {
+        "name": "R5-reset",
+        "error": "capri#23.F180/184/18c: 기준=(0, 0, 0), 실제=(0, 0, 1)"
+      },
+      {
+        "name": "R5-036ade-ret",
+        "error": "retry#2.036ade 반환: 기준=0, 실제=1"
+      },
+      {
+        "name": "R5-036ade-err",
+        "error": "arms#2.036ade 오류 칸[1]: 기준=0, 실제=3"
+      },
+      {
+        "name": "R5-pricing",
+        "error": "scsd1#2: pricing 객체 경로는 계약 밖"
+      },
+      {
+        "name": "R5-spike-left",
+        "error": "adlittle#14.spike count0: 기준=0, 실제=1"
+      },
+      {
+        "name": "R6-cache",
+        "error": "adlittle#4.반환 cache.count: 기준=0, 실제=1"
+      },
+      {
+        "name": "R6-x1d8",
+        "error": "capri#2.반환 F1d8: 기준=-1, 실제=0"
+      }
+    ]
+  }
+}

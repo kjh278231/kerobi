@@ -200,7 +200,7 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-21b | 구현 완료 | Rust 한 RHS FTRAN의 수치·표현·spike·clear adapter | 04c-21a | [완료](m3/primal_push_ftran_rust.md): push 50호출 커널 경계200·raw·입력 후상태·별칭·spike·scratch 5,520필드와 M1 원본 커널186호출 비트 일치. 변조1,493 거부, 변이26 중 생존9(원본에 없는 ZERO 경계·긴 eta·save∉{0,1} 등 미검증). sparse R·count0·A2/B·`21574d`·M1 `Lu` 통합 범위 밖. M1 공유 코드 변경 없음 |
 | M3-04c-21c | 오라클 완료 | 지원 BTRAN의 수치·표현·F1d0/F1d8 cache | 04c-21, 19 | [완료](m3/primal_push_btran_oracle.md): 자연 32호출(선행22+Netlib adlittle·scsd1·capri 10) 독립3회·21a/기준선 비간섭, C 규칙 전부 통과·변조41 거부. U 행 빈25/비영7(cache 기록7)·Lᵀ 희소30/조밀2·level 7. eta>0·조밀 Uᵀ·커널 출력0 미관측 |
 | M3-04c-21d | 구현 완료 | Rust BTRAN 결과·dense flag·cache adapter | 04c-21c | [완료](m3/primal_push_btran_rust.md): 지원 BTRAN 자연 32호출 커널 경계64·raw·입력 후상태·별칭·cache·F1d8·scratch·bucket·work 3,096필드 비트 일치. 변조600 거부, 변이32 중 생존11(동치4·경계7). 조밀 Uᵀ·eta·경로 B·F108>5 커널은 미검증. M1-02k 밀도 근사는 제외(21f) |
-| M3-04c-21e | 오라클 구축 | 지연 LU→FT/재분해→재번호·rhs FTRAN의 수치 연쇄 | 04c-21a·21c | support 생략22·요청0 갱신5·header 변경7의 내부 상태/순열·버퍼 수명 확보. 실패/singular는 실제 증거 전 미검증 |
+| M3-04c-21e | 오라클 완료 | 지연 LU→FT/재분해→재번호·rhs FTRAN의 수치 연쇄 | 04c-21a·21c | [완료](m3/primal_push_lu_chain_oracle.md): 7사례 독립3회·21c 비간섭, `05b257` 55호출(FT36·재분해19)·연산 사이 연결188 C 규칙 통과, 변조54 거부. FT cache 재사용·반환≠0·singular·pricing·BTRAN eta>0 미관측 |
 | M3-04c-21f | 구현 | 직렬 numeric backend의 factor 수명·FT·재분해·재번호·rhs 계산 | 04c-21b·21d·21e | 같은 초기 factor 뒤 중간 상태 재주입 없이 수치 연쇄 일치. 매번 재분해/무조건 갱신 변이 거부. 전체 루프 설치는 별도 |
 | M3-04c-22 | 구현 L1 | 초기화된 직렬 push 루프 연결(수치 backend 외부) | 04c-14·16·18·20·10 | 중간 원본 상태 재주입 없이 여러 round의 호출·상태·후보 비교. 초기화·최종 해 설치·수치 LU 제외 |
 | M3-04c-23 | 조사 | batch 공급·worker·factor 별칭·무효화 | 04c-12 | Threads>1 도달성·재현성·record·work·미소비 후보의 후속 오라클/구현 분할 |

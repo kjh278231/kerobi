@@ -1,0 +1,1 @@
+{"calls": 32, "compared_leaves": 3096, "branches": {"entry:cache": 7, "entry:cache-empty-row": 25, "eta:none": 32, "kernel:heap": 25, "kernel:heap+seq": 7, "lt:dense": 2, "lt:heap": 23, "lt:heap+seq": 1, "lt:level": 6, "u:21a941": 32}, "kernel_events": 64, "models": {"arms": 17, "retry": 4, "interior": 1, "adlittle": 2, "scsd1": 1, "capri": 7}}
