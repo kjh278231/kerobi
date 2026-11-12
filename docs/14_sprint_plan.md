@@ -186,7 +186,7 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-10 | 구현 완료(범위 한정) | push 한 단계 선택·적용 연결(`push_pick`·`push_apply`) | 04c-6·04c-8·04c-9 | [자연 캡처 34구간 166단계 연쇄 재생, 필드 3,606 비트 일치, 변조 24종·변이 31종 중 15 거부](m3/primal_push_step_chain.md). lb≠0·위반 해소·자유 열 flip·동률 미검증 |
 | M3-04c-11 | 오라클 완료(범위 한정) | lb≠0 arm LP와 위반 해소 LP 자연 캡처(04c-10 생존 경계) | 04c-10, Frida 환경 | [shift·resolve 두 순서 각 원본 3회 바이트 동일, 목표 5태그 발생, Rust 236단계 비트 일치, 변이 31종 중 21 거부](m3/primal_push_chain_oracle.md). `loop-viol-keep`·분류 동률 미검증 |
 | M3-04c-12 | 조사 완료 | push 루프 본체(공급자 `25615c`·factor 갱신 판단·재분해 뒤 재계산·재처리) 분할 | 04c-10·11 | [원본 상태·지연 LU·요청 수식·후속 13–23](m3/primal_push_loop.md). 기존 18기록 공급236·factor73 집계, 새 원본 실행0·구현 동등성 미검증 |
-| M3-04c-13 | 오라클 구축 | 단일 `25615c` 후보 소비·보류·FTRAN 경계 | 04c-12 | 후보·cursor·deferred·failures·지원 표시·count 통계 전후, FTRAN 입출력·spike 별칭. 자연3회·정확 경계·누락/변조 거부 |
+| M3-04c-13 | 오라클 구축 완료(범위 한정) | 단일 `25615c` 후보 소비·보류·FTRAN 경계 | 04c-12 | [자연51공급·합성 backend18경계 각3회, 비간섭·제어 재생·변조31종·독립검토 통과](m3/primal_push_supplier_oracle.md). raw sparse33·dense9, 수치 LU·Rust 신규 구현 제외 |
 | M3-04c-14 | 구현 L1 | 단일 공급자 제어(FTRAN은 외부 backend) | 04c-13 | 후보·보류·호출 순서·dense 압축·통계 비교. 수치 backend는21 |
 | M3-04c-15 | 오라클 구축 | 직렬 factor 요청 선택·호출·복원·품질 검사 | 04c-12 | 기존 요청·k==limit·비용식·support 생략·반환1/12/오류·요청6·retry·local_100 비교 |
 | M3-04c-16 | 구현 L1 | 직렬 factor 요청·호출 제어(수치 backend 외부) | 04c-15 | 요청·호출 횟수·별칭 복원·상태·품질 주기 비교. factor 내부는 별도 |
