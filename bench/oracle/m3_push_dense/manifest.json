@@ -1,0 +1,57 @@
+{
+ "task": "M3-04c-21i",
+ "schema": "M3-04c-21i-v1",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "settings": {
+  "Threads": 1,
+  "Seed": 0,
+  "Presolve": 0,
+  "Method": 2,
+  "Crossover": 3,
+  "LPWarmStart": 2
+ },
+ "models": {
+  "grow7": "613ff0e09282ec6da96b5b7292b0855e1da8f3ccc23d6f61dbf7910d06f3499a",
+  "grow22": "799529d386a93f8ca063c6b6d2c15f0bbb80908472906f53ccec7c80c10cf83e",
+  "perold": "62614b576ef436e499231307e54d54d9703e4ea374caef85087d8bd4b2c6e9af",
+  "pilot4": "6d7edf91a97f01f97b86b8e5508f0a3136c94fdcec448a608c11c7471ef0afe1",
+  "stair": "5e93434e32ad5ceac61abe7fedbd6a85a2db2813d6fa70f68e96102f3c47cc6c"
+ },
+ "tools": {
+  "tools/push_dense_agent.js": "a244809714e4e28481a0e6014f17c5144c111243501e70def37acc66c6084f88",
+  "tools/push_dense_capture.js": "51608aa1f697ec0a823618febeeb575d168f33a39f458f676e41027faefc83bb",
+  "tools/push_dense_runs.py": "c4371d206437c237c255c7f4c7c5a8b31652456b2aa7b2ee587fbb1f992e7b15",
+  "tools/push_lu_runs.py": "6fd8906c4b02fd5382059aefedc103af391ed9cdcf3b85da4a1a527a9cc787fa",
+  "tools/push_block_agent.js": "58180cc01590628b6eba1d9174ae163a161ada56df38b081686d338f3f5ce47f",
+  "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec",
+  "tools/gurun.sh": "7efb6a90dd1fae5f71997b24c112601d4f76b822546ddcce8d53920369f0d48f",
+  "tools/push_dense_check.py": "50871a34e5bcc4f03609892000a9cbdaba7515022a5894728de272a423b656e4",
+  "tools/push_dense_survey.py": "dc17db943a421e873b7fb4f7c16bb795f21e66ec140a44d8a3a1074f3a81471b",
+  "tools/push_dense_survey_agent.js": "fbbc35cdc010bf20b0469db1d0c22e09de72ff2078b8e810986e6f98128dc3d1",
+  "tools/push_dense_survey_capture.js": "669dc959b49ec0c5a1cdf2664eb5e5f95f14a2b392f7420707db2b7a4f4be957"
+ },
+ "captures": {
+  "bench/oracle/m3_push_dense/controls/adlittle-1.json.gz": "9ece40a9fb9c3f06fec56cb81805eb595767fa7b489c7f55a1945af3db9b98bd",
+  "bench/oracle/m3_push_dense/controls/arms-1.json.gz": "3050f1f9789a6d72ceb445c2e190368778f95aa71fc608a0415bf3c461c73f02",
+  "bench/oracle/m3_push_dense/controls/capri-1.json.gz": "8924afb74cb12694163cdff8b5a597ecd66fb390dd315494ae4d212219ce37c1",
+  "bench/oracle/m3_push_dense/controls/control-1.json.gz": "e14f4d0ceaf937455fa7d0229c982cb713ec6770a886675a78f73f1e4520c1cc",
+  "bench/oracle/m3_push_dense/controls/interior-1.json.gz": "5b4d0fcc849d8b288033d7c1257fa16bd534e7b58f91fe5e8b6cbdbfa5739761",
+  "bench/oracle/m3_push_dense/controls/retry-1.json.gz": "d0aa1845761f5011b80e7c29ecb3e471775df12327b360191e98b6a65ac5625d",
+  "bench/oracle/m3_push_dense/controls/scsd1-1.json.gz": "75d4757b54c193a86212cb677f90162e02500696c1286f3a47f079962f622099",
+  "bench/oracle/m3_push_dense/grow22-1.json.gz": "84bc380c2011aaab1caa89f5f7ade04d4180fa99b78ffc3e95c3ecd9eb7e19df",
+  "bench/oracle/m3_push_dense/grow22-2.json.gz": "cabc90ba3c1c671a6ca33b4d63892f0b29d0253f37bf073bd6cced3e8b162741",
+  "bench/oracle/m3_push_dense/grow22-3.json.gz": "9e56ce46e1a5a47c7d2e733e31026c822b82b1c5465fa7d33a72010ed218b240",
+  "bench/oracle/m3_push_dense/grow7-1.json.gz": "3225049e871247634d21d020c6c5607ec010d8d8df728188e134ce2a73dde189",
+  "bench/oracle/m3_push_dense/grow7-2.json.gz": "7288eb1ad2697536c8201a8a6d59656922478532ce6c6c27a137195fd97f1485",
+  "bench/oracle/m3_push_dense/grow7-3.json.gz": "a574657e891d40a0db91abde02508464200f6076b49c844e52b3cb92f7949487",
+  "bench/oracle/m3_push_dense/perold-1.json.gz": "84b3be031bc303047b83c1d50ea0805912feaff37c8635a23795d0a467c38c65",
+  "bench/oracle/m3_push_dense/perold-2.json.gz": "fcc24139e57584828dacc07553a09756ba417192c025d32d78cd94f39f88f28c",
+  "bench/oracle/m3_push_dense/perold-3.json.gz": "f1063f196f0959fc19a71c889ca5bc5f7689ddb3c94bb127ce1a1c219fd9bad8",
+  "bench/oracle/m3_push_dense/pilot4-1.json.gz": "0ab116f84b44b58843df255babc412dfa7ab56f771709e245d7b0ae27e21f6bd",
+  "bench/oracle/m3_push_dense/pilot4-2.json.gz": "f4b0c4a96c06aceb87ea9bb5e47584725481bf74b4d34cfefd44c6c3a54ada9f",
+  "bench/oracle/m3_push_dense/pilot4-3.json.gz": "06f2adfc5e3b79c61e06f1fcaddcfdc53b8543c54fc9ddc937b12dbdc0a9bad8",
+  "bench/oracle/m3_push_dense/stair-1.json.gz": "3a77be5cadcb12a5a3f5afedbd5ab604a4477890f7610e136d75497eba8f6679",
+  "bench/oracle/m3_push_dense/stair-2.json.gz": "a09aab02edb3d978996ee92d8409e3fb0de2fc210791966af3cc24d0b9c88d99",
+  "bench/oracle/m3_push_dense/stair-3.json.gz": "df73e553f774317fb68c246470b2eb895eef2d75608922f6f27862882c2475b5"
+ }
+}
