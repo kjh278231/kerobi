@@ -20,7 +20,8 @@
         "out_dense": 3,
         "out_sparse": 25,
         "eta_pos": 0,
-        "perm_nonid": 28
+        "perm_nonid": 28,
+        "eta0_passthrough": 28
       },
       "retry": {
         "calls": 10,
@@ -41,7 +42,8 @@
         "out_dense": 2,
         "out_sparse": 8,
         "eta_pos": 0,
-        "perm_nonid": 10
+        "perm_nonid": 10,
+        "eta0_passthrough": 10
       },
       "interior": {
         "calls": 12,
@@ -62,7 +64,8 @@
         "out_dense": 12,
         "out_sparse": 0,
         "eta_pos": 5,
-        "perm_nonid": 12
+        "perm_nonid": 12,
+        "eta0_passthrough": 7
       },
       "control": {
         "calls": 0,
@@ -83,7 +86,8 @@
         "out_dense": 0,
         "out_sparse": 0,
         "eta_pos": 0,
-        "perm_nonid": 0
+        "perm_nonid": 0,
+        "eta0_passthrough": 0
       }
     },
     "total": {
@@ -105,7 +109,8 @@
       "out_dense": 17,
       "out_sparse": 33,
       "eta_pos": 5,
-      "perm_nonid": 50
+      "perm_nonid": 50,
+      "eta0_passthrough": 45
     }
   }
 }

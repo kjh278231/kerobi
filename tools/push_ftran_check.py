@@ -140,6 +140,8 @@ def check_factor(f,m,label):
 
 def spike_from(v,m):
     """C:703–778, save=1: dense면 F10<|v|인 위치 오름차순, 아니면 목록 그대로 복사(값은 v*1.0)."""
+    # C:708은 count<1 전체를 dense 필터로 처리한다. count0은 dense 값 m개가 캡처되지 않아 미관측 분기로 거부한다.
+    require(v['count']!=0,'spike 저장 count0: 미관측 분기(값 배열 없음)')
     if v['count']<1:
         idx=[i for i in range(m) if 1e-13<abs(f64(v['val'][i]))]
         return {'count':len(idx),'indices':idx,'values':[v['val'][i] for i in idx]}
@@ -225,9 +227,11 @@ def check_call(wenter,body,wleave,label,stats):
         equal({'count':-1,'idx':None,'val':[inp['val'][f['perm']['x20'][i]] for i in range(m)]},k0['input'],label+'.dense gather')
     lout=ks[1]['output'];check_vec(lout,m,label+'.L out')
     if lout['count']==0:
-        equal([lk],names,label+'.L0 종료');stats['L_out0']+=1;return
+        equal([lk],names,label+'.L0 종료');equal(0,lv['output']['count'],label+'.L0 출력')
+        equal(f['spike'],lv['factor']['spike'],label+'.L0 spike');stats['L_out0']+=1;return
     equal(2,len(names),label+'.kernel 수')
     uin=ks[2]['input'];check_vec(uin,m,label+'.U in')
+    if f['scalars']['x180']==0:equal(lout,uin,label+'.eta0 U 입력=L 출력');stats['eta0_passthrough']+=1
     uk=u_kernel(f,uin['count'],m);equal(uk,names[1],label+'.U 경로');stats['U_'+uk]+=1
     # 규칙5: spike는 U 진입 전에 저장
     if save:
@@ -252,7 +256,7 @@ def acceptance(data):
     for name in NAMES:
         r=data[name][0];cs=calls(r)
         stats={k:0 for k in ('save0','save1','clear_nonempty','input_dense','input_sparse','input_zero','count0','L_21b9de','L_214344',
-            'L_out0','U_21686f','U_2126cd','spike_dense','spike_sparse','out_dense','out_sparse','eta_pos','perm_nonid')}
+            'L_out0','U_21686f','U_2126cd','spike_dense','spike_sparse','out_dense','out_sparse','eta_pos','perm_nonid','eta0_passthrough')}
         sup=sum(1 for w,_,_ in cs if w['event'].startswith('supplier'))
         equal(EXPECTED[name],(sup,len(cs)-sup),name+'.호출 수')
         for k,(w,body,lv) in enumerate(cs):check_call(w,body,lv,f'{name}#{k+1}',stats)
@@ -328,6 +332,9 @@ def self_test(data,m):
         e=[e for e in d['interior'][0]['events'] if e['event']=='ftran:kernel' and e['kernel']=='2126cd' and e['phase']=='enter' and e['spike']['count']>1][0]
         e['spike']['indices'].reverse();e['spike']['values'].reverse()
     test('R5-spike-at-U-enter',kspike,acc)
+    def eta0(d,mm):
+        k=ev(d,'arms','ftran:kernel',2);k['input']['val'][0]=flip(k['input']['val'][0])
+    test('R-eta0-passthrough',eta0,acc)
     def wraw(d,mm):
         lv=ev(d,'arms','ftran:leave',0);k=ev(d,'arms','ftran:kernel',3)
         for v in (lv['output'],k['output']):v['val'][0]=flip(v['val'][0])
