@@ -1,0 +1,117 @@
+{
+ "task": "M3-04c-11",
+ "schema_version": 1,
+ "original_version": "13.0.3",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "float_encoding": "IEEE-754 binary64 little-endian hex; exact bits including signed zero",
+ "environment": {
+  "frida_node": "17.26.2",
+  "preload": "tools/frida_resolve.cjs via tools/gurun.sh"
+ },
+ "tools": {
+  "tools/primal_push_recall_capture.js": "3c4255853c2018963be65f0e6739304ba914111dae1a16ffc39357e38d7e7bf0",
+  "tools/primal_push_recall_agent.js": "5c78432949450fc67ac9d8db09a0b8040b05a632331a0a3057563242706d83cf",
+  "tools/push_chain_lp.py": "e9d87d03f0cecea85001408b005b869a52ad4fcf093decdbd9a1e74529f856ca",
+  "tools/push_chain_oracle.py": "24fcb4cc9b05326cfb67241e37255ab4a9a3c06a5c1748038e83fedd562bbc63",
+  "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec"
+ },
+ "inputs": {
+  "bench/oracle/m3_push_chain/shift.lp": "5c8dd0744964818579ce570050680852196f956fe9084a5ff4bfece05ba8d036",
+  "bench/oracle/m3_push_chain/shift.extra.json": "30402c33475c06d58308447fb92ceac5cda5c89b652f181c54b32396beb713d2",
+  "bench/oracle/m3_push_chain/resolve.lp": "3f464970aa40cc5e0d380f9a15b980c5af1ca72919c99d4900c89fbf5dc6509a",
+  "bench/oracle/m3_push_chain/resolve.extra.json": "13cfcb41ecc36b9e6716f921d4a0414de5cb98df2a01227847ca2146b0a6e68e"
+ },
+ "history": {
+  "bench/oracle/m3_push_chain/history/resolve-probe-primal.json": "c4cf87b6ee61495460e666b4749e3c6df5cf583d2a8410718b28a660cc010093",
+  "bench/oracle/m3_push_chain/history/resolve-v1-probe-primal.json": "1d6ad16a3dd913038aed76a32b4cdea234cc9373735fe5e805b8a48c017a51fc",
+  "bench/oracle/m3_push_chain/history/resolve-v1.extra.json": "b8a838d86beb93cb361e615f7d22e7d08cc05e27039215c3548102ba89cf7156",
+  "bench/oracle/m3_push_chain/history/resolve-v1.lp": "cacf9d8b0e0d2613a094ec961f69bedaa384dbd30f6374369f30047645741501",
+  "bench/oracle/m3_push_chain/history/shift-probe-primal.json": "0bb3ec3922cbf19c9d7eadd3d81bbf1fccd4128a4806d04e3609dad446ef791e"
+ },
+ "cases": {
+  "shift-primal": {
+   "role": "target",
+   "kind": "primal",
+   "model": "bench/oracle/m3_push_chain/shift.lp",
+   "model_sha256": "5c8dd0744964818579ce570050680852196f956fe9084a5ff4bfece05ba8d036",
+   "extra": "bench/oracle/m3_push_chain/shift.extra.json",
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_chain/shift-primal-1.json",
+    "bench/oracle/m3_push_chain/shift-primal-2.json",
+    "bench/oracle/m3_push_chain/shift-primal-3.json"
+   ],
+   "capture_sha256": [
+    "fe957bc2557368335208c30ec7b7757c1d08a77ce696baa9fd1bc66d83281764",
+    "7dab1f4ab60c69b566b6dd43f609f1a30e332805c75cdd52b0ea97597e12b16b",
+    "7700600f146c6cb04b45237120b0a26bb4c9ed7a38acb887d268fdef07c6ff10"
+   ],
+   "events_sha256": "b4a6d02f7e6d7b603227ce525ff4202ee7ecf3dcd06f5bd9c65fcff28a48d72d"
+  },
+  "shift-dual": {
+   "role": "target",
+   "kind": "dual",
+   "model": "bench/oracle/m3_push_chain/shift.lp",
+   "model_sha256": "5c8dd0744964818579ce570050680852196f956fe9084a5ff4bfece05ba8d036",
+   "extra": "bench/oracle/m3_push_chain/shift.extra.json",
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_chain/shift-dual-1.json",
+    "bench/oracle/m3_push_chain/shift-dual-2.json",
+    "bench/oracle/m3_push_chain/shift-dual-3.json"
+   ],
+   "capture_sha256": [
+    "55c2448d9dca3a5a0100833f595eb98bf2a36028b6552a5d87b6a3b6117a42f4",
+    "d623654cecbce91128d0980ec0c827d6ee5727cadfd90cb8af04804cc960e071",
+    "b06a6181fb28caadd24d9c6783812d66a0981045090be171711b21b1a76de420"
+   ],
+   "events_sha256": "105b350145174c20d9ee922e8c4ac105be0568bd9c2697f18c86bd99fe9e7747"
+  },
+  "resolve-primal": {
+   "role": "target",
+   "kind": "primal",
+   "model": "bench/oracle/m3_push_chain/resolve.lp",
+   "model_sha256": "3f464970aa40cc5e0d380f9a15b980c5af1ca72919c99d4900c89fbf5dc6509a",
+   "extra": "bench/oracle/m3_push_chain/resolve.extra.json",
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_chain/resolve-primal-1.json",
+    "bench/oracle/m3_push_chain/resolve-primal-2.json",
+    "bench/oracle/m3_push_chain/resolve-primal-3.json"
+   ],
+   "capture_sha256": [
+    "42862d63a0960e5482ddeb79e1457d0b13f3a3c201b130c3a21355ef16fed625",
+    "e1528c85248f36ae1b77f6a9816dfa7d87c47011a9ba9c1fc1c73d266160a798",
+    "8582fd61a4b874ae142654f823e381259c40618508b5cd1d62ac02a11976ab4d"
+   ],
+   "events_sha256": "6713a457f96f8f2a24bc1a57558e723bf2070cfa505e753424b4d1f4d7d2b808"
+  },
+  "resolve-dual": {
+   "role": "target",
+   "kind": "dual",
+   "model": "bench/oracle/m3_push_chain/resolve.lp",
+   "model_sha256": "3f464970aa40cc5e0d380f9a15b980c5af1ca72919c99d4900c89fbf5dc6509a",
+   "extra": "bench/oracle/m3_push_chain/resolve.extra.json",
+   "tool": "tools/primal_push_recall_capture.js",
+   "agent": "tools/primal_push_recall_agent.js",
+   "schema": "M3-04c-8-v1",
+   "captures": [
+    "bench/oracle/m3_push_chain/resolve-dual-1.json",
+    "bench/oracle/m3_push_chain/resolve-dual-2.json",
+    "bench/oracle/m3_push_chain/resolve-dual-3.json"
+   ],
+   "capture_sha256": [
+    "558e9e83d210ff489c0c4c31fcc78adf050d08a18330f5c71bdffbd6e94ebe32",
+    "f537b50e4f3d4ec85b9e86a461df3040700d40b419c7531011f4515aba8ffbb5",
+    "75ce5cdc4a2dce92419797a0d62e6c3d7f927cf2e6cabd0f5d7104703f071735"
+   ],
+   "events_sha256": "e1930532e77329d5ecf61bef90aa4a40cb9a8573c206db62b28f365296565959"
+  }
+ }
+}
