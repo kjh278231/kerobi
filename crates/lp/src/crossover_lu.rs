@@ -249,6 +249,8 @@ impl LuState {
             mult: self.sc.x104 as i64,
             dsum: self.sc.x108 + self.sc.x110,
             levels: self.sc.x128 as i64,
+            llev: self.llev.as_deref().map(u).unwrap_or_default(),
+            llst: self.llst.as_deref().map(u).unwrap_or_default(),
             f0: u(&self.f0),
             f8: self.f8.clone(),
             oldest: self.oldest.iter().map(|&x| x as i64).collect(),
@@ -748,12 +750,16 @@ impl LuState {
         let f = self.ftran_factor();
         let sp = spike.then(|| self.spike.clone());
         let mut s = FtranState::new(m, count, idx, val, sp);
+        s.bucket = self.bucket.clone();
         std::mem::swap(&mut s.mark, &mut self.mark);
         std::mem::swap(&mut s.vals, &mut self.vals);
         let r = crossover_ftran::ftran(&f, &mut s, save);
         std::mem::swap(&mut s.mark, &mut self.mark);
         std::mem::swap(&mut s.vals, &mut self.vals);
         r.map_err(LuError::Ftran)?;
+        if let Some(bk) = s.bucket.take() {
+            self.bucket = Some(bk);
+        }
         if let Some(sp) = s.spike.take() {
             self.spike = sp;
         }

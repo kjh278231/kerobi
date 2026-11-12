@@ -183,7 +183,8 @@ fn snap(s: &LuState) -> String {
         rvals = fl(&s.rvals),
         rlev = oil(&s.rlev),
         rlst = oil(&s.rlst),
-        bucket = oil(&s.bucket),
+        // the captured bucket is F+0x1a8[m..m+F140]; FTRAN A2 may have written further counts (F128 > F140)
+        bucket = oil(&s.bucket.as_ref().map(|b| b[..(sc.x140 + 1) as usize].to_vec())),
         cache = cache_json(&s.cache),
         x1d8 = s.x1d8,
     )
