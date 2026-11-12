@@ -14,4 +14,5 @@ pub mod start;
 pub mod barrier;
 pub mod pdhg;
 pub mod crossover;
+pub mod crossover_supplier;
 pub mod work;

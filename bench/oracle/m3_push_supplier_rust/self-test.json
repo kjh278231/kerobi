@@ -1,0 +1,127 @@
+{
+ "cases": 69,
+ "fields": 1311,
+ "natural": 51,
+ "synthetic": 18,
+ "success": 56,
+ "exhausted": 13,
+ "rule": "ordered integers / f64 LE hex exact incl signed zero",
+ "rejected": [
+  {
+   "name": "empty-targets",
+   "first_difference": "trace 사례 수: 기준=69, 실제=0"
+  },
+  {
+   "name": "missing-case",
+   "first_difference": "trace 사례 수: 기준=69, 실제=68"
+  },
+  {
+   "name": "case-order",
+   "first_difference": "사례 순서: 기준='arms/0', 실제='arms/1'"
+  },
+  {
+   "name": "field-position",
+   "first_difference": "arms/0.position: 기준='1', 실제='corrupted'"
+  },
+  {
+   "name": "field-deferred",
+   "first_difference": "arms/0.deferred: 기준='0', 실제='corrupted'"
+  },
+  {
+   "name": "field-support",
+   "first_difference": "arms/0.support: 기준='1', 실제='corrupted'"
+  },
+  {
+   "name": "field-successes",
+   "first_difference": "arms/0.successes: 기준='1', 실제='corrupted'"
+  },
+  {
+   "name": "field-count_sum",
+   "first_difference": "arms/0.count_sum: 기준='000000000000f03f', 실제='corrupted'"
+  },
+  {
+   "name": "field-candidates",
+   "first_difference": "arms/0.candidates: 기준='21 24 0 7 4 2 12 15 18 34 45 38 62 40 30 36 9 22 25 16 28 19 13', 실제='corrupted'"
+  },
+  {
+   "name": "field-failures",
+   "first_difference": "arms/0.failures: 기준='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0', 실제='corrupted'"
+  },
+  {
+   "name": "field-support_marks",
+   "first_difference": "arms/0.support_marks: 기준='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0', 실제='corrupted'"
+  },
+  {
+   "name": "field-ret",
+   "first_difference": "arms/0.ret: 기준='21', 실제='corrupted'"
+  },
+  {
+   "name": "field-ftran_count",
+   "first_difference": "arms/0.ftran_count: 기준='1', 실제='corrupted'"
+  },
+  {
+   "name": "field-alpha",
+   "first_difference": "arms/0.alpha: 기준='1 21 000000000000f03f', 실제='corrupted'"
+  },
+  {
+   "name": "field-input",
+   "first_difference": "arms/0.input: 기준='1 13 000000000000f03f', 실제='corrupted'"
+  },
+  {
+   "name": "field-spike",
+   "first_difference": "arms/0.spike: 기준='1 0 0000000000000080', 실제='corrupted'"
+  },
+  {
+   "name": "field-work",
+   "first_difference": "arms/0.work: 기준='0000000000604540', 실제='corrupted'"
+  },
+  {
+   "name": "field-output_same",
+   "first_difference": "arms/0.output_same: 기준='true', 실제='corrupted'"
+  },
+  {
+   "name": "field-spike_same",
+   "first_difference": "arms/0.spike_same: 기준='true', 실제='corrupted'"
+  },
+  {
+   "name": "field-backend_input",
+   "first_difference": "arms/0.backend_input: 기준='1 13 000000000000f03f', 실제='corrupted'"
+  },
+  {
+   "name": "field-spike_present",
+   "first_difference": "arms/0.spike_present: 기준='false', 실제='corrupted'"
+  },
+  {
+   "name": "field-spike_before",
+   "first_difference": "arms/0.spike_before: 기준='null', 실제='corrupted'"
+  },
+  {
+   "name": "duplicate-field",
+   "first_difference": "arms/0.duplicate ret"
+  },
+  {
+   "name": "missing-field",
+   "first_difference": "arms/0: 필드 기준=['position', 'deferred', 'support', 'successes', 'count_sum', 'candidates', 'failures', 'support_marks', 'ret', 'ftran_count', 'alpha', 'input', 'spike', 'work', 'output_same', 'spike_same', 'backend_input', 'spike_present', 'spike_before'], 실제=['ret', 'position', 'deferred', 'support', 'successes', 'count_sum', 'candidates', 'failures', 'support_marks', 'ftran_count', 'alpha', 'input', 'spike', 'work', 'output_same', 'spike_present', 'spike_before', 'backend_input']"
+  },
+  {
+   "name": "synthetic/structural-sparse/alpha",
+   "first_difference": "synthetic/structural-sparse.alpha: 기준='3 8 0 3 0000000000000040 0000000000000080 00000000000008c0', 실제='corrupted'"
+  },
+  {
+   "name": "synthetic/dense-boundaries/alpha",
+   "first_difference": "synthetic/dense-boundaries.alpha: 기준='4 3 4 7 8 010000000000d03f 010000000000d0bf 0000000000000040 00000000000008c0', 실제='corrupted'"
+  },
+  {
+   "name": "synthetic/prefix-preserved/candidates",
+   "first_difference": "synthetic/prefix-preserved.candidates: 기준='2 0 1', 실제='corrupted'"
+  },
+  {
+   "name": "synthetic/dense-negative-count/count_sum",
+   "first_difference": "synthetic/dense-negative-count.count_sum: 기준='000000000000d03f', 실제='corrupted'"
+  },
+  {
+   "name": "synthetic/all-failure/ftran_count",
+   "first_difference": "synthetic/all-failure.ftran_count: 기준='0', 실제='corrupted'"
+  }
+ ]
+}
