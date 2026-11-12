@@ -1,18 +1,11 @@
-00000000000f44d0 <PRIVATE000000000005b257+0x2f10>:
-   f44d0:	rex.XB or $0x0,%al
-   f44d3:	add    %al,(%rax)
-   f44d5:	add    %al,0xf024bc(%rbx)
-   f44db:	add    %al,(%rax)
-   f44dd:	add    %cl,(%rdi)
-   f44df:	mov    %edx,%ds
-   f44e1:	adc    %eax,(%rax)
-   f44e3:	add    %cl,-0x54(%rbx,%riz,2)
-   f44e7:	and    $0xf0,%al
-   f44e9:	add    %al,(%rax)
-   f44eb:	add    %cl,-0x75(%rax)
-   f44ee:	xorl   $0xffffff8b,0x4c000000(%rax)
-   f44f5:	movsxd 0x4e(%rax),%ebx
-   f44f8:	mov    (%rax,%rbp,8),%ebx
+00000000000f44cf <PRIVATE000000000005b257+0x2f0f>:
+   f44cf:	movl   $0x0,0xc(%rbx)
+   f44d6:	cmpl   $0x0,0xf0(%rsp)
+   f44de:	jle    f56be <PRIVATE000000000005b257+0x40fe>
+   f44e4:	movslq 0xf0(%rsp),%r13
+   f44ec:	mov    0xb0(%rbx),%rax
+   f44f3:	mov    0x58(%rbx),%r12
+   f44f7:	mov    (%rax,%r13,8),%r11
    f44fb:	add    %r13,%r11
    f44fe:	mov    %r11,0x1e8(%rbx)
    f4505:	add    (%r12,%r13,8),%r13

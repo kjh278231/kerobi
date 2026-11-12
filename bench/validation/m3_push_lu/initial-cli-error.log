@@ -1,0 +1,4 @@
+usage: push_supplier_check.py [-h]
+                              (--controls | --acceptance | --self-test | --write-manifest)
+                              [--output OUTPUT]
+push_supplier_check.py: error: argument --acceptance: not allowed with argument --controls

@@ -1,0 +1,93 @@
+{
+  "environment": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "python": "3.10.12",
+  "new_original_runs": 0,
+  "results": [
+    {
+      "command": [
+        "python3",
+        "tools/push_supplier_check.py",
+        "--controls"
+      ],
+      "exit_code": 0,
+      "log": "bench/validation/m3_push_lu/regression-1.log",
+      "sha256": "972596c5ccb69388743ec67ade5b6b2386ba24be6829818ef686f49191170cab"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_supplier_check.py",
+        "--acceptance"
+      ],
+      "exit_code": 0,
+      "log": "bench/validation/m3_push_lu/regression-2.log",
+      "sha256": "e316906192678b5d0cd1f75fd60a75e1e5979c0b4148ba42ef691fecdf71c3ef"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_supplier_check.py",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "log": "bench/validation/m3_push_lu/regression-3.log",
+      "sha256": "f90873fe3954bbed4853ab7f48fef0696ccc4d0d1eb711e51b17026846ff99fe"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_factor_check.py",
+        "--controls",
+        "--acceptance",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "log": "bench/validation/m3_push_lu/regression-4.log",
+      "sha256": "575c272b94e33aca441cbe35aad5fd8bb9ac40af086065a20bf26f54529d4fe0"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_recompute_check.py",
+        "--controls",
+        "--acceptance",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "log": "bench/validation/m3_push_lu/regression-5.log",
+      "sha256": "0ea712d8e503694d6fdccb3d211233d9f1a434e53de867d7d2a763fa4e7ae825"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_round_check.py",
+        "--controls",
+        "--acceptance",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "log": "bench/validation/m3_push_lu/regression-6.log",
+      "sha256": "c7364edf03e1cd0fc88c59ddb78e1e14e5df8ac22ea7c2c7897189d8aa479b75"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_chain_oracle.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "log": "bench/validation/m3_push_lu/regression-7.log",
+      "sha256": "32c9a2014238433cf97ffffe3a1b31964d2a11acabfa87abd468b35d3617281f"
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_chain_oracle.py",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "log": "bench/validation/m3_push_lu/regression-8.log",
+      "sha256": "3f532f7f9c801054fcc0d7e832eac6f981db98b916552723cb32bc36c15a2509"
+    }
+  ]
+}

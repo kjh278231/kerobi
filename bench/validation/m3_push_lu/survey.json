@@ -4,10 +4,13 @@
   "new_original_runs": 0,
   "numerical_equivalence": "unverified",
   "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
-  "survey_tool_sha256": "e69d862f3103b64ead05617703a7f49c74c9bcdffdaa3ac002d0f77a0771c0dd",
+  "survey_tool_sha256": "a9028fd00650116de84807b39b48da6dc7ffa3de91d7ad01e23c20d43ddd0865",
   "sources": {
     "../re/decomp/c/00120680_PRIVATE000000000009d008.c": "26aec435ba5288663a23a0670ad59fac818bc3afd932162cd7cd0b948d89d348",
     "../re/decomp/c/00120740_PRIVATE00000000002207de.c": "5124f10fccc1eb5e85d57f781b2a97c28f8d8d1ef94b221e84583dbb4ece5baa",
+    "../re/decomp/c/0012bd30_PRIVATE0000000000214344.c": "ecb79a46f71c1bbe6dd33a5423a45ce8feace792721719559b1c8f2031804795",
+    "../re/decomp/c/0012a990_PRIVATE000000000021b9de.c": "4fd5d5772905ca520224ca0f1446cd4272f96c9582bcd01341ce6d610b53e6c7",
+    "../re/decomp/c/001223e0_PRIVATE000000000021686f.c": "fdd332440e4912fedb7abae96eae187472eefeb045ceaf10b1c4669aba155398",
     "../re/decomp/c/001205d0_PRIVATE000000000009cf9b.c": "56ca286a9f131998eb974d6a4ad78daeb66f14404c8ad525993c3853b592be80",
     "../re/decomp/c/00131710_PRIVATE000000000009e376.c": "9a8a6fc9f8e73a7c4f62bb52d38bd66fb8d7210000914e1857e344aa4e3525fb",
     "../re/decomp/c/0012de60_PRIVATE0000000000221173.c": "2770a43287349d418883e6af6610e330089223b6651944d56afe343d2c558898",
@@ -24,7 +27,7 @@
   "assembly": {
     "bench/validation/m3_push_lu/btran-body.asm": "6be60aed7c4c09b09dc02d4e512ac487586dfab70849178cce2cbe6a1d0bb31b",
     "bench/validation/m3_push_lu/btran-wrapper.asm": "44d157a95bc1184040c819be3bb6d5b7857121fb17f3b5314c072ee449d26306",
-    "bench/validation/m3_push_lu/factor-renumber.asm": "a988adfbb7cc88abb2b78edf6c11837b2db0417f7237714840076e6d74d15c37",
+    "bench/validation/m3_push_lu/factor-renumber.asm": "518ac31c56493f8177bc4ea5df3f9f990cb46affbf220d5928e09aa5bb306fca",
     "bench/validation/m3_push_lu/ftran-body.asm": "4f6ed20d6fd51bdc049e1680c9f80bd0febf3adae75ac143f8bcf1cede0aef52",
     "bench/validation/m3_push_lu/ftran-wrappers.asm": "9dc28243810ba35866282a25451861b03f3ecbf5d09820d9c4aca2a8757c08b6"
   },

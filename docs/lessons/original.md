@@ -97,6 +97,9 @@
 
 ## crossover primal push (`134a87`)
 
+- **한 RHS FTRAN의 spike는 일반 sparse와 달리 값이 idx 위치에 있고 U 풀이 전 L/R 결과다.** `09d008`은 spike 비null일 때만 옛 목록 값을0으로 지우고 save=1로 넘기며, 재계산의 `09cf9b(save=0)`는 저장 spike를 지우지 않는다. 공급 wrapper 반환의 입력 idx/버퍼도 바뀌므로 raw 출력만으로 수치 계약이 완성되지 않는다. C·asm, 신규 수치 실행 미검증. (M3-04c-21, [§2.1](../m3/primal_push_lu_survey.md#21-ftran-wrapper좌표spike의-계약))
+- **지원 BTRAN `09e376`은 커널 네 번째 인자로 work가 아니라 F+0x1d0의 Uᵀ cache를 넘긴다.** U 행이 비지 않으면 희소 Uᵀ를 강제하고 cache·F+0x1d8을 바꾸며, 이 상태는 FT 갱신이 읽는다. 최종 지원 목록·dense flag만 복원하는 adapter는 이 부수 상태를 별도 처리해야 한다. C·asm, 신규 수치 실행 미검증. (M3-04c-21, [§2.2](../m3/primal_push_lu_survey.md#22-btran-지원-행과-ft용-uᵀ-scratch))
+
 - **지원 집합 모드는 basis 교환 뒤 LU 갱신을 생략할 수 있다.** 요청0·support!=0이면 `05b257`을 부르지 않고 다음 공급자로 간다(C1725–1750, asm0x1c343d). BTRAN의 제약 행 support와 겹치는 다음 열을 보류하므로, 현재 header로 매번 새 factor를 만들거나 매 pivot에 FT 갱신하면 경로를 바꾼다. C·asm·기존 자연 캡처 사건 집계. (M3-04c-12, [§2.3](../m3/primal_push_loop.md#23-지원-집합은-lu를-매번-갱신하지-않는-경로다))
 - **push factor 판단은 기존 simplex 식과 별도이며 주기 비교는 `k==limit`다.** 채움 비용식은 `(C+E)·2m − min(q·5m²,(L+U−1.5m)²)`(k>=q), 기존 요청을 우선 보존한다. 04c-15 원본 선택 slice24사례로 기존 요청·limit 초과·비용0/양/음·5m² 계수를 구별했고 wrapper31사례로 반환1 반복·12/오류 우선·-999/-1000·attempt0 retry 게이트·품질 주기/요청6을 검증했다. 합성 factor/quality는 외부 backend이며 실제 LU/품질 수치 증거는 아니다. C·asm·자연/합성 캡처. (M3-04c-12·15, [§6](../m3/primal_push_factor_oracle.md#6-실행-결과))
 - **공급 반환이 전부 sparse여도 내부 FTRAN은 dense일 수 있다.** interior의 자연 공급9회가 raw count<0에서 strict `abs(v)>S+0x3a8` 압축을 거쳐 sparse로 반환됐다. count 통계는 raw 음수 count를 합산한다. raw 출력을 helper 반환에서 잡고 반환 alpha와 별도로 비교해야 한다. C·asm·캡처. (M3-04c-13, [§6](../m3/primal_push_supplier_oracle.md#6-실행-결과))
