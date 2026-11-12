@@ -172,3 +172,85 @@ fn ftran_trace() {
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(format!("{dir}/trace.txt"), output.join("\n") + "\n").unwrap();
 }
+
+/// The same kernels on original `09d112` calls (M1-02j/02m captures): input and factor state in, output out.
+#[test]
+fn m1_kernel_trace() {
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
+    let source = std::fs::read_to_string(format!("{root}/bench/oracle/m3_push_ftran_rust/m1_kernels.txt")).unwrap();
+    let mut lines = source.lines();
+    let mut output = vec![lines.next().unwrap().to_string()];
+    for line in lines {
+        let mut t = line.split_whitespace();
+        let kernel: String = next(&mut t);
+        let case: String = next(&mut t);
+        let m: usize = next(&mut t);
+        let idx: Vec<i32> = ints(&mut t).into_iter().map(|x| x as i32).collect();
+        let val = floats(&mut t);
+        let mut f = FtranFactor {
+            m,
+            zero: 1e-13,
+            gather: vec![],
+            relabel: vec![],
+            upos: vec![],
+            uord: vec![],
+            diag: vec![],
+            lbeg: vec![],
+            lrow: vec![],
+            lval: vec![],
+            ucol: vec![],
+            d8: 0,
+            e4: 0,
+            t: m,
+            mult: 0,
+            dsum: 0.0,
+            levels: -1,
+            f0: vec![],
+            f8: vec![],
+            oldest: vec![],
+            etas: vec![],
+        };
+        let mut s = FtranState::new(m, idx.len() as i32, &idx, &val, None);
+        let r = if kernel == "21686f" {
+            f.t = next(&mut t);
+            f.dsum = float(&mut t) + float(&mut t);
+            f.uord = usizes(&mut t);
+            f.f0 = usizes(&mut t);
+            f.f8 = ints(&mut t).into_iter().map(|x| x as i32).collect();
+            f.diag = floats(&mut t);
+            f.ucol = (0..m)
+                .map(|_| {
+                    let tail = next(&mut t);
+                    UColumn { tail, rows: usizes(&mut t), vals: floats(&mut t) }
+                })
+                .collect();
+            u_sparse(&f, &mut s);
+            Ok(())
+        } else {
+            f.e4 = next(&mut t);
+            f.levels = next(&mut t);
+            f.lbeg = usizes(&mut t);
+            f.lrow = usizes(&mut t);
+            f.lval = floats(&mut t);
+            l_sparse(&f, &mut s)
+        };
+        assert!(t.next().is_none(), "extra input {case}");
+        let error = match r {
+            Ok(()) => "null".to_string(),
+            Err(e) => format!("\"{e:?}\""),
+        };
+        let (out, _) = s.snapshot(m);
+        let scratch = s.mark.iter().all(|&x| x == 0) && s.vals.iter().all(|x| x.to_bits() == 0);
+        assert!(scratch, "scratch left non-zero {case}");
+        output.push(format!(
+            "{case};{{\"error\":{error},\"path\":\"{}\",\"output\":{{\"count\":{},\"idx\":{},\"val\":{}}}}}",
+            if kernel == "21686f" { s.branches.u } else { s.branches.l },
+            opt_i(&out.count),
+            out.idx.as_ref().map_or("null".into(), |i| list(i, opt_i)),
+            list(&out.val, opt_f)
+        ));
+    }
+    let dir = format!("{root}/target/m3_push_ftran_rust");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(format!("{dir}/m1_trace.txt"), output.join("\n") + "\n").unwrap();
+}

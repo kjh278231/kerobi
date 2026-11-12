@@ -477,7 +477,7 @@ fn l_dense(f: &FtranFactor, s: &mut FtranState) {
 
 /// `21b9de` (sparse L). Only path A1 (Kahn FIFO over the reached columns, C:81–257): the output index buffer holds
 /// the reached list and then the queue, the output keeps |v| ≥ ZERO in queue order.
-fn l_sparse(f: &FtranFactor, s: &mut FtranState) -> Result<(), FtranError> {
+pub fn l_sparse(f: &FtranFactor, s: &mut FtranState) -> Result<(), FtranError> {
     let m = f.m;
     let dm = (m - f.e4) as f64;
     let ltail = (f.lbeg[m] - f.lbeg[f.e4]) as f64;
@@ -599,7 +599,7 @@ fn u_dense(f: &FtranFactor, s: &mut FtranState) {
 /// the tail by descending U position, prefix rows in section-2 or F+0xf0 order; outputs |x/d| > ZERO. The
 /// heap the original keeps below section 2 of the output index buffer is processed in the same order here and its
 /// cells are left unknown.
-fn u_sparse(f: &FtranFactor, s: &mut FtranState) {
+pub fn u_sparse(f: &FtranFactor, s: &mut FtranState) {
     let m = f.m;
     s.branches.u = "21686f";
     s.event("21686f", false, m);

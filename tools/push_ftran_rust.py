@@ -6,6 +6,7 @@ import argparse
 from collections import Counter
 import copy
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import shutil
@@ -118,6 +119,87 @@ def project(cs):
     body = '\n'.join(line(c) for c in cs) + '\n'
     header = SCHEMA + ' ' + hashlib.sha256(body.encode()).hexdigest()
     return header + '\n' + body, {c['name']: expected(c) for c in cs}
+
+
+# ---------- M1 원본 커널 호출(09d112 문맥의 같은 `21686f`·`21b9de`) ----------
+M1 = {'21686f': ('bench/oracle/m1_02m', '_us_1.json.gz', {'degen2': '337407830c58b08784c0a1ba11bc87d2971524410794bd6e50c49ff8369b1890',
+                                                         'kb2': 'f0d201e8510aa83d90c0826ceec074bbaac5b1949e6ccea7431b087e192a62ab'}),
+      '21b9de': ('bench/oracle/m1_02j', '_ls_1.json.gz', {'degen2': 'db3454311c46f9cffbe41b84000c212c1c84af2d9b1aa199e989783568709db4',
+                                                         'kb2': '6160a0c3af29d61e53d54f7eca5bb828ed7f3a2d7de5ede5710685dd559d4621'})}
+M1_TRACE = ROOT / 'target/m3_push_ftran_rust/m1_trace.txt'
+
+
+def le(h):
+    """M1 캡처의 정수 비트 hex → 이 작업의 little-endian 바이트 hex."""
+    return int(h, 16).to_bytes(8, 'little').hex()
+
+
+def m1_cases():
+    """원본 커널 호출: (이름, 입력 줄, 원본 출력). A2(레벨)·B 경로 `21b9de`는 adapter 범위 밖이라 세기만 한다."""
+    out, skipped = [], Counter()
+    for kernel, (d, suffix, shas) in M1.items():
+        for model, want_sha in shas.items():
+            path = ROOT / d / (model + suffix)
+            equal(want_sha, sha(path), f'{path.name} sha256')
+            cap = json.loads(gzip.decompress(path.read_bytes()))
+            equal(oracle.BINARY_SHA, cap['binary_sha256'], path.name + '.binary'); require(cap['ok'], path.name + '.ok')
+            Ls = {e['id']: e for e in cap['events'] if e['type'] == 'L'}
+            n = 0
+            for e in cap['events']:
+                if e['type'] != 'P' or not e['ft']:
+                    continue
+                ft = e['ft'][0]
+                for c in ft['calls']:
+                    if c['f'] != kernel:
+                        continue
+                    n += 1
+                    name = f'{kernel}/{model}/{e["k"]}/{n}'
+                    m = int(c['m']); inp = c['in']
+                    require(inp['nnz'] >= 0, name + ': sparse 입력 전제')
+                    head = [kernel, name, str(m)] + ints(inp['idx']) + hexes([le(v) for v in inp['val']])
+                    if kernel == '21686f':
+                        equal(0x20, c['uoff'], name + '.uoff')
+                        cols = {col[0]: col for col in c['cols']}
+                        body = [str(c['t']), le(c['D'][0]), le(c['D'][1])] + ints(c['ord']) + ints(c['f0']) + ints(c['f8'])
+                        body += hexes([le(v) for v in c['diag']])
+                        for j in range(m):
+                            col = cols.get(j, (j, [], [], [], []))
+                            body += [str(len(col[1]))] + ints(list(col[1]) + list(col[2])) + hexes([le(v) for v in list(col[3]) + list(col[4])])
+                    else:
+                        L = Ls[ft['lid']]; e4 = int(L['xe4']); x128 = int(L['x128']); beg = L['beg']; dm = m - e4
+                        if not (dm < 6 or dm * (10.0 * dm) <= m or (beg[m] - beg[e4]) <= 10.0 * dm):
+                            skipped[kernel + ' B'] += 1; continue
+                        if not (x128 < 0 or 0.1 * m <= x128):
+                            skipped[kernel + ' A2'] += 1; continue
+                        body = [str(e4), str(x128)] + ints([x - beg[0] for x in beg]) + ints(L['row']) + hexes([le(v) for v in L['val']])
+                    o = c['out']
+                    out.append((name, ' '.join(head + body), dict(count=o['nnz'], idx=o['idx'], val=[le(v) for v in o['val']])))
+    return out, dict(skipped)
+
+
+def m1_project():
+    cs, skipped = m1_cases()
+    body = '\n'.join(ln for _, ln, _ in cs) + '\n'
+    header = SCHEMA + '-m1 ' + hashlib.sha256(body.encode()).hexdigest()
+    return header + '\n' + body, {n: w for n, _, w in cs}, skipped
+
+
+def m1_compare(txt, want, header):
+    lines = txt.splitlines()
+    require(lines, '빈 M1 trace'); equal(header, lines[0], 'M1 trace 입력 해시')
+    got = {}
+    for ln in lines[1:]:
+        name, body = ln.split(';', 1); got[name] = json.loads(body)
+    equal(list(want), list(got), 'M1 사례 목록·순서')
+    paths = Counter()
+    for name, w in want.items():
+        g = got[name]
+        require(g.get('error') is None, f'{name}: Rust 오류 {g.get("error")}')
+        d = first_diff(w, g['output'], name)
+        if d:
+            raise Fail('M1 불일치 ' + d)
+        paths[g['path']] += 1
+    return dict(calls=len(want), paths=dict(sorted(paths.items())))
 
 
 def first_diff(a, b, path=''):
@@ -243,6 +325,34 @@ def self_test(txt, want, header):
     return results
 
 
+def m1_self_test(txt, want, header):
+    results = []
+    lines = txt.splitlines()
+
+    def reject(name, new_lines):
+        try:
+            m1_compare('\n'.join(new_lines) + '\n', want, header)
+        except (Fail, KeyError, TypeError, ValueError) as exc:
+            results.append(dict(name=name, first_difference=str(exc)))
+            return
+        raise Fail('NOT REJECTED ' + name)
+
+    reject('m1-zero-target', lines[:1]); reject('m1-missing-case', lines[:-1])
+    reject('m1-input-hash-zero', [SCHEMA + '-m1 ' + '0' * 64] + lines[1:])
+    for i in range(1, len(lines)):
+        name, body = lines[i].split(';', 1); g = json.loads(body); o = g['output']
+        tampers = [('count', lambda o: o.__setitem__('count', o['count'] + 1))]
+        if o['val']:
+            tampers.append(('val', lambda o: o['val'].__setitem__(0, flip(o['val'][0]))))
+        if len(o['idx']) > 1 and o['idx'][0] != o['idx'][1]:
+            tampers.append(('order', lambda o: o['idx'].insert(0, o['idx'].pop(1))))
+        for label, fn in tampers:
+            h = copy.deepcopy(g); fn(h['output'])
+            new = lines.copy(); new[i] = name + ';' + json.dumps(h)
+            reject(name + '/' + label, new)
+    return results
+
+
 # (이름, 원래 문자열, 변이) — 원본과 다른 동작이 저장 자료 차이로 거부되어야 한다.
 MUTATIONS = [
     ('relabel-skip', 's.idx[ii].set(k, f.relabel[i as usize] as i32);', 's.idx[ii].set(k, i);'),
@@ -270,8 +380,8 @@ MUTATIONS = [
     ('u-dense-multiply', 'let y = x / d;\n        s.val[ov].set(i, y);', 'let y = x * d;\n        s.val[ov].set(i, y);'),
     ('u-sparse-ascending', 'for p in (f.t..m).rev() {\n                let i = f.uord[p];\n                if s.mark[i]',
      'for p in f.t..m {\n                let i = f.uord[p];\n                if s.mark[i]'),
-    ('u-sparse-direct-nodiv', 'let y = v / f.diag[i];\n            if zero < y.abs() {\n                emit(s, i, y, &mut out);\n            }\n        } else if',
-     'let y = v;\n            if zero < y.abs() {\n                emit(s, i, y, &mut out);\n            }\n        } else if'),
+    ('u-sparse-direct-nodiv', 'let y = v / f.diag[i];\n                if zero < y.abs() {\n                    emit(s, i, y, &mut out);\n                }\n            } else if',
+     'let y = v;\n                if zero < y.abs() {\n                    emit(s, i, y, &mut out);\n                }\n            } else if'),
     ('u-sparse-no-input-compaction', 's.idx[ii].set(ntail, i as i32);', 'let _ = ntail;'),
     ('u-sparse-h-always', 'if d2 * ((npre + ntail) as f64) <= (ec + m - f.t) as f64 {', 'if false {'),
     ('input-swap-dense', '        s.output.count = Some(c);\n        std::mem::swap(&mut s.input.idx, &mut s.output.idx);',
@@ -288,22 +398,29 @@ def mutate_rust(path, want, header):
         shutil.copy2(ROOT / file, scratch / file)
     shutil.copytree(ROOT / 'crates', scratch / 'crates')
     (scratch / 'bench/oracle/m3_push_ftran_rust').mkdir(parents=True)
-    shutil.copy2(D / 'input.txt', scratch / 'bench/oracle/m3_push_ftran_rust/input.txt')
+    for file in ('input.txt', 'm1_kernels.txt'):
+        shutil.copy2(D / file, scratch / 'bench/oracle/m3_push_ftran_rust' / file)
     original = (ROOT / SOURCE).read_text(); results = []
     trace = scratch / 'target/m3_push_ftran_rust/trace.txt'
+    m1_trace = scratch / 'target/m3_push_ftran_rust/m1_trace.txt'
+    m1_src, m1_want, _ = m1_project(); m1_header = m1_src.splitlines()[0]
     for name, old, new in MUTATIONS:
         equal(1, original.count(old), 'unique mutation ' + name)
         (scratch / SOURCE).write_text(original.replace(old, new, 1)); trace.unlink(missing_ok=True)
+        m1_trace.unlink(missing_ok=True)
         proc = subprocess.run(['cargo', 'test', '-p', 'rsolver-lp', '--test', 'push_ftran'], cwd=scratch,
                               text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        if proc.returncode or not trace.exists():
+        if proc.returncode or not trace.exists() or not m1_trace.exists():
             results.append(dict(name=name, result='build-or-test-failed', log=proc.stdout[-2000:])); continue
-        try:
-            compare(trace.read_text(), want, header)
-        except (Fail, KeyError, TypeError, ValueError) as exc:
-            results.append(dict(name=name, result='rejected', first_difference=str(exc)))
-        else:
-            results.append(dict(name=name, result='survived'))
+        r = dict(name=name)
+        for label, fn in (('push', lambda: compare(trace.read_text(), want, header)),
+                          ('m1', lambda: m1_compare(m1_trace.read_text(), m1_want, m1_header))):
+            try:
+                fn()
+            except (Fail, KeyError, TypeError, ValueError) as exc:
+                r[label] = str(exc)
+        r['result'] = 'rejected' if 'push' in r or 'm1' in r else 'survived'
+        results.append(r)
     path.write_text(json.dumps(results, ensure_ascii=False, indent=2) + '\n')
     return dict(Counter(r['result'] for r in results))
 
@@ -325,22 +442,27 @@ def main():
     p.add_argument('--write-manifest', action='store_true')
     a = p.parse_args(); cs = cases(); source, want = project(cs); header = source.splitlines()[0]
     D.mkdir(parents=True, exist_ok=True)
+    m1_src, m1_want, m1_skipped = m1_project(); m1_header = m1_src.splitlines()[0]
     if a.write:
-        (D / 'input.txt').write_text(source); result = dict(written=len(cs))
+        (D / 'input.txt').write_text(source); (D / 'm1_kernels.txt').write_text(m1_src)
+        result = dict(written=len(cs), m1_written=len(m1_want), m1_skipped=m1_skipped)
     else:
         equal(source, (D / 'input.txt').read_text(), 'fixed input-only projection')
+        equal(m1_src, (D / 'm1_kernels.txt').read_text(), 'fixed M1 kernel projection')
         txt = TRACE.read_text(); result = compare(txt, want, header)
         result['models'] = dict(Counter(c['model'] for c in cs))
+        m1_txt = M1_TRACE.read_text()
+        result['m1'] = dict(m1_compare(m1_txt, m1_want, m1_header), skipped=m1_skipped)
         if a.mutate_rust:
             result['source_mutations'] = mutate_rust(a.mutate_rust, want, header)
         elif a.self_test:
-            rejected = self_test(txt, want, header)
+            rejected = self_test(txt, want, header) + m1_self_test(m1_txt, m1_want, m1_header)
             (D / 'self-test.json').write_text(json.dumps(rejected, ensure_ascii=False, indent=2) + '\n')
             result['rejected'] = len(rejected)
         else:
             (D / 'comparison.json').write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
         if a.write_manifest:
-            (D / 'trace.txt').write_text(txt)
+            (D / 'trace.txt').write_text(txt); (D / 'm1_trace.txt').write_text(m1_txt)
             (D / 'manifest.json').write_text(json.dumps(manifest(), ensure_ascii=False, indent=2) + '\n')
     print(json.dumps(result, ensure_ascii=False))
 
