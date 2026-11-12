@@ -196,7 +196,7 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-19 | 오라클 완료(범위 한정) | 보류·지원 BTRAN·고갈·재처리 라운드 | 04c-12 | [자연새207사건·합성106경계 각3회·비간섭·제어 재생·변조157종·독립검토 통과](m3/primal_push_round_oracle.md). 자연BTRAN22회 모두count1, count0/다수/dense·오류는 합성, Rust20·실제LU21·루프22 별도 |
 | M3-04c-20 | 구현 L1 완료(범위 한정) | 보류·지원 표시·라운드 제어(BTRAN 외부 backend) | 04c-19 | [자연110+합성106, 216경계·14,365필드 정확/비트 일치, trace변조4,093종·Rust변이39종 거부·workspace134·clippy0](m3/primal_push_round_rust.md). 실제LU21·루프22·batch23 별도 |
 | M3-04c-21 | 조사 완료 | 직렬 수치 backend와 Rust Lu 연결 | 04c-12, M1 LU 계약 | [C/asm·자연751사건 집계, FTRAN42·BTRAN22·factor16·재계산8](m3/primal_push_lu_survey.md). 수치 동등성 미검증, 후속21a–f 분할 |
-| M3-04c-21a | 오라클 구축 | 한 RHS FTRAN의 factor 입력·L/R·spike·U·raw/입력 후상태·alias | 04c-21, 13, 17 | [§4.2/4.3](m3/primal_push_lu_survey.md): 자연42/8회 시작, sparse/dense·save0·spike null/저장·eta/순열/희소 U의 실제 경계. 원본3회·비간섭·동작 변조 거부 |
+| M3-04c-21a | 오라클 완료 | 한 RHS FTRAN의 factor 입력·L/R·spike·U·raw/입력 후상태·alias | 04c-21, 13, 17 | [완료](m3/primal_push_ftran_oracle.md): 자연 50호출(공급42·재계산8) 독립3회·선행19 비간섭, C 규칙 전부 통과·변조35 거부. eta>0 5·희소 U 33·spike dense8/sparse1. count0·레벨 L·접두 희소 U·sparse R 미관측 |
 | M3-04c-21b | 구현 | Rust 한 RHS FTRAN의 수치·표현·spike·clear adapter | 04c-21a | 같은 초기 factor 상태에서 raw/목록/값·입력 후상태·spike/alias 비트 비교. 실제 수치 커널, M1 공유 변경은 조율·회귀 |
 | M3-04c-21c | 오라클 구축 | 지원 BTRAN의 수치·표현·F1d0/F1d8 cache | 04c-21, 19 | 자연22회는count1만. U 행 빈/비영·강제 Uᵀ·eta/Lᵀ sparse/dense의 실제 계산과 지원 좌표·cache 비교 |
 | M3-04c-21d | 구현 | Rust BTRAN 결과·dense flag·cache adapter | 04c-21c | raw/지원 행·cache·입력 변화 비교. M1-02k 일반 밀도 근사를 적용 범위에서 해결하거나 제외 명시 |

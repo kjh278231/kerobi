@@ -64,8 +64,31 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: WSL2 x86-64 Linux 6.6.87.2, Node v22.22.1, Python 3.10. 바이너리 해시는 매 캡처에서 위 값과 일치했다. 정식 캡처 도구 해시: agent `da123ebe…b035ff`, capture `56b06ddf…93d9af`(전체 값은 [manifest](../../bench/oracle/m3_push_ftran/manifest.json)). 계약 `913146c`, 도구·캡처·검사기 `f62034b`.
+- 원본 실행 총 20회: 탐색 1차 4회(`history/explore/`, scratch 형식을 반대로 읽은 첫 agent), 탐색 2차 4회(`history/explore2/`), 정식 12회(4사례×3). 탐색 자료는 판정에 쓰지 않았고 실패한 해석을 보존한다.
+- **재현성·비간섭**(`--controls` 종료0): arms 578사건(새 168)·retry 221(60)·interior 252(72)·대조군 0사건이 각각 독립 pid/run_id 3회에서 동일하다. 새 `ftran:*` 사건을 빼면 선행19 [`m3_push_round`](../../bench/oracle/m3_push_round/) `*-1.json`의 전체 사건·최종 결과·출력과 JSON 전체가 같다.
+- **판정 규칙**(`--acceptance` 종료0, [집계](../../bench/oracle/m3_push_ftran/verification-acceptance.json)): FTRAN **50호출**(공급 42=25/8/9, 재계산 8=3/2/3) 전부 규칙 1–7 통과.
+
+| 분기 | 관측 수 | 비고 |
+|---|---:|---|
+| save0 / save1 | 41 / 9 | save1은 retry 1·interior 8. 비어 있지 않은 목록의 wrapper clear 1회(interior, 이전 spike 8개 → 모두 +0) |
+| 입력 sparse / dense / count0 | 42 / 8 / 0 | dense는 재계산 8회 |
+| L `21b9de` / `214344` | 33 / 17 | interior 공급 sparse 입력 9회도 `count·F104 > m`이라 dense L |
+| U `21686f` / `2126cd` | 33 / 17 | 희소 U는 U 입력 count 1–2, 접두 목록 0개(F_ec=0)뿐 |
+| spike dense 필터 / sparse 복사 | 8 / 1 | sparse 복사는 count1만 |
+| eta>0 | 5 | 모두 interior, R 뒤 dense·dense U |
+| 비identity 순열 | 50 | F20/F28/F40 모두 실제 순열 |
+
+- **변조 거부**(`--self-test` 종료0): 35종. 바이너리·manifest 해시, 빈 사건, 회차 차이, 선행 투영 차이, 기준 결과, 새 사건0, null-null, 본체 leave 누락, wrapper 밖 사건, 규칙2(ZERO·역순열·eta 길이합·scratch·factor 변경·U 경계), 규칙3(sparse 치환·dense gather·포인터 교환), 규칙4(L/U 경로 이름, x104·U 판정 입력 협조 변조), 규칙5(spike 순서·값·누락·U 진입 시점·clear·save0 spike·save flag), 규칙6(출력 비트·순서·재계산 입력 후상태·별칭·wrapper raw). 모든 거부 메시지가 해당 규칙의 첫 차이를 가리키는지 확인했다. 처음 작성한 R4 두 변조는 쌍/불변 검사에서 먼저 거부돼 경로 규칙을 시험하지 못했으므로 협조형으로 고쳤다.
+- **회귀**([요약](../../bench/oracle/m3_push_ftran/regression/summary.txt), 13명령 모두 종료0): 선행 `push_round_check.py --controls --acceptance --self-test`, `push_lu_survey.py --check`·`--check --self-test`, `push_chain_oracle.py --check`·`--self-test`(8종), `cargo test -p rsolver-lp --test push_chain` 1통과, `push_step_chain_rust.py --compare` 236단계·5,144필드(42구간·재분해 제외6 유지), py_compile·`node --check`. `git diff --check` 통과.
+- 실행하지 않은 검사: Rust·확장 코드 변경이 없어 workspace 전체·clippy·확장 설치·pytest·Netlib·P3는 제외했다.
+- 계약 변경: 탐색 1차 뒤 scratch 형식을 C(`21686f` param_6/param_7)로 다시 읽어 F+0x1b0=i32 표시, F+0x1b8=f64 값으로 정정했다(정식 캡처 전). wrapper 반환 주소를 asm으로 확정해 기록했다. 판정 규칙 자체는 바꾸지 않았다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **오라클 구축 완료**(계약 범위). 원본 식별·독립3회·선행19 비간섭·C 규칙 판정·변조 35종 거부를 확인했다. 독립 검토: REVIEW_PLACEHOLDER
+- 동등성: 이번 작업은 Rust 구현을 포함하지 않는다. 수치 L/R/U 값의 독립 재계산과 Rust 비트 비교는 **미검증**(21b).
+- 남은 한계(자연 미관측): 입력 count0 조기 종료, L 출력 0, `21574d`, L 레벨 경로(F128≥0, 모두 −1), eta>0에서의 sparse R/희소 U, 접두 목록이 있는 희소 U, sparse spike count≥2, ±ZERO 정확 경계·동률. 21b는 이 범위에서 L/R/U 비트 재생을 시작하고, 필요한 분기는 원본 수치 명령을 실행하는 별도 오라클로 보강한다. work 누적값은 기록만 했다.
+- 다음: **M3-04c-21b**. `python3 tools/session.py status` → `python3 tools/session.py claim M3-04c-21b --owner <새-owner>` → 이 문서 §2·§6과 `docs/m1/m1_02j_lsolve.md`·`m1_02l_eta_peel.md`·`m1_02m_usolve.md`를 읽고, `bench/oracle/m3_push_ftran/{arms,retry,interior}-1.json`의 `ftran:enter` factor를 초기 상태로 Rust 한 RHS FTRAN의 커널 경계·spike·raw·입력 후상태를 비트 비교한다. 기준 재검사는 `python3 tools/push_ftran_check.py --controls --acceptance --self-test`.
+- branch `work/m3-04c-21a`, worktree `../rsolver-m3-04c-21a`, 선행 미커밋 없음. 최종 commit·병합은 main `Merge M3-04c-21a` 이력을 따른다. main 미추적 `.claude/settings.local.json` 보존. 원격/업로드 없음.
+- 교훈: `docs/lessons/original.md`(FTRAN scratch 형식, 자연 dense L 경로), `tooling.md`(변조 거부 이유 확인, scratch 비영 목록, session.py 번호 정규식).
