@@ -1,0 +1,85 @@
+{
+  "task": "M3-04c-19",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "specs_sha256": "fcbd0140642d6780e63708118dade1f7e8be0cb4a79137a0dd3bc9c1e8e8f757",
+  "tools": {
+    "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec",
+    "tools/gurun.sh": "7efb6a90dd1fae5f71997b24c112601d4f76b822546ddcce8d53920369f0d48f",
+    "tools/push_factor_synthetic.py": "c2c8d5061108956b569263d931f70d0ba7778dc817b06f58bffcb211d0fde2e9",
+    "tools/push_recompute_check.py": "a15cc232b8c6a40ba852c42d29a8b25738e7a65f3b65f9fbecd1d7b1e117cc78",
+    "tools/push_recompute_runs.py": "6692ab102b3e12c55f67d117320721c65cc777c29e4642e9b495f31d746e08ff",
+    "tools/push_recompute_synthetic.py": "89b5e2b0d316b44abcafce3a7fb7f0ab9fa0a2fed8654067cc8498142ee23584",
+    "tools/push_round_agent.js": "1aa3e46e20c77167eada9f2ba737bf195a5008dd339149d83ad1eec6172292c7",
+    "tools/push_round_capture.js": "32f2125e2a8b2a1a8ffdca8bafe9298e934f932ff05ae8fa74f3ff51973e7496",
+    "tools/push_round_check.py": "215c48a35f75d6f04702908dd1844c872850c2bb869f1f6dd2db0777e93c0f70",
+    "tools/push_round_runs.py": "1eec8de9a61237ba1ba6ac436b3d8ddff4cd5cadde5635f0b97577ab216e9860",
+    "tools/push_round_synthetic.py": "41a604b88a34596c86ce2da0d1193768c6fa483c423981067ba77dfd4351b85b",
+    "tools/push_supplier_check.py": "2111b9192c5724e0cee21f0360a0cd0b75dfad0bac57036191367b4f5653df5e"
+  },
+  "inputs": {
+    "bench/oracle/m3_primal_push_step/interior.lp": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0",
+    "bench/oracle/m3_push_arms/arms.extra.json": "7843373b048b87370821eaedb90b918828759254061a3c3f37b60d51f3a1a46d",
+    "bench/oracle/m3_push_arms/arms.lp": "b05832f67ae340637551cda5cd191013c3f65f5cef190a0cc5a8c058070d9683",
+    "bench/oracle/m3_push_retry/retry.extra.json": "a14e2011d1e13d4abf085d97bc3043a5781a1b0daaea2298f036a5a4692d5e1b",
+    "bench/oracle/m3_push_retry/retry.lp": "2be78262e14b9c8482ce0c96fe0ab10d68246bc11eae184dc2bdb9c2f8516986",
+    "bench/oracle/m3_push_round/synthetic-inputs.json": "f4f7d1272647dc71115f6a6286df3c9eda0581fe2e6fc7347e3afd43f745fabe"
+  },
+  "sources": {
+    "../re/decomp/c/00131710_PRIVATE000000000009e376.c": "9a8a6fc9f8e73a7c4f62bb52d38bd66fb8d7210000914e1857e344aa4e3525fb",
+    "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb",
+    "../re/decomp/c/001c5310_PRIVATE000000000025615c.c": "acbf6b5539de8967b02005efd5bb3581e1487d56b2881508ad4309a4305793bd"
+  },
+  "assembly": {
+    "bench/oracle/m3_push_round/source.asm": "aacbd42ac4bbc3d8c1aefec20cac78816de0636450f4f89667199a96d4bb5ec7"
+  },
+  "captures": {
+    "bench/oracle/m3_push_round/arms-1.json": "ffab573cfcdefb260ebb0dc92ec2b26f28dc3356e562d6c256f0550bb43cd344",
+    "bench/oracle/m3_push_round/arms-2.json": "16f746cd50bab5838407fa8410f18fa4aff54ffbc66dce32c6cafbaef6569348",
+    "bench/oracle/m3_push_round/arms-3.json": "e22940844297f33649dc78493c618d41a15096e919b5664dee0e1216db359af7",
+    "bench/oracle/m3_push_round/control-1.json": "2d85e8f4c06b48825504781b73a4067c4c14f2bf1429814a1717e94cc07c2f89",
+    "bench/oracle/m3_push_round/control-2.json": "849777a3ebf898d8e6f17a03bde69def32c8642a866f70253cc0d242db5f9dd7",
+    "bench/oracle/m3_push_round/control-3.json": "14b7451391cccd548ae201755a241d2de4d1056bf9ba8931b6e8ac764bc83876",
+    "bench/oracle/m3_push_round/interior-1.json": "75a486ec597c2290a6a893774587106433a46f0b2d7a7f1e6a6ad0a40f951a37",
+    "bench/oracle/m3_push_round/interior-2.json": "af137cd7b547bcd23e4dc222a2413eaf1e60420513b9c657c66d543ba6478586",
+    "bench/oracle/m3_push_round/interior-3.json": "e2d8ddcba20da7de65e54561abc2c05c4300bf4d2c8a1b03381e986368c8d973",
+    "bench/oracle/m3_push_round/retry-1.json": "7a4c20c863fb94523c23c1c131c7f7034646332e239b9668bd23eeb91e8fd082",
+    "bench/oracle/m3_push_round/retry-2.json": "21560e46693307338ea68128d559cb3235193ff4f012dd909cda9ff2728a6d5b",
+    "bench/oracle/m3_push_round/retry-3.json": "1da2e7e58e9a7bd7ab2e16e04d28d0b44aff1137d8f4dde0a3b96ca6cbb837ed",
+    "bench/oracle/m3_push_round/synthetic-1.json": "e7b46ff30d2a9b8038f9444edb457bc51eedfa2e976fa3febdd702ae3dfb4c48",
+    "bench/oracle/m3_push_round/synthetic-2.json": "90242e8b6e8a87b85d6e9e2bc08a9d14abfad06c991c2c7db91e61fef80d548c",
+    "bench/oracle/m3_push_round/synthetic-3.json": "d5d9e83cc610e3f84c25cef1eceb444f575fc3ea918ec1d8eb1a440e797f6d9a"
+  },
+  "baselines": {
+    "bench/oracle/m3_push_recompute/arms-1.json": "a00abc17dbe2d864480207a66d80f73487ff2808580d238b483ebbe0eac6ae4e",
+    "bench/oracle/m3_push_recompute/control-1.json": "a7f34aa328fc9cdaee128c62de2201969826e9c44780ebcaf5a57b95dc1a4b6f",
+    "bench/oracle/m3_push_recompute/interior-1.json": "a618fed8f6c9722f41d94f63ac831da7671569dff785bba03138342fdf07d40b",
+    "bench/oracle/m3_push_recompute/manifest.json": "59a90720179c4ec9815ea30f6e9ec22a1f6e99fbca9af2001505e8ad5e49a3d7",
+    "bench/oracle/m3_push_recompute/retry-1.json": "ede806d02e721adc6bf55d830163198c12d584cd1a52e5971c5da2ed29fbb963"
+  },
+  "history": {
+    "bench/oracle/m3_push_round/history/checker-before-btran-links.py": "cd81d61e0fb80de4da24fa4a17b550aa5eef577c4339f106c15f4abca704dab6",
+    "bench/oracle/m3_push_round/history/explore-retry.json": "407fda5e1e878bb5a66a9f7c644e501a680c737fa12e56c5e104774073975513",
+    "bench/oracle/m3_push_round/history/first-natural/agent.js": "5d1c73054d05df287c6480216e917251870cb4a93f5eeb43ab66c92138871425",
+    "bench/oracle/m3_push_round/history/first-natural/arms-1.json": "1f97f92c434b92e688a80c5a2cc744271d62f50c90db754fb45705d606d9a224",
+    "bench/oracle/m3_push_round/history/first-natural/arms-2.json": "24a6269561d3d3c4f03bde9f019c29ecbad1d922e82ea7a274e678b4ed8b66a9",
+    "bench/oracle/m3_push_round/history/first-natural/arms-3.json": "2b5ce898e78d5292bdc16bc87dff79c50bb0c645e70d13dcd5d55829ee6591c4",
+    "bench/oracle/m3_push_round/history/first-natural/control-1.json": "99f9a5d08b6fcb22c7529ab3617944ca0cb4d7554cdc441a347bbd9997db8401",
+    "bench/oracle/m3_push_round/history/first-natural/control-2.json": "2200bdee74fda5d04b1994f4ceba6096b5ed1e9c2cf9ca340c76de6000be91c4",
+    "bench/oracle/m3_push_round/history/first-natural/control-3.json": "8859d5d3a4a3f98b96de613e70cd12c3db823770a78e8c2d646156f02a924af0",
+    "bench/oracle/m3_push_round/history/first-natural/interior-1.json": "f417eaf831a180400ce9c83b61b0e96f3af6e3d40a271c3639a8824019867e9e",
+    "bench/oracle/m3_push_round/history/first-natural/interior-2.json": "8fa790782f17430ab44ccae5ea57c105734bba0c534c56c62e583b5cce2cc400",
+    "bench/oracle/m3_push_round/history/first-natural/interior-3.json": "05acd871ca7cd1ca0ed37f54f8ae2b4097b0845ba7f81ff9d9c498275e9b20ba",
+    "bench/oracle/m3_push_round/history/first-natural/retry-1.json": "4296ee29f6bfd51a5127bf727456254fb41401c29ec3c5baaa37ede876192924",
+    "bench/oracle/m3_push_round/history/first-natural/retry-2.json": "332c16134f651d21b426eead9339e2f2a97bf0813c38e738c16390243ed83124",
+    "bench/oracle/m3_push_round/history/first-natural/retry-3.json": "dc27fb5a1afb5eada0aa28eb27ef53b26b1e8da8365021fd95f38d884731190e",
+    "bench/oracle/m3_push_round/history/first-synthetic/synthetic-1.json": "e58d29d3cee0fa998370724565d08e7e2363e9b749913ab9b0e39c0cd40666f8",
+    "bench/oracle/m3_push_round/history/first-synthetic/synthetic-2.json": "6cb929afabf84489b9b182b7755ec61bd26ffb6997601f4f7c8b24da464bc1b7",
+    "bench/oracle/m3_push_round/history/first-synthetic/synthetic-3.json": "89b12579b47e83405081556c7f3dfba9f790d679134befe7a51d65355b24da09",
+    "bench/oracle/m3_push_round/history/first-synthetic/synthetic.py": "72eca913a6bfae2e8b75f9a5e6243613e455612881afd9c2e89e73d0e659dc00",
+    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-1.json": "18184e75666d25878b421dc738e5db47a2583bb6966d8145001e5d0f299dba53",
+    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-2.json": "d8e3a033a1aabec2001911f5859e2d5f54ef3c32a65686f48b174a60da18d5e3",
+    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-3.json": "ca6910a258f3cac2d14d5d1d15b47efee9179cad1c5c284aef2239aeb37bbe43",
+    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic.py": "96be2c83870b25ee87d158df66dbcf72db9b66d33ecce4eb6af9356ce9efa3a4",
+    "bench/oracle/m3_push_round/history/verification-before-btran-links.json": "077bfe9a73512ef800584955f1317765bc95feec475ef8ffac1d31a787ec1c7c"
+  }
+}

@@ -34,6 +34,8 @@
 
 [04c-18 재계산 Rust L1](primal_push_recompute_rust.md)은 raw FTRAN 이후 basic 복사/제자리·shift·width·분류·PInf·retry·request 보존을 구현했다. 자연8+합성130, 총138입력·289행·2,958필드 비트/정확 일치, trace변조84종·Rust변이33종 모두 거부했다. 기존 합산 사례의 역순 미검출을 추가 원본10사례×3회로 보강했고 독립검토 재캡처도 일치한다. workspace133·clippy0·factor/supplier/chain 회귀가 통과했다. FTRAN 수치는 외부 입력이며 실제LU21·루프22·batch23는 별도다. 다음은19 보류·지원·라운드 오라클이다.
 
+[04c-19 보류·지원·라운드 오라클](primal_push_round_oracle.md)은 자연3모델의 새207사건(전체751)과 원본 명령 합성106경계를 각각 독립3회 검증했다. 승인수36·보류6·고갈9·round factor7·종료3, 자연BTRAN22회는 모두count1이며 다른 raw 표현은 합성이다. 원본 재현·선행17 비간섭·제어 재생·157변조·독립검토를 통과했다. 초기 생존 caller 연결3종은 직전 applied→BTRAN→다음 공급자 P/factor 상태 연결로 해결했다. 다음20은 이 제어의 Rust L1이며 수치BTRAN/factor는 외부 backend, 실제LU21·루프22·batch23은 별도다.
+
 ## 2. Method 선택과 Concurrent
 
 자동 선택은 입력 분류→Method 결정→실행 경로를 추적한다. M3-05a는 명시 Method, 자동 Method, 모델 분류, 관련 파라미터에 대한 원본 결정표를 만든다. 선택 분기를 고치는 작업과 concurrent 엔진을 만드는 작업은 독립 번호다.

@@ -1,0 +1,11558 @@
+{
+ "schema": "M3-04c-19-synthetic-v1",
+ "origin": "synthetic-original-slice",
+ "substitution": "original in-place defer/pass/exhaustion/BTRAN-consumer/round-wrapper; exit stubs; numeric BTRAN/factor and context helpers replaced; batch=0",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "96be2c83870b25ee87d158df66dbcf72db9b66d33ecce4eb6af9356ce9efa3a4",
+ "input_sha256": "fcbd0140642d6780e63708118dade1f7e8be0cb4a79137a0dd3bc9c1e8e8f757",
+ "run_id": "abe7ec5c-487f-4443-9605-4d1103995ec7",
+ "pid": 319396,
+ "environment": {
+  "machine": "x86_64",
+  "system": "Linux",
+  "python": "3.13.14"
+ },
+ "events": [
+  {
+   "name": "defer-0",
+   "kind": "defer",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 101,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     4,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 3,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     1,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "defer-1",
+   "kind": "defer",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     1,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 101,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     4,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 3,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     2,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "defer-2",
+   "kind": "defer",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     2,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 101,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     4,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 3,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     3,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "defer-3",
+   "kind": "defer",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     3,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 101,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     4,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 3,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "pass-0",
+   "kind": "pass",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 101,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m0-a0-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 0,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": 0,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 0,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m0-a1-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 0,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": 0,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 0,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": 0,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m1-a0-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 1,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 0,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 1,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m1-a1-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 1,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 0,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 1,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 0,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m1-a2-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 1,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 0,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 1,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 0,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m2-a0-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 2,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 2,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m2-a1-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 2,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 2,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m2-a2-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 2,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 2,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a0-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a1-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a2-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a3-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a0-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a2-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a3-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a4-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 4,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 4,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a0-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a2-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a3-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a4-s0",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 4,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 4,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "all-deferred-0",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 6,
+    "deferred": 6,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 103,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 6,
+    "deferred": 6,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "empty-0",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 103,
+    "m": 9,
+    "total": 0,
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "pass-1",
+   "kind": "pass",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 101,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m0-a0-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 0,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": 1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 0,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": 1,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m0-a1-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 0,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": 1,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 0,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": 1,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m1-a0-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 1,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 1,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m1-a1-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 1,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 1,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 1,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 1,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m1-a2-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 1,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 1,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 1,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m2-a0-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 2,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 2,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m2-a1-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 2,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 2,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m2-a2-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 2,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 2,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a0-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a1-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a2-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a3-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a0-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a2-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a3-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a4-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 4,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 4,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a0-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a2-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a3-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a4-s1",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 4,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 4,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "all-deferred-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 6,
+    "deferred": 6,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "empty-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 103,
+    "m": 9,
+    "total": 0,
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 0,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "pass--1",
+   "kind": "pass",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 101,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m0-a0-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 0,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": -1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 0,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": -1,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m0-a1-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 0,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": -1,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 0,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [],
+    "support": -1,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m1-a0-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 1,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": -1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 1,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m1-a1-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 1,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": -1,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 1,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": -1,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m1-a2-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 1,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": -1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 1,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0
+    ],
+    "support": -1,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m2-a0-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 2,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 2,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m2-a1-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 2,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 2,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m2-a2-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 2,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 2,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a0-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a1-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 1,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 1,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a2-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m4-a3-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 4,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 4,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a0-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a2-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a3-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m9-a4-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 4,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 4,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a0-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a2-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 2,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 2,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a3-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sqrt-m10-a4-s-1",
+   "kind": "exhausted",
+   "input": {
+    "m": 10,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 4,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 10,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 4,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "all-deferred--1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 6,
+    "deferred": 6,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "empty--1",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 103,
+    "m": 9,
+    "total": 0,
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 0,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "no-prefix",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 3,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 3,
+    "candidates": [
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "prefix-only",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 6,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 2,
+    "candidates": [
+     5,
+     2
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "duplicates-order",
+   "kind": "exhausted",
+   "input": {
+    "m": 9,
+    "candidates": [
+     8,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 3,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 5,
+    "candidates": [
+     8,
+     2,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "sparse-0",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": 0,
+     "indices": [],
+     "values": []
+    }
+   },
+   "result": {
+    "exit": 104,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "sparse-1",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": 1,
+     "indices": [
+      4
+     ],
+     "values": [
+      "00000000000000c0"
+     ]
+    }
+   },
+   "result": {
+    "exit": 104,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "sparse-2",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": 2,
+     "indices": [
+      8,
+      1
+     ],
+     "values": [
+      "00000000000000c0",
+      "0000000000000000"
+     ]
+    }
+   },
+   "result": {
+    "exit": 104,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     1,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "sparse-3",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": 3,
+     "indices": [
+      8,
+      0,
+      4
+     ],
+     "values": [
+      "00000000000000c0",
+      "0000000000000000",
+      "00000000000000c0"
+     ]
+    }
+   },
+   "result": {
+    "exit": 104,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "sparse-4",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": 4,
+     "indices": [
+      7,
+      2,
+      5,
+      0
+     ],
+     "values": [
+      "00000000000000c0",
+      "0000000000000000",
+      "00000000000000c0",
+      "0000000000000000"
+     ]
+    }
+   },
+   "result": {
+    "exit": 104,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "dense-a0",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 0,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": -1,
+     "indices": null,
+     "values": [
+      "0000000000000000",
+      "000000000000f03f",
+      "0000000000000040",
+      "0000000000000840",
+      "0000000000001040",
+      "0000000000001440",
+      "0000000000001840",
+      "0000000000001c40",
+      "0000000000002040"
+     ]
+    }
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "approved": 0,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "dense-a3",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": -1,
+     "indices": null,
+     "values": [
+      "0000000000000000",
+      "000000000000f03f",
+      "0000000000000040",
+      "0000000000000840",
+      "0000000000001040",
+      "0000000000001440",
+      "0000000000001840",
+      "0000000000001c40",
+      "0000000000002040"
+     ]
+    }
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "dense-a4",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 4,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": -1,
+     "indices": null,
+     "values": [
+      "0000000000000000",
+      "000000000000f03f",
+      "0000000000000040",
+      "0000000000000840",
+      "0000000000001040",
+      "0000000000001440",
+      "0000000000001840",
+      "0000000000001c40",
+      "0000000000002040"
+     ]
+    }
+   },
+   "result": {
+    "exit": 102,
+    "m": 9,
+    "total": 4,
+    "candidates": [
+     5,
+     2,
+     8,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 4,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "dense-empty",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": -1,
+     "indices": null,
+     "values": [
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000"
+     ]
+    }
+   },
+   "result": {
+    "exit": 103,
+    "m": 9,
+    "total": 0,
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": -1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "support-0",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": 1,
+     "indices": [
+      4
+     ],
+     "values": [
+      "000000000000f03f"
+     ]
+    }
+   },
+   "result": {
+    "exit": 104,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 0,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": []
+   }
+  },
+  {
+   "name": "support-1",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": 1,
+     "indices": [
+      4
+     ],
+     "values": [
+      "000000000000f03f"
+     ]
+    }
+   },
+   "result": {
+    "exit": 104,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "support--1",
+   "kind": "btran",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "raw": {
+     "count": 1,
+     "indices": [
+      4
+     ],
+     "values": [
+      "000000000000f03f"
+     ]
+    }
+   },
+   "result": {
+    "exit": 104,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": -1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "btran",
+      "input": {
+       "count": 1,
+       "indices": [
+        2
+       ],
+       "values": [
+        "000000000000f03f"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "normal",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "repeat1",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 1
+     },
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 1
+      }
+     },
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "repeat2",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 1
+     },
+     {
+      "ret": 1
+     },
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 1
+      }
+     },
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 1
+      }
+     },
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "return12",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 12
+     }
+    ]
+   },
+   "result": {
+    "exit": 106,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 1,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 12
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "error7",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 7
+     }
+    ]
+   },
+   "result": {
+    "exit": 106,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 7,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 7
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "error-before-status",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 7,
+      "status": -1000
+     }
+    ]
+   },
+   "result": {
+    "exit": 106,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 7,
+    "request": 10,
+    "status": -1000,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 7,
+       "status": -1000
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "backend-numeric",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0,
+      "numeric": 13
+     }
+    ]
+   },
+   "result": {
+    "exit": 106,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 13,
+    "failure": 0,
+    "retry": 1,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0,
+       "numeric": 13
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "backend-request",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 1,
+      "request": 6
+     },
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 6,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 1,
+       "request": 6
+      }
+     },
+     {
+      "event": "factor",
+      "request": 6,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "status-999",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": -999,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": -999,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "status-1000",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": -1000,
+    "numeric": 3,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 106,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 1,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "failure-attempt0",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 1,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 106,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 1,
+    "retry": 1,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric12-attempt0",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 12,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 12,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric13-attempt0",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 13,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 106,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 13,
+    "failure": 0,
+    "retry": 1,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric14-attempt0",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 14,
+    "failure": 0,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 106,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 14,
+    "failure": 0,
+    "retry": 1,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "failure-attempt1",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 1,
+    "attempt": 1,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 1,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric12-attempt1",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 12,
+    "failure": 0,
+    "attempt": 1,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 12,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric13-attempt1",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 13,
+    "failure": 0,
+    "attempt": 1,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 13,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric14-attempt1",
+   "kind": "wrapper",
+   "input": {
+    "m": 9,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "enter": 4,
+    "leave": 2,
+    "request": 10,
+    "status": 1,
+    "numeric": 14,
+    "failure": 0,
+    "attempt": 1,
+    "numeric_limit": 13,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "replies": [
+     {
+      "ret": 0
+     }
+    ]
+   },
+   "result": {
+    "exit": 105,
+    "m": 9,
+    "total": 6,
+    "candidates": [
+     5,
+     2,
+     7,
+     2,
+     8,
+     1
+    ],
+    "position": 4,
+    "deferred": 2,
+    "failures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     0,
+     1,
+     2,
+     3,
+     0,
+     0,
+     0
+    ],
+    "marks": [
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1,
+     0,
+     1
+    ],
+    "support": 1,
+    "approved": 3,
+    "return_code": 0,
+    "request": 10,
+    "status": 1,
+    "numeric": 14,
+    "failure": 0,
+    "retry": 0,
+    "count_sum": "00000000000008c0",
+    "successes": 7,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

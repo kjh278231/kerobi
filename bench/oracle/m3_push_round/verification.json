@@ -1,0 +1,709 @@
+{
+  "controls": {
+    "arms": 410,
+    "retry": 161,
+    "interior": 180,
+    "control": 0,
+    "synthetic": 106
+  },
+  "acceptance": {
+    "natural": {
+      "arms": {
+        "pass:enter": 4,
+        "pass:ready": 4,
+        "accepted": 22,
+        "btran:prepare": 17,
+        "btran:enter": 17,
+        "btran:leave": 17,
+        "btran:applied": 17,
+        "defer:enter": 3,
+        "defer:leave": 3,
+        "exhausted": 4,
+        "restart": 3,
+        "support": 3,
+        "factor": 3,
+        "factor:return": 3,
+        "recomputed": 3,
+        "clear": 3,
+        "end": 1
+      },
+      "retry": {
+        "pass:enter": 3,
+        "pass:ready": 3,
+        "accepted": 5,
+        "btran:prepare": 4,
+        "btran:enter": 4,
+        "btran:leave": 4,
+        "btran:applied": 4,
+        "defer:enter": 3,
+        "defer:leave": 3,
+        "exhausted": 3,
+        "restart": 2,
+        "support": 2,
+        "factor": 2,
+        "factor:return": 2,
+        "recomputed": 2,
+        "clear": 2,
+        "end": 1
+      },
+      "interior": {
+        "pass:enter": 2,
+        "pass:ready": 2,
+        "accepted": 9,
+        "btran:prepare": 1,
+        "btran:enter": 1,
+        "btran:leave": 1,
+        "btran:applied": 1,
+        "exhausted": 2,
+        "restart": 2,
+        "support": 2,
+        "factor": 2,
+        "factor:return": 2,
+        "recomputed": 2,
+        "clear": 1,
+        "end": 1
+      }
+    },
+    "synthetic": {
+      "defer": 4,
+      "pass": 3,
+      "exhausted": 69,
+      "btran": 12,
+      "wrapper": 18
+    },
+    "cases": 106
+  },
+  "self_test": {
+    "rejected": 157,
+    "details": [
+      {
+        "name": "binary_sha256",
+        "error": "arms/1.binary: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "model_sha256",
+        "error": "arms/1.model: 기준='b05832f67ae340637551cda5cd191013c3f65f5cef190a0cc5a8c058070d9683', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "agent_sha256",
+        "error": "arms/1.agent: 기준='1aa3e46e20c77167eada9f2ba737bf195a5008dd339149d83ad1eec6172292c7', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "tool_sha256",
+        "error": "arms/1.tool: 기준='32f2125e2a8b2a1a8ffdca8bafe9298e934f932ff05ae8fa74f3ff51973e7496', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "manifest-empty-tools",
+        "error": "manifest.tools.keys: 기준={'tools/push_recompute_synthetic.py', 'tools/push_round_check.py', 'tools/push_supplier_check.py', 'tools/push_recompute_check.py', 'tools/push_round_capture.js', 'tools/push_recompute_runs.py', 'tools/frida_resolve.cjs', 'tools/gurun.sh', 'tools/push_round_synthetic.py', 'tools/push_round_agent.js', 'tools/push_factor_synthetic.py', 'tools/push_round_runs.py'}, 실제=set()"
+      },
+      {
+        "name": "manifest-empty-inputs",
+        "error": "manifest.inputs.keys: 기준={'bench/oracle/m3_push_round/synthetic-inputs.json', 'bench/oracle/m3_push_arms/arms.lp', 'bench/oracle/m3_primal_push_step/interior.lp', 'bench/oracle/m3_push_arms/arms.extra.json', 'bench/oracle/m3_push_retry/retry.lp', 'bench/oracle/m3_push_retry/retry.extra.json'}, 실제=set()"
+      },
+      {
+        "name": "manifest-empty-sources",
+        "error": "manifest.sources.keys: 기준={'../re/decomp/c/00131710_PRIVATE000000000009e376.c', '../re/decomp/c/001c0070_PRIVATE0000000000134a87.c', '../re/decomp/c/001c5310_PRIVATE000000000025615c.c'}, 실제=set()"
+      },
+      {
+        "name": "manifest-empty-assembly",
+        "error": "manifest.assembly.keys: 기준={'bench/oracle/m3_push_round/source.asm'}, 실제=set()"
+      },
+      {
+        "name": "manifest-empty-captures",
+        "error": "manifest.captures.keys: 기준={'bench/oracle/m3_push_round/arms-2.json', 'bench/oracle/m3_push_round/interior-3.json', 'bench/oracle/m3_push_round/synthetic-2.json', 'bench/oracle/m3_push_round/retry-3.json', 'bench/oracle/m3_push_round/interior-2.json', 'bench/oracle/m3_push_round/retry-1.json', 'bench/oracle/m3_push_round/arms-3.json', 'bench/oracle/m3_push_round/control-1.json', 'bench/oracle/m3_push_round/control-2.json', 'bench/oracle/m3_push_round/control-3.json', 'bench/oracle/m3_push_round/interior-1.json', 'bench/oracle/m3_push_round/synthetic-1.json', 'bench/oracle/m3_push_round/synthetic-3.json', 'bench/oracle/m3_push_round/arms-1.json', 'bench/oracle/m3_push_round/retry-2.json'}, 실제=set()"
+      },
+      {
+        "name": "manifest-empty-baselines",
+        "error": "manifest.baselines.keys: 기준={'bench/oracle/m3_push_recompute/interior-1.json', 'bench/oracle/m3_push_recompute/manifest.json', 'bench/oracle/m3_push_recompute/arms-1.json', 'bench/oracle/m3_push_recompute/retry-1.json', 'bench/oracle/m3_push_recompute/control-1.json'}, 실제=set()"
+      },
+      {
+        "name": "manifest-empty-history",
+        "error": "manifest.history.keys: 기준={'bench/oracle/m3_push_round/history/first-natural/interior-2.json', 'bench/oracle/m3_push_round/history/first-natural/retry-1.json', 'bench/oracle/m3_push_round/history/checker-before-btran-links.py', 'bench/oracle/m3_push_round/history/first-natural/retry-3.json', 'bench/oracle/m3_push_round/history/first-natural/control-3.json', 'bench/oracle/m3_push_round/history/verification-before-btran-links.json', 'bench/oracle/m3_push_round/history/first-natural/interior-1.json', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-1.json', 'bench/oracle/m3_push_round/history/first-natural/interior-3.json', 'bench/oracle/m3_push_round/history/first-natural/control-1.json', 'bench/oracle/m3_push_round/history/explore-retry.json', 'bench/oracle/m3_push_round/history/first-natural/arms-2.json', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic-3.json', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic-2.json', 'bench/oracle/m3_push_round/history/first-natural/arms-1.json', 'bench/oracle/m3_push_round/history/first-natural/arms-3.json', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-2.json', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic.py', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-3.json', 'bench/oracle/m3_push_round/history/first-natural/retry-2.json', 'bench/oracle/m3_push_round/history/first-natural/control-2.json', 'bench/oracle/m3_push_round/history/first-natural/agent.js', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic-1.json', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic.py'}, 실제=set()"
+      },
+      {
+        "name": "manifest-binary",
+        "error": "manifest.binary: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "events-empty",
+        "error": "arms.target required"
+      },
+      {
+        "name": "repeat-difference",
+        "error": "arms/2.events: 길이 기준=410, 실제=409"
+      },
+      {
+        "name": "projection",
+        "error": "arms/1.projection[0].first: 기준=1, 실제=99"
+      },
+      {
+        "name": "null-null",
+        "error": "synthetic.defer-0.result: 타입 기준=dict, 실제=NoneType"
+      },
+      {
+        "name": "all-target-zero",
+        "error": "arms.step:applied.step1.accepted required"
+      },
+      {
+        "name": "natural-defer:enter.state.failures",
+        "error": "object of type 'NoneType' has no len()"
+      },
+      {
+        "name": "natural-defer:leave.state.failures",
+        "error": "retry.roundctl:defer:leave.step2.defer transition.failures[15]: 기준=1, 실제=0"
+      },
+      {
+        "name": "natural-defer:leave.state.deferred",
+        "error": "retry.roundctl:defer:leave.step2.defer transition.deferred: 기준=1, 실제=0"
+      },
+      {
+        "name": "natural-defer:leave.state.candidates",
+        "error": "retry.roundctl:defer:leave.step2.total: 기준=6, 실제=0"
+      },
+      {
+        "name": "natural-accepted.state.approved",
+        "error": "retry.roundctl:accepted.step1.approved: 기준=1, 실제=99"
+      },
+      {
+        "name": "natural-accepted.kind",
+        "error": "retry.roundctl:accepted.step1.kind: 기준='pivot', 실제='flip'"
+      },
+      {
+        "name": "natural-exhausted.approved_live",
+        "error": "retry.roundctl:exhausted.step6.approved live: 기준=5, 실제=99"
+      },
+      {
+        "name": "natural-exhausted.state.support",
+        "error": "retry.roundctl:exhausted.step6.unused support_marks: 타입 기준=NoneType, 실제=list"
+      },
+      {
+        "name": "natural-restart.state.support",
+        "error": "retry.roundctl:restart.step6.unused support_marks: 타입 기준=NoneType, 실제=list"
+      },
+      {
+        "name": "natural-support.state.marks",
+        "error": "retry.roundctl:support.step6.support_marks[0]: 기준=1, 실제=0"
+      },
+      {
+        "name": "natural-factor.state.request",
+        "error": "retry.roundctl:factor.step6.compact request10.request: 기준=10, 실제=0"
+      },
+      {
+        "name": "natural-factor.state.position",
+        "error": "retry.roundctl:factor.step6.compact request10.position: 기준=0, 실제=1"
+      },
+      {
+        "name": "natural-factor:return.ret",
+        "error": "retry.roundctl:factor:return.step6.repeats[0]: 기준=1, 실제=0"
+      },
+      {
+        "name": "natural-recomputed.state.request",
+        "error": "retry.roundctl:recomputed.step6.preserved P.request: 기준=10, 실제=0"
+      },
+      {
+        "name": "natural-clear.state.request",
+        "error": "retry.roundctl:clear.step6.request cleared.request: 기준=0, 실제=10"
+      },
+      {
+        "name": "natural-end.remaining",
+        "error": "retry.roundctl:end.step8.remaining: 기준=1, 실제=0"
+      },
+      {
+        "name": "natural-btran:enter.input",
+        "error": "retry.roundctl:btran:enter.step1.unit input.indices[0]: 기준=8, 실제=0"
+      },
+      {
+        "name": "natural-btran:enter.args",
+        "error": "retry.roundctl:btran:enter.step1.args.work: 기준=True, 실제=False"
+      },
+      {
+        "name": "natural-btran:leave.raw",
+        "error": "retry.roundctl:btran:applied.step1.mark transition.support_marks[7]: 기준=0, 실제=1"
+      },
+      {
+        "name": "natural-btran:applied.state.marks",
+        "error": "retry.roundctl:btran:applied.step1.support_marks[7]: 기준=0, 실제=1"
+      },
+      {
+        "name": "natural-pass:ready.state.total",
+        "error": "retry.roundctl:pass:ready.step0.total: 기준=99, 실제=6"
+      },
+      {
+        "name": "missing-accepted",
+        "error": "retry.step:applied.step1.accepted required"
+      },
+      {
+        "name": "missing-defer:enter",
+        "error": "retry.step:defer.step2.defer required"
+      },
+      {
+        "name": "missing-exhausted",
+        "error": "retry.roundctl:restart.step6.action: 타입 기준=str, 실제=NoneType"
+      },
+      {
+        "name": "missing-btran:enter",
+        "error": "retry.roundctl:btran:leave.step1.enter required: 타입 기준=str, 실제=NoneType"
+      },
+      {
+        "name": "missing-btran:leave",
+        "error": "retry.roundctl:btran:applied.step1.sparse raw required"
+      },
+      {
+        "name": "missing-btran:applied",
+        "error": "retry.supply:enter.step1.P continuity.support_marks[7]: 기준=0, 실제=1"
+      },
+      {
+        "name": "missing-factor:return",
+        "error": "retry.roundctl:recomputed.step6.action: 기준='recomputed', 실제='return'"
+      },
+      {
+        "name": "missing-recomputed",
+        "error": "retry.roundctl:pass:enter.step6.after recompute.request: 기준=10, 실제=0"
+      },
+      {
+        "name": "missing-pass:ready",
+        "error": "retry.supply:enter.step0.P continuity.support_marks: 타입 기준=NoneType, 실제=list"
+      },
+      {
+        "name": "missing-end",
+        "error": "retry.push:leave.step8.unfinished round"
+      },
+      {
+        "name": "coordinated-BTRAN-leave",
+        "error": "retry.roundctl:btran:prepare.step1.applied selected.leave: 기준=8, 실제=9"
+      },
+      {
+        "name": "coordinated-BTRAN-request",
+        "error": "retry.roundctl:btran:prepare.step1.applied state.request: 기준=0, 실제=6"
+      },
+      {
+        "name": "coordinated-BTRAN-marks",
+        "error": "retry.roundctl:btran:prepare.step4.applied state.support_marks[7]: 기준=1, 실제=0"
+      },
+      {
+        "name": "defer-0.deferred",
+        "error": "synthetic.defer-0.result.deferred: 기준=3, 실제=-2"
+      },
+      {
+        "name": "defer-1.deferred",
+        "error": "synthetic.defer-1.result.deferred: 기준=3, 실제=-2"
+      },
+      {
+        "name": "defer-2.deferred",
+        "error": "synthetic.defer-2.result.deferred: 기준=3, 실제=-2"
+      },
+      {
+        "name": "defer-3.deferred",
+        "error": "synthetic.defer-3.result.deferred: 기준=3, 실제=-2"
+      },
+      {
+        "name": "pass-0.candidates",
+        "error": "synthetic.pass-0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m0-a0-s0.candidates",
+        "error": "synthetic.sqrt-m0-a0-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m0-a1-s0.candidates",
+        "error": "synthetic.sqrt-m0-a1-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m1-a0-s0.candidates",
+        "error": "synthetic.sqrt-m1-a0-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m1-a1-s0.candidates",
+        "error": "synthetic.sqrt-m1-a1-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m1-a2-s0.candidates",
+        "error": "synthetic.sqrt-m1-a2-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m2-a0-s0.candidates",
+        "error": "synthetic.sqrt-m2-a0-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m2-a1-s0.candidates",
+        "error": "synthetic.sqrt-m2-a1-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m2-a2-s0.candidates",
+        "error": "synthetic.sqrt-m2-a2-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a0-s0.candidates",
+        "error": "synthetic.sqrt-m4-a0-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a1-s0.candidates",
+        "error": "synthetic.sqrt-m4-a1-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a2-s0.candidates",
+        "error": "synthetic.sqrt-m4-a2-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a3-s0.candidates",
+        "error": "synthetic.sqrt-m4-a3-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a0-s0.candidates",
+        "error": "synthetic.sqrt-m9-a0-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a2-s0.candidates",
+        "error": "synthetic.sqrt-m9-a2-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a3-s0.candidates",
+        "error": "synthetic.sqrt-m9-a3-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a4-s0.candidates",
+        "error": "synthetic.sqrt-m9-a4-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a0-s0.candidates",
+        "error": "synthetic.sqrt-m10-a0-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a2-s0.candidates",
+        "error": "synthetic.sqrt-m10-a2-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a3-s0.candidates",
+        "error": "synthetic.sqrt-m10-a3-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a4-s0.candidates",
+        "error": "synthetic.sqrt-m10-a4-s0.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "all-deferred-0.candidates",
+        "error": "synthetic.all-deferred-0.result.candidates: 길이 기준=6, 실제=7"
+      },
+      {
+        "name": "empty-0.candidates",
+        "error": "synthetic.empty-0.result.candidates: 길이 기준=0, 실제=1"
+      },
+      {
+        "name": "pass-1.candidates",
+        "error": "synthetic.pass-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m0-a0-s1.candidates",
+        "error": "synthetic.sqrt-m0-a0-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m0-a1-s1.candidates",
+        "error": "synthetic.sqrt-m0-a1-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m1-a0-s1.candidates",
+        "error": "synthetic.sqrt-m1-a0-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m1-a1-s1.candidates",
+        "error": "synthetic.sqrt-m1-a1-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m1-a2-s1.candidates",
+        "error": "synthetic.sqrt-m1-a2-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m2-a0-s1.candidates",
+        "error": "synthetic.sqrt-m2-a0-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m2-a1-s1.candidates",
+        "error": "synthetic.sqrt-m2-a1-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m2-a2-s1.candidates",
+        "error": "synthetic.sqrt-m2-a2-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a0-s1.candidates",
+        "error": "synthetic.sqrt-m4-a0-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a1-s1.candidates",
+        "error": "synthetic.sqrt-m4-a1-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a2-s1.candidates",
+        "error": "synthetic.sqrt-m4-a2-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a3-s1.candidates",
+        "error": "synthetic.sqrt-m4-a3-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a0-s1.candidates",
+        "error": "synthetic.sqrt-m9-a0-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a2-s1.candidates",
+        "error": "synthetic.sqrt-m9-a2-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a3-s1.candidates",
+        "error": "synthetic.sqrt-m9-a3-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a4-s1.candidates",
+        "error": "synthetic.sqrt-m9-a4-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a0-s1.candidates",
+        "error": "synthetic.sqrt-m10-a0-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a2-s1.candidates",
+        "error": "synthetic.sqrt-m10-a2-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a3-s1.candidates",
+        "error": "synthetic.sqrt-m10-a3-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a4-s1.candidates",
+        "error": "synthetic.sqrt-m10-a4-s1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "all-deferred-1.candidates",
+        "error": "synthetic.all-deferred-1.result.candidates: 길이 기준=6, 실제=7"
+      },
+      {
+        "name": "empty-1.candidates",
+        "error": "synthetic.empty-1.result.candidates: 길이 기준=0, 실제=1"
+      },
+      {
+        "name": "pass--1.candidates",
+        "error": "synthetic.pass--1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m0-a0-s-1.candidates",
+        "error": "synthetic.sqrt-m0-a0-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m0-a1-s-1.candidates",
+        "error": "synthetic.sqrt-m0-a1-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m1-a0-s-1.candidates",
+        "error": "synthetic.sqrt-m1-a0-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m1-a1-s-1.candidates",
+        "error": "synthetic.sqrt-m1-a1-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m1-a2-s-1.candidates",
+        "error": "synthetic.sqrt-m1-a2-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m2-a0-s-1.candidates",
+        "error": "synthetic.sqrt-m2-a0-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m2-a1-s-1.candidates",
+        "error": "synthetic.sqrt-m2-a1-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m2-a2-s-1.candidates",
+        "error": "synthetic.sqrt-m2-a2-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a0-s-1.candidates",
+        "error": "synthetic.sqrt-m4-a0-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a1-s-1.candidates",
+        "error": "synthetic.sqrt-m4-a1-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a2-s-1.candidates",
+        "error": "synthetic.sqrt-m4-a2-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m4-a3-s-1.candidates",
+        "error": "synthetic.sqrt-m4-a3-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a0-s-1.candidates",
+        "error": "synthetic.sqrt-m9-a0-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a2-s-1.candidates",
+        "error": "synthetic.sqrt-m9-a2-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a3-s-1.candidates",
+        "error": "synthetic.sqrt-m9-a3-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m9-a4-s-1.candidates",
+        "error": "synthetic.sqrt-m9-a4-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a0-s-1.candidates",
+        "error": "synthetic.sqrt-m10-a0-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a2-s-1.candidates",
+        "error": "synthetic.sqrt-m10-a2-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a3-s-1.candidates",
+        "error": "synthetic.sqrt-m10-a3-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "sqrt-m10-a4-s-1.candidates",
+        "error": "synthetic.sqrt-m10-a4-s-1.result.candidates: 길이 기준=4, 실제=5"
+      },
+      {
+        "name": "all-deferred--1.candidates",
+        "error": "synthetic.all-deferred--1.result.candidates: 길이 기준=6, 실제=7"
+      },
+      {
+        "name": "empty--1.candidates",
+        "error": "synthetic.empty--1.result.candidates: 길이 기준=0, 실제=1"
+      },
+      {
+        "name": "no-prefix.candidates",
+        "error": "synthetic.no-prefix.result.candidates: 길이 기준=3, 실제=4"
+      },
+      {
+        "name": "prefix-only.candidates",
+        "error": "synthetic.prefix-only.result.candidates: 길이 기준=2, 실제=3"
+      },
+      {
+        "name": "duplicates-order.candidates",
+        "error": "synthetic.duplicates-order.result.candidates: 길이 기준=5, 실제=6"
+      },
+      {
+        "name": "sparse-0.support",
+        "error": "synthetic.sparse-0.result.support: 기준=1, 실제=0"
+      },
+      {
+        "name": "sparse-1.support",
+        "error": "synthetic.sparse-1.result.support: 기준=1, 실제=0"
+      },
+      {
+        "name": "sparse-2.support",
+        "error": "synthetic.sparse-2.result.support: 기준=1, 실제=0"
+      },
+      {
+        "name": "sparse-3.support",
+        "error": "synthetic.sparse-3.result.support: 기준=1, 실제=0"
+      },
+      {
+        "name": "sparse-4.support",
+        "error": "synthetic.sparse-4.result.support: 기준=1, 실제=0"
+      },
+      {
+        "name": "dense-a0.support",
+        "error": "synthetic.dense-a0.result.support: 기준=0, 실제=1"
+      },
+      {
+        "name": "dense-a3.support",
+        "error": "synthetic.dense-a3.result.support: 기준=-1, 실제=2"
+      },
+      {
+        "name": "dense-a4.support",
+        "error": "synthetic.dense-a4.result.support: 기준=-1, 실제=2"
+      },
+      {
+        "name": "dense-empty.support",
+        "error": "synthetic.dense-empty.result.support: 기준=-1, 실제=2"
+      },
+      {
+        "name": "support-0.support",
+        "error": "synthetic.support-0.result.support: 기준=0, 실제=1"
+      },
+      {
+        "name": "support-1.support",
+        "error": "synthetic.support-1.result.support: 기준=1, 실제=0"
+      },
+      {
+        "name": "support--1.support",
+        "error": "synthetic.support--1.result.support: 기준=-1, 실제=2"
+      },
+      {
+        "name": "normal.retry",
+        "error": "synthetic.normal.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "repeat1.retry",
+        "error": "synthetic.repeat1.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "repeat2.retry",
+        "error": "synthetic.repeat2.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "return12.retry",
+        "error": "synthetic.return12.result.retry: 기준=1, 실제=0"
+      },
+      {
+        "name": "error7.retry",
+        "error": "synthetic.error7.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "error-before-status.retry",
+        "error": "synthetic.error-before-status.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "backend-numeric.retry",
+        "error": "synthetic.backend-numeric.result.retry: 기준=1, 실제=0"
+      },
+      {
+        "name": "backend-request.retry",
+        "error": "synthetic.backend-request.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "status-999.retry",
+        "error": "synthetic.status-999.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "status-1000.retry",
+        "error": "synthetic.status-1000.result.retry: 기준=1, 실제=0"
+      },
+      {
+        "name": "failure-attempt0.retry",
+        "error": "synthetic.failure-attempt0.result.retry: 기준=1, 실제=0"
+      },
+      {
+        "name": "numeric12-attempt0.retry",
+        "error": "synthetic.numeric12-attempt0.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "numeric13-attempt0.retry",
+        "error": "synthetic.numeric13-attempt0.result.retry: 기준=1, 실제=0"
+      },
+      {
+        "name": "numeric14-attempt0.retry",
+        "error": "synthetic.numeric14-attempt0.result.retry: 기준=1, 실제=0"
+      },
+      {
+        "name": "failure-attempt1.retry",
+        "error": "synthetic.failure-attempt1.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "numeric12-attempt1.retry",
+        "error": "synthetic.numeric12-attempt1.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "numeric13-attempt1.retry",
+        "error": "synthetic.numeric13-attempt1.result.retry: 기준=0, 실제=1"
+      },
+      {
+        "name": "numeric14-attempt1.retry",
+        "error": "synthetic.numeric14-attempt1.result.retry: 기준=0, 실제=1"
+      }
+    ]
+  }
+}

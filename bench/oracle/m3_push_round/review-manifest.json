@@ -1,0 +1,19 @@
+{
+  "task": "M3-04c-19",
+  "files": {
+    "bench/oracle/m3_push_round/regression-chain.json": "0d9c87ccbcbc21be1f73288a80564de95a9b6e76ea96973ebe15163eefef0063",
+    "bench/oracle/m3_push_round/regression-factor-supplier.json": "8b26d0a6fb9f5c61cfda37b0d705dad0f1147186fd0b76e86dca4b1e1288383f",
+    "bench/oracle/m3_push_round/regression-recompute.json": "78d6a868398167fc372e145964af42379beec4a6ebf2438268f8c329aeece208",
+    "bench/oracle/m3_push_round/review/coverage.json": "a53650474125e66e8e697476ea32abd63010c1b19c42322d3ddd767aa8ced5dd",
+    "bench/oracle/m3_push_round/review/final-checks.json": "c4dbf39e1ed266c2e48befece8756737233c11da5e6fa659dbaf9ed3a8394ee0",
+    "bench/oracle/m3_push_round/review/initial-checks.json": "e6a26abd8e081b48b4d84601c8d1fb38bd3eee45e637bfaf16b0623188b21f09",
+    "bench/oracle/m3_push_round/review/recapture-comparison.json": "91ebeb8bf8150b7038569f999ce21e4a0bfcdfe0d80f463f7fbe47ca6d84614b",
+    "bench/oracle/m3_push_round/review/retry.json": "5d0e5e7f776f41bec9127db1a27a0f73645fca80bb4363ff2a2f7d095fc547b0",
+    "bench/oracle/m3_push_round/review/review.md": "7e4bcd09606961aa50df7664d23a027323273a049d0942c746fa08335015d4dc",
+    "bench/oracle/m3_push_round/review/source.asm": "aacbd42ac4bbc3d8c1aefec20cac78816de0636450f4f89667199a96d4bb5ec7",
+    "bench/oracle/m3_push_round/review/synthetic.json": "a1b8cd1583c117f889d2993cc109c84f5133452a31939d6bf9e35fab3df2e444",
+    "bench/oracle/m3_push_round/review/tampers-final.json": "46d0a8e551e1c16c82254e338a16c99e031e231250af393c7ca1995a2bc66d58",
+    "bench/oracle/m3_push_round/review/tampers-initial.json": "a69fc0207f1ff40864ea77b760356fc7ec8e0630061abc4fc483d52343d6b441",
+    "bench/oracle/m3_push_round/review/tampers.py": "aa21a4844a5090125e82885a27cc9a0584c3aa3f1ba02762f61c0a01dcd354ee"
+  }
+}
