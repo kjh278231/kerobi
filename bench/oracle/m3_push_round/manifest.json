@@ -11,9 +11,9 @@
     "tools/push_recompute_synthetic.py": "89b5e2b0d316b44abcafce3a7fb7f0ab9fa0a2fed8654067cc8498142ee23584",
     "tools/push_round_agent.js": "1aa3e46e20c77167eada9f2ba737bf195a5008dd339149d83ad1eec6172292c7",
     "tools/push_round_capture.js": "32f2125e2a8b2a1a8ffdca8bafe9298e934f932ff05ae8fa74f3ff51973e7496",
-    "tools/push_round_check.py": "6ca9ff15eacdec88254f9f8f5668971596de15e6d141a461005239aa6a562b1c",
+    "tools/push_round_check.py": "cd81d61e0fb80de4da24fa4a17b550aa5eef577c4339f106c15f4abca704dab6",
     "tools/push_round_runs.py": "1eec8de9a61237ba1ba6ac436b3d8ddff4cd5cadde5635f0b97577ab216e9860",
-    "tools/push_round_synthetic.py": "96be2c83870b25ee87d158df66dbcf72db9b66d33ecce4eb6af9356ce9efa3a4",
+    "tools/push_round_synthetic.py": "41a604b88a34596c86ce2da0d1193768c6fa483c423981067ba77dfd4351b85b",
     "tools/push_supplier_check.py": "2111b9192c5724e0cee21f0360a0cd0b75dfad0bac57036191367b4f5653df5e"
   },
   "inputs": {
@@ -45,9 +45,9 @@
     "bench/oracle/m3_push_round/retry-1.json": "7a4c20c863fb94523c23c1c131c7f7034646332e239b9668bd23eeb91e8fd082",
     "bench/oracle/m3_push_round/retry-2.json": "21560e46693307338ea68128d559cb3235193ff4f012dd909cda9ff2728a6d5b",
     "bench/oracle/m3_push_round/retry-3.json": "1da2e7e58e9a7bd7ab2e16e04d28d0b44aff1137d8f4dde0a3b96ca6cbb837ed",
-    "bench/oracle/m3_push_round/synthetic-1.json": "18184e75666d25878b421dc738e5db47a2583bb6966d8145001e5d0f299dba53",
-    "bench/oracle/m3_push_round/synthetic-2.json": "d8e3a033a1aabec2001911f5859e2d5f54ef3c32a65686f48b174a60da18d5e3",
-    "bench/oracle/m3_push_round/synthetic-3.json": "ca6910a258f3cac2d14d5d1d15b47efee9179cad1c5c284aef2239aeb37bbe43"
+    "bench/oracle/m3_push_round/synthetic-1.json": "e7b46ff30d2a9b8038f9444edb457bc51eedfa2e976fa3febdd702ae3dfb4c48",
+    "bench/oracle/m3_push_round/synthetic-2.json": "90242e8b6e8a87b85d6e9e2bc08a9d14abfad06c991c2c7db91e61fef80d548c",
+    "bench/oracle/m3_push_round/synthetic-3.json": "d5d9e83cc610e3f84c25cef1eceb444f575fc3ea918ec1d8eb1a440e797f6d9a"
   },
   "baselines": {
     "bench/oracle/m3_push_recompute/arms-1.json": "a00abc17dbe2d864480207a66d80f73487ff2808580d238b483ebbe0eac6ae4e",
@@ -74,6 +74,10 @@
     "bench/oracle/m3_push_round/history/first-synthetic/synthetic-1.json": "e58d29d3cee0fa998370724565d08e7e2363e9b749913ab9b0e39c0cd40666f8",
     "bench/oracle/m3_push_round/history/first-synthetic/synthetic-2.json": "6cb929afabf84489b9b182b7755ec61bd26ffb6997601f4f7c8b24da464bc1b7",
     "bench/oracle/m3_push_round/history/first-synthetic/synthetic-3.json": "89b12579b47e83405081556c7f3dfba9f790d679134befe7a51d65355b24da09",
-    "bench/oracle/m3_push_round/history/first-synthetic/synthetic.py": "72eca913a6bfae2e8b75f9a5e6243613e455612881afd9c2e89e73d0e659dc00"
+    "bench/oracle/m3_push_round/history/first-synthetic/synthetic.py": "72eca913a6bfae2e8b75f9a5e6243613e455612881afd9c2e89e73d0e659dc00",
+    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-1.json": "18184e75666d25878b421dc738e5db47a2583bb6966d8145001e5d0f299dba53",
+    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-2.json": "d8e3a033a1aabec2001911f5859e2d5f54ef3c32a65686f48b174a60da18d5e3",
+    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-3.json": "ca6910a258f3cac2d14d5d1d15b47efee9179cad1c5c284aef2239aeb37bbe43",
+    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic.py": "96be2c83870b25ee87d158df66dbcf72db9b66d33ecce4eb6af9356ce9efa3a4"
   }
 }

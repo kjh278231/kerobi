@@ -272,7 +272,7 @@ def natural(r,name):
             equal(0,st['retry'],label+'.retry');equal(expected,st,label+'.preserved P');equal(recomp['request'],st['request'],label+'.request')
             expected=copy.deepcopy(st);expected['request']=0;action='clear';recomp=None
         elif t=='clear':
-            equal('clear',action,label+'.action');y=copy.deepcopy(expected);y.pop('approved',None)
+            equal('clear',action,label+'.action');require(expected is not None,label+'.prepared state required');y=copy.deepcopy(expected);y.pop('approved',None)
             equal(y,st,label+'.request cleared');ready=st;action=None
         elif t=='end':
             require(action in ('end','clear'),label+'.end action')
