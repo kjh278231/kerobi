@@ -246,7 +246,7 @@ pub fn push_init<B: PushInitBackend>(lp: &PushLp, par: &PushParams, e: InitEntry
     }
     for i in 0..m {
         let s = st.vstat[n + i];
-        if s >= 0 || s < -3 {
+        if !(-3..0).contains(&s) {
             continue;
         }
         let slack = st.xs[n + i];
@@ -304,7 +304,7 @@ pub fn push_init<B: PushInitBackend>(lp: &PushLp, par: &PushParams, e: InitEntry
                 let s = lp.starts[j] as usize;
                 for k in s..s + lp.lengths[j] as usize {
                     let i = lp.rows[k] as usize;
-                    acc[i] = lp.values[k] * v + acc[i];
+                    acc[i] += lp.values[k] * v;
                 }
             } else {
                 acc[j - n] += v;
@@ -438,7 +438,8 @@ pub fn push_init<B: PushInitBackend>(lp: &PushLp, par: &PushParams, e: InitEntry
             let (lower, upper) = (lp.lb[j], lp.ub[j]);
             let promote = match s {
                 -1 => tau + lower <= x,
-                -2 => !(upper - tau < x),
+                // C 1101: stays at ub when ub - τ' < x (an unordered compare promotes)
+                -2 => (upper - tau).partial_cmp(&x) != Some(std::cmp::Ordering::Less),
                 _ => true,
             };
             let v = if promote {

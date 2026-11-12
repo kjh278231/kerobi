@@ -596,10 +596,50 @@ LU_MUTATIONS = [
     ('loop-no-workspace', 'crossover_loop.rs', 'FactorSite::Pivot, &mut ctl, Some(vectors.workspace), self.trace)', 'FactorSite::Pivot, &mut ctl, None, self.trace)')] + MUTATIONS
 
 
+# M3-04c-1a: 초기화 변이. 자연 경로(첫 재분해·스캔·정렬·FTRAN·잔차·분류·gate·준비)를 지나면 거부돼야 한다.
+I = 'crossover_init.rs'
+INIT_MUTATIONS = [
+    ('init-no-renumber', I, '            if let Some(r) = r {\n                renumber(&mut st, &r);\n            }\n', ''),
+    ('init-request-kept', I, '        ctl.request = 0;\n    }\n', '    }\n'),
+    ('init-factor-skipped', I, '    if e.first {\n        ctl.request = 10;', '    if !e.first {\n        ctl.request = 10;'),
+    ('scan-m1-zero', I, '                count(&mut counts, x - lp.lb[j]);\n                lp.lb[j]\n',
+     '                count(&mut counts, x - lp.lb[j]);\n                0.0\n'),
+    ('scan-m2-zero', I, '                count(&mut counts, lp.ub[j] - x);\n                lp.ub[j]\n',
+     '                count(&mut counts, lp.ub[j] - x);\n                0.0\n'),
+    ('scan-m4-zero', I, '            -4 => lp.lb[j],', '            -4 => 0.0,'),
+    ('scan-m4-ub', I, '            -4 => lp.lb[j],', '            -4 => lp.ub[j],'),
+    ('scan-m5-zero', I, '            -5 => lp.ub[j],', '            -5 => 0.0,'),
+    ('slack-m3-zero', I, '                dist.push(slack);\n                slack\n            }\n            // -2',
+     '                dist.push(slack);\n                0.0\n            }\n            // -2'),
+    ('slack-m2-zero', I, '            _ => xmm0,', '            _ => 0.0,'),
+    ('distance-lower', I, '    if ub + lb > x + x {\n        x - lb', '    if true {\n        x - lb'),
+    ('key-no-cap', I, 'let c = if d < 0.99 { d } else { 0.99 }; // minsd d, 0.99', 'let c = d;'),
+    ('key-slack-as-column', I, '                    -1.0 - c\n', '                    -(1.0 + c)\n'),
+    ('sort-stable', I, '        sort_desc(&mut key, &mut cand);\n',
+     '        { let mut o: Vec<usize> = (0..key.len()).collect(); o.sort_by(|&a, &b| key[b].partial_cmp(&key[a]).unwrap());'
+     ' cand = o.iter().map(|&k| cand[k]).collect(); }\n'),
+    ('rhs-not-copied', I, '        st.rhs.copy_from_slice(&r);\n', ''),
+    ('residual-no-product', I, '                    acc[i] += lp.values[k] * v;', '                    acc[i] += 0.0;'),
+    ('residual-threshold-1e-14', I, '|| 1e-8 < residual {', '|| 1e-14 < residual {'),
+    ('numeric-always', I, '        if 1e-6 < residual {', '        if 0.0 <= residual {'),
+    ('no-lower-shift', I, '                st.basic[p] -= lower;\n', ''),
+    ('width-ub', I, 'st.width[p] = if inf <= upper { inf } else { upper - lower };', 'st.width[p] = if inf <= upper { inf } else { upper };'),
+    ('mark-tau-strict', I, '                if -h <= v {', '                if -h < v {'),
+    ('mark-x-as-l', I, '                    } else if st.width[p] == 0.0 {', '                    } else if st.width[p] == -1.0 {'),
+    ('gate-p-always', I, '|| 1e10 < p ||', '|| 0.0 <= p ||'),
+    ('gate-pinf-always', I, '        if 1e15 < pinf {', '        if 0.0 <= pinf {'),
+    ('adjust-pinf-gate', I, '            && pinf > 1.0\n', '            && pinf >= 0.0\n'),
+    ('iterations-no-inc', I, '            st.iterations += 1.0;\n', ''),
+    ('support-strict', I, '(m as i32 as f64).sqrt() <= total as f64', '(m as i32 as f64).sqrt() < total as f64'),
+    ('numeric-limit-9', I, 'numeric_limit: numeric_entry + 10,', 'numeric_limit: numeric_entry + 9,'),
+    ('round-status-entry0', I, '        out.state.round.status = ctl.status;\n', ''),
+]
+
+
 def mutate_rust(out):
     require(not out.exists(), f'{out} 이미 있음(덮어쓰기 거부)')
     cs, _ = cases()
-    work = ROOT / ('target/m3_push_loop_lu_mutations' if LU else 'target/m3_push_loop_mutations')
+    work = ROOT / ('target/m3_push_init_mutations' if INIT else 'target/m3_push_loop_lu_mutations' if LU else 'target/m3_push_loop_mutations')
     if work.exists():
         shutil.rmtree(work)
     work.mkdir(parents=True)
@@ -612,7 +652,7 @@ def mutate_rust(out):
         else:
             shutil.copy2(src, dst)
     results = []
-    for name, fname, old, new in (LU_MUTATIONS if LU else MUTATIONS):
+    for name, fname, old, new in ((INIT_MUTATIONS + LU_MUTATIONS) if INIT else LU_MUTATIONS if LU else MUTATIONS):
         f = work / 'crates/lp/src' / fname
         orig = (ROOT / 'crates/lp/src' / fname).read_text()
         require(orig.count(old) == 1, f'{name}: 원문 {orig.count(old)}회')
@@ -644,7 +684,7 @@ def mutate_rust(out):
             trace.unlink()
         results.append(dict(name=name, file=fname, verdict=verdict, why=why))
         print(name, verdict, *why)
-    out.write_text(json.dumps(dict(task='M3-04c-24' if LU else 'M3-04c-22', results=results,
+    out.write_text(json.dumps(dict(task='M3-04c-1a' if INIT else 'M3-04c-24' if LU else 'M3-04c-22', results=results,
                                    rejected=sum(r['verdict'] != 'survived' for r in results),
                                    total=len(results)), ensure_ascii=False, indent=2) + '\n')
     surv = [r['name'] for r in results if r['verdict'] == 'survived']
