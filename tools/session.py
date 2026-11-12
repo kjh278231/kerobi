@@ -26,7 +26,7 @@ def common_dir():
 
 
 def claim(args):
-    if not re.fullmatch(r'M[123]-\d{2}[a-z](?:-\d+)*|shared', args.task):
+    if not re.fullmatch(r'M[123]-\d{2}[a-z](?:-\d+[a-z]?)*|shared', args.task):
         raise ValueError('하위 작업 번호 또는 shared를 지정하세요.')
     lane = args.task[:2] if args.task != 'shared' else 'shared'
     folder = common_dir() / 'rsolver-sessions'
