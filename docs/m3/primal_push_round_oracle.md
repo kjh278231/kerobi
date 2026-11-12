@@ -52,3 +52,7 @@
 ### 첫 합성 실행 전 입력 고정
 
 원본 구간 진입/출구와 caller 레지스터를 asm으로 확인했다. `tools/push_round_synthetic.py`의 106사례를 먼저 커밋한다. 입력표 sha256 `fcbd0140642d6780e63708118dade1f7e8be0cb4a79137a0dd3bc9c1e8e8f757`. pass 출구는 공급자 호출 직전 계산된 eax(total)와 r12=0(cursor/deferred)을 저장하는 명시적 stub이며 이 stub의 쓰기는 검증할 원본 명령으로 세지 않는다. 정상 round·dense는 factor 직전102, 종료103, sparse104, wrapper 재계산105/cleanup106에서 중단한다. factor/BTRAN 수치는 대체 backend다.
+
+### 合성 첫 3회 재현 실패와 ABI 보정
+
+실제 입력은106사례다(초기 commit 제목125는 오기). pass-support0의 total이2/2/4로 갈려 독립3회 비교가 실패했다. 원본1c1ff8 진입의 live edx=후보총수가 트램펄린 entry주소의 하위비트로 남아 있었다. 실패3회와 당시 도구를 `history/pass-live-edx-failure/`에 보존한다. 트램펄린이 진입주소를r11로 옮기고 P.total을edx에 싣도록 ABI를 바로잡는다. 비교 규칙·원본 명령·입력은 그대로 유지하고 정식3회를 다시 캡처한다.

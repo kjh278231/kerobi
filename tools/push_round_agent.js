@@ -250,7 +250,7 @@ Process.attachModuleObserver({onAdded(mod) {
     recompute=null;
   }
   // 0x1c3aed에는 선행15 probe가 이미 있으므로 동일 주소에 attach를 더하지 않는다.
-  probe(0x1c400a,(sp)=>{rcFinish(sp,'normal');roundEmit('recomputed',sp);active.roundClear=true;});
+  probe(0x1c400a,(sp)=>{rcFinish(sp,'normal');roundEmit('recomputed',sp);active.roundFactor=false;active.roundClear=true;});
   probe(0x1c08d5,(sp)=>{rcFinish(sp,'retry');if(active.roundFactor)roundEmit('error',sp);});
 
   function roundState(sp) {

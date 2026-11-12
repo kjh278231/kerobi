@@ -84,7 +84,7 @@ def capture():
     assert sha(library)==BINARY_SHA
     # Save actual SysV stack/callee saves. ecx seeds ebp (approved or leave).
     # r12/r13 are zero at caller exhaustion; r14=S, r15=work(NULL), rbx=context(NULL).
-    pro=bytes.fromhex('55 53 41 54 41 55 41 56 41 57 49 89 e3 48 89 f4 4c 89 9c 24 00 21 00 00 49 89 fe 45 31 ff 45 31 e4 45 31 ed 31 db 89 cd ff e2')
+    pro=bytes.fromhex('55 53 41 54 41 55 41 56 41 57 49 89 e3 48 89 f4 4c 89 9c 24 00 21 00 00 49 89 fe 45 31 ff 45 31 e4 45 31 ed 31 db 89 cd 49 89 d3 8b 54 24 0c 41 ff e3')
     cleanup=bytes.fromhex('48 8b a4 24 f8 20 00 00 41 5f 41 5e 41 5d 41 5c 5b 5d c3')
     code=mmap.mmap(-1,4096,prot=mmap.PROT_READ|mmap.PROT_WRITE|mmap.PROT_EXEC);code.write(pro+cleanup)
     ca=c.addressof(c.c_char.from_buffer(code))
@@ -118,7 +118,7 @@ def capture():
                 return dict(exit=exit,m=read(p,0),total=total,candidates=[read(candidates,i*4) for i in range(total)],
                     position=read(p,0x20),deferred=read(p,0x24),failures=[read(failures,i*4) for i in range(len(x['failures']))],
                     marks=[read(marks,i*4) for i in range(m)],support=read(frame,0x209c),approved=read(frame,0x1ea0),
-                    request=read(s,0x294),status=read(s,0xf0),numeric=read(s,0x178),failure=read(s,0x184),retry=read(retry,0),
+                    return_code=read(frame,0x1f70),request=read(s,0x294),status=read(s,0xf0),numeric=read(s,0x178),failure=read(s,0x184),retry=read(retry,0),
                     count_sum=c.string_at(p+0x30,8).hex(),successes=read(p,0x38),batch=[read(p,o) for o in (0x1840,0x1844,0x1848)],calls=calls)
             calls=[];errors=[];kind=case['kind'];seed=x['approved']
             if kind=='defer':
