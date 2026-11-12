@@ -91,6 +91,101 @@ pub struct Lu {
     dense_cap: Option<i64>,
     /// The dense switch this factor took (`factor_dense`).
     pub dense: Option<DenseTrace>,
+    /// M3-04c-21j: `036ade`'s pool positions (`factor_dense` only), their snapshots at the probe points, the
+    /// `local_70` mode's pivots, and a pool shortage (`036ade` returns −1).
+    fpool: Option<Pool>,
+    pub pool_trace: Vec<PoolEvent>,
+    pub mode70: Option<Mode70Trace>,
+    pub short: Option<Short>,
+}
+
+/// `036ade` pool positions at a probe point (M3-04c-21j): `local_1b8` (next L slot, downward), `local_1c0` (next U
+/// slot), `local_f8` (first fill), `local_138`, `param_15[2..=4]`; `nodes` the kernel's initial node count
+/// (`start`), `n` = m − steps (`mode70`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PoolEvent {
+    pub kind: &'static str,
+    pub nodes: i64,
+    pub n: i64,
+    pub b8: i64,
+    pub c0: i64,
+    pub f8: i64,
+    pub x138: i64,
+    pub p2: i64,
+    pub p3: i64,
+    pub p4: i64,
+}
+
+/// The `local_70` mode of a factor: the step it took over, its dense size n', and each pivot as the flat index
+/// r'·n' + c' of its dense array (asm 0xd9f5b esi).
+#[derive(Clone, Debug)]
+pub struct Mode70Trace {
+    pub step: usize,
+    pub n: usize,
+    pub pivots: Vec<i64>,
+}
+
+/// A pool shortage: `036ade` returns −1 with F+0x158 = F+0x168 set to a new size (`Grow`, C:2592–2620) or left as
+/// it was (`Keep`, the other −1 exits; `05b257` C:1487–1492 then grows it by 1.5).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Short {
+    Grow(i64),
+    Keep,
+}
+
+/// `036ade`'s element pool bookkeeping (C:296–366, C:541–606, C:2440–2490): U from 0 up, L from F+0x168 down,
+/// element nodes (32 bytes = 4 slots) from `local_f8` up in chunks of 4m nodes; each chunk's slots also give the
+/// int pool's 16-aligned rest as a later chunk (`local_2f0`).
+#[derive(Clone, Debug)]
+struct Pool {
+    m: i64,
+    p2: i64,
+    p4: i64,
+    f8: i64,
+    b8: i64,
+    c0: i64,
+    p3: i64,
+    x138: i64,
+    /// nodes left in the current chunk (`local_2d8`) and the pending int-side chunk (`local_2f0`)
+    left: i64,
+    pend: i64,
+}
+
+/// Nodes of the int pool's part of slots [p3, p3 + len): from the 16-byte aligned start to the end, 32 bytes each.
+fn int_side(p3: i64, len: i64) -> i64 {
+    let q = (p3 + 3 + (((p3 + 3) >> 1) as u64 >> 62) as i64) >> 2;
+    (((p3 + len - 4 * q) as u64 & 0x3ffffffffffffff8) >> 3) as i64
+}
+
+impl Pool {
+    fn snap(&self, kind: &'static str, nodes: i64, n: i64) -> PoolEvent {
+        PoolEvent { kind, nodes, n, b8: self.b8, c0: self.c0, f8: self.f8, x138: self.x138, p2: self.p2, p3: self.p3, p4: self.p4 }
+    }
+
+    /// A fill node (C:2449–2490, asm 0xd808c): a new chunk of 4m nodes (16m slots) when the current one and the
+    /// pending int-side one are used up; false when the pool cannot take it (`LAB_001d81b2`).
+    fn node(&mut self) -> bool {
+        if self.left < 1 {
+            if self.pend < 1 {
+                let slots = 16 * self.m;
+                if self.b8 < self.p3 || ((self.b8 - self.p3) as f64) * 8.0 <= (slots * 8) as f64 {
+                    return false;
+                }
+                let e = int_side(self.p3, slots);
+                if e != 0 {
+                    self.pend = e;
+                }
+                self.p3 += slots;
+                self.x138 = self.x138.max(self.p3);
+                self.left = 4 * self.m;
+            } else {
+                self.left = self.pend;
+                self.pend = 0;
+            }
+        }
+        self.left -= 1;
+        true
+    }
 }
 
 /// Borrowed internals of a factor (`Lu::parts`), in the factor's own step numbering.
@@ -543,6 +638,19 @@ impl Buckets {
     }
 }
 
+/// The sparse kernel's state the `local_70` mode starts from (live elements, their lists in reversed original
+/// order, counts − 1, the empty row/column stacks and the fill estimate).
+struct Mode70In<'a> {
+    ev: &'a [f64],
+    ec: &'a [usize],
+    rl: &'a [Vec<usize>],
+    rcs: &'a [i64],
+    ccs: &'a [i64],
+    erows: &'a mut Vec<usize>,
+    ecols: &'a mut Vec<usize>,
+    est: f64,
+}
+
 /// Markowitz threshold (MarkowitzTol default 2⁻⁷, spx+0x390).
 pub const MARKOWITZ_TOL: f64 = 0.0078125;
 
@@ -750,6 +858,10 @@ impl Lu {
             fw: FactorWork::default(),
             dense_cap: cap,
             dense: None,
+            fpool: None,
+            pool_trace: Vec::new(),
+            mode70: None,
+            short: None,
         };
         // 036ade C:296–330: basis entries, a slack counts 1
         lu.fw.nnz_b = head.iter().map(|&j| if j < n { spx.len[j] as usize } else { 1 }).sum();
@@ -1397,6 +1509,11 @@ impl Lu {
                 }
             }
         }
+        if let Some(pcap) = self.dense_cap {
+            if !self.pool_start(spx, ppos, pcap, ev.len() as i64) {
+                return false;
+            }
+        }
         // a finished line: its live elements in list order (the list is taken, nothing else walks it again)
         let take_alive = |l: &mut Vec<usize>, ec: &Vec<usize>| -> Vec<usize> {
             let mut v = std::mem::take(l);
@@ -1432,10 +1549,14 @@ impl Lu {
                 self.fw.terms.push(('c', [rcs[r], 0, 0], 0.0));
                 rb.rem(r, rcs[r] as usize);
                 ec[e] = DEAD;
+                if !self.pool_u(rcs[r]) {
+                    return false;
+                }
                 pivot(self, ppos, r, c, ev[e]);
                 let k = self.steps.len() - 1;
                 for f in take_alive(&mut rl[r], &ec) {
                     let j = ec[f];
+                    self.pool_put_u();
                     self.kernel_u[k].push((j, ev[f]));
                     ec[f] = DEAD;
                     cb.rem(j, ccs[j] as usize);
@@ -1455,10 +1576,14 @@ impl Lu {
                 cb.rem(c, ccs[c] as usize);
                 let d = ev[e];
                 ec[e] = DEAD;
+                if !self.pool_l(ccs[c]) {
+                    return false;
+                }
                 pivot(self, ppos, r, c, d);
                 let k = self.steps.len() - 1;
                 for f in take_alive(&mut cl[c], &ec) {
                     let i = er[f];
+                    self.pool_put_l();
                     self.lcol[k].push((i, ev[f] / d));
                     ec[f] = DEAD;
                     rb.rem(i, rcs[i] as usize);
@@ -1470,6 +1595,7 @@ impl Lu {
             } else {
                 let nact = (m - self.steps.len()) - ecols.len();
                 if nact == 0 {
+                    self.pool_event("end", 0, 0);
                     break;
                 }
                 if let Some(cap) = self.dense_cap {
@@ -1479,6 +1605,9 @@ impl Lu {
                         est = ccs.iter().filter(|&&c| c >= 0).map(|&c| (c + 1) as f64).sum();
                         if n2 * 0.325 < est {
                             assert!(ecols.is_empty(), "036ade dense switch with empty columns (local_f0 > 0): not ported");
+                            if !self.pool_dense() {
+                                return false;
+                            }
                             self.dense_switch(ppos, nact, cap, (&ev, &ec), &rl, &cb, &rcs);
                             break;
                         }
@@ -1486,6 +1615,18 @@ impl Lu {
                 }
                 let cidx = (1..m).find(|&k| cb.head[k] >= 0).unwrap_or(m);
                 let ridx = (1..m).find(|&k| rb.head[k] >= 0).unwrap_or(m);
+                // M3-04c-21j: C:1762 (asm 0xd6a82–0xd6ab6): 201 ≤ n ≤ 9999, cidx·ridx > 0.1·n and 0.25·n² > the
+                // fill estimate take the local_70 mode for the rest of the factor
+                if self.dense_cap.is_some() {
+                    let nf = nact as f64;
+                    if ((nact as i64 - 201) as u32) <= 0x2646 && nf * 0.1 < cidx as f64 * ridx as f64 && est < nf * nf * 0.25 {
+                        let mut st = Mode70In { ev: &ev, ec: &ec, rl: &rl, rcs: &rcs, ccs: &ccs, erows: &mut erows, ecols: &mut ecols, est };
+                        if !self.mode70(ppos, tol, &mut st) {
+                            return false;
+                        }
+                        break;
+                    }
+                }
                 let k0 = cidx.min(ridx);
                 if k0 >= m {
                     break; // 0x2732
@@ -1554,11 +1695,15 @@ impl Lu {
                 let csum: i64 = cl[c].iter().filter(|&&f| ec[f] != DEAD).map(|&f| rcs[er[f]]).sum();
                 acc = (acc + (ns as f64 * 6.0) * bound) + rsum.min(csum) as f64 * 10.0;
                 self.fw.terms.push(('g', [ns as i64, rsum, csum], bound));
+                if !self.pool_l(ccs[c]) || !self.pool_u(rcs[r]) {
+                    return false;
+                }
                 pivot(self, ppos, r, c, v);
                 let sk = self.steps.len() - 1;
                 let mut u_row = Vec::new();
                 for f in take_alive(&mut rl[r], &ec) {
                     let j = ec[f];
+                    self.pool_put_u();
                     u_row.push((j, ev[f]));
                     w[j] = ev[f];
                     ec[f] = DEAD;
@@ -1568,6 +1713,7 @@ impl Lu {
                 for f in take_alive(&mut cl[c], &ec) {
                     let i = er[f];
                     let l = ev[f] / v;
+                    self.pool_put_l();
                     self.lcol[sk].push((i, l));
                     ec[f] = DEAD;
                     rb.rem(i, rcs[i] as usize);
@@ -1590,6 +1736,10 @@ impl Lu {
                         if !seen[j] {
                             let p = -(l * u);
                             if ZERO <= p.abs() {
+                                if self.fpool.as_mut().is_some_and(|pl| !pl.node()) {
+                                    self.short = Some(Short::Keep);
+                                    return false;
+                                }
                                 let e = ev.len();
                                 ev.push(p);
                                 er.push(i);
@@ -1618,6 +1768,506 @@ impl Lu {
             self.singular = ecols.into_iter().zip(erows).collect();
             return false;
         }
+        true
+    }
+
+    /// `036ade` pool positions at the kernel's start (asm 0xd5010): F+0x168 = F+0x158 − 1 (`05b257` C:1432), the
+    /// first fill `local_f8` (C:331–366), U and L of the singleton and block phases (`1da0b2`), then the initial
+    /// nodes (C:584–606: `nodes` slots ×4 from `local_f8`, the int side's rest pending). `created` nodes are used.
+    fn pool_start(&mut self, spx: &Spx, ppos: &[i64], cap: i64, created: i64) -> bool {
+        let m = self.head.len();
+        let s4 = self.s4 as i64;
+        let (mut u, mut l) = (0i64, 0i64);
+        for pos in 0..m {
+            let kp = ppos[pos];
+            for (i, _) in spx.col(self.head[pos]) {
+                let ki = self.prow[i];
+                if ki >= 0 && ki < s4 && (kp < 0 || ki < kp) {
+                    u += 1;
+                }
+                if kp >= 0 && kp < s4 && (ki < 0 || ki > kp) {
+                    l += 1;
+                }
+            }
+        }
+        for (lb, ub) in &self.blk {
+            l += lb.len() as i64;
+            u += ub.len() as i64;
+        }
+        let f8 = pool_first_fill(self.fw.nnz_b, m, cap);
+        let nodes = self.fw.act as i64;
+        let mut pl = Pool { m: m as i64, p2: cap, p4: cap - 1, f8, b8: cap - 1 - l, c0: u, p3: f8, x138: 0, left: 0, pend: 0 };
+        // C:586–591: the initial nodes must fit below L
+        if pl.b8 < pl.p3 || ((pl.b8 - pl.p3) as f64) * 8.0 <= (nodes * 32) as f64 {
+            self.fpool = Some(pl);
+            self.short = Some(Short::Keep);
+            return false;
+        }
+        let e = int_side(pl.p3, 4 * nodes);
+        if e != 0 {
+            pl.pend = e;
+        }
+        pl.p3 += 4 * nodes;
+        pl.x138 = pl.p3.max(pl.f8);
+        pl.left = nodes - created;
+        self.pool_trace.push(pl.snap("start", nodes, 0));
+        self.fpool = Some(pl);
+        true
+    }
+
+    fn pool_event(&mut self, kind: &'static str, nodes: i64, n: i64) {
+        if let Some(pl) = &self.fpool {
+            let e = pl.snap(kind, nodes, n);
+            self.pool_trace.push(e);
+        }
+    }
+
+    /// Room for `cnt` U entries (`local_f8 − local_1c0`, C:2289 / C:3734), else −1 with F+0x158 kept.
+    fn pool_u(&mut self, cnt: i64) -> bool {
+        if self.fpool.as_ref().is_some_and(|pl| pl.f8 - pl.c0 < cnt) {
+            self.short = Some(Short::Keep);
+            return false;
+        }
+        true
+    }
+
+    /// Room for `cnt` L entries (`local_1b8 − local_138`, C:928 / C:2140 / C:2331 / C:3814), else −1.
+    fn pool_l(&mut self, cnt: i64) -> bool {
+        if self.fpool.as_ref().is_some_and(|pl| pl.b8 - pl.x138 < cnt) {
+            self.short = Some(Short::Keep);
+            return false;
+        }
+        true
+    }
+
+    fn pool_put_u(&mut self) {
+        if let Some(pl) = self.fpool.as_mut() {
+            pl.c0 += 1;
+        }
+    }
+
+    fn pool_put_l(&mut self) {
+        if let Some(pl) = self.fpool.as_mut() {
+            pl.b8 -= 1;
+        }
+    }
+
+    /// The dense switch's room (C:3394–3398, asm 0xd88d6): 1.5·n(n+1) slots below L and n(n+1)/2 for U with
+    /// n = m − steps, else −1.
+    fn pool_dense(&mut self) -> bool {
+        let n = (self.head.len() - self.steps.len()) as i64;
+        self.pool_event("dense", 0, 0);
+        let Some(pl) = &self.fpool else { return true };
+        let t = (n + 1) as i32 as f64 * 0.5 * (n as i32 as f64);
+        if !(t * 3.0 <= (pl.b8 - pl.p3) as f64 && t <= (pl.f8 - pl.c0) as f64) {
+            self.short = Some(Short::Keep);
+            return false;
+        }
+        true
+    }
+
+    /// `036ade`'s `local_70` mode (M3-04c-21j): the rest of the factor on a dense n'×n' array (row r', column c' at
+    /// r'·n' + c') with per-line index lists of at most `iVar67` entries (a longer line is scanned in full). Pool
+    /// test and new size C:2572–2620; layout C:2621–2810 (columns in position order, rows in row order, each row's
+    /// live elements in list order); search C:2813–3300 (dense switch gate, lowest buckets from 0, at most 4 lines,
+    /// columns then rows per count, `1e-100 < |a|`, threshold and cost ties as the sparse kernel, head rotation);
+    /// pivot C:3686–3966 (U row, then each L row with its update: a structural zero becoming ≥ ZERO joins both
+    /// lists, a value falling below ZERO becomes the marker 0x2b2bff2ee48e0530 and leaves the counts).
+    fn mode70(&mut self, ppos: &mut [i64], tol: f64, st: &mut Mode70In) -> bool {
+        const DEAD: usize = usize::MAX;
+        const TINY: f64 = 1e-100;
+        let sent = f64::from_bits(0x2b2bff2ee48e0530);
+        let m = self.head.len();
+        let steps0 = self.steps.len();
+        let l238 = (m - steps0) as i64;
+        let (e60, ef0) = (st.erows.len() as i64, st.ecols.len() as i64);
+        self.pool_event("mode70", 0, l238);
+        let n2 = l238 - e60.min(ef0);
+        let nn = (n2 * n2) as i32;
+        let mut iv67 = (nn - 3 * n2 as i32) / (2 * n2 as i32);
+        let iv65 = ((n2 as i32 + 2) / 3).max(3);
+        let mut l40 = nn as i64;
+        if iv67 < iv65 {
+            iv67 = iv65;
+            l40 = 3 * n2 + 2 * n2 * iv65 as i64;
+        }
+        if let Some(pl) = self.fpool.as_mut() {
+            let q = nn as f64 * 0.3;
+            let avail = pl.b8 - pl.p3;
+            if (avail as f64) < l40 as i32 as f64 + q || ((pl.f8 - pl.c0) as f64) < q || avail < m as i64 {
+                let e = pl.snap("short70", 0, 0);
+                let cap = if pl.p2 < i64::MAX {
+                    let d1 = (l40 as i32 as f64 + q) - avail as f64;
+                    let q2 = q - (pl.f8 - pl.c0) as f64;
+                    let d = if 0.0 <= d1 { d1 } else { 0.0 };
+                    let mut x = d as i64 as f64;
+                    if x <= q2 {
+                        x = q2;
+                    }
+                    let l30 = (m as i64 - avail).max(x as i64);
+                    let g = (pl.p2 + l30) as f64 * 1.4;
+                    if g < 9.223372036854776e18 { g as i64 } else { i64::MAX }
+                } else {
+                    i64::MAX
+                };
+                self.pool_trace.push(e);
+                self.short = Some(Short::Grow(cap));
+                return false;
+            }
+            pl.p3 += l40;
+            pl.x138 += l40;
+        }
+        let n = n2 as usize;
+        let cap = iv67 as usize;
+        let ni = n2;
+        // C:2621–2700: dense columns in position order with their count, list flag and cached max
+        let mut colmax = vec![0.0f64; m];
+        for e in 0..st.ev.len() {
+            if st.ec[e] != DEAD {
+                let v = st.ev[e].abs();
+                let c = st.ec[e];
+                if colmax[c] <= v {
+                    colmax[c] = v;
+                }
+            }
+        }
+        let mut colmap = vec![0usize; n];
+        let mut cof = vec![usize::MAX; m];
+        let mut cnt_c = vec![-1i64; n];
+        let mut clen = vec![0usize; n];
+        let mut clist = vec![0usize; n * cap];
+        let mut cache = vec![0.0f64; n];
+        let mut cb = Buckets::new(n);
+        let mut k = 0;
+        for pos in 0..m {
+            if st.ccs[pos] >= 0 {
+                colmap[k] = pos;
+                cof[pos] = k;
+                cnt_c[k] = st.ccs[pos];
+                clen[k] = if st.ccs[pos] < iv67 as i64 - 1 { 0 } else { cap };
+                cb.ins(k, st.ccs[pos] as usize);
+                cache[k] = colmax[pos];
+                k += 1;
+            }
+        }
+        for j in 0..n - k {
+            colmap[k + j] = st.ecols[st.ecols.len() - 1 - j];
+        }
+        // C:2700–2810: dense rows in row order, their live elements in list order into the array and the lists
+        let mut rowmap = vec![0usize; n];
+        let mut cnt_r = vec![-1i64; n];
+        let mut rlen = vec![0usize; n];
+        let mut rlist = vec![0usize; n * cap];
+        let mut rb = Buckets::new(n);
+        let mut a = vec![0.0f64; n * n];
+        let mut r = 0;
+        for i in 0..m {
+            if st.rcs[i] < 0 {
+                continue;
+            }
+            rowmap[r] = i;
+            cnt_r[r] = st.rcs[i];
+            rb.ins(r, st.rcs[i] as usize);
+            let listed = st.rcs[i] < iv67 as i64 - 1;
+            rlen[r] = if listed { 0 } else { cap };
+            for &e in st.rl[i].iter().rev() {
+                if st.ec[e] == DEAD {
+                    continue;
+                }
+                let c = cof[st.ec[e]];
+                if clen[c] < cap {
+                    clist[c * cap + clen[c]] = r;
+                    clen[c] += 1;
+                }
+                if listed {
+                    rlist[r * cap + rlen[r]] = c;
+                    rlen[r] += 1;
+                }
+                a[r * n + c] = st.ev[e];
+            }
+            r += 1;
+        }
+        for j in 0..n - r {
+            rowmap[r + j] = st.erows[st.erows.len() - 1 - j];
+        }
+        let mut est = st.est;
+        let mut pivots = Vec::new();
+        loop {
+            let steps = self.steps.len();
+            let nact = (m - steps) as i64 - st.ecols.len() as i64;
+            if nact == 0 {
+                self.pool_event("end", 0, 0);
+                break;
+            }
+            let nsq = nact as f64 * nact as f64;
+            let limit = nact.min(4);
+            if est > nsq * 0.36 && (m as f64) * 4.0 < nsq && nact >= 51 && (m as f64) + nsq < 2000000000.0 {
+                // C:3301–3392: the exact count over the dense columns replaces the estimate
+                est = cnt_c.iter().filter(|&&c| c >= 0).map(|&c| (c + 1) as f64).sum();
+                assert!(est <= nsq * 0.325, "036ade local_70 mode dense switch (C:3405): not ported");
+            }
+            let cmin = (0..n).find(|&k| cb.head[k] >= 0).unwrap_or(n);
+            let rmin = (0..n).find(|&k| rb.head[k] >= 0).unwrap_or(n);
+            let k0 = cmin.min(rmin);
+            assert!(k0 < n, "036ade local_70 mode without a pivot (0x271e): not ported");
+            let mut bound = cmin as f64 * rmin as f64;
+            let mut bcost = n as f64 * n as f64;
+            let (mut ratio, mut best, mut ns) = (0.0f64, -1i64, 0i64);
+            let mut k = k0;
+            'search: loop {
+                let fk = k as f64;
+                let b2 = fk * fk;
+                if bound < b2 {
+                    bound = b2;
+                }
+                let h = cb.head[k];
+                if h < 0 {
+                    if limit <= ns {
+                        break 'search;
+                    }
+                } else {
+                    let h = h as usize;
+                    let mut x = h;
+                    loop {
+                        if clen[x] >= cap {
+                            if cache[x] == 0.0 {
+                                let mut t = 0.0f64;
+                                for rr in 0..n {
+                                    let v = a[rr * n + x].abs();
+                                    if t <= v {
+                                        t = v;
+                                    }
+                                }
+                                cache[x] = if t <= TINY { 0.0 } else { t };
+                            }
+                            let mx = cache[x];
+                            assert!(ZERO <= mx, "036ade local_70 column below ZERO (C:3030): not ported");
+                            for rr in 0..n {
+                                let v = a[rr * n + x].abs();
+                                let cost = cnt_r[rr] as f64 * fk;
+                                if TINY < v && ((cost < bcost && tol * mx < v) || (cost == bcost && ratio * mx < v)) {
+                                    best = (x + rr * n) as i64;
+                                    ratio = v / mx;
+                                    bcost = cost;
+                                }
+                            }
+                        } else {
+                            let recompute = cache[x] == 0.0;
+                            let (mut kept, mut t) = (0usize, 0.0f64);
+                            for j in 0..clen[x] {
+                                let rr = clist[x * cap + j];
+                                let v = a[rr * n + x];
+                                if v != 0.0 {
+                                    clist[x * cap + kept] = rr;
+                                    kept += 1;
+                                    if t <= v.abs() {
+                                        t = v.abs();
+                                    }
+                                }
+                            }
+                            clen[x] = kept;
+                            if recompute {
+                                cache[x] = t;
+                            }
+                            let mx = cache[x];
+                            assert!(ZERO <= mx, "036ade local_70 column below ZERO (C:3030): not ported");
+                            for j in 0..clen[x] {
+                                let rr = clist[x * cap + j];
+                                let v = a[rr * n + x].abs();
+                                let cost = cnt_r[rr] as f64 * fk;
+                                if TINY < v && ((cost < bcost && tol * mx < v) || (cost == bcost && ratio * mx < v)) {
+                                    best = (x + n * rr) as i64;
+                                    ratio = v / mx;
+                                    bcost = cost;
+                                }
+                            }
+                        }
+                        ns += 1;
+                        if limit <= ns || bcost <= bound {
+                            assert!(best >= 0, "036ade local_70 mode without a pivot (0x271e): not ported");
+                            let nx = cb.prv[x];
+                            cb.head[k] = if (best % ni) as usize == x { x as i64 } else { nx as i64 };
+                            break 'search;
+                        }
+                        x = cb.prv[x];
+                        if x == h {
+                            break;
+                        }
+                    }
+                }
+                if bcost <= bound {
+                    break 'search;
+                }
+                let h = rb.head[k];
+                if h >= 0 {
+                    let h = h as usize;
+                    let mut y = h;
+                    loop {
+                        if rlen[y] >= cap {
+                            let mut mx = 0.0f64;
+                            for c in 0..n {
+                                let v = a[y * n + c].abs();
+                                if mx <= v {
+                                    mx = v;
+                                }
+                            }
+                            assert!(TINY < mx && ZERO <= mx, "036ade local_70 row below ZERO (C:3199): not ported");
+                            for c in 0..n {
+                                let v = a[y * n + c].abs();
+                                let cost = cnt_c[c] as f64 * fk;
+                                if TINY < v && ((cost < bcost && mx * tol < v) || (cost == bcost && mx * ratio < v)) {
+                                    best = (y * n + c) as i64;
+                                    ratio = v / mx;
+                                    bcost = cost;
+                                }
+                            }
+                        } else {
+                            let (mut kept, mut mx) = (0usize, 0.0f64);
+                            for j in 0..rlen[y] {
+                                let c = rlist[y * cap + j];
+                                let v = a[y * n + c];
+                                if v != 0.0 {
+                                    rlist[y * cap + kept] = c;
+                                    kept += 1;
+                                    if mx <= v.abs() {
+                                        mx = v.abs();
+                                    }
+                                }
+                            }
+                            rlen[y] = kept;
+                            assert!(ZERO <= mx, "036ade local_70 row below ZERO (C:3199): not ported");
+                            for j in 0..rlen[y] {
+                                let c = rlist[y * cap + j];
+                                let v = a[y * n + c].abs();
+                                let cost = cnt_c[c] as f64 * fk;
+                                if TINY < v && ((cost < bcost && mx * tol < v) || (cost == bcost && mx * ratio < v)) {
+                                    best = (c + n * y) as i64;
+                                    ratio = v / mx;
+                                    bcost = cost;
+                                }
+                            }
+                        }
+                        ns += 1;
+                        if limit <= ns || bcost <= bound {
+                            assert!(best >= 0, "036ade local_70 mode without a pivot (0x271e): not ported");
+                            let nx = rb.prv[y];
+                            rb.head[k] = if (best / ni) as usize == y { y as i64 } else { nx as i64 };
+                            break 'search;
+                        }
+                        y = rb.prv[y];
+                        if y == h {
+                            break;
+                        }
+                    }
+                }
+                if bcost <= bound {
+                    break 'search;
+                }
+                k += 1;
+                if k >= n {
+                    break 'search;
+                }
+            }
+            assert!(best >= 0, "036ade local_70 mode without a pivot (0x271e): not ported");
+            pivots.push(best);
+            // C:3692–3735: the pivot
+            let (r, c) = ((best / ni) as usize, (best % ni) as usize);
+            est += (cnt_r[r] - 1) as f64 * (cnt_c[c] - 1) as f64 - 2.0;
+            cb.rem(c, cnt_c[c] as usize);
+            rb.rem(r, cnt_r[r] as usize);
+            let pv = a[r * n + c];
+            a[r * n + c] = 0.0;
+            if !self.pool_u(cnt_r[r]) {
+                return false;
+            }
+            let sk = self.steps.len();
+            self.prow[rowmap[r]] = sk as i64;
+            ppos[colmap[c]] = sk as i64;
+            self.steps.push((rowmap[r], colmap[c], pv));
+            // C:3736–3806: the U row
+            let mut urow: Vec<(usize, f64)> = Vec::new();
+            let full = rlen[r] >= cap;
+            let len = if full { n } else { rlen[r] };
+            for j in 0..len {
+                let c2 = if full { j } else { rlist[r * cap + j] };
+                let v = a[r * n + c2];
+                if TINY < v.abs() {
+                    cb.rem(c2, cnt_c[c2] as usize);
+                    urow.push((c2, v));
+                    self.pool_put_u();
+                    cnt_c[c2] -= 1;
+                    a[r * n + c2] = 0.0;
+                }
+            }
+            rlen[r] = 0;
+            cnt_r[r] = -1;
+            if !self.pool_l(cnt_c[c]) {
+                return false;
+            }
+            // C:3814–3923: each L row with its update
+            let mut lc: Vec<(usize, f64)> = Vec::new();
+            let full = clen[c] >= cap;
+            let len = if full { n } else { clen[c] };
+            for j in 0..len {
+                let r2 = if full { j } else { clist[c * cap + j] };
+                let v = a[r2 * n + c];
+                if v.abs() <= TINY {
+                    continue;
+                }
+                rb.rem(r2, cnt_r[r2] as usize);
+                let l = v / pv;
+                lc.push((rowmap[r2], l));
+                self.pool_put_l();
+                a[r2 * n + c] = 0.0;
+                cnt_r[r2] -= 1;
+                for &(c2, u) in &urow {
+                    let old = a[r2 * n + c2];
+                    let new = u * -l + old;
+                    if old.abs() <= TINY {
+                        if ZERO <= new.abs() {
+                            if old == 0.0 {
+                                if rlen[r2] < cap {
+                                    rlist[r2 * cap + rlen[r2]] = c2;
+                                    rlen[r2] += 1;
+                                }
+                                if clen[c2] < cap {
+                                    clist[c2 * cap + clen[c2]] = r2;
+                                    clen[c2] += 1;
+                                }
+                            }
+                            a[r2 * n + c2] = new;
+                            cnt_r[r2] += 1;
+                            cnt_c[c2] += 1;
+                        }
+                    } else if new.abs() < ZERO {
+                        a[r2 * n + c2] = sent;
+                        cnt_r[r2] -= 1;
+                        cnt_c[c2] -= 1;
+                    } else {
+                        a[r2 * n + c2] = new;
+                    }
+                }
+                if cnt_r[r2] < 0 {
+                    st.erows.push(rowmap[r2]);
+                } else {
+                    rb.ins(r2, cnt_r[r2] as usize);
+                }
+            }
+            // C:3929–3966: the U row's columns back into their buckets, their cached max cleared
+            for &(c2, _) in &urow {
+                cache[c2] = 0.0;
+                if cnt_c[c2] < 0 {
+                    st.ecols.push(colmap[c2]);
+                } else {
+                    cb.ins(c2, cnt_c[c2] as usize);
+                }
+            }
+            self.kernel_u[sk] = urow.iter().map(|&(c2, v)| (colmap[c2], v)).collect();
+            self.lcol[sk] = lc;
+            clen[c] = 0;
+            cnt_c[c] = -1;
+        }
+        self.mode70 = Some(Mode70Trace { step: steps0, n, pivots });
         true
     }
 
