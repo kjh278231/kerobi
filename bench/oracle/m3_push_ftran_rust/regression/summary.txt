@@ -1,0 +1,14 @@
+exit=0  python3 tools/push_ftran_check.py --controls
+exit=0  python3 tools/push_ftran_check.py --acceptance
+exit=0  python3 tools/push_ftran_check.py --self-test
+exit=0  cargo test -p rsolver-lp --test push_round
+exit=0  python3 tools/push_round_rust.py --compare
+exit=0  cargo test -p rsolver-lp --test push_chain
+exit=0  python3 tools/push_step_chain_rust.py --compare
+exit=0  cargo test -p rsolver-lp --test push_ftran
+exit=0  python3 tools/push_ftran_rust.py --compare
+exit=0  python3 tools/push_ftran_rust.py --self-test
+exit=0  python3 -m py_compile tools/push_ftran_rust.py
+exit=0  git diff --check HEAD
+cargo test --release --workspace: exit=0, passed 136 failed 0 ignored 12 (workspace.log)
+cargo clippy --workspace --all-targets -- -D warnings: exit=0 (clippy.log)
