@@ -1,0 +1,585 @@
+{
+  "task": "M3-04c-1a",
+  "results": [
+    {
+      "name": "init-no-renumber",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (63858) panicked at crates/lp/src/crossover_init.rs:325:31:",
+        "thread 'init_loop_trace' (63858) panicked at crates/lp/src/crossover_init.rs:325:31:",
+        "thread 'init_loop_trace' (63858) panicked at crates/lp/src/crossover_init.rs:325:31:"
+      ]
+    },
+    {
+      "name": "init-request-kept",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.req[0]: 원본 ['0'] != Rust ['10'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "init-factor-skipped",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (65055) panicked at crates/lp/src/crossover_backend.rs:189:31:",
+        "thread 'init_loop_trace' (65055) panicked at crates/lp/src/crossover_backend.rs:189:31:",
+        "thread 'init_loop_trace' (65055) panicked at crates/lp/src/crossover_backend.rs:189:31:"
+      ]
+    },
+    {
+      "name": "scan-m1-zero",
+      "file": "crossover_init.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "scan-m2-zero",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (65767) panicked at crates/lp/src/crossover_init.rs:404:32:",
+        "thread 'init_loop_trace' (65767) panicked at crates/lp/src/crossover_init.rs:404:32:",
+        "thread 'init_loop_trace' (65767) panicked at crates/lp/tests/push_init_loop.rs:166:5:"
+      ]
+    },
+    {
+      "name": "scan-m4-zero",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (66105) panicked at crates/lp/src/crossover_init.rs:404:32:",
+        "thread 'init_loop_trace' (66105) panicked at crates/lp/src/crossover_init.rs:404:32:",
+        "thread 'init_loop_trace' (66105) panicked at crates/lp/tests/push_init_loop.rs:166:5:"
+      ]
+    },
+    {
+      "name": "scan-m4-ub",
+      "file": "crossover_init.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "scan-m5-zero",
+      "file": "crossover_init.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "slack-m3-zero",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.basic[0]: 원본 ['000000000000f03f', '00401cebe2360a3f', '0000000000288f40'] != Rust ['0000000000000040', '8f53742497ffefbf', '0000000000288f40'] (길이 25/25)"
+      ]
+    },
+    {
+      "name": "slack-m2-zero",
+      "file": "crossover_init.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "distance-lower",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.cand[2]: 원본 ['0', '7', '4'] != Rust ['7', '4', '2'] (길이 23/23)"
+      ]
+    },
+    {
+      "name": "key-no-cap",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.cand[6]: 원본 ['12', '15', '18'] != Rust ['45', '36', '62'] (길이 23/23)"
+      ]
+    },
+    {
+      "name": "key-slack-as-column",
+      "file": "crossover_init.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "sort-stable",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.cand[3]: 원본 ['7', '4', '2'] != Rust ['4', '7', '2'] (길이 23/23)"
+      ]
+    },
+    {
+      "name": "rhs-not-copied",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (69911) panicked at crates/lp/src/crossover_init.rs:327:31:",
+        "thread 'init_loop_trace' (69911) panicked at crates/lp/src/crossover_init.rs:327:31:",
+        "thread 'init_loop_trace' (69911) panicked at crates/lp/src/crossover_init.rs:327:31:"
+      ]
+    },
+    {
+      "name": "residual-no-product",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (70266) panicked at crates/lp/src/crossover_init.rs:328:31:",
+        "thread 'init_loop_trace' (70266) panicked at crates/lp/src/crossover_init.rs:328:31:",
+        "thread 'init_loop_trace' (70266) panicked at crates/lp/src/crossover_init.rs:328:31:"
+      ]
+    },
+    {
+      "name": "residual-threshold-1e-14",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (70617) panicked at crates/lp/src/crossover_init.rs:328:31:",
+        "thread 'init_loop_trace' (70617) panicked at crates/lp/src/crossover_init.rs:328:31:",
+        "thread 'init_loop_trace' (70617) panicked at crates/lp/tests/push_init_loop.rs:166:5:"
+      ]
+    },
+    {
+      "name": "numeric-always",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.numeric[0]: 원본 ['0'] != Rust ['1'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "no-lower-shift",
+      "file": "crossover_init.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "width-ub",
+      "file": "crossover_init.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "mark-tau-strict",
+      "file": "crossover_init.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "mark-x-as-l",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.marks[23]: 원본 ['58', '4e'] != Rust ['4c', '4e'] (길이 25/25)"
+      ]
+    },
+    {
+      "name": "gate-p-always",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (72779) panicked at crates/lp/tests/push_init_loop.rs:166:5:"
+      ]
+    },
+    {
+      "name": "gate-pinf-always",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (73118) panicked at crates/lp/tests/push_init_loop.rs:166:5:"
+      ]
+    },
+    {
+      "name": "adjust-pinf-gate",
+      "file": "crossover_init.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (73455) panicked at crates/lp/src/crossover_init.rs:404:32:",
+        "thread 'init_loop_trace' (73455) panicked at crates/lp/src/crossover_init.rs:404:32:",
+        "thread 'init_loop_trace' (73455) panicked at crates/lp/src/crossover_init.rs:404:32:"
+      ]
+    },
+    {
+      "name": "iterations-no-inc",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.iter[0]: 원본 ['000000000000f03f'] != Rust ['0000000000000000'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "support-strict",
+      "file": "crossover_init.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "numeric-limit-9",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.nlimit[0]: 원본 ['10'] != Rust ['9'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "round-status-entry0",
+      "file": "crossover_init.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄1 start.status[0]: 원본 ['1'] != Rust ['0'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "column-work-skip",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected",
+      "why": [
+        "interior 줄21 fcall.stats[3]: 원본 ['8', '0', '13'] != Rust ['0', '0', '13'] (길이 7/7)"
+      ]
+    },
+    {
+      "name": "column-work-no-plus1",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected",
+      "why": [
+        "interior 줄21 fcall.stats[3]: 원본 ['8', '0', '13'] != Rust ['7', '0', '13'] (길이 7/7)"
+      ]
+    },
+    {
+      "name": "column-work-no-reset",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected",
+      "why": [
+        "interior 줄39 fcall.stats[3]: 원본 ['0', '0', '11'] != Rust ['16', '0', '11'] (길이 7/7)"
+      ]
+    },
+    {
+      "name": "u-stat-no-m",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄0 init.stats[6]: 원본 ['25'] != Rust ['0'] (길이 7/7)"
+      ]
+    },
+    {
+      "name": "u-stat-stale",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected",
+      "why": [
+        "interior 줄39 fcall.stats[6]: 원본 ['23'] != Rust ['8'] (길이 7/7)"
+      ]
+    },
+    {
+      "name": "no-wrapper-clear",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected",
+      "why": [
+        "adlittle 줄51 supply.acount[0]: 원본 ['5'] != Rust ['9'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "supplier-save0",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (77444) panicked at crates/lp/src/crossover_backend.rs:143:69:",
+        "thread 'init_loop_trace' (77444) panicked at crates/lp/src/crossover_backend.rs:143:69:",
+        "thread 'init_loop_trace' (77444) panicked at crates/lp/src/crossover_backend.rs:143:69:"
+      ]
+    },
+    {
+      "name": "supplier-no-spike",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (77782) panicked at crates/lp/src/crossover_backend.rs:115:33:",
+        "thread 'init_loop_trace' (77782) panicked at crates/lp/src/crossover_backend.rs:115:33:",
+        "thread 'init_loop_trace' (77782) panicked at crates/lp/src/crossover_backend.rs:115:33:"
+      ]
+    },
+    {
+      "name": "ft-header-stale",
+      "file": "crossover_backend.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "ft-leave-zero",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (78468) panicked at crates/lp/src/crossover_backend.rs:143:53:",
+        "thread 'init_loop_trace' (78468) panicked at crates/lp/src/crossover_backend.rs:143:53:",
+        "thread 'init_loop_trace' (78468) panicked at crates/lp/tests/push_init_loop.rs:166:5:"
+      ]
+    },
+    {
+      "name": "refactor-no-lu-renumber",
+      "file": "crossover_backend.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "refactor-prev-none",
+      "file": "crossover_backend.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "refactor-block-off",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected",
+      "why": [
+        "capri 줄214 fcall.hdr2[140]: 원본 ['236', '233', '238'] != Rust ['118', '115', '21'] (길이 271/271)"
+      ]
+    },
+    {
+      "name": "refactor-block-no-raise",
+      "file": "crossover_backend.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "initial-block-no-raise",
+      "file": "crossover_backend.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "btran-no-cache",
+      "file": "crossover_backend.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "rhs-ftran-save1",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (80958) panicked at crates/lp/src/crossover_backend.rs:164:74:",
+        "thread 'init_loop_trace' (80958) panicked at crates/lp/src/crossover_backend.rs:164:74:",
+        "thread 'init_loop_trace' (80958) panicked at crates/lp/src/crossover_backend.rs:164:74:"
+      ]
+    },
+    {
+      "name": "stats-interval-zero",
+      "file": "crossover_backend.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄0 init.stats[2]: 원본 ['4', '0', '0'] != Rust ['0', '0', '0'] (길이 7/7)"
+      ]
+    },
+    {
+      "name": "loop-no-workspace",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (81676) panicked at crates/lp/src/crossover_backend.rs:140:44:",
+        "thread 'init_loop_trace' (81676) panicked at crates/lp/src/crossover_backend.rs:140:44:",
+        "thread 'init_loop_trace' (81676) panicked at crates/lp/src/crossover_backend.rs:140:44:"
+      ]
+    },
+    {
+      "name": "pass-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (82038) panicked at crates/lp/src/crossover_supplier.rs:62:54:",
+        "thread 'init_loop_trace' (82038) panicked at crates/lp/src/crossover_supplier.rs:62:54:",
+        "thread 'init_loop_trace' (82038) panicked at crates/lp/src/crossover_supplier.rs:62:54:"
+      ]
+    },
+    {
+      "name": "begin-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (82375) panicked at crates/lp/src/crossover_round.rs:71:30:",
+        "thread 'init_loop_trace' (82375) panicked at crates/lp/src/crossover_round.rs:71:30:",
+        "thread 'init_loop_trace' (82375) panicked at crates/lp/src/crossover_round.rs:71:30:"
+      ]
+    },
+    {
+      "name": "accept-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄5 step.approved[0]: 원본 ['1'] != Rust ['0'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "defer-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄102 step.cand[0]: 원본 ['9', '24', '0'] != Rust ['21', '24', '0'] (길이 23/23)"
+      ]
+    },
+    {
+      "name": "flip-goes-on",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (83391) panicked at crates/lp/src/crossover_round.rs:116:5:",
+        "assertion failed: leave >= 0 && (leave as usize) < state.m",
+        "thread 'init_loop_trace' (83391) panicked at crates/lp/src/crossover_round.rs:116:5:"
+      ]
+    },
+    {
+      "name": "btran-always",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "interior 줄20: 태그 원본 select != Rust btran"
+      ]
+    },
+    {
+      "name": "no-clear-request",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "select-support0",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (84405) panicked at crates/lp/src/crossover_backend.rs:143:69:",
+        "thread 'init_loop_trace' (84405) panicked at crates/lp/src/crossover_backend.rs:143:69:",
+        "thread 'init_loop_trace' (84405) panicked at crates/lp/src/crossover_backend.rs:143:69:"
+      ]
+    },
+    {
+      "name": "pivot-no-recompute",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "interior 줄40: 태그 원본 rin != Rust clear"
+      ]
+    },
+    {
+      "name": "round-no-recompute",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄114: 태그 원본 rin != Rust pass"
+      ]
+    },
+    {
+      "name": "round-no-clear",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄116 pass.req[0]: 원본 ['0'] != Rust ['10'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "no-renumber",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (85773) panicked at crates/lp/src/crossover_backend.rs:150:33:",
+        "thread 'init_loop_trace' (85773) panicked at crates/lp/src/crossover_backend.rs:150:33:",
+        "thread 'init_loop_trace' (85773) panicked at crates/lp/src/crossover_backend.rs:150:33:"
+      ]
+    },
+    {
+      "name": "renumber-no-vstat",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄0 init.vstat[5]: 원본 ['1', '-1', '-3'] != Rust ['17', '-1', '-3'] (길이 67/67)"
+      ]
+    },
+    {
+      "name": "renumber-no-leave",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄0 init.leave[0]: 원본 ['2'] != Rust ['0'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "renumber-inverse",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "thread 'init_loop_trace' (86853) panicked at crates/lp/src/crossover_init.rs:328:31:",
+        "thread 'init_loop_trace' (86853) panicked at crates/lp/src/crossover_init.rs:328:31:",
+        "thread 'init_loop_trace' (86853) panicked at crates/lp/src/crossover_init.rs:328:31:"
+      ]
+    },
+    {
+      "name": "exhausted-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-timeout",
+      "why": [
+        "재생 120초 초과(루프 미종료)"
+      ]
+    },
+    {
+      "name": "restart-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄112 round.cand[6]: 원본 [] != Rust ['12', '15', '18'] (길이 6/23)"
+      ]
+    },
+    {
+      "name": "end-on-empty-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "interior 줄75: 태그 원본 end != Rust pass"
+      ]
+    },
+    {
+      "name": "pinf-not-saved",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "retry 줄43 recompute.pinf[0]: 원본 ['046c95607138d33f'] != Rust ['d02406819543d33f'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "violations-not-saved",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "request-not-synced",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "period-not-saved",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "updates-stale",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "resume-restarts",
+      "file": "crossover_factor.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "resume-no-period",
+      "file": "crossover_factor.rs",
+      "verdict": "survived",
+      "why": []
+    }
+  ],
+  "rejected": 51,
+  "total": 73
+}

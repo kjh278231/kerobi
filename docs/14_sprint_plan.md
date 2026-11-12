@@ -179,7 +179,7 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04b-3 | 오라클 구축 완료(범위 한정) | 거부 판정·pivot 보류·미관측 이탈 arm과 생존 변조 경계 | 04b-2 | [arm LP(PStart·DStart) 두 순서 각 3회 50단계, 보류 양성 사건, 판단 모델·Rust 일치(고유 43), 모델 변조 32종 중 27·Rust 36종 중 30 거부](m3/primal_push_arms_oracle.md). `A`·`B`·`X`·기본 arm은 feasible 경로에서 도달 불가로 분류, `U`(a≥0) 정확 경계 미검증 |
 | M3-04c | 구현 완료(범위 한정) | double feasible ratio `055f68` 첫 패스 | 04b·04b-1 | [자연 9입력×2·합성 29사례 비트 일치, 변조 14종 중 10 거부](m3/primal_push_ratio_rust.md). 생존 4경계·재진입·push 연결 미검증 |
 | M3-04c-1 | 조사 완료 | primal push 초기화(C 150–1142): 후보 구성·정렬·rhs·basic·분류·품질·기준 조정 | 04b·04c-21h | [완료](m3/primal_push_init.md): 10단계 C/asm 표, slack -2 직전 xmm0·재구성 -4/-5 생략(asm). 21h 자연 6사례 push:enter→첫 supply 재계산 1,480필드 일치, 변조11 거부, 변이7 중 생존3. 조정·강화·retry 자연 0회, basic·조건수 미비교 |
-| M3-04c-1a | 구현 | Rust `push_init`(단계 2–7·9·10)와 `push_loop` 연결 | 04c-1·04c-24 | push:enter부터 종료까지 6사례 비교(초기 factor는 push:enter header 재분해, basic 비트 포함). 조건수는 원본 condition 입력, 품질 gate 판정만 비교 |
+| M3-04c-1a | 구현 연결 완료(범위 한정) | Rust `push_init`(단계 2–10)와 `push_loop` 연결 | 04c-1·04c-24 | [완료](m3/primal_push_init_rust.md): push:enter 입력만으로 6사례 731줄·5,743필드 일치(basic 비트 포함). 조건수 항·조정·Markowitz 강화 미검증(1b·1c) |
 | M3-04c-1b | 오라클 | 초기화 중간 경계와 미관측 분기 | 04c-1 | `09cf9b` 출력·`089d8f` 잔차·Markowitz 판단값·`12f282` 입출력·param_1·첫 스캔 셈. 기준 조정·Markowitz 강화·품질 retry·slack -2·-5 자연 탐색+원본 명령 합성, 각 3회 |
 | M3-04c-1c | 조사·구현 | 조건수 추정 `116fd7`(double) | 04c-1b | 원본 입출력 비교로 품질 gate의 condition 비트 일치 |
 | M3-04c-6 | 구현 완료(범위 한정) | 방향식·거리 flip·pivot 승인·이탈 상태 판단의 Rust | 04b-2·04c | [저장 캡처 40단계(고유 20, +frame 보조 9) 비트 일치, 연결 ratio 49 일치, Rust 변조 24종 중 9 거부(오라클과 같은 분류)](m3/primal_push_decision_rust.md). 생존 15경계·미관측 arm·push 연결 미검증 |

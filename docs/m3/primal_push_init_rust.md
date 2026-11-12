@@ -63,8 +63,25 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 기준 main `de29640`, 계약 `00cfb02`, 구현·첫 비교 `daf9ec7`, clippy 정리·재비교 `d9aab36`. x86-64 Linux(WSL2), rustc stable. Gurobi 새 실행 0회. 입력 `bench/oracle/m3_push_init_rust/input.txt`(머리 = 21e manifest 해시, 사례마다 case·model·cfg·enter·lu 5줄, 루프 시작 상태·수치 출력 없음).
+- 구현: `crates/lp/src/crossover_init.rs`(`push_init`, `PushInitBackend`, `InitEntry`·`InitResult`), `crossover_backend.rs`(`SerialStart`: 초기 재분해 입력을 들고 있다가 요청 10에서 Rust `refactor`, 이후 `SerialBackend`로 넘김; `SerialBackend::initial`은 같은 helper 사용), `crates/lp/tests/push_init_loop.rs`, `tools/push_loop_rust.py --init`.
+- 착수 검사: `--init --write`가 21e·21h 검사기의 controls·acceptance를 통과한 뒤 투영했고, 사례마다 초기 factor 입력 header·vstat·S+0x2f8·Markowitz가 push:enter 상태와 같음을 확인했다(그 사이 쓰기 없음).
+- 비교 `cargo test -p rsolver-lp --test push_init_loop && python3 tools/push_loop_rust.py --init --compare`: **6사례·731줄·5,743필드 전부 일치(첫 비교부터)**. 24의 725줄·5,575필드 + start 6줄·168필드. start 줄에서 후보 103개 순서, rhs·basic·폭(각 m개, 비트), 표시, PInf, 반복, 지원, 요청·카운터·numeric_limit, Markowitz·갱신 한도, 라운드 초기값이 원본과 같다. **basic(초기 재분해 → rhs 구성 → dense FTRAN → lower shift)은 이번에 처음 비트 비교했다.** [비교 출력](../../bench/oracle/m3_push_init_rust/compare.txt).
+- 판별력: `--init --self-test` **변조 136종 전부 거부**([기록](../../bench/oracle/m3_push_init_rust/self-test.txt)).
+- Rust 변이 `--init --mutate-rust`: **73종(초기화 29 + 24의 44) 중 거부 51(시간 초과 1), 생존 22**([기록](../../bench/oracle/m3_push_init_rust/rust-mutations.json)). 초기화 거부 20: 초기 재번호 생략·요청 유지·초기 factor 생략, -2·-4 값 0, slack -3 값 0, 거리 항상 x-lb, 0.99 상한 제거, 안정 정렬, S+0x200 미복사, 잔차 곱 생략·임계 1e-14(강화 경로에서 외부 값 없음 panic), 수치 카운터 항상, X→L, gate P·PInf 항상, 조정 PInf 조건(이전 PInf 없음 panic), 반복 미증가, numeric_limit, 상태 S+0xf0. 초기화 생존 9은 자연 자료가 구별하지 못하는 경우다.
+  - `scan-m1-zero`·`no-lower-shift`·`width-ub`: 6사례 모두 -1 열과 기저 변수의 lb가 0(또는 -I)이다.
+  - `scan-m4-ub`: -4 변수는 lb = ub. `scan-m5-zero`·`slack-m2-zero`: 자연 0회.
+  - `mark-tau-strict`: basic이 정확히 -τ인 위치 0. `support-strict`: √m = 후보 수인 사례 없음.
+  - `key-slack-as-column`: `-1 - c`와 `-(1 + c)`는 IEEE 반올림 대칭이라 같은 값(동치 변이).
+  - 루프·backend 생존 13은 24 §6과 같은 목록·분류다.
+- 회귀(`bench/oracle/m3_push_init_rust/regressions.json`, 11명령 종료0): 24 입력 재투영 불변·재생·비교(725줄), 22 입력 재투영 불변·재생·비교(719줄), `push_init_survey.py --check`, py_compile, `cargo test --release --workspace` **146통과·0실패·ignored12**(새 `push_init_loop` 1), clippy 0, `git diff --check`.
+- 실행하지 않은 검사: 기존 solver 경로·Python 경계 미변경이라 확장 설치·pytest·Netlib·P3 제외. 독립 검토자는 사용하지 않았다.
+- 계약과 다른 점: 없음. 조사 문서 §2.1의 기준 조정 조건 방향(τ < S+0x120)을 asm `0x1c1873`에 따라 `S+0x120 < τ`로 구현했고 조사 문서를 정정했다(자연 조정 0회라 결과에는 영향 없음).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 **완료**, 구현 동등성 **계약 범위 통과**. 자연 6사례에서 push:enter 상태(모델·basis·x·slack·허용오차·카운터)와 초기 재분해 입력만으로 Rust가 초기 factor·후보 구성·정렬·rhs·basic·폭·표시·PInf·라운드 상태를 만들고, 이어 24의 실제 Rust backend 루프가 종료까지 원본과 비트/정확 일치한다. 원본 상태·수치 재주입 0회.
+- 남은 한계: 품질 gate의 조건수 항(`116fd7`, 입력 없음, 1c)은 미검증이며 Rust 결과에 `cond unknown`으로 남는다. 외부 값(param_1, S+0x120, S+0x3c8·환경 flag)이 필요한 경로(기준 조정, Markowitz 강화)는 C 그대로 옮겼으나 값 없이 도달하면 실패하며 동등성 미검증이다. 자연 미관측: 기준 조정·재구성, Markowitz 강화, 잔차 >1e-6, 품질 retry, 초기 factor 반환≠0·S+0xf0 gate, first=0, slack -2, 열 -5, 후보 0, lb≠0인 -1 열·기저 변수, quick 정렬. 할당 실패·batch(23)·x87·해 설치(04f)·solver 경로 연결은 범위 밖.
+- branch `work/m3-04c-1a`, worktree `../rsolver-m3-04c-1a`, owner `claude-m3-04c1a-20261113`. 최종 commit/병합은 main `Merge M3-04c-1a` 이력을 따른다. 미커밋 선행 변경 없음.
+- 갱신: `docs/11_progress.md`·`12_roadmap_diagram.md`·`14_sprint_plan.md`·`m3/sprint_design.md`·`m3/primal_push_init.md`(조건 방향 정정)·`handoff/M3.md`. 교훈 `docs/lessons/original.md`(조정 조건 방향, basic 비트 재현), `tooling.md`(변이 도구 실행 중 소스 수정 금지, 캡처 없는 입력은 Option+필요 시 실패).
+- 다음: **M3-04c-1b**(초기화 중간 경계·미관측 분기 오라클: `12f282` 입출력·param_1·S+0x120 캡처 포함) → 1c(조건수). 또는 23(batch 조사), 해 설치 04f. 기준 재검사 `python3 tools/push_loop_rust.py --init --write && cargo test -p rsolver-lp --test push_init_loop && python3 tools/push_loop_rust.py --init --compare`.
