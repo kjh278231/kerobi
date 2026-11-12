@@ -122,6 +122,9 @@ def dense_table(cap, name):
     groups, cur = [], None
     for i, e in enumerate(ev):
         k = e['event']
+        if k == 'dense:mode70':
+            continue  # 범위 밖 경로 표지(out_of_scope가 따로 센다)
+        require(k != 'dense:dgetrf', f'{name}#{i}: MKL dgetrf 경로(범위 밖)')
         if k == 'dense:enter':
             require(cur is None, f'{name}#{i}: 앞 조밀 묶음이 끝나지 않음')
             cur = {'enter': e, 'seq': [k]}
@@ -135,6 +138,41 @@ def dense_table(cap, name):
                 cur = None
     require(cur is None, f'{name}: 끝나지 않은 조밀 묶음')
     return groups
+
+
+def block_table(cap, name):
+    """push 재분해 lu id → 036ade 호출들의 lu:block(첫 진입·마지막 반환·호출 수). 풀 부족 −1이면 05b257이 같은 재분해에서
+    036ade를 다시 부른다(C:2592–2620). 21h 표와 같은 짝 검사를 하되 재호출을 허용하고 표시한다."""
+    ev = cap['events']
+    pend, rows = {}, {}
+    for j, e in enumerate(ev):
+        if e['event'] != 'lu:block':
+            continue
+        if e['phase'] == 'enter':
+            pend[e['id']] = e
+            if e['push']:
+                nxt = ev[j + 1]
+                require(nxt['event'] == 'lu:refactor' and nxt['phase'] == 'enter' and nxt['id'] == e['lu'], f'{name}: lu:block #{e["id"]} 뒤 lu:refactor 없음')
+                require(e['s_active'] and e['ret'] == 0xf34f2, f'{name}: lu:block #{e["id"]} S·반환 주소')
+        else:
+            st = pend.pop(e['id'])
+            if not st['push']:
+                continue
+            r = rows.setdefault(st['lu'], {'lu': st['lu'], 'block': st['id'], 'enter': st['state'], 'calls': 0, 'rets': []})
+            r['leave'] = e['state']
+            r['calls'] += 1
+            r['rets'].append(e['ret'])
+    for r in rows.values():
+        require(r['rets'][-1] == 0 and all(x in (0, -1) for x in r['rets']), f'{name}: 036ade 반환 {r["rets"]}')
+        r['retry'] = r['calls'] > 1
+    return rows
+
+
+def out_of_scope(cap, name):
+    """계약 §1(i): push 재분해 중 풀 부족 재호출(−1)이나 local_70 모드가 있었던 lu id 집합."""
+    bad = {lu for lu, r in block_table(cap, name).items() if r['retry']}
+    bad |= {e['lu'] for e in cap['events'] if e['event'] == 'dense:mode70' and e['push']}
+    return bad
 
 
 def acceptance(caps, verbose=True):
@@ -163,7 +201,10 @@ def acceptance(caps, verbose=True):
             else:
                 total['other'] += 1
         require(push_n == EXPECT_PUSH[c], f'{c}: push 조밀 n {push_n} != 계약 {EXPECT_PUSH[c]}')
+    scope = {c: sorted(out_of_scope(caps[(c, 1)], c)) for c in MODELS}
+    require(all(not v for c, v in scope.items() if c != 'grow22'), f'grow22 밖의 범위 밖 재분해: {scope}')
     if verbose:
+        print('범위 밖 push 재분해(풀 부족 재호출·local_70)', scope)
         print('조밀 LU', total, {c: [g['enter']['n'] for g in dense_table(caps[(c, 1)], c)] for c in MODELS})
     return total
 

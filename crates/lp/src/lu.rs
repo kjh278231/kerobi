@@ -86,6 +86,11 @@ pub struct Lu {
     pub singular: Vec<(usize, usize)>,
     /// Work inputs of this factorization (`036ade`, docs/m1/m1_02q_work.md).
     pub fw: FactorWork,
+    /// Pool size `param_15[2]` (F+0x158) when the kernel may take the dense switch (`factor_dense`); `None` keeps
+    /// the shortcut (no dense switch) of the M1 path.
+    dense_cap: Option<i64>,
+    /// The dense switch this factor took (`factor_dense`).
+    pub dense: Option<DenseTrace>,
 }
 
 /// Borrowed internals of a factor (`Lu::parts`), in the factor's own step numbering.
@@ -126,6 +131,305 @@ pub struct BlockState {
 impl BlockState {
     /// The phase switched off (what the M1 simplex path factors with).
     pub const OFF: BlockState = BlockState { x2c0: 0, x4e0: 0, x4e4: -1 };
+}
+
+/// The dense switch of the `036ade` kernel as one factor took it: the step it left the sparse kernel at, the dense
+/// order (positions by column-count bucket, rows ascending) and the array before and after the dense LU.
+#[derive(Clone, Debug, Default)]
+pub struct DenseTrace {
+    pub step: usize,
+    pub n: usize,
+    /// 16-byte offset of the dense array (`param_15[1] + param_15[3]·8`): 8 when the pool fill is odd.
+    pub mat16: usize,
+    pub rows: Vec<usize>,
+    pub cols_in: Vec<usize>,
+    pub a_in: Vec<f64>,
+    pub cols_out: Vec<usize>,
+    pub a_out: Vec<f64>,
+}
+
+/// `036ade` C:331–366 (asm 0xd440a–0xd457b): the element pool's first fill `local_f8` from the basis entries `nnz`,
+/// m and the pool size (`param_15[2]`, F+0x158). Every later chunk adds a multiple of 4 slots, so its parity is
+/// the dense array's 16-byte alignment.
+pub fn pool_first_fill(nnz: usize, m: usize, cap: i64) -> i64 {
+    let d = nnz as f64 / m as f64;
+    let x = if m < 500 {
+        d * d
+    } else if m < 3000 {
+        d * d.sqrt()
+    } else if m < 10000 {
+        d * d.sqrt().sqrt()
+    } else {
+        d
+    };
+    let half = (m as i32 / 2 + 2) as f64;
+    let y = if half < x { half } else { x }; // minsd
+    let y = (y + y) * m as f64;
+    let c5 = (cap / 5) as f64;
+    (if y < c5 { c5 } else { y }) as i64 // maxsd, cvttsd2si
+}
+
+/// `036ade`'s own dense LU (C:3968–4920, asm 0xdd1b2–0xde68c) on the column-major n×n array `a` (column k holds
+/// row `cols[k]`, row i position `rows[i]`): 4-row blocks of left-looking updates (two SSE2 lanes, one peeled
+/// element when a column starts off 16 bytes), the largest |a| along the pivot row (first maximum) with column
+/// swaps, then single rows (eight lanes against the scratch row) for the last < 4. `first` is the blocked pass;
+/// a block pivot below `zero` asks for the unblocked pass (`None`), where a pivot below `zero` sends its row to the
+/// end. Returns the rows left without a pivot.
+#[allow(clippy::too_many_arguments)]
+pub fn dense_lu(
+    a: &mut [f64],
+    n: usize,
+    cols: &mut [usize],
+    rows: &mut [usize],
+    zero: f64,
+    mat16: usize,
+    scr16: usize,
+    first: bool,
+) -> Option<usize> {
+    let col_peel = |c: usize| usize::from(!(mat16 + 8 * c * n).is_multiple_of(16));
+    let scr_peel = usize::from(!scr16.is_multiple_of(16));
+    let mut c0 = 0;
+    if first {
+        let mut j = 0;
+        loop {
+            if n - j < 4 {
+                break;
+            }
+            let mut s = [vec![0.0f64; j], vec![0.0f64; j], vec![0.0f64; j], vec![0.0f64; j]];
+            for k in 0..j {
+                for (r, sr) in s.iter_mut().enumerate() {
+                    sr[k] = a[j + r + k * n];
+                }
+            }
+            // C:3995–4158: the block rows against the earlier U rows (columns 1..j), two lanes
+            for k in 1..j {
+                let col = k * n;
+                let mut v = [s[0][k], s[1][k], s[2][k], s[3][k]];
+                let mut t0 = 0;
+                if k > 1 {
+                    let peel = col_peel(k);
+                    if peel + 2 <= k {
+                        let end = k - ((k - peel) & 1);
+                        for t in 0..peel {
+                            for r in 0..4 {
+                                v[r] -= s[r][t] * a[t + col];
+                            }
+                        }
+                        let (mut l0, mut l1) = (v, [0.0f64; 4]);
+                        let mut t = peel;
+                        while t < end {
+                            for r in 0..4 {
+                                l0[r] -= s[r][t] * a[t + col];
+                                l1[r] -= s[r][t + 1] * a[t + 1 + col];
+                            }
+                            t += 2;
+                        }
+                        for r in 0..4 {
+                            v[r] = l0[r] + l1[r];
+                        }
+                        t0 = end;
+                    }
+                }
+                for t in t0..k {
+                    for r in 0..4 {
+                        v[r] -= s[r][t] * a[t + col];
+                    }
+                }
+                for r in 0..4 {
+                    s[r][k] = v[r];
+                }
+            }
+            for k in 0..j {
+                for (r, sr) in s.iter().enumerate() {
+                    a[j + r + k * n] = sr[k];
+                }
+            }
+            // C:4175–4307: the block rows of columns j.. against the solved left part
+            for c in j..n {
+                let col = c * n;
+                let mut v = [a[j + col], a[j + 1 + col], a[j + 2 + col], a[j + 3 + col]];
+                if j > 0 {
+                    let mut t0 = 0;
+                    if j >= 2 {
+                        let peel = col_peel(c);
+                        if peel + 2 <= j {
+                            let end = j - ((j - peel) & 1);
+                            for t in 0..peel {
+                                for r in 0..4 {
+                                    v[r] -= s[r][t] * a[t + col];
+                                }
+                            }
+                            let (mut l0, mut l1) = (v, [0.0f64; 4]);
+                            let mut t = peel;
+                            while t < end {
+                                for r in 0..4 {
+                                    l0[r] -= s[r][t] * a[t + col];
+                                    l1[r] -= s[r][t + 1] * a[t + 1 + col];
+                                }
+                                t += 2;
+                            }
+                            for r in 0..4 {
+                                v[r] = l0[r] + l1[r];
+                            }
+                            t0 = end;
+                        }
+                    }
+                    for t in t0..j {
+                        for r in 0..4 {
+                            v[r] -= s[r][t] * a[t + col];
+                        }
+                    }
+                }
+                for (r, &x) in v.iter().enumerate() {
+                    a[j + r + col] = x;
+                }
+            }
+            // C:4308–4463: pivots of the block rows
+            for p in j..j + 4 {
+                let d = p + p * n;
+                let (mut best, mut bi) = (a[d].abs(), p);
+                for t in p + 1..n {
+                    let x = a[p + t * n].abs();
+                    if best < x {
+                        best = x;
+                        bi = t;
+                    }
+                }
+                if best < zero {
+                    return None;
+                }
+                if bi != p {
+                    cols.swap(bi, p);
+                    for x in 0..n {
+                        a.swap(p * n + x, bi * n + x);
+                    }
+                }
+                let piv = a[d];
+                let mut l = d + n;
+                match p - j {
+                    0 => {
+                        let (b1, b2, b3) = (a[d + 1], a[d + 2], a[d + 3]);
+                        while l < n * n {
+                            let q = a[l] / piv;
+                            a[l] = q;
+                            a[l + 1] -= b1 * q;
+                            a[l + 2] -= b2 * q;
+                            a[l + 3] -= q * b3;
+                            l += n;
+                        }
+                    }
+                    1 => {
+                        let (b1, b2) = (a[d + 1], a[d + 2]);
+                        while l < n * n {
+                            let q = a[l] / piv;
+                            a[l] = q;
+                            a[l + 1] -= b1 * q;
+                            a[l + 2] -= q * b2;
+                            l += n;
+                        }
+                    }
+                    2 => {
+                        let b1 = a[d + 1];
+                        while l < n * n {
+                            let q = a[l] / piv;
+                            a[l] = q;
+                            a[l + 1] -= q * b1;
+                            l += n;
+                        }
+                    }
+                    _ => {
+                        while l < n * n {
+                            a[l] /= piv;
+                            l += n;
+                        }
+                    }
+                }
+            }
+            j += 4;
+            if j >= n {
+                break;
+            }
+        }
+        c0 = j;
+    }
+    // C:4470–4909: single rows, eight lanes against the scratch copy of the row's left part
+    let dot8 = |a: &[f64], col: usize, s: &[f64], terms: usize, mut v: f64| -> f64 {
+        let mut t0 = 0;
+        if terms >= 8 && terms >= scr_peel + 8 {
+            let end = terms - ((terms - scr_peel) & 7);
+            for t in 0..scr_peel {
+                v -= a[col + t] * s[t];
+            }
+            let mut l = [[v, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]];
+            let mut t = scr_peel;
+            while t < end {
+                for (q, lq) in l.iter_mut().enumerate() {
+                    lq[0] -= a[col + t + 2 * q] * s[t + 2 * q];
+                    lq[1] -= a[col + t + 2 * q + 1] * s[t + 2 * q + 1];
+                }
+                t += 8;
+            }
+            // asm 0xde06e: (A + B) + (C + D) lane-wise, then the two lanes
+            let x0 = (l[0][0] + l[1][0]) + (l[2][0] + l[3][0]);
+            let x1 = (l[0][1] + l[1][1]) + (l[2][1] + l[3][1]);
+            v = x0 + x1;
+            t0 = end;
+        }
+        for t in t0..terms {
+            v -= a[col + t] * s[t];
+        }
+        v
+    };
+    let mut last = n as isize - 1;
+    let mut c = c0;
+    let mut s = vec![0.0f64; n];
+    while (c as isize) <= last {
+        if c > 0 {
+            for t in 0..c {
+                s[t] = a[c + t * n];
+            }
+            for k in 1..c {
+                s[k] = dot8(a, k * n, &s, k, s[k]);
+            }
+            for t in 0..c {
+                a[c + t * n] = s[t];
+            }
+        }
+        for cc in c..n {
+            let v = a[c + cc * n];
+            a[c + cc * n] = if c > 0 { dot8(a, cc * n, &s, c, v) } else { v };
+        }
+        let d = c + c * n;
+        let (mut best, mut bi) = (a[d].abs(), c);
+        for t in c + 1..n {
+            let x = a[c + t * n].abs();
+            if best < x {
+                best = x;
+                bi = t;
+            }
+        }
+        if zero <= best {
+            if bi != c {
+                cols.swap(bi, c);
+                for x in 0..n {
+                    a.swap(c * n + x, bi * n + x);
+                }
+            }
+            let piv = a[d];
+            for t in c + 1..n {
+                a[c + t * n] /= piv;
+            }
+            c += 1;
+        } else {
+            let l = last as usize;
+            rows.swap(l, c);
+            for t in 0..n {
+                a.swap(c + t * n, l + t * n);
+            }
+            last -= 1;
+        }
+    }
+    Some((n as isize - 1 - last) as usize)
 }
 
 /// `76fa2`: the smallest 6k±1 number ≥ p that passes its trial division (a prime for the sizes used here).
@@ -369,6 +673,16 @@ impl Lu {
 
     /// Factor with the `1da0b2` 2×2 block phase state `st` (read and updated as the original does on S).
     pub fn factor_block(spx: &Spx, head: &[usize], tol: f64, st: &mut BlockState) -> Lu {
+        Lu::factor_with(spx, head, tol, st, None)
+    }
+
+    /// `factor_block` with the kernel's dense switch (`036ade` C:1526–1626, C:3394–3470, C:3968–5300) for an element
+    /// pool of `cap` slots (`param_15[2]`, F+0x158), whose first fill fixes the dense array's alignment.
+    pub fn factor_dense(spx: &Spx, head: &[usize], tol: f64, st: &mut BlockState, cap: i64) -> Lu {
+        Lu::factor_with(spx, head, tol, st, Some(cap))
+    }
+
+    fn factor_with(spx: &Spx, head: &[usize], tol: f64, st: &mut BlockState, cap: Option<i64>) -> Lu {
         let (m, n) = (spx.m, spx.n);
         let mut rc = vec![0usize; m];
         for &j in head {
@@ -434,6 +748,8 @@ impl Lu {
             kernel_u: Vec::new(),
             singular: Vec::new(),
             fw: FactorWork::default(),
+            dense_cap: cap,
+            dense: None,
         };
         // 036ade C:296–330: basis entries, a slack counts 1
         lu.fw.nnz_b = head.iter().map(|&j| if j < n { spx.len[j] as usize } else { 1 }).sum();
@@ -1029,8 +1345,10 @@ impl Lu {
     /// |a|/max; multipliers a/v, updates a − l·u and fill −(l·u) dropped under ZERO, fill prepended to its lists.
     /// Empty rows and columns pair up in discovery order as the singular tail (`self.singular`).
     /// The 2×2 block phase runs before it in `block_phase` (only with a `BlockState` that allows it).
-    /// shortcut: no dense switches (036ade L1542/L1762: fill > 0.325·n² with n > 50, or
-    /// 201 ≤ n ≤ 9999 with a costly search) and no 1e99 pivot cap; those cases stay sparse.
+    /// With `dense_cap` the kernel takes the dense switch (C:1526–1626: estimated fill > 0.36·n², 4m < n², n > 50,
+    /// m + n² < 2e9, then the recounted fill > 0.325·n²) into `dense_lu`; without it the M1 path stays sparse.
+    /// shortcut: no `local_70` dense-array Markowitz mode (C:1762: 201 ≤ n ≤ 9999 with a costly search), no MKL
+    /// `dgetrf` (n ≥ 1001 with n² > m), no dense switch with empty columns, no 1e99 pivot cap.
     fn kernel(&mut self, spx: &Spx, ppos: &mut [i64], tol: f64) -> bool {
         let m = self.head.len();
         // element pool: (value, row, position; position usize::MAX = dead). Lists are stored reversed so that
@@ -1097,6 +1415,8 @@ impl Lu {
             lu.steps.push((r, pos, d));
         };
         let mut acc = 0.0f64;
+        // C:296–329 / C:2023: the fill estimate local_128
+        let mut est = self.fw.nnz_b as f64;
         loop {
             if 100000000.0 < acc {
                 self.fw.early.push(acc);
@@ -1151,6 +1471,18 @@ impl Lu {
                 let nact = (m - self.steps.len()) - ecols.len();
                 if nact == 0 {
                     break;
+                }
+                if let Some(cap) = self.dense_cap {
+                    // C:1526–1626 (asm 0xd6695): the gate, then the exact count Σ(count) of the active columns
+                    let (n2, mf) = (nact as f64 * nact as f64, m as f64);
+                    if n2 * 0.36 < est && mf * 4.0 < n2 && nact > 50 && mf + n2 < 2000000000.0 {
+                        est = ccs.iter().filter(|&&c| c >= 0).map(|&c| (c + 1) as f64).sum();
+                        if n2 * 0.325 < est {
+                            assert!(ecols.is_empty(), "036ade dense switch with empty columns (local_f0 > 0): not ported");
+                            self.dense_switch(ppos, nact, cap, (&ev, &ec), &rl, &cb, &rcs);
+                            break;
+                        }
+                    }
                 }
                 let cidx = (1..m).find(|&k| cb.head[k] >= 0).unwrap_or(m);
                 let ridx = (1..m).find(|&k| rb.head[k] >= 0).unwrap_or(m);
@@ -1212,6 +1544,7 @@ impl Lu {
                 }
                 let Some(best) = best else { break };
                 let (r, c, v) = (er[best], ec[best], ev[best]);
+                est += (rcs[r] as f64 - 1.0) * (ccs[c] as f64 - 1.0) - 2.0;
                 cb.rem(c, ccs[c] as usize);
                 rb.rem(r, rcs[r] as usize);
                 ec[best] = DEAD;
@@ -1286,6 +1619,103 @@ impl Lu {
             return false;
         }
         true
+    }
+
+    /// `036ade` dense switch (C:3394–3470, own LU C:3968–4920, conversion C:4921–5300): the active positions in
+    /// column-count bucket order (each circular list from its head through the C's +4 link, Rust `prv`) and the
+    /// active rows ascending, as a column-major array of the live elements; `dense_lu` on it; then step s0 + k
+    /// pivots position `rows[k]` and row `cols[k]` with the L column (row `cols[j]`, a[j·n + k]) and U row
+    /// (position `rows[i]`, a[k·n + i]) above j, i > k ascending, after entries |v| < ZERO become 0 and drop.
+    #[allow(clippy::too_many_arguments)]
+    fn dense_switch(
+        &mut self,
+        ppos: &mut [i64],
+        n: usize,
+        cap: i64,
+        (ev, ec): (&[f64], &[usize]),
+        rl: &[Vec<usize>],
+        cb: &Buckets,
+        rcs: &[i64],
+    ) {
+        const DEAD: usize = usize::MAX;
+        let m = self.head.len();
+        let mut rows = Vec::with_capacity(n);
+        for k in 0..=m {
+            if rows.len() == n {
+                break;
+            }
+            let h = cb.head[k];
+            if h < 0 {
+                continue;
+            }
+            let h = h as usize;
+            let mut x = h;
+            loop {
+                rows.push(x);
+                x = cb.prv[x];
+                if x == h {
+                    break;
+                }
+            }
+        }
+        assert_eq!(rows.len(), n, "dense rows");
+        let mut didx = vec![usize::MAX; m];
+        for (i, &p) in rows.iter().enumerate() {
+            didx[p] = i;
+        }
+        let cols: Vec<usize> = (0..m).filter(|&i| rcs[i] >= 0).collect();
+        assert_eq!(cols.len(), n, "dense columns (active rows with entries)");
+        let mut a = vec![0.0f64; n * n];
+        for (kk, &i) in cols.iter().enumerate() {
+            for &e in &rl[i] {
+                if ec[e] != DEAD {
+                    a[kk * n + didx[ec[e]]] = ev[e];
+                }
+            }
+        }
+        let mat16 = if pool_first_fill(self.fw.nnz_b, m, cap) % 2 != 0 { 8 } else { 0 };
+        let (a_in, cols_in) = (a.clone(), cols.clone());
+        let (mut cols, mut rows2) = (cols, rows.clone());
+        let deficits = match dense_lu(&mut a, n, &mut cols, &mut rows2, ZERO, mat16, 0, true) {
+            Some(d) => d,
+            None => {
+                // C:4331–4336: the unblocked pass from a fresh array (bVar23 = false)
+                a.copy_from_slice(&a_in);
+                cols.copy_from_slice(&cols_in);
+                rows2.copy_from_slice(&rows);
+                dense_lu(&mut a, n, &mut cols, &mut rows2, ZERO, mat16, 0, false).expect("unblocked pass")
+            }
+        };
+        assert_eq!(deficits, 0, "036ade dense LU left rows without a pivot: not ported");
+        self.dense = Some(DenseTrace {
+            step: self.steps.len(),
+            n,
+            mat16,
+            rows: rows.clone(),
+            cols_in,
+            a_in,
+            cols_out: cols.clone(),
+            a_out: a.clone(),
+        });
+        // C:4921–5180: the diagonal moves out, then |v| < ZERO becomes 0 over the array
+        let diag: Vec<f64> = (0..n).map(|k| a[k * n + k]).collect();
+        for k in 0..n {
+            a[k * n + k] = 0.0;
+        }
+        for v in a.iter_mut() {
+            if v.abs() < ZERO {
+                *v = 0.0;
+            }
+        }
+        let s0 = self.steps.len();
+        for k in 0..n {
+            let (r, pos) = (cols[k], rows2[k]);
+            self.prow[r] = (s0 + k) as i64;
+            ppos[pos] = (s0 + k) as i64;
+            self.steps.push((r, pos, diag[k]));
+            self.lcol[s0 + k] = (k + 1..n).filter(|&j| a[j * n + k] != 0.0).map(|j| (cols[j], a[j * n + k])).collect();
+            self.kernel_u[s0 + k] = (k + 1..n).filter(|&i| a[k * n + i] != 0.0).map(|i| (rows2[i], a[k * n + i])).collect();
+        }
     }
 
     /// Positions, Lᵀ rows, LU+0x104 and the Lᵀ levels (036ade L5700-5912).

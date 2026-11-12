@@ -389,6 +389,19 @@ fn run_case(lines: &[&str], out: &mut Vec<String>) {
                     if block.is_some() {
                         block = Some(BlockState { x2c0: b.x2c0 + 1, ..b });
                     }
+                    // M3-04c-21i: the dense switch (step, n, alignment, dense order and array) when the kernel took it
+                    let dj = rf.dense.as_ref().map_or(String::new(), |d| {
+                        let hx: Vec<String> = d.a_in.iter().map(|x| format!("\"{}\"", bits(*x))).collect();
+                        format!(
+                            ",\"dense\":{{\"steps\":{},\"n\":{},\"mat_mod16\":{},\"rows\":{},\"cols\":{},\"a\":[{}]}}",
+                            d.step,
+                            d.n,
+                            d.mat16,
+                            il(&d.rows.iter().map(|&x| x as i32).collect::<Vec<_>>()),
+                            il(&d.cols_in.iter().map(|&x| x as i32).collect::<Vec<_>>()),
+                            hx.join(",")
+                        )
+                    });
                     let mut s = rf.state;
                     let r = s.renumber(&header, leave, &vstat, &rf.o, &rf.n);
                     let json = format!(
@@ -403,7 +416,8 @@ fn run_case(lines: &[&str], out: &mut Vec<String>) {
                         s.spike.count,
                         snap(&s),
                         bj
-                    );
+                    ) + "";
+                    let json = if dj.is_empty() { json } else { format!("{}{}}}", &json[..json.len() - 1], dj) };
                     st = Some(s);
                     Ok(json)
                 }
@@ -540,6 +554,12 @@ fn refactor_chain_trace() {
 #[test]
 fn block_chain_trace() {
     replay("m3_push_block_rust");
+}
+
+/// M3-04c-21i: the push refactors of the dense-switch models (refactor boundary only: no FTRAN/BTRAN/FT between).
+#[test]
+fn dense_chain_trace() {
+    replay("m3_push_dense_rust");
 }
 
 fn replay(dir: &str) {

@@ -1,8 +1,8 @@
 // M3-04c-21i: 21h 블록 상태 agent(push_block_agent.js)의 사본. 같은 훅·직렬화를 그대로 두고 내보내는 사건만 push 재분해
 // 경계(push:enter/leave, factor:enter, 재분해 lu:enter/lu:leave, lu:refactor, lu:block)로 거른다(send → keep). 그리고 036ade
-// 조밀 전환 경로에 함수형 probe 3개를 더한다(읽기 전용): 0xd88bf 조밀 LU 진입(남은 n·단계 수), 0xdd1b2 자체 조밀 LU 진입(n·행렬·
+// 조밀 전환 경로에 함수형 probe를 더한다(읽기 전용): 0xd88bf 조밀 LU 진입(남은 n·단계 수), 0xdd1b2 자체 조밀 LU 진입(n·행렬·
 // 열/행 목록·ZERO·첫 시도 플래그·정렬), 0xde68c LU 뒤 변환 진입(행렬·목록). probe 지점은 asm에서 명령 경계·창 안 착지점 0을 확인했다.
-const KEEP = new Set(['push:enter','push:leave','factor:enter','lu:enter','lu:leave','lu:refactor','lu:block','dense:enter','dense:lu','dense:done','dense:fill']);
+const KEEP = new Set(['push:enter','push:leave','factor:enter','lu:enter','lu:leave','lu:refactor','lu:block','dense:enter','dense:lu','dense:done','dense:fill','dense:mode70','dense:dgetrf']);
 let refactorLu = null;
 function keep(p) {
   if (!KEEP.has(p.event)) return;
@@ -478,6 +478,9 @@ Process.attachModuleObserver({onAdded(mod) {
     keep({event: fn.name, call: denseCtx.call, step: denseCtx.step, lu: denseCtx.lu, push: denseCtx.push, ...fn(c, sp)});
   });}
   dprobe(0xd88bf, function denseEnter(c, sp) {return {event: 'dense:enter', n: sp.add(0x100).readS32(), steps: sp.add(0x160).readS32()};});
+  // local_70 = 1(조밀 배열 Markowitz 모드, C:2569)와 MKL dgetrf 진입: 범위 밖 경로의 표지(값 없음).
+  dprobe(0xd85b4, function denseMode70() {return {event: 'dense:mode70'};});
+  Interceptor.attach(b.add(0x9fef00), {onEnter(a) {if (denseCtx !== null) keep({event: 'dense:dgetrf', call: denseCtx.call, step: denseCtx.step, lu: denseCtx.lu, push: denseCtx.push, n: a[0].readS32()});}});
   dprobe(0xd8a7d, function denseFill(c, sp) {return {event: 'dense:fill', n: c.rdx.toInt32(), mode70: sp.add(0x2c8).readU8()};});
   dprobe(0xdd1b2, function denseLu(c, sp) {
     const n = c.rcx.toInt32(), mat = c.rbp;

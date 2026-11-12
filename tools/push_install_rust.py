@@ -160,10 +160,10 @@ def compare_unit(text=None, wants=None, verbose=True):
     return errs, nl, nf
 
 
-# 결과 확인 뒤 분류한 연결 실패(사전 명시 아님, 통과 수에 넣지 않는다). 설치 진입 전 루프의 마지막 round 재분해가
-# 원본과 다른 피벗 순서를 낸다(탐색 21h 캡처로 24 루프 911줄 중 906줄 일치, 줄 907 fcall에서 header·L/U 비영 수 차이).
-# 같은 첫 차이가 아니면 실패로 본다. 후속: M3-04c-21i. 계약 §6.
-KNOWN = {('netlib/grow7', 1): "('netlib/grow7', 1) 줄15 inst.hdr[89]: 원본 234 Rust 182 (길이 140/140)"}
+# 결과 확인 뒤 분류한 연결 실패(사전 명시 아님, 통과 수에 넣지 않는다). 04f-1의 grow7(마지막 round 재분해의 036ade
+# 조밀 전환 미이식, 첫 차이 "줄15 inst.hdr[89]: 원본 234 Rust 182")은 M3-04c-21i에서 조밀 전환을 이식해 통과로 바뀌어
+# 비웠다(docs/m3/primal_push_dense_lu.md §6). 비어 있으면 모든 차이가 실패다.
+KNOWN = {}
 
 
 def compare(text=None, wants=None, verbose=True):
