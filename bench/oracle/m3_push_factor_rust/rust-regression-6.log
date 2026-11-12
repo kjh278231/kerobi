@@ -1,0 +1,9 @@
+{
+ "cases": 69,
+ "fields": 1311,
+ "natural": 51,
+ "synthetic": 18,
+ "success": 56,
+ "exhausted": 13,
+ "rule": "ordered integers / f64 LE hex exact incl signed zero"
+}

@@ -200,12 +200,11 @@ def mutate_rust(path, expected):
             SOURCE.write_text(original.replace(old,new,1))
             proc = subprocess.run(['cargo','test','-p','rsolver-lp','--test','push_factor'], cwd=ROOT,
                                   text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            TRACE_EXISTS = TRACE.exists()
             if proc.returncode:
                 # Exhausting replies can be an actual control error, but require a produced trace instead.
                 results.append(dict(name=name, result='test-failed', log=proc.stdout))
                 continue
-            oracle.require(TRACE_EXISTS, name+': trace missing')
+            oracle.require(TRACE.exists(), name+': trace missing')
             try:
                 compare(TRACE.read_text(), expected)
             except (oracle.Fail, ValueError, TypeError) as exc:
@@ -226,7 +225,10 @@ def mutate_rust(path, expected):
 def manifest():
     files = ['crates/lp/src/crossover_factor.rs','crates/lp/src/lib.rs','crates/lp/tests/push_factor.rs',
              'tools/push_factor_rust.py','bench/oracle/m3_push_factor/manifest.json',
-             'bench/oracle/m3_push_factor_rust/input.txt','bench/oracle/m3_push_factor_rust/trace.txt']
+             'bench/oracle/m3_push_factor_rust/input.txt','bench/oracle/m3_push_factor_rust/trace.txt',
+             'bench/oracle/m3_push_factor_rust/source.asm',
+             'bench/oracle/m3_push_factor_rust/self-test.json','bench/oracle/m3_push_factor_rust/mutations.json',
+             'bench/oracle/m3_push_factor_rust/oracle-regression.json','bench/oracle/m3_push_factor_rust/rust-regression.json']
     return dict(task='M3-04c-16', baseline='5358cf7', binary_sha256=oracle.BINARY_SHA,
                 oracle_manifest_sha256=sha(ROOT/oracle.D/'manifest.json'),
                 files={p:sha(ROOT/p) for p in files})

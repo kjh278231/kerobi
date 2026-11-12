@@ -1,0 +1,222 @@
+[
+  {
+    "name": "empty-targets",
+    "first_difference": "trace case count: 기준=89, 실제=0"
+  },
+  {
+    "name": "missing-case",
+    "first_difference": "trace case count: 기준=89, 실제=88"
+  },
+  {
+    "name": "case-order",
+    "first_difference": "trace case order: 기준='arms/1/1/select', 실제='arms/1/2/select'"
+  },
+  {
+    "name": "synthetic/update/request",
+    "first_difference": "synthetic/update.request: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/update/call",
+    "first_difference": "synthetic/update.call: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/update/preserved",
+    "first_difference": "synthetic/update.preserved: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/update/duplicate",
+    "first_difference": "synthetic/update.duplicate request"
+  },
+  {
+    "name": "synthetic/repeat-two/exit",
+    "first_difference": "synthetic/repeat-two.exit: 기준=200, 실제=201"
+  },
+  {
+    "name": "synthetic/repeat-two/request",
+    "first_difference": "synthetic/repeat-two.request: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/repeat-two/status",
+    "first_difference": "synthetic/repeat-two.status: 기준=1, 실제=2"
+  },
+  {
+    "name": "synthetic/repeat-two/numeric",
+    "first_difference": "synthetic/repeat-two.numeric: 기준=3, 실제=4"
+  },
+  {
+    "name": "synthetic/repeat-two/failure",
+    "first_difference": "synthetic/repeat-two.failure: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/repeat-two/retry",
+    "first_difference": "synthetic/repeat-two.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/repeat-two/period",
+    "first_difference": "synthetic/repeat-two.period: 기준=50, 실제=51"
+  },
+  {
+    "name": "synthetic/repeat-two/k",
+    "first_difference": "synthetic/repeat-two.k: 기준=1, 실제=2"
+  },
+  {
+    "name": "synthetic/repeat-two/alpha_restored",
+    "first_difference": "synthetic/repeat-two.alpha_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/repeat-two/spike_restored",
+    "first_difference": "synthetic/repeat-two.spike_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/repeat-two/contents_preserved",
+    "first_difference": "synthetic/repeat-two.contents_preserved: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/repeat-two/calls",
+    "first_difference": "synthetic/repeat-two.calls.length: 기준=3, 실제=0"
+  },
+  {
+    "name": "synthetic/repeat-two/quality_restored",
+    "first_difference": "synthetic/repeat-two.quality_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/repeat-two/factor_consumed",
+    "first_difference": "synthetic/repeat-two.factor_consumed: 기준=3, 실제=4"
+  },
+  {
+    "name": "synthetic/repeat-two/quality_consumed",
+    "first_difference": "synthetic/repeat-two.quality_consumed: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/repeat-two/duplicate",
+    "first_difference": "synthetic/repeat-two.duplicate request"
+  },
+  {
+    "name": "synthetic/quality-request6/exit",
+    "first_difference": "synthetic/quality-request6.exit: 기준=201, 실제=202"
+  },
+  {
+    "name": "synthetic/quality-request6/request",
+    "first_difference": "synthetic/quality-request6.request: 기준=6, 실제=7"
+  },
+  {
+    "name": "synthetic/quality-request6/status",
+    "first_difference": "synthetic/quality-request6.status: 기준=1, 실제=2"
+  },
+  {
+    "name": "synthetic/quality-request6/numeric",
+    "first_difference": "synthetic/quality-request6.numeric: 기준=3, 실제=4"
+  },
+  {
+    "name": "synthetic/quality-request6/failure",
+    "first_difference": "synthetic/quality-request6.failure: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/quality-request6/retry",
+    "first_difference": "synthetic/quality-request6.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/quality-request6/period",
+    "first_difference": "synthetic/quality-request6.period: 기준=20, 실제=21"
+  },
+  {
+    "name": "synthetic/quality-request6/k",
+    "first_difference": "synthetic/quality-request6.k: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/quality-request6/alpha_restored",
+    "first_difference": "synthetic/quality-request6.alpha_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/quality-request6/spike_restored",
+    "first_difference": "synthetic/quality-request6.spike_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/quality-request6/contents_preserved",
+    "first_difference": "synthetic/quality-request6.contents_preserved: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/quality-request6/calls",
+    "first_difference": "synthetic/quality-request6.calls.length: 기준=3, 실제=0"
+  },
+  {
+    "name": "synthetic/quality-request6/quality_restored",
+    "first_difference": "synthetic/quality-request6.quality_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/quality-request6/factor_consumed",
+    "first_difference": "synthetic/quality-request6.factor_consumed: 기준=2, 실제=3"
+  },
+  {
+    "name": "synthetic/quality-request6/quality_consumed",
+    "first_difference": "synthetic/quality-request6.quality_consumed: 기준=1, 실제=2"
+  },
+  {
+    "name": "synthetic/quality-request6/duplicate",
+    "first_difference": "synthetic/quality-request6.duplicate request"
+  },
+  {
+    "name": "synthetic/return12/exit",
+    "first_difference": "synthetic/return12.exit: 기준=202, 실제=203"
+  },
+  {
+    "name": "synthetic/return12/request",
+    "first_difference": "synthetic/return12.request: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/return12/status",
+    "first_difference": "synthetic/return12.status: 기준=1, 실제=2"
+  },
+  {
+    "name": "synthetic/return12/numeric",
+    "first_difference": "synthetic/return12.numeric: 기준=3, 실제=4"
+  },
+  {
+    "name": "synthetic/return12/failure",
+    "first_difference": "synthetic/return12.failure: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/return12/retry",
+    "first_difference": "synthetic/return12.retry: 기준=1, 실제=2"
+  },
+  {
+    "name": "synthetic/return12/period",
+    "first_difference": "synthetic/return12.period: 기준=50, 실제=51"
+  },
+  {
+    "name": "synthetic/return12/k",
+    "first_difference": "synthetic/return12.k: 기준=1, 실제=2"
+  },
+  {
+    "name": "synthetic/return12/alpha_restored",
+    "first_difference": "synthetic/return12.alpha_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/return12/spike_restored",
+    "first_difference": "synthetic/return12.spike_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/return12/contents_preserved",
+    "first_difference": "synthetic/return12.contents_preserved: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/return12/calls",
+    "first_difference": "synthetic/return12.calls.length: 기준=1, 실제=0"
+  },
+  {
+    "name": "synthetic/return12/quality_restored",
+    "first_difference": "synthetic/return12.quality_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/return12/factor_consumed",
+    "first_difference": "synthetic/return12.factor_consumed: 기준=1, 실제=2"
+  },
+  {
+    "name": "synthetic/return12/quality_consumed",
+    "first_difference": "synthetic/return12.quality_consumed: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/return12/duplicate",
+    "first_difference": "synthetic/return12.duplicate request"
+  }
+]

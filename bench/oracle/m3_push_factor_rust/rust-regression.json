@@ -1,0 +1,67 @@
+[
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--release",
+      "--workspace"
+    ],
+    "returncode": 0,
+    "log": "rust-regression-1.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "clippy",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "returncode": 0,
+    "log": "rust-regression-2.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "rsolver-lp",
+      "--test",
+      "push_chain"
+    ],
+    "returncode": 0,
+    "log": "rust-regression-3.log"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_step_chain_rust.py",
+      "--compare"
+    ],
+    "returncode": 0,
+    "log": "rust-regression-4.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "rsolver-lp",
+      "--test",
+      "push_supplier"
+    ],
+    "returncode": 0,
+    "log": "rust-regression-5.log"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_supplier_rust.py",
+      "--compare"
+    ],
+    "returncode": 0,
+    "log": "rust-regression-6.log"
+  }
+]

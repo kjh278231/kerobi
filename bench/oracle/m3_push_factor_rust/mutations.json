@@ -1,0 +1,152 @@
+[
+  {
+    "name": "limit-ge",
+    "result": "rejected",
+    "first_difference": "synthetic/limit-11.request: 기준=0, 실제=2"
+  },
+  {
+    "name": "overwrite-request",
+    "result": "rejected",
+    "first_difference": "synthetic/preserve-6.request: 기준=6, 실제=2"
+  },
+  {
+    "name": "limit-request10",
+    "result": "rejected",
+    "first_difference": "synthetic/limit-10.request: 기준=2, 실제=10"
+  },
+  {
+    "name": "cost-ge-zero",
+    "result": "rejected",
+    "first_difference": "arms/1/1/select.request: 기준=0, 실제=10"
+  },
+  {
+    "name": "cost-coefficient4",
+    "result": "rejected",
+    "first_difference": "synthetic/min-q-term-19.request: 기준=0, 실제=10"
+  },
+  {
+    "name": "sum-convert",
+    "result": "rejected",
+    "first_difference": "synthetic/sum-convert.request: 기준=0, 실제=10"
+  },
+  {
+    "name": "numeric-q-equal",
+    "result": "rejected",
+    "first_difference": "synthetic/q-4-numeric-1.request: 기준=0, 실제=10"
+  },
+  {
+    "name": "ignore-numeric",
+    "result": "rejected",
+    "first_difference": "synthetic/q-5-numeric-1.request: 기준=10, 실제=0"
+  },
+  {
+    "name": "always-call-support",
+    "result": "rejected",
+    "first_difference": "arms/1/1/select.call: 기준=False, 실제=True"
+  },
+  {
+    "name": "negative-support-call",
+    "result": "rejected",
+    "first_difference": "synthetic/skip--1.call: 기준=False, 실제=True"
+  },
+  {
+    "name": "no-install-alpha",
+    "result": "rejected",
+    "first_difference": "interior/1/2/wrapper.calls[0].alpha_current: 기준=True, 실제=False"
+  },
+  {
+    "name": "no-restore-alpha",
+    "result": "rejected",
+    "first_difference": "interior/1/2/wrapper.alpha_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "swap-spike",
+    "result": "rejected",
+    "first_difference": "interior/1/2/wrapper.spike_restored: 기준=True, 실제=False"
+  },
+  {
+    "name": "no-repeat",
+    "result": "rejected",
+    "first_difference": "synthetic/repeat-one.calls.length: 기준=2, 실제=1"
+  },
+  {
+    "name": "return12-error",
+    "result": "rejected",
+    "first_difference": "synthetic/return12.exit: 기준=202, 실제=12"
+  },
+  {
+    "name": "status-before-error",
+    "result": "rejected",
+    "first_difference": "synthetic/error-precedes-status.exit: 기준=7, 실제=202"
+  },
+  {
+    "name": "status-threshold",
+    "result": "rejected",
+    "first_difference": "synthetic/status--999.exit: 기준=200, 실제=202"
+  },
+  {
+    "name": "no-status-reset",
+    "result": "rejected",
+    "first_difference": "synthetic/status--1000.status: 기준=1, 실제=-1000"
+  },
+  {
+    "name": "attempt-ignored",
+    "result": "rejected",
+    "first_difference": "synthetic/failure-attempt-1.exit: 기준=200, 실제=202"
+  },
+  {
+    "name": "ignore-failure",
+    "result": "rejected",
+    "first_difference": "synthetic/failure-attempt-0.exit: 기준=202, 실제=200"
+  },
+  {
+    "name": "numeric-gt",
+    "result": "rejected",
+    "first_difference": "synthetic/numeric-crossed-by-backend.exit: 기준=202, 실제=200"
+  },
+  {
+    "name": "skip-recompute",
+    "result": "rejected",
+    "first_difference": "interior/1/5/wrapper.exit: 기준=201, 실제=200"
+  },
+  {
+    "name": "quality-gt",
+    "result": "rejected",
+    "first_difference": "synthetic/quality-increment-5.period: 기준=55, 실제=50"
+  },
+  {
+    "name": "wrong-enter",
+    "result": "rejected",
+    "first_difference": "synthetic/quality-increment-5.calls[1].enter: 기준=7, 실제=8"
+  },
+  {
+    "name": "quality-status-ignored",
+    "result": "rejected",
+    "first_difference": "synthetic/quality-status12.exit: 기준=202, 실제=200"
+  },
+  {
+    "name": "quality-request-clear",
+    "result": "rejected",
+    "first_difference": "synthetic/quality-request6.exit: 기준=201, 실제=200"
+  },
+  {
+    "name": "quality-period50",
+    "result": "rejected",
+    "first_difference": "synthetic/quality-request6.period: 기준=20, 실제=50"
+  },
+  {
+    "name": "quality-increment",
+    "result": "rejected",
+    "first_difference": "synthetic/quality-increment-5.period: 기준=55, 실제=56"
+  },
+  {
+    "name": "clamp-zero-updates",
+    "result": "rejected",
+    "first_difference": "synthetic/zero-updates-period100.period: 기준=100, 실제=50"
+  },
+  {
+    "name": "no-period-clamp",
+    "result": "rejected",
+    "first_difference": "synthetic/nonzero-clamp100.period: 기준=50, 실제=100"
+  }
+]
