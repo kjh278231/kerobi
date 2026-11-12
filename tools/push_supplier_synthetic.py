@@ -36,8 +36,8 @@ def specs():
     base = dict(candidates=[0], position=0, deferred=0, support=0, failures=[0]*12,
                 support_marks=None, count_sum=bits(7.25), successes=4, batch=[0, 0, 0])
     result = []
-    def add(name, raw=sparse, **kw):
-        result.append(dict(name=name, before=dict(base, **kw), raw=raw, drop=bits(tol)))
+    def add(name, raw=sparse, m=9, **kw):
+        result.append(dict(name=name, m=m, before=dict(base, **kw), raw=raw, drop=bits(tol)))
     add('structural-sparse')
     add('slack-sparse', candidates=[6])
     add('negative-support', support=-1)

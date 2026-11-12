@@ -1,0 +1,128 @@
+{
+ "rejected": [
+  {
+   "name": "binary-zero",
+   "first_difference": "arms-1.binary_sha256: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+   "name": "model-zero",
+   "first_difference": "arms-1.model_sha256: 기준='b05832f67ae340637551cda5cd191013c3f65f5cef190a0cc5a8c058070d9683', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+   "name": "tool-zero",
+   "first_difference": "arms-1.tool_sha256: 기준='0a93dfbe43563c361800b2c72bbde8609f8778710193dbe14363d0bc01a60fb7', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+   "name": "agent-zero",
+   "first_difference": "arms-1.agent_sha256: 기준='9369c0c1b55a3efab8877e4c6b68cf9bd7fdd28422c34ff83f2f2afbc3c9b329', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+   "name": "events-empty",
+   "first_difference": "arms: 목표 사건0회"
+  },
+  {
+   "name": "target-zero",
+   "first_difference": "arms: 목표 사건0회"
+  },
+  {
+   "name": "run-difference",
+   "first_difference": "arms-2.repeat.events: 길이 기준=237, 실제=236"
+  },
+  {
+   "name": "projection-difference",
+   "first_difference": "arms-1.noninterference.events[186].ret: 기준=0, 실제=9"
+  },
+  {
+   "name": "null-context",
+   "first_difference": "arms-1.supply[0]: 필수 문맥 누락"
+  },
+  {
+   "name": "null-alpha",
+   "first_difference": "arms-1.supply[0].alpha: 필수 벡터 누락"
+  },
+  {
+   "name": "candidate-ret",
+   "first_difference": "arms-1.supply[0].ret: 기준=21, 실제=3"
+  },
+  {
+   "name": "cursor",
+   "first_difference": "arms-1.supply[0].after.position: 기준=1, 실제=0"
+  },
+  {
+   "name": "deferred",
+   "first_difference": "arms-1.supply[0].after.deferred: 기준=0, 실제=1"
+  },
+  {
+   "name": "failures",
+   "first_difference": "arms-1.supply[0].after.failures[0]: 기준=0, 실제=7"
+  },
+  {
+   "name": "marks",
+   "first_difference": "arms-1.supply[0].after.support_marks[0]: 기준=0, 실제=1"
+  },
+  {
+   "name": "success-counter",
+   "first_difference": "arms-1.supply[0].after.successes: 기준=1, 실제=0"
+  },
+  {
+   "name": "count-sum",
+   "first_difference": "arms-1.supply[0].after.count_sum: 기준='000000000000f03f', 실제='0000000000c05840'"
+  },
+  {
+   "name": "output-alias",
+   "first_difference": "arms-1.supply[0].output_is_s210: 기준=True, 실제=False"
+  },
+  {
+   "name": "ftran-spike-alias",
+   "first_difference": "arms-1.supply[0].FTRAN aliases.spike_null: 기준=True, 실제=False"
+  },
+  {
+   "name": "ftran-column",
+   "first_difference": "arms-1.supply[0].FTRAN original column.values[0]: 기준='000000000000f03f', 실제='0000000000001040'"
+  },
+  {
+   "name": "raw-null",
+   "first_difference": "arms-1.supply[0].raw: 필수 벡터 누락"
+  },
+  {
+   "name": "raw-value",
+   "first_difference": "arms-1.supply[0].alpha compression/order.values[0]: 기준='0000000000001040', 실제='000000000000f03f'"
+  },
+  {
+   "name": "dense-keeps-equal-tol",
+   "first_difference": "synthetic-1.dense-boundaries.alpha compression/order.indices[0]: 기준=3, 실제=0"
+  },
+  {
+   "name": "dense-order",
+   "first_difference": "synthetic-1.dense-boundaries.alpha compression/order.indices[0]: 기준=3, 실제=8"
+  },
+  {
+   "name": "dense-count-stat",
+   "first_difference": "synthetic-1.dense-boundaries.after.count_sum: 기준='0000000000001940', 실제='0000000000802840'"
+  },
+  {
+   "name": "sparse-order",
+   "first_difference": "synthetic-1.structural-sparse.alpha compression/order.indices[0]: 기준=8, 실제=3"
+  },
+  {
+   "name": "negative-support-not-normalized",
+   "first_difference": "synthetic-1.negative-support.after.support: 기준=0, 실제=-1"
+  },
+  {
+   "name": "skip-failure-increments",
+   "first_difference": "synthetic-1.failure-three.after.failures[0]: 기준=3, 실제=4"
+  },
+  {
+   "name": "deferred-prefix-order",
+   "first_difference": "synthetic-1.prefix-preserved.after.candidates[0]: 기준=2, 실제=0"
+  },
+  {
+   "name": "exhausted-null-null",
+   "first_difference": "synthetic-1.all-failure: 필수 문맥 누락"
+  },
+  {
+   "name": "synthetic-only",
+   "first_difference": "arms: 자연 실행 필수"
+  }
+ ]
+}
