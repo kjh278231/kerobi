@@ -54,8 +54,39 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: WSL2 x86-64 Linux 6.6.87.2, Python 3.10, Rust stable. 계약 `a88c0f1`. 원본 실행 **0회**(21e 정식 `*-1` 재사용, `push_lu_check --controls --acceptance`로 3회 동일·해시 재확인). 증거 `bench/oracle/m3_push_refactor_rust/`(입력 `input.txt` 213연산, `comparison.txt`, `self-test.txt`, `rust-mutations.json/.txt`, manifest, `regression/`).
+- 구현: `crates/lp/src/crossover_refactor.rs`(M1 `Lu::factor_tol` → 원본 배열 adapter), `lu.rs`에 읽기 전용 `parts()`/`LuParts`와 저장 필드 `s1`(LU+0xd8)·`s3`(LU+0x100) 추가(M1 계산·분기 불변, workspace 회귀 통과), 하네스 `push_lu.rs`의 `M`/`G` 연산과 `refactor_chain_trace`, `tools/push_lu_rust.py --generate`.
+- **연쇄 재생**(`--generate --compare` 종료0): 213연산(모델 6·재분해 19·FTRAN 120·BTRAN 32·FT 36) 중 **211 통과**, 비교 필드 1,234,852. 재분해 생성 **18/19 비트 일치**(삼각 9·커널 9, L/Lᵀ 레벨 2): 순열 F+0x20/0x28/0x30/0x38(`036ade` 반환)·대각·L 열/행·레벨·lst·U 열/행과 풀 위치·스칼라 전부(xd8·xdc·xe4·xe8·x100·x104·x108·x110·x128·x140·x160·x168·x1e0 등)·접두·F1a0·재번호. 그 뒤 FT·FTRAN·BTRAN이 생성 상태 위에서 21f와 같은 분기 수로 원본과 일치한다. push 첫 factor 사건 뒤 원본 factor 주입은 0회다.
+- **예상 실패 2연산**(계약 §1 사전 명시): capri#813 재분해의 `G.perm.x20[140]`(원본 218, Rust 149: 원본 140·141단계는 2×2 블록 {217,218}×{152,206})과 그 뒤 capri#821 FTRAN(`L.beg[142]` 290≠291). 비교기는 예상 실패가 정확히 그 재분해에서 시작하는지까지 판정한다.
+
+| 사례 | 재분해(생성 일치) | 그 뒤 연산 | 비고 |
+|---|---|---|---|
+| arms | 4/4 | FTRAN 28·BTRAN 17 | 삼각 |
+| retry | 3/3 | FTRAN 10·BTRAN 4 | 삼각 |
+| interior | 4/4 | FTRAN 12·BTRAN 1·FT 5 | 커널 2회(5·9회째) |
+| adlittle | 3/3 | FTRAN 24·BTRAN 2·FT 11 | 커널 3회, t=s3≠M1 prefix(아래) |
+| scsd1 | 2/2 | FTRAN 13·BTRAN 1 | 커널 2회 |
+| capri | 2/3 | FTRAN 32/33·BTRAN 7·FT 20 | 커널·L/Lᵀ 레벨, 23회째 2×2 블록 실패 |
+
+- **trace 변조**(`--generate --self-test` 종료0): 42종 모두 판정 실패로 거부(연산 누락·머리 해시·오류 주입, 재분해의 `036ade` 순열 x20/o·대각·L 열 안 순서·L 값·L 시작·L/Lᵀ 레벨·L lst 마지막 칸·Lᵀ 행 안 순서·Lᵀ lst·U 열 행 순서·U 열 경계·U 행 순서·U 행 시작·스칼라 18종·접두 목록/자리·F1a0·header·이탈 위치·vstat·x40 별칭, 이후 FTRAN 출력·FT 대각·BTRAN cache). 첫 시도에서 "L 열 순서 뒤집기"가 통과했다(interior 5회째 L 행 [7,6,7]이 회문). 열 안 서로 다른 두 원소를 맞바꾸는 변조로 고쳐 거부를 확인했다.
+- **Rust 소스 변이**(`crossover_refactor.rs`, 임시 Cargo 사본, 23종): **모두 거부**. 계약 필수 `refactor-skipped`(직전 factor 유지)는 arms#423 x20에서 거부. Markowitz 0.1 → 기본 2⁻⁷은 capri#2 피벗 215에서 거부(push의 S+0x390 = 0.1이 피벗을 가른다). 그 밖에 L/Lᵀ/U 행·열 순서 뒤집기, L 행을 단계 대신 행 번호로, 풀 채움 U만, 열 기준, t = M1 prefix, 꼬리 경계 엄격, xe8 조건 반전, F+0xf8 경계, x108/x110 교환, 빈 범위 1.0, x1e0 대각 제외, xd8/xe4 출처, lst 마지막 칸 누적, Lᵀ lst 길이, F1a0 0, spike 0 불변식 제거, o 대신 행 순열.
+- **회귀**([요약](../../bench/oracle/m3_push_refactor_rust/regression/summary.txt)): 17명령 모두 종료0: 21e `push_lu_check --controls --acceptance`, 21f `--write`(입력 파일 불변 `git diff --exit-code`)·`--compare`·`--self-test`(45종), 생성 `--write`·`--compare`·`--self-test`, `cargo test --test push_lu`(2), 21b `push_ftran` test·compare, 21d `push_btran` test·compare, py_compile, clippy, `cargo test --release --workspace` **139통과·0실패·ignored12**(새 테스트 1), `git diff --check`. 하네스 변이 함수를 일반화했으므로 21f 소스 변이도 다시 돌렸다(`regression/lu-mutations-21f.txt`, 아래 §6 끝).
+- 실행하지 않은 검사: M1 `lu.rs`는 읽기 접근자와 저장 필드만 더해 solver 수치 경로가 바뀌지 않으므로 확장 설치·pytest·Netlib·P3는 제외했다. 원본 캡처 0회. 독립 검토자는 쓰지 않았다(사용자 지시로 이 세션이 작업자·마스터를 겸함).
+- **계약 변경**(결과 확인 중, 이유 기록):
+  1. 할당 4필드(F+0x158·pool_mod16·F+0x188·F+0x1f8)의 출처: 계약은 첫 재분해 `lu:enter` factor였으나 21e가 push 첫 `05b257` 진입 factor를 캡처하지 않았다(미초기화 첫 호출, 21e §6). `036ade`는 풀 부족 재시도(C:2592–2620: 용량 1.4배·−1 반환, `05b257`이 다시 호출)에서만 F+0x158을 바꾸므로, 그 재분해의 `036ade` 반환이 1회임을 비교기가 확인한 뒤 첫 재분해 `lu:leave`에서 이 4필드만 읽는다. 다른 factor 필드는 읽지 않는다.
+  2. Lᵀ lst(F+0x138): 원본 배열은 m+1칸이고 `lst[levels+1]`은 마지막 레벨의 개수다(아래). 캡처는 L은 levels+2칸, Lᵀ는 levels+1칸을 담으므로 backend는 Lᵀ lst를 levels+1칸으로 둔다(`221173`은 그 이상을 읽지 않는다).
+  3. F+0x1a8 bucket: 재분해 직후 원본에는 `036ade` scratch 잔류값(1.0의 상위 32비트 1072693248 등)이 남는다. 읽는 쪽(FTRAN A2·BTRAN 레벨 경로)이 쓰기 전에 0으로 둔다. Rust는 이 칸을 미지값(`BUCKET_UNKNOWN`)으로 두고 비교에서 빼며 센다(재분해 비교 34칸). 미지값이 읽히면 출력이 달라져 드러난다. 이후 FTRAN/BTRAN 스냅숏에서는 미지 칸이 남지 않았다.
+  4. push 첫 재분해의 spike 값 버퍼는 21f 주입과 같은 C 불변식(목록 밖 칸 0)으로 둔다. 처음에 미지값으로 두었더니 adlittle#191 FT가 그 칸을 읽어 멈췄다. 두 모드의 풀·스냅숏 전체가 같음을 진단 덤프로 확인한 뒤 원인을 찾았다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **구현 완료(계약 범위, 예상 실패 1재분해 포함)**. 동등성: push 자연 7사례 재분해 19회 중 2×2 블록 단계가 피벗하지 않는 **18회**에서 `036ade` 분해와 분해 뒤 factor 설정을 Rust가 원본 배열 표현으로 생성해 factor 전체가 **비트 일치(통과)**. 원본 factor 주입 없이 그 위의 FT 36·FTRAN 119·BTRAN 32가 일치한다. capri 23회째 재분해(2×2 블록)와 그 뒤 FTRAN 1회는 **실패**(사전 명시, 통과로 세지 않음).
+- 새로 확정한 원본 사실: F+0x100(t)는 `1da0b2`의 열 singleton 단계 3 끝(s3, C:1514–1532)이다. M1 `Lu::finish`는 t를 "앞쪽 빈 U 열 수"로 세서 단계 4 열이 비면 s3보다 커진다(adlittle 1·2회째 재분해에서 36 대 35). 이 차이는 M1 simplex의 FT 갱신·FTRAN 경로에도 영향을 줄 수 있으나 M1 동작은 바꾸지 않았다(아래 후속). `lst[levels+1]`은 마지막 레벨 개수, x1e0 = m + nnz(L), x160 = 2·(nnz(L)+nnz(U)), 재분해 직후 F+0x1a8은 scratch 잔류값.
+- 미검증: 2×2 블록 단계(capri 23), 조밀 전환 dgetrf, 특이 기저, 풀 부족 재시도, 1e99 피벗 상한(자연 0회), work. M1 커널의 shortcut이 다른 모델에서 드러날 가능성.
+- 범위 밖: 루프 설치22·품질15a·batch23·x87·P3.
+- 후속:
+  - **M3-04c-21h**(M1 조율): `1da0b2` 2×2 블록 단계(C:686–1510, S+0x4e0/0x4e4 상태와 갱신 규칙 C:1498–1510)를 M1 `Lu`에 이식하고 capri 23 재분해를 닫는다. M1 simplex 경로에도 영향이 있어 M1 점유와 회귀(pathcmp·Netlib)가 필요하다. 같은 작업에서 M1 t(prefix) = s3 정정 여부도 M1과 정한다.
+  - 다음 M3 후보: **M3-04c-22**(초기화된 직렬 push 루프 연결) 또는 21h.
+- 재실행: `python3 tools/push_lu_rust.py --generate --write` → `cargo test -p rsolver-lp --test push_lu` → `python3 tools/push_lu_rust.py --generate --compare` / `--generate --self-test` / `--generate --mutate-rust <새 경로>`. 21f 주입 모드는 `--generate` 없이 그대로다.
+- branch `work/m3-04c-21g`, worktree `../rsolver-m3-04c-21g`, 선행 미커밋 없음. 최종 commit·병합은 main `Merge M3-04c-21g` 이력을 따른다. main 미추적 `.claude/settings.local.json` 보존. 원격/업로드 없음.
+- 교훈: `docs/lessons/original.md`(t = s3와 M1 prefix 차이·lst 마지막 칸·F+0x1a8 잔류·풀 재시도), `tooling.md`(회문 변조·주입 모드와 생성 모드의 상태 덤프 비교).
