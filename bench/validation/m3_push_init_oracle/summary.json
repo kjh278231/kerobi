@@ -1,0 +1,283 @@
+{
+ "calls": [
+  {
+   "call": 1,
+   "cand": 23,
+   "case": "arms",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 1,
+   "cand": 6,
+   "case": "retry",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "d02406819543d33f",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 5
+  },
+  {
+   "call": 1,
+   "cand": 9,
+   "case": "interior",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 1,
+   "cand": 22,
+   "case": "adlittle",
+   "counts": [
+    12,
+    7,
+    2
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 1,
+   "cand": 12,
+   "case": "scsd1",
+   "counts": [
+    2,
+    0,
+    0
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 1,
+   "cand": 31,
+   "case": "capri",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 1,
+   "cand": 16,
+   "case": "adlittle_x1",
+   "counts": [
+    12,
+    7,
+    2
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 1,
+   "cand": 24,
+   "case": "adjust",
+   "counts": [
+    1,
+    1,
+    1
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "8a8d1e64fe3f4640",
+   "rounds": 2,
+   "tau": "95d626e80b2e113e",
+   "viol": 3
+  },
+  {
+   "call": 1,
+   "cand": 9,
+   "case": "mk_low",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "2d431cebe2361a3f",
+   "numeric": 0,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 1,
+   "cand": 9,
+   "case": "mk_limit",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "2d431cebe2361a3f",
+   "numeric": 0,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 2,
+   "cand": 22,
+   "case": "quality",
+   "counts": [
+    12,
+    7,
+    2
+   ],
+   "mk": "cdccccccccccec3f",
+   "numeric": 1,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 2,
+   "cand": 23,
+   "case": "quality_pinf",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "cdccccccccccec3f",
+   "numeric": 1,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 1,
+   "cand": 7,
+   "case": "slack_m2",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "0c73d712f241d33f",
+   "rounds": 2,
+   "tau": "95d626e80b2e113e",
+   "viol": 4
+  },
+  {
+   "call": 1,
+   "cand": 23,
+   "case": "col_m5",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "0000000000000000",
+   "rounds": 1,
+   "tau": "8dedb5a0f7c6b03e",
+   "viol": 0
+  },
+  {
+   "call": 1,
+   "cand": 6,
+   "case": "col_m5_ub",
+   "counts": [
+    0,
+    0,
+    0
+   ],
+   "mk": "9a9999999999b93f",
+   "numeric": 0,
+   "pinf": "d02406819543d33f",
+   "rounds": 2,
+   "tau": "95d626e80b2e113e",
+   "viol": 5
+  }
+ ],
+ "observed": {
+  "adjust": [
+   "adjust",
+   "promote"
+  ],
+  "adlittle": [],
+  "adlittle_x1": [
+   "first0"
+  ],
+  "arms": [],
+  "capri": [],
+  "col_m5": [],
+  "col_m5_ub": [
+   "adjust"
+  ],
+  "interior": [],
+  "mk_limit": [
+   "limit",
+   "strengthen"
+  ],
+  "mk_low": [
+   "strengthen"
+  ],
+  "quality": [
+   "mk_cand_0.5",
+   "numeric_residual",
+   "retry_p",
+   "strengthen"
+  ],
+  "quality_pinf": [
+   "retry_pinf"
+  ],
+  "retry": [],
+  "scsd1": [],
+  "slack_m2": [
+   "adjust",
+   "promote"
+  ]
+ }
+}

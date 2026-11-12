@@ -1,0 +1,17 @@
+controls 통과 (사례 15 × 3회, 21h 비간섭 6사례)
+acceptance 통과 (push 호출 15개 초기화 완료 + retry 반환)
+  arms          -
+  retry         -
+  interior      -
+  adlittle      -
+  scsd1         -
+  capri         -
+  adlittle_x1   first0
+  adjust        adjust promote
+  mk_low        strengthen
+  mk_limit      limit strengthen
+  quality       mk_cand_0.5 numeric_residual retry_p strengthen
+  quality_pinf  retry_pinf
+  slack_m2      adjust promote
+  col_m5        -
+  col_m5_ub     adjust
