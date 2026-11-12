@@ -90,6 +90,32 @@ pub enum FactorExit {
     Error(i32),
 }
 
+enum Tail {
+    Again,
+    Exit(FactorExit),
+}
+
+/// Quality period and request clear after a successful call (C 1982–1996). `Again` re-enters the wrapper.
+fn quality_tail(state: &mut FactorState, frame: &mut FactorFrame, vectors: &FactorVectors<'_>,
+                backend: &mut impl PushFactorBackend) -> Tail {
+    if state.updates >= frame.period {
+        let increment = backend.quality(state, frame.enter, frame.period, vectors);
+        if state.status == 12 {
+            state.status = 1;
+            return Tail::Exit(FactorExit::Retry);
+        }
+        if state.request != 0 {
+            frame.period = 20;
+            return Tail::Again;
+        }
+        frame.period += increment;
+    } else if state.updates != 0 && frame.period > 50 {
+        frame.period = 50;
+    }
+    state.request = 0;
+    Tail::Exit(FactorExit::Continue)
+}
+
 /// Run only the serial caller. Backends must eventually return a value other than 1 and
 /// resolve quality requests; no arbitrary iteration cap changes the original control flow.
 /// On every returned exit workspace and spike aliases have their original values.
@@ -113,21 +139,19 @@ pub fn factor_run(state: &mut FactorState, frame: &mut FactorFrame, vectors: &mu
             return FactorExit::Retry;
         }
         if state.request != 0 { return FactorExit::Recompute; }
-        if state.updates >= frame.period {
-            let increment = backend.quality(state, frame.enter, frame.period, vectors);
-            if state.status == 12 {
-                state.status = 1;
-                return FactorExit::Retry;
-            }
-            if state.request != 0 {
-                frame.period = 20;
-                continue;
-            }
-            frame.period += increment;
-        } else if state.updates != 0 && frame.period > 50 {
-            frame.period = 50;
+        match quality_tail(state, frame, vectors, backend) {
+            Tail::Again => continue,
+            Tail::Exit(exit) => return exit,
         }
-        state.request = 0;
-        return FactorExit::Continue;
+    }
+}
+
+/// Resume the same wrapper after the caller finished the `Recompute` exit's RHS FTRAN and reclassification:
+/// the request is still set and the quality period check follows (C 1980–1982).
+pub fn factor_resume(state: &mut FactorState, frame: &mut FactorFrame, vectors: &mut FactorVectors<'_>,
+                     backend: &mut impl PushFactorBackend) -> FactorExit {
+    match quality_tail(state, frame, vectors, backend) {
+        Tail::Again => factor_run(state, frame, vectors, backend),
+        Tail::Exit(exit) => exit,
     }
 }

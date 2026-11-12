@@ -1,0 +1,105 @@
+[
+  {
+    "cmd": "cargo test -q -p rsolver-lp --test push_factor && python3 tools/push_factor_rust.py --compare",
+    "exit": 0,
+    "seconds": 0.4,
+    "tail": [
+      ".",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "",
+      "{\"cases\": 89, \"fields\": 978, \"natural_select\": 28, \"natural_wrapper\": 6, \"synthetic_select\": 24, \"synthetic_wrapper\": 31, \"rule\": \"ordered typed exact fields; pointer aliases; sentinel f64 bits\"}"
+    ]
+  },
+  {
+    "cmd": "cargo test -q -p rsolver-lp --test push_round && python3 tools/push_round_rust.py --compare",
+    "exit": 0,
+    "seconds": 0.5,
+    "tail": [
+      ".",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "",
+      "{\"cases\": 216, \"fields\": 14365, \"rule\": \"ordered typed exact; f64 little-endian bits incl signed zero\", \"origins\": {\"natural\": 110, \"synthetic\": 106}, \"kinds\": {\"pass\": 12, \"begin_accept\": 4, \"btran\": 34, \"accept\": 32, \"defer\": 10, \"gate\": 7, \"support\": 7, \"exhausted\": 78, \"wrapper\": 25, \"clear\": 7}}"
+    ]
+  },
+  {
+    "cmd": "cargo test -q -p rsolver-lp --test push_supplier && python3 tools/push_supplier_rust.py --compare",
+    "exit": 0,
+    "seconds": 0.5,
+    "tail": [
+      " \"success\": 56,",
+      " \"exhausted\": 13,",
+      " \"rule\": \"ordered integers / f64 LE hex exact incl signed zero\"",
+      "}"
+    ]
+  },
+  {
+    "cmd": "cargo test -q -p rsolver-lp --test push_recompute && python3 tools/push_recompute_rust.py --compare",
+    "exit": 0,
+    "seconds": 0.5,
+    "tail": [
+      ".",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "",
+      "{\"cases\": 138, \"fields\": 2958, \"rule\": \"ordered typed exact; f64 little-endian bits incl signed zero\", \"natural\": 8, \"synthetic\": 130, \"rows\": 289, \"sites\": {\"round\": 72, \"pivot\": 66}}"
+    ]
+  },
+  {
+    "cmd": "cargo test -q -p rsolver-lp --test push_chain && python3 tools/push_step_chain_rust.py --compare",
+    "exit": 0,
+    "seconds": 0.6,
+    "tail": [
+      ".",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+      "",
+      "{\"steps\": 236, \"fields\": 5144, \"tally\": {\"flip\": 70, \"pivot\": 148, \"defer\": 18, \"recall\": 20, \"violated\": 80}, \"segments\": 42, \"refactor_skip\": 6, \"first_leave_input\": 42}"
+    ]
+  },
+  {
+    "cmd": "python3 tools/push_lu_rust.py --block --write && cargo test -q -p rsolver-lp --test push_lu && python3 tools/push_lu_rust.py --block --compare",
+    "exit": 0,
+    "seconds": 14.1,
+    "tail": [
+      "FT 분기 {'cache_reuse=False': 36, 'cycle=False': 15, 'cycle=True': 21, 'dot_lanes=False': 25, 'dot_lanes=True': 11, 'eta=False': 13, 'eta=True': 23, 'interval_trivial=False': 26, 'interval_trivial=True': 10, 'local80=0': 7, 'local80=1': 17, 'local80=2': 6, 'local80=3': 6, 'moved_column=False': 3, 'moved_column=True': 33, 'moved_rows=0': 6, 'moved_rows=1': 7, 'moved_rows=11': 1, 'moved_rows=2': 6, 'moved_rows=23': 1, 'moved_rows=3': 5, 'moved_rows=4': 3, 'moved_rows=5': 1, 'moved_rows=53': 1, 'moved_rows=6': 1, 'moved_rows=7': 2, 'moved_rows=8': 2, 'promoted=False': 22, 'promoted=True': 14}",
+      "FTRAN/BTRAN 분기 {'B.entry=cache': 7, 'B.entry=cache-empty-row': 25, 'B.eta=none': 32, 'B.kernel=heap': 25, 'B.kernel=heap+seq': 7, 'B.lt=dense': 2, 'B.lt=heap': 23, 'B.lt=heap+seq': 1, 'B.lt=level': 6, 'B.u=21a941': 32, 'F.input=dense': 13, 'F.input=sparse': 107, 'F.l=214344': 48, 'F.l=21b9de': 47, 'F.l=21b9de A2': 25, 'F.r=dense': 25, 'F.r=none': 79, 'F.r=sparse': 13, 'F.r=sparse-dense': 3, 'F.spike=dense': 36, 'F.spike=save0': 69, 'F.spike=sparse': 15, 'F.u=2126cd': 51, 'F.u=21686f H2': 50, 'F.u=21686f S1': 8, 'F.u=21686f S2': 11}",
+      "미지 칸(비교 제외) {'supplier input_after': 2255, 'G bucket': 34}",
+      "OK"
+    ]
+  },
+  {
+    "cmd": "python3 tools/push_lu_check.py --controls --acceptance",
+    "exit": 0,
+    "seconds": 4.6,
+    "tail": [
+      "{\"controls\": {\"arms\": {\"events\": 662, \"lu\": 16}, \"retry\": {\"events\": 249, \"lu\": 12}, \"interior\": {\"events\": 288, \"lu\": 32}, \"control\": {\"events\": 0, \"lu\": 0}, \"adlittle\": {\"events\": 547, \"lu\": 52}, \"scsd1\": {\"events\": 237, \"lu\": 8}, \"capri\": {\"events\": 832, \"lu\": 80}}, \"acceptance\": {\"models\": {\"arms\": {\"calls\": 4, \"ft\": 0, \"roweta\": 0, \"cache_reuse\": 0, \"span_trivial\": 0, \"eta_added\": 0, \"refactor\": 4, \"refactor_calls\": 4, \"init\": 1, \"refactor_push\": 3, \"leave_renumbered\": 4, \"header_reordered\": 2, \"old_perm_nonid\": 2, \"links\": 45, \"links_header_changed\": 17, \"links_bucket_changed\": 0, \"links_after_lu\": 4, \"links_into_lu\": 0}, \"retry\": {\"calls\": 3, \"ft\": 0, \"roweta\": 0, \"cache_reuse\": 0, \"span_trivial\": 0, \"eta_added\": 0, \"refactor\": 3, \"refactor_calls\": 3, \"init\": 1, \"refactor_push\": 2, \"leave_renumbered\": 3, \"header_reordered\": 2, \"old_perm_nonid\": 2, \"links\": 14, \"links_header_changed\": 4, \"links_bucket_changed\": 0, \"links_after_lu\": 3, \"links_into_lu\": 0}, \"interior\": {\"calls\": 9, \"ft\": 5, \"roweta\": 3, \"cache_reuse\": 0, \"span_trivial\": 2, \"eta_added\": 3, \"refactor\": 4, \"refactor_calls\": 4, \"init\": 1, \"refactor_push\": 3, \"leave_renumbered\": 3, \"header_reordered\": 3, \"old_perm_nonid\": 3, \"links\": 18, \"links_header_changed\": 6, \"links_bucket_changed\": 0, \"links_after_lu\": 9, \"links_into_lu\": 5}, \"control\": {\"calls\": 0, \"ft\": 0, \"roweta\": 0, \"cache_reuse\": 0, \"span_trivial\": 0, \"eta_added\": 0, \"refactor\": 0, \"refactor_calls\": 0, \"init\": 0, \"refactor_push\": 0, \"leave_renumbered\": 0, \"header_reordered\": 0, \"old_perm_nonid\": 0, \"links\": 0, \"links_header_changed\": 0, \"links_bucket_changed\": 0, \"links_after_lu\": 0, \"links_into_lu\": 0}, \"adlittle\": {\"calls\": 14, \"ft\": 11, \"roweta\": 9, \"cache_reuse\": 0, \"span_trivial\": 2, \"eta_added\": 6, \"refactor\": 3, \"refactor_calls\": 3, \"init\": 1, \"refactor_push\": 2, \"leave_renumbered\": 3, \"header_reordered\": 3, \"old_perm_nonid\": 3, \"links\": 37, \"links_header_changed\": 13, \"links_bucket_changed\": 0, \"links_after_lu\": 13, \"links_into_lu\": 11}, \"scsd1\": {\"calls\": 2, \"ft\": 0, \"roweta\": 0, \"cache_reuse\": 0, \"span_trivial\": 0, \"eta_added\": 0, \"refactor\": 2, \"refactor_calls\": 2, \"init\": 1, \"refactor_push\": 1, \"leave_renumbered\": 2, \"header_reordered\": 2, \"old_perm_nonid\": 2, \"links\": 14, \"links_header_changed\": 1, \"links_bucket_changed\": 0, \"links_after_lu\": 2, \"links_into_lu\": 0}, \"capri\": {\"calls\": 23, \"ft\": 20, \"roweta\": 14, \"cache_reuse\": 0, \"span_trivial\": 6, \"eta_added\": 14, \"refactor\": 3, \"refactor_calls\": 3, \"init\": 1, \"refactor_push\": 2, \"leave_renumbered\": 3, \"header_reordered\": 3, \"old_perm_nonid\": 3, \"links\": 60, \"links_header_changed\": 27, \"links_bucket_changed\": 19, \"links_after_lu\": 22, \"links_into_lu\": 20}}, \"total\": {\"calls\": 55, \"ft\": 36, \"roweta\": 26, \"cache_reuse\": 0, \"span_trivial\": 10, \"eta_added\": 23, \"refactor\": 19, \"refactor_calls\": 19, \"init\": 6, \"refactor_push\": 13, \"leave_renumbered\": 18, \"header_reordered\": 15, \"old_perm_nonid\": 15, \"links\": 188, \"links_header_changed\": 68, \"links_bucket_changed\": 19, \"links_after_lu\": 53, \"links_into_lu\": 36}}}"
+    ]
+  },
+  {
+    "cmd": "python3 -m py_compile tools/push_loop_rust.py",
+    "exit": 0,
+    "seconds": 0.0,
+    "tail": []
+  },
+  {
+    "cmd": "cargo test -q --release --workspace",
+    "exit": 0,
+    "seconds": 14.3,
+    "tail": [
+      "",
+      "running 0 tests",
+      "",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  {
+    "cmd": "cargo clippy -q --workspace --all-targets -- -D warnings",
+    "exit": 0,
+    "seconds": 4.2,
+    "tail": []
+  },
+  {
+    "cmd": "git diff --check main",
+    "exit": 0,
+    "seconds": 0.0,
+    "tail": []
+  }
+]
