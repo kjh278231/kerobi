@@ -5,12 +5,12 @@ slack-norm-zero 거부 ('interior', 1) 줄5 cnorm.norm[0]: 원본 000000000000f0
 norm-sum-not-max 거부 ('arms', 1) 줄5 cnorm.norm[0]: 원본 000000000000f03f Rust 0000000000003940 (길이 1/1)
 start-ones 거부 ('arms', 1) 줄6 cft.in[3]: 원본 7b14ae47e17aa43f Rust 000000000000f03f (길이 28/28)
 stop-strict 거부 ('arms', 1): 사건 순서 11: 원본 ['cres', 'gate', 'start'] Rust ['cbt', 'cres', 'gate']
-stop-first-iter 생존 
+stop-first-iter 생존
 sign-le 거부 ('capri', 1) 줄8 cbt.in[39]: 원본 000000000000f03f Rust 000000000000f0bf (길이 271/271)
 sign-sparse-packed 거부 ('adlittle', 1): 사건 순서 12: 원본 ['cres', 'gate', 'start'] Rust ['cft', 'cest', 'cres']
 limit-4 거부 ('netlib/sc105', 1): 사건 순서 18: 원본 ['cft', 'cest', 'cbt'] Rust ['cres', 'gate', 'exit']
 argmax-last 거부 ('arms', 1) 줄9 cft.in[2]: 원본 0 Rust 24 (길이 5/5)
-argmax-position 생존 
+argmax-position 생존
 repeat-never 거부 ('adlittle', 1): 사건 순서 12: 원본 ['cres', 'gate', 'start'] Rust ['cft', 'cest', 'cres']
 result-est-only 거부 ('adlittle', 1) 줄12 cres.cond[0]: 원본 04cd643a549a7340 Rust 8da367d1f5ff5340 (길이 1/1)
 buffer-no-swap 거부 ('arms', 1) 줄9 cft.x[0]: 원본 Y Rust X (길이 1/1)
