@@ -1,0 +1,20 @@
+{
+  "task": "M3-04c-16",
+  "baseline": "5358cf7",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "oracle_manifest_sha256": "4acf65aec7b11fad4b38dee182f9a83fe387b2c84f7135acc1a4e144292d6d5c",
+  "files": {
+    "crates/lp/src/crossover_factor.rs": "c52142939f60489955709c99495b13cce4a1f1a35ca76788565c4fee64c8b46a",
+    "crates/lp/src/lib.rs": "ae28ac60fb746a6463557d3d27a302f2fe98134c27b0943d234d84352e670c92",
+    "crates/lp/tests/push_factor.rs": "f5af3c4f46117aaec54d87088fbef7a7c721e7cc9e1b687a62b4d2c84a2f6ec0",
+    "tools/push_factor_rust.py": "934d66c14144994871f188542d97eb5f53b95c37359c5321996bdd44147ed31e",
+    "bench/oracle/m3_push_factor/manifest.json": "4acf65aec7b11fad4b38dee182f9a83fe387b2c84f7135acc1a4e144292d6d5c",
+    "bench/oracle/m3_push_factor_rust/input.txt": "41d7833ee64e0b64aa7f4b0a13db61dda12ce40415ce9b43ecbb09bde1d7345b",
+    "bench/oracle/m3_push_factor_rust/trace.txt": "8987e977506927bb8c24a432662c58b4e699f7b30d3d97a658c06abfef3906bb",
+    "bench/oracle/m3_push_factor_rust/source.asm": "2110ed78b39665293e418545fb7dcd285945ebe660d695e8f6d454d3a37c777e",
+    "bench/oracle/m3_push_factor_rust/self-test.json": "a9b5b1bbdc036711c1b0254f9a75141cf29c93b6c3711599c67e52db1315c690",
+    "bench/oracle/m3_push_factor_rust/mutations.json": "7ae736fbfe858444c621437dba04792d3a678297087410d9113f1007df011f87",
+    "bench/oracle/m3_push_factor_rust/oracle-regression.json": "e10b7e19a839cda7990329ffd07cf87c2e96b1772b1d78cd5353e77b9fdcb2e4",
+    "bench/oracle/m3_push_factor_rust/rust-regression.json": "537418bf87cdcdd7427e64f1546e0fb6633de869414b441b110c30b5a759b559"
+  }
+}
