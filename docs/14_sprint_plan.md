@@ -215,7 +215,10 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-23 | 조사 | batch 공급·worker·factor 별칭·무효화 | 04c-12 | Threads>1 도달성·재현성·record·work·미소비 후보의 후속 오라클/구현 분할 |
 | M3-04d | 조사 | dual push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |
 | M3-04e | 구현 | 04d의 push 분기 하나 | 04d | 해당 phase 입력·출력 상태 비교 |
-| M3-04f | 조사·구현 | cleanup 진입과 basis 설치 한 경로 | 필요한 push 분기 완료 | 설치 basis·단일 모델 최종 해 비교 |
+| M3-04f | 조사·구현 | cleanup 진입과 basis 설치 한 경로 | 필요한 push 분기 완료 | 설치 basis·단일 모델 최종 해 비교. 하위 04f-1(push 해 설치)·04f-2(cleanup) |
+| M3-04f-1 | 구현 완료(범위 한정) | primal push 해 설치 `134a87` C 2419–2582(x 기록·PInf·설치 조건수·retry·remaining 부호·vstat·스냅) | 04c-1c·24 | [완료](m3/primal_push_install.md): 원본 330회(1b 15+합성 5+Netlib 45+Crossover=-1 45)×3 재현·1c 비간섭, 설치 111회 C 재계산 비트 일치. Rust 설치 경계 111호출 일치, 진입→루프→설치 연결 58/59 일치(grow7 재분해 실패 → 21i). 변조19·5,412·666 거부, Rust 변이21 중 거부15. P항·임계값 양수·±τ 동률 미관측 |
+| M3-04c-21i | 조사·구현 | grow7 마지막 round 재분해(`036ade` 진입 S+0x2c0=8·0x4e0=7) 피벗 순서·L/U 비영 수 차이 | 04f-1 | 24 루프 911줄 중 906줄 일치, 줄 907 fcall에서 header·L/U(1424/1604 vs 1128/1284) 차이. 21h 캡처로 재분해 내부 첫 차이 특정 |
+| M3-04f-2 | 조사 | `13f716`의 push 반환(remaining 부호·retry) 소비와 `0cda5b` cleanup 진입·`0325b4` 상태 배열 설치 | 04f-1 | cleanup mode 선택·설치 basis 경계와 오라클 방법 |
 | M3-04g | 조사 | crossover 재시작·수치 실패 경로 | 04f | 재시작 조건별 후속 구현 번호 |
 | M3-04h | 검증 | Netlib 64 기본 crossover | 기본 push·cleanup·재시작 완료 | 상태·목적·반복과잔차 목록 |
 | M3-05a | 조사 | Method 자동 선택의 입력·결정표 | 드라이버·노트14 | 기능별 실행 모델과 원본 선택 결과 |

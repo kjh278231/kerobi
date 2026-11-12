@@ -5,6 +5,9 @@
 //! M3-04c-1c: with a `cond` record the `12f282` outputs are not injected; `116fd7` runs on the Rust factor
 //! (`crossover_condition`) and its internal boundaries are written as `cnorm`/`cft`/`cest`/`cbt`/`cres` lines
 //! (`tools/push_cond_rust.py --compare`, contract docs/m3/primal_push_condition.md).
+//! M3-04f-1: with an `inst` record the call continues into `push_loop` (the serial backend) and `push_install`
+//! (condition from `116fd7` on the factor after the loop); the install entry, its `116fd7` lines (prefixed `i`) and
+//! the push result are written (`tools/push_install_rust.py --compare`, contract docs/m3/primal_push_install.md).
 mod loop_io;
 
 use loop_io::*;
@@ -12,6 +15,7 @@ use rsolver_lp::crossover::{PushLp, PushParams, PushState};
 use rsolver_lp::crossover_backend::{SerialBackend, SerialStart};
 use rsolver_lp::crossover_condition::{CondEntry, CondEvent, CondVec, Phys};
 use rsolver_lp::crossover_init::*;
+use rsolver_lp::crossover_install::{push_install, InstallEntry};
 use rsolver_lp::crossover_loop::*;
 use rsolver_lp::crossover_refactor::{Alloc, Matrix};
 use rsolver_lp::lu::BlockState;
@@ -198,6 +202,13 @@ fn run_call(case: &[&str], prev: Option<SerialBackend>, out: &Out) -> Option<Ser
         t.done();
         v
     });
+    let install = (case.len() > 7).then(|| {
+        let mut t = rec(case, 7, "inst");
+        let (env_2ba0, interval): (i32, i32) = (t.i(), t.i());
+        let e = CondEntry { f0c: t.i(), a_val_mod16: t.i(), x_mod16: t.i(), y_mod16: t.i() };
+        t.done();
+        (env_2ba0, interval, e)
+    });
 
     let lp = PushLp { n, m, starts: &starts, lengths: &lengths, rows: &rows, values: &values, cost: &cost, lb: &lb,
                       ub: &ub };
@@ -230,7 +241,39 @@ fn run_call(case: &[&str], prev: Option<SerialBackend>, out: &Out) -> Option<Ser
         }
         other => backend.line(format!("exit;{other:?}")),
     }
-    backend.serial.and_then(|s| s.backend)
+    let mut serial = backend.serial.take().and_then(|s| s.backend);
+    if let Some((env_2ba0, interval, centry)) = install {
+        if matches!(res.exit, InitExit::Loop | InitExit::End) {
+            let sb = serial.as_mut().expect("install chain without a Rust factor");
+            let mut s = res.state;
+            let exit = if res.exit == InitExit::Loop {
+                let cfg = LoopConfig { attempt, model_status, numeric_limit: res.numeric_limit, drop };
+                push_loop(&lp, &par, &cfg, &mut s, sb, &mut |_: LoopEvent<'_>| {})
+            } else {
+                LoopExit::End
+            };
+            if exit == LoopExit::End {
+                // every list entry is valid at the end (exhaustion: all deferred; otherwise empty)
+                let cands = s.round.candidates.clone();
+                backend.line(format!("inst;cnt {};cand {};hdr {};basic {};width {};vstat {};xs {};pinf {};iter {}",
+                                     cands.len(), ints(&cands), ints(&s.st.header), hexs(&s.st.basic),
+                                     hexs(&s.st.width), ints(&s.st.vstat), hexs(&s.st.xs), hex(s.pinf),
+                                     hex(s.st.iterations)));
+                let mut lines = Vec::new();
+                let e = InstallEntry { first: first != 0, attempt, model_status, candidates: &cands, interval, env_2ba0 };
+                let r = push_install(&lp, &par, &mut s.st, &e, &mut || {
+                    sb.condition(centry, &mut |ev| lines.push(format!("i{}", cond_line(ev))))
+                });
+                out.borrow_mut().extend(lines);
+                backend.line(format!("leave;retry {};rem {};pinf {};viol {};cond {};vstat {};xs {}", r.retry as i32,
+                                     r.remaining, hex(r.pinf), r.violations, hex(r.condition), ints(&s.st.vstat),
+                                     hexs(&s.st.xs)));
+            } else {
+                backend.line(format!("exit;{exit:?}"));
+            }
+        }
+    }
+    serial
 }
 
 #[test]
@@ -241,6 +284,11 @@ fn init_ext_trace() {
 #[test]
 fn init_cond_trace() {
     replay("m3_push_cond_rust", "tools/push_cond_rust.py --write");
+}
+
+#[test]
+fn init_install_trace() {
+    replay("m3_push_install_rust", "tools/push_install_rust.py --write");
 }
 
 /// Records of one call: from a `case` line up to the next.

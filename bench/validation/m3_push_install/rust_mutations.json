@@ -1,0 +1,128 @@
+[
+ {
+  "result": "거부",
+  "unit": "('arms', 1) 줄0 leave.xs[2]: 원본 718a8ee4f2ff2340 Rust 3d0ad7a370fd2340 (길이 67/67)",
+  "chain": "('arms', 1) 줄23 leave.xs[2]: 원본 718a8ee4f2ff2340 Rust 3d0ad7a370fd2340 (길이 67/67)",
+  "name": "no-write-back"
+ },
+ {
+  "result": "거부",
+  "unit": "('adlittle_x1', 1) 줄0 leave.xs[0]: 원본 0c90ac7dc3da3640 Rust db37ac7dc3da3640 (길이 153/153)",
+  "chain": null,
+  "name": "write-back-always"
+ },
+ {
+  "result": "거부",
+  "unit": "('netlib/recipe', 1) 줄0 leave.xs[68]: 원본 0000000000000440 Rust 000000000000f43f (길이 271/271)",
+  "chain": "('netlib/recipe', 1) 줄24 leave.xs[68]: 원본 0000000000000440 Rust 000000000000f43f (길이 271/271)",
+  "name": "write-back-no-lb"
+ },
+ {
+  "result": "거부",
+  "unit": "('capri', 1) 줄0 leave.xs[2]: 원본 004670d3626b0440 Rust ea8ca039593e29c6 (길이 624/624)",
+  "chain": "('capri', 1) 줄24 leave.xs[2]: 원본 004670d3626b0440 Rust ea8ca039593e29c6 (길이 624/624)",
+  "name": "write-back-lb-ge"
+ },
+ {
+  "result": "거부",
+  "unit": "('retry', 1) 줄0 leave.pinf[0]: 원본 046c95607138d33f Rust 2841e388b5f8343f (길이 1/1)",
+  "chain": "('retry', 1) 줄23 leave.pinf[0]: 원본 046c95607138d33f Rust 2841e388b5f8343f (길이 1/1)",
+  "name": "pinf-free-ub-only"
+ },
+ {
+  "result": "생존",
+  "unit": null,
+  "chain": null,
+  "name": "pinf-low-ge"
+ },
+ {
+  "result": "생존",
+  "unit": null,
+  "chain": null,
+  "name": "pinf-tau-ge"
+ },
+ {
+  "result": "생존",
+  "unit": null,
+  "chain": null,
+  "name": "pinf-upper-ge"
+ },
+ {
+  "result": "거부",
+  "unit": "('retry', 1) 줄0 leave.pinf[0]: 원본 046c95607138d33f Rust 443333333333d33f (길이 1/1)",
+  "chain": "('retry', 1) 줄23 leave.pinf[0]: 원본 046c95607138d33f Rust 443333333333d33f (길이 1/1)",
+  "name": "pinf-upper-sign"
+ },
+ {
+  "result": "생존",
+  "unit": null,
+  "chain": null,
+  "name": "pp-always-pinf"
+ },
+ {
+  "result": "생존",
+  "unit": null,
+  "chain": null,
+  "name": "retry-1e14-ge"
+ },
+ {
+  "result": "거부",
+  "unit": "('inst_att1_retry', 2) 줄0 leave.retry[0]: 원본 1 Rust 0 (길이 1/1)",
+  "chain": null,
+  "name": "no-1e30"
+ },
+ {
+  "result": "거부",
+  "unit": "('inst_retry', 1) 줄0 leave.rem[0]: 원본 1 Rust 0 (길이 1/1)",
+  "chain": null,
+  "name": "retry-rem-zero"
+ },
+ {
+  "result": "거부",
+  "unit": "('inst_free', 1) 줄0 leave.rem[0]: 원본 -1 Rust 1 (길이 1/1)",
+  "chain": null,
+  "name": "free-ignored"
+ },
+ {
+  "result": "거부",
+  "unit": "('arms', 1) 줄0 leave.rem[0]: 원본 1 Rust -1 (길이 1/1)",
+  "chain": "('arms', 1) 줄23 leave.rem[0]: 원본 1 Rust -1 (길이 1/1)",
+  "name": "env-any"
+ },
+ {
+  "result": "거부",
+  "unit": "('inst_env_neg', 1) 줄0 leave.rem[0]: 원본 -1 Rust 1 (길이 1/1)",
+  "chain": null,
+  "name": "threshold-1"
+ },
+ {
+  "result": "거부",
+  "unit": "('arms', 1) 줄0 leave.vstat[9]: 원본 -2 Rust -1 (길이 67/67)",
+  "chain": "('arms', 1) 줄23 leave.vstat[9]: 원본 -2 Rust -1 (길이 67/67)",
+  "name": "vstat-ge"
+ },
+ {
+  "result": "거부",
+  "unit": "('arms', 1) 줄0 leave.vstat[9]: 원본 -2 Rust -1 (길이 67/67)",
+  "chain": "('arms', 1) 줄23 leave.vstat[9]: 원본 -2 Rust -1 (길이 67/67)",
+  "name": "vstat-swap"
+ },
+ {
+  "result": "거부",
+  "unit": "('inst_env_neg', 1) 줄0 leave.xs[0]: 원본 0000000000002440 Rust 39454772f9ff2340 (길이 67/67)",
+  "chain": null,
+  "name": "no-snap"
+ },
+ {
+  "result": "거부",
+  "unit": "('inst_env_neg', 1) 줄0 leave.xs[0]: 원본 0000000000002440 Rust 0000000000000000 (길이 67/67)",
+  "chain": null,
+  "name": "snap-swap"
+ },
+ {
+  "result": "생존",
+  "unit": null,
+  "chain": null,
+  "name": "cond-before-pinf"
+ }
+]

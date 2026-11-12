@@ -1,0 +1,71 @@
+{
+ "_doc": "M3-04f-1 원본 명령 합성(Rust 비교 전, 자연 탐색 뒤 결정). base는 1b 사례 이름이며 base가 합성이면 그 편집에 아래 편집을 더한다. install = 설치 진입(0x1c4050) 직후·install:enter 기록 전, install_cond = 설치 중 12f282 반환 직후(0x1c4276). call 없으면 1. require는 결과를 보기 전에 정한 필수 분기.",
+ "inst_env_neg": {
+  "base": "arms",
+  "edits": [
+   {
+    "at": "install",
+    "field": "env_2ba0",
+    "int": -1
+   }
+  ],
+  "require": [
+   "threshold-neg",
+   "snap"
+  ]
+ },
+ "inst_free": {
+  "base": "retry",
+  "edits": [
+   {
+    "at": "install",
+    "field": "free_first"
+   }
+  ],
+  "require": [
+   "free",
+   "snap"
+  ]
+ },
+ "inst_retry": {
+  "base": "arms",
+  "edits": [
+   {
+    "at": "install_cond",
+    "field": "condition",
+    "hex": "00003426f56b0c43"
+   }
+  ],
+  "require": [
+   "retry"
+  ]
+ },
+ "inst_att1_keep": {
+  "base": "quality_pinf",
+  "edits": [
+   {
+    "call": 2,
+    "at": "install_cond",
+    "field": "condition",
+    "hex": "408cb5781daf1544"
+   }
+  ],
+  "require": [
+   "att1-no-retry"
+  ]
+ },
+ "inst_att1_retry": {
+  "base": "quality_pinf",
+  "edits": [
+   {
+    "call": 2,
+    "at": "install_cond",
+    "field": "condition",
+    "hex": "24b00888ef8d5f46"
+   }
+  ],
+  "require": [
+   "retry-1e30"
+  ]
+ }
+}
