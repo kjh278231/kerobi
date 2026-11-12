@@ -1,0 +1,5 @@
+    Checking rsolver-lp v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-21d/crates/lp)
+    Checking rsolver-mip v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-21d/crates/mip)
+    Checking rsolver-driver v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-21d/crates/driver)
+    Checking rsolver v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-21d/crates/py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.02s

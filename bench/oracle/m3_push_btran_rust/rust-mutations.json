@@ -1,0 +1,151 @@
+[
+  {
+    "name": "cache-skip-empty-check",
+    "result": "rejected",
+    "first_difference": "불일치 arms/1.kernels[0].x1d8: 원본 -1 != Rust 21"
+  },
+  {
+    "name": "cache-always-empty",
+    "result": "rejected",
+    "first_difference": "불일치 adlittle/2.kernels[0].x1d8: 원본 37 != Rust -1"
+  },
+  {
+    "name": "cache-no-x1d8",
+    "result": "rejected",
+    "first_difference": "불일치 adlittle/2.kernels[0].x1d8: 원본 37 != Rust -1"
+  },
+  {
+    "name": "cache-no-copy",
+    "result": "rejected",
+    "first_difference": "불일치 adlittle/2.leave.cache.count: 원본 11 != Rust 0"
+  },
+  {
+    "name": "general-dense-u",
+    "result": "rejected",
+    "first_difference": "불일치 arms/1.kernels: 길이 2 != 0"
+  },
+  {
+    "name": "kernel-strict-direct",
+    "result": "survived"
+  },
+  {
+    "name": "kernel-direct-nodiv",
+    "result": "rejected",
+    "first_difference": "불일치 arms/9.kernels[1].output.val[0]: 원본 '000000000000f0bf' != Rust '000000000000f03f'"
+  },
+  {
+    "name": "kernel-max-heap",
+    "result": "rejected",
+    "first_difference": "불일치 capri/7.kernels[1].output.count: 원본 22 != Rust 15"
+  },
+  {
+    "name": "kernel-never-seq",
+    "result": "survived"
+  },
+  {
+    "name": "kernel-always-seq",
+    "result": "survived"
+  },
+  {
+    "name": "kernel-plus",
+    "result": "rejected",
+    "first_difference": "불일치 adlittle/2.kernels[1].output.val[1]: 원본 'a044a661bb59cebf' != Rust 'a044a661bb59ce3f'"
+  },
+  {
+    "name": "kernel-nonstrict",
+    "result": "survived"
+  },
+  {
+    "name": "kernel-work-off",
+    "result": "rejected",
+    "first_difference": "불일치 adlittle/2.kernels[1].x200: 원본 '0000000000003c40' != Rust '0000000000000000'"
+  },
+  {
+    "name": "kernel-no-clear-mark",
+    "result": "rejected",
+    "first_difference": "불일치 adlittle/2.kernels[1].scratch.x1b0: 길이 0 != 2"
+  },
+  {
+    "name": "eta0-no-swap",
+    "result": "rejected",
+    "first_difference": "불일치 arms/1.leave.alias.in.idx: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "lt-dense-always",
+    "result": "rejected",
+    "first_difference": "불일치 arms/1.leave.alias.in.idx: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "lt-sparse-boundary",
+    "result": "survived"
+  },
+  {
+    "name": "lt-no-relabel",
+    "result": "rejected",
+    "first_difference": "불일치 arms/1.leave.output.idx[0]: 원본 13 != Rust 21"
+  },
+  {
+    "name": "lt-heap-min",
+    "result": "rejected",
+    "first_difference": "불일치 scsd1/1.leave.output.count: 원본 11 != Rust 13"
+  },
+  {
+    "name": "lt-heap-never-seq",
+    "result": "survived"
+  },
+  {
+    "name": "lt-heap-always-seq",
+    "result": "survived"
+  },
+  {
+    "name": "lt-heap-strict",
+    "result": "survived"
+  },
+  {
+    "name": "lt-level-as-heap",
+    "result": "rejected",
+    "first_difference": "불일치 capri/1.leave.bucket[0]: 원본 2 != Rust 0"
+  },
+  {
+    "name": "lt-path-b-never",
+    "result": "survived"
+  },
+  {
+    "name": "lt-path-b-always",
+    "result": "rejected",
+    "first_difference": "불일치 arms/1.leave.x200: 원본 '143bb1133b313440' != Rust '00000000008045c0'"
+  },
+  {
+    "name": "lt-dense-no-gather",
+    "result": "rejected",
+    "first_difference": "불일치 adlittle/2.leave.output.val[1]: 원본 '308b3403130f513f' != Rust '1b4f5046fe01cf3f'"
+  },
+  {
+    "name": "lt-dense-nonstrict",
+    "result": "rejected",
+    "first_difference": "불일치 capri/7.leave.input_after.val[46]: 원본 '0000000000000000' != Rust '000000000000e03b'"
+  },
+  {
+    "name": "lt-dense-swap-out",
+    "result": "rejected",
+    "first_difference": "불일치 adlittle/2.leave.alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "lt-heap-work-assoc",
+    "result": "survived"
+  },
+  {
+    "name": "lt-level-work-factor",
+    "result": "rejected",
+    "first_difference": "불일치 capri/1.leave.x200: 원본 'b5b4b4b4b4d87a40' != Rust '00000000003e7540'"
+  },
+  {
+    "name": "lt-dense-work-order",
+    "result": "survived"
+  },
+  {
+    "name": "lt-level-no-bucket-reset",
+    "result": "rejected",
+    "first_difference": "capri/1: Rust 오류 read of an unknown cell 216"
+  }
+]
