@@ -1,0 +1,117 @@
+{
+  "task": "M3-04c-15",
+  "tested_code_commit": "342a9ca7350be2495742ea798e6f300ccca6adf7",
+  "results": [
+    {
+      "command": [
+        "python3",
+        "tools/push_factor_check.py",
+        "--controls"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"controls\": {\"arms\": 271, \"retry\": 104, \"interior\": 137, \"control\": 0, \"synthetic\": 55}}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_factor_check.py",
+        "--acceptance"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"acceptance\": {\"factor\": 16, \"select\": 28, \"skip\": 22, \"selected_call\": 6, \"wrapper\": 6, \"restored\": 6, \"synthetic_select\": 24, \"synthetic_wrapper\": 31}}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "tools/push_factor_check.py",
+        "--self-test"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"self_test\": {\"rejected\": 41, \"names\": [\"binary-zero\", \"model-zero\", \"tool-zero\", \"agent-zero\", \"manifest-binary-zero\", \"manifest-empty-inputs\", \"empty-events\", \"target-zero\", \"independent-difference\", \"null-null\", \"preserve-6.request\", \"limit-11.request\", \"limit-10.request\", \"cost-0.request\", \"cost-1.request\", \"skip-1.call\", \"sum-convert.preserved\", \"repeat-two.alpha_restored\", \"return12.retry\", \"error7.exit\", \"error-precedes-status.status\", \"status--999.retry\", \"status--1000.status\", \"failure-attempt-1.retry\", \"numeric-13-attempt-0.retry\", \"request-recompute.exit\", \"nonzero-clamp100.period\", \"zero-updates-period100.period\", \"quality-increment-5.period\", \"quality-request6.period\", \"quality-status12.status\", \"normal.spike_restored\", \"normal.contents_preserved\", \"min-q-term-19.request\", \"min-q-term-20.request\", \"repeat-call-order\", \"natural-alpha-restore\", \"natural-factorctl:restored.status\", \"natural-factorctl:call.attempt\", \"natural-factorctl:call.numeric_limit\", \"quality-enter\"]}}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "py_compile",
+        "tools/push_factor_synthetic.py",
+        "tools/push_factor_runs.py",
+        "tools/push_factor_check.py"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tools/push_factor_agent.js"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "tools/push_factor_capture.js"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "artifact_sha256": {
+    "manifest.json": "38975e145220946a1302187cb6ebe091dec9d304d500dee7ec66b1d7cd539f34",
+    "review.md": "ef7939258df1cd34b4225e0dec309048b896f73671589f5fb89da13457e542d4",
+    "review-interior.json": "17487cef736d92b6919b91fc5c1f4537fc7b75072d2611e713f17d2e2783ee3c",
+    "review-synthetic.json": "3306975cf6ec65a85dc3f04ec8cf63a5bb9254d08b174f27ea4010d2c11fed33",
+    "review-extra-tampers.json": "adb8005065814b12dc77068ad0c03f9476367bfa90eea1cb6429b1b4fd1129f7",
+    "regression.json": "3368c7d93ff361b9f9856b447ca521b856e83b54322738b604ff3cc56e9de286",
+    "rust-regression.log": "31021ee44ad2d023a7a452d8b563fc48bbd7cc2f00b89917f2d31b9734508f9b",
+    "source.asm": "df14c4ff80ba2fcc270239e477063284f814959e523395375a7b96943216c321"
+  },
+  "accepted": {
+    "natural_decisions": 28,
+    "natural_calls": 6,
+    "natural_skips": 22,
+    "natural_factor_calls": 16,
+    "natural_restored": 6,
+    "synthetic_select": 24,
+    "synthetic_wrapper": 31,
+    "self_test_rejected": 41,
+    "review_extra_rejected": 9,
+    "rust_steps": 236,
+    "rust_fields": 5144,
+    "refactor_skips": 6
+  },
+  "excluded": [
+    "numeric LU",
+    "quality helper arithmetic (15a)",
+    "recompute body (17/18)",
+    "batch (23)",
+    "x87",
+    "full push",
+    "full work/P3"
+  ],
+  "regression_note": "regression.json and rust-regression.log record earlier unchanged-Rust checks; no shared venv install",
+  "failed_attempts": [
+    "Initial regression CLI combined mutually-exclusive flags: argparse exit2; corrected separate commands all pass",
+    "First review survived status/attempt tampers; checker strengthened and all repeated tampers rejected"
+  ]
+}

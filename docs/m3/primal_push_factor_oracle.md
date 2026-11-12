@@ -24,11 +24,11 @@
 | m·L/U·C/E·준비 상수 | 정수 정확, f64 ±0 포함 LE hex 비트 | 자연 frame 및 합성 입력 |
 | 비용식 | ((f64(C)+f64(E))*2)*m-min(q*((m*5)*m),(f64(L+U)-m*1.5)^2), >0만 요청10 | asm 결합 순서, 유한 입력만 |
 | factor 호출·반환1 반복·12·오류 | 순서·인자·요청·반환 정확 | 자연 + 명시적 합성 backend |
-| alpha 교체/복원·spike 보존 | 별칭과 내용 정확, null-null 거부 | 자연 전후·합성 sentinel 두 벡터 |
+| alpha 교체/복원·spike 보존 | 자연은 비영 포인터의 별칭/복원 boolean, 합성은 별칭 및 sentinel 3버퍼 내용 보존. null-null 거부 | 자연 전후·합성 sentinel 세 버퍼 |
 | retry·status·attempt·failure·numeric 게이트 | 상태·쓰기·요청 보존 정확 | 원본 wrapper slice, cleanup 전에 종료 |
 | quality 호출·increment·request6·주기 | 호출 순서·local_100·최종 request 정확 | wrapper 원본, 품질 수치는 외부 입력 |
 
-- 입력은 유한 수·유효 int32/int64 합(overflow 없음), NaN/Inf 비용식은 제외. helper의 수치 오차는 외부 backend라 오차식을 적용하지 않는다.
+- 입력은 유한 수·유효 int32/int64 합(overflow 없음). `sum-convert`의 L/U는 큰 signed 수를 상쇄시키는 **합성 기계 입력**이며 비음수 nnz인 실제 factor 상태로 도달 가능하다고 주장하지 않는다. 자연 벡터 내용의 수치 계산/불변성은 검증하지 않는다. NaN/Inf 비용식은 제외. helper의 수치 오차는 외부 backend라 오차식을 적용하지 않는다.
 - Threads1·Seed0, 타이머 분기와 work 누적 비교 제외. 원본 캡처는 독립3회 사건/결과 동일 및 기존13 사건 투영 동일을 요구한다.
 
 ## 4. 사례와 원본 자료
@@ -40,7 +40,16 @@
 
 ## 5. 재실행과 완료 기준
 
-예정 도구: `push_factor_capture.js`/`agent.js`, `push_factor_synthetic.py`, `push_factor_runs.py`, `push_factor_check.py`.
+도구: `push_factor_capture.js`/`agent.js`, `push_factor_synthetic.py`, `push_factor_runs.py`, `push_factor_check.py`.
+
+```bash
+python3 tools/push_factor_runs.py bench/oracle/m3_push_factor-recapture
+python3 tools/push_factor_check.py --controls
+python3 tools/push_factor_check.py --acceptance
+python3 tools/push_factor_check.py --self-test
+```
+
+캡처 도구는 기존 출력 덮어쓰기를 거부한다. 새 디렉터리를 인자로 주거나 별도 review 파일을 사용한다. `--write-manifest`는 고정 도구·캡처 파일을 확인한 뒤 기준 manifest를 명시적으로 만드는 명령이다.
 
 1. 탐색1회 → 자연/대조/합성 독립3회.
 2. `python3 tools/push_factor_check.py --controls`(출처·재현·비간섭)와 `--acceptance`(자연 사건 존재·제어 전이 재생)를 분리한다.
@@ -50,8 +59,22 @@
 
 ## 6. 실행 결과
 
-미실행. 계약을 먼저 커밋하고 도구 첫 동작·캡처·검사 단계마다 기록한다.
+- 계약 `4a0ba43`, 도구 첫 동작 `4501da9`, 초기 캡처 `755d74a`. 초기 51사례와 당시 도구·manifest·검토 원자료는 `bench/oracle/m3_push_factor/history/initial-capture.tar.gz`에 바이트 확인 후 보존했다. 최종 합성은 아래 55사례다. 실패 사례나 기준값을 Rust 출력으로 덮어쓰지 않았다.
+- 환경: WSL2 x86-64 Linux, 원본13.0.3(§2 SHA), Node Frida17.26.2, Python3.13. 원본 주소는 ELF offset을 사용하며 [source.asm](../../bench/oracle/m3_push_factor/source.asm)에 호출·복원·품질·오류 경계를 저장했다. 원본/입력/도구/기준 자료 해시는 [manifest](../../bench/oracle/m3_push_factor/manifest.json)에 연결했다.
+- 자연 arms/retry/interior 각각 독립3회 사건271/104/137이 동일하다. 대조군 Crossover0도 독립3회 사건0이다. 새 사건을 제거하고 `factor_ctl` 확장 필드를 빼면 **기존13의 JSON 사건 전체·최종 출력·basis와 동일**하다.
+- 대표 자연3기록에서 판단28회(arms17·retry4·interior7), support 생략22회·호출6회다. 전체 factor16호출 중 승인 pivot wrapper6회가 alpha 교체·복원·spike 보존을 통과했고, 나머지10호출은 초기화/라운드의 관측이며 wrapper 검증 수에 더하지 않는다. 실제 quality helper 호출은0회다.
+- 합성 **55사례=선택24+wrapper31**의 원본 독립3회가 동일하다. 선택은 기존 요청 우선·k==limit/초과·k=q 전후·비용 음/0/양·min 두 항·support0/1/-1을 포함한다. q항이 min인 C19/20/21은 5m² 계수·>0 경계를 구분하고, 상쇄 L/U 기계 입력은 정수합 뒤 변환을 구분한다. 후자는 자연 도달성 증거가 아니다.
+- wrapper31사례는 반환1 반복(1회/2회),12·오류7·오류의 status보다 우선, -999/-1000, attempt0/1, failure·numeric 임계(입력과 backend 변경), 비영 요청 재계산 진입, k0의 주기 보존·비영k의50 clamp, 품질 increment5/10/20/50, k=주기/초과, 요청6 재호출·반복, 품질 status12를 포함한다. 실제 원본 caller 명령이 세 sentinel 버퍼의 포인터·내용을 보존하고 quality enter=7을 전달했다. factor/quality/문맥 helper는 대체했으므로 수치 동등성 증거가 아니다.
+- `push_factor_check.py --controls`·`--acceptance`·`--self-test`: 종료0, 변조 **41종 모두 거부**. 자연 상태/frame의 전후 연결·attempt/numeric_limit·quality enter·별칭/내용·출처·빈 사건·목표0회까지 검사한다. 각 정수/순서/준비 상수 bit/상태 필드는 계약 규칙과 일치했다. 비용 중간값 자체의 비트와 수치 LU는 비교한 것으로 보고하지 않는다.
+- 독립 최초 검토에서 자연 restored.status·call.frame.attempt 변조가 생존해 상태/frame 연결을 추가했고, quality enter·sentinel 내용·비용식 경계도 보강했다. 보완 전 자료와 검토는 history에 남겼다. 최종 독립 재검토는 **통과**(자연137사건·합성55사례 직접 재캡처 일치·추가변조9종 거부)이며 [review.md](../../bench/oracle/m3_push_factor/review.md)에 기록한다.
+- 회귀: supplier controls/acceptance/self-test31종, push chain check/self-test8종 모두 종료0. `cargo test -p rsolver-lp --test push_chain`1통과, `push_step_chain_rust.py --compare` **236단계·5,144필드 비트 일치**(42구간·재분해 뒤 제외6 유지). py_compile·node --check·git diff --check 통과. 명령별 결과는 [regression.json](../../bench/oracle/m3_push_factor/regression.json), [rust-regression.log](../../bench/oracle/m3_push_factor/rust-regression.log)에 보존한다.
+- 초기 회귀 명령을 한 번에 여러 mutually-exclusive 플래그로 실행해 argparse가 거부했다. 각 플래그를 독립 명령으로 재실행한 종료코드를 위 기록에 보존했으며 초기 실패를 통과에 세지 않았다.
+- Rust/solver/API 변경이 없어 workspace 전체·clippy·확장 재설치·pytest·Netlib/P3는 제외했다. 이 작업으로 Rust 구현 일치·실제 LU·품질 helper의 수치·재계산 본문·batch·전체 push가 검증됐다고 주장하지 않는다.
 
 ## 7. 판정과 인수인계
 
-착수. 원본 구현 동등성 미검증. 다음은 도구 작성과 탐색 캡처다. 품질 helper 수치15a를 완료해도 caller16·LU21와 별개다.
+- 작업 수행: 오라클 구축 완료(최종 독립 검토 통과). 동등성: **명시한 자연·합성 제어 경계 통과**, Rust 구현은 미검증이다.
+- 다음: **M3-04c-16**. `python3 tools/session.py status` → `python3 tools/session.py claim M3-04c-16 --owner <새-owner>` 후 이 계약과 `push_factor_check.py`의 select/wrapper 비교를 읽고 외부 backend 기반 L1을 작성한다. 재계산 진입을 중단 경계로 보존한다. 실제 재계산은17→18이며 그 뒤 연결은22다.
+- 품질 helper의 FTRAN/오차/Markowitz 수치 자체는 **M3-04c-15a**로 별도 등록했다. `089f61` caller의 반환 인자/상태 소비와 helper 수치 동등성을 구분한다.
+- branch `work/m3-04c-15`, 선행 미커밋 없음. 최종 커밋/병합은 main `Merge M3-04c-15` 이력으로 확인한다. 병합과 같은 단계에서 worktree·branch 정리와 M3-04c-15·shared 점유 해제를 한다. main의 별도 `.claude/settings.local.json`은 보존한다.
+- 공유 기록: `docs/11_progress.md`, `docs/12_roadmap_diagram.md`, `docs/14_sprint_plan.md`, `docs/m3/sprint_design.md`, `docs/handoff/M3.md`를 같은 branch에서 갱신해 병합한다. 교훈은 `docs/lessons/tooling.md`와 `original.md`에 기록한다. 외부 업로드·원격 동작 없음.
