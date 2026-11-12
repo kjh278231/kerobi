@@ -1,0 +1,57 @@
+{
+ "task": "M3-04c-21j",
+ "schema": "M3-04c-21j-v1",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "settings": {
+  "Threads": 1,
+  "Seed": 0,
+  "Presolve": 0,
+  "Method": 2,
+  "Crossover": 3,
+  "LPWarmStart": 2
+ },
+ "models": {
+  "grow7": "613ff0e09282ec6da96b5b7292b0855e1da8f3ccc23d6f61dbf7910d06f3499a",
+  "grow22": "799529d386a93f8ca063c6b6d2c15f0bbb80908472906f53ccec7c80c10cf83e",
+  "perold": "62614b576ef436e499231307e54d54d9703e4ea374caef85087d8bd4b2c6e9af",
+  "pilot4": "6d7edf91a97f01f97b86b8e5508f0a3136c94fdcec448a608c11c7471ef0afe1",
+  "stair": "5e93434e32ad5ceac61abe7fedbd6a85a2db2813d6fa70f68e96102f3c47cc6c"
+ },
+ "tools": {
+  "tools/push_mode70_agent.js": "a6d2440a4bdcff75178fd0397d82fcd665003082d7ea7cab6a29c9a1bd979263",
+  "tools/push_mode70_capture.js": "e4cccddee15b94ca143b97f9242dac344dfd11bb1b0cb5390359614acc3f18ff",
+  "tools/push_mode70_runs.py": "3b335d3eab559e965d433de05ac50d88c1cbbe5f6a9469646d7b8b7e0c2732cd",
+  "tools/push_lu_runs.py": "6fd8906c4b02fd5382059aefedc103af391ed9cdcf3b85da4a1a527a9cc787fa",
+  "tools/push_dense_agent.js": "115cc688566246031a4d804ee36f971ab67cc4581b43df72d160f89961727101",
+  "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec",
+  "tools/gurun.sh": "7efb6a90dd1fae5f71997b24c112601d4f76b822546ddcce8d53920369f0d48f",
+  "tools/push_mode70_check.py": "c2c6d2ad5f1563a19216777a48cfb5073d68d0766425c4bcbc9dc34ec04a57df",
+  "tools/push_mode70_survey.py": "bebce455351fca0267b7de21de9fe0be847fe09c0b31e19935668ade3b5bcbef",
+  "tools/push_mode70_survey_agent.js": "d985afdf25611e4dd7ca8f7329d1efe7e073e70f8be0570bc9d93528f6ab3006",
+  "tools/push_mode70_survey_capture.js": "b82d54b416b1ccf22a41865c16e4e252e7514ea1ab14c84d956de2d8c58f8cda"
+ },
+ "captures": {
+  "bench/oracle/m3_push_mode70/controls/adlittle-1.json.gz": "dd605c162ed2a4356bf876e0120fe905c2bf09d5e7c5f88501d11f61a9a02f70",
+  "bench/oracle/m3_push_mode70/controls/arms-1.json.gz": "030ace36a30b99d8bc508db2bb722308c14334a09ad425b39c8dfb27decf243f",
+  "bench/oracle/m3_push_mode70/controls/capri-1.json.gz": "d9e83d9ec89adfce4610df246f7d3a3a6028dbf8be8f8dfbfd5728746c339b1e",
+  "bench/oracle/m3_push_mode70/controls/control-1.json.gz": "13fb68f931f643d96bd24415844ba37320e4b6e7ed8309d4950e357407dfc674",
+  "bench/oracle/m3_push_mode70/controls/interior-1.json.gz": "c0a8b1c919cd56b3fb422d0876dc10db5ebf879e7b2d80cd4e43ad0c5988dac0",
+  "bench/oracle/m3_push_mode70/controls/retry-1.json.gz": "5e64eb0e565afd27fcd6149bfc9c4a9e48ccd1a1ab65e06fdcb1b38271688cce",
+  "bench/oracle/m3_push_mode70/controls/scsd1-1.json.gz": "d9309de9b1f331f81b583801cd4ede3f2b0899769926ecdbf5c7de75a21d7690",
+  "bench/oracle/m3_push_mode70/grow22-1.json.gz": "47259c54b33ac84944063e3984013a49ff2213c463cbb5a720b1925b6d6e7aa1",
+  "bench/oracle/m3_push_mode70/grow22-2.json.gz": "4edbf2f0fbb8f4df1b4bb846eaf8fe23b066acc66ba6abff234563cc309d937a",
+  "bench/oracle/m3_push_mode70/grow22-3.json.gz": "4b2af6a3d50c90fc0400bfedf9aeb458edf652e5dea7d0f33cce054badad525a",
+  "bench/oracle/m3_push_mode70/grow7-1.json.gz": "15e1f10fc94cb27a75032c46f9cab7dcabeebdf2aa95222ee7b63136fe149134",
+  "bench/oracle/m3_push_mode70/grow7-2.json.gz": "c5380a6ceda3c8f6390c63ffc420b2b5311d8b097c35425c9a540c8cadd54074",
+  "bench/oracle/m3_push_mode70/grow7-3.json.gz": "cb348d9f3838f2edf8ce30521a05432dff8896ace3d777306ee6940396821d86",
+  "bench/oracle/m3_push_mode70/perold-1.json.gz": "857b262fdd543ea67ecc4e4d2c32245f8768952c8221dbabd520684169fb78f7",
+  "bench/oracle/m3_push_mode70/perold-2.json.gz": "4a7e1b723fb99cf79945777a59c6183f273a2de4cb554f8d1a46c8c589ab2cb2",
+  "bench/oracle/m3_push_mode70/perold-3.json.gz": "715bb93b432f9ed9bc92e1c98631c8f30e9244be86807fc64b9fd30f58308406",
+  "bench/oracle/m3_push_mode70/pilot4-1.json.gz": "a0e64264c47b2d2cf2dc88de04ed772e642c38113f4fb44a5626e9958fab39d0",
+  "bench/oracle/m3_push_mode70/pilot4-2.json.gz": "143c682b54a3e52ca4eda10ed6b81970913825077b36bf0a3d370c8722de4f25",
+  "bench/oracle/m3_push_mode70/pilot4-3.json.gz": "e43d2ce8001f006f06c848a4fc1879e6a349571f5f8ce436b4e36f1d6c1caae0",
+  "bench/oracle/m3_push_mode70/stair-1.json.gz": "b533165c8fc8ea6f7f91c654e34d01913dc80743222fa85ab8ac208b265a3b05",
+  "bench/oracle/m3_push_mode70/stair-2.json.gz": "5b78d77beb097b7f64b5bd8ef55d492bb837b7c2c16b99e62ef93d201b924c75",
+  "bench/oracle/m3_push_mode70/stair-3.json.gz": "d757b012f3efcbea10cb719398e6f7040e9aa218a152ec020a752e156df79234"
+ }
+}

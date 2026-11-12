@@ -227,7 +227,7 @@ def self_test(caps, ctl, base):
     mut('회차 풀 값', lambda c, t: first_of(c[('stair', 3)], 'pool:start').update(c0=first_of(c[('stair', 3)], 'pool:start')['c0'] + 1))
     mut('회차 모드 피벗', lambda c, t: first_of(c[('grow22', 2)], 'mode70:pivot').update(idx=0))
     mut('비간섭 lu:leave', lambda c, t: [first_of(x, 'lu:leave')['factor']['diag'].__setitem__(0, '00' * 8) for x in allr(c, 'pilot4')])
-    mut('비간섭 대조군 사건 누락', lambda c, t: t['capri']['events'].pop(5))
+    mut('비간섭 대조군 사건 누락', lambda c, t: t['capri']['events'].remove(next(e for e in t['capri']['events'] if not e['event'].startswith(NEW))))
     mut('대조군 결과', lambda c, t: t['scsd1']['result'].update(status=3))
     mut('대조군 모드 사건', lambda c, t: t['arms']['events'].append({'event': 'mode70:pivot'}))
     mut('start 노드 수(전 회차)', lambda c, t: [first_of(x, 'pool:start').update(nodes=first_of(x, 'pool:start')['nodes'] + 1) for x in allr(c, 'grow7')])
