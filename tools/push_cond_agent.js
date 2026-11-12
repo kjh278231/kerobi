@@ -106,9 +106,15 @@ Process.attachModuleObserver({onAdded(mod) {
       const c=this.returnAddress.sub(b).toInt32();
       this.on=onInit()&&(c===0x1c07c6||c===0x1c07ea);if(!this.on)return;
       this.caller=c;this.request=S().add(0x294).readS32();
+      // 1c: 초기 재분해 입력(Rust SerialStart::new) — S+0x2fc·0x2f8·0x46c, 036ade 진입 블록 상태
+      if(!survey){const s=S();this.pre={x2fc:s.add(0x2fc).readS32(),x2f8:s.add(0x2f8).readS32(),x46c:s.add(0x46c).readS32()};active.blk=[];}
     },
     onLeave(r){
       if(!this.on)return;
+      if(!survey){const F=S().add(0x470).readPointer();
+        emit('cond:lu',{caller:this.caller.toString(16),pre:this.pre,block:active.blk,zero:hex(F.add(0x10),8),x158:F.add(0x158).readS64().toNumber(),
+          pool_mod16:[F.add(0x148).readPointer().and(0xf).toInt32(),F.add(0x150).readPointer().and(0xf).toInt32()],
+          x188:F.add(0x188).readS32(),x1f8:hex(F.add(0x1f8),8)});active.blk=null;}
       const v={caller:this.caller.toString(16),request_in:this.request,ret:r.toInt32(),extra:extra()};
       if(survey) (active.sum.lu=active.sum.lu||[]).push(v); else emit('init:lu',{...v,header:vec(S().add(0x470).readPointer(),0x18,M(),4),vstat:vec(S(),0x168,N()+M(),4)});
     }
@@ -143,6 +149,12 @@ Process.attachModuleObserver({onAdded(mod) {
     }
   });
   Interceptor.attach(b.add(0x285d00),{onEnter(){send({event:'unsupported:23e604'});}});
+  // 036ade 진입(05b257 caller 0xf34f2): 초기 재분해 중이면 블록 상태 S+0x2c0/0x4e0/0x4e4.
+  Interceptor.attach(b.add(0xd4190),{onEnter(a){
+    if(active===null||!Array.isArray(active.blk)||this.returnAddress.sub(b).toInt32()!==0xf34f2)return;
+    if(!a[0].equals(S()))throw Error('036ade S 불일치');
+    active.blk.push({x2c0:a[0].add(0x2c0).readS32(),x4e0:a[0].add(0x4e0).readS32(),x4e4:a[0].add(0x4e4).readS32()});
+  }});
   // 9e288 BTRAN: caller 0x1a998a(116fd7)만.
   Interceptor.attach(b.add(0x12de10),{
     onEnter(a){
