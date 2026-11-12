@@ -52,6 +52,15 @@ Rust 변이 실행 전에 입력과 연산을 분석해 기대 분류를 고정�
 ## 6. 실행 결과
 
 - 첫 동작: `--write` → `cargo test -p rsolver-lp --test push_recompute` → `--compare` 종료0. 자연8·합성120, 총128입력·271행·2,790필드 비트/정확 일치. `--self-test`는62종 trace 변조를 모두 거부했다. 경계·회귀·Rust 변이는 다음 단계다.
+- 최초 Rust 변이33종은28거부·5생존이었고, 예상하지 않은 `reverse-basis` 생존 때문에 검사가 종료1이었다. 기존 누적은 큰 값2^54와 작은 값1 두 개라 역순 합의 +2가 반 ULP로 반올림되어 같은 값이었다. 이 실패를 `history/initial-mutations.json`에 보존한다. 선행 회귀 CLI의 배타적 플래그 조합 오류2건도 `history/initial-oracle-regression.json`에 보존하고 개별 명령으로 고친다.
+
+### 6.1 추가 원본 캡처 계약(캡처 전 고정)
+
+- 기존 실패를 없애기 위해 합격 조건을 완화하지 않는다. 17의 도구·입력·캡처는 수정하지 않고, 같은 원본 명령 구간 실행기를 재사용하는 `push_recompute_extra.py`로 두 진입점 각각5사례(총10사례·18행)를 추가한다. 원래128사례는 유지한다.
+- I=1e30·h=0.125를 유지한다. lower=-I/upper=I/2, lower=I/2/upper=I, width=I에서 v=2I, A행 앞 PInf=1인 재결합 구분, 2^54 뒤 작은 값1 세 개를 합산하는 역순 구분을 고정한다. 이들은 자연 도달성을 주장하지 않는 합성 기계 상태다. model_status=1, attempt=0, request=10, 별칭false다.
+- 원본 두 경계의 ABI·입출구·FTRAN/로그 대체는17과 동일하다. 새 원본 독립3회는 `tools/gurun.sh ../.venv/bin/python tools/push_recompute_extra.py --capture bench/oracle/m3_push_recompute_rust/extra-N.json`으로 순차 실행한다. 기존 파일 덮어쓰기는 거부한다. source/도구/입력/바이너리/캡처 해시를 별도 manifest에 고정하고 사건·환경·입력을 대조한다.
+- 기준 캡처 전체 필드를 기존 `recompute` 계산 모델과 대조하되 Rust 기대값은 모델 출력이 아닌 원본 result에서 읽는다. 빈 사건·해시0·입력·회차·null·수치·순서 변조를 거부해야 한다. 추가 후138입력·289행에서 Rust 변이33종 모두를 거부해야 하며, 초기 실패 이력은 보존한다.
+- `oracle-capture` 스킬의 완료 전 독립 검토 지침에 따라 다른 에이전트에게 읽기 전용 검토를 요청한다. 원본 추가 캡처는 작업자 실행이 끝난 뒤 순차로 수행한다.
 
 ## 7. 판정과 인수인계
 
