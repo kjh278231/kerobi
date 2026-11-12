@@ -1,0 +1,15 @@
+{
+  "command": "cargo test --release --workspace",
+  "returncode": 0,
+  "passed": 134,
+  "failed": 0,
+  "ignored": 12,
+  "clippy": {
+    "command": "cargo clippy --workspace --all-targets -- -D warnings",
+    "returncode": 0
+  },
+  "py_compile": {
+    "command": "python3 -m py_compile tools/push_round_rust.py",
+    "returncode": 0
+  }
+}

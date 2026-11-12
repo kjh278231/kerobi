@@ -1,0 +1,21 @@
+{
+  "cases": 216,
+  "fields": 14365,
+  "rule": "ordered typed exact; f64 little-endian bits incl signed zero",
+  "origins": {
+    "natural": 110,
+    "synthetic": 106
+  },
+  "kinds": {
+    "pass": 12,
+    "begin_accept": 4,
+    "btran": 34,
+    "accept": 32,
+    "defer": 10,
+    "gate": 7,
+    "support": 7,
+    "exhausted": 78,
+    "wrapper": 25,
+    "clear": 7
+  }
+}

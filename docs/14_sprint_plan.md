@@ -194,7 +194,7 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-17 | 오라클 완료(범위 한정) | 재분해 뒤 rhs FTRAN·basic 재계산 두 경계 | 04c-12 | [자연8회·119행+합성120사례·152행 독립3회·비트 일치, 변조82종·독립검토 추가15종 거부](m3/primal_push_recompute_oracle.md). 자연 별칭/free/fixed/retry는 미관측(합성), Rust18·수치LU21·루프22 별도 |
 | M3-04c-18 | 구현 L1 완료(범위 한정) | FTRAN 결과의 shift·분류·PInf·retry | 04c-17 | [자연8+합성130, 138입력·289행·2,958필드 비트 일치, trace변조84종·Rust변이33종 거부, workspace133·clippy0·독립검토 통과](m3/primal_push_recompute_rust.md). FTRAN 외부 입력, 실제LU21·루프22 별도 |
 | M3-04c-19 | 오라클 완료(범위 한정) | 보류·지원 BTRAN·고갈·재처리 라운드 | 04c-12 | [자연새207사건·합성106경계 각3회·비간섭·제어 재생·변조157종·독립검토 통과](m3/primal_push_round_oracle.md). 자연BTRAN22회 모두count1, count0/다수/dense·오류는 합성, Rust20·실제LU21·루프22 별도 |
-| M3-04c-20 | 구현 L1 | 보류·지원 표시·라운드 제어(BTRAN 외부 backend) | 04c-19 | 후보·지원·실패 횟수·압축·종료·요청의 연쇄 비교 |
+| M3-04c-20 | 구현 L1 완료(범위 한정) | 보류·지원 표시·라운드 제어(BTRAN 외부 backend) | 04c-19 | [자연110+합성106, 216경계·14,365필드 정확/비트 일치, trace변조4,093종·Rust변이39종 거부·workspace134·clippy0](m3/primal_push_round_rust.md). 실제LU21·루프22·batch23 별도 |
 | M3-04c-21 | 조사 | 직렬 수치 backend와 Rust Lu 연결 | 04c-12, M1 LU 계약 | FTRAN/BTRAN 목록·spike·지연 LU·재분해 번호 대응을 수치 오라클/구현 하위 번호로 분할 |
 | M3-04c-22 | 구현 L1 | 초기화된 직렬 push 루프 연결(수치 backend 외부) | 04c-14·16·18·20·10 | 중간 원본 상태 재주입 없이 여러 round의 호출·상태·후보 비교. 초기화·최종 해 설치·수치 LU 제외 |
 | M3-04c-23 | 조사 | batch 공급·worker·factor 별칭·무효화 | 04c-12 | Threads>1 도달성·재현성·record·work·미소비 후보의 후속 오라클/구현 분할 |

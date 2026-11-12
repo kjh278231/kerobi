@@ -36,6 +36,8 @@
 
 [04c-19 보류·지원·라운드 오라클](primal_push_round_oracle.md)은 자연3모델의 새207사건(전체751)과 원본 명령 합성106경계를 각각 독립3회 검증했다. 승인수36·보류6·고갈9·round factor7·종료3, 자연BTRAN22회는 모두count1이며 다른 raw 표현은 합성이다. 원본 재현·선행17 비간섭·제어 재생·157변조·독립검토를 통과했다. 초기 생존 caller 연결3종은 직전 applied→BTRAN→다음 공급자 P/factor 상태 연결로 해결했다. 다음20은 이 제어의 Rust L1이며 수치BTRAN/factor는 외부 backend, 실제LU21·루프22·batch23은 별도다.
 
+[04c-20 round Rust L1](primal_push_round_rust.md)은 보류·실패 증가·승인수·지원 표시·순서/중복 보존 압축·고갈 종료·요청10·BTRAN caller·round factor/retry·재계산 뒤 요청 clear를 구현했다. 자연110+합성106, 총216경계·14,365필드 정확/비트 일치와 trace변조4,093종·Rust변이39종 거부, workspace134통과·clippy0·선행 회귀를 확인했다. 원본19 독립3회 자료 재사용·새 원본0회이며 독립검토자는 사용하지 않았다. 현재 API는 기존 solver 루프에서 호출하지 않고 수치 BTRAN/factor는 외부 backend다. 다음21은 FTRAN/BTRAN 목록·spike·지연 LU·재분해 번호 대응의 수치 연결 조사이며,22의 루프 연결·23의 batch와 구분한다.
+
 ## 2. Method 선택과 Concurrent
 
 자동 선택은 입력 분류→Method 결정→실행 경로를 추적한다. M3-05a는 명시 Method, 자동 Method, 모델 분류, 관련 파라미터에 대한 원본 결정표를 만든다. 선택 분기를 고치는 작업과 concurrent 엔진을 만드는 작업은 독립 번호다.
