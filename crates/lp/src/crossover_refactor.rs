@@ -7,7 +7,7 @@
 use crate::crossover_btran::Cache;
 use crate::crossover_ftran::{Cells, Spike};
 use crate::crossover_lu::{LuState, Scalars};
-use crate::lu::Lu;
+use crate::lu::{BlockState, Lu};
 use crate::scaling::Scaling;
 use crate::spx::Spx;
 
@@ -71,8 +71,17 @@ fn level_starts(lev: &[usize]) -> (i32, Vec<i32>) {
 
 /// Refactor `header` (variable of each basis position) with ZERO `zero` and Markowitz threshold `tol`.
 /// `alloc` is the allocation before the call; `prev` the backend state before it (its spike, cache and scratch
-/// are kept; None at the push's first factor call, where they are unknown).
-pub fn refactor(a: &Matrix, header: &[i32], zero: f64, tol: f64, alloc: Alloc, prev: Option<&LuState>) -> Result<Refactor, RefactorError> {
+/// are kept; None at the push's first factor call, where they are unknown). `block` is the `1da0b2` 2×2 block phase
+/// state on S (S+0x2c0/0x4e0/0x4e4), updated as the original does.
+pub fn refactor(
+    a: &Matrix,
+    header: &[i32],
+    zero: f64,
+    tol: f64,
+    alloc: Alloc,
+    prev: Option<&LuState>,
+    block: &mut BlockState,
+) -> Result<Refactor, RefactorError> {
     let (m, n) = (a.m, a.n);
     assert_eq!(zero.to_bits(), crate::lu::ZERO.to_bits(), "ZERO other than the M1 factor's");
     let spx = Spx {
@@ -91,7 +100,7 @@ pub fn refactor(a: &Matrix, header: &[i32], zero: f64, tol: f64, alloc: Alloc, p
         scaling: Scaling { col: vec![1.0; n], row: vec![1.0; m], obj: 1.0 },
     };
     let head: Vec<usize> = header.iter().map(|&j| j as usize).collect();
-    let lu = Lu::factor_tol(&spx, &head, tol);
+    let lu = Lu::factor_block(&spx, &head, tol, block);
     if !lu.complete() {
         return Err(RefactorError::Singular);
     }
@@ -197,7 +206,7 @@ pub fn refactor(a: &Matrix, header: &[i32], zero: f64, tol: f64, alloc: Alloc, p
     let sc = Scalars {
         xd8: p.s1 as i32,
         xdc: dc as i32,
-        xe4: p.n_singleton as i32,
+        xe4: p.s4 as i32,
         xe8: e8 as i32,
         x100: t as i32,
         x104: p.sparse_mult as i32,

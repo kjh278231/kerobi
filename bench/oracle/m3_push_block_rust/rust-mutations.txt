@@ -1,0 +1,24 @@
+  block-phase-skipped: rejected 2개 연산 불일치: 첫 capri#813 G.perm.x20[140]: 원본 218 != Rust 149
+  x4e0-not-counted: rejected 3개 연산 불일치: 첫 capri#2 G.block.leave.x4e0: 원본 1 != Rust 0
+  run-threshold-50-65: rejected 3개 연산 불일치: 첫 capri#2 G.block.leave.x4e0: 원본 1 != Rust 0
+  run-threshold-50-49: survived 
+  table-size-2active: survived 
+  A-skipped: survived 
+  A-pivot-row-reversed: survived 
+  A-accept-0: survived 
+  A-value-swap: survived 
+  B-skipped: rejected 2개 연산 불일치: 첫 capri#813 G.perm.x20[140]: 원본 218 != Rust 149
+  B-pivot-col-reversed: rejected 2개 연산 불일치: 첫 capri#813 G.perm.x28[140]: 원본 152 != Rust 206
+  B-key-order-reversed: rejected 2개 연산 불일치: 첫 capri#813 G.perm.x20[140]: 원본 218 != Rust 217
+  B-accept-0: survived 
+  B-accept-huge: rejected 2개 연산 불일치: 첫 capri#813 G.perm.x20[140]: 원본 218 != Rust 149
+  B-U-merge-reversed: rejected 2개 연산 불일치: 첫 capri#813 G.factor.U.row[141].cols[0]: 원본 249 != Rust 233
+  B-U-no-drop: survived 
+  B-other-col-last-dropped: rejected 2개 연산 불일치: 첫 capri#813 G.factor.U.col[141].vals[0]: 원본 '000000000000e03f' != Rust '0000000000000000'
+  B-col-singletons-skipped: rejected 2개 연산 불일치: 첫 capri#813 G.perm.x20[143]: 원본 149 != Rust 262
+  pairs-fifo: survived 
+  update-threshold-20-19: survived 
+  settle-reversed: survived 
+  xe4-after-blocks: rejected 2개 연산 불일치: 첫 capri#813 G.factor.L.beg[145]: 원본 292 != Rust 291
+  block-L-generic: rejected 2개 연산 불일치: 첫 capri#813 G.factor.L.beg[141]: 원본 290 != Rust 289
+Rust 변이 {'rejected': 12, 'survived': 11}

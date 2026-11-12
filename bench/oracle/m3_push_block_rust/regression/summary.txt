@@ -1,0 +1,94 @@
+== python3 tools/push_block_check.py --controls --acceptance --self-test
+exit 0
+controls 통과: 7사례 × 3회 lu:block 일치, 21e 투영 일치
+acceptance 통과
+self-test 통과 0
+== python3 tools/push_lu_check.py --controls --acceptance
+exit 0
+== python3 tools/push_lu_rust.py --write
+exit 0
+input: 207 연산 {'R': 19, 'F': 120, 'B': 32, 'U': 36}
+== git diff --exit-code --stat bench/oracle/m3_push_lu_rust/input.txt
+exit 0
+== python3 tools/push_lu_rust.py --generate --write
+exit 0
+input: 213 연산 {'M': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}
+== git diff --exit-code --stat bench/oracle/m3_push_refactor_rust/input.txt
+exit 0
+== python3 tools/push_lu_rust.py --block --write
+exit 0
+input: 219 연산 {'M': 6, 'K': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}
+== git diff --exit-code --stat bench/oracle/m3_push_block_rust/input.txt
+exit 0
+== cargo test -p rsolver-lp --test push_lu
+exit 0
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+== python3 tools/push_lu_rust.py --compare
+exit 0
+비교 연산 207 {'R': 19, 'F': 120, 'B': 32, 'U': 36}, 통과 {'R': 19, 'F': 120, 'B': 32, 'U': 36}, 필드 1257225, 실패 0
+OK
+== python3 tools/push_lu_rust.py --generate --compare
+exit 0
+비교 연산 213 {'M': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}, 통과 {'M': 6, 'G': 18, 'F': 119, 'B': 32, 'U': 36}, 필드 1234852, 실패 2
+예상 실패(2×2 블록, 계약 §1) ['capri#813 G.perm.x20[140]: 원본 218 != Rust 149', 'capri#821 F.enter.L.beg[142]: 원본 290 != Rust 291']
+OK (예상 실패 2연산 제외)
+== python3 tools/push_lu_rust.py --block --compare
+exit 0
+비교 연산 219 {'M': 6, 'K': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}, 통과 {'M': 6, 'K': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}, 필드 1262508, 실패 0
+생성 재분해 통과 분류 {'triangular': 9, 'no levels': 16, 'kernel': 10, 'L levels': 3}
+예상 실패(2×2 블록, 계약 §1) []
+OK
+== python3 tools/push_lu_rust.py --self-test
+exit 0
+trace 변조 45종 모두 거부
+== python3 tools/push_lu_rust.py --generate --self-test
+exit 0
+trace 변조 42종 모두 거부
+== python3 tools/push_lu_rust.py --block --self-test
+exit 0
+trace 변조 54종 모두 거부
+== cargo test -p rsolver-lp --test push_ftran
+exit 0
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+== python3 tools/push_ftran_rust.py --compare
+exit 0
+== cargo test -p rsolver-lp --test push_btran
+exit 0
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+== python3 tools/push_btran_rust.py --compare
+exit 0
+== cargo test -p rsolver-lp
+exit 0
+test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.99s
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+== python3 -m py_compile tools/push_lu_rust.py tools/push_block_check.py tools/push_block_runs.py
+exit 0
+== cargo clippy --workspace --all-targets -- -D warnings
+exit 101
+error: could not compile `rsolver-lp` (lib) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `rsolver-lp` (lib test) due to 2 previous errors
+== cargo test --release --workspace 2>&1 | grep -E '^test result|FAILED|panicked' | awk '{p+=$4; f+=$6; i+=$8} END {print "passed", p, "failed", f, "ignored", i}'; exit ${PIPESTATUS[0]}
+exit 0
+passed 143 failed 0 ignored 12
+== git diff --check
+exit 0
+== (clippy 실패 2건(type_complexity·manual_range_contains) 수정 뒤 재실행) cargo clippy --workspace --all-targets -- -D warnings
+exit 0
+== (수정 뒤) cargo test --release --workspace
+passed 143 failed 0 ignored 12
+exit 0
+== (수정 뒤) python3 tools/push_lu_rust.py --block --compare / --generate --compare / cargo test --test push_lu
+OK
+OK (예상 실패 2연산 제외)
