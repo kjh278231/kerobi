@@ -62,8 +62,22 @@
 
 ## 6. 실행 결과
 
-(실행 뒤 작성)
+- 환경: WSL2 x86-64 Linux 6.6.87.2(i7-13700F), Python 3.10, Node 22, Rust stable. 계약 `72adcbf`. 원본 실행: 조사 probe 62회(Netlib 1회씩, 면허 초과 42개는 실행 불가)·탐색 21h agent 1회(grow7)·풀 채움 탐색 3회, 정식 1차 22회(표지 없는 agent, 근거로 쓰기 전에 버림·이력 `cf1bd5e` 이전 commit에 있음), **정식 22회**(5모델 × 3 + 대조군 7).
+- **계약 변경(Rust 비교 전)**: ① M1 경로는 끈 채 둔다(§1, 풀 크기 F+0x158을 M1이 모름). ② 정식 1차 캡처에 `local_70`·dgetrf 표지가 없어 grow22의 범위 밖 재분해를 사전 기준으로 가를 수 없었다. agent에 표지 probe 2개(0xd85b4, DGETRF 진입)를 더하고 정식 자료 전체를 다시 찍었다(섞지 않음). ③ 조밀 정렬은 캡처 주입 대신 C·asm으로 확정한 풀 첫 채움 식(`pool_first_fill`)으로 Rust가 만든다(탐색에서 9건, (B)에서 10건 일치).
+- **캡처**(`bench/oracle/m3_push_dense/`, manifest): `push_dense_check.py --controls --acceptance --self-test` 종료0. 5모델 × 3회 JSON 동일(pid·run_id 제외), 대조군 7사례는 dense 사건이 없고 21h 정식 `*-1`에 같은 거르기를 한 사건열·결과·출력·파라미터와 같다(비간섭). 조밀 LU push 10·밖 11, 모두 자체 LU·첫 시도·결함 0·scratch 정렬 0, 행렬 정렬 0/8 모두 있음. 범위 밖 push 재분해는 grow22 lu 392·431·455(풀 부족 재호출·`local_70`)뿐. 변조 16종 거부.
+- **원본 사실**(C·asm·캡처): 전환 판정·조밀 배치·자체 LU·정렬 규칙은 [교훈](../lessons/original.md)에 적었다. 조밀 배열 열 = 활성 행 오름차순(반환 순열 x20 쪽), 행 = 활성 위치의 열 개수 bucket 순(x28 쪽). 정렬 = 풀 첫 채움 `local_f8`의 짝홀(이후 chunk는 4의 배수). 꼬리 8-lane 합은 asm 0xde06e에서 `(A+B)+(C+D)`.
+- **(A) 조밀 LU 경계**(`cargo test --test push_dense` → `push_dense_rust.py --compare`): **21회(push 10·밖 11, n 51–84, 정렬 0·8) 행렬·열/행 목록 88,651필드 비트·정확 일치**, 첫 실행부터.
+- **(B) 재분해 생성**(`--test push_lu dense_chain_trace`): 5모델 push 재분해 31회 중 범위 안 **28/28 일치**(036ade 반환 순열·factor 전체·블록 상태, 필드 726,853). 조밀 재분해 **10/10**에서 Rust의 전환 단계·n·정렬·조밀 순서·입력 행렬이 `dense:enter`·`dense:lu`와 같고, 조밀이 아닌 18회에서 Rust도 전환하지 않았다. 범위 밖(grow22 lu ≥ 392, 사전 명시 §1(i)) 3재분해는 실패(첫 차이 grow22#467 `x20[229]`, 이후 블록 상태 0x4e0 13 ≠ 14: 풀 부족 재호출이 블록 단계를 한 번 더 센다).
+- **(C) 연결**: 04f-1 `push_install_rust.py --compare` **설치 59/59**(grow7 분류된 실패가 통과로 바뀌어 `KNOWN`을 비움), (A) 111호출 그대로. 21h `--block` 219/219, 21g(블록 끔) 211/213(기존 예상 실패 그대로), 21f 207/207, 24 `--lu` 725줄, 1a 731줄, 1c·1d·21b·21d 일치.
+- **판별력**: trace 변조 13종 거부(`--self-test`, 첫 시도에서 대상 지정 오류 2건 — n을 반환 칸에서 읽음, 범위 밖 grow22 줄을 고름 — 을 고친 뒤 재실행). Rust 소스 변이 23종(`bench/validation/m3_push_dense/rust_mutations.json`): **거부 20·생존 3**. 필수 `dense-off`는 grow7#164 `x20[89]`에서 거부. 생존: 판정 `n > 50 → n ≥ 50`(n = 50 사례 없음), `4m < n²` 제거(관측 n에서 늘 참), 꼬리 피벗 동률 마지막(동률 없음).
+- **회귀**([요약](../../bench/validation/m3_push_dense/regression.txt)) 31명령 모두 종료0: 캡처 검사 3종, 입력 `--write` 9종 불변(`git diff --exit-code`), `cargo test --release --workspace --no-fail-fast` **152통과·0실패·ignored 12**(새 테스트 2), 비교 13종, clippy(첫 실행 `manual_is_multiple_of` 2건 수정), py_compile, `git diff --check`.
+- 실행하지 않은 검사: M1 simplex는 조밀 전환을 끈 채(결과 불변)라 확장 설치·pytest·pathcmp는 workspace 회귀로 대신했다. 독립 검토자는 쓰지 않았다(사용자 지시로 이 세션이 작업자·마스터를 겸함).
 
 ## 7. 판정과 인수인계
 
-(실행 뒤 작성)
+- 작업 수행: **구현 완료(계약 범위 통과)**. 동등성: (A) 자체 조밀 LU 21회 비트 통과, (B) 5모델 push 재분해 범위 안 28/28 통과(조밀 10 포함), (C) 04f-1 grow7 연결 통과(설치 59/59). grow22 범위 밖 3재분해는 사전 명시 실패.
+- 미검증: 조밀 LU 재시작(블록 피벗 < ZERO)·결함 행(꼬리 피벗 < ZERO)·빈 열 조밀 전환(자연 0회, C만), MKL dgetrf·전치 경로(n ≥ 1001), `local_70` 조밀 배열 Markowitz 모드·풀 부족 재호출(21j), 판정 경계(n = 50, 4m), 1e99 상한, work, M1 경로 활성화.
+- 후속: **M3-04c-21j**(grow22: `036ade` 풀 부족 재호출 C:2592–2620과 `local_70` 모드 C:2569–3960), M1 후속(M1 `Lu`에 풀 크기 수명을 두고 조밀 전환 켜기, pathcmp 회귀), M3-04f-2(cleanup).
+- 재실행: `python3 tools/push_dense_check.py --controls --acceptance --self-test` → `python3 tools/push_dense_rust.py --write` → `cargo test --release -p rsolver-lp --test push_dense --test push_lu` → `python3 tools/push_dense_rust.py --compare` / `--self-test` / `--mutate-rust <새 경로>`. 원본 재캡처는 `python3 tools/push_dense_runs.py`(+`--controls`).
+- branch `work/m3-04c-21i`, worktree `../rsolver-m3-04c-21i`, 선행 미커밋 없음. 최종 병합은 main `Merge M3-04c-21i` 이력. main 미추적 `.claude/settings.local.json` 보존. 원격/업로드 없음.
+- 교훈: `docs/lessons/original.md`(조밀 전환 판정·배치·자체 LU, 정렬 = 풀 첫 채움 짝홀), `tooling.md`(표지 probe 조사, agent 사본 거르기와 비간섭, 표지 추가 시 전체 재캡처).

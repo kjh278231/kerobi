@@ -222,7 +222,7 @@ def self_test(caps):
         name, ev, js = lines[i].split(' ', 2)
         g = json.loads(js); fn(g); lines[i] = f'{name} {ev} ' + json.dumps(g, separators=(',', ':'))
 
-    n0 = int(ut[1].split(' ')[2])
+    n0 = unit_cases(caps)[0][2]['n']  # 첫 (A) 사례의 n(반환 칸이 아니라 캡처에서)
     muts = [
         ('A 행렬 1비트', unit_mut, lambda L: tok(L, 1, 3 + 2 * n0 + 7, bit)),
         ('A 열 목록 교환', unit_mut, lambda L: (lambda t: (t.__setitem__(slice(3, 5), [t[4], t[3]]), L.__setitem__(3, ' '.join(t))))(L[3].split(' '))),
@@ -232,7 +232,7 @@ def self_test(caps):
         ('B 조밀 단계', chain_mut, lambda L: gedit(L, dense_lines(L)[0], lambda g: g['dense'].update(steps=g['dense']['steps'] + 1))),
         ('B 조밀 정렬', chain_mut, lambda L: gedit(L, dense_lines(L)[1], lambda g: g['dense'].update(mat_mod16=8 - g['dense']['mat_mod16']))),
         ('B 조밀 행 순서', chain_mut, lambda L: gedit(L, dense_lines(L)[2], lambda g: g['dense']['rows'].reverse())),
-        ('B 조밀 입력 1비트', chain_mut, lambda L: gedit(L, dense_lines(L)[3], lambda g: g['dense']['a'].__setitem__(0, bit(g['dense']['a'][0])))),
+        ('B 조밀 입력 1비트', chain_mut, lambda L: gedit(L, dense_lines(L)[-1], lambda g: g['dense']['a'].__setitem__(0, bit(g['dense']['a'][0])))),
         ('B 조밀 없음', chain_mut, lambda L: gedit(L, dense_lines(L)[0], lambda g: g.pop('dense'))),
         ('B 원본에 없는 조밀', chain_mut, lambda L: gedit(L, next(i for i, ln in enumerate(L) if '"op":"G"' in ln and '"dense"' not in ln),
                                                        lambda g: g.update(dense={'steps': 0, 'n': 0, 'mat_mod16': 0, 'rows': [], 'cols': [], 'a': []}))),
