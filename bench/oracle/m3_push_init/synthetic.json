@@ -1,0 +1,125 @@
+{
+ "_doc": "M3-04c-1b 원본 명령 합성. edits는 첫 push 호출에서 push 진입(enter) 또는 첫 초기화 FTRAN 직전(ftran)에 쓴다. 값은 numpy 설계(§6)로 골랐고 판정은 원본 캡처로만 한다. require는 결과를 보기 전에 정한 필수 분기 증거.",
+ "adjust": {
+  "base": "arms",
+  "edits": [
+   {
+    "at": "enter",
+    "field": "x",
+    "index": 13,
+    "hex": "0000000000004940"
+   },
+   {
+    "at": "enter",
+    "field": "x",
+    "index": 1,
+    "hex": "000000000000e03f"
+   }
+  ],
+  "require": [
+   "adjust"
+  ]
+ },
+ "mk_low": {
+  "base": "interior",
+  "edits": [
+   {
+    "at": "ftran",
+    "field": "s390",
+    "hex": "f168e388b5f8e43e"
+   }
+  ],
+  "require": [
+   "strengthen"
+  ]
+ },
+ "mk_limit": {
+  "base": "interior",
+  "edits": [
+   {
+    "at": "ftran",
+    "field": "s390",
+    "hex": "f168e388b5f8e43e"
+   },
+   {
+    "at": "ftran",
+    "field": "s3c8",
+    "int": 200
+   }
+  ],
+  "require": [
+   "strengthen",
+   "limit"
+  ]
+ },
+ "quality": {
+  "base": "adlittle",
+  "edits": [
+   {
+    "at": "enter",
+    "field": "x",
+    "index": 11,
+    "hex": "000000a2941a6d42"
+   }
+  ],
+  "require": [
+   "retry_p"
+  ]
+ },
+ "quality_pinf": {
+  "base": "arms",
+  "edits": [
+   {
+    "at": "enter",
+    "field": "x",
+    "index": 13,
+    "hex": "00a0d88557347643"
+   }
+  ],
+  "require": [
+   "retry_pinf"
+  ]
+ },
+ "slack_m2": {
+  "base": "retry",
+  "edits": [
+   {
+    "at": "enter",
+    "field": "vstat",
+    "index": 21,
+    "int": -2
+   }
+  ],
+  "require": [
+   "slack_m2_stale"
+  ]
+ },
+ "col_m5": {
+  "base": "arms",
+  "edits": [
+   {
+    "at": "enter",
+    "field": "vstat",
+    "index": 27,
+    "int": -5
+   }
+  ],
+  "require": [
+   "col_m5"
+  ]
+ },
+ "col_m5_ub": {
+  "base": "retry",
+  "edits": [
+   {
+    "at": "enter",
+    "field": "vstat",
+    "index": 3,
+    "int": -5
+   }
+  ],
+  "require": [
+   "col_m5_ub"
+  ]
+ }
+}
