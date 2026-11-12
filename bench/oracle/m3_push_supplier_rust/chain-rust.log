@@ -1,0 +1,9 @@
+   Compiling rsolver-lp v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-14/crates/lp)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.66s
+     Running tests/push_chain.rs (target/debug/deps/push_chain-5830d4edfb45a3bd)
+
+running 1 test
+test chain_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+

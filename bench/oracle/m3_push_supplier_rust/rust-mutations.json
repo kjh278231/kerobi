@@ -1,0 +1,114 @@
+{
+ "rejected": [
+  {
+   "name": "failure-two",
+   "rejected": true,
+   "first_difference": "arms/26.deferred[0]: 기준='0', 실제='1'"
+  },
+  {
+   "name": "failure-four",
+   "rejected": true,
+   "first_difference": "arms/28.deferred[0]: 기준='1', 실제='0'"
+  },
+  {
+   "name": "ignore-support",
+   "rejected": true,
+   "first_difference": "arms/17.position[0]: 기준='21', 실제='18'"
+  },
+  {
+   "name": "positive-marks-only",
+   "rejected": true,
+   "first_difference": "arms/17.position[0]: 기준='21', 실제='18'"
+  },
+  {
+   "name": "ignore-slack-conflict",
+   "rejected": true,
+   "first_difference": "synthetic/slack-conflict.position[0]: 기준='2', 실제='1'"
+  },
+  {
+   "name": "no-normalization",
+   "rejected": true,
+   "first_difference": "synthetic/negative-support.support[0]: 기준='0', 실제='-1'"
+  },
+  {
+   "name": "defer-wrong-candidate",
+   "rejected": true,
+   "first_difference": "arms/17.candidates[1]: 기준='22', 실제='0'"
+  },
+  {
+   "name": "increment-failures",
+   "rejected": true,
+   "first_difference": "arms/17.failures[16]: 기준='0', 실제='1'"
+  },
+  {
+   "name": "reverse-column",
+   "rejected": true,
+   "first_difference": "arms/16.input[1]: 기준='5', 실제='6'"
+  },
+  {
+   "name": "negative-slack",
+   "rejected": true,
+   "first_difference": "arms/10.input[2]: 기준='000000000000f03f', 실제='000000000000f0bf'"
+  },
+  {
+   "name": "never-spike",
+   "rejected": true,
+   "first_difference": "retry/9.spike: 길이 기준=3, 실제=1"
+  },
+  {
+   "name": "always-spike",
+   "rejected": true,
+   "first_difference": "arms/0.spike_present[0]: 기준='false', 실제='true'"
+  },
+  {
+   "name": "no-success-counter",
+   "rejected": true,
+   "first_difference": "arms/0.successes[0]: 기준='1', 실제='0'"
+  },
+  {
+   "name": "absolute-count",
+   "rejected": true,
+   "first_difference": "interior/0.count_sum[0]: 기준='000000000000f0bf', 실제='000000000000f03f'"
+  },
+  {
+   "name": "compressed-statistics",
+   "rejected": true,
+   "first_difference": "interior/0.count_sum[0]: 기준='000000000000f0bf', 실제='0000000000001840'"
+  },
+  {
+   "name": "keep-equal-drop",
+   "rejected": true,
+   "first_difference": "synthetic/dense-boundaries.alpha: 길이 기준=9, 실제=13"
+  },
+  {
+   "name": "drop-negative-values",
+   "rejected": true,
+   "first_difference": "interior/0.alpha: 길이 기준=13, 실제=5"
+  },
+  {
+   "name": "lose-last-dense-row",
+   "rejected": true,
+   "first_difference": "interior/0.alpha: 길이 기준=13, 실제=11"
+  },
+  {
+   "name": "reverse-dense",
+   "rejected": true,
+   "first_difference": "interior/0.alpha[1]: 기준='0', 실제='7'"
+  },
+  {
+   "name": "sort-sparse",
+   "rejected": true,
+   "first_difference": "arms/16.alpha[1]: 기준='22', 실제='8'"
+  },
+  {
+   "name": "wrong-return",
+   "rejected": true,
+   "first_difference": "arms/0.ret[0]: 기준='21', 실제='22'"
+  },
+  {
+   "name": "wrong-exhaustion",
+   "rejected": true,
+   "first_difference": "arms/18.ret[0]: 기준='-1', 실제='0'"
+  }
+ ]
+}

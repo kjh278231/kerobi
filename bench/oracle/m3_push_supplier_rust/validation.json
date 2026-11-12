@@ -1,0 +1,87 @@
+{
+ "task": "M3-04c-14",
+ "baseline_main": "03bdca3",
+ "contract_commit": "0e2c2e9",
+ "implementation_commit": "9d972bd",
+ "environment": {
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "machine": "x86_64",
+  "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)"
+ },
+ "workspace": {
+  "passed": 131,
+  "failed": 0,
+  "ignored": 12
+ },
+ "comparator": {
+  "cases": 69,
+  "fields": 1311,
+  "natural": 51,
+  "synthetic": 18,
+  "success": 56,
+  "exhausted": 13,
+  "rule": "ordered integers / f64 LE hex exact incl signed zero"
+ },
+ "comparator_mutations_rejected": 29,
+ "rust_mutations_rejected": 22,
+ "commands": [
+  {
+   "command": "python3 tools/push_supplier_check.py --controls",
+   "exit_code": 0
+  },
+  {
+   "command": "python3 tools/push_supplier_check.py --acceptance",
+   "exit_code": 0
+  },
+  {
+   "command": "python3 tools/push_supplier_check.py --self-test",
+   "exit_code": 0
+  },
+  {
+   "command": "cargo test -p rsolver-lp --test push_supplier",
+   "exit_code": 0
+  },
+  {
+   "command": "python3 tools/push_supplier_rust.py --compare",
+   "exit_code": 0
+  },
+  {
+   "command": "python3 tools/push_supplier_rust.py --self-test",
+   "exit_code": 0
+  },
+  {
+   "command": "python3 tools/push_supplier_rust.py --mutate-rust <new-output>",
+   "exit_code": 0
+  },
+  {
+   "command": "cargo test --release --workspace",
+   "exit_code": 0
+  },
+  {
+   "command": "cargo clippy --workspace --all-targets -- -D warnings",
+   "exit_code": 0
+  },
+  {
+   "command": "cargo test -p rsolver-lp --test push_chain",
+   "exit_code": 0
+  },
+  {
+   "command": "python3 tools/push_step_chain_rust.py --compare",
+   "exit_code": 0
+  },
+  {
+   "command": "python3 tools/push_chain_oracle.py --check",
+   "exit_code": 0
+  },
+  {
+   "command": "python3 tools/push_chain_oracle.py --self-test",
+   "exit_code": 0
+  }
+ ],
+ "new_original_runs": 0,
+ "original_reproduction": "reuse M3-04c-13 natural/synthetic/control independent3runs",
+ "limitation": "raw FTRAN and spike are external backend inputs; numeric LU, caller chains, batch, x87, full push/work unverified",
+ "initial_clippy_failure": "assign_op_pattern on raw_count + count_sum; preserved operand order via intermediate local and passed"
+}

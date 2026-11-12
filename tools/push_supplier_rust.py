@@ -1,6 +1,7 @@
 """M3-04c-14: before와 외부 FTRAN 결과만 Rust에 주고 원본 supplier 반환/후상태를 비교한다.
 
 --write: 고정69입력 작성; --compare: Rust trace 비교; --self-test: 비교기 변조 거부;
+--write-manifest: 비교 통과한 Rust trace와 구현/입력/결과 해시 보존;
 --mutate-rust PATH: Rust 동작 변이마다 재생/비교, 원본 소스 복구, 새 결과 파일 기록.
 """
 import argparse
@@ -94,10 +95,15 @@ def compare(txt, expected):
             key, value = item.split(' ', 1)
             oracle.require(key not in got, name+'.duplicate '+key)
             got[key] = value
-        oracle.equal(want, got, name)
+        oracle.require(want.keys() == got.keys(), name+': 필드 누락/추가')
+        for key, value in want.items():
+            oracle.equal(value.split(), got[key].split(), name+'.'+key)
         fields += len(want)
-    return dict(cases=len(expected), fields=fields, natural=51, synthetic=18,
-                success=56, exhausted=13, rule='ordered integers / f64 LE hex exact incl signed zero')
+    natural = sum(not name.startswith('synthetic/') for name in expected)
+    success = sum(int(w['ret']) >= 0 for w in expected.values())
+    return dict(cases=len(expected), fields=fields, natural=natural, synthetic=len(expected)-natural,
+                success=success, exhausted=len(expected)-success,
+                rule='ordered integers / f64 LE hex exact incl signed zero')
 
 
 def self_test(txt, expected):
@@ -165,7 +171,7 @@ MUTATIONS = [
 ]
 
 
-def mutate(cs, expected):
+def mutate(expected):
     source = SOURCE.read_text()
     results = []
     try:
@@ -190,10 +196,25 @@ def mutate(cs, expected):
     return results
 
 
+def manifest(expected):
+    summary = compare(TRACE.read_text(), expected)
+    saved_trace = DIRECTORY / 'rust-trace.txt'
+    saved_trace.write_text(TRACE.read_text())
+    paths = [SOURCE, Path(__file__).resolve(), ROOT / 'crates/lp/tests/push_supplier.rs',
+             ROOT / 'crates/lp/src/lib.rs', ROOT / oracle.D / 'manifest.json']
+    paths += sorted(p for p in DIRECTORY.iterdir() if p.is_file() and p.name != 'manifest.json')
+    result = dict(task='M3-04c-14', schema=1, baseline_main='03bdca3', original_version='13.0.3',
+                  binary_sha256=oracle.BINARY_SHA, summary=summary,
+                  boundary='supplier control only; captured raw FTRAN/spike via external backend',
+                  hashes={str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths})
+    (DIRECTORY / 'manifest.json').write_text(json.dumps(result, ensure_ascii=False, indent=1)+'\n')
+    return result
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     group = p.add_mutually_exclusive_group(required=True)
-    for flag in ('write', 'compare', 'self-test'):
+    for flag in ('write', 'compare', 'self-test', 'write-manifest'):
         group.add_argument('--'+flag, action='store_true')
     group.add_argument('--mutate-rust', type=Path)
     p.add_argument('--output', type=Path)
@@ -207,9 +228,11 @@ def main():
             result = dict(input=str(INPUT.relative_to(ROOT)), sha256=hashlib.sha256(input_text.encode()).hexdigest(), cases=69)
         else:
             oracle.equal(input_text, INPUT.read_text(), '고정 입력 투영')
-            if a.mutate_rust:
+            if a.write_manifest:
+                result = manifest(expected)
+            elif a.mutate_rust:
                 oracle.require(not a.mutate_rust.exists(), '기존 결과 덮어쓰기 거부')
-                result = dict(rejected=mutate(cs, expected))
+                result = dict(rejected=mutate(expected))
                 a.mutate_rust.write_text(json.dumps(result, ensure_ascii=False, indent=1)+'\n')
             else:
                 txt = TRACE.read_text()

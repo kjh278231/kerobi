@@ -1,0 +1,38 @@
+{
+ "task": "M3-04c-14",
+ "schema": 1,
+ "baseline_main": "03bdca3",
+ "original_version": "13.0.3",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "summary": {
+  "cases": 69,
+  "fields": 1311,
+  "natural": 51,
+  "synthetic": 18,
+  "success": 56,
+  "exhausted": 13,
+  "rule": "ordered integers / f64 LE hex exact incl signed zero"
+ },
+ "boundary": "supplier control only; captured raw FTRAN/spike via external backend",
+ "hashes": {
+  "crates/lp/src/crossover_supplier.rs": "7a1405f6e74b3a4f5d1cfd58cbf7fa06ca9f0a2b085dd9b3332550fdb1d14df1",
+  "tools/push_supplier_rust.py": "496df82318463573a6fdcef12ab6b41dfffa4d92f57813fc76fc7640f2490b06",
+  "crates/lp/tests/push_supplier.rs": "e1c4a1ef946b68a6f59bcaee96e8b0ca7ac31e6a66e15b4ab1e7b3c47387021b",
+  "crates/lp/src/lib.rs": "8fcf8c94e4993f24fe9bf093e235072c24ff9e3973c25fd94d745fd11e644a65",
+  "bench/oracle/m3_push_supplier/manifest.json": "a3870dd96de069482420677fb9c23fc719cd33e3a70568be1f6a0fae01bbc995",
+  "bench/oracle/m3_push_supplier_rust/chain-check.log": "32c9a2014238433cf97ffffe3a1b31964d2a11acabfa87abd468b35d3617281f",
+  "bench/oracle/m3_push_supplier_rust/chain-compare.json": "8a877f9441aaa7ec9df77c70696afdb8eb2d564af2a2296fbbbeadd425d85eca",
+  "bench/oracle/m3_push_supplier_rust/chain-rust.log": "4336742b58cb82fa0df6e9f65b6c23fe19dbe7c21e760685f7f40d40aa506c7c",
+  "bench/oracle/m3_push_supplier_rust/chain-self-test.log": "3f532f7f9c801054fcc0d7e832eac6f981db98b916552723cb32bc36c15a2509",
+  "bench/oracle/m3_push_supplier_rust/compare.json": "1ae16c539bf96c0d54dc3b98fbd70de0553678f9a6b62a8a609cc32382883ac0",
+  "bench/oracle/m3_push_supplier_rust/input.txt": "f7384e98fb931877ca9eb8b6b8426a47cf7d4a684ebb30e98e3f3b6fd47c6495",
+  "bench/oracle/m3_push_supplier_rust/oracle-acceptance.json": "e316906192678b5d0cd1f75fd60a75e1e5979c0b4148ba42ef691fecdf71c3ef",
+  "bench/oracle/m3_push_supplier_rust/oracle-controls.json": "972596c5ccb69388743ec67ade5b6b2386ba24be6829818ef686f49191170cab",
+  "bench/oracle/m3_push_supplier_rust/oracle-self-test.json": "f90873fe3954bbed4853ab7f48fef0696ccc4d0d1eb711e51b17026846ff99fe",
+  "bench/oracle/m3_push_supplier_rust/rust-mutations.json": "36ae874814c98caa4a1d41322a9d4dfc1deb0df02ccb4106da85b55668376531",
+  "bench/oracle/m3_push_supplier_rust/rust-trace.txt": "c4e2fde0ecaad26f6749bf96deb0f78c35cd644c846ea87025b9e7eef5ee2250",
+  "bench/oracle/m3_push_supplier_rust/self-test.json": "e8a0558156ad10c5218d0ff51c5790c81ad40c6c749095d549812df9662898ca",
+  "bench/oracle/m3_push_supplier_rust/validation.json": "a1d27655cde7495aa769413674e2350acfa29546b4f10eaf8c4a8774877788eb",
+  "bench/oracle/m3_push_supplier_rust/workspace-tests.log": "9062342c201e011b4b5685f8fd2ec85a19d2b24ab0b2c3535d0331cabdd014e1"
+ }
+}

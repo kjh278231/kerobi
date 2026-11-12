@@ -93,7 +93,8 @@ pub fn supplier_next(model: &SupplierModel<'_>, state: &mut SupplierState, buffe
         let alpha = &mut buffers.alpha;
         let raw_count = alpha.count;
         state.successes += 1;
-        state.count_sum = f64::from(raw_count) + state.count_sum;
+        let count_sum = f64::from(raw_count) + state.count_sum;
+        state.count_sum = count_sum;
         if raw_count < 0 {
             alpha.indices.clear();
             let mut kept = 0;
