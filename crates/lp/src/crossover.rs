@@ -1,7 +1,8 @@
 //! Crossover primal push pieces: the ratio tests on a feasible (docs/m3/primal_push_ratio_rust.md) and a violated basis
 //! (docs/m3/primal_push_violated.md) with its retry (docs/m3/primal_push_retry.md), and the step decisions around them
-//! (docs/m3/primal_push_decision_rust.md, docs/m3/primal_push_recall.md). No push loop calls them yet. All three ratio
-//! tests run their small-pivot second pass (docs/m3/primal_push_reentry.md, docs/m3/primal_push_violated_reentry.md).
+//! (docs/m3/primal_push_decision_rust.md, docs/m3/primal_push_recall.md). All three ratio tests run their small-pivot
+//! second pass (docs/m3/primal_push_reentry.md, docs/m3/primal_push_violated_reentry.md). `push_pick`/`push_apply` chain
+//! them into one push step (docs/m3/primal_push_step_chain.md); no push loop calls those yet.
 
 /// Feasible-basis ratio test (`055f68`) of the primal push on the FTRAN column `(idx, val)`: `idx = None` is the dense
 /// form with `val.len() == x.len()`. `x` is the lower-shifted basic value, `width` the bound width, `marks` the basic
@@ -579,6 +580,255 @@ pub fn push_leave_state(range: f64, fixed: f64, a: f64, theta: f64, mark: u8, ba
             b'A' if (t + 1.0) * k > ((basic - width) / a - t).abs() => -2,
             b'U' if k > a.abs() * t => -2,
             _ => -1,
+        }
+    }
+}
+
+/// Workspace LP a push step reads: CSC of the n structural columns, and cost/bounds over all n+m columns.
+pub struct PushLp<'a> {
+    pub n: usize,
+    pub m: usize,
+    pub starts: &'a [i64],
+    pub lengths: &'a [i32],
+    pub rows: &'a [i32],
+    pub values: &'a [f64],
+    pub cost: &'a [f64],
+    pub lb: &'a [f64],
+    pub ub: &'a [f64],
+}
+
+/// Push constants: `h` (S+0x380) for the Harris slack, step constants and basic row classes, the ratio pivot tolerance
+/// (S+0x398), the internal infinity `inf` (S+0x370) and the fixed-width threshold (S+0x3b0).
+#[derive(Debug, Clone, Copy)]
+pub struct PushParams {
+    pub h: f64,
+    pub piv_tol: f64,
+    pub inf: f64,
+    pub fixed: f64,
+}
+
+/// State one push step reads and writes. `xs` holds the n structural values followed by the m row slacks (one
+/// allocation in the original). `theta`/`pivot` are the step locals the ratio tests write into.
+#[derive(Debug, Clone)]
+pub struct PushState {
+    pub vstat: Vec<i32>,
+    pub header: Vec<i32>,
+    pub xs: Vec<f64>,
+    pub basic: Vec<f64>,
+    pub width: Vec<f64>,
+    pub marks: Vec<u8>,
+    pub rhs: Vec<f64>,
+    /// Number of basic rows marked `B` or `A`; nonzero sends the step down the violated path.
+    pub violations: i32,
+    /// S+0x2a0.
+    pub iterations: f64,
+    /// S+0x2fc, S+0x2f8, S+0x328, S+0x32c, S+0x294.
+    pub enter: i32,
+    pub leave: i32,
+    pub direction: i32,
+    pub leave_col: i32,
+    pub request: i32,
+    pub theta: f64,
+    pub pivot: f64,
+}
+
+/// What [`push_pick`] decided: the direction formula's entry, the ratio results (the second one after a recall)
+/// and the step kind.
+#[derive(Debug, Clone, Copy)]
+pub struct PushPick {
+    pub entry: PushEntry,
+    pub violated: bool,
+    pub first: (i32, f64, f64),
+    pub second: Option<(i32, f64, f64)>,
+    pub step: PushStep,
+    /// S+0x2f8, S+0x328 and S+0x294 as each ratio call saw them.
+    pub seen: [(i32, i32, i32); 2],
+}
+
+/// Basic row class from the lower-shifted value `v` and width `w`; `B`/`A` also count as violations.
+fn classify(v: f64, w: f64, h: f64, inf: f64, violations: &mut i32) -> u8 {
+    if -h <= v {
+        if h <= v {
+            if v < w - h || inf <= w {
+                b'N'
+            } else if w + h <= v {
+                *violations += 1;
+                b'A'
+            } else {
+                b'U'
+            }
+        } else if w == 0.0 {
+            b'X'
+        } else {
+            b'L'
+        }
+    } else {
+        *violations += 1;
+        b'B'
+    }
+}
+
+/// Step selection of the double primal push for entering column `j` with its sparse FTRAN column `(idx, val)` as the
+/// supplier returned it: direction, ratio test, the theta = I recall in the opposite direction and the step kind.
+/// Writes S+0x2fc/0x328/0x2f8 (and S+0x294 on a ratio's refactor request) in the original's order and leaves `val`
+/// with the signs of the final direction. The ratio tests run with a zero work coefficient.
+pub fn push_pick(lp: &PushLp, st: &mut PushState, par: &PushParams, j: usize, idx: &[i32], val: &mut [f64],
+                 factor_updates: &mut dyn FnMut() -> i32) -> PushPick {
+    let (n, inf) = (lp.n, par.inf);
+    let tol = PushTol::new(par.h);
+    st.enter = j as i32;
+    st.direction = 0;
+    let violated = st.violations != 0;
+    let entry = push_direction(j, &st.xs[..n], &st.xs[n..], lp.lb, lp.ub, lp.cost, &st.header, idx, val, &tol, inf,
+                               violated.then_some(&st.marks[..]));
+    if entry.decrease {
+        st.direction = 1;
+    }
+    let mut seen = [(0, 0, 0); 2];
+    let mut ratio = |st: &mut PushState, val: &[f64], call: usize| {
+        seen[call] = (st.leave, st.direction, st.request);
+        let (mut work, mut refactor) = (0.0, false);
+        let f = if violated { violated_ratio } else { feasible_ratio };
+        let pos = f(par.h, par.piv_tol, inf, inf, Some(idx), val, &st.basic, &st.width, &st.marks, 0.0, &mut work,
+                    &mut st.theta, &mut st.pivot, factor_updates, &mut refactor);
+        if refactor {
+            st.request = 2;
+            st.leave = -1;
+        }
+        if violated || pos != -1 {
+            st.leave = pos; // 0x1c2655 / 0x1c4d0c
+        } else {
+            st.theta = inf; // feasible -1 leaves S+0x2f8 alone
+        }
+        (pos, st.theta, st.pivot)
+    };
+    let first = ratio(st, val, 0);
+    let mut theta = st.theta;
+    let (second, step) = match push_step(&entry, &tol, inf, st.leave, &mut theta, st.pivot) {
+        Ok(step) => (None, step),
+        Err(Recall) => {
+            st.direction = 1 - st.direction;
+            val.iter_mut().for_each(|v| *v = -*v); // 0x1c49e2
+            let second = ratio(st, val, 1);
+            if st.theta == inf && entry.free {
+                st.leave = -1;
+            }
+            theta = st.theta;
+            (Some(second), push_recall_step(&entry, &tol, inf, st.leave, &mut theta, st.pivot))
+        }
+    };
+    st.theta = theta;
+    if matches!(step, PushStep::Flip | PushStep::Reject) {
+        st.leave = -1; // 0x1c293b; the other flip paths already hold a negative S+0x2f8
+    }
+    PushPick { entry, violated, first, second, step, seen }
+}
+
+/// Applies a flip or an accepted pivot of [`push_pick`]: statuses and header, the pivot row's width/value/class
+/// (`applied` sees the state at the join point 0x1c3004), then the rhs of the moved columns and the remaining basic
+/// rows of the column. A deferred step changes nothing. `(idx, val)` loses the pivot position like the original's
+/// sparse column.
+#[allow(clippy::too_many_arguments)]
+pub fn push_apply(lp: &PushLp, st: &mut PushState, par: &PushParams, pick: &PushPick, idx: &mut Vec<i32>,
+                  val: &mut Vec<f64>, applied: &mut dyn FnMut(&PushState)) {
+    let (n, inf, h) = (lp.n, par.inf, par.h);
+    let j = st.enter as usize;
+    let down = st.direction != 0;
+    let theta = st.theta;
+    let shift; // dVar49: how far the basic rows move along the column
+    match pick.step {
+        PushStep::Defer => return,
+        PushStep::Flip | PushStep::Reject => {
+            st.iterations += 1.0;
+            let s = push_flip_state(lp.lb[j], lp.ub[j], inf, down);
+            st.vstat[j] = s;
+            shift = if s != -3 {
+                if down { pick.entry.dl } else { pick.entry.du }
+            } else if down {
+                st.xs[j]
+            } else {
+                -st.xs[j]
+            };
+        }
+        PushStep::Pivot => {
+            let p = st.leave as usize;
+            st.iterations += 1.0;
+            let mut a = val[p];
+            let r = idx[p] as usize;
+            st.leave = r as i32;
+            idx.swap_remove(p);
+            val.swap_remove(p);
+            st.vstat[j] = r as i32;
+            let lv = st.header[r] as usize;
+            st.leave_col = lv as i32;
+            st.header[r] = j as i32;
+            st.vstat[lv] = push_leave_state(lp.ub[lv] - lp.lb[lv], par.fixed, a, theta, st.marks[r], st.basic[r],
+                                            st.width[r], &PushTol::new(h));
+            st.width[r] = if lp.ub[j] < inf { lp.ub[j] - lp.lb[j] } else { inf };
+            if down {
+                a = -a;
+            }
+            if matches!(st.marks[r], b'B' | b'A') {
+                st.violations -= 1;
+            }
+            let b = if st.vstat[lv] == -1 { st.basic[r] } else { (st.basic[r] - lp.ub[lv]) + lp.lb[lv] };
+            let mut b = b / a;
+            shift = if down { -b } else { b };
+            if j < n {
+                b += st.xs[j];
+                if -inf < lp.lb[j] {
+                    b -= lp.lb[j];
+                }
+            } else {
+                b += st.xs[j];
+            }
+            st.basic[r] = b;
+            st.marks[r] = if -inf < lp.lb[j] { classify(b, st.width[r], h, inf, &mut st.violations) } else { b'F' };
+        }
+    }
+    applied(st);
+    let pivot = pick.step == PushStep::Pivot;
+    let add_col = |rhs: &mut [f64], c: usize, d: f64| {
+        let s = lp.starts[c] as usize;
+        for q in s..s + lp.lengths[c] as usize {
+            let i = lp.rows[q] as usize;
+            rhs[i] += d * lp.values[q]; // the original adds the product to the old value; + commutes bitwise
+        }
+    };
+    if j < n {
+        let mut d = st.xs[j];
+        if !pivot {
+            match st.vstat[j] {
+                -1 => d -= lp.lb[j],
+                -3 => {}
+                _ => d -= lp.ub[j],
+            }
+        }
+        if d != 0.0 {
+            add_col(&mut st.rhs, j, d);
+        }
+    } else {
+        st.rhs[j - n] += st.xs[j];
+    }
+    if pivot && (st.leave_col as usize) < n {
+        let lc = st.leave_col as usize;
+        let bound = if st.vstat[lc] == -1 { lp.lb[lc] } else { lp.ub[lc] };
+        if -bound != 0.0 {
+            add_col(&mut st.rhs, lc, -bound);
+        }
+    }
+    for (&i, &a) in idx.iter().zip(val.iter()) {
+        let r = i as usize;
+        let v = st.basic[r] - shift * a;
+        st.basic[r] = v;
+        match st.marks[r] {
+            b'F' => {}
+            m => {
+                if matches!(m, b'B' | b'A') {
+                    st.violations -= 1;
+                }
+                st.marks[r] = classify(v, st.width[r], h, inf, &mut st.violations);
+            }
         }
     }
 }
