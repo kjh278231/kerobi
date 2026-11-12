@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M3-04c-10 primal push 한 단계의 선택·적용을 Rust `push_pick`·`push_apply`로 연결해 범위 한정 완료했다. 자연 캡처 166단계를 연쇄 재생해 비트 일치했다. 남은 것은 lb≠0·위반 해소 원본 캡처(M3-04c-11, Frida 필요), push 루프 본체(공급자·factor 갱신 판단·재분해, M3-04c-12)와 dual push(M3-04d)다. [계약과 결과](m3/primal_push_step_chain.md).
+
 M3-04c-9 `054eef`·`056973` 작은 pivot 재진입을 원본 합성 3회(231사례, 바이트 동일)와 Rust 재생으로 범위 한정 완료했다. 세 ratio(`055f68`·`054eef`·`056973`) 모두 재진입을 원본대로 돌고 Rust의 `Reentry` 거부가 없어졌다. 남은 것은 push 루프 연결과 dual push(M3-04d)다. [계약과 결과](m3/primal_push_violated_reentry.md).
 
 M3-04c-5 `055f68` 작은 pivot 재진입과 `12dd49` 요청 2를 원본 합성 3회(91사례, 바이트 동일)와 Rust 재생으로 범위 한정 완료했다. 04c에서 생존한 2차 상한 동률·후보 있는 상한 I·0.1·계수표 변이를 모두 거부하게 됐다. 남은 것은 push 루프에서 요청 2 적용과 `054eef`·`056973` 재진입 Rust다.

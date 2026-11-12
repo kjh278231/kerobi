@@ -118,6 +118,8 @@
 - **theta=I 재호출은 ratio 뒤 `0x1c28ee`에서 theta==I이고 자유 열(`lb<=local_1d8`·`ub>=I`) 또는 방향 0·`ub>=I`일 때만 간다.** `local_1d8`은 `0x1f00(%rsp)`의 -I(-1e30)이고 LP 파일의 ±1e30 bound는 workspace에 ±1e30으로 들어온다. 재호출 뒤 거리 검사는 새 방향(`S+0x328`)의 gap, 거부 arm은 방향식 직후 `r13b`다. 재호출 단계에서는 두 거부 arm이 모두 거짓이라 거부 arm 선택은 판별되지 않는다. asm·캡처. (M3-04c-8, [§2](../m3/primal_push_recall.md#2-원본과-상태-경계))
 - **feasible `055f68`이 -1이면 push는 `S+0x2f8`에 쓰지 않는다(위반 경로는 `0x1c2655`에서 쓴다).** 그래서 재호출 `ratio:enter`의 `selected.leave`는 이전 단계 값이다. flip 상태는 `local_1d8<lb` 또는 `ub<I`이면 현재 방향 0→-2·1→-1, 둘 다 무한이면 -3(superbasic 유지)이다. 빈 자유 열이 -3으로 남는 것을 캡처로 봤다. asm·캡처. (M3-04c-8, [§6](../m3/primal_push_recall.md#6-실행-결과))
 - **ub=I 열을 방향 0으로 보내려면 feasible은 r<0과 허용오차(3e-8) 미만 계수의 유계 행, 위반은 자기 B 행의 ∓2e-8 계수(σ 부호 절)를 쓴다.** r=0이면 feasible 방향식 첫 절이 방향 1을 낸다. 자유 열은 r=0이면 두 경로 모두 방향 0이고, 위반 경로에서 σ=+2e-8이면 방향 1(자유 절 단독 판별)이다. 캡처. (M3-04c-8, [§4](../m3/primal_push_recall.md#4-사례와-원본-자료))
+- **push 단계 적용의 이동량은 flip이면 진입 열의 gap(방향 0은 dU, 1은 dL; -3 자유 열은 ∓x), pivot이면 `(basic[r]-(이탈 상태≠-1이면 ub-lb 보정))/a`이고, 남은 희소 원소마다 `basic -= 이동량·alpha`(방향 반전된 alpha) 뒤 표시를 다시 매긴다.** pivot 행 표시는 진입 열 lb>-I일 때만 분류하고 아니면 `F`다. rhs는 진입 구조 열(flip은 새 bound를 뺀 값, pivot은 x 그대로)과 pivot 이탈 구조 열(-bound)의 CSC를 `rhs += d·a`로, slack 진입은 `rhs[j-n] += slack`으로 보정한다. 요청 0(factor 갱신)은 basis 배열·basic 값을 바꾸지 않았다(166단계 연쇄 재생). C·캡처. (M3-04c-10, [§6](../m3/primal_push_step_chain.md#6-실행-결과))
+- **push의 theta·pivot 지역 변수는 단계 사이로 새지 않는다.** 세 ratio가 후보 없음에도 theta·pivot을 쓰고, feasible -1이면 push가 theta=I를 쓴다. 연쇄 재생을 NaN으로 시작해도 일치했다. 캡처. (M3-04c-10)
 
 ## dual simplex DSE β (`28c93`·`8b473`)
 
