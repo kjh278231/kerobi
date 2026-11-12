@@ -413,10 +413,11 @@ fn run_case(lines: &[&str], out: &mut Vec<String>) {
                     Ok(format!(
                         "{{\"op\":\"U\",\"enter\":{enter},\"roweta\":{},\"roweta_cache\":{},\"x1d8_enter\":{x1d8},\"leave\":{},\"report\":{{\"cache_reuse\":{},\"interval_trivial\":{},\"eta\":{},\"local80\":{},\"promoted\":{},\"cycle\":{},\"moved_column\":{},\"moved_rows\":{},\"dot_lanes\":{}}}}}",
                         rep.roweta.map_or("null".into(), |r| r.to_string()),
-                        rep.roweta_cache.as_ref().map_or("null".into(), |(c, i, v)| format!(
-                            "{{\"count\":{c},\"idx\":{},\"val\":{}}}",
-                            list(i, opt_i),
-                            list(v, opt_f)
+                        rep.roweta_cache.as_ref().map_or("null".into(), |c| format!(
+                            "{{\"count\":{},\"idx\":{},\"val\":{}}}",
+                            c.count,
+                            list(&c.idx, opt_i),
+                            list(&c.val, opt_f)
                         )),
                         snap(s),
                         rep.cache_reuse,

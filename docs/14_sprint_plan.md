@@ -201,7 +201,8 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-21c | 오라클 완료 | 지원 BTRAN의 수치·표현·F1d0/F1d8 cache | 04c-21, 19 | [완료](m3/primal_push_btran_oracle.md): 자연 32호출(선행22+Netlib adlittle·scsd1·capri 10) 독립3회·21a/기준선 비간섭, C 규칙 전부 통과·변조41 거부. U 행 빈25/비영7(cache 기록7)·Lᵀ 희소30/조밀2·level 7. eta>0·조밀 Uᵀ·커널 출력0 미관측 |
 | M3-04c-21d | 구현 완료 | Rust BTRAN 결과·dense flag·cache adapter | 04c-21c | [완료](m3/primal_push_btran_rust.md): 지원 BTRAN 자연 32호출 커널 경계64·raw·입력 후상태·별칭·cache·F1d8·scratch·bucket·work 3,096필드 비트 일치. 변조600 거부, 변이32 중 생존11(동치4·경계7). 조밀 Uᵀ·eta·경로 B·F108>5 커널은 미검증. M1-02k 밀도 근사는 제외(21f) |
 | M3-04c-21e | 오라클 완료 | 지연 LU→FT/재분해→재번호·rhs FTRAN의 수치 연쇄 | 04c-21a·21c | [완료](m3/primal_push_lu_chain_oracle.md): 7사례 독립3회·21c 비간섭, `05b257` 55호출(FT36·재분해19)·연산 사이 연결188 C 규칙 통과, 변조54 거부. FT cache 재사용·반환≠0·singular·pricing·BTRAN eta>0 미관측 |
-| M3-04c-21f | 구현 | 직렬 numeric backend의 factor 수명·FT·재분해·재번호·rhs 계산 | 04c-21b·21d·21e | 같은 초기 factor 뒤 중간 상태 재주입 없이 수치 연쇄 일치. 매번 재분해/무조건 갱신 변이 거부. 전체 루프 설치는 별도 |
+| M3-04c-21f | 구현 완료 | 직렬 numeric backend의 factor 수명·FT·재분해·재번호·rhs 계산 | 04c-21b·21d·21e | [완료](m3/primal_push_lu_rust.md): 재분해 `036ade` 결과만 주입, 그 사이 FT36·FTRAN120·BTRAN32·재번호19 비트 일치(207연산). FT 생략·무조건 행 eta 변이 거부. FTRAN A2 구현. rhs 입력 벡터는 push 상태 입력(루프22) |
+| M3-04c-21g | 구현 | `036ade` 분해 수치와 분해 뒤 factor 설정(C:2570–2760)을 원본 배열 표현으로 생성 | 04c-21f | 21f 주입점을 Rust 생성으로 바꿔도 207연산 비트 일치. M1 `Lu::factor` adapter와 직접 이식 중 계약에서 선택 |
 | M3-04c-22 | 구현 L1 | 초기화된 직렬 push 루프 연결(수치 backend 외부) | 04c-14·16·18·20·10 | 중간 원본 상태 재주입 없이 여러 round의 호출·상태·후보 비교. 초기화·최종 해 설치·수치 LU 제외 |
 | M3-04c-23 | 조사 | batch 공급·worker·factor 별칭·무효화 | 04c-12 | Threads>1 도달성·재현성·record·work·미소비 후보의 후속 오라클/구현 분할 |
 | M3-04d | 조사 | dual push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |

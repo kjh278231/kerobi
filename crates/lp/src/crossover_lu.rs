@@ -6,7 +6,7 @@
 //! refactor's factor itself (`036ade` and C:2570–2760) is an input of this backend. Contract and C references:
 //! docs/m3/primal_push_lu_rust.md.
 
-use crate::crossover_btran::{self, BtranEta, BtranFactor, BtranState, Cache, SparseRow};
+use crate::crossover_btran::{self, BtranEta, BtranFactor, BtranState, Cache, CacheSnap, SparseRow};
 use crate::crossover_ftran::{self, eta_dot, Cells, EtaRecord, FtranError, FtranFactor, FtranState, Spike, UColumn};
 
 /// A row eta record of F+0x198: its row, length and pool offset (F+0x148/0x150 index).
@@ -114,7 +114,7 @@ pub struct FtReport {
     /// `09e47c` was called with this row (cache before → after).
     pub roweta: Option<i32>,
     /// The cache right after `09e47c` (count, rows, values; the exit empties it).
-    pub roweta_cache: Option<(i32, Vec<Option<i32>>, Vec<Option<f64>>)>,
+    pub roweta_cache: Option<CacheSnap>,
     pub cache_reuse: bool,
     pub interval_trivial: bool,
     pub eta: bool,
@@ -366,11 +366,11 @@ impl LuState {
                 self.row_eta(r);
                 rep.roweta = Some(ri);
                 let n = self.cache.count.max(0) as usize;
-                rep.roweta_cache = Some((
-                    self.cache.count,
-                    (0..n).map(|k| self.cache.idx.peek(k)).collect(),
-                    (0..n).map(|k| self.cache.val.peek(k)).collect(),
-                ));
+                rep.roweta_cache = Some(CacheSnap {
+                    count: self.cache.count,
+                    idx: (0..n).map(|k| self.cache.idx.peek(k)).collect(),
+                    val: (0..n).map(|k| self.cache.val.peek(k)).collect(),
+                });
             } else {
                 rep.cache_reuse = true;
             }
@@ -608,7 +608,7 @@ impl LuState {
             s.x40[kb as usize] = a;
             s.x40[ka as usize] = b;
         };
-        if i35 == i52 || i35 < i52 {
+        if i35 <= i52 {
             if q < i52 {
                 swap(self, q, i52);
             }

@@ -62,8 +62,44 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: WSL2 x86-64 Linux 6.6.87.2, Python 3.10, Rust stable(clippy 1.99). 계약 `17e4179`, 첫 동작 `4b3af39`(capri A2 미구현으로 실패, 아래), A2·별칭·미지칸 `78bb095`, 이후 clippy 정리·변이 도구. 원본 실행 **0회**(21e 정식 `*-1` 재사용, `push_lu_check --controls`로 3회 동일·해시 재확인). 증거 `bench/oracle/m3_push_lu_rust/`(입력 `input.txt`, `comparison.txt`, `self-test.txt`, `rust-mutations.json/.txt`, manifest, 회귀 기록).
+- **연쇄 재생**(`--compare` 종료0): 7사례(대조군 사건0) push 1회씩, 연산 **207개**(재분해 19·FTRAN 120·BTRAN 32·FT 36) 전부 원본과 비트/정확 일치, 비교 필드 1,257,225개. 재분해 사이에는 원본 factor를 다시 넣지 않았다.
+
+| 사례 | 재분해 / FTRAN / BTRAN / FT | 최대 eta 수 |
+|---|---|---:|
+| arms | 4 / 28 / 17 / 0 | 0 |
+| retry | 3 / 10 / 4 / 0 | 0 |
+| interior | 4 / 12 / 1 / 5 | 2 |
+| adlittle | 3 / 24 / 2 / 11 | 6 |
+| scsd1 | 2 / 13 / 1 / 0 | 0 |
+| capri | 3 / 33 / 7 / 20 | 14 |
+
+| 분기(관측) | 수 | 비고 |
+|---|---:|---|
+| FT 행 eta(`09e47c`) / 구간 자명 / cache 재사용 | 26(eta 생성 23) / 10 / **0** | 행 eta 26 중 cache 0개 3 |
+| FT local_80 0/1/2/3 | 7/17/6/6 | 1 = 접두 r, 2 = 꼬리 r, 3 = eta 없이 r을 꼬리로 |
+| FT 빈 열 승격 / 순환 / 새 열 재배치 / 행 재배치 | 14 / 21 / 33 / 174행 | 열 재배치 33회 모두 열 기준 = 분해 직후 F+0x160/2 |
+| FT cache 내적 8-lane / 순차 | 11 / 25 | peel 유무는 판별 불가(아래 변이) |
+| FTRAN eta>0 / R 희소 목록 / R 희소→조밀 | 41 / 13 / 3 | 21b 자연 미관측이던 R 희소 경로를 이번에 비교 |
+| FTRAN `21b9de` A1 / A2(레벨) / `214344` | 47 / 25 / 48 | A2는 이번에 구현 |
+| BTRAN cache 경로 / 빈 행 / level Lᵀ / eta>0 | 7 / 25 / 6 / **0** | |
+| 공급 FTRAN `input_after` 미지 칸(비교 제외) | 2,255 | 원본 push 버퍼 잔류값, 21a 계약상 기록만 |
+
+- **trace 변조**(`--self-test` 종료0): 45종 모두 목표 필드의 첫 차이로 거부(연산 누락·순서·머리 해시·오류 주입, 재분해 header·이탈 위치·vstat·spike·버퍼 교환·cache·F1d8, FT 대각·x48·x28 별칭·U 열 시작/경계·행 시작·열 값·행 순서·eta offset/값/정렬·F1a0·x160·t·xe8·x18c·x184·F+0xf0/0xf8·spike 잔류·행 eta 누락/추가/cache 값·진입 spike, FTRAN 출력·별칭·spike·wrapper clear·scratch·재계산 입력 후상태, BTRAN cache·F1d8·level bucket·출력 목록).
+- **Rust 소스 변이**(임시 Cargo 사본, 24종, `rust-mutations.json`): 거부 21, 재생 시간 초과 1, **생존 2**. 계약 필수 두 변이 `ft-skipped`(FT 대신 factor 유지, 매번 재분해 대체)·`roweta-always`(구간 판정 무시 무조건 행 eta)는 첫 차이로 거부됐다(interior#80 U 열 6 길이, interior#80 행 eta 추가). 그 밖에 행 eta 생략·local_40 첫 분기·빈 열 승격 생략·local_80 1↔2·3↔0·회전 생략·풀 여유·행 용량·열 풀 기준·tail/prefix 경계·F1a0 덮기·순차 내적·F+0xf8 표시·LU+0xe8 갱신 생략·재번호 o↔n·이탈 위치·vstat·wrapper clear 생략·bucket 비공유가 거부됐다. `cycle-strict`(순환 탈출 `≤`→`<`)는 재생이 끝나지 않아(무한 루프) 240초 제한으로 trace 없이 거부된다(첫 실행은 제한이 없어 20분 멈춰 하네스에 제한을 넣었다). 생존: `local40-last`(`t−2+(np=0)` → `t−2`)는 그 분기가 i35>i52라 r 밖 spike 원소가 있어 np≥1이므로 **동치**, `dot-peel`(cache 내적에 peel 강제)은 이번 8-lane 11회에서 결과 비트가 같아 **판별 불가**라 cache 버퍼 16 정렬 가정은 미검증으로 남는다(순차 변이는 adlittle#512 대각에서 거부).
+- **회귀**([요약](../../bench/oracle/m3_push_lu_rust/regression/summary.txt)): 14명령 모두 종료0: 재생 write·`cargo test --test push_lu`·`--compare`·`--self-test`·`--mutate-rust`, 21b `cargo test --test push_ftran`·`push_ftran_rust.py --compare`(A2 추가 뒤 push 50호출·M1 커널 186호출 그대로 통과), 21d `--test push_btran`·`push_btran_rust.py --compare`, 21e `push_lu_check.py --controls --acceptance`, py_compile, `cargo clippy --workspace --all-targets -- -D warnings`(첫 실행이 타입 복잡도·이중 비교 2건으로 실패해 고친 뒤 재생·변조·변이를 다시 실행), `cargo test --release --workspace` **138통과·0실패·ignored12**, `git diff --check`.
+- 실행하지 않은 검사: solver·확장·Python 경로를 바꾸지 않아(`lib.rs`에 모듈 등록, 21b adapter에 A2 추가) 확장 설치·pytest·Netlib·P3는 제외했다. 원본 캡처 0회. 독립 검토자는 쓰지 않았다(사용자 지시로 이 세션이 작업자·마스터를 겸함).
+- **계약 변경**(결과 확인 중, 이유 기록):
+  1. 첫 비교(`4b3af39`)에서 재분해 뒤 FT가 바꾼 순열이 원본에서는 F+0x28/0x38에도 보였다. 재분해 C:2572–2573이 F+0x40/0x48을 F+0x28/0x38 버퍼로 돌리기 때문이다. 이 별칭(21e `lu:leave.buffers.x40_is_x28/x48_is_x38`)을 주입점에 넣었다(분해 뒤 설정의 일부, 비교 규칙 불변).
+  2. capri FTRAN이 21b 미구현 `21b9de` 레벨 경로 A2를 탔다(첫 비교에서 capri 62연산 adapter 오류). §4는 이 경우를 실패로 기록하라고 했으나, 범위를 줄이지 않고 C:259–604(+ asm 0x120823: wrapper null이면 F+0x1a8)를 읽어 A2를 21b adapter에 구현했다. 실패 기록은 `4b3af39` 이력과 이 문서에 남긴다.
+  3. 공급 FTRAN의 `input_after`는 원본 push 버퍼의 이전 값이 남은 칸을 포함한다. 21a 계약이 이 필드를 "기록만"으로 둔 것을 따라, Rust가 아는 칸만 비교하고 미지 칸 수를 출력한다. 재계산 FTRAN의 `input_after`는 전부 비교한다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **구현 완료(계약 범위)**. 동등성: push 자연 7사례의 factor 연산 207개에서, 재분해 지점의 `036ade` 결과만 주입하고 그 사이 FT 갱신 36회·FTRAN 120회·BTRAN 32회와 재분해 재번호 19회가 factor 전체(풀 위치·eta 오프셋 포함)·출력·spike·cache·bucket까지 원본과 **비트 일치(통과)**.
+- 미검증: FT cache 재사용(F1d8=r, 자연 0회), FT 실패·재할당 경로(Rust는 오류로 멈춤), pricing 경로, BTRAN eta>0(자연 0회), cache 값 버퍼 정렬(16 정렬 가정, peel 변이 생존으로 판별 안 됨), 위 생존 변이의 경계. F190·work는 비교하지 않았다.
+- 범위 밖: `036ade` 분해와 C:2570–2760 분해 뒤 설정(주입점, **M3-04c-21g**), 루프 설치22·품질15a·batch23·x87·P3.
+- 다음: **M3-04c-21g**(`036ade` 분해 수치와 분해 뒤 factor 설정을 원본 배열 표현으로 생성해 21f 주입점을 없앰). `python3 tools/session.py claim M3-04c-21g --owner <새-owner>` → 이 문서 §1·§2, `docs/m1/m1_02a2_urow.md`·`m1_02q_work.md`(`036ade` 구조), `tools/dc.py 036ade`. M1 `Lu::factor`를 원본 배열로 옮기는 adapter와 `036ade` 직접 이식 중 무엇을 할지 계약에서 정한다. 기준 재검사 `python3 tools/push_lu_rust.py --compare`.
+- 재실행: `python3 tools/push_lu_rust.py --write` → `cargo test -p rsolver-lp --test push_lu` → `python3 tools/push_lu_rust.py --compare` / `--self-test` / `--mutate-rust <새 경로>`.
+- branch `work/m3-04c-21f`, worktree `../rsolver-m3-04c-21f`, 선행 미커밋 없음. 최종 commit·병합은 main `Merge M3-04c-21f` 이력을 따른다. main 미추적 `.claude/settings.local.json` 보존. 원격/업로드 없음.
+- 교훈: `docs/lessons/original.md`(풀 좌표·F40/F28 별칭·`09e47c`=`21a941`·A2 bucket 공유), `tooling.md`(연쇄 재생의 주입점과 미지 칸).
