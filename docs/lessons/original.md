@@ -96,7 +96,7 @@
 ## crossover primal push (`134a87`)
 
 - **지원 집합 모드는 basis 교환 뒤 LU 갱신을 생략할 수 있다.** 요청0·support!=0이면 `05b257`을 부르지 않고 다음 공급자로 간다(C1725–1750, asm0x1c343d). BTRAN의 제약 행 support와 겹치는 다음 열을 보류하므로, 현재 header로 매번 새 factor를 만들거나 매 pivot에 FT 갱신하면 경로를 바꾼다. C·asm·기존 자연 캡처 사건 집계. (M3-04c-12, [§2.3](../m3/primal_push_loop.md#23-지원-집합은-lu를-매번-갱신하지-않는-경로다))
-- **push factor 판단은 기존 simplex 식과 별도이며 주기 비교는 `k==limit`다.** 채움 비용식은 `(C+E)·2m − min(q·5m²,(L+U−1.5m)²)`(k>=q), 기존 요청을 우선 보존한다. factor73호출의 저장 요청은0·10뿐이라 요청2·6·오류 경계 실행 검증은 후속 오라클이 필요하다. C·asm, 식의 동등성은 미검증. (M3-04c-12, [§2.4](../m3/primal_push_loop.md#24-factor-요청-선택과-실행을-분리한다))
+- **push factor 판단은 기존 simplex 식과 별도이며 주기 비교는 `k==limit`다.** 채움 비용식은 `(C+E)·2m − min(q·5m²,(L+U−1.5m)²)`(k>=q), 기존 요청을 우선 보존한다. 04c-15 원본 선택 slice24사례로 기존 요청·limit 초과·비용0/양/음·5m² 계수를 구별했고 wrapper31사례로 반환1 반복·12/오류 우선·-999/-1000·attempt0 retry 게이트·품질 주기/요청6을 검증했다. 합성 factor/quality는 외부 backend이며 실제 LU/품질 수치 증거는 아니다. C·asm·자연/합성 캡처. (M3-04c-12·15, [§6](../m3/primal_push_factor_oracle.md#6-실행-결과))
 - **공급 반환이 전부 sparse여도 내부 FTRAN은 dense일 수 있다.** interior의 자연 공급9회가 raw count<0에서 strict `abs(v)>S+0x3a8` 압축을 거쳐 sparse로 반환됐다. count 통계는 raw 음수 count를 합산한다. raw 출력을 helper 반환에서 잡고 반환 alpha와 별도로 비교해야 한다. C·asm·캡처. (M3-04c-13, [§6](../m3/primal_push_supplier_oracle.md#6-실행-결과))
 
 - **공급자의 failure>=3 skip도 후보를 보류 prefix에 남기며 실패 횟수는 늘리지 않는다.** caller의 단계 보류만 실패를 +1 하고 재처리에서도 보존한다. 공급 통계는 dense 압축 전 count(음수 포함)를 합산하고, dense 반환은 내부에서 sparse로 바뀌므로 공급 반환 count만으로 내부 FTRAN 경로를 판정할 수 없다. C. (M3-04c-12, [§2.2](../m3/primal_push_loop.md#22-공급자의-상태와-단일-경로))

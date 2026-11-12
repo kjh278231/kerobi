@@ -4,6 +4,9 @@
 
 ## Frida 훅
 
+- **함수 중간의 순수 제어 구간은 실제 원본 명령에 fake frame을 공급해 격리 실행할 수 있지만, 출구·callee-saved·스택 정렬·대체 backend를 명시해야 한다.** M3 factor selector는 r14=S·frame 상수와 F만 읽으며 call/skip 두 출구를 반환 stub으로 바꿨다. wrapper는 실제 수치/문맥 helper를 대체하고 재계산 직전에 끝낸다. 자연 상태의 도달성이나 수치 backend 증거로 확대하지 않는다. 캡처·asm. (M3-04c-15, [계약](../m3/primal_push_factor_oracle.md#2-원본과-상태-경계))
+- **캡처한 상태/frame은 독립3회 일치와 별도로 인접 사건 사이의 보존·변경을 연결해 검사한다.** 최초 factor 검사기는 restored.status=-1000·call.attempt=99 변조가 생존했다. push의 attempt/numeric+10과 select→call·factor leave→복원→품질gate→clear를 대조해 해결했다. q항이 min인 비용 음/0/양은 5m² 계수의 판별에도 필요했다. 변조·원본 slice 캡처. (M3-04c-15, [검토](../../bench/oracle/m3_push_factor/review.md))
+
 - **구조체 주소로 객체를 식별할 때는 realloc 래퍼(`ac6569`, env·p·size → 새 p)를 함께 훅해 주소 이동을 따라간다.** 노드 N이 bound 목록 때문에 옮겨져 첫 시험 캡처에서 "모르는 노드"가 나왔다. 디버그 사본에서 그 N의 I가 이미 아는 노드의 I임을 확인해 원인을 찾았다. (M2-06f-2, [§2.1](../m2/mip_node_life.md#21-노드-생성-5ff358parent-m-out-0x5177f0-c-전문-앞부분asm-0x5177fe0x517804))
 
 - **함수 중간 명령에는 객체형 `Interceptor.attach(addr, {onEnter})` 대신 함수형 probe `Interceptor.attach(addr, function () {...})`를 쓴다.** 객체형은 대상을 함수 진입으로 보고 `[rsp]`(반환 주소 자리)를 바꾸는 것으로 보인다. `5fb8ec` `0x51319d`–`0x5131c2`에서는 `(%rsp)`가 mip 포인터라 `5e7204`가 null을 읽고 죽었다(실패한 접근). 03d-8의 객체형 중간 훅 3곳(`0x512468`·`0x513078`·`0x513951`)은 함수형으로 바꿔 돌려도 사건이 같았다(그 지점에서는 영향 없음 확인). 새 훅은 처음부터 함수형으로 붙인다. 원인을 모를 때는 `Process.setExceptionHandler`로 주소·backtrace를 send하면 바로 보인다. (M2-03d-11, [§6.1](../m2/mip_dive_gate.md#61-도구-문제와-탐색-sweep판정-근거-아님))

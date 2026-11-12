@@ -1,0 +1,59 @@
+{
+  "task": "M3-04c-15",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "specs_sha256": "66c508466ee88a0c36c0b709e384ab48ef9fee292a94ce06186c0a2c96e40214",
+  "tools": {
+    "tools/push_factor_agent.js": "c142777844465268618624f2b1583721f83ee0bc1aa14a678143ccf2209b7a01",
+    "tools/push_factor_capture.js": "db6d56301216b51a51bcc9d4ea78f3e79774bc98cce7c50eea0d53b1a0ca5e21",
+    "tools/push_factor_synthetic.py": "c2c8d5061108956b569263d931f70d0ba7778dc817b06f58bffcb211d0fde2e9",
+    "tools/push_factor_runs.py": "52b0f3e0ff1055c519a312b64e16d69432adccd30052c9ecd2b46cc49204049b",
+    "tools/push_factor_check.py": "75745d933d70eb71171d070532ccad83381f016856bb0264365d7d5b9853a71f",
+    "tools/push_supplier_check.py": "2111b9192c5724e0cee21f0360a0cd0b75dfad0bac57036191367b4f5653df5e",
+    "tools/push_supplier_synthetic.py": "35dde0a2f26afa06c917f8b910c6da3d961acf890f8004e056002539bfea6fbe",
+    "tools/push_supplier_runs.py": "c1cc394a87618fcb4e29231c588c14679c63e4c8f39dbf49e6141bfc5f5d1da9",
+    "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec",
+    "tools/gurun.sh": "7efb6a90dd1fae5f71997b24c112601d4f76b822546ddcce8d53920369f0d48f"
+  },
+  "inputs": {
+    "bench/oracle/m3_primal_push_step/interior.lp": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0",
+    "bench/oracle/m3_push_arms/arms.extra.json": "7843373b048b87370821eaedb90b918828759254061a3c3f37b60d51f3a1a46d",
+    "bench/oracle/m3_push_arms/arms.lp": "b05832f67ae340637551cda5cd191013c3f65f5cef190a0cc5a8c058070d9683",
+    "bench/oracle/m3_push_retry/retry.extra.json": "a14e2011d1e13d4abf085d97bc3043a5781a1b0daaea2298f036a5a4692d5e1b",
+    "bench/oracle/m3_push_retry/retry.lp": "2be78262e14b9c8482ce0c96fe0ab10d68246bc11eae184dc2bdb9c2f8516986"
+  },
+  "baselines": {
+    "bench/oracle/m3_push_supplier/arms-1.json": "1775d20a89a36d9a9851f59f26ee175aaf9269f128d0aa93375698b8046d62eb",
+    "bench/oracle/m3_push_supplier/control-1.json": "0f6ab3f0b87ed0230b91c46c792cf56cc8cbafd92818362686889c9b26c11b96",
+    "bench/oracle/m3_push_supplier/interior-1.json": "d2be9b2c03efe9977bb9a977d92ea3f2d17f0a9eed2b56b32c7dd51582196545",
+    "bench/oracle/m3_push_supplier/manifest.json": "a3870dd96de069482420677fb9c23fc719cd33e3a70568be1f6a0fae01bbc995",
+    "bench/oracle/m3_push_supplier/retry-1.json": "ccf71f10c33413e69102824b7dc9368be1585aec186acd311cea2a72e88face7"
+  },
+  "sources": {
+    "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb",
+    "../re/decomp/c/00115ed0_PRIVATE0000000000089f61.c": "26c8052b00e069c4f079ca3014c1c102d68695406e107c2d0ae4809aa4b15865"
+  },
+  "history": {
+    "bench/oracle/m3_push_factor/history/README.md": "74da1a8f03a05ae19a7a4730f8145169b4cd36a6fb693056e4cff2184aa62a1a",
+    "bench/oracle/m3_push_factor/history/initial-capture.tar.gz": "202758cc4ab211a7a0a10e3b6e74366969c8a0650e7625c4ea0c42085c5839aa"
+  },
+  "assembly": {
+    "bench/oracle/m3_push_factor/source.asm": "24dc511a3ddd471debf1c413ade8396e2fa65d00e2ddc57bfc0c855a754cb9ef"
+  },
+  "captures": {
+    "bench/oracle/m3_push_factor/arms-1.json": "8f7894adeed045a54dfe2013f3b4bfc08f899c07cbed8929d2fa2c5607f8e610",
+    "bench/oracle/m3_push_factor/arms-2.json": "0f40fa277411b5dd8c79c1f7fdc7168774bf84422782430a1653c0f0b5ddc302",
+    "bench/oracle/m3_push_factor/arms-3.json": "0640184b6f8270bc3b783ee5b53f96b11def80fdf84ee6fc48ae2d38ed7ee04e",
+    "bench/oracle/m3_push_factor/retry-1.json": "ff4a9aaf7234bb1582cdbf872ec1de30cd6d2648140e341a63bb50003f15cb2a",
+    "bench/oracle/m3_push_factor/retry-2.json": "b79c66579cf8400a6af26661ebeaf728b73b9dcc83d9e8ed1b267b389a4050ba",
+    "bench/oracle/m3_push_factor/retry-3.json": "d3574f72e9a4c504a53317e0c7db970ddf6cbee53a73b3fc3a94583021ddb5b1",
+    "bench/oracle/m3_push_factor/interior-1.json": "429f7b5e54f9d0bab25b5bbdf150d7552771d4fe474e4a4f55241c0a32378dde",
+    "bench/oracle/m3_push_factor/interior-2.json": "422e773e76297b47b948e165dc91d81398140ec878acf3e222cb5709c78ff02f",
+    "bench/oracle/m3_push_factor/interior-3.json": "10559b6aaa7ccea633f9af7e95aa4da338121ab643654477c901bbd7ba41b577",
+    "bench/oracle/m3_push_factor/control-1.json": "63390a4e4920383a918ed61760a1df47a6f0d2d6dae751cabeb0d40321c1c574",
+    "bench/oracle/m3_push_factor/control-2.json": "ba0e2971b8d07c2c915fe272e6131b683f4f86e506cfc07aa715fbe8e6e767b5",
+    "bench/oracle/m3_push_factor/control-3.json": "92cb5c75c4aad212110f1b54e599390e12ff627aa6e38dd5db4db6c722893d34",
+    "bench/oracle/m3_push_factor/synthetic-1.json": "d029cd2723beb82f24b039e8dd4a0a44057ce22427952cbe00598a28b6afcff9",
+    "bench/oracle/m3_push_factor/synthetic-2.json": "9e707809475d1f51187e8c99accc191324f52188bd7e5cd635ab1a74498fe8e9",
+    "bench/oracle/m3_push_factor/synthetic-3.json": "41bb4d45372813d09a6bd777e4905f93abe8b00bd5d3f9ce4d2fdf79ea09ef49"
+  }
+}
