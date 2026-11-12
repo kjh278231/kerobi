@@ -1,0 +1,44 @@
+[
+  {
+    "name": "binary-zero",
+    "rejected": true,
+    "error": "Fail: arms/1.binary: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+    "name": "empty-events",
+    "rejected": true,
+    "error": "Fail: arms.target required"
+  },
+  {
+    "name": "target-zero",
+    "rejected": true,
+    "error": "Fail: arms.step:applied.step1.accepted required"
+  },
+  {
+    "name": "caller-leave-and-unit-consistently-wrong",
+    "rejected": false
+  },
+  {
+    "name": "caller-request-consistently-wrong",
+    "rejected": false
+  },
+  {
+    "name": "caller-existing-marks-lost",
+    "rejected": false
+  },
+  {
+    "name": "factor-request",
+    "rejected": true,
+    "error": "Fail: retry.roundctl:factor.step6.compact request10.request: 기준=10, 실제=0"
+  },
+  {
+    "name": "approval-count",
+    "rejected": true,
+    "error": "Fail: retry.roundctl:accepted.step1.approved: 기준=1, 실제=100"
+  },
+  {
+    "name": "failed-defer-increment",
+    "rejected": true,
+    "error": "Fail: retry.roundctl:defer:leave.step2.defer transition.failures[15]: 기준=1, 실제=0"
+  }
+]

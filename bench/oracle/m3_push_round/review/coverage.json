@@ -1,0 +1,53 @@
+{
+  "arms": {
+    "all_events": 410,
+    "new_round_events": 127,
+    "btran_raw_counts": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "defer_failure_after": [
+      1,
+      2,
+      3
+    ]
+  },
+  "retry": {
+    "all_events": 161,
+    "new_round_events": 49,
+    "btran_raw_counts": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "defer_failure_after": [
+      1,
+      2,
+      3
+    ]
+  },
+  "interior": {
+    "all_events": 180,
+    "new_round_events": 31,
+    "btran_raw_counts": [
+      1
+    ],
+    "defer_failure_after": []
+  }
+}

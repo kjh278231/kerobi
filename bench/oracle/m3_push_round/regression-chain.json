@@ -1,0 +1,29 @@
+{
+  "commands": [
+    {
+      "command": "python3 tools/push_chain_oracle.py --check",
+      "returncode": 0
+    },
+    {
+      "command": "python3 tools/push_chain_oracle.py --self-test",
+      "returncode": 0,
+      "rejected": 8
+    },
+    {
+      "command": "cargo test -p rsolver-lp --test push_chain",
+      "returncode": 0,
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "command": "python3 tools/push_step_chain_rust.py --compare",
+      "returncode": 0,
+      "steps": 236,
+      "fields": 5144,
+      "segments": 42,
+      "refactor_skip": 6
+    }
+  ],
+  "note": "실제 실행 결과 요약; 새 원본 실행0회. 기존42구간·재분해 비교 제외6 유지."
+}
