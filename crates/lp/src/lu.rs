@@ -67,6 +67,10 @@ pub struct Lu {
     pub n_updates: usize,
     /// Steps taken by the singleton phases (the rest is the Markowitz kernel).
     pub n_singleton: usize,
+    /// End of the row-singleton stack phase (LU+0xd8) and of the column-singleton phase 3 (LU+0xe0 = LU+0x100 as
+    /// `1da0b2` leaves it, C:1514–1532).
+    s1: usize,
+    s3: usize,
     /// U rows of the kernel steps by step: (position, u), moved into `ucol` after the factor.
     kernel_u: Vec<Vec<(usize, f64)>>,
     /// Singular factor: (position, row) pairs of the empty columns and rows in discovery order (tail steps m−1,
@@ -74,6 +78,30 @@ pub struct Lu {
     pub singular: Vec<(usize, usize)>,
     /// Work inputs of this factorization (`036ade`, docs/m1/m1_02q_work.md).
     pub fw: FactorWork,
+}
+
+/// Borrowed internals of a factor (`Lu::parts`), in the factor's own step numbering.
+pub struct LuParts<'a> {
+    pub steps: &'a [(usize, usize, f64)],
+    pub prow: &'a [i64],
+    pub lcol: &'a [Vec<(usize, f64)>],
+    pub lrow: &'a [Vec<(usize, f64)>],
+    pub ucol: &'a [Vec<(usize, f64)>],
+    pub urow: &'a [Vec<(usize, f64)>],
+    pub umid: &'a [usize],
+    pub prefix: usize,
+    pub e8: usize,
+    pub dc: usize,
+    pub f0: &'a [usize],
+    pub f8: &'a [i64],
+    pub pool: usize,
+    pub sparse_mult: usize,
+    pub level: Option<&'a [usize]>,
+    pub llev: Option<&'a [usize]>,
+    pub lmax: i64,
+    pub n_singleton: usize,
+    pub s1: usize,
+    pub s3: usize,
 }
 
 /// What `036ade` adds to the dual work counter: q = singleton-phase L + U entries ((P0 + local_100) − local_110 after
@@ -222,6 +250,33 @@ impl Lu {
         self.steps.len() == self.head.len()
     }
 
+    /// Read-only view of a fresh factor for adapters that rebuild the original's array layout (the crossover push
+    /// backend, docs/m3/primal_push_refactor_rust.md). Nothing here changes the factor.
+    pub fn parts(&self) -> LuParts<'_> {
+        LuParts {
+            steps: &self.steps,
+            prow: &self.prow,
+            lcol: &self.lcol,
+            lrow: &self.lrow,
+            ucol: &self.ucol,
+            urow: &self.urow,
+            umid: &self.umid,
+            prefix: self.prefix,
+            e8: self.e8,
+            dc: self.dc,
+            f0: &self.f0,
+            f8: &self.f8,
+            pool: self.pool,
+            sparse_mult: self.sparse_mult,
+            level: self.level.as_deref(),
+            llev: self.llev.as_deref(),
+            lmax: self.lmax,
+            n_singleton: self.n_singleton,
+            s1: self.s1,
+            s3: self.s3,
+        }
+    }
+
     pub fn factor(spx: &Spx, head: &[usize]) -> Lu {
         Lu::factor_tol(spx, head, MARKOWITZ_TOL)
     }
@@ -286,6 +341,8 @@ impl Lu {
             general: false,
             n_updates: 0,
             n_singleton: 0,
+            s1: 0,
+            s3: 0,
             kernel_u: Vec::new(),
             singular: Vec::new(),
             fw: FactorWork::default(),
@@ -319,6 +376,7 @@ impl Lu {
         }
 
         let s1 = lu.steps.len();
+        lu.s1 = s1;
         // slacks of rows without structural entries
         for (pos, &j) in head.iter().enumerate() {
             if j >= n && rc[j - n] == m + 1 {
@@ -349,6 +407,7 @@ impl Lu {
         // order; skipped when phases 2–3 pivoted nothing
 
         let s3 = lu.steps.len();
+        lu.s3 = s3;
         {
             let mut cc = vec![0usize; m];
             // active row copy, ascending position, flat

@@ -1,0 +1,26 @@
+  ft-skipped(매번 재분해 대체): rejected 79개 연산 불일치: 첫 interior#80 U.leave.U.col[6].rows: 길이 7 != 0
+  roweta-always(무조건 행 eta): rejected 59개 연산 불일치: 첫 interior#80 U.roweta: 형식 None != 6
+  roweta-never: rejected 79개 연산 불일치: 첫 interior#105 U.roweta: 형식 7 != None
+  local40-first: rejected 42개 연산 불일치: 첫 interior#80 U.leave.scalars.x100: 원본 7 != Rust 8
+  local40-last: survived 
+  promote-never: rejected 62개 연산 불일치: 첫 adlittle#245 U.leave.U.col_bound[54]: 원본 49 != Rust 50
+  local80-3-0: rejected 59개 연산 불일치: 첫 adlittle#166 U.leave.U.col[42].rows[2]: 원본 27 != Rust 43
+  local80-1-2: rejected 77개 연산 불일치: 첫 interior#105 U.leave.U.col[6].rows[0]: 원본 0 != Rust 7
+  cycle-strict: replay-timeout
+  rotate-none: rejected 36개 연산 불일치: 첫 interior#105 U.leave.perm.x28[7]: 원본 7 != Rust 6
+  pool-extra: rejected 79개 연산 불일치: 첫 interior#80 U.leave.U.row_end[1]: 원본 22 != Rust 20
+  row-cap: rejected 43개 연산 불일치: 첫 interior#212 U.leave.U.row_end[3]: 원본 49 != Rust 64
+  column-base: rejected 79개 연산 불일치: 첫 interior#80 U.leave.U.col[6].rows[6]: 원본 0 != Rust 6
+  tail-prefix: rejected 28개 연산 불일치: 첫 interior#80 U.leave.U.col_bound[6]: 원본 5 != Rust 6
+  oldest-overwrite: rejected 64개 연산 불일치: 첫 interior#237 U.leave.eta_oldest[5]: 원본 0 != Rust 1
+  dot-sequential: rejected 1개 연산 불일치: 첫 adlittle#512 U.leave.diag[42]: 원본 '2e4ae32313e8edbf' != Rust '304ae32313e8edbf'
+  dot-peel: survived 
+  unlist-mark: rejected 79개 연산 불일치: 첫 interior#80 U.leave.prefix.flag[6]: 원본 -2 != Rust -1
+  xe8-never: rejected 20개 연산 불일치: 첫 adlittle#363 U.leave.scalars.xe8: 원본 50 != Rust 43
+  renumber-n: rejected 15개 연산 불일치: 첫 arms#2 R.header[0]: 원본 32 != Rust 58
+  leave-o: rejected 13개 연산 불일치: 첫 arms#2 R.leave: 원본 2 != Rust 14
+  vstat-none: rejected 15개 연산 불일치: 첫 arms#2 R.vstat[5]: 원본 1 != Rust 17
+  wrapper-clear-none: rejected 33개 연산 불일치: 첫 interior#132 F.enter.spike.count: 원본 0 != Rust 8
+  bucket-not-shared: rejected 6개 연산 불일치: 첫 capri#666 U.enter.Lrow.bucket[0]: 원본 2 != Rust 0
+Rust 변이 {'rejected': 21, 'survived': 2, 'replay-timeout': 1}
+exit 0

@@ -24,6 +24,16 @@ D = ROOT / 'bench/oracle/m3_push_lu_rust'
 TRACE = ROOT / 'target/m3_push_lu_rust/trace.txt'
 SOURCE = Path('crates/lp/src/crossover_lu.rs')
 SCHEMA = 'M3-04c-21f-v1'
+GENERATE = False
+
+
+def use_generate():
+    """21g 생성 모드: 재분해 factor를 주입하지 않고 Rust가 만든다(별도 입력·trace)."""
+    global D, TRACE, SCHEMA, GENERATE
+    D = ROOT / 'bench/oracle/m3_push_refactor_rust'
+    TRACE = ROOT / 'target/m3_push_refactor_rust/trace.txt'
+    SCHEMA = 'M3-04c-21g-v1'
+    GENERATE = True
 MODELS = ('arms', 'retry', 'interior', 'adlittle', 'scsd1', 'capri')
 
 
@@ -88,17 +98,30 @@ def lu_block(ev, i):
     return ev[i:j + 1]
 
 
-def program(name, r):
-    """push 안 연산 열: (op, ev 번호, 입력 토큰, 원본 기대값)."""
-    ev = r['events']; out = []; inside = False
+def matrix(e):
+    """push 진입 CSC(S+0x64/0x68/0x70…0x88): 21g 생성 모드의 분해 입력."""
+    M = e['model']; st = e['state']; m, n = st['m'], st['n']
+    starts = [int.from_bytes(bytes.fromhex(x), 'little', signed=True) for x in M['starts']]
+    nnz = max((s + l for s, l in zip(starts, M['lengths'])), default=0)
+    return [str(m), str(n)] + ints(starts) + ints(M['lengths']) + ints(M['rows'][:nnz]) + hexes(M['values'][:nnz])
+
+
+def program(name, r, generate=False):
+    """push 안 연산 열: (op, ev 번호, 입력 토큰, 원본 기대값). generate면 재분해 factor를 주입하지 않고 Rust가 만든다(21g)."""
+    ev = r['events']; out = []; inside = False; markowitz = None; first = True
     for i, e in enumerate(ev):
         k = e['event']
         if k == 'push:enter':
             inside = True
+            if generate:
+                out.append(('M', i, ['M', name, str(i), str(e['state']['m'])] + matrix(e), None))
         elif k == 'push:leave':
             inside = False
+        if k == 'factor:enter':
+            markowitz = e['factor_ctl']['state']['markowitz']
         if not inside or k not in ('ftran:enter', 'btran:enter', 'lu:enter'):
             continue
+        was_first = first; first = False
         m = len(e['factor']['diag']) if 'factor' in e and e['factor'] else len(e['header'])
         if k == 'lu:enter':
             blk = lu_block(ev, i); lv = blk[-1]
@@ -108,11 +131,27 @@ def program(name, r):
                 ref = [x for x in blk if x['event'] == 'lu:refactor' and x['phase'] == 'leave']
                 require(ref, f'{name}#{i}: 036ade 반환 없음')
                 st = ref[-1]['state']; equal(0, ref[-1]['ret'], f'{name}#{i}.036ade'); equal([0, 0], ref[-1]['out'], f'{name}#{i}.036ade out')
-                toks = ['R', name, str(i), str(m)] + inject(lv['factor'], lv['buffers']) + ints(e['header']) + [str(e['leave'])] + ints(e['vstat']) + ints(st['x28']) + ints(st['x38'])
                 want = dict(header=lv['header'], leave=lv['leave'], vstat=lv['vstat'], spike_count=lv['spike_count'],
                             buffers={k: lv['buffers'][k] for k in ('spike_idx_is_old_header', 'header_is_old_spike_idx')},
                             factor=lv['factor'])
-                out.append(('R', i, toks, want))
+                if generate:
+                    require(markowitz is not None, f'{name}#{i}: Markowitz 없음')
+                    equal(ref[0]['state']['header'], e['header'], f'{name}#{i}.036ade header')
+                    if was_first:
+                        # push 첫 factor 호출: 할당 상태 4필드(풀 크기·정렬·갱신 한도·work 배율)만 원본에서 읽는다. 첫 lu:enter
+                        # factor는 캡처되지 않아(21e) 첫 재분해 lu:leave에서 읽는다: 036ade는 풀 부족 재시도(C:2592–2620,
+                        # 036ade 2회 이상)에서만 F+0x158을 바꾸므로 036ade 1회인 호출에서는 호출 전 값과 같다.
+                        equal(1, sum(1 for x in blk if x['event'] == 'lu:refactor' and x['phase'] == 'leave'), f'{name}#{i}: 036ade 재시도')
+                        s0 = (e['factor'] or lv['factor'])['scalars']
+                        alloc = ['1', str(s0['x158']), str(s0['pool_mod16'][0]), str(s0['pool_mod16'][1]), str(s0['x188']), s0['x1f8']]
+                    else:
+                        alloc = ['0']
+                    toks = ['G', name, str(i), str(m), (e['factor'] or lv['factor'])['zero'] if was_first else '-', markowitz] + alloc + ints(e['header']) + [str(e['leave'])] + ints(e['vstat'])
+                    want['perm'] = {k: st[k] for k in ('x20', 'x28', 'x30', 'x38')}
+                    out.append(('G', i, toks, want))
+                else:
+                    toks = ['R', name, str(i), str(m)] + inject(lv['factor'], lv['buffers']) + ints(e['header']) + [str(e['leave'])] + ints(e['vstat']) + ints(st['x28']) + ints(st['x38'])
+                    out.append(('R', i, toks, want))
             else:
                 rw = [x for x in blk if x['event'] == 'lu:roweta']
                 require(len(rw) in (0, 2), f'{name}#{i}.roweta')
@@ -154,7 +193,7 @@ def cases():
     oracle.controls(data, m)
     out = []
     for name in MODELS:
-        out += [(name,) + x for x in program(name, data[name][0])]
+        out += [(name,) + x for x in program(name, data[name][0], GENERATE)]
     return out, m
 
 
@@ -204,9 +243,33 @@ def mask(a, b, key):
     return a
 
 
+def unknown_bucket(want, got, key):
+    """재분해 뒤 F+0x1a8은 036ade scratch 잔류값: Rust가 미지값(null)으로 둔 칸은 세고 비교에서 뺀다(읽히면 출력이 달라져 드러난다)."""
+    if not isinstance(want, dict) or not isinstance(got, dict):
+        return want
+    wb = (want.get('Lrow') or {}).get('bucket'); gb = (got.get('Lrow') or {}).get('bucket')
+    if wb is None or gb is None:
+        return want
+    want = copy.deepcopy(want)
+    for k, (x, y) in enumerate(zip(wb, gb)):
+        if y is None:
+            want['Lrow']['bucket'][k] = None
+            UNKNOWN[key] += 1
+    return want
+
+
 def pairs(op, want, got):
     """(이름, 원본, Rust) 비교 쌍."""
     H = ('header',)
+    if op == 'M':
+        return []
+    if GENERATE and op != 'G':
+        want = dict(want)
+        for k in ('enter', 'leave'):
+            if k in want and k in got:
+                want[k] = unknown_bucket(want[k], got[k], f'{op} bucket')
+    if op == 'G':
+        return [('perm', want['perm'], got['perm'])] + pairs('R', dict(want, factor=unknown_bucket(want['factor'], got['factor'], 'G bucket')), got)
     if op == 'R':
         return [('header', want['header'], got['header']), ('leave', want['leave'], got['leave']),
                 ('vstat', want['vstat'], got['vstat']), ('spike_count', want['spike_count'], got['spike_count']),
@@ -234,23 +297,47 @@ def read_trace(path, head):
     return out
 
 
+# 21g 계약 §1에 사전 명시한 예상 실패: capri 23회째 재분해(ev 813)는 `1da0b2` 2×2 블록 단계(M1 미구현)로 피벗한다.
+# 그 재분해와 같은 push의 이후 연산은 실패로 세고 통과 수에 넣지 않는다(후속 M3-04c-21h).
+EXPECTED = {'capri': 813}
+
+
+def fail_key(f):
+    name, rest = f.split('#', 1)
+    return name, int(rest.split(' ', 1)[0])
+
+
+def expected(f):
+    name, ev = fail_key(f)
+    return GENERATE and name in EXPECTED and ev >= EXPECTED[name]
+
+
 def compare(trace, cs, head, verbose=True):
     got = read_trace(trace, head)
     equal(len(cs), len(got), 'trace 연산 수')
-    fields = 0; branches = Counter(); report = Counter(); first = None; fails = []
+    fields = 0; branches = Counter(); report = Counter(); fails = []; ops = Counter(); passed = Counter(); gen = Counter()
     for c, (name, ev, g) in zip(cs, got):
         cname, op, i, toks, want = c
         equal((cname, i), (name, ev), 'trace 순서')
+        ops[op] += 1
         if g.get('error') is not None:
             fails.append(f'{name}#{ev} {op}: Rust 오류 {g["error"]}' + (' (앞선 오류로 건너뜀)' if g.get('skipped') else ''))
             continue
         equal(op, g['op'], f'{name}#{ev}.op')
+        ok = True
         for label, a, b in pairs(op, want, g):
             d = first_diff(a, b, f'{name}#{ev} {op}.{label}')
             if d:
-                fails.append(d)
+                fails.append(d); ok = False
                 break
             fields += count_leaves(a)
+        if not ok:
+            continue
+        passed[op] += 1
+        if op == 'G':
+            sc = want['factor']['scalars']; m = want['factor']['m']
+            gen['kernel' if sc['xe4'] < m else 'triangular'] += 1
+            gen['L levels' if sc['x128'] >= 0 else 'no levels'] += 1
         if op in ('F', 'B'):
             for k, v in g['branches'].items():
                 branches[f'{op}.{k}={v}'] += 1
@@ -258,13 +345,27 @@ def compare(trace, cs, head, verbose=True):
             for k, v in g['report'].items():
                 report[f'{k}={v}'] += 1
     if verbose:
-        print(f'비교 연산 {len(cs)}, 필드 {fields}, 실패 {len(fails)}')
+        print(f'비교 연산 {sum(ops.values())} {dict(ops)}, 통과 {dict(passed)}, 필드 {fields}, 실패 {len(fails)}')
+        if GENERATE:
+            print('생성 재분해 통과 분류', dict(gen))
+            print('예상 실패(2×2 블록, 계약 §1)', [f for f in fails if expected(f)])
         print('FT 분기', dict(sorted(report.items())))
         print('FTRAN/BTRAN 분기', dict(sorted(branches.items())))
         print('미지 칸(비교 제외)', dict(UNKNOWN))
-        for f in fails[:40]:
+        for f in [f for f in fails if not expected(f)][:40]:
             print('  ', f)
     return fields, fails, report, branches
+
+
+def judge(fails):
+    """통과 판정: 예상 실패 밖의 실패가 없고, 생성 모드면 예상 실패가 실제로 그 재분해에서 시작해야 한다."""
+    bad = [f for f in fails if not expected(f)]
+    if bad:
+        raise Fail(f'{len(bad)}개 연산 불일치: 첫 {bad[0]}')
+    if GENERATE:
+        for name, ev in EXPECTED.items():
+            first = [f for f in fails if fail_key(f)[0] == name]
+            require(first and fail_key(first[0])[1] == ev and ' G.' in first[0], f'예상 실패가 {name}#{ev} 재분해에서 시작하지 않음: {first[:1]}')
 
 
 # ---------- 판별력 ----------
@@ -343,7 +444,86 @@ TRACE_MUTATIONS = [
 ]
 
 
+def kernel_g(g):
+    """커널(Markowitz)이 있고 L·U가 비어 있지 않은 생성 재분해."""
+    f = g['factor']; return f['scalars']['xe4'] < f['m'] and f['L']['rows'] and any(len(r['cols']) > 1 for r in f['U']['row'])
+
+
+def level_g(g):
+    return g['factor']['scalars']['x128'] >= 0
+
+
+def first_multi(rows, key):
+    return next(r for r in rows if len(r[key]) > 1)
+
+
+def gf(g):
+    return g['factor']
+
+
+def swap_in_column(beg, idx):
+    """한 열(beg 구간) 안의 서로 다른 첫 두 원소를 맞바꾼다."""
+    for k in range(len(beg) - 1):
+        a, b = beg[k] - beg[0], beg[k + 1] - beg[0]
+        if b - a >= 2 and idx[a] != idx[a + 1]:
+            idx[a], idx[a + 1] = idx[a + 1], idx[a]
+            return
+    raise Fail('맞바꿀 열 없음')
+
+
+def bump(d, k, by=1):
+    d[k] = d[k] + by
+
+
+GEN_TRACE_MUTATIONS = [
+    ('trace: 연산 누락', lambda L: L[:5] + L[6:]),
+    ('trace: 머리 해시', lambda L: ['M3-04c-21g-v1 ' + '0' * 64] + L[1:]),
+    ('trace: G 오류 주입', lambda L: edit(L, 'G', lambda g: g.update(error='주입'))),
+    ('G: 036ade 피벗 행 x20', lambda L: edit(L, 'G', lambda g: g['perm']['x20'].reverse(), kernel_g)),
+    ('G: 036ade 옛 위치 o', lambda L: edit(L, 'G', lambda g: g['perm']['x28'].reverse(), kernel_g)),
+    ('G: 대각 비트', lambda L: edit(L, 'G', lambda g: gf(g)['diag'].__setitem__(-1, flipbit(gf(g)['diag'][-1])), kernel_g)),
+    ('G: L 열 안 순서', lambda L: edit(L, 'G', lambda g: swap_in_column(gf(g)['L']['beg'], gf(g)['L']['rows']), kernel_g)),
+    ('G: L 값 비트', lambda L: edit(L, 'G', lambda g: gf(g)['L']['vals'].__setitem__(0, flipbit(gf(g)['L']['vals'][0])), kernel_g)),
+    ('G: L 열 시작', lambda L: edit(L, 'G', lambda g: gf(g)['L']['beg'].__setitem__(1, gf(g)['L']['beg'][1] + 1), kernel_g)),
+    ('G: L 레벨', lambda L: edit(L, 'G', lambda g: gf(g)['L']['lev'].__setitem__(0, gf(g)['L']['lev'][0] + 1), level_g)),
+    ('G: L lst 마지막 칸', lambda L: edit(L, 'G', lambda g: gf(g)['L']['lst'].__setitem__(-1, gf(g)['L']['lst'][-1] + 1), level_g)),
+    ('G: Lᵀ 행 안 순서', lambda L: edit(L, 'G', lambda g: swap_in_column(gf(g)['Lrow']['beg'], gf(g)['Lrow']['cols']), lambda g: kernel_g(g) and any(b - a >= 2 for a, b in zip(gf(g)['Lrow']['beg'], gf(g)['Lrow']['beg'][1:])))),
+    ('G: Lᵀ 레벨', lambda L: edit(L, 'G', lambda g: gf(g)['Lrow']['lev'].__setitem__(0, gf(g)['Lrow']['lev'][0] + 1), level_g)),
+    ('G: Lᵀ lst', lambda L: edit(L, 'G', lambda g: gf(g)['Lrow']['lst'].__setitem__(-1, gf(g)['Lrow']['lst'][-1] - 1), level_g)),
+    ('G: U 열 행 순서', lambda L: edit(L, 'G', lambda g: first_multi(gf(g)['U']['col'], 'rows')['rows'].reverse(), kernel_g)),
+    ('G: U 열 경계', lambda L: edit(L, 'G', lambda g: gf(g)['U']['col_bound'].__setitem__(-1, gf(g)['U']['col_bound'][-1] + 1), kernel_g)),
+    ('G: U 행 순서', lambda L: edit(L, 'G', lambda g: first_multi(gf(g)['U']['row'], 'cols')['cols'].reverse(), kernel_g)),
+    ('G: U 행 시작', lambda L: edit(L, 'G', lambda g: gf(g)['U']['row_start'].__setitem__(-1, gf(g)['U']['row_start'][-1] + 1), kernel_g)),
+    ('G: xd8', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'xd8'), kernel_g)),
+    ('G: xdc', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'xdc'), kernel_g)),
+    ('G: xe4', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'xe4'), kernel_g)),
+    ('G: xe8', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'xe8'), kernel_g)),
+    ('G: x100 t', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'x100'), kernel_g)),
+    ('G: x104', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'x104'), kernel_g)),
+    ('G: x108 비트', lambda L: edit(L, 'G', lambda g: gf(g)['scalars'].update(x108=flipbit(gf(g)['scalars']['x108'])), kernel_g)),
+    ('G: x110 비트', lambda L: edit(L, 'G', lambda g: gf(g)['scalars'].update(x110=flipbit(gf(g)['scalars']['x110'])), kernel_g)),
+    ('G: x128', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'x128'), level_g)),
+    ('G: x140', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'x140'), level_g)),
+    ('G: x160 풀 끝', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'x160', 2), kernel_g)),
+    ('G: x168', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'x168'), kernel_g)),
+    ('G: x1e0', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'x1e0'), kernel_g)),
+    ('G: x188', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'x188'), kernel_g)),
+    ('G: 접두 목록', lambda L: edit(L, 'G', lambda g: gf(g)['prefix']['list'].append(0), kernel_g)),
+    ('G: 접두 자리', lambda L: edit(L, 'G', lambda g: gf(g)['prefix']['flag'].__setitem__(-1, -1), kernel_g)),
+    ('G: F1a0', lambda L: edit(L, 'G', lambda g: gf(g)['eta_oldest'].__setitem__(0, 0), kernel_g)),
+    ('G: header 재번호', lambda L: edit(L, 'G', lambda g: g['header'].reverse(), kernel_g)),
+    ('G: 이탈 위치', lambda L: edit(L, 'G', lambda g: g.update(leave=g['leave'] + 1), lambda g: g['leave'] >= 0)),
+    ('G: vstat', lambda L: edit(L, 'G', lambda g: g['vstat'].__setitem__(g['header'][0], g['vstat'][g['header'][0]] + 1))),
+    ('G: x40 별칭 identity', lambda L: edit(L, 'G', lambda g: gf(g)['perm']['x40'].reverse(), kernel_g)),
+    ('F: 출력 값 비트', lambda L: edit(L, 'F', lambda g: g['output']['val'].__setitem__(0, flipbit(g['output']['val'][0])), lambda g: g['output']['val'] and g['output']['val'][0])),
+    ('U: 반환 대각 비트', lambda L: edit(L, 'U', lambda g: g['leave']['diag'].__setitem__(0, flipbit(g['leave']['diag'][0])))),
+    ('B: cache 값', lambda L: edit(L, 'B', lambda g: g['leave']['cache']['val'].__setitem__(0, flipbit(g['leave']['cache']['val'][0])), lambda g: g['leave']['cache']['count'] > 0)),
+]
+
+
 def self_test(cs, head):
+    if GENERATE:
+        return self_test_generate(cs, head)
     base = TRACE.read_text().splitlines()
     tmp = ROOT / 'target/m3_push_lu_rust/mutated.txt'
     rejected = []
@@ -359,6 +539,28 @@ def self_test(cs, head):
             rejected.append((name, str(e)))
     for name, why in rejected:
         print(f'  거부 {name}: {why[:140]}')
+    print(f'trace 변조 {len(rejected)}종 모두 거부')
+    return rejected
+
+
+def self_test_generate(cs, head):
+    """21g: 기준 trace의 실패는 예상 실패뿐이다. 변조는 판정(judge)을 실패시켜야 거부다."""
+    base = TRACE.read_text().splitlines()
+    _, fails, _, _ = compare(TRACE, cs, head, verbose=False)
+    judge(fails)
+    tmp = TRACE.parent / 'mutated.txt'
+    rejected = []
+    for name, fn in GEN_TRACE_MUTATIONS:
+        tmp.write_text('\n'.join(fn(base)) + '\n')
+        try:
+            _, f2, _, _ = compare(tmp, cs, head, verbose=False)
+            judge(f2)
+        except Fail as e:
+            rejected.append((name, str(e)))
+            continue
+        raise Fail(f'변조 통과: {name}')
+    for name, why in rejected:
+        print(f'  거부 {name}: {why[:150]}')
     print(f'trace 변조 {len(rejected)}종 모두 거부')
     return rejected
 
@@ -393,6 +595,34 @@ MUTATIONS = [
     ('bucket-not-shared', '        s.bucket = self.bucket.clone();\n', '        s.bucket = self.bucket.clone().map(|b| vec![0; b.len()]);\n'),
 ]
 MUT_SOURCE = {'bucket-not-shared': SOURCE}
+GEN_SOURCE = Path('crates/lp/src/crossover_refactor.rs')
+GEN_MUTATIONS = [
+    # 계약 §3: 재분해를 건너뛰고 직전 factor 유지(반드시 거부)
+    ('refactor-skipped(직전 factor 유지)', '    let (m, n) = (a.m, a.n);\n',
+     '    let (m, n) = (a.m, a.n);\n    if let Some(p) = prev {\n        let id: Vec<i32> = (0..m as i32).collect();\n        return Ok(Refactor { state: p.clone(), o: id.clone(), n: id });\n    }\n'),
+    ('markowitz-default', 'Lu::factor_tol(&spx, &head, tol)', 'Lu::factor_tol(&spx, &head, crate::lu::MARKOWITZ_TOL)'),
+    ('L-order-reversed', 'for &(i, l) in &p.lcol[k] {', 'for &(i, l) in p.lcol[k].iter().rev() {'),
+    ('L-rows-not-steps', 'lrows.push(step(i));', 'lrows.push(i as i32);'),
+    ('Lt-order-reversed', 'for &(j, l) in &p.lrow[k] {', 'for &(j, l) in p.lrow[k].iter().rev() {'),
+    ('Urow-order-reversed', 'for &(j, u) in &p.urow[k] {', 'for &(j, u) in p.urow[k].iter().rev() {'),
+    ('Ucol-order-reversed', 'for &(i, u) in &p.ucol[k] {', 'for &(i, u) in p.ucol[k].iter().rev() {'),
+    ('pool-fill-U-only', 'let x160 = 2 * (lnnz + unnz) as i64;', 'let x160 = 2 * unnz as i64;'),
+    ('column-base-after-rows', 'let colbase = x160 / 2;', 'let colbase = unnz as i64;'),
+    ('t-M1-prefix', 'let (t, dc) = (p.s3, p.dc);', 'let (t, dc) = (p.prefix, p.dc);'),
+    ('tail-bound-strict', 'p.prow[e.0] >= t as i64', 'p.prow[e.0] > t as i64'),
+    ('xe8-nonempty', 'while e8 > t && ce[e8] != cs[e8] {', 'while e8 > t && ce[e8] == cs[e8] {'),
+    ('f8-dc-inclusive', 'if k < dc { -1 }', 'if k <= dc { -1 }'),
+    ('x108-x110-swapped', 'x108: mean(t, m),\n        x110: mean(dc, t),', 'x108: mean(dc, t),\n        x110: mean(t, m),'),
+    ('mean-empty-1', '} else { 1.5 };', '} else { 1.0 };'),
+    ('x1e0-no-diag', 'x1e0: (m + lnnz) as i64,', 'x1e0: lnnz as i64,'),
+    ('xd8-slack-end', 'xd8: p.s1 as i32,', 'xd8: p.dc as i32,'),
+    ('xe4-phase3', 'xe4: p.n_singleton as i32,', 'xe4: p.s3 as i32,'),
+    ('lst-last-summed', 'for l in 1..=levels {', 'for l in 1..=levels + 1 {'),
+    ('Lt-lst-kept', '            lst.pop();\n', ''),
+    ('F1a0-zero', 'oldest: vec![2_000_000_000; m],', 'oldest: vec![0; m],'),
+    ('spike-unknown', '                    val.set(i, 0.0);\n', ''),
+    ('o-inverse', 'let o: Vec<i32> = p.steps.iter().map(|s| s.1 as i32).collect();', 'let o: Vec<i32> = p.steps.iter().map(|s| s.0 as i32).collect();'),
+]
 
 
 def mutate_rust(path, cs, head):
@@ -403,15 +633,19 @@ def mutate_rust(path, cs, head):
     for file in ('Cargo.toml', 'Cargo.lock'):
         shutil.copy2(ROOT / file, scratch / file)
     shutil.copytree(ROOT / 'crates', scratch / 'crates')
-    (scratch / 'bench/oracle/m3_push_lu_rust').mkdir(parents=True)
-    shutil.copy2(D / 'input.txt', scratch / 'bench/oracle/m3_push_lu_rust/input.txt')
-    original = (ROOT / SOURCE).read_text(); results = []
-    trace = scratch / 'target/m3_push_lu_rust/trace.txt'
-    for name, old, new in MUTATIONS:
+    for sub in ('m3_push_lu_rust', 'm3_push_refactor_rust'):
+        if (ROOT / 'bench/oracle' / sub / 'input.txt').exists():
+            (scratch / 'bench/oracle' / sub).mkdir(parents=True)
+            shutil.copy2(ROOT / 'bench/oracle' / sub / 'input.txt', scratch / 'bench/oracle' / sub / 'input.txt')
+    source, mutations = (GEN_SOURCE, GEN_MUTATIONS) if GENERATE else (SOURCE, MUTATIONS)
+    test = 'refactor_chain_trace' if GENERATE else 'lu_chain_trace'
+    original = (ROOT / source).read_text(); results = []
+    trace = scratch / TRACE.relative_to(ROOT)
+    for name, old, new in mutations:
         equal(1, original.count(old), 'unique mutation ' + name)
-        (scratch / SOURCE).write_text(original.replace(old, new, 1)); trace.unlink(missing_ok=True)
+        (scratch / source).write_text(original.replace(old, new, 1)); trace.unlink(missing_ok=True)
         try:
-            proc = subprocess.run(['cargo', 'test', '-p', 'rsolver-lp', '--test', 'push_lu'], cwd=scratch,
+            proc = subprocess.run(['cargo', 'test', '-p', 'rsolver-lp', '--test', 'push_lu', test], cwd=scratch,
                                   text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=240)
         except subprocess.TimeoutExpired:
             # 재생이 끝나지 않음(예: 순환 탈출 조건 변이의 무한 루프): trace가 없어 비교기가 받지 않는다
@@ -419,11 +653,16 @@ def mutate_rust(path, cs, head):
             results.append(dict(name=name, result='replay-timeout'))
             print(f'  {name}: replay-timeout', flush=True); continue
         if proc.returncode or not trace.exists():
-            results.append(dict(name=name, result='build-or-test-failed', log=proc.stdout[-1500:])); continue
+            results.append(dict(name=name, result='build-or-test-failed', log=proc.stdout[-1500:]))
+            print(f'  {name}: build-or-test-failed', flush=True); continue
         _, fails, _, _ = compare(trace, cs, head, verbose=False)
-        results.append(dict(name=name, result='rejected' if fails else 'survived', first=fails[0] if fails else None))
-        print(f'  {name}: {results[-1]["result"]} {(fails[0] if fails else "")[:120]}', flush=True)
-    (scratch / SOURCE).write_text(original)
+        try:
+            judge(fails); first = None
+        except Fail as e:
+            first = str(e)
+        results.append(dict(name=name, result='rejected' if first else 'survived', first=first))
+        print(f'  {name}: {results[-1]["result"]} {(first or "")[:140]}', flush=True)
+    (scratch / source).write_text(original)
     path.write_text(json.dumps(results, ensure_ascii=False, indent=2) + '\n')
     return dict(Counter(r['result'] for r in results))
 
@@ -431,12 +670,17 @@ def mutate_rust(path, cs, head):
 def manifest():
     files = [D / 'input.txt', ROOT / SOURCE, ROOT / 'crates/lp/tests/push_lu.rs', ROOT / 'crates/lp/src/crossover_ftran.rs',
              ROOT / 'crates/lp/src/crossover_btran.rs', Path(__file__).resolve(), ROOT / oracle.D / 'manifest.json']
-    return dict(task='M3-04c-21f', schema=SCHEMA, binary_sha256=oracle.BINARY_SHA,
+    if GENERATE:
+        files += [ROOT / GEN_SOURCE, ROOT / 'crates/lp/src/lu.rs']
+    return dict(task='M3-04c-21g' if GENERATE else 'M3-04c-21f', schema=SCHEMA, binary_sha256=oracle.BINARY_SHA,
                 files={str(p.relative_to(ROOT)): sha(p) for p in files})
 
 
 def main():
+    if '--generate' in sys.argv:
+        use_generate()
     ap = argparse.ArgumentParser()
+    ap.add_argument('--generate', action='store_true', help='21g: 재분해 factor를 Rust가 생성(주입 없음)')
     ap.add_argument('--write', action='store_true')
     ap.add_argument('--compare', action='store_true')
     ap.add_argument('--trace', default=str(TRACE))
@@ -451,9 +695,8 @@ def main():
             cs, m = cases()
             head = (D / 'input.txt').read_text().splitlines()[0]
             fields, fails, _, _ = compare(Path(a.trace), cs, head)
-            if fails:
-                raise Fail(f'{len(fails)}개 연산 불일치: 첫 {fails[0]}')
-            print('OK')
+            judge(fails)
+            print('OK' + (f' (예상 실패 {len(fails)}연산 제외)' if fails else ''))
         if a.self_test or a.mutate_rust:
             cs, m = cases()
             head = (D / 'input.txt').read_text().splitlines()[0]

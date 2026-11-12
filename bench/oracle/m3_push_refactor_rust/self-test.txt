@@ -1,0 +1,44 @@
+  거부 trace: 연산 누락: trace 연산 수: 기준=213, 실제=212
+  거부 trace: 머리 해시: trace.header: 기준='M3-04c-21g-v1 357174cc9aee8a42c7bc6bb7ff8ff056ccd76422a31c67a30b6f61518c76008f', 실제='M3-04c-21g-v1 000000000000000000000000000000000
+  거부 trace: G 오류 주입: 1개 연산 불일치: 첫 arms#2 G: Rust 오류 주입
+  거부 G: 036ade 피벗 행 x20: 1개 연산 불일치: 첫 interior#148 G.perm.x20[0]: 원본 2 != Rust 5
+  거부 G: 036ade 옛 위치 o: 1개 연산 불일치: 첫 interior#148 G.perm.x28[0]: 원본 1 != Rust 6
+  거부 G: 대각 비트: 1개 연산 불일치: 첫 interior#148 G.factor.diag[7]: 원본 '3e0ad7a3703de2bf' != Rust '3f0ad7a3703de2bf'
+  거부 G: L 열 안 순서: 1개 연산 불일치: 첫 interior#148 G.factor.L.rows[0]: 원본 7 != Rust 6
+  거부 G: L 값 비트: 1개 연산 불일치: 첫 interior#148 G.factor.L.vals[0]: 원본 '333333333333e3bf' != Rust '323333333333e3bf'
+  거부 G: L 열 시작: 1개 연산 불일치: 첫 interior#148 G.factor.L.beg[1]: 원본 0 != Rust 1
+  거부 G: L 레벨: 1개 연산 불일치: 첫 capri#2 G.factor.L.lev[0]: 원본 0 != Rust 1
+  거부 G: L lst 마지막 칸: 1개 연산 불일치: 첫 capri#2 G.factor.L.lst[11]: 원본 1 != Rust 2
+  거부 G: Lᵀ 행 안 순서: 1개 연산 불일치: 첫 interior#148 G.factor.Lrow.cols[1]: 원본 6 != Rust 5
+  거부 G: Lᵀ 레벨: 1개 연산 불일치: 첫 capri#2 G.factor.Lrow.lev[0]: 원본 6 != Rust 7
+  거부 G: Lᵀ lst: 1개 연산 불일치: 첫 capri#2 G.factor.Lrow.lst[10]: 원본 270 != Rust 269
+  거부 G: U 열 행 순서: 1개 연산 불일치: 첫 interior#148 G.factor.U.col[5].rows[0]: 원본 4 != Rust 0
+  거부 G: U 열 경계: 1개 연산 불일치: 첫 interior#148 G.factor.U.col_bound[7]: 원본 10 != Rust 11
+  거부 G: U 행 순서: 1개 연산 불일치: 첫 interior#148 G.factor.U.row[0].cols[0]: 원본 6 != Rust 5
+  거부 G: U 행 시작: 1개 연산 불일치: 첫 interior#148 G.factor.U.row_start[7]: 원본 15 != Rust 16
+  거부 G: xd8: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.xd8: 원본 0 != Rust 1
+  거부 G: xdc: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.xdc: 원본 0 != Rust 1
+  거부 G: xe4: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.xe4: 원본 5 != Rust 6
+  거부 G: xe8: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.xe8: 원본 5 != Rust 6
+  거부 G: x100 t: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.x100: 원본 5 != Rust 6
+  거부 G: x104: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.x104: 원본 2 != Rust 3
+  거부 G: x108 비트: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.x108: 원본 '0000000000000040' != Rust '0100000000000040'
+  거부 G: x110 비트: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.x110: 원본 '3333333333330b40' != Rust '3233333333330b40'
+  거부 G: x128: 1개 연산 불일치: 첫 capri#2 G.factor.scalars.x128: 원본 10 != Rust 11
+  거부 G: x140: 1개 연산 불일치: 첫 capri#2 G.factor.scalars.x140: 원본 10 != Rust 11
+  거부 G: x160 풀 끝: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.x160: 원본 36 != Rust 38
+  거부 G: x168: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.x168: 원본 895 != Rust 896
+  거부 G: x1e0: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.x1e0: 원본 11 != Rust 12
+  거부 G: x188: 1개 연산 불일치: 첫 interior#148 G.factor.scalars.x188: 원본 20 != Rust 21
+  거부 G: 접두 목록: 1개 연산 불일치: 첫 interior#148 G.factor.prefix.list: 길이 5 != 6
+  거부 G: 접두 자리: 1개 연산 불일치: 첫 interior#148 G.factor.prefix.flag[7]: 원본 -2 != Rust -1
+  거부 G: F1a0: 1개 연산 불일치: 첫 interior#148 G.factor.eta_oldest[0]: 원본 2000000000 != Rust 0
+  거부 G: header 재번호: 1개 연산 불일치: 첫 interior#148 G.header[0]: 원본 14 != Rust 6
+  거부 G: 이탈 위치: 1개 연산 불일치: 첫 arms#2 G.leave: 원본 2 != Rust 3
+  거부 G: vstat: 1개 연산 불일치: 첫 arms#2 G.vstat[32]: 원본 0 != Rust 1
+  거부 G: x40 별칭 identity: 1개 연산 불일치: 첫 interior#148 G.factor.perm.x40[0]: 원본 0 != Rust 7
+  거부 F: 출력 값 비트: 1개 연산 불일치: 첫 arms#11 F.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'
+  거부 U: 반환 대각 비트: 1개 연산 불일치: 첫 interior#80 U.leave.diag[0]: 원본 '000000000000e43f' != Rust '010000000000e43f'
+  거부 B: cache 값: 1개 연산 불일치: 첫 adlittle#68 B.leave.cache.val[0]: 원본 '651ab69be549f4bf' != Rust '641ab69be549f4bf'
+trace 변조 42종 모두 거부
+exit 0

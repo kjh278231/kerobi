@@ -1,0 +1,23 @@
+refactor-skipped(직전 factor 유지): rejected 124개 연산 불일치: 첫 arms#423 G.perm.x20[0]: 원본 22 != Rust 20
+markowitz-default: rejected 16개 연산 불일치: 첫 capri#2 G.perm.x20[215]: 원본 80 != Rust 81
+L-order-reversed: rejected 120개 연산 불일치: 첫 interior#42 G.factor.L.rows[0]: 원본 6 != Rust 5
+L-rows-not-steps: rejected 147개 연산 불일치: 첫 arms#595 G.factor.L.rows[1]: 원본 15 != Rust 16
+Lt-order-reversed: rejected 53개 연산 불일치: 첫 interior#148 G.factor.Lrow.cols[1]: 원본 6 != Rust 5
+Urow-order-reversed: rejected 128개 연산 불일치: 첫 interior#148 G.factor.U.row[0].cols[0]: 원본 6 != Rust 5
+Ucol-order-reversed: rejected 128개 연산 불일치: 첫 interior#148 G.factor.U.col[5].rows[0]: 원본 4 != Rust 0
+pool-fill-U-only: rejected 160개 연산 불일치: 첫 arms#423 G.factor.scalars.x160: 원본 2 != Rust 0
+column-base-after-rows: rejected 79개 연산 불일치: 첫 interior#80 U.leave.U.col_bound[6]: 원본 5 != Rust 10
+t-M1-prefix: rejected 40개 연산 불일치: 첫 adlittle#2 G.factor.U.col_bound[48]: 원본 20 != Rust 19
+tail-bound-strict: rejected 128개 연산 불일치: 첫 interior#148 G.factor.U.col_bound[6]: 원본 5 != Rust 4
+xe8-nonempty: rejected 68개 연산 불일치: 첫 interior#148 G.factor.scalars.xe8: 원본 5 != Rust 7
+f8-dc-inclusive: rejected 128개 연산 불일치: 첫 interior#148 G.factor.prefix.flag[0]: 원본 0 != Rust -1
+x108-x110-swapped: rejected 128개 연산 불일치: 첫 interior#148 G.factor.scalars.x108: 원본 '0000000000000040' != Rust '3333333333330b40'
+mean-empty-1: rejected 77개 연산 불일치: 첫 arms#2 G.factor.scalars.x108: 원본 '000000000000f83f' != Rust '000000000000f03f'
+x1e0-no-diag: rejected 86개 연산 불일치: 첫 arms#2 G.factor.scalars.x1e0: 원본 25 != Rust 0
+xd8-slack-end: rejected 194개 연산 불일치: 첫 arms#2 G.factor.scalars.xd8: 원본 2 != Rust 25
+xe4-phase3: rejected 77개 연산 불일치: 첫 scsd1#2 G.factor.scalars.xe4: 원본 70 != Rust 62
+lst-last-summed: rejected 61개 연산 불일치: 첫 capri#2 G.factor.L.lst[11]: 원본 1 != Rust 271
+Lt-lst-kept: rejected 29개 연산 불일치: 첫 capri#2 G.factor.Lrow.lst: 길이 11 != 12
+F1a0-zero: rejected 205개 연산 불일치: 첫 arms#2 G.factor.eta_oldest[0]: 원본 2000000000 != Rust 0
+spike-unknown: rejected 68개 연산 불일치: 첫 adlittle#191 U: Rust 오류 read of an unknown cell 42
+o-inverse: rejected 18개 연산 불일치: 첫 arms#2 G.perm.x28[0]: 원본 14 != Rust 20
