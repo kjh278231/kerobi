@@ -1,0 +1,17 @@
+$ python3 tools/push_init_survey.py --check
+scsd1: n=760 m=77 후보=12 조정=False Markowitz강화=False 위반=0
+capri: n=353 m=271 후보=31 조정=False Markowitz강화=False 위반=0
+통과
+exit=0
+$ python3 tools/push_init_survey.py --self-test
+  거부  slack 후보 먼저  ["arms: ('candidates', 3)"]
+  생존  -τ 경계 strict  []
+  생존  -4를 ub로  []
+exit=0
+$ python3 tools/push_block_check.py --controls --acceptance
+  scsd1: push 2 [1:1/0/0→0/0 2:2/0/0→0/0] push 밖 5 (사이 [])
+  capri: push 3 [1:1/0/0→1/0 2:2/1/0→2/0 23:3/2/0→3/0] push 밖 2 (사이 [])
+acceptance 통과
+exit=0
+$ python3 -m py_compile tools/push_init_survey.py
+exit=0

@@ -1,0 +1,21 @@
+입력 변조(필수 거부):
+  거부  후보 앞 두 개 교환  ["arms: ('candidates', 0)"]
+  거부  rhs[0] 1비트  ["arms: ('rhs', 0, '0000e80533010a3f', '0100e80533010a3f')"]
+  거부  표시[0] 변경  ["arms: ('marks', 0)"]
+  거부  반복 수 +1  ["arms: ('iterations', 0.0, 2.0)"]
+  거부  입력 rhs[0] 1ulp  ["arms: ('rhs', 0, '0000ec0533010a3f', '0000e80533010a3f')"]
+  거부  폭[0] 1비트  ["arms: ('width', 0)"]
+  거부  지원 flag 반전  ["arms: ('support', 1, 0)"]
+  거부  후보 열 x 1ulp  ["arms: ('rhs', 0, '0000e40533010a3f', '0000e80533010a3f')"]
+자료 변조(필수 거부):
+  거부  바이너리 해시 0  ['binary bench/oracle/m3_push_block/arms-1.json']
+  거부  사건 비우기  ['예외 KeyError']
+  거부  첫 공급 사건 제거  ['예외 KeyError']
+규칙 변이(자연 자료 판별력):
+  거부  안정 정렬  ["arms: ('candidates', 3)"]
+  거부  0.99 상한 제거  ["arms: ('candidates', 6)"]
+  생존  slack -2 = 0  []
+  거부  거리 항상 x-lb  ["arms: ('candidates', 2)"]
+  거부  slack 후보 먼저  ["arms: ('candidates', 3)"]
+  생존  -τ 경계 strict  []
+  생존  -4를 ub로  []

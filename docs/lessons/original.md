@@ -137,6 +137,8 @@
 - **push의 theta·pivot 지역 변수는 단계 사이로 새지 않는다.** 세 ratio가 후보 없음에도 theta·pivot을 쓰고, feasible -1이면 push가 theta=I를 쓴다. 연쇄 재생을 NaN으로 시작해도 일치했다. 캡처. (M3-04c-10)
 - **basic 표시 `F`(자유 basic) 행은 `055f68` 후보에서 빠지므로, 자유 basic 행에만 계수가 있는 자유 열은 양방향 ratio가 -1이고 theta=I 재호출 뒤 -3 flip(이동량 ±x)으로 간다.** 등식 하나를 공유하는 자유 변수 두 개(시작 0.5·0.7)로 자연 push에서 재현했다. 루프는 F 행의 basic 값만 바꾸고 표시는 그대로 둔다. C 47·105줄·캡처. (M3-04c-11, [§6](../m3/primal_push_chain_oracle.md#6-실행-결과))
 - **04c-2 위반 묶음은 영구 위반 행 W를 빼도 위반이 풀리지 않는다.** c5·c6·bD1–bD4 등의 B 행에는 고칠 후보가 없어 push 끝까지 B 7개가 남았다. 위반 해소(V→F)는 SA(A, 등식 행의 내부 구조 변수)와 feasible 묶음만 둔 LP에서 나왔고, 해소는 pivot 행에서 일어났다. 캡처. (M3-04c-11, history/resolve-v1)
+- **push 초기화 첫 rhs 구성에서 slack 상태 -2는 직전 xmm0을 rhs에서 뺀다.** `0x1c4f3d`가 -2를 값 설정 없이 `0x1c4f68`(`rhs_i -= xmm0`)로 보내므로, 직전 slack -1이면 0, -3이면 그 slack 값, 앞선 slack이 없으면 마지막 음수 상태 열의 v가 빠진다. 기준 조정 재구성(`0x1c1cae`)은 반대로 -4·-5 열을 rhs 보정 없이 건너뛴다. 두 동작 모두 자연 6사례에서 결과에 나타나지 않았으니(slack -2 0회, 조정 0회) 구현은 C·asm 그대로 두고 미검증으로 표시한다. asm. (M3-04c-1, [§2.2](../m3/primal_push_init.md#22-asm으로-판정한-원본-사실))
+- **push 초기화의 후보 순서·rhs S+0x200·폭·표시·PInf는 push 진입 상태만으로 결정된다.** key는 열 `-(len+minsd(d,0.99))`, slack `-1-minsd(d,0.99)`, `aabbe3` 불안정 정렬이며 동률 때문에 6사례 중 4사례가 안정 정렬과 다르다. 초기 재분해(요청 10)는 기저 위치 번호(vstat ≥ 0)를 바꾸므로 진입·첫 공급의 vstat을 그대로 비교하면 안 된다. 캡처 재계산. (M3-04c-1, [§6](../m3/primal_push_init.md#6-실행-결과))
 
 ## dual simplex DSE β (`28c93`·`8b473`)
 

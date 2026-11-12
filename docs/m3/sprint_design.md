@@ -44,6 +44,8 @@
 
 [04c-24 실제 backend 설치](primal_push_loop_lu.md)는 tape을 `crossover_backend::SerialBackend`(21b–21h의 LuState·refactor·블록 단계, 판단 통계 F190·F1e0·F1e8)로 바꿔, 초기화 factor 입력만 받고 같은 6사례를 원본 수치 재주입 없이 비교한다. 다음은 batch23, 품질 helper 15a, 그리고 초기화(후보 구성)와 해 설치(04f)를 이어 solver 경로에 연결하는 일이다.
 
+[04c-1 초기화 조사](primal_push_init.md)는 C 1143 이전 초기화를 10단계로 고정하고, 21h 자연 6사례의 push:enter만으로 후보 순서·rhs·폭·표시·PInf가 원본과 같게 다시 계산됨을 확인했다(1,480필드). 다음 1a는 이 규칙을 Rust `push_init`으로 옮겨 24의 `SerialBackend`·`push_loop`과 이어 push 진입부터 종료까지 비교한다. 중간 경계·미관측 분기는 1b, 조건수 `116fd7`은 1c다. 해 설치(04f)는 그 뒤다.
+
 ## 2. Method 선택과 Concurrent
 
 자동 선택은 입력 분류→Method 결정→실행 경로를 추적한다. M3-05a는 명시 Method, 자동 Method, 모델 분류, 관련 파라미터에 대한 원본 결정표를 만든다. 선택 분기를 고치는 작업과 concurrent 엔진을 만드는 작업은 독립 번호다.
