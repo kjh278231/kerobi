@@ -1,0 +1,21 @@
+{
+  "task": "M3-04c-24",
+  "schema": "M3-04c-24-v1",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "source_captures": "bench/oracle/m3_push_lu_chain/*-1.json(.gz) (21e run 1) + bench/oracle/m3_push_block 첫 push 재분해 진입 블록 상태(21h), 두 검사기 controls·acceptance 선행",
+  "original_runs_new": 0,
+  "files": {
+    "bench/oracle/m3_push_loop_lu/input.txt": "ec9735e23ea82eb3f35ba189d543e8d1bd0c28c3563416d4552a7197ff373a20",
+    "tools/push_loop_rust.py": "c48d6c72816a958d4f7ed739b03ec1208008cf52bb96bfa9c4c02e65f93dd73f",
+    "crates/lp/src/crossover_backend.rs": "0421d6980ed561078cac23472acf406938d59619b6fb407622c8d0feb909d9ca",
+    "crates/lp/src/crossover_loop.rs": "941492895b2c8dbaf2a73be2fa0be58064e091afbe47d54a03207df112888450",
+    "crates/lp/tests/push_loop_lu.rs": "3ac8703bf4fe1685e0467eaf5016db49099265d88feb59d91870c275535a90fd",
+    "crates/lp/tests/loop_io/mod.rs": "37bd74c03fa3f0b8513924288d3ff568f4203ae808d0ed9893da36300c49cc71",
+    "crates/lp/tests/push_loop.rs": "3688a143d60afb0c10ebeee4bbfe3560ffd87a9db44e6361868a0cacd4842df9",
+    "bench/oracle/m3_push_lu_chain/manifest.json": "357174cc9aee8a42c7bc6bb7ff8ff056ccd76422a31c67a30b6f61518c76008f",
+    "bench/oracle/m3_push_loop_lu/compare.txt": "dec93287f4e0375f62673848a1fd698d56d65fd043c80b1eab1d8107929faf04",
+    "bench/oracle/m3_push_loop_lu/self-test.txt": "77c1f2de42d8f154f09fa38d3d8a33ce0589f4dc8824843b7af38fc1815328b3",
+    "bench/oracle/m3_push_loop_lu/rust-mutations.json": "66797dced960fb4f5ded20ef1c7af4abe926119e7c98cf3fc31b297cf5007e9a",
+    "bench/oracle/m3_push_loop_lu/regressions.json": "cf5721043b0ffb1c8dcfc336cd8efa415f88de3e0c54a9855fe94d5f540c9f9b"
+  }
+}

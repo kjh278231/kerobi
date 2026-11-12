@@ -14,6 +14,7 @@ pub mod start;
 pub mod barrier;
 pub mod pdhg;
 pub mod crossover;
+pub mod crossover_backend;
 pub mod crossover_btran;
 pub mod crossover_factor;
 pub mod crossover_ftran;
