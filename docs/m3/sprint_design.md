@@ -30,6 +30,8 @@
 
 [04c-16 factor 제어 Rust L1](primal_push_factor_rust.md)은 자연 판단28·wrapper6와 합성55, 총89입력·978필드의 요청·호출·복원·retry/status·품질 주기 비교를 통과했다. 비교기 변조55종·Rust 동작 변이30종 모두 거부, workspace132·clippy0와 기존 supplier/chain 회귀도 통과했다. 원본 독립3회 자료를 재사용했으며 실제 factor/quality 계산은 외부 backend다. 요청 비영은 재계산 직전에서 멈춘다. 다음은17 재계산 오라클이며 실제 계산18·루프 연결22는 별도다.
 
+[04c-17 재계산 오라클](primal_push_recompute_oracle.md)은 두 진입점의 자연8회·119행 및 합성120사례·152행을 독립3회 재현하고 새 header·rhs 복사·raw FTRAN·shift·폭·분류·PInf·retry·별칭 재생을 통과했다. 변조82종을 거부하고 선행 회귀·Rust236단계 비트 일치를 유지한다. 자연 미관측 별칭 true·free/fixed·retry와 정확 경계는 원본 명령 구간의 합성 증거다. 18은 이 입력의 shift·분류·PInf·retry L1 구현이며 실제 수치LU21·루프22와 구분한다. 독립 검토자의 자연/합성 재캡처 일치·추가15변조 거부를 확인했다.
+
 ## 2. Method 선택과 Concurrent
 
 자동 선택은 입력 분류→Method 결정→실행 경로를 추적한다. M3-05a는 명시 Method, 자동 Method, 모델 분류, 관련 파라미터에 대한 원본 결정표를 만든다. 선택 분기를 고치는 작업과 concurrent 엔진을 만드는 작업은 독립 번호다.

@@ -1,0 +1,61 @@
+{
+  "task": "M3-04c-17",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "specs_sha256": "3e70b99379b4f0c6b615bf29f3b6d9b13e49de66c9d17ba6763a6432faca4159",
+  "tools": {
+    "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec",
+    "tools/gurun.sh": "7efb6a90dd1fae5f71997b24c112601d4f76b822546ddcce8d53920369f0d48f",
+    "tools/push_factor_synthetic.py": "c2c8d5061108956b569263d931f70d0ba7778dc817b06f58bffcb211d0fde2e9",
+    "tools/push_recompute_agent.js": "6aebb16f1c0cde55409b39a674d4f1ea0e3241ea95def1a0f1011477b8dcc48b",
+    "tools/push_recompute_capture.js": "e574340181fb129cb8524fef55fd871cfe6d5cd1a5723ce6a887a34dfcf6ccef",
+    "tools/push_recompute_check.py": "a15cc232b8c6a40ba852c42d29a8b25738e7a65f3b65f9fbecd1d7b1e117cc78",
+    "tools/push_recompute_runs.py": "6692ab102b3e12c55f67d117320721c65cc777c29e4642e9b495f31d746e08ff",
+    "tools/push_recompute_synthetic.py": "89b5e2b0d316b44abcafce3a7fb7f0ab9fa0a2fed8654067cc8498142ee23584",
+    "tools/push_supplier_check.py": "2111b9192c5724e0cee21f0360a0cd0b75dfad0bac57036191367b4f5653df5e"
+  },
+  "inputs": {
+    "bench/oracle/m3_primal_push_step/interior.lp": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0",
+    "bench/oracle/m3_push_arms/arms.extra.json": "7843373b048b87370821eaedb90b918828759254061a3c3f37b60d51f3a1a46d",
+    "bench/oracle/m3_push_arms/arms.lp": "b05832f67ae340637551cda5cd191013c3f65f5cef190a0cc5a8c058070d9683",
+    "bench/oracle/m3_push_retry/retry.extra.json": "a14e2011d1e13d4abf085d97bc3043a5781a1b0daaea2298f036a5a4692d5e1b",
+    "bench/oracle/m3_push_retry/retry.lp": "2be78262e14b9c8482ce0c96fe0ab10d68246bc11eae184dc2bdb9c2f8516986"
+  },
+  "baselines": {
+    "bench/oracle/m3_push_factor/arms-1.json": "8f7894adeed045a54dfe2013f3b4bfc08f899c07cbed8929d2fa2c5607f8e610",
+    "bench/oracle/m3_push_factor/control-1.json": "63390a4e4920383a918ed61760a1df47a6f0d2d6dae751cabeb0d40321c1c574",
+    "bench/oracle/m3_push_factor/interior-1.json": "429f7b5e54f9d0bab25b5bbdf150d7552771d4fe474e4a4f55241c0a32378dde",
+    "bench/oracle/m3_push_factor/manifest.json": "4acf65aec7b11fad4b38dee182f9a83fe387b2c84f7135acc1a4e144292d6d5c",
+    "bench/oracle/m3_push_factor/retry-1.json": "ff4a9aaf7234bb1582cdbf872ec1de30cd6d2648140e341a63bb50003f15cb2a"
+  },
+  "sources": {
+    "../re/decomp/c/001205d0_PRIVATE000000000009cf9b.c": "56ca286a9f131998eb974d6a4ad78daeb66f14404c8ad525993c3853b592be80",
+    "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb"
+  },
+  "assembly": {
+    "bench/oracle/m3_push_recompute/source.asm": "aacbd42ac4bbc3d8c1aefec20cac78816de0636450f4f89667199a96d4bb5ec7"
+  },
+  "captures": {
+    "bench/oracle/m3_push_recompute/arms-1.json": "a00abc17dbe2d864480207a66d80f73487ff2808580d238b483ebbe0eac6ae4e",
+    "bench/oracle/m3_push_recompute/arms-2.json": "43eb274d1f74e19f323c53add5707cf21f604f45bdfd62cd34845c17782d7090",
+    "bench/oracle/m3_push_recompute/arms-3.json": "76e44eccd092b5c955b6f8ee89ad20ce6808c91e1a3b7224bb4a2ad37e754d65",
+    "bench/oracle/m3_push_recompute/control-1.json": "a7f34aa328fc9cdaee128c62de2201969826e9c44780ebcaf5a57b95dc1a4b6f",
+    "bench/oracle/m3_push_recompute/control-2.json": "118d12d0277da8329b9ab029b8978da6cd5ae3ce056e54a4be7fd14f9279e633",
+    "bench/oracle/m3_push_recompute/control-3.json": "61e8e70bdadf454ec542e06bad4938467a9c8f5e8eea180c5db7e50dfdd3b83a",
+    "bench/oracle/m3_push_recompute/interior-1.json": "a618fed8f6c9722f41d94f63ac831da7671569dff785bba03138342fdf07d40b",
+    "bench/oracle/m3_push_recompute/interior-2.json": "81b7160d5b4de3de5ef64c58c009bb61a8fff786a9901504a1b5e21e35d38332",
+    "bench/oracle/m3_push_recompute/interior-3.json": "d70845dc7195c8f6428387b7f487ae5512adc9a5057aba547c827b54a8733833",
+    "bench/oracle/m3_push_recompute/retry-1.json": "ede806d02e721adc6bf55d830163198c12d584cd1a52e5971c5da2ed29fbb963",
+    "bench/oracle/m3_push_recompute/retry-2.json": "ca89a6eaa9a8a7cf5a611add15ae05b2a677f13cad108a700d0c981ace6f299a",
+    "bench/oracle/m3_push_recompute/retry-3.json": "8ead2bc71bd7226764683eefa456c271b9c181dc4b580341a1083ea5b7a16af8",
+    "bench/oracle/m3_push_recompute/synthetic-1.json": "61be262e94c80b636f9aebbf6d84eb13f4678fc75913b0f2c515e2bff28e6295",
+    "bench/oracle/m3_push_recompute/synthetic-2.json": "9372416d1def8f3ba033f176eeabbd371c6f00affab4a718b46d790b3b21460f",
+    "bench/oracle/m3_push_recompute/synthetic-3.json": "693cac36ef1f250f780a4886ec345969a12274b9c9640b8b5bb50aba70dd9c76"
+  },
+  "history": {
+    "bench/oracle/m3_push_recompute/history/explore-interior.json": "75c5dae04960e9fecf39529c185845d226d9fd78cd971a28b88ac51eb01dc438",
+    "bench/oracle/m3_push_recompute/history/explore-synthetic.json": "c1a2011a74891a67f9b5f7a1834e3f3fe2d559d07f0e89fc69741bcd7af75add",
+    "bench/oracle/m3_push_recompute/history/missing-copy-bytes-synthetic-1.json": "4d642b4816f1ae97496f1b299538187116ac362db476dd641a34e04cb9d036d8",
+    "bench/oracle/m3_push_recompute/history/missing-copy-bytes-synthetic-2.json": "8cd3810f1651341fe9f12679229647c309cbefba3bf8a1d7d127c7fed4ced34b",
+    "bench/oracle/m3_push_recompute/history/missing-copy-bytes-synthetic-3.json": "f20bb97ee1445a1171a12be283c78badcefd527c0c887de5e9b1b0cfec52cf25"
+  }
+}

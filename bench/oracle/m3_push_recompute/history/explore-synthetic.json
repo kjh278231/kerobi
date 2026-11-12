@@ -1,0 +1,10487 @@
+{
+ "schema": "M3-04c-17-synthetic-v1",
+ "origin": "synthetic-original-slice",
+ "substitution": "original in-place recompute; jump exits; FTRAN supplied raw output; log no-op; no numeric LU",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "b16461450af914c6f61f58ca97945e2af21aed86f766f42e40ebcef5d6d275a1",
+ "input_sha256": "4bc4d2cc9dbc2d752026bb7dce1f66d63ad77926a35888626eda18876f37234a",
+ "run_id": "7d8cb20c-21b8-4fd0-a489-e0fec7c3c069",
+ "pid": 263000,
+ "environment": {
+  "machine": "x86_64",
+  "system": "Linux",
+  "python": "3.13.14"
+ },
+ "events": [
+  {
+   "name": "pivot-bounded-minus-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "010000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-minus-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "000000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-minus-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "ffffffffffffbfbf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "ffffffffffffbf3f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "000000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "010000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-width-minus-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "ffffffffffff0e40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-width-minus-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000000f40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-width-minus-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "0100000000000f40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-width-plus-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "ffffffffff7f1040"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-width-plus-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000801040"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-bounded-width-plus-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "0100000000801040"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-minus-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000740"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-minus-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000740"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-minus-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000740"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000940"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000940"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000940"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-width-minus-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000801b40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-width-minus-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000801b40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-width-minus-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000801b40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-width-plus-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "ffffffffff7f1c40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-width-plus-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000801c40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-shifted-width-plus-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0100000000801c40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-minus-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "010000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-minus-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "000000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-minus-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "ffffffffffffbfbf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "ffffffffffffbf3f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "000000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "010000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-width-minus-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "010000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-width-minus-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "000000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-width-minus-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "ffffffffffffbfbf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-width-plus-h-below",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "ffffffffffffbf3f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-width-plus-h-exact",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "000000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-fixed-width-plus-h-above",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "010000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-free",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "00000000000022c0"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "46"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-lower-infinite",
+   "site": "pivot",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "ea8ca039593e29c6",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001040",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001140",
+     "000000000000f0bf"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "ea8ca039593e29c6",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001040",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-upper-infinite",
+   "site": "pivot",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "0000000000000840"
+    ],
+    "ub": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "0000000000000c40",
+     "0000000000000640"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40",
+     "0000000000205e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "0000000000000840"
+     ],
+     "ub": [
+      "ea8ca039593e2946",
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-outside-sentinel",
+   "site": "pivot",
+   "input": {
+    "m": 3,
+    "header": [
+     2,
+     1,
+     0
+    ],
+    "lb": [
+     "ea8ca039593e39c6",
+     "ea8ca039593e39c6",
+     "0000000000000040"
+    ],
+    "ub": [
+     "ea8ca039593e3946",
+     "0000000000000840",
+     "ea8ca039593e3946"
+    ],
+    "raw": [
+     "0000000000000440",
+     "000000000000d0bf",
+     "000000000000f03f"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240",
+     "0000000000403340"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000605e40",
+     "0000000000e05e40",
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e",
+     "4e",
+     "46"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      2,
+      1,
+      0
+     ],
+     "lb": [
+      "ea8ca039593e39c6",
+      "ea8ca039593e39c6",
+      "0000000000000040"
+     ],
+     "ub": [
+      "ea8ca039593e3946",
+      "0000000000000840",
+      "ea8ca039593e3946"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240",
+      "0000000000403340"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-signed-zero",
+   "site": "pivot",
+   "input": {
+    "m": 3,
+    "header": [
+     2,
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000000",
+     "0000000000000080",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001040",
+     "0000000000001040",
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "0000000000000080",
+     "0000000000000000",
+     "0000000000000080"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240",
+     "0000000000403340"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040",
+     "0000000000001040"
+    ],
+    "marks": [
+     "46",
+     "41",
+     "41"
+    ],
+    "pinf": "0000000000e06d40",
+    "violations": 2,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      2,
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000000",
+      "0000000000000080",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001040",
+      "0000000000001040",
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240",
+      "0000000000403340"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-mixed",
+   "site": "pivot",
+   "input": {
+    "m": 6,
+    "header": [
+     5,
+     4,
+     3,
+     2,
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6",
+     "0000000000000000",
+     "0000000000000000",
+     "0000000000000000",
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "ea8ca039593e2946",
+     "0000000000000000",
+     "0000000000001040",
+     "0000000000001040",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001040",
+     "000000000000c03f",
+     "0000000000001140",
+     "0000000000000000",
+     "0000000000000000",
+     "0000000000000640"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240",
+     "0000000000403340",
+     "0000000000403440",
+     "0000000000403540",
+     "0000000000403640"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040",
+     "0000000000001040",
+     "0000000000001040",
+     "0000000000000000",
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "41",
+     "41",
+     "41",
+     "41",
+     "46",
+     "41"
+    ],
+    "pinf": "0000000000b48240",
+    "violations": 5,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      5,
+      4,
+      3,
+      2,
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "ea8ca039593e2946",
+      "0000000000000000",
+      "0000000000001040",
+      "0000000000001040",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240",
+      "0000000000403340",
+      "0000000000403440",
+      "0000000000403540",
+      "0000000000403640"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-accumulation",
+   "site": "pivot",
+   "input": {
+    "m": 3,
+    "header": [
+     2,
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000000",
+     "0000000000000000",
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "00000000000050c3",
+     "000000000000f0bf",
+     "000000000000f0bf"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240",
+     "0000000000403340"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e",
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      2,
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946",
+      "ea8ca039593e2946",
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240",
+      "0000000000403340"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-alias-0-0",
+   "site": "pivot",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001240",
+     "0000000000001940"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000205e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "4e",
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-alias-0-1",
+   "site": "pivot",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001240",
+     "0000000000001940"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": true
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000001240",
+     "0000000000000a40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": true
+    }
+   }
+  },
+  {
+   "name": "pivot-alias-1-0",
+   "site": "pivot",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001240",
+     "0000000000001940"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": true,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000205e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "4e",
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000403140",
+        "0000000000403240"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": true,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-alias-1-1",
+   "site": "pivot",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001240",
+     "0000000000001940"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": true,
+     "raw_basic": true
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000001240",
+     "0000000000000a40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000403140",
+        "0000000000403240"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": true,
+     "raw_basic": true
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f1fffffffp+33-1-0",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "ffffff1f5fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f1fffffffp+33-1-1",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "ffffff1f5fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f1fffffffp+33-2-0",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "ffffff1f5fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f1fffffffp+33-2-1",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "ffffff1f5fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f20000000p+33-1-0",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "000000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f20000000p+33-1-1",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "000000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f20000000p+33-2-0",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "000000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f20000000p+33-2-1",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "000000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f20000001p+33-1-0",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "010000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f20000001p+33-1-1",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "010000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f20000001p+33-2-0",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "010000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-retry-0x1.2a05f20000001p+33-2-1",
+   "site": "pivot",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "010000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "pivot-empty",
+   "site": "pivot",
+   "input": {
+    "m": 0,
+    "header": [],
+    "lb": [],
+    "ub": [],
+    "raw": [],
+    "rhs": [],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [],
+    "width": [],
+    "marks": [],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": []
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [],
+     "lb": [],
+     "ub": [],
+     "rhs": []
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-minus-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "010000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-minus-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "000000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-minus-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "ffffffffffffbfbf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "ffffffffffffbf3f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "000000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "010000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-width-minus-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "ffffffffffff0e40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-width-minus-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000000f40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-width-minus-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "0100000000000f40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-width-plus-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "ffffffffff7f1040"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-width-plus-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000801040"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-bounded-width-plus-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001040"
+    ],
+    "raw": [
+     "0100000000801040"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-minus-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000740"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-minus-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000740"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-minus-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000740"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000940"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000940"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000000940"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-width-minus-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000801b40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-width-minus-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000801b40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-width-minus-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000801b40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-width-plus-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "ffffffffff7f1c40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-width-plus-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0000000000801c40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-shifted-width-plus-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000840"
+    ],
+    "ub": [
+     "0000000000001c40"
+    ],
+    "raw": [
+     "0100000000801c40"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000840"
+     ],
+     "ub": [
+      "0000000000001c40"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-minus-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "010000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-minus-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "000000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-minus-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "ffffffffffffbfbf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "ffffffffffffbf3f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "000000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "010000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-width-minus-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "010000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-width-minus-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "000000000000c0bf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-width-minus-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "ffffffffffffbfbf"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-width-plus-h-below",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "ffffffffffffbf3f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-width-plus-h-exact",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "000000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-fixed-width-plus-h-above",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000000000"
+    ],
+    "raw": [
+     "010000000000c03f"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "0000000000000000"
+    ],
+    "marks": [
+     "41"
+    ],
+    "pinf": "0000000000e05e40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000000000"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-free",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "00000000000022c0"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "46"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-lower-infinite",
+   "site": "round",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "ea8ca039593e29c6",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001040",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001140",
+     "000000000000f0bf"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "ea8ca039593e29c6",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001040",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-upper-infinite",
+   "site": "round",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "0000000000000840"
+    ],
+    "ub": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "0000000000000c40",
+     "0000000000000640"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000205e40",
+     "0000000000205e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "0000000000000840"
+     ],
+     "ub": [
+      "ea8ca039593e2946",
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-outside-sentinel",
+   "site": "round",
+   "input": {
+    "m": 3,
+    "header": [
+     2,
+     1,
+     0
+    ],
+    "lb": [
+     "ea8ca039593e39c6",
+     "ea8ca039593e39c6",
+     "0000000000000040"
+    ],
+    "ub": [
+     "ea8ca039593e3946",
+     "0000000000000840",
+     "ea8ca039593e3946"
+    ],
+    "raw": [
+     "0000000000000440",
+     "000000000000d0bf",
+     "000000000000f03f"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240",
+     "0000000000403340"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000605e40",
+     "0000000000e05e40",
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e",
+     "4e",
+     "46"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      2,
+      1,
+      0
+     ],
+     "lb": [
+      "ea8ca039593e39c6",
+      "ea8ca039593e39c6",
+      "0000000000000040"
+     ],
+     "ub": [
+      "ea8ca039593e3946",
+      "0000000000000840",
+      "ea8ca039593e3946"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240",
+      "0000000000403340"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-signed-zero",
+   "site": "round",
+   "input": {
+    "m": 3,
+    "header": [
+     2,
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000000",
+     "0000000000000080",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001040",
+     "0000000000001040",
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "0000000000000080",
+     "0000000000000000",
+     "0000000000000080"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240",
+     "0000000000403340"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040",
+     "0000000000001040"
+    ],
+    "marks": [
+     "46",
+     "41",
+     "41"
+    ],
+    "pinf": "0000000000e06d40",
+    "violations": 2,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      2,
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000000",
+      "0000000000000080",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001040",
+      "0000000000001040",
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240",
+      "0000000000403340"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-mixed",
+   "site": "round",
+   "input": {
+    "m": 6,
+    "header": [
+     5,
+     4,
+     3,
+     2,
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6",
+     "0000000000000000",
+     "0000000000000000",
+     "0000000000000000",
+     "0000000000000000"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "ea8ca039593e2946",
+     "0000000000000000",
+     "0000000000001040",
+     "0000000000001040",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001040",
+     "000000000000c03f",
+     "0000000000001140",
+     "0000000000000000",
+     "0000000000000000",
+     "0000000000000640"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240",
+     "0000000000403340",
+     "0000000000403440",
+     "0000000000403540",
+     "0000000000403640"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000205e40"
+    ],
+    "width": [
+     "0000000000001040",
+     "0000000000001040",
+     "0000000000001040",
+     "0000000000000000",
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "41",
+     "41",
+     "41",
+     "41",
+     "46",
+     "41"
+    ],
+    "pinf": "0000000000b48240",
+    "violations": 5,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      5,
+      4,
+      3,
+      2,
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "ea8ca039593e2946",
+      "0000000000000000",
+      "0000000000001040",
+      "0000000000001040",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240",
+      "0000000000403340",
+      "0000000000403440",
+      "0000000000403540",
+      "0000000000403640"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-accumulation",
+   "site": "round",
+   "input": {
+    "m": 3,
+    "header": [
+     2,
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000000",
+     "0000000000000000",
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "00000000000050c3",
+     "000000000000f0bf",
+     "000000000000f0bf"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240",
+     "0000000000403340"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000e05e40",
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "ea8ca039593e2946",
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e",
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      2,
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000000",
+      "0000000000000000",
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946",
+      "ea8ca039593e2946",
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240",
+      "0000000000403340"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-alias-0-0",
+   "site": "round",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001240",
+     "0000000000001940"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000205e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "4e",
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-alias-0-1",
+   "site": "round",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001240",
+     "0000000000001940"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": true
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000001240",
+     "0000000000000a40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0",
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": true
+    }
+   }
+  },
+  {
+   "name": "round-alias-1-0",
+   "site": "round",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001240",
+     "0000000000001940"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": true,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40",
+     "0000000000205e40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "4e",
+     "41"
+    ],
+    "pinf": "0000000000205d40",
+    "violations": 1,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000403140",
+        "0000000000403240"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": true,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-alias-1-1",
+   "site": "round",
+   "input": {
+    "m": 2,
+    "header": [
+     1,
+     0
+    ],
+    "lb": [
+     "0000000000000840",
+     "ea8ca039593e29c6"
+    ],
+    "ub": [
+     "0000000000001c40",
+     "0000000000001040"
+    ],
+    "raw": [
+     "0000000000001240",
+     "0000000000001940"
+    ],
+    "rhs": [
+     "0000000000403140",
+     "0000000000403240"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": true,
+     "raw_basic": true
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000001240",
+     "0000000000000a40"
+    ],
+    "width": [
+     "ea8ca039593e2946",
+     "0000000000001040"
+    ],
+    "marks": [
+     "4e",
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000403140",
+        "0000000000403240"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      1,
+      0
+     ],
+     "lb": [
+      "0000000000000840",
+      "ea8ca039593e29c6"
+     ],
+     "ub": [
+      "0000000000001c40",
+      "0000000000001040"
+     ],
+     "rhs": [
+      "0000000000403140",
+      "0000000000403240"
+     ]
+    },
+    "aliases": {
+     "rhs_input": true,
+     "raw_basic": true
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f1fffffffp+33-1-0",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "ffffff1f5fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f1fffffffp+33-1-1",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "ffffff1f5fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f1fffffffp+33-2-0",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "ffffff1f5fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f1fffffffp+33-2-1",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "ffffff1f5fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f20000000p+33-1-0",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "000000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f20000000p+33-1-1",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "000000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f20000000p+33-2-0",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "000000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f20000000p+33-2-1",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "000000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f20000001p+33-1-0",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "010000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f20000001p+33-1-1",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "010000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 1,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f20000001p+33-2-0",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "010000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-retry-0x1.2a05f20000001p+33-2-1",
+   "site": "round",
+   "input": {
+    "m": 1,
+    "header": [
+     0
+    ],
+    "lb": [
+     "0000000000000000"
+    ],
+    "ub": [
+     "ea8ca039593e2946"
+    ],
+    "raw": [
+     "010000205fa002c2"
+    ],
+    "rhs": [
+     "0000000000403140"
+    ],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 1,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [
+     "0000000000e05e40"
+    ],
+    "width": [
+     "ea8ca039593e2946"
+    ],
+    "marks": [
+     "4e"
+    ],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": [
+        "0000000000d051c0"
+       ]
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [
+      0
+     ],
+     "lb": [
+      "0000000000000000"
+     ],
+     "ub": [
+      "ea8ca039593e2946"
+     ],
+     "rhs": [
+      "0000000000403140"
+     ]
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  },
+  {
+   "name": "round-empty",
+   "site": "round",
+   "input": {
+    "m": 0,
+    "header": [],
+    "lb": [],
+    "ub": [],
+    "raw": [],
+    "rhs": [],
+    "I": "ea8ca039593e2946",
+    "minus_I": "ea8ca039593e29c6",
+    "h": "000000000000c03f",
+    "minus_h": "000000000000c0bf",
+    "attempt": 0,
+    "model_status": 2,
+    "request": 10,
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   },
+   "result": {
+    "exit": "normal",
+    "basic": [],
+    "width": [],
+    "marks": [],
+    "pinf": "0000000000000000",
+    "violations": 0,
+    "retry": 0,
+    "request": 10,
+    "calls": [
+     {
+      "input": {
+       "count": -1,
+       "values": []
+      },
+      "args": {
+       "factor": true,
+       "input": true,
+       "output": true,
+       "flag": 0,
+       "work": true
+      }
+     }
+    ],
+    "preserved": {
+     "header": [],
+     "lb": [],
+     "ub": [],
+     "rhs": []
+    },
+    "aliases": {
+     "rhs_input": false,
+     "raw_basic": false
+    }
+   }
+  }
+ ]
+}

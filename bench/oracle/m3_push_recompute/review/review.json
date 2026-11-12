@@ -1,0 +1,96 @@
+{
+  "task": "M3-04c-17",
+  "reviewer": "/root/m3_04c17_review",
+  "reviewed_commit": "9f69dbf9990442e8ded202334e2da1dab65f1f65",
+  "recaptures": {
+    "interior": {
+      "events": 149,
+      "independent_pid": 266074,
+      "sha256": "b789952850fe3ef417719791103d35b629e57f1dd61f976597c4c6f5f5ae9ede"
+    },
+    "synthetic": {
+      "events": 120,
+      "independent_pid": 266093,
+      "sha256": "a32e762abf0e140691dfc817fc9e875ad8a8c06bd9d4c64124758a8d82c24b6b"
+    }
+  },
+  "additional_mutations": {
+    "rejected": 15,
+    "details": [
+      {
+        "name": "binary-zero",
+        "first_difference": "interior/1.binary: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "input-model-zero",
+        "first_difference": "interior/1.model: 기준='e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "manifest-model-zero",
+        "first_difference": "manifest.bench/oracle/m3_primal_push_step/interior.lp: 기준='0000000000000000000000000000000000000000000000000000000000000000', 실제='e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0'"
+      },
+      {
+        "name": "empty-events",
+        "first_difference": "interior.target required"
+      },
+      {
+        "name": "natural-target-zero",
+        "first_difference": "arms.target required"
+      },
+      {
+        "name": "required-rhs-missing",
+        "first_difference": "'rhs'"
+      },
+      {
+        "name": "null-null-rhs",
+        "first_difference": "interior.recompute[1].recompute:ftran:leave.rhs preserved by ftran: 타입 기준=NoneType, 실제=list"
+      },
+      {
+        "name": "shift-basic-output",
+        "first_difference": "interior.recompute[1].recompute:leave.basic[0]: 기준='0ee92329a1eb2040', 실제='0000000000000000'"
+      },
+      {
+        "name": "pinf-sign-zero",
+        "first_difference": "interior.recompute[1].recompute:leave.pinf: 기준='0000000000000000', 실제='0000000000000080'"
+      },
+      {
+        "name": "ftran-dense-count",
+        "first_difference": "interior.recompute[1].recompute:ftran:enter.input.count: 기준=-1, 실제=0"
+      },
+      {
+        "name": "raw-basic-alias",
+        "first_difference": "interior.recompute[1].recompute:leave.aliases.raw_basic: 기준=False, 실제=True"
+      },
+      {
+        "name": "ftran-event-order",
+        "first_difference": "interior.recompute[1].recompute:ftran:leave.stage: 기준=1, 실제=0"
+      },
+      {
+        "name": "new-header-order",
+        "first_difference": "interior.recompute[1].recompute:enter.new header[0]: 기준=4, 실제=14"
+      },
+      {
+        "name": "h-exact-strictness",
+        "first_difference": "synthetic.round-bounded-h-exact.result.marks[0]: 기준='4e', 실제='4c'"
+      },
+      {
+        "name": "pinf-equal-threshold",
+        "first_difference": "synthetic.pivot-retry-0x1.2a05f20000000p+33-2-0.result.retry: 기준=0, 실제=1"
+      }
+    ]
+  },
+  "original_assembly": {
+    "lines": 4036,
+    "sha256": "aacbd42ac4bbc3d8c1aefec20cac78816de0636450f4f89667199a96d4bb5ec7"
+  },
+  "verdict": "통과",
+  "blocking_findings": [],
+  "original_execution_count": 2,
+  "review_artifacts_sha256": {
+    "interior-review-1.json": "b789952850fe3ef417719791103d35b629e57f1dd61f976597c4c6f5f5ae9ede",
+    "review.md": "c9712eb8196a6bb077bcca7caf0f51c05a2a9126730b773379bb4827fb41828c",
+    "review_checks.py": "b8a7dd8e1970fda89778bc4f0d7a597bbb7ebd6fb88af11c29c75426bdd26f2f",
+    "standard-check.json": "b0631e37c099b4ddbd9cf1ff0a159829b4947d5da11e814186846ae724303e84",
+    "synthetic-review-1.json": "a32e762abf0e140691dfc817fc9e875ad8a8c06bd9d4c64124758a8d82c24b6b"
+  }
+}

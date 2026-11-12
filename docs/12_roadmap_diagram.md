@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M3-04c-17 재분해 뒤 재계산 오라클을 완료했다(계약 범위 통과). 두 진입점의 자연8회(pivot1/round7)·119행 및 원본 명령 합성120사례·152행이 독립3회 재현·제어 재생에서 비트 일치했다. 새 header·rhs 복사·raw FTRAN·하한 이동·폭·분류·위반수·PInf·retry·별칭을 비교하며 변조82종을 모두 거부했다. 독립 검토자가 자연/합성을 각각1회 재캡처해 일치를 확인했고 추가15변조도 거부했다. 선행 factor/supplier/chain 회귀와 Rust236단계·5,144필드 비교도 통과했다. 자연 별칭 true·free/fixed·retry는 미관측(합성 보강), 실제 LU21·루프22·batch23·x87·work/P3와 Rust 신규 구현은 미검증이다. 다음은 **M3-04c-18 shift·분류·PInf·retry Rust L1**이다. [계약과 결과](m3/primal_push_recompute_oracle.md).
+
 M3-04c-16 직렬 factor 제어를 Rust L1으로 완료했다(계약 범위 통과). 자연 판단28·호출6과 합성55경계, 총89입력·978필드가 원본과 일치했다. 요청 선택·alpha 참조 설치/복원·반환1 반복·retry/status·품질 주기를 검증했고 비교기 변조55종·Rust 동작 변이30종을 모두 거부했다. workspace132통과·기존 ignored12·clippy0, supplier69입력·1,311묶음과 push 연쇄236단계·5,144필드 회귀도 일치한다. 원본 독립3회 자료 재사용·새 원본 실행0회다. 실제 factor/quality 수치·재계산 본문·루프 연결은 제외했다. 다음은 **M3-04c-17 재계산 오라클**이다. [계약과 결과](m3/primal_push_factor_rust.md).
 
 M3-04c-15 직렬 factor 제어 오라클을 완료했다(경계 한정). 자연3모델·대조군 각 원본3회가 재현·기존13 비간섭 검사를 통과했다. 자연 판단28회는 호출6·support 생략22이며, wrapper6회의 alpha 복원·spike 보존을 확인했다. 원본 명령 구간의 합성55사례(선택24·wrapper31)도 독립3회와 제어 재생이 일치하고 변조41종을 거부했다. 실제 품질 helper는 자연0회이며 합성의 factor/quality는 외부 backend다. Rust 연쇄236단계/5,144필드 회귀는 유지한다. 다음은 **M3-04c-16 factor 제어 L1**이며 품질 수치15a·재계산17·실제LU21·batch23은 별도다. [계약과 결과](m3/primal_push_factor_oracle.md).
