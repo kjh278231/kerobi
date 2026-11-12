@@ -1,0 +1,24 @@
+{
+  "task": "M3-04c-21b",
+  "baseline": "40e1280",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "oracle_manifest_sha256": "95c456ab7bacdd4445d72de0235e95711731ced5bc53754e8d9664ecc4319eab",
+  "files": {
+    "crates/lp/src/crossover_ftran.rs": "6fd732387c9b3b60c73f799876f6ae837a1c6a85f11e447129b326b6da692a8c",
+    "crates/lp/src/lib.rs": "0e1b39552027925c695af50900d48b00ceedf8688271a50ef00cf86b0b2d0607",
+    "crates/lp/tests/push_ftran.rs": "fbf9837d2b2401fcde0bc25481468dd2eafe5f70a3d0694d7fcf9b8f878380c0",
+    "tools/push_ftran_rust.py": "f67d7e832dfa93e418e32d94c85183b62919490c8d59f5ecbfe8b64e60248b75",
+    "tools/push_ftran_check.py": "936668ac54669151d207af7718ea226ab8756c77bfd1bcfb364cb68b56067aaa",
+    "bench/oracle/m3_push_ftran/manifest.json": "95c456ab7bacdd4445d72de0235e95711731ced5bc53754e8d9664ecc4319eab",
+    "bench/oracle/m3_push_ftran_rust/comparison.json": "01671874b5535db98d156ef7c19ae4da43d25c178f2f008e41b9b4bbd32c9484",
+    "bench/oracle/m3_push_ftran_rust/input.txt": "a3c9f16f04de056976192601d3cd03b7e1afc55f2eff27d9033fed8cfa034f3a",
+    "bench/oracle/m3_push_ftran_rust/m1_kernels.txt": "8ca508d10a09084f605a1d3f8f3b6444d15504eb7354cd992a7abb8cc05cf6cc",
+    "bench/oracle/m3_push_ftran_rust/m1_trace.txt": "0018f12a209ce636a767655ce0367d2f8d47498b31b3aac011fe71c628873d75",
+    "bench/oracle/m3_push_ftran_rust/regression/clippy.log": "fd2b4cbb527396d7b1deeffc3b00cb96ad1c1a2fcfdfa046349b0212506160c0",
+    "bench/oracle/m3_push_ftran_rust/regression/summary.txt": "b31e30401032b8bbeadd2d77c9a140ab9718167cf70dde02f735f38df4943db3",
+    "bench/oracle/m3_push_ftran_rust/regression/workspace.log": "434fb54cba6ff97c233921a7b93cd802a741669073d4359a44a10e68625625ab",
+    "bench/oracle/m3_push_ftran_rust/rust-mutations.json": "70e9699c6a159707383f0288c15f7867a88a6c93fb78a8f583afe25213991083",
+    "bench/oracle/m3_push_ftran_rust/self-test.json": "0375751796cbec83b2ddb4a935789c1b5181a84a51b529c8908614db4b576d58",
+    "bench/oracle/m3_push_ftran_rust/trace.txt": "a04879bd122268fbc907bbfed783077c5d8ad2a424ed777970002ca509b7ffec"
+  }
+}

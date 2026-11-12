@@ -3016,6 +3016,10 @@
     "first_difference": "M1 불일치 21686f/degen2/0/1.count: 원본 5 != Rust 6"
   },
   {
+    "name": "21686f/degen2/0/1/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/0/1.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/0/1/val",
     "first_difference": "M1 불일치 21686f/degen2/0/1.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3026,6 +3030,10 @@
   {
     "name": "21686f/degen2/1/2/count",
     "first_difference": "M1 불일치 21686f/degen2/1/2.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21686f/degen2/1/2/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/1/2.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/1/2/val",
@@ -3040,6 +3048,10 @@
     "first_difference": "M1 불일치 21686f/degen2/2/3.count: 원본 2 != Rust 3"
   },
   {
+    "name": "21686f/degen2/2/3/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/2/3.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/2/3/val",
     "first_difference": "M1 불일치 21686f/degen2/2/3.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3050,6 +3062,10 @@
   {
     "name": "21686f/degen2/3/4/count",
     "first_difference": "M1 불일치 21686f/degen2/3/4.count: 원본 20 != Rust 21"
+  },
+  {
+    "name": "21686f/degen2/3/4/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/3/4.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/3/4/val",
@@ -3064,6 +3080,10 @@
     "first_difference": "M1 불일치 21686f/degen2/4/5.count: 원본 13 != Rust 14"
   },
   {
+    "name": "21686f/degen2/4/5/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/4/5.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/4/5/val",
     "first_difference": "M1 불일치 21686f/degen2/4/5.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3074,6 +3094,10 @@
   {
     "name": "21686f/degen2/5/6/count",
     "first_difference": "M1 불일치 21686f/degen2/5/6.count: 원본 10 != Rust 11"
+  },
+  {
+    "name": "21686f/degen2/5/6/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/5/6.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/5/6/val",
@@ -3088,6 +3112,10 @@
     "first_difference": "M1 불일치 21686f/degen2/6/7.count: 원본 15 != Rust 16"
   },
   {
+    "name": "21686f/degen2/6/7/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/6/7.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/6/7/val",
     "first_difference": "M1 불일치 21686f/degen2/6/7.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3098,6 +3126,10 @@
   {
     "name": "21686f/degen2/7/8/count",
     "first_difference": "M1 불일치 21686f/degen2/7/8.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "21686f/degen2/7/8/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/7/8.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/7/8/val",
@@ -3112,6 +3144,10 @@
     "first_difference": "M1 불일치 21686f/degen2/8/9.count: 원본 18 != Rust 19"
   },
   {
+    "name": "21686f/degen2/8/9/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/8/9.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/8/9/val",
     "first_difference": "M1 불일치 21686f/degen2/8/9.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3122,6 +3158,10 @@
   {
     "name": "21686f/degen2/9/10/count",
     "first_difference": "M1 불일치 21686f/degen2/9/10.count: 원본 22 != Rust 23"
+  },
+  {
+    "name": "21686f/degen2/9/10/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/9/10.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/9/10/val",
@@ -3136,6 +3176,10 @@
     "first_difference": "M1 불일치 21686f/degen2/10/11.count: 원본 15 != Rust 16"
   },
   {
+    "name": "21686f/degen2/10/11/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/10/11.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/10/11/val",
     "first_difference": "M1 불일치 21686f/degen2/10/11.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3146,6 +3190,10 @@
   {
     "name": "21686f/degen2/11/12/count",
     "first_difference": "M1 불일치 21686f/degen2/11/12.count: 원본 19 != Rust 20"
+  },
+  {
+    "name": "21686f/degen2/11/12/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/11/12.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/11/12/val",
@@ -3160,6 +3208,10 @@
     "first_difference": "M1 불일치 21686f/degen2/12/13.count: 원본 7 != Rust 8"
   },
   {
+    "name": "21686f/degen2/12/13/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/12/13.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/12/13/val",
     "first_difference": "M1 불일치 21686f/degen2/12/13.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3170,6 +3222,10 @@
   {
     "name": "21686f/degen2/13/14/count",
     "first_difference": "M1 불일치 21686f/degen2/13/14.count: 원본 13 != Rust 14"
+  },
+  {
+    "name": "21686f/degen2/13/14/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/13/14.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/13/14/val",
@@ -3184,6 +3240,10 @@
     "first_difference": "M1 불일치 21686f/degen2/14/15.count: 원본 7 != Rust 8"
   },
   {
+    "name": "21686f/degen2/14/15/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/14/15.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/14/15/val",
     "first_difference": "M1 불일치 21686f/degen2/14/15.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3194,6 +3254,10 @@
   {
     "name": "21686f/degen2/15/16/count",
     "first_difference": "M1 불일치 21686f/degen2/15/16.count: 원본 12 != Rust 13"
+  },
+  {
+    "name": "21686f/degen2/15/16/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/15/16.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/15/16/val",
@@ -3208,6 +3272,10 @@
     "first_difference": "M1 불일치 21686f/degen2/16/17.count: 원본 9 != Rust 10"
   },
   {
+    "name": "21686f/degen2/16/17/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/16/17.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/16/17/val",
     "first_difference": "M1 불일치 21686f/degen2/16/17.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3218,6 +3286,10 @@
   {
     "name": "21686f/degen2/17/18/count",
     "first_difference": "M1 불일치 21686f/degen2/17/18.count: 원본 6 != Rust 7"
+  },
+  {
+    "name": "21686f/degen2/17/18/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/17/18.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/17/18/val",
@@ -3232,6 +3304,10 @@
     "first_difference": "M1 불일치 21686f/degen2/18/19.count: 원본 2 != Rust 3"
   },
   {
+    "name": "21686f/degen2/18/19/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/18/19.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/18/19/val",
     "first_difference": "M1 불일치 21686f/degen2/18/19.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3242,6 +3318,10 @@
   {
     "name": "21686f/degen2/19/20/count",
     "first_difference": "M1 불일치 21686f/degen2/19/20.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21686f/degen2/19/20/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/19/20.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/19/20/val",
@@ -3256,6 +3336,10 @@
     "first_difference": "M1 불일치 21686f/degen2/20/21.count: 원본 6 != Rust 7"
   },
   {
+    "name": "21686f/degen2/20/21/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/20/21.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/20/21/val",
     "first_difference": "M1 불일치 21686f/degen2/20/21.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3266,6 +3350,10 @@
   {
     "name": "21686f/degen2/21/22/count",
     "first_difference": "M1 불일치 21686f/degen2/21/22.count: 원본 17 != Rust 18"
+  },
+  {
+    "name": "21686f/degen2/21/22/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/21/22.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/21/22/val",
@@ -3280,6 +3368,10 @@
     "first_difference": "M1 불일치 21686f/degen2/22/23.count: 원본 28 != Rust 29"
   },
   {
+    "name": "21686f/degen2/22/23/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/22/23.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/22/23/val",
     "first_difference": "M1 불일치 21686f/degen2/22/23.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3290,6 +3382,10 @@
   {
     "name": "21686f/degen2/23/24/count",
     "first_difference": "M1 불일치 21686f/degen2/23/24.count: 원본 20 != Rust 21"
+  },
+  {
+    "name": "21686f/degen2/23/24/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/23/24.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/23/24/val",
@@ -3304,6 +3400,10 @@
     "first_difference": "M1 불일치 21686f/degen2/24/25.count: 원본 4 != Rust 5"
   },
   {
+    "name": "21686f/degen2/24/25/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/24/25.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/24/25/val",
     "first_difference": "M1 불일치 21686f/degen2/24/25.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3314,6 +3414,10 @@
   {
     "name": "21686f/degen2/25/26/count",
     "first_difference": "M1 불일치 21686f/degen2/25/26.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21686f/degen2/25/26/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/25/26.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/25/26/val",
@@ -3328,6 +3432,10 @@
     "first_difference": "M1 불일치 21686f/degen2/26/27.count: 원본 19 != Rust 20"
   },
   {
+    "name": "21686f/degen2/26/27/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/26/27.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/26/27/val",
     "first_difference": "M1 불일치 21686f/degen2/26/27.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3338,6 +3446,10 @@
   {
     "name": "21686f/degen2/27/28/count",
     "first_difference": "M1 불일치 21686f/degen2/27/28.count: 원본 3 != Rust 4"
+  },
+  {
+    "name": "21686f/degen2/27/28/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/27/28.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/27/28/val",
@@ -3352,6 +3464,10 @@
     "first_difference": "M1 불일치 21686f/degen2/28/29.count: 원본 6 != Rust 7"
   },
   {
+    "name": "21686f/degen2/28/29/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/28/29.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/28/29/val",
     "first_difference": "M1 불일치 21686f/degen2/28/29.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3362,6 +3478,10 @@
   {
     "name": "21686f/degen2/29/30/count",
     "first_difference": "M1 불일치 21686f/degen2/29/30.count: 원본 16 != Rust 17"
+  },
+  {
+    "name": "21686f/degen2/29/30/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/29/30.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/29/30/val",
@@ -3376,6 +3496,10 @@
     "first_difference": "M1 불일치 21686f/degen2/30/31.count: 원본 10 != Rust 11"
   },
   {
+    "name": "21686f/degen2/30/31/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/30/31.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/30/31/val",
     "first_difference": "M1 불일치 21686f/degen2/30/31.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3386,6 +3510,10 @@
   {
     "name": "21686f/degen2/31/32/count",
     "first_difference": "M1 불일치 21686f/degen2/31/32.count: 원본 21 != Rust 22"
+  },
+  {
+    "name": "21686f/degen2/31/32/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/31/32.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/31/32/val",
@@ -3400,6 +3528,10 @@
     "first_difference": "M1 불일치 21686f/degen2/32/33.count: 원본 6 != Rust 7"
   },
   {
+    "name": "21686f/degen2/32/33/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/32/33.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/32/33/val",
     "first_difference": "M1 불일치 21686f/degen2/32/33.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3410,6 +3542,10 @@
   {
     "name": "21686f/degen2/33/34/count",
     "first_difference": "M1 불일치 21686f/degen2/33/34.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "21686f/degen2/33/34/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/33/34.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/33/34/val",
@@ -3424,6 +3560,10 @@
     "first_difference": "M1 불일치 21686f/degen2/34/35.count: 원본 5 != Rust 6"
   },
   {
+    "name": "21686f/degen2/34/35/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/34/35.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/34/35/val",
     "first_difference": "M1 불일치 21686f/degen2/34/35.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3434,6 +3574,10 @@
   {
     "name": "21686f/degen2/35/36/count",
     "first_difference": "M1 불일치 21686f/degen2/35/36.count: 원본 16 != Rust 17"
+  },
+  {
+    "name": "21686f/degen2/35/36/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/35/36.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/35/36/val",
@@ -3448,6 +3592,10 @@
     "first_difference": "M1 불일치 21686f/degen2/36/37.count: 원본 29 != Rust 30"
   },
   {
+    "name": "21686f/degen2/36/37/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/36/37.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/36/37/val",
     "first_difference": "M1 불일치 21686f/degen2/36/37.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3458,6 +3606,10 @@
   {
     "name": "21686f/degen2/37/38/count",
     "first_difference": "M1 불일치 21686f/degen2/37/38.count: 원본 9 != Rust 10"
+  },
+  {
+    "name": "21686f/degen2/37/38/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/37/38.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/37/38/val",
@@ -3472,6 +3624,10 @@
     "first_difference": "M1 불일치 21686f/degen2/38/39.count: 원본 10 != Rust 11"
   },
   {
+    "name": "21686f/degen2/38/39/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/38/39.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/38/39/val",
     "first_difference": "M1 불일치 21686f/degen2/38/39.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3482,6 +3638,10 @@
   {
     "name": "21686f/degen2/39/40/count",
     "first_difference": "M1 불일치 21686f/degen2/39/40.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21686f/degen2/39/40/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/39/40.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/39/40/val",
@@ -3496,6 +3656,10 @@
     "first_difference": "M1 불일치 21686f/degen2/40/41.count: 원본 8 != Rust 9"
   },
   {
+    "name": "21686f/degen2/40/41/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/40/41.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/40/41/val",
     "first_difference": "M1 불일치 21686f/degen2/40/41.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3506,6 +3670,10 @@
   {
     "name": "21686f/degen2/41/42/count",
     "first_difference": "M1 불일치 21686f/degen2/41/42.count: 원본 6 != Rust 7"
+  },
+  {
+    "name": "21686f/degen2/41/42/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/41/42.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/41/42/val",
@@ -3520,6 +3688,10 @@
     "first_difference": "M1 불일치 21686f/degen2/42/43.count: 원본 13 != Rust 14"
   },
   {
+    "name": "21686f/degen2/42/43/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/42/43.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/42/43/val",
     "first_difference": "M1 불일치 21686f/degen2/42/43.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3530,6 +3702,10 @@
   {
     "name": "21686f/degen2/43/44/count",
     "first_difference": "M1 불일치 21686f/degen2/43/44.count: 원본 11 != Rust 12"
+  },
+  {
+    "name": "21686f/degen2/43/44/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/43/44.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/43/44/val",
@@ -3544,6 +3720,10 @@
     "first_difference": "M1 불일치 21686f/degen2/44/45.count: 원본 9 != Rust 10"
   },
   {
+    "name": "21686f/degen2/44/45/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/44/45.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/44/45/val",
     "first_difference": "M1 불일치 21686f/degen2/44/45.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3554,6 +3734,10 @@
   {
     "name": "21686f/degen2/45/46/count",
     "first_difference": "M1 불일치 21686f/degen2/45/46.count: 원본 6 != Rust 7"
+  },
+  {
+    "name": "21686f/degen2/45/46/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/45/46.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/45/46/val",
@@ -3568,6 +3752,10 @@
     "first_difference": "M1 불일치 21686f/degen2/46/47.count: 원본 7 != Rust 8"
   },
   {
+    "name": "21686f/degen2/46/47/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/46/47.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/46/47/val",
     "first_difference": "M1 불일치 21686f/degen2/46/47.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3578,6 +3766,10 @@
   {
     "name": "21686f/degen2/47/48/count",
     "first_difference": "M1 불일치 21686f/degen2/47/48.count: 원본 7 != Rust 8"
+  },
+  {
+    "name": "21686f/degen2/47/48/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/47/48.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/47/48/val",
@@ -3592,6 +3784,10 @@
     "first_difference": "M1 불일치 21686f/degen2/48/49.count: 원본 4 != Rust 5"
   },
   {
+    "name": "21686f/degen2/48/49/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/48/49.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/48/49/val",
     "first_difference": "M1 불일치 21686f/degen2/48/49.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3602,6 +3798,10 @@
   {
     "name": "21686f/degen2/49/50/count",
     "first_difference": "M1 불일치 21686f/degen2/49/50.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "21686f/degen2/49/50/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/49/50.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/49/50/val",
@@ -3616,6 +3816,10 @@
     "first_difference": "M1 불일치 21686f/degen2/50/51.count: 원본 8 != Rust 9"
   },
   {
+    "name": "21686f/degen2/50/51/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/50/51.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/50/51/val",
     "first_difference": "M1 불일치 21686f/degen2/50/51.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3626,6 +3830,10 @@
   {
     "name": "21686f/degen2/51/52/count",
     "first_difference": "M1 불일치 21686f/degen2/51/52.count: 원본 6 != Rust 7"
+  },
+  {
+    "name": "21686f/degen2/51/52/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/51/52.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/51/52/val",
@@ -3640,6 +3848,10 @@
     "first_difference": "M1 불일치 21686f/degen2/52/53.count: 원본 5 != Rust 6"
   },
   {
+    "name": "21686f/degen2/52/53/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/52/53.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/52/53/val",
     "first_difference": "M1 불일치 21686f/degen2/52/53.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3650,6 +3862,10 @@
   {
     "name": "21686f/degen2/53/54/count",
     "first_difference": "M1 불일치 21686f/degen2/53/54.count: 원본 7 != Rust 8"
+  },
+  {
+    "name": "21686f/degen2/53/54/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/53/54.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/53/54/val",
@@ -3664,6 +3880,10 @@
     "first_difference": "M1 불일치 21686f/degen2/54/55.count: 원본 10 != Rust 11"
   },
   {
+    "name": "21686f/degen2/54/55/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/54/55.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/54/55/val",
     "first_difference": "M1 불일치 21686f/degen2/54/55.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3674,6 +3894,10 @@
   {
     "name": "21686f/degen2/55/56/count",
     "first_difference": "M1 불일치 21686f/degen2/55/56.count: 원본 12 != Rust 13"
+  },
+  {
+    "name": "21686f/degen2/55/56/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/55/56.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/55/56/val",
@@ -3688,6 +3912,10 @@
     "first_difference": "M1 불일치 21686f/degen2/56/57.count: 원본 7 != Rust 8"
   },
   {
+    "name": "21686f/degen2/56/57/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/56/57.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/56/57/val",
     "first_difference": "M1 불일치 21686f/degen2/56/57.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3698,6 +3926,10 @@
   {
     "name": "21686f/degen2/57/58/count",
     "first_difference": "M1 불일치 21686f/degen2/57/58.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21686f/degen2/57/58/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/57/58.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/57/58/val",
@@ -3712,6 +3944,10 @@
     "first_difference": "M1 불일치 21686f/degen2/58/59.count: 원본 13 != Rust 14"
   },
   {
+    "name": "21686f/degen2/58/59/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/58/59.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/58/59/val",
     "first_difference": "M1 불일치 21686f/degen2/58/59.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
   },
@@ -3722,6 +3958,10 @@
   {
     "name": "21686f/degen2/59/60/count",
     "first_difference": "M1 불일치 21686f/degen2/59/60.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21686f/degen2/59/60/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/59/60.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/59/60/val",
@@ -3736,6 +3976,10 @@
     "first_difference": "M1 불일치 21686f/degen2/60/61.count: 원본 7 != Rust 8"
   },
   {
+    "name": "21686f/degen2/60/61/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/60/61.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/60/61/val",
     "first_difference": "M1 불일치 21686f/degen2/60/61.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3746,6 +3990,10 @@
   {
     "name": "21686f/degen2/61/62/count",
     "first_difference": "M1 불일치 21686f/degen2/61/62.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21686f/degen2/61/62/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/61/62.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/61/62/val",
@@ -3760,6 +4008,10 @@
     "first_difference": "M1 불일치 21686f/degen2/62/63.count: 원본 3 != Rust 4"
   },
   {
+    "name": "21686f/degen2/62/63/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/62/63.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/62/63/val",
     "first_difference": "M1 불일치 21686f/degen2/62/63.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3770,6 +4022,10 @@
   {
     "name": "21686f/degen2/63/64/count",
     "first_difference": "M1 불일치 21686f/degen2/63/64.count: 원본 15 != Rust 16"
+  },
+  {
+    "name": "21686f/degen2/63/64/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/63/64.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/63/64/val",
@@ -3784,6 +4040,10 @@
     "first_difference": "M1 불일치 21686f/degen2/64/65.count: 원본 30 != Rust 31"
   },
   {
+    "name": "21686f/degen2/64/65/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/64/65.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/64/65/val",
     "first_difference": "M1 불일치 21686f/degen2/64/65.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3794,6 +4054,10 @@
   {
     "name": "21686f/degen2/65/66/count",
     "first_difference": "M1 불일치 21686f/degen2/65/66.count: 원본 13 != Rust 14"
+  },
+  {
+    "name": "21686f/degen2/65/66/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/65/66.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/65/66/val",
@@ -3808,6 +4072,10 @@
     "first_difference": "M1 불일치 21686f/degen2/66/67.count: 원본 8 != Rust 9"
   },
   {
+    "name": "21686f/degen2/66/67/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/66/67.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/66/67/val",
     "first_difference": "M1 불일치 21686f/degen2/66/67.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3818,6 +4086,10 @@
   {
     "name": "21686f/degen2/67/68/count",
     "first_difference": "M1 불일치 21686f/degen2/67/68.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21686f/degen2/67/68/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/67/68.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/67/68/val",
@@ -3832,6 +4104,10 @@
     "first_difference": "M1 불일치 21686f/degen2/68/69.count: 원본 3 != Rust 4"
   },
   {
+    "name": "21686f/degen2/68/69/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/68/69.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/68/69/val",
     "first_difference": "M1 불일치 21686f/degen2/68/69.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3842,6 +4118,10 @@
   {
     "name": "21686f/degen2/69/70/count",
     "first_difference": "M1 불일치 21686f/degen2/69/70.count: 원본 6 != Rust 7"
+  },
+  {
+    "name": "21686f/degen2/69/70/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/69/70.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/69/70/val",
@@ -3856,6 +4136,10 @@
     "first_difference": "M1 불일치 21686f/degen2/70/71.count: 원본 7 != Rust 8"
   },
   {
+    "name": "21686f/degen2/70/71/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/70/71.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/70/71/val",
     "first_difference": "M1 불일치 21686f/degen2/70/71.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3866,6 +4150,10 @@
   {
     "name": "21686f/degen2/71/72/count",
     "first_difference": "M1 불일치 21686f/degen2/71/72.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21686f/degen2/71/72/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/71/72.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/71/72/val",
@@ -3880,6 +4168,10 @@
     "first_difference": "M1 불일치 21686f/degen2/72/73.count: 원본 6 != Rust 7"
   },
   {
+    "name": "21686f/degen2/72/73/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/72/73.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/72/73/val",
     "first_difference": "M1 불일치 21686f/degen2/72/73.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3890,6 +4182,10 @@
   {
     "name": "21686f/degen2/73/74/count",
     "first_difference": "M1 불일치 21686f/degen2/73/74.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21686f/degen2/73/74/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/73/74.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/73/74/val",
@@ -3904,6 +4200,10 @@
     "first_difference": "M1 불일치 21686f/degen2/74/75.count: 원본 7 != Rust 8"
   },
   {
+    "name": "21686f/degen2/74/75/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/74/75.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/74/75/val",
     "first_difference": "M1 불일치 21686f/degen2/74/75.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3914,6 +4214,10 @@
   {
     "name": "21686f/degen2/75/76/count",
     "first_difference": "M1 불일치 21686f/degen2/75/76.count: 원본 7 != Rust 8"
+  },
+  {
+    "name": "21686f/degen2/75/76/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/75/76.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/75/76/val",
@@ -3928,6 +4232,10 @@
     "first_difference": "M1 불일치 21686f/degen2/76/77.count: 원본 6 != Rust 7"
   },
   {
+    "name": "21686f/degen2/76/77/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/76/77.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/76/77/val",
     "first_difference": "M1 불일치 21686f/degen2/76/77.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3938,6 +4246,10 @@
   {
     "name": "21686f/degen2/77/78/count",
     "first_difference": "M1 불일치 21686f/degen2/77/78.count: 원본 6 != Rust 7"
+  },
+  {
+    "name": "21686f/degen2/77/78/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/77/78.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/77/78/val",
@@ -3952,6 +4264,10 @@
     "first_difference": "M1 불일치 21686f/degen2/78/79.count: 원본 8 != Rust 9"
   },
   {
+    "name": "21686f/degen2/78/79/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/78/79.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/78/79/val",
     "first_difference": "M1 불일치 21686f/degen2/78/79.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3962,6 +4278,10 @@
   {
     "name": "21686f/degen2/79/80/count",
     "first_difference": "M1 불일치 21686f/degen2/79/80.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21686f/degen2/79/80/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/79/80.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/79/80/val",
@@ -3976,6 +4296,10 @@
     "first_difference": "M1 불일치 21686f/degen2/80/81.count: 원본 9 != Rust 10"
   },
   {
+    "name": "21686f/degen2/80/81/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/80/81.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/80/81/val",
     "first_difference": "M1 불일치 21686f/degen2/80/81.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -3986,6 +4310,10 @@
   {
     "name": "21686f/degen2/81/82/count",
     "first_difference": "M1 불일치 21686f/degen2/81/82.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21686f/degen2/81/82/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/81/82.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/81/82/val",
@@ -4000,6 +4328,10 @@
     "first_difference": "M1 불일치 21686f/degen2/82/83.count: 원본 7 != Rust 8"
   },
   {
+    "name": "21686f/degen2/82/83/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/82/83.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/82/83/val",
     "first_difference": "M1 불일치 21686f/degen2/82/83.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4010,6 +4342,10 @@
   {
     "name": "21686f/degen2/83/84/count",
     "first_difference": "M1 불일치 21686f/degen2/83/84.count: 원본 9 != Rust 10"
+  },
+  {
+    "name": "21686f/degen2/83/84/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/83/84.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/83/84/val",
@@ -4024,6 +4360,10 @@
     "first_difference": "M1 불일치 21686f/degen2/84/85.count: 원본 3 != Rust 4"
   },
   {
+    "name": "21686f/degen2/84/85/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/84/85.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/84/85/val",
     "first_difference": "M1 불일치 21686f/degen2/84/85.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4034,6 +4374,10 @@
   {
     "name": "21686f/degen2/85/86/count",
     "first_difference": "M1 불일치 21686f/degen2/85/86.count: 원본 15 != Rust 16"
+  },
+  {
+    "name": "21686f/degen2/85/86/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/85/86.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/85/86/val",
@@ -4048,6 +4392,10 @@
     "first_difference": "M1 불일치 21686f/degen2/86/87.count: 원본 6 != Rust 7"
   },
   {
+    "name": "21686f/degen2/86/87/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/86/87.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/86/87/val",
     "first_difference": "M1 불일치 21686f/degen2/86/87.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4058,6 +4406,10 @@
   {
     "name": "21686f/degen2/87/88/count",
     "first_difference": "M1 불일치 21686f/degen2/87/88.count: 원본 7 != Rust 8"
+  },
+  {
+    "name": "21686f/degen2/87/88/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/87/88.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/87/88/val",
@@ -4072,6 +4424,10 @@
     "first_difference": "M1 불일치 21686f/degen2/88/89.count: 원본 8 != Rust 9"
   },
   {
+    "name": "21686f/degen2/88/89/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/88/89.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/88/89/val",
     "first_difference": "M1 불일치 21686f/degen2/88/89.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4082,6 +4438,10 @@
   {
     "name": "21686f/degen2/89/90/count",
     "first_difference": "M1 불일치 21686f/degen2/89/90.count: 원본 17 != Rust 18"
+  },
+  {
+    "name": "21686f/degen2/89/90/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/89/90.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/89/90/val",
@@ -4096,6 +4456,10 @@
     "first_difference": "M1 불일치 21686f/degen2/90/91.count: 원본 11 != Rust 12"
   },
   {
+    "name": "21686f/degen2/90/91/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/90/91.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/90/91/val",
     "first_difference": "M1 불일치 21686f/degen2/90/91.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4106,6 +4470,10 @@
   {
     "name": "21686f/degen2/91/92/count",
     "first_difference": "M1 불일치 21686f/degen2/91/92.count: 원본 14 != Rust 15"
+  },
+  {
+    "name": "21686f/degen2/91/92/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/91/92.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/91/92/val",
@@ -4120,6 +4488,10 @@
     "first_difference": "M1 불일치 21686f/degen2/92/93.count: 원본 5 != Rust 6"
   },
   {
+    "name": "21686f/degen2/92/93/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/92/93.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/92/93/val",
     "first_difference": "M1 불일치 21686f/degen2/92/93.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4130,6 +4502,10 @@
   {
     "name": "21686f/degen2/93/94/count",
     "first_difference": "M1 불일치 21686f/degen2/93/94.count: 원본 9 != Rust 10"
+  },
+  {
+    "name": "21686f/degen2/93/94/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/93/94.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/93/94/val",
@@ -4144,6 +4520,10 @@
     "first_difference": "M1 불일치 21686f/degen2/94/95.count: 원본 11 != Rust 12"
   },
   {
+    "name": "21686f/degen2/94/95/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/94/95.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/94/95/val",
     "first_difference": "M1 불일치 21686f/degen2/94/95.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4154,6 +4534,10 @@
   {
     "name": "21686f/degen2/95/96/count",
     "first_difference": "M1 불일치 21686f/degen2/95/96.count: 원본 11 != Rust 12"
+  },
+  {
+    "name": "21686f/degen2/95/96/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/95/96.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/95/96/val",
@@ -4168,6 +4552,10 @@
     "first_difference": "M1 불일치 21686f/degen2/96/97.count: 원본 14 != Rust 15"
   },
   {
+    "name": "21686f/degen2/96/97/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/96/97.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/96/97/val",
     "first_difference": "M1 불일치 21686f/degen2/96/97.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4178,6 +4566,10 @@
   {
     "name": "21686f/degen2/97/98/count",
     "first_difference": "M1 불일치 21686f/degen2/97/98.count: 원본 7 != Rust 8"
+  },
+  {
+    "name": "21686f/degen2/97/98/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/97/98.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/97/98/val",
@@ -4192,6 +4584,10 @@
     "first_difference": "M1 불일치 21686f/degen2/98/99.count: 원본 4 != Rust 5"
   },
   {
+    "name": "21686f/degen2/98/99/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/98/99.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/98/99/val",
     "first_difference": "M1 불일치 21686f/degen2/98/99.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4202,6 +4598,10 @@
   {
     "name": "21686f/degen2/99/100/count",
     "first_difference": "M1 불일치 21686f/degen2/99/100.count: 원본 3 != Rust 4"
+  },
+  {
+    "name": "21686f/degen2/99/100/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/99/100.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/99/100/val",
@@ -4216,6 +4616,10 @@
     "first_difference": "M1 불일치 21686f/degen2/100/101.count: 원본 10 != Rust 11"
   },
   {
+    "name": "21686f/degen2/100/101/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/100/101.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/100/101/val",
     "first_difference": "M1 불일치 21686f/degen2/100/101.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4226,6 +4630,10 @@
   {
     "name": "21686f/degen2/101/102/count",
     "first_difference": "M1 불일치 21686f/degen2/101/102.count: 원본 16 != Rust 17"
+  },
+  {
+    "name": "21686f/degen2/101/102/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/101/102.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/101/102/val",
@@ -4240,6 +4648,10 @@
     "first_difference": "M1 불일치 21686f/degen2/102/103.count: 원본 8 != Rust 9"
   },
   {
+    "name": "21686f/degen2/102/103/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/102/103.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/102/103/val",
     "first_difference": "M1 불일치 21686f/degen2/102/103.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4250,6 +4662,10 @@
   {
     "name": "21686f/degen2/103/104/count",
     "first_difference": "M1 불일치 21686f/degen2/103/104.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21686f/degen2/103/104/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/103/104.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/103/104/val",
@@ -4264,6 +4680,10 @@
     "first_difference": "M1 불일치 21686f/degen2/104/105.count: 원본 3 != Rust 4"
   },
   {
+    "name": "21686f/degen2/104/105/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/104/105.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/104/105/val",
     "first_difference": "M1 불일치 21686f/degen2/104/105.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4274,6 +4694,10 @@
   {
     "name": "21686f/degen2/105/106/count",
     "first_difference": "M1 불일치 21686f/degen2/105/106.count: 원본 11 != Rust 12"
+  },
+  {
+    "name": "21686f/degen2/105/106/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/105/106.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/105/106/val",
@@ -4288,12 +4712,20 @@
     "first_difference": "M1 불일치 21686f/degen2/106/107.count: 원본 1 != Rust 2"
   },
   {
+    "name": "21686f/degen2/106/107/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/106/107.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/106/107/val",
     "first_difference": "M1 불일치 21686f/degen2/106/107.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
   {
     "name": "21686f/degen2/107/108/count",
     "first_difference": "M1 불일치 21686f/degen2/107/108.count: 원본 22 != Rust 23"
+  },
+  {
+    "name": "21686f/degen2/107/108/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/107/108.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/107/108/val",
@@ -4308,6 +4740,10 @@
     "first_difference": "M1 불일치 21686f/degen2/108/109.count: 원본 15 != Rust 16"
   },
   {
+    "name": "21686f/degen2/108/109/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/108/109.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/108/109/val",
     "first_difference": "M1 불일치 21686f/degen2/108/109.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
   },
@@ -4318,6 +4754,10 @@
   {
     "name": "21686f/degen2/109/110/count",
     "first_difference": "M1 불일치 21686f/degen2/109/110.count: 원본 11 != Rust 12"
+  },
+  {
+    "name": "21686f/degen2/109/110/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/109/110.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/109/110/val",
@@ -4332,6 +4772,10 @@
     "first_difference": "M1 불일치 21686f/degen2/110/111.count: 원본 15 != Rust 16"
   },
   {
+    "name": "21686f/degen2/110/111/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/110/111.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/110/111/val",
     "first_difference": "M1 불일치 21686f/degen2/110/111.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4342,6 +4786,10 @@
   {
     "name": "21686f/degen2/112/112/count",
     "first_difference": "M1 불일치 21686f/degen2/112/112.count: 원본 6 != Rust 7"
+  },
+  {
+    "name": "21686f/degen2/112/112/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/112/112.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/112/112/val",
@@ -4356,6 +4804,10 @@
     "first_difference": "M1 불일치 21686f/degen2/113/113.count: 원본 10 != Rust 11"
   },
   {
+    "name": "21686f/degen2/113/113/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/113/113.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/113/113/val",
     "first_difference": "M1 불일치 21686f/degen2/113/113.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
   },
@@ -4366,6 +4818,10 @@
   {
     "name": "21686f/degen2/115/114/count",
     "first_difference": "M1 불일치 21686f/degen2/115/114.count: 원본 33 != Rust 34"
+  },
+  {
+    "name": "21686f/degen2/115/114/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/115/114.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/115/114/val",
@@ -4380,6 +4836,10 @@
     "first_difference": "M1 불일치 21686f/degen2/116/115.count: 원본 13 != Rust 14"
   },
   {
+    "name": "21686f/degen2/116/115/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/116/115.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/116/115/val",
     "first_difference": "M1 불일치 21686f/degen2/116/115.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4390,6 +4850,10 @@
   {
     "name": "21686f/degen2/117/116/count",
     "first_difference": "M1 불일치 21686f/degen2/117/116.count: 원본 23 != Rust 24"
+  },
+  {
+    "name": "21686f/degen2/117/116/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/117/116.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/117/116/val",
@@ -4404,6 +4868,10 @@
     "first_difference": "M1 불일치 21686f/degen2/118/117.count: 원본 21 != Rust 22"
   },
   {
+    "name": "21686f/degen2/118/117/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/118/117.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/118/117/val",
     "first_difference": "M1 불일치 21686f/degen2/118/117.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4414,6 +4882,10 @@
   {
     "name": "21686f/degen2/119/118/count",
     "first_difference": "M1 불일치 21686f/degen2/119/118.count: 원본 15 != Rust 16"
+  },
+  {
+    "name": "21686f/degen2/119/118/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/119/118.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/119/118/val",
@@ -4428,6 +4900,10 @@
     "first_difference": "M1 불일치 21686f/degen2/121/119.count: 원본 8 != Rust 9"
   },
   {
+    "name": "21686f/degen2/121/119/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/121/119.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/121/119/val",
     "first_difference": "M1 불일치 21686f/degen2/121/119.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
   },
@@ -4438,6 +4914,10 @@
   {
     "name": "21686f/degen2/124/120/count",
     "first_difference": "M1 불일치 21686f/degen2/124/120.count: 원본 35 != Rust 36"
+  },
+  {
+    "name": "21686f/degen2/124/120/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/124/120.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/124/120/val",
@@ -4452,6 +4932,10 @@
     "first_difference": "M1 불일치 21686f/degen2/126/121.count: 원본 16 != Rust 17"
   },
   {
+    "name": "21686f/degen2/126/121/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/126/121.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/126/121/val",
     "first_difference": "M1 불일치 21686f/degen2/126/121.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4462,6 +4946,10 @@
   {
     "name": "21686f/degen2/127/122/count",
     "first_difference": "M1 불일치 21686f/degen2/127/122.count: 원본 10 != Rust 11"
+  },
+  {
+    "name": "21686f/degen2/127/122/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/127/122.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/127/122/val",
@@ -4476,6 +4964,10 @@
     "first_difference": "M1 불일치 21686f/degen2/129/123.count: 원본 34 != Rust 35"
   },
   {
+    "name": "21686f/degen2/129/123/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/129/123.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/129/123/val",
     "first_difference": "M1 불일치 21686f/degen2/129/123.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
   },
@@ -4486,6 +4978,10 @@
   {
     "name": "21686f/degen2/131/124/count",
     "first_difference": "M1 불일치 21686f/degen2/131/124.count: 원본 19 != Rust 20"
+  },
+  {
+    "name": "21686f/degen2/131/124/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/131/124.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/131/124/val",
@@ -4500,6 +4996,10 @@
     "first_difference": "M1 불일치 21686f/degen2/132/125.count: 원본 16 != Rust 17"
   },
   {
+    "name": "21686f/degen2/132/125/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/132/125.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/132/125/val",
     "first_difference": "M1 불일치 21686f/degen2/132/125.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
   },
@@ -4510,6 +5010,10 @@
   {
     "name": "21686f/degen2/133/126/count",
     "first_difference": "M1 불일치 21686f/degen2/133/126.count: 원본 13 != Rust 14"
+  },
+  {
+    "name": "21686f/degen2/133/126/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/133/126.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/133/126/val",
@@ -4524,6 +5028,10 @@
     "first_difference": "M1 불일치 21686f/degen2/136/127.count: 원본 14 != Rust 15"
   },
   {
+    "name": "21686f/degen2/136/127/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/136/127.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/136/127/val",
     "first_difference": "M1 불일치 21686f/degen2/136/127.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
   },
@@ -4534,6 +5042,10 @@
   {
     "name": "21686f/degen2/145/128/count",
     "first_difference": "M1 불일치 21686f/degen2/145/128.count: 원본 40 != Rust 41"
+  },
+  {
+    "name": "21686f/degen2/145/128/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/145/128.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/145/128/val",
@@ -4548,6 +5060,10 @@
     "first_difference": "M1 불일치 21686f/degen2/146/129.count: 원본 13 != Rust 14"
   },
   {
+    "name": "21686f/degen2/146/129/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/146/129.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/146/129/val",
     "first_difference": "M1 불일치 21686f/degen2/146/129.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4558,6 +5074,10 @@
   {
     "name": "21686f/degen2/170/130/count",
     "first_difference": "M1 불일치 21686f/degen2/170/130.count: 원본 7 != Rust 8"
+  },
+  {
+    "name": "21686f/degen2/170/130/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/170/130.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/170/130/val",
@@ -4572,6 +5092,10 @@
     "first_difference": "M1 불일치 21686f/degen2/176/131.count: 원본 5 != Rust 6"
   },
   {
+    "name": "21686f/degen2/176/131/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/176/131.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/176/131/val",
     "first_difference": "M1 불일치 21686f/degen2/176/131.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4582,6 +5106,10 @@
   {
     "name": "21686f/degen2/177/132/count",
     "first_difference": "M1 불일치 21686f/degen2/177/132.count: 원본 33 != Rust 34"
+  },
+  {
+    "name": "21686f/degen2/177/132/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/177/132.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/177/132/val",
@@ -4596,6 +5124,10 @@
     "first_difference": "M1 불일치 21686f/degen2/182/133.count: 원본 4 != Rust 5"
   },
   {
+    "name": "21686f/degen2/182/133/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/182/133.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/182/133/val",
     "first_difference": "M1 불일치 21686f/degen2/182/133.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4606,6 +5138,10 @@
   {
     "name": "21686f/degen2/184/134/count",
     "first_difference": "M1 불일치 21686f/degen2/184/134.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21686f/degen2/184/134/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/184/134.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/184/134/val",
@@ -4620,6 +5156,10 @@
     "first_difference": "M1 불일치 21686f/degen2/185/135.count: 원본 18 != Rust 19"
   },
   {
+    "name": "21686f/degen2/185/135/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/185/135.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/185/135/val",
     "first_difference": "M1 불일치 21686f/degen2/185/135.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4630,6 +5170,10 @@
   {
     "name": "21686f/degen2/186/136/count",
     "first_difference": "M1 불일치 21686f/degen2/186/136.count: 원본 9 != Rust 10"
+  },
+  {
+    "name": "21686f/degen2/186/136/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/186/136.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/186/136/val",
@@ -4644,6 +5188,10 @@
     "first_difference": "M1 불일치 21686f/degen2/187/137.count: 원본 8 != Rust 9"
   },
   {
+    "name": "21686f/degen2/187/137/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/187/137.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/187/137/val",
     "first_difference": "M1 불일치 21686f/degen2/187/137.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4654,6 +5202,10 @@
   {
     "name": "21686f/degen2/188/138/count",
     "first_difference": "M1 불일치 21686f/degen2/188/138.count: 원본 13 != Rust 14"
+  },
+  {
+    "name": "21686f/degen2/188/138/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/188/138.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/188/138/val",
@@ -4668,6 +5220,10 @@
     "first_difference": "M1 불일치 21686f/degen2/197/139.count: 원본 3 != Rust 4"
   },
   {
+    "name": "21686f/degen2/197/139/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/197/139.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/197/139/val",
     "first_difference": "M1 불일치 21686f/degen2/197/139.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4678,6 +5234,10 @@
   {
     "name": "21686f/degen2/198/140/count",
     "first_difference": "M1 불일치 21686f/degen2/198/140.count: 원본 9 != Rust 10"
+  },
+  {
+    "name": "21686f/degen2/198/140/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/198/140.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/198/140/val",
@@ -4692,6 +5252,10 @@
     "first_difference": "M1 불일치 21686f/degen2/199/141.count: 원본 21 != Rust 22"
   },
   {
+    "name": "21686f/degen2/199/141/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/199/141.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/199/141/val",
     "first_difference": "M1 불일치 21686f/degen2/199/141.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4702,6 +5266,10 @@
   {
     "name": "21686f/degen2/202/142/count",
     "first_difference": "M1 불일치 21686f/degen2/202/142.count: 원본 3 != Rust 4"
+  },
+  {
+    "name": "21686f/degen2/202/142/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/202/142.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/202/142/val",
@@ -4716,6 +5284,10 @@
     "first_difference": "M1 불일치 21686f/degen2/203/143.count: 원본 9 != Rust 10"
   },
   {
+    "name": "21686f/degen2/203/143/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/203/143.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/203/143/val",
     "first_difference": "M1 불일치 21686f/degen2/203/143.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4726,6 +5298,10 @@
   {
     "name": "21686f/degen2/204/144/count",
     "first_difference": "M1 불일치 21686f/degen2/204/144.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21686f/degen2/204/144/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/204/144.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/204/144/val",
@@ -4740,6 +5316,10 @@
     "first_difference": "M1 불일치 21686f/degen2/205/145.count: 원본 7 != Rust 8"
   },
   {
+    "name": "21686f/degen2/205/145/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/205/145.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/205/145/val",
     "first_difference": "M1 불일치 21686f/degen2/205/145.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4750,6 +5330,10 @@
   {
     "name": "21686f/degen2/206/146/count",
     "first_difference": "M1 불일치 21686f/degen2/206/146.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21686f/degen2/206/146/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/206/146.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/206/146/val",
@@ -4764,6 +5348,10 @@
     "first_difference": "M1 불일치 21686f/degen2/209/147.count: 원본 14 != Rust 15"
   },
   {
+    "name": "21686f/degen2/209/147/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/209/147.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/209/147/val",
     "first_difference": "M1 불일치 21686f/degen2/209/147.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4774,6 +5362,10 @@
   {
     "name": "21686f/degen2/210/148/count",
     "first_difference": "M1 불일치 21686f/degen2/210/148.count: 원본 38 != Rust 39"
+  },
+  {
+    "name": "21686f/degen2/210/148/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/210/148.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/210/148/val",
@@ -4788,6 +5380,10 @@
     "first_difference": "M1 불일치 21686f/degen2/225/149.count: 원본 10 != Rust 11"
   },
   {
+    "name": "21686f/degen2/225/149/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/225/149.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/225/149/val",
     "first_difference": "M1 불일치 21686f/degen2/225/149.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4798,6 +5394,10 @@
   {
     "name": "21686f/degen2/226/150/count",
     "first_difference": "M1 불일치 21686f/degen2/226/150.count: 원본 7 != Rust 8"
+  },
+  {
+    "name": "21686f/degen2/226/150/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/226/150.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/226/150/val",
@@ -4812,6 +5412,10 @@
     "first_difference": "M1 불일치 21686f/degen2/238/151.count: 원본 3 != Rust 4"
   },
   {
+    "name": "21686f/degen2/238/151/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/238/151.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/238/151/val",
     "first_difference": "M1 불일치 21686f/degen2/238/151.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4822,6 +5426,10 @@
   {
     "name": "21686f/degen2/247/152/count",
     "first_difference": "M1 불일치 21686f/degen2/247/152.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21686f/degen2/247/152/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/247/152.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/247/152/val",
@@ -4836,6 +5444,10 @@
     "first_difference": "M1 불일치 21686f/degen2/249/153.count: 원본 4 != Rust 5"
   },
   {
+    "name": "21686f/degen2/249/153/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/249/153.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/249/153/val",
     "first_difference": "M1 불일치 21686f/degen2/249/153.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4846,6 +5458,10 @@
   {
     "name": "21686f/degen2/250/154/count",
     "first_difference": "M1 불일치 21686f/degen2/250/154.count: 원본 19 != Rust 20"
+  },
+  {
+    "name": "21686f/degen2/250/154/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/250/154.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/250/154/val",
@@ -4860,6 +5476,10 @@
     "first_difference": "M1 불일치 21686f/degen2/253/155.count: 원본 35 != Rust 36"
   },
   {
+    "name": "21686f/degen2/253/155/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/253/155.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/253/155/val",
     "first_difference": "M1 불일치 21686f/degen2/253/155.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4870,6 +5490,10 @@
   {
     "name": "21686f/degen2/256/156/count",
     "first_difference": "M1 불일치 21686f/degen2/256/156.count: 원본 85 != Rust 86"
+  },
+  {
+    "name": "21686f/degen2/256/156/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/256/156.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/256/156/val",
@@ -4884,6 +5508,10 @@
     "first_difference": "M1 불일치 21686f/degen2/258/157.count: 원본 6 != Rust 7"
   },
   {
+    "name": "21686f/degen2/258/157/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/258/157.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/258/157/val",
     "first_difference": "M1 불일치 21686f/degen2/258/157.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4894,6 +5522,10 @@
   {
     "name": "21686f/degen2/259/158/count",
     "first_difference": "M1 불일치 21686f/degen2/259/158.count: 원본 45 != Rust 46"
+  },
+  {
+    "name": "21686f/degen2/259/158/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/259/158.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/259/158/val",
@@ -4908,6 +5540,10 @@
     "first_difference": "M1 불일치 21686f/degen2/260/159.count: 원본 25 != Rust 26"
   },
   {
+    "name": "21686f/degen2/260/159/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/260/159.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/260/159/val",
     "first_difference": "M1 불일치 21686f/degen2/260/159.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4918,6 +5554,10 @@
   {
     "name": "21686f/degen2/263/160/count",
     "first_difference": "M1 불일치 21686f/degen2/263/160.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21686f/degen2/263/160/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/263/160.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/263/160/val",
@@ -4932,6 +5572,10 @@
     "first_difference": "M1 불일치 21686f/degen2/265/161.count: 원본 4 != Rust 5"
   },
   {
+    "name": "21686f/degen2/265/161/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/265/161.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/degen2/265/161/val",
     "first_difference": "M1 불일치 21686f/degen2/265/161.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -4942,6 +5586,10 @@
   {
     "name": "21686f/degen2/274/162/count",
     "first_difference": "M1 불일치 21686f/degen2/274/162.count: 원본 50 != Rust 51"
+  },
+  {
+    "name": "21686f/degen2/274/162/scratch",
+    "first_difference": "M1 불일치 21686f/degen2/274/162.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/degen2/274/162/val",
@@ -4956,6 +5604,10 @@
     "first_difference": "M1 불일치 21686f/kb2/0/1.count: 원본 10 != Rust 11"
   },
   {
+    "name": "21686f/kb2/0/1/scratch",
+    "first_difference": "M1 불일치 21686f/kb2/0/1.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/kb2/0/1/val",
     "first_difference": "M1 불일치 21686f/kb2/0/1.val[0]: 원본 '878787878787d7bf' != Rust '868787878787d7bf'"
   },
@@ -4966,6 +5618,10 @@
   {
     "name": "21686f/kb2/1/2/count",
     "first_difference": "M1 불일치 21686f/kb2/1/2.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "21686f/kb2/1/2/scratch",
+    "first_difference": "M1 불일치 21686f/kb2/1/2.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/kb2/1/2/val",
@@ -4980,6 +5636,10 @@
     "first_difference": "M1 불일치 21686f/kb2/2/3.count: 원본 14 != Rust 15"
   },
   {
+    "name": "21686f/kb2/2/3/scratch",
+    "first_difference": "M1 불일치 21686f/kb2/2/3.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/kb2/2/3/val",
     "first_difference": "M1 불일치 21686f/kb2/2/3.val[0]: 원본 '000000000000e0bf' != Rust '010000000000e0bf'"
   },
@@ -4990,6 +5650,10 @@
   {
     "name": "21686f/kb2/3/4/count",
     "first_difference": "M1 불일치 21686f/kb2/3/4.count: 원본 14 != Rust 15"
+  },
+  {
+    "name": "21686f/kb2/3/4/scratch",
+    "first_difference": "M1 불일치 21686f/kb2/3/4.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21686f/kb2/3/4/val",
@@ -5004,6 +5668,10 @@
     "first_difference": "M1 불일치 21686f/kb2/4/5.count: 원본 4 != Rust 5"
   },
   {
+    "name": "21686f/kb2/4/5/scratch",
+    "first_difference": "M1 불일치 21686f/kb2/4/5.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21686f/kb2/4/5/val",
     "first_difference": "M1 불일치 21686f/kb2/4/5.val[0]: 원본 '3d0ad7a3703deabf' != Rust '3c0ad7a3703deabf'"
   },
@@ -5014,6 +5682,10 @@
   {
     "name": "21b9de/kb2/0/1/count",
     "first_difference": "M1 불일치 21b9de/kb2/0/1.count: 원본 10 != Rust 11"
+  },
+  {
+    "name": "21b9de/kb2/0/1/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/0/1.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21b9de/kb2/0/1/val",
@@ -5028,6 +5700,10 @@
     "first_difference": "M1 불일치 21b9de/kb2/0/2.count: 원본 4 != Rust 5"
   },
   {
+    "name": "21b9de/kb2/0/2/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/0/2.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/0/2/val",
     "first_difference": "M1 불일치 21b9de/kb2/0/2.val[0]: 원본 '878787878787c73f' != Rust '868787878787c73f'"
   },
@@ -5038,6 +5714,10 @@
   {
     "name": "21b9de/kb2/1/3/count",
     "first_difference": "M1 불일치 21b9de/kb2/1/3.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "21b9de/kb2/1/3/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/1/3.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21b9de/kb2/1/3/val",
@@ -5052,6 +5732,10 @@
     "first_difference": "M1 불일치 21b9de/kb2/1/4.count: 원본 5 != Rust 6"
   },
   {
+    "name": "21b9de/kb2/1/4/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/1/4.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/1/4/val",
     "first_difference": "M1 불일치 21b9de/kb2/1/4.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -5062,6 +5746,10 @@
   {
     "name": "21b9de/kb2/2/5/count",
     "first_difference": "M1 불일치 21b9de/kb2/2/5.count: 원본 14 != Rust 15"
+  },
+  {
+    "name": "21b9de/kb2/2/5/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/2/5.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21b9de/kb2/2/5/val",
@@ -5076,6 +5764,10 @@
     "first_difference": "M1 불일치 21b9de/kb2/2/6.count: 원본 2 != Rust 3"
   },
   {
+    "name": "21b9de/kb2/2/6/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/2/6.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/2/6/val",
     "first_difference": "M1 불일치 21b9de/kb2/2/6.val[0]: 원본 '8fc2f5285c8f1240' != Rust '8ec2f5285c8f1240'"
   },
@@ -5086,6 +5778,10 @@
   {
     "name": "21b9de/kb2/3/7/count",
     "first_difference": "M1 불일치 21b9de/kb2/3/7.count: 원본 14 != Rust 15"
+  },
+  {
+    "name": "21b9de/kb2/3/7/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/3/7.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21b9de/kb2/3/7/val",
@@ -5100,6 +5796,10 @@
     "first_difference": "M1 불일치 21b9de/kb2/3/8.count: 원본 2 != Rust 3"
   },
   {
+    "name": "21b9de/kb2/3/8/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/3/8.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/3/8/val",
     "first_difference": "M1 불일치 21b9de/kb2/3/8.val[0]: 원본 '48e17a14ae471140' != Rust '49e17a14ae471140'"
   },
@@ -5110,6 +5810,10 @@
   {
     "name": "21b9de/kb2/4/9/count",
     "first_difference": "M1 불일치 21b9de/kb2/4/9.count: 원본 4 != Rust 5"
+  },
+  {
+    "name": "21b9de/kb2/4/9/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/4/9.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21b9de/kb2/4/9/val",
@@ -5124,6 +5828,10 @@
     "first_difference": "M1 불일치 21b9de/kb2/4/10.count: 원본 3 != Rust 4"
   },
   {
+    "name": "21b9de/kb2/4/10/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/4/10.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/4/10/val",
     "first_difference": "M1 불일치 21b9de/kb2/4/10.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -5134,6 +5842,10 @@
   {
     "name": "21b9de/kb2/5/11/count",
     "first_difference": "M1 불일치 21b9de/kb2/5/11.count: 원본 11 != Rust 12"
+  },
+  {
+    "name": "21b9de/kb2/5/11/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/5/11.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21b9de/kb2/5/11/val",
@@ -5148,6 +5860,10 @@
     "first_difference": "M1 불일치 21b9de/kb2/5/12.count: 원본 3 != Rust 4"
   },
   {
+    "name": "21b9de/kb2/5/12/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/5/12.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/5/12/val",
     "first_difference": "M1 불일치 21b9de/kb2/5/12.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -5160,6 +5876,10 @@
     "first_difference": "M1 불일치 21b9de/kb2/21/13.count: 원본 1 != Rust 2"
   },
   {
+    "name": "21b9de/kb2/21/13/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/21/13.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/21/13/val",
     "first_difference": "M1 불일치 21b9de/kb2/21/13.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
@@ -5168,12 +5888,20 @@
     "first_difference": "M1 불일치 21b9de/kb2/24/14.count: 원본 1 != Rust 2"
   },
   {
+    "name": "21b9de/kb2/24/14/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/24/14.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/24/14/val",
     "first_difference": "M1 불일치 21b9de/kb2/24/14.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
   {
     "name": "21b9de/kb2/30/15/count",
     "first_difference": "M1 불일치 21b9de/kb2/30/15.count: 원본 5 != Rust 6"
+  },
+  {
+    "name": "21b9de/kb2/30/15/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/30/15.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21b9de/kb2/30/15/val",
@@ -5188,6 +5916,10 @@
     "first_difference": "M1 불일치 21b9de/kb2/32/16.count: 원본 37 != Rust 38"
   },
   {
+    "name": "21b9de/kb2/32/16/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/32/16.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/32/16/val",
     "first_difference": "M1 불일치 21b9de/kb2/32/16.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
   },
@@ -5200,12 +5932,20 @@
     "first_difference": "M1 불일치 21b9de/kb2/34/17.count: 원본 1 != Rust 2"
   },
   {
+    "name": "21b9de/kb2/34/17/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/34/17.scratch_clean: 원본 True != Rust False"
+  },
+  {
     "name": "21b9de/kb2/34/17/val",
     "first_difference": "M1 불일치 21b9de/kb2/34/17.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
   },
   {
     "name": "21b9de/kb2/36/18/count",
     "first_difference": "M1 불일치 21b9de/kb2/36/18.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "21b9de/kb2/36/18/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/36/18.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21b9de/kb2/36/18/val",
@@ -5218,6 +5958,10 @@
   {
     "name": "21b9de/kb2/37/19/count",
     "first_difference": "M1 불일치 21b9de/kb2/37/19.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "21b9de/kb2/37/19/scratch",
+    "first_difference": "M1 불일치 21b9de/kb2/37/19.scratch_clean: 원본 True != Rust False"
   },
   {
     "name": "21b9de/kb2/37/19/val",

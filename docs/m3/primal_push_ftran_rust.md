@@ -54,8 +54,38 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: WSL2 x86-64 Linux 6.6.87.2, Python 3.10, Rust stable(clippy 1.99). 계약 `9537aab`, adapter·재생 첫 동작 `0c87888`, M1 커널 재생 추가 `55b2bcf`. 원본 실행 **0회**(21a 정식 캡처와 M1-02j/02m 캡처 재사용). 증거 `bench/oracle/m3_push_ftran_rust/`(입력 `input.txt`·`m1_kernels.txt`, Rust `trace.txt`·`m1_trace.txt`, manifest, 비교·변조·변이·회귀 기록).
+- **push FTRAN 50호출**(`--compare` 종료0): 공급42·재계산8(arms28·retry10·interior12) 전부 커널 사건 200개(이름·enter/leave 순서, in/out count·목록·값·별칭, F1c8 spike)와 본체 반환(raw out·입력 후상태·별칭·spike·scratch)이 원본과 비트/정확 일치. 비교 필드 5,520개. 첫 실행부터 일치했다.
+
+| 분기 | 관측(push) | 비고 |
+|---|---:|---|
+| 입력 sparse / dense / count0 | 42 / 8 / 0 | dense는 재계산 |
+| L `21b9de` A1 / `214344` | 33 / 17 | |
+| R 없음 / dense / sparse 목록 / sparse→dense | 45 / 5 / 0 / 0 | eta 길이 3–4라 8-lane 본체 미실행 |
+| spike save0 / dense / sparse | 41 / 8 / 1 | save는 0·1뿐 |
+| U `2126cd` / `21686f` S1 / H2 | 17 / 3 / 30 | push의 희소 U는 모두 F_ec=0 |
+
+- **M1 원본 커널 186호출**(같은 `21686f`·`21b9de`를 `09d112`에서 부른 degen2·kb2 캡처, 해시 고정): `21686f` 167호출(S1 9·S2 29·H1 1·H2 128)과 `21b9de` A1 19호출(kb2)의 출력 순서·값이 비트 일치하고 scratch가 0으로 돌아온다. degen2 `21b9de` 695호출은 레벨 경로 A2라 adapter 범위 밖으로 세기만 했다. 이 커널 입력은 `09d112` 문맥이며 2207de 본체의 버퍼 교환은 포함하지 않는다.
+- **trace 변조**(`--self-test` 종료0): 1,493종 모두 첫 차이로 거부(사례 누락·순서·입력 해시0·빈 trace, 사례마다 출력 값 비트·count·입력 후상태 idx/val·별칭·spike count/값·scratch·미지값·오류 주입·커널 누락/이름/단계/입력 count/출력 값/순서, M1 사례마다 count·값·순서·scratch).
+- **Rust 소스 변이**(임시 Cargo 사본, 26종, `rust-mutations.json`): 첫 차이 거부 15, 재생 거부 2(`r-no-swap`·`u-sparse-always`: 캡처되지 않은 칸을 읽어 adapter가 중단, trace 없음), **생존 9**. 생존은 모두 이번 원본 자료에 나타나지 않는 경계다.
+
+| 생존 변이 | 판별에 필요한 원본 사례 |
+|---|---|
+| `sparse-l-boundary`(`<`→`≤`) | `count·F104 = m` 동률 입력 |
+| `l-dense-nonstrict`, `u-dense-no-drop`, `eta-no-drop`, `spike-nonstrict`, `kahn-keep-small` | `|x| ≤ ZERO`인 0 아닌 값(문턱 필터가 실제로 거르는 값) |
+| `eta-sequential` | 길이 ≥ 8(+peel)인 eta 레코드 |
+| `spike-unscaled` | save ∉ {0, 1} (자연은 1뿐이라 `v·1 = v`) |
+| `u-dense-scatter-prefix` | t 아래 비어 있지 않은 U 열(분해 직후 비어 있음, M1-02m P) — 동치 변이일 가능성 |
+
+- 계약 변경(확대): 첫 변이 실행(26종 중 생존 12)을 보고, 같은 커널의 기존 원본 캡처(M1-02j/02m)를 두 번째 재생으로 추가했다. 그 결과 `u-sparse-ascending`·`u-sparse-h-always`·`u-sparse-no-input-compaction`·`kahn-lifo`가 원본 차이로 거부됐다. push 50호출 비교 규칙은 바꾸지 않았다. 첫 실행 결과는 이 기록과 커밋 `55b2bcf` 이전 이력에 남는다. M1 재생의 scratch 검사는 처음 assert(재생 중단)로 넣었다가 출력 필드 `scratch_clean`으로 바꿔 비교기가 첫 차이로 거부하게 했다.
+- **회귀**([요약](../../bench/oracle/m3_push_ftran_rust/regression/summary.txt) 14명령 종료0): 21a `push_ftran_check.py --controls/--acceptance/--self-test`, `push_round` 재생·비교, `push_chain` 재생·`push_step_chain_rust.py --compare`, `push_ftran` 재생·비교·self-test, py_compile, `git diff --check`, `cargo test --release --workspace` **136통과·0실패·기존 ignored12**, `cargo clippy --workspace --all-targets -- -D warnings` 0. clippy 첫 실행이 복합 대입·`as_chunks` 6건으로 실패해 비트 동일 형태로 고친 뒤 재생·변이·workspace를 다시 실행했다.
+- 실행하지 않은 검사: solver·확장·Python 경로를 바꾸지 않아(`lib.rs`에 모듈 등록만) 확장 설치·pytest·Netlib·P3는 제외했다. 원본 캡처 0회.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **구현 완료(계약 범위)**. 동등성: push 자연 50호출의 한 RHS FTRAN 커널 경계·raw·입력 후상태·별칭·spike·scratch가 원본과 **비트 일치(통과)**. `21686f` 네 경로와 `21b9de` A1은 M1 원본 186호출에서도 통과.
+- 미검증(C 근거 구현, 원본 비교 0회): sparse 목록 R·sparse→dense R, count0 조기 종료, L 출력0, 8-lane eta 본체, `ZERO` 경계 값 처리(위 생존 변이), save ∉ {0,1}, 힙이 out idx에 남기는 칸(미지값으로 둠). 미구현(오류 반환): `21b9de` A2·B, `21574d`(k5/p6). work 누적은 비교하지 않았다.
+- 범위 밖: M1 `Lu`와의 통합(이 adapter는 원본 배열 표현을 직접 받는다), factor 생성·갱신, BTRAN 21c/21d, 지연 LU·재분해 21e/21f, solver 경로 연결, 루프22, x87, P3.
+- 다음: **M3-04c-21c**(지원 BTRAN 수치 오라클). 이 작업의 경계 미관측 분기를 원본으로 닫으려면 별도 오라클(ZERO 경계·긴 eta·sparse R가 나오는 모델 탐색 또는 원본 수치 명령을 직접 부르는 합성 경계)이 필요하며 21e 착수 전 후보로 둔다.
+- 재실행: `python3 tools/push_ftran_rust.py --write` → `cargo test -p rsolver-lp --test push_ftran` → `python3 tools/push_ftran_rust.py --compare` / `--self-test` / `--compare --mutate-rust <새 경로>`.
+- 교훈: `docs/lessons/original.md`(2207de 버퍼 교환과 입력 후상태, F_ec=0 희소 U는 H2), `tooling.md`(미캡처 칸을 미지값으로 두는 재생, 첫 일치 뒤 변이로 판별력 확인·기존 커널 캡처 재사용).

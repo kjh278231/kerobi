@@ -241,7 +241,7 @@ fn eta_dot(terms: &[f64], peel: bool) -> f64 {
     }
     let body = terms.len() - ((terms.len() - p) & 7);
     let mut a = [terms[..p].iter().fold(0.0, |a, &t| a + t), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-    for c in terms[p..body].chunks_exact(8) {
+    for c in terms[p..body].as_chunks::<8>().0 {
         for q in 0..8 {
             a[q] += c[q];
         }
@@ -536,7 +536,7 @@ pub fn l_sparse(f: &FtranFactor, s: &mut FtranState) -> Result<(), FtranError> {
             let i = f.lrow[e];
             s.mark[i] -= 1;
             if big {
-                s.vals[i] = -(f.lval[e] * v) + s.vals[i];
+                s.vals[i] += -(f.lval[e] * v);
             }
             if s.mark[i] == 0 {
                 s.idx[oi].set(q, i as i32);
@@ -674,7 +674,7 @@ pub fn u_sparse(f: &FtranFactor, s: &mut FtranState) {
                     let col = &f.ucol[i];
                     b8 += col.rows.len() - col.tail;
                     for (&r, &u) in col.rows[..col.tail].iter().zip(&col.vals[..col.tail]) {
-                        s.vals[r] = s.vals[r] - u * y;
+                        s.vals[r] -= u * y;
                     }
                 }
             }
@@ -693,7 +693,7 @@ pub fn u_sparse(f: &FtranFactor, s: &mut FtranState) {
                             npre += 1;
                         }
                         s.mark[r] = 1;
-                        s.vals[r] = -(u * y) + s.vals[r];
+                        s.vals[r] += -(u * y);
                     }
                 }
                 for k in 0..npre {
@@ -714,7 +714,7 @@ pub fn u_sparse(f: &FtranFactor, s: &mut FtranState) {
                 for &(i, y) in &tail_out {
                     let col = &f.ucol[i];
                     for (&r, &u) in col.rows[col.tail..].iter().zip(&col.vals[col.tail..]) {
-                        s.vals[r] = -(u * y) + s.vals[r];
+                        s.vals[r] += -(u * y);
                     }
                 }
                 for &r in &f.f0 {
@@ -746,7 +746,7 @@ pub fn u_sparse(f: &FtranFactor, s: &mut FtranState) {
             emit(s, i, y, &mut out);
             let col = &f.ucol[i];
             for (&r, &u) in col.rows.iter().zip(&col.vals) {
-                s.vals[r] = s.vals[r] - u * y;
+                s.vals[r] -= u * y;
             }
         }
         s.vals[i] = 0.0;

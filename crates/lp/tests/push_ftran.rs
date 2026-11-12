@@ -241,9 +241,8 @@ fn m1_kernel_trace() {
         };
         let (out, _) = s.snapshot(m);
         let scratch = s.mark.iter().all(|&x| x == 0) && s.vals.iter().all(|x| x.to_bits() == 0);
-        assert!(scratch, "scratch left non-zero {case}");
         output.push(format!(
-            "{case};{{\"error\":{error},\"path\":\"{}\",\"output\":{{\"count\":{},\"idx\":{},\"val\":{}}}}}",
+            "{case};{{\"error\":{error},\"path\":\"{}\",\"output\":{{\"count\":{},\"idx\":{},\"val\":{},\"scratch_clean\":{scratch}}}}}",
             if kernel == "21686f" { s.branches.u } else { s.branches.l },
             opt_i(&out.count),
             out.idx.as_ref().map_or("null".into(), |i| list(i, opt_i)),

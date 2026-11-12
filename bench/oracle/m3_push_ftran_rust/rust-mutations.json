@@ -1,0 +1,125 @@
+[
+  {
+    "name": "relabel-skip",
+    "push": "불일치 arms/1.kernels[0].input.idx[0]: 원본 21 != Rust 13",
+    "result": "rejected"
+  },
+  {
+    "name": "gather-identity",
+    "push": "불일치 arms/19.kernels[0].input.val[0]: 원본 '0000000000000040' != Rust '0000009af2d79abe'",
+    "result": "rejected"
+  },
+  {
+    "name": "dense-l-always",
+    "push": "불일치 arms/1.kernels[0].kernel: 원본 '21b9de' != Rust '214344'",
+    "result": "rejected"
+  },
+  {
+    "name": "sparse-l-boundary",
+    "result": "survived"
+  },
+  {
+    "name": "l-dense-skip-d8",
+    "push": "불일치 arms/19.kernels[1].output.val[18]: 원본 '8affffffffbf5740' != Rust '0000000000005940'",
+    "result": "rejected"
+  },
+  {
+    "name": "l-dense-nonstrict",
+    "result": "survived"
+  },
+  {
+    "name": "l-dense-plus",
+    "push": "불일치 arms/19.kernels[1].output.val[18]: 원본 '8affffffffbf5740' != Rust '7600000000405a40'",
+    "result": "rejected"
+  },
+  {
+    "name": "kahn-lifo",
+    "push": "불일치 arms/17.kernels[1].output.count: 원본 2 != Rust 1",
+    "m1": "M1 불일치 21b9de/kb2/0/1.count: 원본 10 != Rust 4",
+    "result": "rejected"
+  },
+  {
+    "name": "kahn-keep-small",
+    "result": "survived"
+  },
+  {
+    "name": "r-no-swap",
+    "result": "build-or-test-failed",
+    "log": "   Compiling rsolver-lp v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-21b/target/m3_ftran_mutations/crates/lp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.52s\n     Running tests/push_ftran.rs (target/debug/deps/push_ftran-84e9dcb8735c7a78)\n\nrunning 2 tests\ntest ftran_trace ... FAILED\ntest m1_kernel_trace ... ok\n\nfailures:\n\n---- ftran_trace stdout ----\n\nthread 'ftran_trace' (426690) panicked at crates/lp/src/crossover_ftran.rs:85:9:\nread of an unknown cell 7\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    ftran_trace\n\ntest result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s\n\nerror: test failed, to rerun pass `-p rsolver-lp --test push_ftran`\n"
+  },
+  {
+    "name": "eta-sequential",
+    "result": "survived"
+  },
+  {
+    "name": "eta-no-drop",
+    "result": "survived"
+  },
+  {
+    "name": "eta-reverse",
+    "push": "불일치 interior/11.kernels[2].input.val[4]: 원본 'e6c1071f7cf0d1bf' != Rust '32f8e0830f3ee4bf'",
+    "result": "rejected"
+  },
+  {
+    "name": "spike-nonstrict",
+    "result": "survived"
+  },
+  {
+    "name": "spike-unscaled",
+    "result": "survived"
+  },
+  {
+    "name": "spike-dense-unscaled",
+    "push": "불일치 interior/3.kernels[2].spike.values[0]: 원본 '000000000000e8bf' != Rust '000000000000e83f'",
+    "result": "rejected"
+  },
+  {
+    "name": "u-dense-always",
+    "push": "불일치 arms/1.kernels[2].kernel: 원본 '21686f' != Rust '2126cd'",
+    "result": "rejected"
+  },
+  {
+    "name": "u-sparse-always",
+    "result": "build-or-test-failed",
+    "log": "   Compiling rsolver-lp v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-21b/target/m3_ftran_mutations/crates/lp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.50s\n     Running tests/push_ftran.rs (target/debug/deps/push_ftran-84e9dcb8735c7a78)\n\nrunning 2 tests\ntest ftran_trace ... FAILED\ntest m1_kernel_trace ... ok\n\nfailures:\n\n---- ftran_trace stdout ----\n\nthread 'ftran_trace' (429075) panicked at crates/lp/src/crossover_ftran.rs:85:9:\nread of an unknown cell 0\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n\nfailures:\n    ftran_trace\n\ntest result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s\n\nerror: test failed, to rerun pass `-p rsolver-lp --test push_ftran`\n"
+  },
+  {
+    "name": "u-dense-no-drop",
+    "result": "survived"
+  },
+  {
+    "name": "u-dense-scatter-prefix",
+    "result": "survived"
+  },
+  {
+    "name": "u-dense-multiply",
+    "push": "불일치 arms/19.kernels[3].output.val[4]: 원본 '5807000000001440' != Rust '24b9bc9af2d76a3e'",
+    "result": "rejected"
+  },
+  {
+    "name": "u-sparse-ascending",
+    "m1": "M1 불일치 21686f/degen2/11/12.idx[2]: 원본 295 != Rust 7",
+    "result": "rejected"
+  },
+  {
+    "name": "u-sparse-direct-nodiv",
+    "push": "불일치 arms/11.kernels[3].output.val[0]: 원본 '000000000000f0bf' != Rust '000000000000f03f'",
+    "m1": "M1 불일치 21686f/degen2/22/23.val[9]: 원본 '000000000000f0bf' != Rust '000000000000f03f'",
+    "result": "rejected"
+  },
+  {
+    "name": "u-sparse-no-input-compaction",
+    "m1": "M1 불일치 21686f/degen2/9/10.scratch_clean: 원본 True != Rust False",
+    "result": "rejected"
+  },
+  {
+    "name": "u-sparse-h-always",
+    "m1": "M1 불일치 21686f/degen2/8/9.idx[14]: 원본 239 != Rust 50",
+    "result": "rejected"
+  },
+  {
+    "name": "input-swap-dense",
+    "push": "불일치 arms/19.kernels[0].alias.in.idx: 원본 'out' != Rust 'in'",
+    "result": "rejected"
+  }
+]

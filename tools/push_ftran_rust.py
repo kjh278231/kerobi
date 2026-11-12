@@ -173,7 +173,7 @@ def m1_cases():
                             skipped[kernel + ' A2'] += 1; continue
                         body = [str(e4), str(x128)] + ints([x - beg[0] for x in beg]) + ints(L['row']) + hexes([le(v) for v in L['val']])
                     o = c['out']
-                    out.append((name, ' '.join(head + body), dict(count=o['nnz'], idx=o['idx'], val=[le(v) for v in o['val']])))
+                    out.append((name, ' '.join(head + body), dict(count=o['nnz'], idx=o['idx'], val=[le(v) for v in o['val']], scratch_clean=True)))
     return out, dict(skipped)
 
 
@@ -341,7 +341,7 @@ def m1_self_test(txt, want, header):
     reject('m1-input-hash-zero', [SCHEMA + '-m1 ' + '0' * 64] + lines[1:])
     for i in range(1, len(lines)):
         name, body = lines[i].split(';', 1); g = json.loads(body); o = g['output']
-        tampers = [('count', lambda o: o.__setitem__('count', o['count'] + 1))]
+        tampers = [('count', lambda o: o.__setitem__('count', o['count'] + 1)), ('scratch', lambda o: o.__setitem__('scratch_clean', False))]
         if o['val']:
             tampers.append(('val', lambda o: o['val'].__setitem__(0, flip(o['val'][0]))))
         if len(o['idx']) > 1 and o['idx'][0] != o['idx'][1]:
