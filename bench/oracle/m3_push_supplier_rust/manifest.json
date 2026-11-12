@@ -22,7 +22,7 @@
   "bench/oracle/m3_push_supplier/manifest.json": "a3870dd96de069482420677fb9c23fc719cd33e3a70568be1f6a0fae01bbc995",
   "bench/oracle/m3_push_supplier_rust/chain-check.log": "32c9a2014238433cf97ffffe3a1b31964d2a11acabfa87abd468b35d3617281f",
   "bench/oracle/m3_push_supplier_rust/chain-compare.json": "8a877f9441aaa7ec9df77c70696afdb8eb2d564af2a2296fbbbeadd425d85eca",
-  "bench/oracle/m3_push_supplier_rust/chain-rust.log": "4336742b58cb82fa0df6e9f65b6c23fe19dbe7c21e760685f7f40d40aa506c7c",
+  "bench/oracle/m3_push_supplier_rust/chain-rust.log": "9dd8aafd08901b64bbefcc07d4317bb8a6ef2240bdf2305021851b2ad2830f28",
   "bench/oracle/m3_push_supplier_rust/chain-self-test.log": "3f532f7f9c801054fcc0d7e832eac6f981db98b916552723cb32bc36c15a2509",
   "bench/oracle/m3_push_supplier_rust/compare.json": "1ae16c539bf96c0d54dc3b98fbd70de0553678f9a6b62a8a609cc32382883ac0",
   "bench/oracle/m3_push_supplier_rust/input.txt": "f7384e98fb931877ca9eb8b6b8426a47cf7d4a684ebb30e98e3f3b6fd47c6495",
@@ -33,6 +33,6 @@
   "bench/oracle/m3_push_supplier_rust/rust-trace.txt": "c4e2fde0ecaad26f6749bf96deb0f78c35cd644c846ea87025b9e7eef5ee2250",
   "bench/oracle/m3_push_supplier_rust/self-test.json": "e8a0558156ad10c5218d0ff51c5790c81ad40c6c749095d549812df9662898ca",
   "bench/oracle/m3_push_supplier_rust/validation.json": "a1d27655cde7495aa769413674e2350acfa29546b4f10eaf8c4a8774877788eb",
-  "bench/oracle/m3_push_supplier_rust/workspace-tests.log": "9062342c201e011b4b5685f8fd2ec85a19d2b24ab0b2c3535d0331cabdd014e1"
+  "bench/oracle/m3_push_supplier_rust/workspace-tests.log": "3004f5f75ef6ae3fd3c83f072aee43f12905f1d22d24afb3771e40be996a3c10"
  }
 }
