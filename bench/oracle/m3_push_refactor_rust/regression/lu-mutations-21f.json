@@ -1,0 +1,121 @@
+[
+  {
+    "name": "ft-skipped(매번 재분해 대체)",
+    "result": "rejected",
+    "first": "79개 연산 불일치: 첫 interior#80 U.leave.U.col[6].rows: 길이 7 != 0"
+  },
+  {
+    "name": "roweta-always(무조건 행 eta)",
+    "result": "rejected",
+    "first": "59개 연산 불일치: 첫 interior#80 U.roweta: 형식 None != 6"
+  },
+  {
+    "name": "roweta-never",
+    "result": "rejected",
+    "first": "79개 연산 불일치: 첫 interior#105 U.roweta: 형식 7 != None"
+  },
+  {
+    "name": "local40-first",
+    "result": "rejected",
+    "first": "42개 연산 불일치: 첫 interior#80 U.leave.scalars.x100: 원본 7 != Rust 8"
+  },
+  {
+    "name": "local40-last",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "promote-never",
+    "result": "rejected",
+    "first": "62개 연산 불일치: 첫 adlittle#245 U.leave.U.col_bound[54]: 원본 49 != Rust 50"
+  },
+  {
+    "name": "local80-3-0",
+    "result": "rejected",
+    "first": "59개 연산 불일치: 첫 adlittle#166 U.leave.U.col[42].rows[2]: 원본 27 != Rust 43"
+  },
+  {
+    "name": "local80-1-2",
+    "result": "rejected",
+    "first": "77개 연산 불일치: 첫 interior#105 U.leave.U.col[6].rows[0]: 원본 0 != Rust 7"
+  },
+  {
+    "name": "cycle-strict",
+    "result": "replay-timeout"
+  },
+  {
+    "name": "rotate-none",
+    "result": "rejected",
+    "first": "36개 연산 불일치: 첫 interior#105 U.leave.perm.x28[7]: 원본 7 != Rust 6"
+  },
+  {
+    "name": "pool-extra",
+    "result": "rejected",
+    "first": "79개 연산 불일치: 첫 interior#80 U.leave.U.row_end[1]: 원본 22 != Rust 20"
+  },
+  {
+    "name": "row-cap",
+    "result": "rejected",
+    "first": "43개 연산 불일치: 첫 interior#212 U.leave.U.row_end[3]: 원본 49 != Rust 64"
+  },
+  {
+    "name": "column-base",
+    "result": "rejected",
+    "first": "79개 연산 불일치: 첫 interior#80 U.leave.U.col[6].rows[6]: 원본 0 != Rust 6"
+  },
+  {
+    "name": "tail-prefix",
+    "result": "rejected",
+    "first": "28개 연산 불일치: 첫 interior#80 U.leave.U.col_bound[6]: 원본 5 != Rust 6"
+  },
+  {
+    "name": "oldest-overwrite",
+    "result": "rejected",
+    "first": "64개 연산 불일치: 첫 interior#237 U.leave.eta_oldest[5]: 원본 0 != Rust 1"
+  },
+  {
+    "name": "dot-sequential",
+    "result": "rejected",
+    "first": "1개 연산 불일치: 첫 adlittle#512 U.leave.diag[42]: 원본 '2e4ae32313e8edbf' != Rust '304ae32313e8edbf'"
+  },
+  {
+    "name": "dot-peel",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "unlist-mark",
+    "result": "rejected",
+    "first": "79개 연산 불일치: 첫 interior#80 U.leave.prefix.flag[6]: 원본 -2 != Rust -1"
+  },
+  {
+    "name": "xe8-never",
+    "result": "rejected",
+    "first": "20개 연산 불일치: 첫 adlittle#363 U.leave.scalars.xe8: 원본 50 != Rust 43"
+  },
+  {
+    "name": "renumber-n",
+    "result": "rejected",
+    "first": "15개 연산 불일치: 첫 arms#2 R.header[0]: 원본 32 != Rust 58"
+  },
+  {
+    "name": "leave-o",
+    "result": "rejected",
+    "first": "13개 연산 불일치: 첫 arms#2 R.leave: 원본 2 != Rust 14"
+  },
+  {
+    "name": "vstat-none",
+    "result": "rejected",
+    "first": "15개 연산 불일치: 첫 arms#2 R.vstat[5]: 원본 1 != Rust 17"
+  },
+  {
+    "name": "wrapper-clear-none",
+    "result": "rejected",
+    "first": "33개 연산 불일치: 첫 interior#132 F.enter.spike.count: 원본 0 != Rust 8"
+  },
+  {
+    "name": "bucket-not-shared",
+    "result": "rejected",
+    "first": "6개 연산 불일치: 첫 capri#666 U.enter.Lrow.bucket[0]: 원본 2 != Rust 0"
+  }
+]
