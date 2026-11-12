@@ -18,14 +18,16 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import primal_push_decision_check as dc  # noqa: E402  캡처 검사·로더(독립 3회·대조군·비간섭 재검사)
+import push_chain_oracle as chain  # noqa: E402  M3-04c-11 캡처 검사(독립 3회·출처·목표 태그)
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / 'bench/oracle/m3_push_step_chain/input.txt'
 TRACE = ROOT / 'target/m3_push_step_chain/trace.txt'
 RUST = ROOT / 'crates/lp/src/crossover.rs'
 KIND = {'flip': ('Flip', 'Reject'), 'pivot': ('Pivot',), 'defer': ('Defer',)}
-# 캡처에서 세어 계약 §4에 고정한 기대 집계
-EXPECT = dict(flip=45, pivot=109, defer=12, refactor_skip=6)
+# 캡처에서 세어 계약 §4에 고정한 기대 집계. 04c-10 사례(flip 45·pivot 109·보류 12·재분해 6)에
+# M3-04c-11 shift·resolve 두 순서(flip 25·pivot 39·보류 6·재분해 0, docs/m3/primal_push_chain_oracle.md §6)를 더한 값
+EXPECT = dict(flip=70, pivot=148, defer=18, refactor_skip=6)
 
 
 def i64(h):
@@ -134,6 +136,15 @@ def collect():
     lines, steps, stats = [], [], dict(segments=0, refactor_skip=0, first_leave_input=0)
     for label, rec in dc.load_all(manifest, arms=True, violated=True, retry=True, recall=True):
         ln, st, s = project(label, rec)
+        lines += ln
+        steps += st
+        for key in stats:
+            stats[key] += s[key]
+    m = json.loads((ROOT / chain.D / 'manifest.json').read_text())
+    cases = chain.all_cases()
+    chain.check(cases, m)  # M3-04c-11: 재현성·출처·목표 태그를 통과한 첫 실행만 쓴다
+    for (lp, kind), recs in cases.items():
+        ln, st, s = project(f'chain-{lp}-{kind}', recs[0])
         lines += ln
         steps += st
         for key in stats:

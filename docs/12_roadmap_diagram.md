@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M3-04c-11 push 한 단계 연쇄의 생존 경계(lb≠0·위반 해소·자유 열 flip·F 행 루프)를 원본 캡처로 확인해 Rust 변이 거부를 15→21로 늘렸다(Rust 변경 없음, 236단계 비트 일치). Frida는 프리로드 해석으로 이 컴퓨터에서도 돈다. 남은 것은 push 루프 본체(M3-04c-12)와 dual push(M3-04d)다. [계약과 결과](m3/primal_push_chain_oracle.md).
+
 M3-04c-10 primal push 한 단계의 선택·적용을 Rust `push_pick`·`push_apply`로 연결해 범위 한정 완료했다. 자연 캡처 166단계를 연쇄 재생해 비트 일치했다. 남은 것은 lb≠0·위반 해소 원본 캡처(M3-04c-11, Frida 필요), push 루프 본체(공급자·factor 갱신 판단·재분해, M3-04c-12)와 dual push(M3-04d)다. [계약과 결과](m3/primal_push_step_chain.md).
 
 M3-04c-9 `054eef`·`056973` 작은 pivot 재진입을 원본 합성 3회(231사례, 바이트 동일)와 Rust 재생으로 범위 한정 완료했다. 세 ratio(`055f68`·`054eef`·`056973`) 모두 재진입을 원본대로 돌고 Rust의 `Reentry` 거부가 없어졌다. 남은 것은 push 루프 연결과 dual push(M3-04d)다. [계약과 결과](m3/primal_push_violated_reentry.md).
