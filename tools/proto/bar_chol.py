@@ -11,9 +11,9 @@ Order of operations (2d8ee5 for one block c of width w, rows R = F+0xb0[c], len 
 
 usage: python tools/proto/bar_chol.py <oracle.jsonl.gz> [iteration ...]   (MKL is called through libgurobi130.so)
 """
-import ctypes, gzip, json, math, sys
+import ctypes, gzip, json, math, os, sys
 
-LIB = "/home/sds/workspace/gurobi-sandbox/.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so"
+LIB = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so')
 _lib = ctypes.CDLL(LIB)
 _BASE = next(int(ln.split("-")[0], 16) for ln in open("/proc/self/maps")
              if "libgurobi130.so" in ln and ln.split()[2] == "00000000")

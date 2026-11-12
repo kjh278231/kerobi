@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 mkdir -p "$out"
 ms="$*"
 [ -z "$ms" ] && ms=$(.venv/bin/python -I -c "import sys; sys.path.insert(0, 'tools'); from parity import instances; print(' '.join(n for n, p in instances().items() if p.parent.name == 'miplib'))" 2>/dev/null \
-  || /home/sds/workspace/gurobi-sandbox/.venv/bin/python -I -c "import sys; sys.path.insert(0, 'tools'); from parity import instances; print(' '.join(n for n, p in instances().items() if p.parent.name == 'miplib'))")
+  || ../.venv/bin/python -I -c "import sys; sys.path.insert(0, 'tools'); from parity import instances; print(' '.join(n for n, p in instances().items() if p.parent.name == 'miplib'))")
 for m in $ms; do
   for f in ${FNS:-3e5363 3ff744 57627e 578fd2 374521 5431ee}; do
     [ -s "$out/${m}_$f.json" ] && continue

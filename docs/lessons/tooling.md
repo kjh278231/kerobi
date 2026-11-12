@@ -53,7 +53,7 @@
 
 - **4바이트 함수(`6edd89`: `mov %esi,0x60(%rdi); ret`)는 `Interceptor.attach`가 "unable to intercept function"으로 실패하고, 그 뒤의 훅 설치도 멈춘다.** callgraph의 호출 지점마다 함수형 probe를 붙여 인자 레지스터를 읽는다. 작은 setter는 인라인 복사본이 있을 수 있으니, 그 값을 읽는 쪽과 대조하는 사슬 검사를 함께 둔다. M2-06g는 η 사슬이 어긋나 `62f909`의 인라인 쓰기 5곳을 찾았다. (M2-06g, [§2.5](../m2/mip_sb_read.md#25-ηsb-반복-한도))
 - **call 명령에 probe를 붙이면 재배치된 call이 트램펄린 주소를 반환 주소로 넣어, 피호출자 훅의 `returnAddress`가 엉뚱한 값이 된다.** `0x54287f`에 붙였더니 `6ee5d1`의 반환 주소가 `0x1c5a3840`처럼 나왔다(실패한 접근). call 앞의 명령에 붙이되, 읽을 레지스터가 그 사이에 바뀌지 않고 재배치 창(5바이트)에 점프 대상이 없는 곳을 고른다(`0x5421a0`은 점프 대상이라 `0x54219d` 대신 `0x542199`). (M2-06g, [§6](../m2/mip_sb_read.md#6-실행-결과))
-- **캡처 도구의 Frida require 경로(`/home/sds/.npm/_npx/.../frida`)는 원래 캡처 컴퓨터 전용이다.** `coco0912` 컴퓨터에는 그 경로도 venv frida 모듈도 없어 새 자연 캡처를 못 한다. ctypes 직접 호출 하네스(04c-5·04c-9)는 Frida 없이 돈다. 새 자연 캡처가 필요하면 착수 전에 `ls`로 확인하고 오라클 작업으로 분리한다. (M3-04c-10)
+- **캡처 도구의 Frida require 경로(`/home/sds/.npm/_npx/.../frida`)는 원래 캡처 컴퓨터 전용이지만, 도구를 고치면 안 된다.** 캡처는 도구 자기 해시(`hash(__filename)`)를 기록하고 검사기 약 40개가 manifest·캡처의 `tool_sha256`을 현재 파일 해시와 대조한다. 대신 `tools/gurun.sh`가 `NODE_OPTIONS=--require tools/frida_resolve.cjs`로 그 경로를 `FRIDA_NODE` 또는 `~/.local/share/frida-node/node_modules/frida`로 돌린다. 이렇게 고정 도구 `primal_push_recall_capture.js`로 재캡처한 04c-8 feasible primal이 저장 캡처와 사건·해시·출력까지 같았다. 캡처 도구는 `node`를 직접 부르지 말고 `tools/gurun.sh node ...`로 실행한다. (M3-04c-10 발견, shared 정리)
 
 ## 디컴파일 조회
 
