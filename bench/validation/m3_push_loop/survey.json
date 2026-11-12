@@ -1,0 +1,1154 @@
+{
+  "task": "M3-04c-12",
+  "kind": "stored-capture-survey",
+  "new_original_runs": 0,
+  "implementation_equivalence": "unverified",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "sources": {
+    "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb",
+    "../re/decomp/c/001c5310_PRIVATE000000000025615c.c": "acbf6b5539de8967b02005efd5bb3581e1487d56b2881508ad4309a4305793bd",
+    "../re/decomp/c/000f15c0_PRIVATE000000000005b257.c": "f4bc6293c44b0374816f05a8b09318a046fccef96db8e0b81c7ae2ced0e77183",
+    "../re/decomp/c/00115ed0_PRIVATE0000000000089f61.c": "26c8052b00e069c4f079ca3014c1c102d68695406e107c2d0ae4809aa4b15865",
+    "../re/decomp/c/001205c0_PRIVATE000000000009c062.c": "de84345eaf29f5ab10c2ee7e44c46d0b8b475770139f6047348e8ac320bc9569",
+    "../re/decomp/c/00120260_PRIVATE000000000009bae6.c": "bfd0a54f5cd110343561dc95b7c20872345f1135e6894b64d51052e170147065"
+  },
+  "survey_tool_sha256": "e6ecdcc35b78cad148ad966bd5cc75904675e37c4548b352702729859885ce66",
+  "totals": {
+    "datasets": 18,
+    "supplied": 236,
+    "exhausted": 38,
+    "defer": 18,
+    "factor_calls": 73,
+    "requests": {
+      "0": 26,
+      "10": 47
+    },
+    "returns": {
+      "0": 73
+    },
+    "header_reordered": 33,
+    "dense_outputs": 0,
+    "batch_capacities": [
+      0
+    ]
+  },
+  "datasets": [
+    {
+      "label": "04b-1/primal",
+      "events": 87,
+      "events_sha256": "18d594f024ca406c9ee158ed1e33bffa379a5d64dee1dc81fd600e0d407c9007",
+      "dimensions": [
+        8,
+        12
+      ],
+      "supplied": 9,
+      "exhausted": 2,
+      "support_modes": {
+        "0": 9,
+        "1": 2
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 0,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "initial",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 1,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 2,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 3,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 5,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-candidate",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 6,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 7,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 8,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 9,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "04b-1/dual",
+      "events": 85,
+      "events_sha256": "0b4a4db56d17347d4b8ee64242da99207f13887b21e1db2d35f5e18e02cf189a",
+      "dimensions": [
+        8,
+        12
+      ],
+      "supplied": 9,
+      "exhausted": 2,
+      "support_modes": {
+        "0": 9,
+        "1": 2
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 1,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 2,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 3,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 5,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-candidate",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 6,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 7,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 8,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 9,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "face5-primal",
+      "events": 109,
+      "events_sha256": "241e9d1c1dee6b891bd8e102da678fef57d914ca4daf8969de7206afb5516486",
+      "dimensions": [
+        8,
+        12
+      ],
+      "supplied": 11,
+      "exhausted": 2,
+      "support_modes": {
+        "0": 11,
+        "1": 2
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 0,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "initial",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 1,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 2,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 3,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 4,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-candidate",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 5,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 6,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 7,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 8,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 9,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-candidate",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 10,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 11,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 11,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "face5-dual",
+      "events": 107,
+      "events_sha256": "42365441ec69663eebeef02f10c084f321f9dc04c669506c658c868721b486f0",
+      "dimensions": [
+        8,
+        12
+      ],
+      "supplied": 11,
+      "exhausted": 2,
+      "support_modes": {
+        "0": 11,
+        "1": 2
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 1,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 2,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 3,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 4,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-candidate",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 5,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 6,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 7,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 8,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 9,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-candidate",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 10,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 11,
+          "request": 0,
+          "ret": 0,
+          "request_after": 0,
+          "context": "after-candidate",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 11,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "arms-primal",
+      "events": 187,
+      "events_sha256": "c5f467e36ff7566253ad8ad1673f52baf7fefb978e60f394378cfef975a93209",
+      "dimensions": [
+        25,
+        42
+      ],
+      "supplied": 25,
+      "exhausted": 4,
+      "support_modes": {
+        "0": 1,
+        "1": 28
+      },
+      "max_failures": 3,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 3,
+      "factors": [
+        {
+          "call": 1,
+          "step": 0,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "initial",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 18,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 24,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 25,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        }
+      ],
+      "remaining": [
+        1
+      ]
+    },
+    {
+      "label": "arms-dual",
+      "events": 185,
+      "events_sha256": "444c290fda1a30afa6105b92c6f3262083ad096af1a7a4951d32cca06a891e1b",
+      "dimensions": [
+        25,
+        42
+      ],
+      "supplied": 25,
+      "exhausted": 4,
+      "support_modes": {
+        "0": 1,
+        "1": 28
+      },
+      "max_failures": 3,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 3,
+      "factors": [
+        {
+          "call": 1,
+          "step": 18,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 24,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 25,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        }
+      ],
+      "remaining": [
+        1
+      ]
+    },
+    {
+      "label": "violated-primal",
+      "events": 145,
+      "events_sha256": "5f71679dfda1ed36cda6e25b7c5c4b1a832ff2f3764836b6e0a8df5bd2178035",
+      "dimensions": [
+        25,
+        45
+      ],
+      "supplied": 19,
+      "exhausted": 2,
+      "support_modes": {
+        "1": 21
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 0,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "initial",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 18,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 19,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "violated-dual",
+      "events": 143,
+      "events_sha256": "fd69139e2bf34add95fdf656c79d88714e839583a737389574d6f9bbd58c3add",
+      "dimensions": [
+        25,
+        45
+      ],
+      "supplied": 19,
+      "exhausted": 2,
+      "support_modes": {
+        "1": 21
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 18,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 19,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "retry-primal",
+      "events": 80,
+      "events_sha256": "586634362cd2879a1717383359f69eaad3aa98cc709c15259530691ecd0b4214",
+      "dimensions": [
+        10,
+        18
+      ],
+      "supplied": 8,
+      "exhausted": 3,
+      "support_modes": {
+        "0": 2,
+        "1": 9
+      },
+      "max_failures": 3,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 3,
+      "factors": [
+        {
+          "call": 1,
+          "step": 0,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "initial",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 6,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 7,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        }
+      ],
+      "remaining": [
+        1
+      ]
+    },
+    {
+      "label": "retry-dual",
+      "events": 78,
+      "events_sha256": "77098e0a4c0eab1d2675284e4e8524874e3b66ee9338a49dca7d9d0b3a64c100",
+      "dimensions": [
+        10,
+        18
+      ],
+      "supplied": 8,
+      "exhausted": 3,
+      "support_modes": {
+        "0": 2,
+        "1": 9
+      },
+      "max_failures": 3,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 3,
+      "factors": [
+        {
+          "call": 1,
+          "step": 6,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 7,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        }
+      ],
+      "remaining": [
+        1
+      ]
+    },
+    {
+      "label": "recall-feasible-primal",
+      "events": 42,
+      "events_sha256": "656101c912edd5a004c72db920476b52c2072b5781562e91abbbbcf5f29aa638",
+      "dimensions": [
+        4,
+        8
+      ],
+      "supplied": 4,
+      "exhausted": 1,
+      "support_modes": {
+        "1": 5
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 0,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "initial",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 4,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "recall-feasible-dual",
+      "events": 40,
+      "events_sha256": "f3a772e6b5f56f0e27b414023c626d056159d265dad2b035c45d65147a41f6e1",
+      "dimensions": [
+        4,
+        8
+      ],
+      "supplied": 4,
+      "exhausted": 1,
+      "support_modes": {
+        "1": 5
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 4,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "recall-violated-primal",
+      "events": 87,
+      "events_sha256": "185bf3e4e9d26d96bac7f688270a1dcfd952531fea17786358c5b75bd696cc54",
+      "dimensions": [
+        10,
+        18
+      ],
+      "supplied": 7,
+      "exhausted": 1,
+      "support_modes": {
+        "1": 8
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 0,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "initial",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 7,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "recall-violated-dual",
+      "events": 85,
+      "events_sha256": "d8f8576a9493de49533f127c61f32595c4f0aa1caa3e740a2252ea2012e79148",
+      "dimensions": [
+        10,
+        18
+      ],
+      "supplied": 7,
+      "exhausted": 1,
+      "support_modes": {
+        "1": 8
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 7,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "chain-shift-primal",
+      "events": 192,
+      "events_sha256": "b4a6d02f7e6d7b603227ce525ff4202ee7ecf3dcd06f5bd9c65fcff28a48d72d",
+      "dimensions": [
+        26,
+        44
+      ],
+      "supplied": 26,
+      "exhausted": 3,
+      "support_modes": {
+        "0": 2,
+        "1": 27
+      },
+      "max_failures": 3,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 3,
+      "factors": [
+        {
+          "call": 1,
+          "step": 0,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "initial",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 19,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 25,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        }
+      ],
+      "remaining": [
+        1
+      ]
+    },
+    {
+      "label": "chain-shift-dual",
+      "events": 190,
+      "events_sha256": "105b350145174c20d9ee922e8c4ac105be0568bd9c2697f18c86bd99fe9e7747",
+      "dimensions": [
+        26,
+        44
+      ],
+      "supplied": 26,
+      "exhausted": 3,
+      "support_modes": {
+        "0": 2,
+        "1": 27
+      },
+      "max_failures": 3,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 3,
+      "factors": [
+        {
+          "call": 1,
+          "step": 19,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        },
+        {
+          "call": 1,
+          "step": 25,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": false
+        }
+      ],
+      "remaining": [
+        1
+      ]
+    },
+    {
+      "label": "chain-resolve-primal",
+      "events": 71,
+      "events_sha256": "6713a457f96f8f2a24bc1a57558e723bf2070cfa505e753424b4d1f4d7d2b808",
+      "dimensions": [
+        9,
+        19
+      ],
+      "supplied": 9,
+      "exhausted": 1,
+      "support_modes": {
+        "1": 10
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 0,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "initial",
+          "header_reordered": false
+        },
+        {
+          "call": 1,
+          "step": 9,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    },
+    {
+      "label": "chain-resolve-dual",
+      "events": 69,
+      "events_sha256": "e1930532e77329d5ecf61bef90aa4a40cb9a8573c206db62b28f365296565959",
+      "dimensions": [
+        9,
+        19
+      ],
+      "supplied": 9,
+      "exhausted": 1,
+      "support_modes": {
+        "1": 10
+      },
+      "max_failures": 0,
+      "batch_capacities": [
+        0
+      ],
+      "dense_outputs": 0,
+      "defer": 0,
+      "factors": [
+        {
+          "call": 1,
+          "step": 9,
+          "request": 10,
+          "ret": 0,
+          "request_after": 10,
+          "context": "after-exhaustion",
+          "header_reordered": true
+        }
+      ],
+      "remaining": [
+        0
+      ]
+    }
+  ]
+}

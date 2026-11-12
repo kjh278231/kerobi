@@ -20,6 +20,8 @@
 
 04b의 [primal push 조사](primal_push_branches.md)는 double·x87 정밀도, 후보·방향·ratio·이동·basis·재분해·signed remaining 경계를 특정했다. 합성 ratio 29사례×3회는 helper 경계만 검증했다. 04b-1에서 정상 실행의 필수 상태와 실제 pivot·flip을 캡처한 뒤 04c의 구현 분기 하나를 고른다. 나머지 초기화·infeasible ratio·batch·재분해·x87은 조사 §4의 분할 후보에서 계약을 별도로 확정한다.
 
+04c-10·11은 희소 double 한 단계의 선택·적용을 연쇄 재생했다. [04c-12 루프 조사](primal_push_loop.md)는 나머지를 공급자(13→14), factor 제어(15→16), 재분해 뒤 재계산(17→18), 보류·지원·라운드(19→20)로 나눈다. 각 쌍은 원본 오라클 뒤 L1 제어 구현 순서다. 수치 FTRAN/BTRAN/factor는 외부 backend로 구분하며, 실제 Rust Lu 연결은 21 조사에서 오라클·구현을 다시 분할한다. 22는 초기화된 상태에서 이 제어를 연결하는 작업이고 전체 primal push 완료가 아니다. batch는23, 초기화·정렬·기준 조정과 x87·최종 외부 해 설치는 별도다. support 경로에서는 basis 교환 뒤 factor 호출을 생략할 수 있으므로 현재 header만으로 LU를 재구성하지 않는다.
+
 ## 2. Method 선택과 Concurrent
 
 자동 선택은 입력 분류→Method 결정→실행 경로를 추적한다. M3-05a는 명시 Method, 자동 Method, 모델 분류, 관련 파라미터에 대한 원본 결정표를 만든다. 선택 분기를 고치는 작업과 concurrent 엔진을 만드는 작업은 독립 번호다.

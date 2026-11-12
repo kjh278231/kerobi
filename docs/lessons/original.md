@@ -95,6 +95,9 @@
 
 ## crossover primal push (`134a87`)
 
+- **지원 집합 모드는 basis 교환 뒤 LU 갱신을 생략할 수 있다.** 요청0·support!=0이면 `05b257`을 부르지 않고 다음 공급자로 간다(C1725–1750, asm0x1c343d). BTRAN의 제약 행 support와 겹치는 다음 열을 보류하므로, 현재 header로 매번 새 factor를 만들거나 매 pivot에 FT 갱신하면 경로를 바꾼다. C·asm·기존 자연 캡처 사건 집계. (M3-04c-12, [§2.3](../m3/primal_push_loop.md#23-지원-집합은-lu를-매번-갱신하지-않는-경로다))
+- **push factor 판단은 기존 simplex 식과 별도이며 주기 비교는 `k==limit`다.** 채움 비용식은 `(C+E)·2m − min(q·5m²,(L+U−1.5m)²)`(k>=q), 기존 요청을 우선 보존한다. factor73호출의 저장 요청은0·10뿐이라 요청2·6·오류 경계 실행 검증은 후속 오라클이 필요하다. C·asm, 식의 동등성은 미검증. (M3-04c-12, [§2.4](../m3/primal_push_loop.md#24-factor-요청-선택과-실행을-분리한다))
+- **공급자의 failure>=3 skip도 후보를 보류 prefix에 남기며 실패 횟수는 늘리지 않는다.** caller의 단계 보류만 실패를 +1 하고 재처리에서도 보존한다. 공급 통계는 dense 압축 전 count(음수 포함)를 합산하고, dense 반환은 내부에서 sparse로 바뀌므로 공급 반환 count만으로 내부 FTRAN 경로를 판정할 수 없다. C. (M3-04c-12, [§2.2](../m3/primal_push_loop.md#22-공급자의-상태와-단일-경로))
 - **flip(`0x1c2994`)과 pivot(`0x1c2ab5`) 경로는 `0x1c3004`에서 합류한다.** 이 지점이 교환 직후·rhs 보정 전이며 r14는 workspace S다. pivot 경로에서 `S+0x2f8`은 ratio의 sparse 위치에서 basis 행으로 바뀐다. C·asm·캡처. (M3-04b-1, [§3](../m3/primal_push_step_oracle.md#3-캡처-경계-보완))
 - **pivot 뒤 factor 처리(`05b257` 호출 구간)가 basis header 전체 순서를 재배열할 수 있다.** 다음 후보 직전 header에서 교환한 행 위치를 그대로 기대하면 틀린다. 교환은 `0x1c3004`에서 보고, factor 후에는 집합 보존만 검사한다. 캡처. (M3-04b-1)
 - **목적 0인 `interior.lp`에서는 Crossover=1(dual-first)과 3(primal-first)의 primal push 단계 순서가 같았다.** 다른 궤적이 필요하면 목적이 있는 LP를 먼저 탐색한다. 캡처 1개 LP. (M3-04b-1)
