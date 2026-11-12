@@ -139,6 +139,8 @@
 - **04c-2 위반 묶음은 영구 위반 행 W를 빼도 위반이 풀리지 않는다.** c5·c6·bD1–bD4 등의 B 행에는 고칠 후보가 없어 push 끝까지 B 7개가 남았다. 위반 해소(V→F)는 SA(A, 등식 행의 내부 구조 변수)와 feasible 묶음만 둔 LP에서 나왔고, 해소는 pivot 행에서 일어났다. 캡처. (M3-04c-11, history/resolve-v1)
 - **push 초기화 첫 rhs 구성에서 slack 상태 -2는 직전 xmm0을 rhs에서 뺀다.** `0x1c4f3d`가 -2를 값 설정 없이 `0x1c4f68`(`rhs_i -= xmm0`)로 보내므로, 직전 slack -1이면 0, -3이면 그 slack 값, 앞선 slack이 없으면 마지막 음수 상태 열의 v가 빠진다. 기준 조정 재구성(`0x1c1cae`)은 반대로 -4·-5 열을 rhs 보정 없이 건너뛴다. 두 동작 모두 자연 6사례에서 결과에 나타나지 않았으니(slack -2 0회, 조정 0회) 구현은 C·asm 그대로 두고 미검증으로 표시한다. asm. (M3-04c-1, [§2.2](../m3/primal_push_init.md#22-asm으로-판정한-원본-사실))
 - **push 초기화의 후보 순서·rhs S+0x200·폭·표시·PInf는 push 진입 상태만으로 결정된다.** key는 열 `-(len+minsd(d,0.99))`, slack `-1-minsd(d,0.99)`, `aabbe3` 불안정 정렬이며 동률 때문에 6사례 중 4사례가 안정 정렬과 다르다. 초기 재분해(요청 10)는 기저 위치 번호(vstat ≥ 0)를 바꾸므로 진입·첫 공급의 vstat을 그대로 비교하면 안 된다. 캡처 재계산. (M3-04c-1, [§6](../m3/primal_push_init.md#6-실행-결과))
+- **push 초기화의 기준 조정은 이전 push의 PInf(S+0x120)가 τ보다 작을 때만 한다.** asm `0x1c186a–0x1c187c`는 `comisd 0x120(%r14), xmm0(τ); jbe 건너뜀`이라 조건은 `S+0x120 < τ`(비순서면 건너뜀)이고, 나머지는 `PInf > 1`(`jbe`, NaN 건너뜀)·`0.1τ셈 < 후보 수`(`jle`)다. M3-04c-1 조사 표의 "τ < S+0x120"은 방향 오기였다. asm·C 일치. (M3-04c-1a, [§1](../m3/primal_push_init_rust.md#1-범위와-주장))
+- **push 초기화의 basic(S+0x1e8)은 push:enter 상태에서 Rust로 비트 재현된다.** 초기 재분해(요청 10, push:enter header)→rhs 구성→`09cf9b` dense FTRAN→lower shift가 자연 6사례에서 원본 basic과 비트 일치했고, 잔차 `089d8f`는 FMA 없이 `a·x + acc` 순서다(`0x115e27`). 캡처. (M3-04c-1a, [§6](../m3/primal_push_init_rust.md#6-실행-결과))
 
 ## dual simplex DSE β (`28c93`·`8b473`)
 

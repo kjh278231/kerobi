@@ -6,7 +6,8 @@
 use crate::crossover::PushState;
 use crate::crossover_ftran::VecSnap;
 use crate::crossover_loop::{FactorCtl, FactorSite, FactorStats, PushLoopBackend, Renumber};
-use crate::crossover_lu::LuState;
+use crate::crossover_init::PushInitBackend;
+use crate::crossover_lu::{LuState, Renumbered};
 use crate::crossover_refactor::{refactor, Alloc, Matrix};
 use crate::crossover_supplier::PushColumn;
 use crate::lu::BlockState;
@@ -61,6 +62,13 @@ impl SerialBackend {
     #[allow(clippy::too_many_arguments)]
     pub fn initial(matrix: Matrix, zero: f64, tol: f64, alloc: Alloc, block: BlockState, interval: i32, drop: f64,
                    header: &[i32], leave: i32, vstat: &[i32]) -> Factored {
+        let (backend, r, _) = Self::first_factor(matrix, zero, tol, alloc, block, interval, drop, header, leave, vstat);
+        Factored { backend, header: r.header, leave: r.leave, vstat: r.vstat }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn first_factor(matrix: Matrix, zero: f64, tol: f64, alloc: Alloc, block: BlockState, interval: i32, drop: f64,
+                    header: &[i32], leave: i32, vstat: &[i32]) -> (SerialBackend, Renumbered, Renumber) {
         let mut block = block;
         let rf = refactor(&matrix, header, zero, tol, alloc, None, &mut block).expect("initial refactor");
         // 05b257 C:1399 raises S+0x2c0 before each refactor; the next one enters with it raised
@@ -68,12 +76,8 @@ impl SerialBackend {
         let mut lu = rf.state;
         let r = lu.renumber(header, leave, vstat, &rf.o, &rf.n);
         let u_nnz = u_stat(&lu);
-        Factored {
-            backend: SerialBackend { lu, matrix, tol, block, interval, drop, column_work: 0, u_nnz },
-            header: r.header,
-            leave: r.leave,
-            vstat: r.vstat,
-        }
+        let backend = SerialBackend { lu, matrix, tol, block, interval, drop, column_work: 0, u_nnz };
+        (backend, r, Renumber { old_of_new: rf.o, new_of_old: rf.n })
     }
 
     /// `05b257` C:144–251: the update adds the work column's count + 1 (dense: 1 + its entries above S+0x3a8).
@@ -163,3 +167,52 @@ impl PushLoopBackend for SerialBackend {
         raw.copy_from_slice(&out.values);
     }
 }
+
+/// The serial backend before the push's first factor exists: the inputs of that refactorization (request 10 with no
+/// previous factor), or an existing factor for a later push.
+pub struct SerialStart {
+    pending: Option<(Matrix, f64, f64, Alloc, BlockState, i32, f64)>,
+    pub backend: Option<SerialBackend>,
+}
+
+impl SerialStart {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(matrix: Matrix, zero: f64, tol: f64, alloc: Alloc, block: BlockState, interval: i32, drop: f64) -> Self {
+        SerialStart { pending: Some((matrix, zero, tol, alloc, block, interval, drop)), backend: None }
+    }
+
+    pub fn existing(backend: SerialBackend) -> Self {
+        SerialStart { pending: None, backend: Some(backend) }
+    }
+
+    fn ready(&mut self) -> &mut SerialBackend {
+        self.backend.as_mut().expect("no factor before the push's first factor call")
+    }
+}
+
+impl PushInitBackend for SerialStart {
+    fn initial_factor(&mut self, ctl: &mut FactorCtl, st: &PushState) -> (i32, Option<Renumber>) {
+        match self.pending.take() {
+            Some((matrix, zero, tol, alloc, block, interval, drop)) => {
+                let (backend, _, r) = SerialBackend::first_factor(matrix, zero, tol, alloc, block, interval, drop,
+                                                                  &st.header, st.leave, &st.vstat);
+                self.backend = Some(backend);
+                (0, Some(r))
+            }
+            None => self.ready().factor(FactorSite::Round, ctl, st, None),
+        }
+    }
+
+    fn rhs_ftran(&mut self, rhs: &[f64], raw: &mut [f64]) {
+        self.ready().recompute_ftran(rhs, raw);
+    }
+
+    fn tighten(&mut self, markowitz: f64, limit: Option<i32>) {
+        let b = self.ready();
+        b.tol = markowitz;
+        if let Some(l) = limit {
+            b.lu.sc.x188 = l;
+        }
+    }
+}
+

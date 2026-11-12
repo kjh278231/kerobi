@@ -1,0 +1,1 @@
+일치: 사례 6 줄 731 필드 5743 태그 {'btran': 32, 'clear': 67, 'end': 6, 'exhausted': 12, 'fcall': 49, 'ftran': 107, 'init': 6, 'leave': 101, 'pass': 14, 'recompute': 13, 'rin': 13, 'round': 12, 'select': 67, 'start': 6, 'step': 107, 'supply': 119}

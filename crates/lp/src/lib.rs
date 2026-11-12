@@ -18,6 +18,7 @@ pub mod crossover_backend;
 pub mod crossover_btran;
 pub mod crossover_factor;
 pub mod crossover_ftran;
+pub mod crossover_init;
 pub mod crossover_loop;
 pub mod crossover_lu;
 pub mod crossover_recompute;

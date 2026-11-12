@@ -1,0 +1,52 @@
+{
+  "task": "M3-04c-1a",
+  "commands": [
+    {
+      "cmd": "python3 tools/push_loop_rust.py --lu --write && git diff --exit-code bench/oracle/m3_push_loop_lu/input.txt",
+      "exit": 0
+    },
+    {
+      "cmd": "cargo test -q -p rsolver-lp --test push_loop_lu",
+      "exit": 0
+    },
+    {
+      "cmd": "python3 tools/push_loop_rust.py --lu --compare",
+      "exit": 0,
+      "result": "725줄·5,575필드 일치"
+    },
+    {
+      "cmd": "python3 tools/push_loop_rust.py --write && git diff --exit-code bench/oracle/m3_push_loop_rust/input.txt",
+      "exit": 0
+    },
+    {
+      "cmd": "cargo test -q -p rsolver-lp --test push_loop",
+      "exit": 0
+    },
+    {
+      "cmd": "python3 tools/push_loop_rust.py --compare",
+      "exit": 0,
+      "result": "719줄·5,502필드 일치"
+    },
+    {
+      "cmd": "python3 tools/push_init_survey.py --check",
+      "exit": 0
+    },
+    {
+      "cmd": "python3 -m py_compile tools/push_loop_rust.py",
+      "exit": 0
+    },
+    {
+      "cmd": "cargo test --release --workspace",
+      "exit": 0,
+      "result": "146 passed, 0 failed, 12 ignored"
+    },
+    {
+      "cmd": "cargo clippy --workspace --all-targets -- -D warnings",
+      "exit": 0
+    },
+    {
+      "cmd": "git diff --check",
+      "exit": 0
+    }
+  ]
+}
