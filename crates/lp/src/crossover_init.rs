@@ -3,10 +3,11 @@
 //! Markowitz tightening, the basic classification, the quality gate, the one-time tolerance adjustment and the loop
 //! state. The factor, its RHS FTRAN and the Markowitz setting stay behind [`PushInitBackend`].
 //!
-//! Values the captures do not hold (`param_1`, S+0x120, S+0x3c8 and the environment flag of `061bfe`, the condition
+//! Values outside the push state (`param_1`, S+0x120, S+0x3c8 and the environment flag of `061bfe`, the condition
 //! estimate) are `Option`s: a branch that needs a missing one panics, except the condition, whose terms of the quality
-//! gate count as false when it is missing ([`InitResult::condition_known`]). Contract and C references:
-//! docs/m3/primal_push_init_rust.md.
+//! gate count as false when it is missing ([`InitResult::condition_known`]). The condition estimate `12f282` is a
+//! backend call ([`PushInitBackend::condition`]). Contract and C references: docs/m3/primal_push_init_rust.md,
+//! docs/m3/primal_push_init_ext_rust.md.
 use crate::common::sort_desc;
 use crate::crossover::{PushLp, PushParams, PushState};
 use crate::crossover_loop::{renumber, FactorCtl, PushLoop, Renumber};
@@ -22,6 +23,27 @@ pub trait PushInitBackend {
     /// `12f5d1` has run: the Markowitz threshold S+0x390 for later refactorizations and, when `061bfe` lowered it,
     /// the update limit F+0x188.
     fn tighten(&mut self, markowitz: f64, limit: Option<i32>);
+    /// `12f282` (C 868–872, first push only, on every pass through the quality gate): `*param_8` after the call,
+    /// given its value before. Without an estimate the value stays as it was.
+    fn condition(&mut self, before: Option<f64>) -> Option<f64> {
+        before
+    }
+    /// Observation points of the initialization; they do not change it.
+    fn observe(&mut self, _ev: InitEvent<'_>) {}
+}
+
+/// What the initialization has computed at the original's boundaries (M3-04c-1b capture points).
+#[derive(Debug)]
+pub enum InitEvent<'a> {
+    /// `089d8f` output S+0x1f8: B·x_B in row order.
+    Residual(&'a [f64]),
+    /// Before `12f5d1` (0x1c151c): the new Markowitz value and the residual max.
+    Strengthen { markowitz: f64, residual: f64 },
+    /// Before `12f282` (0x1c17b3): PInf, violations, the condition before, S+0x390 and S+0x178.
+    Condition { pinf: f64, violations: i32, before: Option<f64>, markowitz: f64, numeric: i32 },
+    /// The adjustment test (0x1c184d): flag, candidates, counts above τ·{0.001, 0.01, 0.1}, τ_in (τ' once adjusted)
+    /// and PInf.
+    AdjustGate { adjusted: bool, candidates: usize, counts: Option<[i32; 3]>, tau: Option<f64>, pinf: f64 },
 }
 
 /// `061bfe` inputs: S+0x3c8 and the environment value at (S+0x4b8)+0x100 → +0x2c54.
@@ -98,6 +120,8 @@ pub struct InitResult {
     pub adjusted: bool,
     /// False when the quality gate ran without a condition value.
     pub condition_known: bool,
+    /// `*param_8` when the initialization stopped.
+    pub condition: Option<f64>,
     pub diag: InitDiag,
 }
 
@@ -167,6 +191,7 @@ pub fn push_init<B: PushInitBackend>(lp: &PushLp, par: &PushParams, e: InitEntry
         update_limit: None,
         adjusted: false,
         condition_known: e.condition.is_some(),
+        condition: e.condition,
         diag: InitDiag::default(),
     };
     let finish = |mut out: InitResult, exit, st: PushState, ctl: FactorCtl, pinf: f64| {
@@ -269,6 +294,7 @@ pub fn push_init<B: PushInitBackend>(lp: &PushLp, par: &PushParams, e: InitEntry
     let counts = counts.map(|(_, c)| c);
     let mut tau_in = e.tau_in;
     let mut markowitz = e.markowitz;
+    let mut condition = e.condition;
     let mut raw = vec![0.0; m];
     loop {
         // C 598–645: keys, aabbe3 descending, then the scratch becomes S+0x200.
@@ -310,6 +336,7 @@ pub fn push_init<B: PushInitBackend>(lp: &PushLp, par: &PushParams, e: InitEntry
                 acc[j - n] += v;
             }
         }
+        backend.observe(InitEvent::Residual(&acc));
         let mut basic_max = 0.0;
         raw.iter().for_each(|&x| amax(&mut basic_max, x));
         let mut residual = 0.0;
@@ -326,12 +353,15 @@ pub fn push_init<B: PushInitBackend>(lp: &PushLp, par: &PushParams, e: InitEntry
         out.diag = InitDiag { rhs_max, basic_max, residual, markowitz_candidate: candidate };
         if markowitz <= candidate && candidate != markowitz {
             let t = e.tighten.expect("Markowitz tightening (061bfe) without S+0x3c8 and the environment flag");
+            backend.observe(InitEvent::Strengthen { markowitz: candidate, residual });
             let limit = tightened_limit(m, t);
             if limit.is_some() {
                 out.update_limit = limit;
             }
             backend.tighten(candidate, limit);
             markowitz = candidate;
+            // S+0x390 is written here (C 791), so a retry exit reports the new value too
+            out.markowitz = candidate;
         }
         if 1e-6 < residual {
             ctl.numeric += 1;
@@ -384,10 +414,17 @@ pub fn push_init<B: PushInitBackend>(lp: &PushLp, par: &PushParams, e: InitEntry
         }
         st.violations = violations;
 
-        // C 867–896: quality gate (asm 0x1c1800–0x1c1847).
+        // C 867–896: condition estimate on the first push, then the quality gate (asm 0x1c1800–0x1c1847).
+        if e.first {
+            backend.observe(InitEvent::Condition { pinf, violations, before: condition, markowitz,
+                                                   numeric: ctl.numeric });
+            condition = backend.condition(condition);
+            out.condition = condition;
+            out.condition_known = condition.is_some();
+        }
         let p = if e.model_status == 2 { pinf } else { 1.0 };
-        let cond_above = |t: f64| e.condition.is_some_and(|c| c > t);
-        if e.attempt == 0 && (cond_above(1e14) || 1e10 < p || e.condition.is_some_and(|c| 1e16 < p * c)) {
+        let cond_above = |t: f64| condition.is_some_and(|c| c > t);
+        if e.attempt == 0 && (cond_above(1e14) || 1e10 < p || condition.is_some_and(|c| 1e16 < p * c)) {
             return finish(out, InitExit::Retry, st, ctl, pinf);
         }
         if cond_above(1e30) {
@@ -398,6 +435,8 @@ pub fn push_init<B: PushInitBackend>(lp: &PushLp, par: &PushParams, e: InitEntry
             return finish(out, InitExit::Retry, st, ctl, pinf);
         }
 
+        backend.observe(InitEvent::AdjustGate { adjusted: out.adjusted, candidates: cand.len(),
+                                                counts, tau: tau_in, pinf });
         // asm 0x1c184d–0x1c1890: one adjustment when the previous push ended below τ and many candidates qualify.
         let adjust = !out.adjusted
             && pinf > 1.0

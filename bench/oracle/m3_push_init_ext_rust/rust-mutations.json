@@ -1,0 +1,147 @@
+[
+ {
+  "result": "거부",
+  "first": "('adjust', 1) 줄10 gate.tau[0]: 원본 95d626e80b2e113e Rust 3a8c30e28e79453e (길이 1/1)",
+  "name": "adjust-tau-always-01"
+ },
+ {
+  "result": "거부",
+  "first": "('adjust', 1) 줄10 gate.tau[0]: 원본 95d626e80b2e113e Rust 8dedb5a0f7c6b03e (길이 1/1)",
+  "name": "adjust-tau-no-scale"
+ },
+ {
+  "result": "거부",
+  "first": "('adjust', 1) 줄6 ftin.v[17]: 원본 0000000000000040 Rust 000000000010a83c (길이 25/25)",
+  "name": "rebuild-subtract-m45"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "name": "promote-m1-strict"
+ },
+ {
+  "result": "거부",
+  "first": "('adjust', 1) 줄6 ftin.v[0]: 원본 c0d067f62fffdfbf Rust 0000e80533010a3f (길이 25/25)",
+  "name": "promote-m1-never"
+ },
+ {
+  "result": "거부",
+  "first": "('slack_m2', 1) 줄6 ftin.v[3]: 원본 2c431cebe2361a3f Rust 40431cebe2361abf (길이 10/10)",
+  "name": "rebuild-slack-m2-kept"
+ },
+ {
+  "result": "거부",
+  "first": "('adjust', 1): Rust 오류 unused condition or FTRAN tape",
+  "name": "adjust-never"
+ },
+ {
+  "result": "거부",
+  "first": "('adjust', 1): Rust 오류 12f282 output tape exhausted",
+  "name": "adjust-twice"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "name": "adjust-prev-pinf-ignored"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "name": "adjust-count-ignored"
+ },
+ {
+  "result": "거부",
+  "first": "('slack_m2', 1): Rust 오류 unused condition or FTRAN tape",
+  "name": "slack-m2-zero"
+ },
+ {
+  "result": "거부",
+  "first": "('col_m5_ub', 1): Rust 오류 unused condition or FTRAN tape",
+  "name": "col-m5-lb"
+ },
+ {
+  "result": "거부",
+  "first": "('col_m5', 1): Rust 오류 12f282 output tape exhausted",
+  "name": "col-m5-zero"
+ },
+ {
+  "result": "거부",
+  "first": "('quality', 1) 줄4 mk.new[0]: 원본 000000000000e03f Rust 000000000000d03f (길이 1/1)",
+  "name": "mk-05-threshold"
+ },
+ {
+  "result": "거부",
+  "first": "('mk_low', 1): 사건 순서 4: 원본 ['mk', 'cond', 'gate'] Rust ['cond', 'gate', 'start']",
+  "name": "mk-no-tighten"
+ },
+ {
+  "result": "거부",
+  "first": "('mk_low', 1) 줄5 cond.s390[0]: 원본 2d431cebe2361a3f Rust f168e388b5f8e43e (길이 1/1)",
+  "name": "mk-tighten-not-stored"
+ },
+ {
+  "result": "거부",
+  "first": "('mk_limit', 1) 줄5 cond.s3c8[0]: 원본 50 Rust 200 (길이 1/1)",
+  "name": "limit-never"
+ },
+ {
+  "result": "거부",
+  "first": "('mk_limit', 1) 줄5 cond.s3c8[0]: 원본 50 Rust 200 (길이 1/1)",
+  "name": "limit-env-ignored"
+ },
+ {
+  "result": "거부",
+  "first": "('quality', 1) 줄5 cond.numeric[0]: 원본 1 Rust 0 (길이 1/1)",
+  "name": "numeric-threshold"
+ },
+ {
+  "result": "거부",
+  "first": "('quality', 1): Rust 오류 12f282 output tape exhausted",
+  "name": "gate-p-always-1"
+ },
+ {
+  "result": "거부",
+  "first": "('quality_pinf', 1) 줄5 retry.numeric[0]: 원본 1 Rust 0 (길이 1/1)",
+  "name": "gate-p-always-pinf"
+ },
+ {
+  "result": "거부",
+  "first": "('quality_pinf', 1) 줄5 retry.numeric[0]: 원본 1 Rust 0 (길이 1/1)",
+  "name": "gate-pinf-no-count"
+ },
+ {
+  "result": "거부",
+  "first": "('quality_pinf', 1): Rust 오류 12f282 output tape exhausted",
+  "name": "gate-pinf-threshold"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "name": "gate-attempt-ignored"
+ },
+ {
+  "result": "거부",
+  "first": "('arms', 1): Rust 오류 unused condition or FTRAN tape",
+  "name": "cond-not-called"
+ },
+ {
+  "result": "거부",
+  "first": "('adlittle_x1', 1): Rust 오류 12f282 output tape exhausted",
+  "name": "cond-called-first0"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "name": "cond-product-ignored"
+ },
+ {
+  "result": "거부",
+  "first": "('adlittle_x1', 1): Rust 오류 first push without a factor input",
+  "name": "first0-refactor"
+ },
+ {
+  "result": "거부",
+  "first": "('quality', 1) 줄6 retry.s390[0]: 원본 000000000000e03f Rust 9a9999999999b93f (길이 1/1)",
+  "name": "retry-markowitz-entry"
+ }
+]

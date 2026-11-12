@@ -1,0 +1,18 @@
+('arms', 1) lu1 ftin1 ftout1 res1 cond1 gate1 start1 | gate adj0 cand23
+('retry', 1) lu1 ftin1 ftout1 res1 cond1 gate1 start1 | gate adj0 cand6
+('interior', 1) lu1 ftin1 ftout1 res1 cond1 gate1 start1 | gate adj0 cand9
+('adlittle', 1) lu1 ftin1 ftout1 res1 cond1 gate1 start1 | gate adj0 cand22
+('scsd1', 1) lu1 ftin1 ftout1 res1 cond1 gate1 start1 | gate adj0 cand12
+('capri', 1) lu1 ftin1 ftout1 res1 cond1 gate1 start1 | gate adj0 cand31
+('adlittle_x1', 1) ftin1 res1 gate1 start1 | gate adj0 cand16
+('adjust', 1) lu1 ftin2 ftout2 res2 cond2 gate2 start1 | gate adj0 cand23, gate adj1 cand24
+('mk_low', 1) lu1 ftin1 ftout1 res1 mk1 cond1 gate1 start1 | strengthen, gate adj0 cand9
+('mk_limit', 1) lu1 ftin1 ftout1 res1 mk1 cond1 gate1 start1 | strengthen, gate adj0 cand9
+('quality', 1) lu1 ftin1 ftout1 res1 mk1 cond1 retry1 | strengthen
+('quality', 2) lu1 ftin1 ftout1 res1 cond1 gate1 start1 | gate adj0 cand22
+('quality_pinf', 1) lu1 ftin1 ftout1 res1 cond1 retry1 | 
+('quality_pinf', 2) lu1 ftin1 ftout1 res1 cond1 gate1 start1 | gate adj0 cand23
+('slack_m2', 1) lu1 ftin2 ftout2 res2 cond2 gate2 start1 | gate adj0 cand6, gate adj1 cand7
+('col_m5', 1) lu1 ftin1 ftout1 res1 cond1 gate1 start1 | gate adj0 cand23
+('col_m5_ub', 1) lu1 ftin2 ftout2 res2 cond2 gate2 start1 | gate adj0 cand6, gate adj1 cand6
+합계 {'lu': 16, 'ftin': 20, 'ftout': 19, 'res': 20, 'cond': 19, 'gate': 18, 'start': 15, 'mk': 3, 'retry': 2}
