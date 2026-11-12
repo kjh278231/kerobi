@@ -67,8 +67,27 @@ Rust 하네스는 호출마다 canonical 줄을 내고, 비교기는 1b 캡처(r
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 기준 main `e65ce10`, 계약 `b824642`, 구현·비교 `d4f2cff`. x86-64 Linux(WSL2), rustc stable, Python 3.10. Gurobi 새 실행 0회. 입력 `bench/oracle/m3_push_init_ext_rust/input.txt`(머리 = 1b manifest·1a 입력 해시 `1f858090…`, 호출마다 case·model·cfg·enter·ext·lu 6줄). `--write`는 1b `controls`·`acceptance`를 통과한 뒤 투영했고, first=1 call 1의 편집 전 push:enter가 1a enter 줄(21e·21h)과 같음, 초기 재분해 Markowitz = push:enter S+0x390, S+0x1f8 진입 0, 편집 before = push:enter 값을 확인했다.
+- 코드: `crossover_init.rs`에 `PushInitBackend::condition`(`12f282`, 기본 값 유지)·`observe`(`InitEvent`: Residual·Strengthen·Condition·AdjustGate)와 `InitResult::condition`을 더하고, gate가 이 조건수를 쓴다. 테스트 `crates/lp/tests/push_init_ext.rs`, 도구 `tools/push_init_rust.py`.
+- **첫 비교**([기록](../../bench/oracle/m3_push_init_ext_rust/first-compare.txt)): 17호출 중 1곳 불일치 — `quality` call 1 retry 반환의 S+0x390이 원본 0.5(강화 값), Rust 0.1. 원인은 `InitResult.markowitz`를 루프 준비에서만 갱신해 retry 반환이 진입 값을 보고한 것(계산과 backend의 Markowitz는 맞았고 보고 필드만 틀림, 1a 자연 자료는 retry가 없어 미검출). 강화 지점(C 791)에서 결과 필드도 갱신하도록 고쳤다.
+- **재비교** `cargo test -p rsolver-lp --test push_init_ext && python3 tools/push_init_rust.py --compare`: **17호출·132줄·727필드 전부 일치**, 불일치·skip 0([출력](../../bench/oracle/m3_push_init_ext_rust/compare.txt), [줄 집계](../../bench/oracle/m3_push_init_ext_rust/coverage.txt)). 줄 종류: lu 16·ftin 20·ftout 19(adlittle_x1 주입 1 제외)·res 20·mk 3·cond 19·gate 18·start 15·retry 2.
+  - 기준 조정: adjust·slack_m2·col_m5_ub가 2라운드(gate flag 0→1, τ' 비트, 재구성 rhs·-1/-2 승격·-4/-5 생략, 후보 23→24·6→7·6→6)로 원본과 같다.
+  - Markowitz 강화: mk_low(1e-4, 한도 불변)·mk_limit(`061bfe` 200→50, S+0x3c8·F+0x188)·quality(0.5, 잔차 > 1e-6 수치 카운터 +1).
+  - retry: quality(P > 1e10)·quality_pinf(PInf > 1e15, 카운터 +1)의 반환 상태와, call 1 factor를 이어 받은 call 2(attempt=1, S+0x390=0.9 재분해)의 header·vstat·FTRAN·basic·factor 통계·후보까지 일치.
+  - slack -2 = 직전 xmm0, 열 -5 = ub(col_m5·col_m5_ub)의 FTRAN 입력 비트 일치.
+  - first=0(adlittle_x1): 초기 재분해·`12f282` 없음, 진입 condition gate, 잔차·후보 16·루프 직전 상태 일치(FTRAN 출력은 주입).
+  - 자연 6사례: 조건수를 주입한 gate가 통과로 같고, 1a의 `cond unknown`이 해소됐다(조건수 값 자체는 1c 범위의 주입).
+- **판별력**: `--self-test` 기대 줄 변조 **710종 전부 거부**([기록](../../bench/oracle/m3_push_init_ext_rust/self-test.txt), 호출마다 줄 종류·필드별 1비트/정수+1, 순서 교환, 마지막 줄 누락). `--mutate-rust` **29종 중 거부 24·생존 5·무효 0**([기록](../../bench/oracle/m3_push_init_ext_rust/rust-mutations.json)). 첫 실행에서 `mk-tighten-not-stored`는 retry 수정으로 원문이 바뀌어 무효였고, 원문을 고쳐 29종 전체를 다시 돌렸다(첫 실행 결과는 보관하지 않음, 나머지 28종 판정은 같음).
+  - 거부 24: τ' 배율 고정·미적용, 재구성 -4/-5 포함, -1 승격 안 함, 재구성 slack -2 유지, 조정 안 함·두 번, slack -2 = 0, -5 = lb·0, 0.5 임계, 강화 안 함·저장 안 함, 한도 감소 없음·환경 flag 무시, 수치 카운터 임계, gate P 항상 1·항상 PInf, PInf 1e15 카운터 생략·임계, `12f282` 미호출·first=0 호출, first=0 재분해, retry S+0x390 보고. 이 중 9종은 줄 비교 전에 tape 소진/잔여(라운드 수·`12f282` 호출 수 차이)로, `first0-refactor`는 factor 입력 없음 panic으로 거부됐다(나머지 14종은 줄·필드 첫 차이).
+  - 생존 5(자료에 경계 없음): `promote-m1-strict`(x = lb + τ' 없음), `adjust-prev-pinf-ignored`(모든 사례 S+0x120 < τ, 1b §6), `adjust-count-ignored`(PInf > 1인 사례 모두 0.1셈 < 후보 수), `gate-attempt-ignored`(attempt=1 호출은 PInf 0·P 1·cond 작음), `cond-product-ignored`(P·cond > 1e16 단독 결정 사례 없음).
+- 회귀([기록](../../bench/oracle/m3_push_init_ext_rust/regression.txt), 모두 종료 0): 1a `--init --write`(입력 불변)·`push_init_loop`·`--init --compare` 6사례 731줄·5,743필드, 24 `--lu --write`(불변)·`push_loop_lu`·`--lu --compare` 725줄·5,575필드, 1b `push_init_check.py --controls --acceptance`, `cargo test --release --workspace` **147통과·0실패·ignored 12**(새 `push_init_ext` 1), `cargo clippy --workspace --all-targets -- -D warnings` 0, py_compile, `git diff --check`.
+- 실행하지 않은 검사: 기존 solver 경로·Python 경계 미변경이라 확장 설치·pytest·Netlib·P3 제외. 독립 검토자는 사용하지 않았다.
+- 계약과 다른 점: 없음. `start` 줄의 support marks는 원본 supply:enter가 0 배열, Rust가 `None`(표시 없음)이라 0 배열을 `none`으로 정규화해 비교했다(표현 차이, 비영 표시가 있으면 그대로 비교).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 **완료**, 구현 동등성 **계약 범위 통과**. 1b의 자연 7·합성 8사례 17 push 호출에서 push:enter 상태와 외부 값(τ_in·S+0x120·S+0x3c8·환경 flag·조건수 출력, first=0의 FTRAN 출력)만으로 Rust `push_init`이 초기 재분해·FTRAN 입력·잔차·Markowitz 강화와 `061bfe` 한도·수치 카운터·분류·품질 gate·retry·기준 조정과 재구성·루프 직전 상태를 원본과 비트/정확 일치로 만든다. 1a에서 미검증이던 조정·강화·잔차 >1e-6·retry(P·PInf)·slack -2·열 -5·first=0 경로가 이 범위에서 검증됐다.
+- 동등성 한계: 합성 사례는 바꾼 입력에 대한 원본 동작과의 일치이며 자연 모델에서 그 분기가 일어난다는 증거가 아니다. 조건수 값은 원본 출력 주입이며 `116fd7` 계산은 1c다. first=0의 FTRAN 수치(dual factor)는 미검증. retry 재호출은 call 1 factor를 이어 받는 가정으로 일치했다(2사례). 미관측·생존 경계: x = lb+τ' 승격, S+0x120 ≥ τ, 0.1셈 ≥ 후보 수, attempt=1에서 결정적인 gate 항, cond > 1e14·P·cond > 1e16·cond > 1e30, 0.25 후보, `061bfe` √m 항, 초기 재분해 반환 ≠ 0·S+0xf0 ≤ −1000, 후보 0, lb ≠ 0 기저 shift.
+- branch `work/m3-04c-1d`, worktree `../rsolver-m3-04c-1d`, owner `claude-m3-04c1d-20261113`. 최종 commit/병합은 main `Merge M3-04c-1d` 이력을 따른다. 미커밋 선행 변경 없음.
+- 갱신: `docs/11_progress.md`·`12_roadmap_diagram.md`·`14_sprint_plan.md`·`m3/sprint_design.md`·`handoff/M3.md`. 교훈 `docs/lessons/original.md`(retry 재호출의 factor 연속성·`12f282` 호출 조건), `tooling.md`(tape 소진 판별, 조기 반환 보고 필드).
+- 다음: **M3-04c-1c**(조건수 `116fd7`, 1b 캡처 condition 19값이 기준이며 이 하네스의 조건수 tape를 Rust 계산으로 바꿔 재비교), 또는 23(batch 조사)·04f(해 설치). 기준 재검사 `python3 tools/push_init_rust.py --write && cargo test -p rsolver-lp --test push_init_ext && python3 tools/push_init_rust.py --compare`.

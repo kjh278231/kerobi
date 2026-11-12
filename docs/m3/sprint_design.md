@@ -69,3 +69,5 @@ Concurrent 조사는 다음 수명 문제를 해결해야 한다.
 기본 조건은 기존 barrier·PDHG 기록과 동일하게 명시한다. Crossover 또는 Method를 바꾼 실험은 기존 Crossover=0의 64개 결과와 별도 표로 보관한다. Method=4는 같은 설정 3회 비교를 사용하고, Netlib 91 전체 상태·목적과 P1·P3는 M3-07의 별도 작업으로 판정한다. 아직 구현되지 않은 경로의 검증 완료를 미리 표시하지 않는다.
 
 [04c-1a 초기화 Rust 연결](primal_push_init_rust.md)은 `push_init`으로 push:enter 상태에서 루프 시작 상태를 만들고 24의 실제 backend 루프와 이어 자연 6사례 731줄·5,743필드(basic 비트 포함)를 원본과 맞췄다. 캡처에 없는 param_1·S+0x120·S+0x3c8·조건수는 `Option` 입력이며, 자연 경로가 읽는 조건수만 gate에서 unknown으로 남는다. 1b는 이 값들과 미관측 분기의 원본 오라클, 1c는 조건수 이식이다.
+
+[04c-1d 외부 값 경로 비교](primal_push_init_ext_rust.md)는 1b 오라클 17호출을 push:enter 상태와 외부 값(τ_in·S+0x120·S+0x3c8·환경 flag·`12f282` 출력)만으로 재생해 기준 조정·Markowitz 강화·`061bfe` 한도·수치 카운터·retry와 재호출·slack -2·열 -5·first=0을 원본과 맞췄다. `12f282`는 `PushInitBackend::condition` 경계가 됐으며 1c는 이 자리에 `116fd7` 계산을 넣고 같은 하네스로 재비교한다.
