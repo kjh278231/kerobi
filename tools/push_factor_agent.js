@@ -162,7 +162,7 @@ Process.attachModuleObserver({onAdded(mod) {
         factor_ctl:{state:ctlState(),caller:this.returnAddress.sub(b).toString(),workspace:a[0].equals(active.s),
           alpha_is_current:active.frame?active.s.add(0x210).readPointer().equals(active.frame.add(0x2090).readPointer()):null}});},
     onLeave(r){if(!this.enabled)return;emit('factor:leave',{ret:r.toInt32(),request:active.s.add(0x294).readS32(),header:vec(active.s.add(0x470).readPointer(),0x18,active.s.add(0x64).readS32(),4),
-      factor_ctl:{state:ctlState(),spike_preserved:active.s.add(0x470).readPointer().add(0x1c8).readPointer().equals(this.spike)}});} 
+      factor_ctl:{state:ctlState(),spike_preserved:active.s.add(0x470).readPointer().add(0x1c8).readPointer().equals(this.spike)}});}
   });
 
   function ctlState() {

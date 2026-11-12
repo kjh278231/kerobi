@@ -3,7 +3,7 @@
   "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
   "specs_sha256": "66c508466ee88a0c36c0b709e384ab48ef9fee292a94ce06186c0a2c96e40214",
   "tools": {
-    "tools/push_factor_agent.js": "9c8babaa7efeb5865bfd2303447b4009d99d64a075757bd77733b240878177fc",
+    "tools/push_factor_agent.js": "c142777844465268618624f2b1583721f83ee0bc1aa14a678143ccf2209b7a01",
     "tools/push_factor_capture.js": "db6d56301216b51a51bcc9d4ea78f3e79774bc98cce7c50eea0d53b1a0ca5e21",
     "tools/push_factor_synthetic.py": "c2c8d5061108956b569263d931f70d0ba7778dc817b06f58bffcb211d0fde2e9",
     "tools/push_factor_runs.py": "52b0f3e0ff1055c519a312b64e16d69432adccd30052c9ecd2b46cc49204049b",
@@ -37,21 +37,21 @@
     "bench/oracle/m3_push_factor/history/initial-capture.tar.gz": "202758cc4ab211a7a0a10e3b6e74366969c8a0650e7625c4ea0c42085c5839aa"
   },
   "assembly": {
-    "bench/oracle/m3_push_factor/source.asm": "df14c4ff80ba2fcc270239e477063284f814959e523395375a7b96943216c321"
+    "bench/oracle/m3_push_factor/source.asm": "24dc511a3ddd471debf1c413ade8396e2fa65d00e2ddc57bfc0c855a754cb9ef"
   },
   "captures": {
-    "bench/oracle/m3_push_factor/arms-1.json": "5b9d1ece2f4522ea41e3fa3517f771af5aa873f237404f41cad0b1efa6b32186",
-    "bench/oracle/m3_push_factor/arms-2.json": "d416ae9f777de903fab8d117ebda0c5902b8fbb69224345b944302f99ee48985",
-    "bench/oracle/m3_push_factor/arms-3.json": "952ee16c455506185788c2a47e81ec0a539a5facf512e87c4f8e8dec3d1540e9",
-    "bench/oracle/m3_push_factor/retry-1.json": "8b7ffc5ea5b52a2f320f165554c0636777f090b1fa6cad00258784fffbfaf6ee",
-    "bench/oracle/m3_push_factor/retry-2.json": "f182ee96a1422716ef794daf9eb5a3ee8b98a6539985a4a24b527a13ad566a72",
-    "bench/oracle/m3_push_factor/retry-3.json": "7b8c85903c5250ff174d250c4acd258f33149b8713a144f4830bb9ae724be5a5",
-    "bench/oracle/m3_push_factor/interior-1.json": "665f876ddb6a563f5aaf7092ad3b31fa98414d5195a9192f688bdaf85ecdda54",
-    "bench/oracle/m3_push_factor/interior-2.json": "aa7e233dd584762cc7efed8c3492cde614158d7fde20d79da3c54d1559a03822",
-    "bench/oracle/m3_push_factor/interior-3.json": "a20f3eb15a57c3f93e7991ca2cdd1006545456549b22808c02e12177936c1b7d",
-    "bench/oracle/m3_push_factor/control-1.json": "45a7e7d31f02b1e7fb159b013b80037453f6874e2f72e900ab6a8df650a1e663",
-    "bench/oracle/m3_push_factor/control-2.json": "f6a5fb89cb896ea3b7cff33ace705717244496941552ee5e5c2832477de0ef65",
-    "bench/oracle/m3_push_factor/control-3.json": "983c11497684bd9aa58f9a9bf40ff3cacfc1df26230ea1fd9e4410b9d5c800d9",
+    "bench/oracle/m3_push_factor/arms-1.json": "8f7894adeed045a54dfe2013f3b4bfc08f899c07cbed8929d2fa2c5607f8e610",
+    "bench/oracle/m3_push_factor/arms-2.json": "0f40fa277411b5dd8c79c1f7fdc7168774bf84422782430a1653c0f0b5ddc302",
+    "bench/oracle/m3_push_factor/arms-3.json": "0640184b6f8270bc3b783ee5b53f96b11def80fdf84ee6fc48ae2d38ed7ee04e",
+    "bench/oracle/m3_push_factor/retry-1.json": "ff4a9aaf7234bb1582cdbf872ec1de30cd6d2648140e341a63bb50003f15cb2a",
+    "bench/oracle/m3_push_factor/retry-2.json": "b79c66579cf8400a6af26661ebeaf728b73b9dcc83d9e8ed1b267b389a4050ba",
+    "bench/oracle/m3_push_factor/retry-3.json": "d3574f72e9a4c504a53317e0c7db970ddf6cbee53a73b3fc3a94583021ddb5b1",
+    "bench/oracle/m3_push_factor/interior-1.json": "429f7b5e54f9d0bab25b5bbdf150d7552771d4fe474e4a4f55241c0a32378dde",
+    "bench/oracle/m3_push_factor/interior-2.json": "422e773e76297b47b948e165dc91d81398140ec878acf3e222cb5709c78ff02f",
+    "bench/oracle/m3_push_factor/interior-3.json": "10559b6aaa7ccea633f9af7e95aa4da338121ab643654477c901bbd7ba41b577",
+    "bench/oracle/m3_push_factor/control-1.json": "63390a4e4920383a918ed61760a1df47a6f0d2d6dae751cabeb0d40321c1c574",
+    "bench/oracle/m3_push_factor/control-2.json": "ba0e2971b8d07c2c915fe272e6131b683f4f86e506cfc07aa715fbe8e6e767b5",
+    "bench/oracle/m3_push_factor/control-3.json": "92cb5c75c4aad212110f1b54e599390e12ff627aa6e38dd5db4db6c722893d34",
     "bench/oracle/m3_push_factor/synthetic-1.json": "d029cd2723beb82f24b039e8dd4a0a44057ce22427952cbe00598a28b6afcff9",
     "bench/oracle/m3_push_factor/synthetic-2.json": "9e707809475d1f51187e8c99accc191324f52188bd7e5cd635ab1a74498fe8e9",
     "bench/oracle/m3_push_factor/synthetic-3.json": "41bb4d45372813d09a6bd777e4905f93abe8b00bd5d3f9ce4d2fdf79ea09ef49"

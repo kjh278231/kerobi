@@ -235,15 +235,6 @@
   1c4588:	pxor   %xmm2,%xmm2
   1c458c:	jmp    1c3a73 <PRIVATE0000000000134a87+0x3a03>
   1c4591:	mov    %ebx,%eax
-  1c4593:	mov    0x1ee8(%rsp),%rbp
-  1c459b:	mov    0x1ef0(%rsp),%r12
-  1c45a3:	mov    0x1f18(%rsp),%rbx
-  1c45ab:	mov    0x1f60(%rsp),%r13
-  1c45b3:	mov    0x1f30(%rsp),%r15
-  1c45bb:	.byte 0x89
-  1c45bc:	test   %ah,(%rax,%rsi,2)
-  1c45bf:	(bad)  
-	...
 00000000001c0070 <PRIVATE0000000000134a87>:
   1c0070:	push   %r12
   1c0072:	push   %r13
@@ -259,8 +250,3 @@
   1c0098:	mov    %edx,0x1fa0(%rsp)
   1c009f:	mov    0x68(%r14),%ebp
   1c00a3:	mov    %ebp,0x2060(%rsp)
-  1c00aa:	rex.WB
-  1c00ab:	.byte 0x8b
-  1c00ac:	scas   %es:(%rdi),%al
-  1c00ad:	.byte 0x68
-  1c00ae:	add    %eax,(%rax)
