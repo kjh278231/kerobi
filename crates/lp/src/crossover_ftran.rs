@@ -49,6 +49,9 @@ pub struct FtranFactor {
     pub mult: i64,
     pub dsum: f64,
     pub levels: i64,
+    /// F+0x118 (row → L level) and F+0x120 (level → first slot of the F+0x1a8 list), used by `21b9de` path A2.
+    pub llev: Vec<usize>,
+    pub llst: Vec<usize>,
     /// F+0xf0 (length F+0xec) and F+0xf8.
     pub f0: Vec<usize>,
     pub f8: Vec<i32>,
@@ -149,6 +152,10 @@ pub struct FtranState {
     /// Scratch F+0x1b0 (i32 marks) and F+0x1b8 (f64 values), all zero between calls.
     pub mark: Vec<i32>,
     pub vals: Vec<f64>,
+    /// Scratch F+0x1a8: the level list [0, m) (never captured) and the level counts from m (shared with the BTRAN
+    /// level bucket; None when not known).
+    pub list: Cells<i32>,
+    pub bucket: Option<Vec<i32>>,
     pub events: Vec<KernelEvent>,
     pub branches: Branches,
 }
@@ -175,6 +182,8 @@ impl FtranState {
             spike,
             mark: vec![0; m],
             vals: vec![0.0; m],
+            list: Cells::unknown(m),
+            bucket: None,
             events: Vec::new(),
             branches: Branches::default(),
         };
@@ -234,7 +243,7 @@ impl FtranState {
 /// Σ of products in the 8-lane order of `2207de`'s R phase (asm 0x120c0e–0x120cb3): below 8 terms (or 8 + peel)
 /// in sequence, else lanes (0,1)(2,3)(4,5)(6,7) over the aligned head combined ((0+2)+(4+6)) + ((1+3)+(5+7)), the
 /// tail after in sequence; `peel` adds the first term to lane 0 first.
-fn eta_dot(terms: &[f64], peel: bool) -> f64 {
+pub(crate) fn eta_dot(terms: &[f64], peel: bool) -> f64 {
     let p = peel as usize;
     if terms.len() < 8 || terms.len() < p + 8 {
         return terms.iter().fold(0.0, |a, &t| a + t);
@@ -475,8 +484,10 @@ fn l_dense(f: &FtranFactor, s: &mut FtranState) {
     s.event("214344", true, m);
 }
 
-/// `21b9de` (sparse L). Only path A1 (Kahn FIFO over the reached columns, C:81–257): the output index buffer holds
-/// the reached list and then the queue, the output keeps |v| ≥ ZERO in queue order.
+/// `21b9de` (sparse L). Path A1 (Kahn FIFO over the reached columns, C:81–257): the output index buffer holds the
+/// reached list and then the queue, the output keeps |v| ≥ ZERO in queue order. Path A2 (L levels, C:259–604): the
+/// reached rows go to per-level lists in F+0x1a8 (counts from F+0x1a8[m]), processed from the shallowest input level
+/// in list order.
 pub fn l_sparse(f: &FtranFactor, s: &mut FtranState) -> Result<(), FtranError> {
     let m = f.m;
     let dm = (m - f.e4) as f64;
@@ -485,7 +496,7 @@ pub fn l_sparse(f: &FtranFactor, s: &mut FtranState) -> Result<(), FtranError> {
         return Err(FtranError::Unsupported("21b9de path B"));
     }
     if !(f.levels < 0 || m as f64 * 0.1 <= f.levels as f64) {
-        return Err(FtranError::Unsupported("21b9de path A2"));
+        return l_levels(f, s);
     }
     s.branches.l = "21b9de";
     s.event("21b9de", false, m);
@@ -544,6 +555,79 @@ pub fn l_sparse(f: &FtranFactor, s: &mut FtranState) -> Result<(), FtranError> {
             }
         }
     }
+    s.output.count = Some(out as i32);
+    s.event("21b9de", true, m);
+    Ok(())
+}
+
+/// `21b9de` path A2 (C:259–604).
+fn l_levels(f: &FtranFactor, s: &mut FtranState) -> Result<(), FtranError> {
+    let m = f.m;
+    let lv = f.levels as usize;
+    let Some(mut bucket) = s.bucket.take() else {
+        return Err(FtranError::Unsupported("21b9de path A2 without the F+0x1a8 bucket"));
+    };
+    s.branches.l = "21b9de A2";
+    s.event("21b9de", false, m);
+    if bucket.len() < lv + 1 {
+        bucket.resize(lv + 1, 0);
+    }
+    // C:262 memset of the level counts
+    for c in &mut bucket[..=lv] {
+        *c = 0;
+    }
+    let (ii, iv, oi, ov) = (b(s.input.idx), b(s.input.val), b(s.output.idx), b(s.output.val));
+    let c = FtranState::count(s.input) as usize;
+    let mut lo = lv + 1;
+    for k in 0..c {
+        let i = s.idx[ii].get(k) as usize;
+        let l = f.llev[i];
+        s.list.set(f.llst[l] + bucket[l] as usize, i as i32);
+        bucket[l] += 1;
+        s.mark[i] = 1;
+        lo = lo.min(l);
+        s.vals[i] = s.val[iv].get(k);
+    }
+    let mut pending = c as i64;
+    let mut out = 0usize;
+    if pending > 0 {
+        let mut k = 0;
+        loop {
+            let l = lo + k;
+            k += 1;
+            if bucket[l] != 0 {
+                let mut p = f.llst[l];
+                while p < bucket[l] as usize + f.llst[l] {
+                    let j = s.list.get(p) as usize;
+                    pending -= 1;
+                    let v = s.vals[j];
+                    s.mark[j] = 0;
+                    s.vals[j] = 0.0;
+                    if f.zero <= v.abs() {
+                        s.val[ov].set(out, v);
+                        s.idx[oi].set(out, j as i32);
+                        out += 1;
+                        for e in f.lbeg[j]..f.lbeg[j + 1] {
+                            let i = f.lrow[e];
+                            if s.mark[i] == 0 {
+                                let li = f.llev[i];
+                                pending += 1;
+                                s.mark[i] = 1;
+                                s.list.set(f.llst[li] + bucket[li] as usize, i as i32);
+                                bucket[li] += 1;
+                            }
+                            s.vals[i] += -(f.lval[e] * v);
+                        }
+                    }
+                    p += 1;
+                }
+            }
+            if pending <= 0 {
+                break;
+            }
+        }
+    }
+    s.bucket = Some(bucket);
     s.output.count = Some(out as i32);
     s.event("21b9de", true, m);
     Ok(())
