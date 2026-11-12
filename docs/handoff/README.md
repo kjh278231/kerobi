@@ -67,7 +67,7 @@ python3 tools/session.py status
 
 clone의 origin은 로컬 bundle 파일이다. 공유 원격으로 바뀌었다고 간주하지 않는다. 새 컴퓨터 owner로 점유하고 스냅숏의 선행 변경·검증 상태부터 확인한다. 검증된 main 기준선이 준비됐으면 거기서 작업 branch를 만들고, 스냅숏에서 이어야 하면 임시 분기로 기록한 뒤 병합 전에 선행 변경을 분리한다. 스냅숏에서는 원본 컴퓨터의 미커밋 내용도 commit에 포함돼 있으므로 깨끗한 status가 정상이며, 그것만으로 검증 완료 기준선이 되지는 않는다. 원본 branch·미커밋 상태는 manifest에 남아 있다.
 
-빌드 산출물·`.venv`·Gurobi 라이선스·환경변수·개인별 스킬은 전달하지 않는다. 대상은 기존 수치 검증 조건에 맞는 x86-64 Linux를 기준으로 Rust, Python과 PyO3 빌드 환경을 준비한다. `pyproject.toml`을 확인해 새 가상환경에서 확장을 빌드한다. 오라클을 돌릴 컴퓨터는 Gurobi 13.0.3·라이선스와 Frida 등 해당 도구 의존성을 별도로 준비한다. 경로·환경이 없으면 doctor 결과를 인수인계에 기록하고 원본 확인이 가능한 범위만 진행한다.
+빌드 산출물·`.venv`·Gurobi 라이선스·환경변수·개인별 스킬은 전달하지 않는다. 대상은 기존 수치 검증 조건에 맞는 x86-64 Linux를 기준으로 Rust, Python과 PyO3 빌드 환경을 준비한다. `pyproject.toml`을 확인해 새 가상환경에서 확장을 빌드한다. 오라클을 돌릴 컴퓨터는 Gurobi 13.0.3·라이선스와 Frida 등 해당 도구 의존성을 별도로 준비한다. Frida는 Node 모듈 17.x를 `~/.local/share/frida-node`에 설치하거나(`npm install frida@17` 그 디렉터리에서) 설치 위치를 `FRIDA_NODE`로 지정한다. 캡처 도구에 남은 원래 캡처 컴퓨터의 Frida 경로는 해시로 고정돼 있어 고치지 않고, `tools/gurun.sh`가 `NODE_OPTIONS`로 싣는 `tools/frida_resolve.cjs`가 그 경로를 이 위치로 돌린다. 그래서 캡처 도구는 `tools/gurun.sh node tools/<도구>.js ...`로 실행한다. 경로·환경이 없으면 doctor 결과를 인수인계에 기록하고 원본 확인이 가능한 범위만 진행한다.
 
 ## 5. 다른 에이전트에게 위임과 독립 검토
 

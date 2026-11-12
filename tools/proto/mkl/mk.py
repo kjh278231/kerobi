@@ -1,7 +1,8 @@
 """ctypes access to the MKL DGEMM/DTRSM statically linked in libgurobi130.so, with controlled buffer alignment."""
 import ctypes
+import os
 import numpy as np
-LIBP = '/home/sds/workspace/gurobi-sandbox/.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so'
+LIBP = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../../.venv/lib/python3.13/site-packages/gurobipy/.libs/libgurobi130.so')
 _lib = ctypes.CDLL(LIBP)
 BASE = next(int(ln.split("-")[0], 16) for ln in open("/proc/self/maps") if "libgurobi130.so" in ln and ln.split()[2] == "00000000")
 VP = ctypes.c_void_p

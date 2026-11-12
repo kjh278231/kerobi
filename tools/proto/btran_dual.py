@@ -1,7 +1,7 @@
 import gzip, json, sys, glob, os
-sys.path.insert(0, "/home/sds/workspace/gurobi-sandbox/rsolver/tools/proto")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 H = float.fromhex
-src = open("/home/sds/workspace/gurobi-sandbox/rsolver/tools/proto/lu_singleton.py").read().split("ok = full = tot = 0")[0]
+src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lu_singleton.py')).read().split("ok = full = tot = 0")[0]
 exec(src)
 
 def btran(m, n, beg, ind, val, head, steps, prow, cb):
