@@ -1,0 +1,962 @@
+{
+  "schema": "M3-04c-18-extra-v1",
+  "origin": "synthetic-original-slice",
+  "substitution": "original in-place recompute; jump exits; FTRAN supplied raw output; log no-op; no numeric LU",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "ceee567d5e8d10cb8b18fcb29110e2cdfd9e9d64e75ce23d8e217f1c4800d173",
+  "input_sha256": "3dd482deb3ad991350a1dd7814e17c7d0061c4d028c738f444db4254c7dc5c7f",
+  "run_id": "c0470dba-ad34-48a2-9bb9-a3d7ce43acb5",
+  "pid": 300447,
+  "environment": {
+    "machine": "x86_64",
+    "system": "Linux",
+    "python": "3.13.14"
+  },
+  "events": [
+    {
+      "name": "pivot-lower-sentinel-wide",
+      "site": "pivot",
+      "input": {
+        "m": 1,
+        "header": [
+          0
+        ],
+        "lb": [
+          "ea8ca039593e29c6"
+        ],
+        "ub": [
+          "ea8ca039593e1946"
+        ],
+        "raw": [
+          "000000000000f03f"
+        ],
+        "rhs": [
+          "0000000000403140"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "000000000000f03f"
+        ],
+        "width": [
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e"
+        ],
+        "pinf": "0000000000000000",
+        "violations": 0,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            0
+          ],
+          "lb": [
+            "ea8ca039593e29c6"
+          ],
+          "ub": [
+            "ea8ca039593e1946"
+          ],
+          "rhs": [
+            "0000000000403140"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    },
+    {
+      "name": "pivot-upper-sentinel-wide",
+      "site": "pivot",
+      "input": {
+        "m": 1,
+        "header": [
+          0
+        ],
+        "lb": [
+          "ea8ca039593e1946"
+        ],
+        "ub": [
+          "ea8ca039593e2946"
+        ],
+        "raw": [
+          "b06938ebc2ee2246"
+        ],
+        "rhs": [
+          "0000000000403140"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "ec8ca039593e0946"
+        ],
+        "width": [
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e"
+        ],
+        "pinf": "0000000000000000",
+        "violations": 0,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            0
+          ],
+          "lb": [
+            "ea8ca039593e1946"
+          ],
+          "ub": [
+            "ea8ca039593e2946"
+          ],
+          "rhs": [
+            "0000000000403140"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    },
+    {
+      "name": "pivot-infinite-width-large-value",
+      "site": "pivot",
+      "input": {
+        "m": 1,
+        "header": [
+          0
+        ],
+        "lb": [
+          "0000000000000000"
+        ],
+        "ub": [
+          "ea8ca039593e2946"
+        ],
+        "raw": [
+          "ea8ca039593e3946"
+        ],
+        "rhs": [
+          "0000000000403140"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "ea8ca039593e3946"
+        ],
+        "width": [
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e"
+        ],
+        "pinf": "0000000000000000",
+        "violations": 0,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            0
+          ],
+          "lb": [
+            "0000000000000000"
+          ],
+          "ub": [
+            "ea8ca039593e2946"
+          ],
+          "rhs": [
+            "0000000000403140"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    },
+    {
+      "name": "pivot-above-association",
+      "site": "pivot",
+      "input": {
+        "m": 2,
+        "header": [
+          1,
+          0
+        ],
+        "lb": [
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "ub": [
+          "feffffffffff4f43",
+          "ea8ca039593e2946"
+        ],
+        "raw": [
+          "000000000000f0bf",
+          "0000000000005043"
+        ],
+        "rhs": [
+          "0000000000403140",
+          "0000000000403240"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "000000000000f0bf",
+          "0000000000005043"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "feffffffffff4f43"
+        ],
+        "marks": [
+          "42",
+          "41"
+        ],
+        "pinf": "0000000000001440",
+        "violations": 2,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140",
+                "0000000000403240"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            1,
+            0
+          ],
+          "lb": [
+            "0000000000000000",
+            "0000000000000000"
+          ],
+          "ub": [
+            "feffffffffff4f43",
+            "ea8ca039593e2946"
+          ],
+          "rhs": [
+            "0000000000403140",
+            "0000000000403240"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    },
+    {
+      "name": "pivot-basis-accumulation",
+      "site": "pivot",
+      "input": {
+        "m": 4,
+        "header": [
+          3,
+          2,
+          1,
+          0
+        ],
+        "lb": [
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "ub": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "raw": [
+          "00000000000050c3",
+          "000000000000f0bf",
+          "000000000000f0bf",
+          "000000000000f0bf"
+        ],
+        "rhs": [
+          "0000000000403140",
+          "0000000000403240",
+          "0000000000403340",
+          "0000000000403440"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "00000000000050c3",
+          "000000000000f0bf",
+          "000000000000f0bf",
+          "000000000000f0bf"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "42",
+          "42",
+          "42",
+          "42"
+        ],
+        "pinf": "0000000000005043",
+        "violations": 4,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140",
+                "0000000000403240",
+                "0000000000403340",
+                "0000000000403440"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            3,
+            2,
+            1,
+            0
+          ],
+          "lb": [
+            "0000000000000000",
+            "0000000000000000",
+            "0000000000000000",
+            "0000000000000000"
+          ],
+          "ub": [
+            "ea8ca039593e2946",
+            "ea8ca039593e2946",
+            "ea8ca039593e2946",
+            "ea8ca039593e2946"
+          ],
+          "rhs": [
+            "0000000000403140",
+            "0000000000403240",
+            "0000000000403340",
+            "0000000000403440"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    },
+    {
+      "name": "round-lower-sentinel-wide",
+      "site": "round",
+      "input": {
+        "m": 1,
+        "header": [
+          0
+        ],
+        "lb": [
+          "ea8ca039593e29c6"
+        ],
+        "ub": [
+          "ea8ca039593e1946"
+        ],
+        "raw": [
+          "000000000000f03f"
+        ],
+        "rhs": [
+          "0000000000403140"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "000000000000f03f"
+        ],
+        "width": [
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e"
+        ],
+        "pinf": "0000000000000000",
+        "violations": 0,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            0
+          ],
+          "lb": [
+            "ea8ca039593e29c6"
+          ],
+          "ub": [
+            "ea8ca039593e1946"
+          ],
+          "rhs": [
+            "0000000000403140"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    },
+    {
+      "name": "round-upper-sentinel-wide",
+      "site": "round",
+      "input": {
+        "m": 1,
+        "header": [
+          0
+        ],
+        "lb": [
+          "ea8ca039593e1946"
+        ],
+        "ub": [
+          "ea8ca039593e2946"
+        ],
+        "raw": [
+          "b06938ebc2ee2246"
+        ],
+        "rhs": [
+          "0000000000403140"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "ec8ca039593e0946"
+        ],
+        "width": [
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e"
+        ],
+        "pinf": "0000000000000000",
+        "violations": 0,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            0
+          ],
+          "lb": [
+            "ea8ca039593e1946"
+          ],
+          "ub": [
+            "ea8ca039593e2946"
+          ],
+          "rhs": [
+            "0000000000403140"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    },
+    {
+      "name": "round-infinite-width-large-value",
+      "site": "round",
+      "input": {
+        "m": 1,
+        "header": [
+          0
+        ],
+        "lb": [
+          "0000000000000000"
+        ],
+        "ub": [
+          "ea8ca039593e2946"
+        ],
+        "raw": [
+          "ea8ca039593e3946"
+        ],
+        "rhs": [
+          "0000000000403140"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "ea8ca039593e3946"
+        ],
+        "width": [
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "4e"
+        ],
+        "pinf": "0000000000000000",
+        "violations": 0,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            0
+          ],
+          "lb": [
+            "0000000000000000"
+          ],
+          "ub": [
+            "ea8ca039593e2946"
+          ],
+          "rhs": [
+            "0000000000403140"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    },
+    {
+      "name": "round-above-association",
+      "site": "round",
+      "input": {
+        "m": 2,
+        "header": [
+          1,
+          0
+        ],
+        "lb": [
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "ub": [
+          "feffffffffff4f43",
+          "ea8ca039593e2946"
+        ],
+        "raw": [
+          "000000000000f0bf",
+          "0000000000005043"
+        ],
+        "rhs": [
+          "0000000000403140",
+          "0000000000403240"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "000000000000f0bf",
+          "0000000000005043"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "feffffffffff4f43"
+        ],
+        "marks": [
+          "42",
+          "41"
+        ],
+        "pinf": "0000000000001440",
+        "violations": 2,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140",
+                "0000000000403240"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            1,
+            0
+          ],
+          "lb": [
+            "0000000000000000",
+            "0000000000000000"
+          ],
+          "ub": [
+            "feffffffffff4f43",
+            "ea8ca039593e2946"
+          ],
+          "rhs": [
+            "0000000000403140",
+            "0000000000403240"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    },
+    {
+      "name": "round-basis-accumulation",
+      "site": "round",
+      "input": {
+        "m": 4,
+        "header": [
+          3,
+          2,
+          1,
+          0
+        ],
+        "lb": [
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000",
+          "0000000000000000"
+        ],
+        "ub": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "raw": [
+          "00000000000050c3",
+          "000000000000f0bf",
+          "000000000000f0bf",
+          "000000000000f0bf"
+        ],
+        "rhs": [
+          "0000000000403140",
+          "0000000000403240",
+          "0000000000403340",
+          "0000000000403440"
+        ],
+        "I": "ea8ca039593e2946",
+        "minus_I": "ea8ca039593e29c6",
+        "h": "000000000000c03f",
+        "minus_h": "000000000000c0bf",
+        "attempt": 0,
+        "model_status": 1,
+        "request": 10,
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      },
+      "result": {
+        "exit": "normal",
+        "basic": [
+          "00000000000050c3",
+          "000000000000f0bf",
+          "000000000000f0bf",
+          "000000000000f0bf"
+        ],
+        "width": [
+          "ea8ca039593e2946",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946",
+          "ea8ca039593e2946"
+        ],
+        "marks": [
+          "42",
+          "42",
+          "42",
+          "42"
+        ],
+        "pinf": "0000000000005043",
+        "violations": 4,
+        "retry": 0,
+        "request": 10,
+        "calls": [
+          {
+            "input": {
+              "count": -1,
+              "values": [
+                "0000000000403140",
+                "0000000000403240",
+                "0000000000403340",
+                "0000000000403440"
+              ]
+            },
+            "args": {
+              "factor": true,
+              "input": true,
+              "output": true,
+              "flag": 0,
+              "work": true
+            }
+          }
+        ],
+        "preserved": {
+          "header": [
+            3,
+            2,
+            1,
+            0
+          ],
+          "lb": [
+            "0000000000000000",
+            "0000000000000000",
+            "0000000000000000",
+            "0000000000000000"
+          ],
+          "ub": [
+            "ea8ca039593e2946",
+            "ea8ca039593e2946",
+            "ea8ca039593e2946",
+            "ea8ca039593e2946"
+          ],
+          "rhs": [
+            "0000000000403140",
+            "0000000000403240",
+            "0000000000403340",
+            "0000000000403440"
+          ]
+        },
+        "aliases": {
+          "rhs_input": false,
+          "raw_basic": false
+        }
+      }
+    }
+  ],
+  "slice_tool_sha256": "89b5e2b0d316b44abcafce3a7fb7f0ab9fa0a2fed8654067cc8498142ee23584"
+}

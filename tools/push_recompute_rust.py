@@ -157,9 +157,9 @@ MUTATIONS = [
     ('no-shift', 'basic[p] -= lower;', 'basic[p] += 0.0;'),
     ('wrong-shift-sign', 'basic[p] -= lower;', 'basic[p] += lower;'),
     ('wrong-column', 'let j = column as usize;', 'let j = p; let _ = column;'),
-    ('lower-sentinel-strict', 'lower <= -inf {', 'lower < -inf {'),
+    ('lower-sentinel-strict', 'let w = if lower <= -inf || upper >= inf {', 'let w = if lower < -inf || upper >= inf {'),
     ('shift-sentinel-equality', 'if lower > -inf {', 'if lower >= -inf {'),
-    ('upper-sentinel-strict', 'if upper >= inf {', 'if upper > inf {'),
+    ('upper-sentinel-strict', 'let w = if lower <= -inf || upper >= inf {', 'let w = if lower <= -inf || upper > inf {'),
     ('width-is-upper', 'upper - lower', 'upper'),
     ('free-as-normal', "b'F'", "b'N'"),
     ('free-ignore-upper', 'lower <= -inf && upper >= inf', 'lower <= -inf'),
@@ -224,7 +224,7 @@ def mutate_rust(path, expected, header):
 def manifest():
     paths = ['crates/lp/src/crossover_recompute.rs', 'crates/lp/src/lib.rs', 'crates/lp/tests/push_recompute.rs',
              'tools/push_recompute_rust.py', 'bench/oracle/m3_push_recompute/manifest.json']
-    paths += [str(p.relative_to(ROOT)) for p in sorted(D.iterdir()) if p.is_file() and p.name != 'manifest.json']
+    paths += [str(p.relative_to(ROOT)) for p in sorted(D.rglob('*')) if p.is_file() and p != D/'manifest.json']
     return dict(task='M3-04c-18', baseline='484243d', binary_sha256=oracle.BINARY_SHA,
                 oracle_manifest_sha256=sha(ROOT/oracle.D/'manifest.json'), files={p: sha(ROOT/p) for p in paths})
 

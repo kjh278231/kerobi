@@ -2,7 +2,8 @@
 
 /// New factor header in basis order, bounds in column order, and fixed push frame.
 /// All values and intermediate arithmetic must be finite, bounds ordered, indices valid,
-/// and infinity > tolerance > 0. Arrays have exactly header.len() basis entries.
+/// and infinity > tolerance > 0. Basic/width/marks have exactly header.len() entries;
+/// lower/upper cover every column referenced by the header.
 pub struct RecomputeInput<'a> {
     pub header: &'a [i32],
     pub lower: &'a [f64],
@@ -59,9 +60,7 @@ pub fn push_recompute(
         let j = column as usize;
         let lower = input.lower[j];
         let upper = input.upper[j];
-        let w = if lower <= -inf {
-            inf
-        } else if upper >= inf {
+        let w = if lower <= -inf || upper >= inf {
             inf
         } else {
             upper - lower
