@@ -1,0 +1,1940 @@
+{
+ "schema": "M3-04c-15-synthetic-v1",
+ "origin": "synthetic-original-slice",
+ "substitution": "original in-place selector/wrapper; exit stubs; wrapper factor, quality, context helpers replaced; no numeric LU",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "470ef1fa2e9ed9dd814a090fcbdf3bf036b119d94950db992b24bc8483856da7",
+ "input_sha256": "160cff354c928768363462a388689aa899e5a51d9cc166432505c30808745f82",
+ "run_id": "06f403ad-e71b-4245-9fc3-6805d40bdcfc",
+ "pid": 223654,
+ "environment": {
+  "machine": "x86_64",
+  "system": "Linux",
+  "python": "3.13.14"
+ },
+ "events": [
+  {
+   "name": "update",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 0,
+    "k": 2,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "preserve-2",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 2,
+    "numeric": 0,
+    "k": 10,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 1
+   },
+   "result": {
+    "request": 2,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "preserve-6",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 6,
+    "numeric": 0,
+    "k": 10,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 1
+   },
+   "result": {
+    "request": 6,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "preserve-10",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 10,
+    "numeric": 0,
+    "k": 10,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 1
+   },
+   "result": {
+    "request": 10,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "limit-9",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 0,
+    "k": 9,
+    "limit": 10,
+    "q": 12,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "limit-10",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 0,
+    "k": 10,
+    "limit": 10,
+    "q": 12,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 2,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "limit-11",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 0,
+    "k": 11,
+    "limit": 10,
+    "q": 12,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "q-3-numeric-0",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 0,
+    "k": 3,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "q-3-numeric-1",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 1,
+    "k": 3,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "q-4-numeric-0",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 0,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "q-4-numeric-1",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 1,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "q-5-numeric-0",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 0,
+    "k": 5,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "q-5-numeric-1",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 1,
+    "k": 5,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 0
+   },
+   "result": {
+    "request": 10,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "skip-1",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 0,
+    "k": 2,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": 1
+   },
+   "result": {
+    "request": 0,
+    "call": false,
+    "preserved": true
+   }
+  },
+  {
+   "name": "skip--1",
+   "kind": "select",
+   "input": {
+    "m": 8,
+    "request": 0,
+    "numeric": 0,
+    "k": 2,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 20,
+    "U": 20,
+    "support": -1
+   },
+   "result": {
+    "request": 0,
+    "call": false,
+    "preserved": true
+   }
+  },
+  {
+   "name": "cost--1",
+   "kind": "select",
+   "input": {
+    "m": 2,
+    "request": 0,
+    "numeric": 0,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 2,
+    "U": 3,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "cost-0",
+   "kind": "select",
+   "input": {
+    "m": 2,
+    "request": 0,
+    "numeric": 0,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 1,
+    "E": 0,
+    "L": 2,
+    "U": 3,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "cost-1",
+   "kind": "select",
+   "input": {
+    "m": 2,
+    "request": 0,
+    "numeric": 0,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 2,
+    "E": 0,
+    "L": 2,
+    "U": 3,
+    "support": 0
+   },
+   "result": {
+    "request": 10,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "min-q-term",
+   "kind": "select",
+   "input": {
+    "m": 2,
+    "request": 0,
+    "numeric": 0,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 21,
+    "E": 0,
+    "L": 50,
+    "U": 50,
+    "support": 0
+   },
+   "result": {
+    "request": 10,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "min-q-zero",
+   "kind": "select",
+   "input": {
+    "m": 2,
+    "request": 0,
+    "numeric": 0,
+    "k": 0,
+    "limit": 10,
+    "q": 0,
+    "C": 1,
+    "E": 0,
+    "L": 2,
+    "U": 3,
+    "support": 0
+   },
+   "result": {
+    "request": 10,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "sum-convert",
+   "kind": "select",
+   "input": {
+    "m": 7,
+    "request": 0,
+    "numeric": 0,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 1,
+    "E": -1,
+    "L": 9007199254740993,
+    "U": 2,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "negative-cost-support",
+   "kind": "select",
+   "input": {
+    "m": 2,
+    "request": 0,
+    "numeric": 0,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 0,
+    "E": 0,
+    "L": 2,
+    "U": 3,
+    "support": 1
+   },
+   "result": {
+    "request": 0,
+    "call": false,
+    "preserved": true
+   }
+  },
+  {
+   "name": "normal",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "repeat-one",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 1
+    },
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 1
+      }
+     },
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "repeat-two",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 1
+    },
+    {
+     "ret": 1
+    },
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 1
+      }
+     },
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 1
+      }
+     },
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "return12",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 12
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 202,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 1,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 12
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "error7",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 7
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 7,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 7
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "error-precedes-status",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 7,
+     "status": -1000
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 7,
+    "request": 0,
+    "status": -1000,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 7,
+       "status": -1000
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "status--999",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": -999,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": -999,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "status--1000",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": -1000,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 202,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 1,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "failure-attempt-0",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 1,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 202,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 1,
+    "retry": 1,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric-12-attempt-0",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 12,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 12,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric-13-attempt-0",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 13,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 202,
+    "request": 0,
+    "status": 1,
+    "numeric": 13,
+    "failure": 0,
+    "retry": 1,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric-14-attempt-0",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 14,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 202,
+    "request": 0,
+    "status": 1,
+    "numeric": 14,
+    "failure": 0,
+    "retry": 1,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "failure-attempt-1",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 1,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 1,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 1,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric-12-attempt-1",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 12,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 1,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 12,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric-13-attempt-1",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 13,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 1,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 13,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric-14-attempt-1",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 14,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 1,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 14,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "request-recompute",
+   "kind": "wrapper",
+   "input": {
+    "request": 10,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 201,
+    "request": 10,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 10,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "request-preserved-on-retry",
+   "kind": "wrapper",
+   "input": {
+    "request": 6,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 12
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 202,
+    "request": 6,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 1,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 6,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 12
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "zero-updates-period100",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 0,
+    "period": 100,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 100,
+    "k": 0,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "nonzero-clamp100",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 100,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "period20-kept",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 20,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 20,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "quality-increment-5",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 50,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [
+    {
+     "increment": 5,
+     "request": 0
+    }
+   ],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 55,
+    "k": 50,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     },
+     {
+      "event": "quality",
+      "period": 50,
+      "request": 0,
+      "reply": {
+       "increment": 5,
+       "request": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "quality-increment-10",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 50,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [
+    {
+     "increment": 10,
+     "request": 0
+    }
+   ],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 60,
+    "k": 50,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     },
+     {
+      "event": "quality",
+      "period": 50,
+      "request": 0,
+      "reply": {
+       "increment": 10,
+       "request": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "quality-increment-20",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 50,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [
+    {
+     "increment": 20,
+     "request": 0
+    }
+   ],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 70,
+    "k": 50,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     },
+     {
+      "event": "quality",
+      "period": 50,
+      "request": 0,
+      "reply": {
+       "increment": 20,
+       "request": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "quality-increment-50",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 50,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [
+    {
+     "increment": 50,
+     "request": 0
+    }
+   ],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 100,
+    "k": 50,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     },
+     {
+      "event": "quality",
+      "period": 50,
+      "request": 0,
+      "reply": {
+       "increment": 50,
+       "request": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "quality-above-period",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 51,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [
+    {
+     "increment": 10,
+     "request": 0
+    }
+   ],
+   "result": {
+    "exit": 200,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 60,
+    "k": 51,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     },
+     {
+      "event": "quality",
+      "period": 50,
+      "request": 0,
+      "reply": {
+       "increment": 10,
+       "request": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "quality-request6",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 50,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    },
+    {
+     "ret": 0,
+     "k": 0
+    }
+   ],
+   "qualities": [
+    {
+     "increment": 5,
+     "request": 6
+    }
+   ],
+   "result": {
+    "exit": 201,
+    "request": 6,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 20,
+    "k": 0,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     },
+     {
+      "event": "quality",
+      "period": 50,
+      "request": 0,
+      "reply": {
+       "increment": 5,
+       "request": 6
+      }
+     },
+     {
+      "event": "factor",
+      "request": 6,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0,
+       "k": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "quality-request6-repeat",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 50,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    },
+    {
+     "ret": 1
+    },
+    {
+     "ret": 0,
+     "k": 0
+    }
+   ],
+   "qualities": [
+    {
+     "increment": 20,
+     "request": 6
+    }
+   ],
+   "result": {
+    "exit": 201,
+    "request": 6,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 20,
+    "k": 0,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     },
+     {
+      "event": "quality",
+      "period": 50,
+      "request": 0,
+      "reply": {
+       "increment": 20,
+       "request": 6
+      }
+     },
+     {
+      "event": "factor",
+      "request": 6,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 1
+      }
+     },
+     {
+      "event": "factor",
+      "request": 6,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0,
+       "k": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "quality-status12",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 50,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13
+   },
+   "replies": [
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [
+    {
+     "increment": 50,
+     "request": 0,
+     "status": 12
+    }
+   ],
+   "result": {
+    "exit": 202,
+    "request": 0,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 1,
+    "period": 50,
+    "k": 50,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     },
+     {
+      "event": "quality",
+      "period": 50,
+      "request": 0,
+      "reply": {
+       "increment": 50,
+       "request": 0,
+       "status": 12
+      }
+     }
+    ]
+   }
+  }
+ ]
+}
