@@ -48,3 +48,7 @@
 ## 7. 판정과 인수인계
 
 작업 미완료. branch `work/m3-04c-19`, worktree `../rsolver-m3-04c-19`, owner `codex-m3-04c19-20261112`가19를 점유했다. 다음은 훅/명령 구간 ABI 확인과 탐색 캡처다. 완료 전 shared 점유 후 progress·roadmap·스프린트·handoff·교훈을 갱신한다.
+
+### 첫 합성 실행 전 입력 고정
+
+원본 구간 진입/출구와 caller 레지스터를 asm으로 확인했다. `tools/push_round_synthetic.py`의 106사례를 먼저 커밋한다. 입력표 sha256 `fcbd0140642d6780e63708118dade1f7e8be0cb4a79137a0dd3bc9c1e8e8f757`. pass 출구는 공급자 호출 직전 계산된 eax(total)와 r12=0(cursor/deferred)을 저장하는 명시적 stub이며 이 stub의 쓰기는 검증할 원본 명령으로 세지 않는다. 정상 round·dense는 factor 직전102, 종료103, sparse104, wrapper 재계산105/cleanup106에서 중단한다. factor/BTRAN 수치는 대체 backend다.
