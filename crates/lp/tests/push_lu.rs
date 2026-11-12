@@ -432,7 +432,8 @@ fn run_case(lines: &[&str], out: &mut Vec<String>, pool_out: bool) {
                         let sizes: Vec<String> = rf.sizes.iter().map(|x| x.to_string()).collect();
                         let m70 = rf.mode70.as_ref().map_or("null".to_string(), |t| {
                             let pv: Vec<String> = t.pivots.iter().map(|x| x.to_string()).collect();
-                            format!("{{\"step\":{},\"n\":{},\"pivots\":[{}]}}", t.step, t.n, pv.join(","))
+                            let sv: Vec<String> = t.stats.iter().map(|x| x.to_string()).collect();
+                            format!("{{\"step\":{},\"n\":{},\"pivots\":[{}],\"stats\":[{}]}}", t.step, t.n, pv.join(","), sv.join(","))
                         });
                         format!("{},\"pool\":[{}],\"sizes\":[{}],\"mode70\":{}}}", &json[..json.len() - 1], calls.join(","), sizes.join(","), m70)
                     };

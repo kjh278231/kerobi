@@ -123,6 +123,10 @@ pub struct Mode70Trace {
     pub step: usize,
     pub n: usize,
     pub pivots: Vec<i64>,
+    /// Branch counts (coverage only): full column / row scans, list column / row scans, cost-tie acceptances,
+    /// markers set, structural fills (list adds), fills on a marker, list adds skipped (full), new empty rows /
+    /// columns, dense gate recounts, list cap iVar67.
+    pub stats: [usize; 12],
 }
 
 /// A pool shortage: `036ade` returns −1 with F+0x158 = F+0x168 set to a new size (`Grow`, C:2592–2620) or left as
@@ -1992,6 +1996,8 @@ impl Lu {
         }
         let mut est = st.est;
         let mut pivots = Vec::new();
+        let mut cov = [0usize; 12];
+        cov[11] = cap;
         loop {
             let steps = self.steps.len();
             let nact = (m - steps) as i64 - st.ecols.len() as i64;
@@ -2004,6 +2010,7 @@ impl Lu {
             if est > nsq * 0.36 && (m as f64) * 4.0 < nsq && nact >= 51 && (m as f64) + nsq < 2000000000.0 {
                 // C:3301–3392: the exact count over the dense columns replaces the estimate
                 est = cnt_c.iter().filter(|&&c| c >= 0).map(|&c| (c + 1) as f64).sum();
+                cov[10] += 1;
                 assert!(est <= nsq * 0.325, "036ade local_70 mode dense switch (C:3405): not ported");
             }
             let cmin = (0..n).find(|&k| cb.head[k] >= 0).unwrap_or(n);
@@ -2030,6 +2037,7 @@ impl Lu {
                     let mut x = h;
                     loop {
                         if clen[x] >= cap {
+                            cov[0] += 1;
                             if cache[x] == 0.0 {
                                 let mut t = 0.0f64;
                                 for rr in 0..n {
@@ -2046,12 +2054,14 @@ impl Lu {
                                 let v = a[rr * n + x].abs();
                                 let cost = cnt_r[rr] as f64 * fk;
                                 if TINY < v && ((cost < bcost && tol * mx < v) || (cost == bcost && ratio * mx < v)) {
+                                    cov[4] += usize::from(cost == bcost);
                                     best = (x + rr * n) as i64;
                                     ratio = v / mx;
                                     bcost = cost;
                                 }
                             }
                         } else {
+                            cov[2] += 1;
                             let recompute = cache[x] == 0.0;
                             let (mut kept, mut t) = (0usize, 0.0f64);
                             for j in 0..clen[x] {
@@ -2076,6 +2086,7 @@ impl Lu {
                                 let v = a[rr * n + x].abs();
                                 let cost = cnt_r[rr] as f64 * fk;
                                 if TINY < v && ((cost < bcost && tol * mx < v) || (cost == bcost && ratio * mx < v)) {
+                                    cov[4] += usize::from(cost == bcost);
                                     best = (x + n * rr) as i64;
                                     ratio = v / mx;
                                     bcost = cost;
@@ -2104,6 +2115,7 @@ impl Lu {
                     let mut y = h;
                     loop {
                         if rlen[y] >= cap {
+                            cov[1] += 1;
                             let mut mx = 0.0f64;
                             for c in 0..n {
                                 let v = a[y * n + c].abs();
@@ -2116,12 +2128,14 @@ impl Lu {
                                 let v = a[y * n + c].abs();
                                 let cost = cnt_c[c] as f64 * fk;
                                 if TINY < v && ((cost < bcost && mx * tol < v) || (cost == bcost && mx * ratio < v)) {
+                                    cov[4] += usize::from(cost == bcost);
                                     best = (y * n + c) as i64;
                                     ratio = v / mx;
                                     bcost = cost;
                                 }
                             }
                         } else {
+                            cov[3] += 1;
                             let (mut kept, mut mx) = (0usize, 0.0f64);
                             for j in 0..rlen[y] {
                                 let c = rlist[y * cap + j];
@@ -2141,6 +2155,7 @@ impl Lu {
                                 let v = a[y * n + c].abs();
                                 let cost = cnt_c[c] as f64 * fk;
                                 if TINY < v && ((cost < bcost && mx * tol < v) || (cost == bcost && mx * ratio < v)) {
+                                    cov[4] += usize::from(cost == bcost);
                                     best = (c + n * y) as i64;
                                     ratio = v / mx;
                                     bcost = cost;
@@ -2225,7 +2240,9 @@ impl Lu {
                     let new = u * -l + old;
                     if old.abs() <= TINY {
                         if ZERO <= new.abs() {
+                            cov[if old == 0.0 { 6 } else { 7 }] += 1;
                             if old == 0.0 {
+                                cov[8] += usize::from(rlen[r2] >= cap) + usize::from(clen[c2] >= cap);
                                 if rlen[r2] < cap {
                                     rlist[r2 * cap + rlen[r2]] = c2;
                                     rlen[r2] += 1;
@@ -2240,6 +2257,7 @@ impl Lu {
                             cnt_c[c2] += 1;
                         }
                     } else if new.abs() < ZERO {
+                        cov[5] += 1;
                         a[r2 * n + c2] = sent;
                         cnt_r[r2] -= 1;
                         cnt_c[c2] -= 1;
@@ -2248,6 +2266,7 @@ impl Lu {
                     }
                 }
                 if cnt_r[r2] < 0 {
+                    cov[9] += 1;
                     st.erows.push(rowmap[r2]);
                 } else {
                     rb.ins(r2, cnt_r[r2] as usize);
@@ -2257,6 +2276,7 @@ impl Lu {
             for &(c2, _) in &urow {
                 cache[c2] = 0.0;
                 if cnt_c[c2] < 0 {
+                    cov[9] += 1;
                     st.ecols.push(colmap[c2]);
                 } else {
                     cb.ins(c2, cnt_c[c2] as usize);
@@ -2267,7 +2287,7 @@ impl Lu {
             clen[c] = 0;
             cnt_c[c] = -1;
         }
-        self.mode70 = Some(Mode70Trace { step: steps0, n, pivots });
+        self.mode70 = Some(Mode70Trace { step: steps0, n, pivots, stats: cov });
         true
     }
 
