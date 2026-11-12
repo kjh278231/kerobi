@@ -1,5 +1,7 @@
 # 12. 로드맵 다이어그램
 
+M3-04c-1 primal push 초기화를 조사했다(조사 완료, Rust 구현 없음). `134a87` 진입부터 첫 패스 준비(`0x1c1ff8`)까지를 10단계(할당·요청 10 초기 재분해·rhs/후보 구성·`aabbe3` 정렬·dense rhs FTRAN·잔차/Markowitz 강화·shift/폭/분류·품질 gate·1회 기준 조정·루프 준비)로 C/asm에 고정했다. asm으로 원본 특유 동작 둘을 확인했다: 첫 구성의 slack -2는 직전 xmm0을 rhs에서 빼고(`0x1c4f3d`), 기준 조정 재구성은 -4·-5 열을 rhs에서 빼지 않는다(`0x1c1cae`). 21h 자연 6사례×3회 캡처의 push:enter만으로 후보 순서·rhs S+0x200·폭·표시·PInf·반복·지원 flag를 다시 계산해 첫 supply:enter와 **1,480필드**가 첫 실행부터 비트/정확 일치했다(`tools/push_init_survey.py`, 동률 때문에 4사례는 안정 정렬과 순서가 다름). 변조11 전부 거부, 규칙 변이7 중 생존3(slack -2·-τ 경계·-4 값, 자연 미경유·동치). 기준 조정·Markowitz 강화·품질 retry·slack -2·열 -5는 자연 0회, basic 값·조건수 `116fd7`은 미비교다. 원본 실행0회, 독립 검토자 미사용. 후속은 **M3-04c-1a** Rust `push_init`+`push_loop` 연결, **1b** 중간 경계·미관측 분기 오라클, **1c** 조건수 이식이다. [기록](m3/primal_push_init.md)
+
 M3-04c-24 실제 Rust 직렬 backend를 push 루프에 설치했다(계약 범위 통과). `crossover_backend::SerialBackend`가 21b–21h의 `LuState`(공급·rhs FTRAN, 지원 BTRAN, FT 갱신, 재번호)와 `refactor`(`036ade`+`1da0b2` 블록 단계)를 22의 `push_loop`에 연결하고, factor 판단 통계를 원본 규칙대로 만든다: F+0x190은 FT마다 작업 열 count+1 누적·재분해에서 0(`05b257` C:144–251·1379), F+0x1e0 = m+F+0x58[m], F+0x1e8 = F+0xb0[m]+m(C:1978–1986). 초기화 factor 입력(21h 첫 재분해와 같음)만 받고 원본 수치 출력·factor 재주입 0회로 자연 6사례 **725줄·5,575필드**(22의 719줄 + init 6, fcall 통계 49)가 첫 비교부터 비트/정확 일치했다(FT 36·재분해 19·FTRAN 120·BTRAN 32). trace 변조108 전부 거부, Rust 변이44 중 거부31·생존13(F1d8=r cache 재사용·S+0x2c0>20 등 자연 미경유와 동치), workspace 145통과·clippy0, 22 tape·21h 연쇄 등 회귀 12명령 통과. 원본 실행0회, 독립 검토자 미사용. 초기화의 나머지·해 설치·solver 경로 연결·품질15a·batch23은 미검증이다. [기록](m3/primal_push_loop_lu.md)
 
 M3-04c-22 초기화된 직렬 push 루프를 연결했다(계약 범위 통과). `crossover_loop::push_loop`이 첫 패스 준비(`0x1c1ff8`) 직전 상태에서 패스 준비·공급자·단계 선택/적용·승인/보류·지원 BTRAN(dense면 round)·factor 판단/wrapper·pivot 재계산·품질 주기·고갈 gate·지원 gate/압축·round factor·재계산·요청 지우기를 C 1143–2418 순서로 잇고, 재분해 뒤 header·vstat·S+0x2f8 재번호(`05b257` C:2036–2090)를 backend 순열로 적용한다. `crossover_factor`에는 재계산 뒤 품질 검사부터 재개하는 `factor_resume`만 더했다. 수치 결과(공급 FTRAN·지원 BTRAN·`05b257` 반환/카운터/통계/순열·재계산 FTRAN)는 21e 캡처의 출력 tape이며 원본 상태 재주입은 0회다. 자연 6사례(arms·retry·interior·adlittle·scsd1·capri)에서 **719줄·5,502필드**(패스14·공급119·단계107·BTRAN32(dense2)·판단67·`05b257` 49·재계산13·round12·종료6)가 비트/정확 일치했고, trace 변조103 전부 거부, Rust 변이25 중 거부18·생존7(재계산 전후 위반 수 동일·ratio 요청 항상 0·품질 주기 50 고정 등 자연 미경유 경로), workspace 144통과·clippy0, 선행 L1 재생 회귀 통과. 실제 Rust LU를 루프에 설치하는 검증은 M3-04c-24, 초기화·해 설치·batch·품질 수치는 미검증이다. [기록](m3/primal_push_loop_rust.md)
@@ -213,7 +215,7 @@ flowchart TD
     subgraph M3["M3 내부점·1차법"]
         BAR["✅ Barrier<br/>반복 수 64/64"]:::done
         PDHG["✅ PDHG<br/>반복 수 64/64"]:::done
-        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm·위반 basis·재시도 오라클 완료<br/>feasible·infeasible·재시도 ratio(재진입 포함)·단계 판단 Rust 범위 한정 통과"]:::doing
+        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm·위반 basis·재시도 오라클 완료<br/>feasible·infeasible·재시도 ratio(재진입 포함)·단계 판단 Rust 범위 한정 통과<br/>직렬 push 루프+실제 LU backend 연결 통과(04c-24), 초기화 조사 완료(04c-1)"]:::doing
     end
 
     subgraph M2["M2 MIP 엔진"]
