@@ -7,6 +7,8 @@ factor 통계·재분해 순열, 재계산 FTRAN raw)뿐이다. 원본 후상태
   --compare           target/m3_push_loop_rust/trace.txt를 원본 canonical 사건열과 비교(첫 차이에서 종료 1)
   --self-test         trace 변조(필드·줄 누락·추가·순서)가 모두 거부되는지 확인
   --mutate-rust PATH  Rust 소스 변이마다 target 사본에서 재생·비교해 결과를 PATH(새 파일)에 기록
+  --lu                M3-04c-24: tape 대신 실제 Rust backend(crossover_backend)로 재생하는 모드. 입력에는 수치 출력이
+                      없고(초기화 factor 입력만, 21h 첫 재분해와 같음), canonical 줄에 init 줄과 fcall 통계를 더한다.
 """
 import argparse
 from collections import Counter
@@ -27,6 +29,48 @@ D = ROOT / 'bench/oracle/m3_push_loop_rust'
 INPUT = D / 'input.txt'
 TRACE = ROOT / 'target/m3_push_loop_rust/trace.txt'
 SCHEMA = 'M3-04c-22-v1'
+TEST = 'push_loop'
+LU = False
+
+
+def use_lu():
+    global D, INPUT, TRACE, SCHEMA, TEST, LU
+    D = ROOT / 'bench/oracle/m3_push_loop_lu'
+    INPUT = D / 'input.txt'
+    TRACE = ROOT / 'target/m3_push_loop_lu/trace.txt'
+    SCHEMA = 'M3-04c-24-v1'
+    TEST = 'push_loop_lu'
+    LU = True
+
+
+def stats_text(s):
+    return ' '.join(str(s[k]) for k in ('k', 'limit', 'q', 'C', 'E', 'L', 'U'))
+
+
+def init_line(name, rec, k0):
+    """초기화 factor 입력(21h 첫 G·K와 같은 토큰)과 원본 기대 init 줄."""
+    import push_lu_rust as plr
+    plr.use_block()
+    prog = plr.program(name, rec, True)
+    ks = [x for x in prog if x[0] == 'K']
+    gs = [x for x in prog if x[0] == 'G']
+    require(ks and gs and ks[0][1] == gs[0][1] < k0, f'{name}: 초기화 재분해 입력')
+    g, kk = gs[0][2], ks[0][2]
+    require(g[6] == '1', f'{name}: 초기화 할당')
+    ev = rec['events']
+    i = gs[0][1]
+    lv = next(e for e in ev[i:] if e['event'] == 'lu:leave')
+    fl = [e for e in ev[:k0] if e['event'] == 'factor:leave']
+    require(len(fl) == 1, f'{name}: 초기화 factor:leave')
+    fc = fl[0]['factor_ctl']['state']
+    m = int(g[3])
+    # 21h G 토큰: ... 할당5, [m, header…], leave, [n+m, vstat…] (목록은 길이 접두)
+    rest = g[12:]
+    require(int(rest[0]) == m and int(rest[m + 2]) == len(lv['vstat']) == len(rest) - m - 3,
+            f'{name}: 초기화 header/vstat 길이')
+    toks = ['lu', g[4], g[5], *g[7:12], *kk[4:7], str(fc['q']), *rest[1:m + 1], rest[m + 1], *rest[m + 3:]]
+    want = ('init', dict(hdr=j(lv['header']), leave=str(lv['leave']), vstat=j(lv['vstat']), stats=stats_text(fc)))
+    return toks, want
 MODELS = ('arms', 'retry', 'interior', 'adlittle', 'scsd1', 'capri')
 SITE = {'0x1c3538': 'pivot', '0x1c3d31': 'round'}
 # 계약 §4에서 캡처를 세어 고정한 집계
@@ -111,7 +155,11 @@ def project(name, rec):
                  str(pe['retry'])])
     require(len(pe['candidates']) == pe['total'], '후보 길이')
     fc = init[0]['factor_ctl']['state']
-    toks.append(['stats', str(fc['k']), str(fc['limit']), str(fc['q']), fc['C'], str(fc['E']), fc['L'], fc['U']])
+    if LU:
+        lt, lw = init_line(name, rec, k0)
+        toks.append(lt)
+    else:
+        toks.append(['stats', str(fc['k']), str(fc['limit']), str(fc['q']), fc['C'], str(fc['E']), fc['L'], fc['U']])
 
     # backend tape
     body = ev[k0:]
@@ -119,6 +167,8 @@ def project(name, rec):
     bt = [e['raw'] for e in body if e['event'] == 'roundctl:btran:leave']
     rc = [e['raw'] for e in body if e['event'] == 'recompute:ftran:leave']
     require(not [e for e in body if e['event'].startswith('quality')], f'{name}: 품질 helper 자연 호출(범위 밖)')
+    if LU:
+        ft, bt, rc = [], [], []
     toks.append(['ftran', str(len(ft))] + sum((tape_vec(v, m) for v in ft), []))
     toks.append(['btran', str(len(bt))] + sum((tape_vec(v, m) for v in bt), []))
     fac, refac = [], {}
@@ -142,9 +192,11 @@ def project(name, rec):
     toks.append(['recompute', str(len(rc))] + sum((list(r) for r in rc), []))
     for r in rc:
         require(len(r) == m, 'recompute 길이')
+    if LU:
+        toks = toks[:6]  # case·model·cfg·state·round·lu: 수치 tape 없음
 
     # 기대 canonical 사건열
-    want, cnt = [], Counter()
+    want, cnt = ([lw] if LU else []), Counter()
     step = None
     lu_of = {}
     for i, e in enumerate(body):
@@ -243,9 +295,11 @@ def project(name, rec):
             fe, le, fl = lu_of['fe'], lu_of['le'], lu_of['fl']
             require(fe['header'] == le['header'], 'factor/lu header')
             site = SITE[fe['factor_ctl']['caller']]
-            want.append(('fcall', dict(site=site, req=str(fe['request']), leave=str(le['leave']), hdr=j(le['header']),
-                                       ret=str(fl['ret']), hdr2=j(e['header']), vstat=j(e['vstat']),
-                                       leave2=str(e['leave']))))
+            w = dict(site=site, req=str(fe['request']), leave=str(le['leave']), hdr=j(le['header']),
+                     ret=str(fl['ret']), hdr2=j(e['header']), vstat=j(e['vstat']), leave2=str(e['leave']))
+            if LU:
+                w['stats'] = stats_text(fl['factor_ctl']['state'])
+            want.append(('fcall', w))
             cnt['fcall_' + site] += 1
         elif k == 'recompute:ftran:enter':
             require(e['input']['count'] == -1, 'rhs FTRAN count')
@@ -343,9 +397,9 @@ def compare_cases(cs, head, got, verbose=True):
     return lines, fields
 
 
-def compare(trace=TRACE, verbose=True):
+def compare(trace=None, verbose=True):
     cs, _ = cases()
-    head, got = parse_trace(trace.read_text())
+    head, got = parse_trace((trace or TRACE).read_text())
     return compare_cases(cs, head, got, verbose)
 
 
@@ -456,14 +510,17 @@ MUTATIONS = [
 ]
 
 
+LU_MUTATIONS = []
+
+
 def mutate_rust(out):
     require(not out.exists(), f'{out} 이미 있음(덮어쓰기 거부)')
     cs, _ = cases()
-    work = ROOT / 'target/m3_push_loop_mutations'
+    work = ROOT / ('target/m3_push_loop_lu_mutations' if LU else 'target/m3_push_loop_mutations')
     if work.exists():
         shutil.rmtree(work)
     work.mkdir(parents=True)
-    for p in ('Cargo.toml', 'Cargo.lock', 'crates', 'bench/oracle/m3_push_loop_rust/input.txt'):
+    for p in ('Cargo.toml', 'Cargo.lock', 'crates', str(INPUT.relative_to(ROOT))):
         src = ROOT / p
         dst = work / p
         dst.parent.mkdir(parents=True, exist_ok=True)
@@ -472,14 +529,14 @@ def mutate_rust(out):
         else:
             shutil.copy2(src, dst)
     results = []
-    for name, fname, old, new in MUTATIONS:
+    for name, fname, old, new in (LU_MUTATIONS if LU else MUTATIONS):
         f = work / 'crates/lp/src' / fname
         orig = (ROOT / 'crates/lp/src' / fname).read_text()
         require(orig.count(old) == 1, f'{name}: 원문 {orig.count(old)}회')
         f.write_text(orig.replace(old, new))
-        r = subprocess.run(['cargo', 'test', '-q', '-p', 'rsolver-lp', '--test', 'push_loop'], cwd=work,
+        r = subprocess.run(['cargo', 'test', '-q', '-p', 'rsolver-lp', '--test', TEST], cwd=work,
                            capture_output=True, text=True, timeout=900)
-        trace = work / 'target/m3_push_loop_rust/trace.txt'
+        trace = work / TRACE.relative_to(ROOT)
         if r.returncode != 0:
             verdict, why = 'rejected-run', (r.stderr or r.stdout).strip().splitlines()[-1:]
         else:
@@ -494,7 +551,7 @@ def mutate_rust(out):
             trace.unlink()
         results.append(dict(name=name, file=fname, verdict=verdict, why=why))
         print(name, verdict, *why)
-    out.write_text(json.dumps(dict(task='M3-04c-22', results=results,
+    out.write_text(json.dumps(dict(task='M3-04c-24' if LU else 'M3-04c-22', results=results,
                                    rejected=sum(r['verdict'] != 'survived' for r in results),
                                    total=len(results)), ensure_ascii=False, indent=2) + '\n')
     surv = [r['name'] for r in results if r['verdict'] == 'survived']
@@ -508,7 +565,10 @@ def main():
     g.add_argument('--compare', action='store_true')
     g.add_argument('--self-test', action='store_true')
     g.add_argument('--mutate-rust', type=Path)
+    p.add_argument('--lu', action='store_true')
     a = p.parse_args()
+    if a.lu:
+        use_lu()
     if a.write:
         write()
     elif a.compare:

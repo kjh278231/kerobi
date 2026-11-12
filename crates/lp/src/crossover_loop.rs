@@ -70,9 +70,11 @@ pub trait PushLoopBackend {
     fn btran(&mut self, input: &PushColumn) -> PushColumn;
     /// Current factor statistics; they change only inside [`PushLoopBackend::factor`].
     fn stats(&self) -> FactorStats;
-    /// One `05b257` call with the current header and S+0x2f8. Returns its value and, after a successful
-    /// refactorization, the renumbering the loop applies to the basis.
-    fn factor(&mut self, site: FactorSite, ctl: &mut FactorCtl, header: &[i32], leave: i32) -> (i32, Option<Renumber>);
+    /// One `05b257` call on the current push state (header, S+0x2f8, vstat) with the work column S+0x210 (the
+    /// wrapper's current alpha; None at the round site, which only refactors). Returns its value and, after a
+    /// successful refactorization, the renumbering the loop applies to the basis.
+    fn factor(&mut self, site: FactorSite, ctl: &mut FactorCtl, st: &PushState, workspace: Option<&PushColumn>)
+              -> (i32, Option<Renumber>);
     /// Quality helper `089f61`; returns the period increment.
     fn quality(&mut self, ctl: &mut FactorCtl, enter: i32, period: i32) -> i32;
     /// RHS FTRAN `09cf9b` (count -1) of `rhs` with the factor's new header; m raw values.
@@ -120,7 +122,8 @@ pub enum LoopEvent<'a> {
     Stepped { step: PushStep, st: &'a PushState, round: &'a RoundState },
     Btran { leave: i32, raw: &'a PushColumn, exit: &'a RoundExit, round: &'a RoundState },
     Select(&'a FactorDecision),
-    Factor { site: FactorSite, request: i32, leave: i32, header: &'a [i32], ret: i32, st: &'a PushState },
+    /// One `05b257` call: its entry request, S+0x2f8 and header, return, the renumbered state and the statistics after.
+    Factor { site: FactorSite, request: i32, leave: i32, header: &'a [i32], ret: i32, st: &'a PushState, stats: FactorStats },
     Recompute { site: FactorSite, exit: &'a RecomputeExit, st: &'a PushState, pinf: f64 },
     Clear { period: i32 },
     /// State at the exhaustion gate before it may clear support; `end` is the gate's outcome.
@@ -153,13 +156,14 @@ impl<B: PushLoopBackend> RoundBtran for Btran<'_, B> {
 
 /// One `05b257` call on behalf of either caller; applies the renumbering and reports the call.
 fn call_factor<B: PushLoopBackend>(backend: &mut B, st: &mut PushState, site: FactorSite, ctl: &mut FactorCtl,
-                                   trace: &mut Trace<'_>) -> i32 {
+                                   workspace: Option<&PushColumn>, trace: &mut Trace<'_>) -> i32 {
     let (request, leave, header) = (ctl.request, st.leave, st.header.clone());
-    let (ret, renumbering) = backend.factor(site, ctl, &header, leave);
+    let (ret, renumbering) = backend.factor(site, ctl, st, workspace);
     if let Some(r) = renumbering {
         renumber(st, &r);
     }
-    trace(LoopEvent::Factor { site, request, leave, header: &header, ret, st });
+    let stats = backend.stats();
+    trace(LoopEvent::Factor { site, request, leave, header: &header, ret, st, stats });
     ret
 }
 
@@ -181,9 +185,9 @@ fn ctl_into(c: &FactorCtl, s: &mut FactorState) {
 }
 
 impl<B: PushLoopBackend> PushFactorBackend for PivotFactor<'_, '_, B> {
-    fn factor(&mut self, state: &mut FactorState, _: &FactorVectors<'_>) -> i32 {
+    fn factor(&mut self, state: &mut FactorState, vectors: &FactorVectors<'_>) -> i32 {
         let mut ctl = ctl_of(state);
-        let ret = call_factor(self.backend, self.st, FactorSite::Pivot, &mut ctl, self.trace);
+        let ret = call_factor(self.backend, self.st, FactorSite::Pivot, &mut ctl, Some(vectors.workspace), self.trace);
         ctl_into(&ctl, state);
         state.updates = self.backend.stats().updates;
         ret
@@ -208,7 +212,7 @@ impl<B: PushLoopBackend> RoundFactor for RoundCall<'_, '_, B> {
     fn factor(&mut self, state: &mut RoundState) -> i32 {
         let mut ctl =
             FactorCtl { request: state.request, numeric: state.numeric, failure: state.failure, status: state.status };
-        let ret = call_factor(self.backend, self.st, FactorSite::Round, &mut ctl, self.trace);
+        let ret = call_factor(self.backend, self.st, FactorSite::Round, &mut ctl, None, self.trace);
         state.request = ctl.request;
         state.numeric = ctl.numeric;
         state.failure = ctl.failure;
