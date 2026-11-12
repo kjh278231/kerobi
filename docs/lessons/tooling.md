@@ -82,6 +82,8 @@
 
 ## 검사기
 
+- **외부 backend를 사용하는 L1 재생은 실제 호출 인자와 버퍼 별칭을 검사한다.** scratch의 종료 내용만 비교하면 다른 인자·임시 출력 버퍼로 backend를 부른 오류가 숨을 수 있다. 호출 때 원본 열을 복사해 기록하고 alpha/spike 동일 버퍼를 검사하며, 고갈에는 기존 버퍼와 work canary 보존을 확인한다. 원본 after·ret·압축 alpha는 구현 입력에 넣지 않는다. Rust69입력 재생·변이22종으로 확인. (M3-04c-14, [§6](../m3/primal_push_supplier_rust.md#6-실행-결과))
+
 - **합성 경계의 차원은 생성 명세·실제 ABI 인자·벡터 길이를 함께 대조한다.** supplier 짝수 dense 사례의 m=8이 문맥 안으로만 들어가 실제 호출은 m=9였다. raw 길이 검사가 거부한 자료를 history에 보존하고 전달을 고쳐3회 재캡처했다. 기존 Rust 연쇄 비교는 새 worktree에서 먼저 `cargo test -p rsolver-lp --test push_chain`으로 trace를 만든 뒤 `push_step_chain_rust.py --compare`를 실행한다. (M3-04c-13, [§6](../m3/primal_push_supplier_oracle.md#6-실행-결과))
 
 - **코드 변이로 저장 기준 Rust 재생의 판별력을 볼 때는 사례마다 `catch_unwind`로 panic을 가둔다.** 수명 변이(W3·W5 등)는 이미 해제된 노드를 참조해 panic할 수 있고, 그러면 cargo 테스트 전체가 실패해 사례별 거부·생존 기대를 판정할 수 없다. panic한 사례는 출력에 `panic` 줄을 남겨 첫 차이로 거부한다. 이 경로는 입력의 `end` 줄을 지운 변조로 실행해 확인했다(이번 변이 W1–W6은 panic 0회). (M2-06f-3, [§3](../m2/mip_node_life_rust.md#3-비교-계약))
