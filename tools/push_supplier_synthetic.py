@@ -120,7 +120,7 @@ def capture():
             p,s,f = buf(0x1870),buf(0x480),buf(0x200)
             iv,ov,spike = vector(),vector(),vector()
             starts=(c.c_int64*3)(0,3,5);keep.append(starts)
-            model=dict(starts=[0,3,5],lengths=[3,2,0],rows=[5,1,8,2,7],
+            model=dict(starts=[0,3,5],lengths=[3,2,0],rows=[5,1,m-1,2,7],
                        values=list(map(bits,[2.,-1.,3.,0.5,-2.])))
             for off, val in [(0x70,c.addressof(starts)),(0x78,ints(model['lengths'])),(0x80,ints(model['rows'])),
                              (0x88,doubles([2.,-1.,3.,0.5,-2.])),(0x210,ov),(0x220,iv),(0x470,f)]:
