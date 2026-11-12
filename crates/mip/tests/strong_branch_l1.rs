@@ -122,16 +122,21 @@ fn clamp_and_signed_zero() {
 }
 
 #[test]
-fn unobserved_paths_are_unported() {
+fn contradiction_unported_timer_stops() {
     let x = [0.5, 0.5];
     let b = Batch { columns: &[0, 1], x: &x, lower: &[0.0; 2], upper: &[1.0; 2], int_tol: 1e-5, parent_obj: 0.0, stall_limit: 2 };
     let mut lp = script(&["prop 1 0 0"]);
     assert!(matches!(run(&b, &mut lp, &mut 0.0, &mut 0.0), Err(Error::Unported)));
-    // Down infeasible resets the stall counter and moves on; an expired timer stops the batch.
+    // Down infeasible resets the stall counter and moves on; an expired timer ends the batch
+    // with the closing flush and re-solve, leaving later candidates unevaluated.
     let mut lp = script(&["prop 0 0 0", "solve 7 3ff0000000000000 - 0", "restore 0",
-        "prop 0 0 0", "solve 6 - - 0", "restore 0", "timer 1 3ff0000000000000"]);
-    assert!(matches!(run(&b, &mut lp, &mut 0.0, &mut 0.0), Err(Error::Unported)));
-    assert!(lp.trace.ends_with("poll\ntimer 0000000000000000\n"));
+        "prop 0 0 0", "solve 6 - - 0", "restore 0", "timer 1 3ff0000000000000", "solve 2 - - 4000000000000000"]);
+    let mut work = 0.0;
+    let r = run(&b, &mut lp, &mut 0.0, &mut work).unwrap();
+    assert!(lp.trace.ends_with("poll\ntimer 0000000000000000\nflush\nsolve 3ff0000000000000\n"));
+    assert_eq!((r.up[0], r.down[0]), (1.0, 1e100));
+    assert_eq!((r.up[1], r.down[1]), (-1e100, -1e100));
+    assert_eq!(work, 2.0);
 }
 
 #[test]

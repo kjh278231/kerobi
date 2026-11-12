@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M2-06h-3/06h-4 strong-branching candidate loop: original backend responses -> Rust -> original command trace."""
+"""M2-06h-3/06h-4/06h-5 strong-branching candidate loop: original backend responses -> Rust -> original command trace."""
 import argparse
 import collections
 import copy
@@ -20,10 +20,9 @@ DATA4 = ROOT / 'bench/oracle/m2_06h4/final'
 WORK = ROOT / 'target/mip_sb_loop'
 SOURCE = 'crates/mip/src/strong_branch.rs'
 TEST = 'crates/mip/tests/strong_branch_l1.rs'
-# Smallest explore captures covering status 3/-1000, down >= 1e100, up prefill (markshare_4_0), dual < parent (kasai).
-NEW_MODELS = ['markshare_4_0', 'neos-3627168-kasai']
-# Original timer expiry: Rust returns Unported, so only reproducibility and the rejection are checked.
-TIMER_MODEL = 'ran14x18-disj-8'
+# Smallest explore captures covering status 3/-1000, down >= 1e100, up prefill (markshare_4_0), dual < parent (kasai),
+# timer expiry (ran14x18-disj-8, 5 of 94 batches; replayed since M2-06h-5).
+NEW_MODELS = ['markshare_4_0', 'neos-3627168-kasai', 'ran14x18-disj-8']
 OLD_MODELS = ['pk1', 'neos5', 'tr12-30']
 MODELS = {**{m: DATA for m in OLD_MODELS}, **{m: DATA4 for m in NEW_MODELS}}
 OLD_06H2 = ROOT / 'bench/oracle/m2_06h2/capture/1.json.gz'
@@ -164,9 +163,12 @@ def batches(m, d, cover):
             if k == 'poll':
                 exp.append('poll')
             elif k == 'timer':
-                same(0, s['r'], at+'.timer expired')
+                assert s['r'] in (0, 1), at+'.timer result'
                 exp.append(f'timer {prev["w"]}')
                 lines.append(f'timer {s["r"]} {s["w"]}')
+                if s['r']:  # C:1095-1100 expiry leaves the loop: closing flush and re-solve only
+                    same(['flush', 'solve'], [t['kind'] for t in steps[i+1:]], at+'.after expiry')
+                    cover['timer expired'] += 1
             elif k == 'propEnter':
                 assert s['value'] is not None and s['dir'] in (60, 62), at+'.prop call site'
                 bits(value(s['value']))
@@ -271,7 +273,9 @@ def branches(e, cover):
 REQUIRED = ['prop', 'extra propagation', 'values', 'restore request', 'status 2', 'status 6', 'status 7',
             'optimal below parent', 'whole candidate skipped', 'down gate', 'up >= 1e100', 'early exit', 'prefilled value',
             # M2-06h-4 natural cases.
-            'status 3', 'status -1000', 'limited below parent', 'down >= 1e100', 'up prefilled']
+            'status 3', 'status -1000', 'limited below parent', 'down >= 1e100', 'up prefilled',
+            # M2-06h-5.
+            'timer expired']
 
 
 def run(root, text, label):
@@ -303,13 +307,7 @@ def build(cases):
     cover = collections.Counter()
     inputs, expected = '', ''
     for m in cases:
-        d = cases[m][0]
-        if m == TIMER_MODEL:  # replay every batch except the expired-timer ones (Rust: Unported)
-            d = copy.deepcopy(d)
-            n = len(d['events'])
-            d['events'] = [e for e in d['events'] if not any(s['kind'] == 'timer' and s['r'] for s in e.get('steps', []))]
-            assert len(d['events']) < n, 'no expired timer left out'
-        i, e = batches(m, d, cover)
+        i, e = batches(m, cases[m][0], cover)
         inputs, expected = inputs + i, expected + e
     for k in REQUIRED:
         assert cover[k] > 0, 'no original case for '+k
@@ -357,6 +355,7 @@ def self_test(cases, manifest, inputs, expected, actual):
         ('stall', lambda d: kernels(d)[0].__setitem__('stall', 1)),
         ('missing reset', drop('reset', lambda s: True)),
         ('timer', set_step('timer', 'r', 1)),
+        ('timer clear', lambda d: [s.__setitem__('r', 0) for e in kernels(d) for s in e['steps'] if s['kind'] == 'timer']),
         ('contradiction', set_step('prop', 'out', 1)),
         ('status', set_step('solve', 'status', 3)),
     ]
@@ -406,6 +405,9 @@ def self_test(cases, manifest, inputs, expected, actual):
         ('clamp2', 'LpValue::Optimal(obj) => if obj > parent { obj } else { parent },', 'LpValue::Optimal(obj) => obj,'),
         ('clamp7', 'LpValue::Limited(dual) => if parent > dual { parent } else { dual },', 'LpValue::Limited(dual) => dual,'),
         ('split', 's.direction(k, Side::Lower, split + 1.0)?;', 's.direction(k, Side::Lower, split + 2.0)?;'),
+        ('timer ignored', 'if s.lp.expired(s.work).map_err(Error::Backend)? {', 'if s.lp.expired(s.work).map_err(Error::Backend)? && false {'),
+        ('timer return', 'if s.lp.expired(s.work).map_err(Error::Backend)? {\n            break;',
+         'if s.lp.expired(s.work).map_err(Error::Backend)? {\n            return Ok(Evaluation { down: s.down, up: s.up });'),
     ]
     survivors = []
     with tempfile.TemporaryDirectory(prefix='sb-loop-') as td:
@@ -460,7 +462,7 @@ def main():
         print('TOTAL', dict(tot))
         return
     files = {m: [d/f'{m}_{i}.json.gz' for i in (1, 2, 3)] + [d/f'{m}_control.json.gz']
-             for m, d in {**MODELS, TIMER_MODEL: DATA4}.items()}
+             for m, d in MODELS.items()}
     cases = {m: [load(p) for p in ps] for m, ps in files.items()}
     if a.write_manifest:
         paths = [p for ps in files.values() for p in ps] + [ROOT/p for p in TOOLS] + [OLD_06H2] + [Path(OLD_06G2.format(m)) for m in OLD_MODELS]
@@ -472,11 +474,6 @@ def main():
     for p, h in manifest['files'].items():
         same(h, sha(ROOT/p), 'manifest.'+p)
     controls(cases, manifest)
-    try:
-        batches(TIMER_MODEL, cases[TIMER_MODEL][0], collections.Counter())
-        raise AssertionError('timer expiry no longer rejected')
-    except AssertionError as x:
-        assert 'timer expired: expected=0 actual=1' in str(x), x
     inputs, expected, cover = build(cases)
     actual = run(ROOT, inputs, 'original')
     compare(expected, actual, 'Rust')

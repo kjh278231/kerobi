@@ -1,0 +1,29 @@
+    Checking cfg-if v1.0.5
+   Compiling crc32fast v1.5.4
+    Checking simd-adler32 v0.3.10
+    Checking adler2 v2.0.1
+   Compiling target-lexicon v0.13.5
+   Compiling once_cell v1.21.4
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling autocfg v1.5.1
+   Compiling libc v0.2.191
+   Compiling heck v0.5.0
+   Compiling indoc v2.0.8
+    Checking unindent v0.2.4
+    Checking miniz_oxide v0.9.1
+   Compiling memoffset v0.9.1
+    Checking flate2 v1.1.10
+   Compiling pyo3-build-config v0.24.2
+    Checking rsolver-model v0.1.0 (/home/sds/workspace/gurobi-sandbox/rsolver-m2-06h-5/crates/model)
+   Compiling syn v2.0.119
+    Checking rsolver-lp v0.1.0 (/home/sds/workspace/gurobi-sandbox/rsolver-m2-06h-5/crates/lp)
+   Compiling pyo3-macros-backend v0.24.2
+   Compiling pyo3-ffi v0.24.2
+   Compiling pyo3 v0.24.2
+    Checking rsolver-mip v0.1.0 (/home/sds/workspace/gurobi-sandbox/rsolver-m2-06h-5/crates/mip)
+    Checking rsolver-driver v0.1.0 (/home/sds/workspace/gurobi-sandbox/rsolver-m2-06h-5/crates/driver)
+   Compiling pyo3-macros v0.24.2
+    Checking rsolver v0.1.0 (/home/sds/workspace/gurobi-sandbox/rsolver-m2-06h-5/crates/py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.03s

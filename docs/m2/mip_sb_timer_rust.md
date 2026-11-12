@@ -41,8 +41,16 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 변경: `crates/mip/src/strong_branch.rs` `run`에서 `expired()`가 참이면 `return Err(Error::Unported)` 대신 `break`(마지막 flush·재풀이 뒤 그때까지 배열 반환). 합성 테스트 `contradiction_unported_timer_stops`가 만료 뒤 `flush`·`solve`, 뒤 후보 −1e100 유지, work 반영을 확인한다. 하네스 `tools/mip_sb_loop_rust.py`는 ran14x18-disj-8을 일반 모델로 넣고 만료 묶음을 거르지 않는다. 원본 자료에서 `timer r=1` 뒤 단계가 `flush, solve`뿐인지 먼저 검사하고 `timer expired`를 필수 사례로 센다.
+- 새 Gurobi 실행 0회. 기준 자료는 06h-4 그대로이고 manifest에서 바뀐 것은 하네스·소스·테스트 해시 3개뿐이다(캡처 해시 불변).
+- `python3 tools/mip_sb_loop_rust.py --self-test` 종료 0([로그](../../bench/oracle/m2_06h5/selftest.log)). 6모델 **289묶음** 명령 trace·결과 배열·비용·work 비트 일치, `timer expired` 5(ran14x18 double[49]·[59]·[64]·[69]·[74]). 거부 43: 변조 18(새 `timer clear` 포함, 기존 `timer`도 이제 재생 차이로 거부)·직접 3·trace 4·Rust 변이 20 중 18(새 `timer ignored`·`timer return` 거부). 생존 2는 기존과 같다(`restore strict` 합성 거부, `score shift` 관측 불가).
+- `cargo test --release --workspace` 129 통과·12 무시·실패 0([로그](../../bench/oracle/m2_06h5/cargo.log)), clippy 종료 0. pytest는 Python 미변경이라 실행하지 않았다.
+- 실행하지 못한 것: 타이머 산술(`ade736`·`adf1a6`·`adf2be`)의 Rust 구현·원본 비교(범위 밖, §1).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **완료(구현 L1)**. 동등성: 타이머 만료 뒤 루프 반응은 **원본 자연 사례 범위 통과**(ran14x18-disj-8 만료 5묶음, 같은 모델 94묶음 전체, 6모델 289묶음 비트 일치, 오차 0).
+- 남은 한계: 만료 판정 자체(예산·work 식)는 backend 몫이고 미이식·미검증. 전파 모순은 `Unported` 유지(원본 사례 없음). 비전파·연속 열은 M2-06h-6. B&B 미연결.
+- 후속: M2-06h-6(VarBranch=3 비전파 오라클·이식), 타이머 산술은 B&B 연결 때 타이머 소유자와 함께(가칭 M2-06h-7). 회귀 `python3 tools/mip_sb_loop_rust.py --self-test`.
+- branch `work/m2-06h-5`, worktree `../rsolver-m2-06h-5`. 인수인계 `docs/handoff/M2.md`, 진행 `docs/11_progress.md`·`docs/12_roadmap_diagram.md`·`docs/14_sprint_plan.md`.
+- 교훈: `docs/lessons/m2_sb_snapshot.md`에 만료 = stall 종료와 같은 출구 항목.

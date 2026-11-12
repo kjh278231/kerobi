@@ -1,8 +1,8 @@
 //! One strong-branching batch: the candidate loop with an external LP, propagation and
 //! saved-state backend. The backend owns the LP numbers, the propagation itself, the parent
 //! snapshot and the timer; this module owns the candidate control and the values it writes.
-//! shortcut: integer candidates on the propagation path only. Propagation contradiction and
-//! timer expiry return Unported; natural timer cases exist since M2-06h-4, port in M2-06h-5.
+//! shortcut: integer candidates on the propagation path only. Propagation contradiction returns
+//! Unported (no original case yet); upgrade when one is captured.
 
 const INF: f64 = 1e100;
 
@@ -227,8 +227,9 @@ pub fn run<B: Backend>(b: &Batch, lp: &mut B, iterations: &mut f64, work: &mut f
             break;
         }
         s.lp.poll().map_err(Error::Backend)?;
+        // Expiry leaves like the stall exit: closing flush and parent re-solve, values so far.
         if s.lp.expired(s.work).map_err(Error::Backend)? {
-            return Err(Error::Unported);
+            break;
         }
     }
     s.lp.flush().map_err(Error::Backend)?;
