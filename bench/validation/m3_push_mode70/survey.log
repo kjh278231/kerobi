@@ -1,0 +1,118 @@
+25fv47 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, -1, 0, -1,
+80bau3b 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+adlittle 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, -1, -1, 
+afiro 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, -1
+agg 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, -1, -1, -1, 0
+agg2 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, -1, -1, -1
+agg3 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, -1, -1, -1
+bandm 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, -1, 0, -1, 
+beaconfd 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, -1, 0, 
+blend 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+bnl1 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+bnl2 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+boeing1 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, -1, -1, 0, 
+boeing2 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, -1, -1, -1
+bore3d 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, -1, -1,
+brandy 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+capri 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+cycle 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+czprob 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+d2q06c 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+d6cube 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+degen2 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, -1, 0, 0
+degen3 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+dfl001 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+e226 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+etamacro 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-2, -1, -1, 0, 0,
+fffff800 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, -1, -1, -1, -
+finnis 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-2, -2, -2, -1, -
+fit1d 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, -2, -1, -2, -
+fit1p 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, -1, 0, 
+fit2d 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+fit2p 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+forplan 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, 0, -1, 0, -1,
+ganges 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+gfrd-pnc 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+greenbea 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+greenbeb 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+grow15 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+grow22 0 primal 사건 7 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, -2, 0, 0
+grow7 0 primal 사건 2 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, -2, 0, 0
+israel 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, -1, -1, 
+kb2 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, -1, -1, 0,
+lotfi 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, 0, 0, 0
+maros 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -2, -2, 0, -2,
+maros-r7 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+modszk1 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, -1, -1, 0,
+nesm 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+perold 0 primal 사건 5 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, 0, -1, 
+pilot 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+pilot4 0 primal 사건 8 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, -1, -1, 
+pilot87 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+pilotnov 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+recipe 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, -1, -1, -1, -
+sc105 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, -1
+sc205 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, -1
+sc50a 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, -1
+sc50b 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+scagr25 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, 0, 0, -1, 0, 
+scagr7 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, 0, 0, -1, 0, 
+scfxm1 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, -1, -1,
+scfxm2 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, -1, -1,
+scfxm3 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, -1, -1,
+scorpion 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+scrs8 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, 0, 0, 0, -1, 
+scsd1 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, 0, -1, -1, -1
+scsd6 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, -1, -1, -1
+scsd8 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+sctap1 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, -1, -1, 0,
+sctap2 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, -1, -1, 0,
+sctap3 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+seba 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, 0, -1, 
+share1b 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -1, 0, -1, -1,
+share2b 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, -1, -1, -1,
+shell 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -2, 0, -2, -2,
+ship04l 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+ship04s 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+ship08l 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+ship08s 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+ship12l 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+ship12s 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+sierra 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+stair 0 primal 사건 4 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, -2, -2, 0, 0, 
+standata 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, -1, 0, 0, 0, 
+standgub 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, -1, 0, 0, 0, 
+standmps 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, -1, 0, 0, 0, 
+stocfor1 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, -1, -1, -1, -
+stocfor2 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+tuff 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [-1, -1, 0, -1, -1
+vtpbase 0 primal 사건 0 성공 true  CROSSOVER_RESULT {"status": 2, "vbasis": [0, 0, 0, 0, 0, 0,
+wood1p 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
+woodw 1 primal 사건 0 성공 false  Traceback (most recent call last):
+  File "<string>", line
