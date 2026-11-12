@@ -1,0 +1,169 @@
+{
+  "task": "M3-04c-18",
+  "reviewer": "/root/m3_04c18_review",
+  "verdict": "계약 범위 통과",
+  "recapture": {
+    "command": "tools/gurun.sh ../.venv/bin/python tools/push_recompute_extra.py --capture bench/oracle/m3_push_recompute_rust/review/extra.json",
+    "cases": 10,
+    "rows": 18,
+    "all_nonidentity_fields_equal": true,
+    "pid": 300447,
+    "run_id": "c0470dba-ad34-48a2-9bb9-a3d7ce43acb5",
+    "sha256": "96680d35f54b52a1a2c0007890e38c8e2a43b4e5dc14ac069a644881f1348056",
+    "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c"
+  },
+  "original_controls": {
+    "arms": 283,
+    "retry": 112,
+    "interior": 149,
+    "control": 0,
+    "synthetic": 120
+  },
+  "original_acceptance": {
+    "round": 7,
+    "rows": 119,
+    "mark_N": 89,
+    "mark_L": 21,
+    "mark_U": 3,
+    "mark_A": 2,
+    "mark_B": 4,
+    "pivot": 1,
+    "synthetic": 120,
+    "synthetic_rows": 152,
+    "synthetic_retry": 2,
+    "synthetic_mark_B": 46,
+    "synthetic_mark_L": 16,
+    "synthetic_mark_N": 36,
+    "synthetic_mark_U": 14,
+    "synthetic_mark_A": 18,
+    "synthetic_mark_X": 14,
+    "synthetic_mark_F": 8
+  },
+  "comparison": {
+    "cases": 138,
+    "fields": 2958,
+    "rule": "ordered typed exact; f64 little-endian bits incl signed zero"
+  },
+  "error_detection": {
+    "original_self_test": 82,
+    "extra_self_test": 21,
+    "trace_self_test": 84,
+    "direct_rejected": 16,
+    "direct_details": [
+      {
+        "name": "capture-binary-zero",
+        "first_difference": "extra[0].binary_sha256: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "capture-input-zero",
+        "first_difference": "extra[0].input_sha256: 기준='3dd482deb3ad991350a1dd7814e17c7d0061c4d028c738f444db4254c7dc5c7f', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "capture-empty-targets",
+        "first_difference": "extra[0].nonempty count: 기준=10, 실제=0"
+      },
+      {
+        "name": "capture-manifest-zero",
+        "first_difference": "extra manifest files/inputs/binary.binary_sha256: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "capture-null-result",
+        "first_difference": "extra[0].pivot-lower-sentinel-wide.result: 타입 기준=dict, 실제=NoneType"
+      },
+      {
+        "name": "capture-association-pinf-four",
+        "first_difference": "extra[0].pivot-above-association.result.pinf: 기준='0000000000001440', 실제='0000000000001040'"
+      },
+      {
+        "name": "capture-classification",
+        "first_difference": "extra[0].pivot-above-association.result.marks[0]: 기준='42', 실제='4e'"
+      },
+      {
+        "name": "capture-request-cleared",
+        "first_difference": "extra[0].pivot-above-association.result.request: 기준=10, 실제=0"
+      },
+      {
+        "name": "capture-alias-change",
+        "first_difference": "extra[0].pivot-above-association.result.aliases.raw_basic: 기준=False, 실제=True"
+      },
+      {
+        "name": "trace-pinf-one-bit",
+        "first_difference": "arms/1/1/round.pinf: 기준='0000000000000000', 실제='0100000000000000'"
+      },
+      {
+        "name": "trace-classification",
+        "first_difference": "arms/1/1/round.marks[5]: 기준='4c', 실제='4e'"
+      },
+      {
+        "name": "trace-request-cleared",
+        "first_difference": "arms/1/1/round.request: 기준=10, 실제=0"
+      },
+      {
+        "name": "trace-typed-bool",
+        "first_difference": "arms/1/1/round.violations: type mismatch"
+      },
+      {
+        "name": "trace-empty-targets",
+        "first_difference": "trace case count: 기준=138, 실제=0"
+      },
+      {
+        "name": "trace-null-result",
+        "first_difference": "arms/1/1/round: type mismatch"
+      },
+      {
+        "name": "trace-schema-hash-zero",
+        "first_difference": "trace schema/input hash"
+      }
+    ]
+  },
+  "parent_rust_mutations": {
+    "count": 33,
+    "rejected": 33,
+    "fresh_cargo_execution": false
+  },
+  "findings": [
+    {
+      "severity": "낮음",
+      "file": "crates/lp/src/crossover_recompute.rs",
+      "description": "최종 주석이 bounds의 열 좌표 길이와 basic/width/marks의 basis 길이를 구분함을 확인했다.",
+      "status": "수정 확인"
+    },
+    {
+      "severity": "정리중",
+      "file": "docs/m3/primal_push_recompute_rust.md",
+      "description": "계약의 초기128사례·추가 원본 실행 불필요·변이4생존·독립검토 미사용 설명은 최종138사례 결과와 함께 갱신할 필요가 있다. 부모에게 전달함."
+    }
+  ],
+  "limitations": [
+    "유한 입력과 유효 header/bounds, retry 초기0 범위",
+    "별칭true·free/fixed·retry·정확경계는 자연 도달성을 검증하지 않은 합성 증거",
+    "rhs/FTRAN 호출·수치 backend, 실제LU21·루프22·batch23·x87·전체work/P3는 제외",
+    "검토자는 Cargo 재빌드·Rust 소스변이를 새로 실행하지 않고 부모의33종 출력 차이를 검토함"
+  ],
+  "hashes": {
+    "crates/lp/src/crossover_recompute.rs": "22a3815c0afdbfa32b148fb3161fc6626987c4597c7232454fc5e55567aa5b9d",
+    "crates/lp/tests/push_recompute.rs": "6a4d85ddb3e5a8f6a784db7ed4d5b852b0ce6a9c32c173d3bfb29a05b87fa583",
+    "tools/push_recompute_rust.py": "9acbb9942e8107c0e9d880edcfaf9f69afef0835f0d7cceb08e45123a5d3e306",
+    "tools/push_recompute_extra.py": "ceee567d5e8d10cb8b18fcb29110e2cdfd9e9d64e75ce23d8e217f1c4800d173",
+    "tools/push_recompute_synthetic.py": "89b5e2b0d316b44abcafce3a7fb7f0ab9fa0a2fed8654067cc8498142ee23584",
+    "bench/oracle/m3_push_recompute/source.asm": "aacbd42ac4bbc3d8c1aefec20cac78816de0636450f4f89667199a96d4bb5ec7",
+    "bench/oracle/m3_push_recompute/manifest.json": "59a90720179c4ec9815ea30f6e9ec22a1f6e99fbca9af2001505e8ad5e49a3d7",
+    "bench/oracle/m3_push_recompute_rust/extra-manifest.json": "835cc53e2262ff8758322393222b78207a89812596a9710d6edeb4168650660b",
+    "bench/oracle/m3_push_recompute_rust/input.txt": "ebc788752e286922afca89cc61a840656c0c51d8958ad43ea47aa9ecc4c7d687",
+    "target/m3_push_recompute_rust/trace.txt": "f97d66e0b56e7b7b5e566000052ab38b6f75f8a35405c3da1b81f06e883e74a9",
+    "bench/oracle/m3_push_recompute_rust/mutations.json": "e7af1ff0140ef48f7c3b8165dac68bad61b90171d8a08f6b183d47e24d72d2fa"
+  },
+  "source_c_sha256": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb",
+  "execution_history": [
+    {
+      "command": "python3 bench/oracle/m3_push_recompute_rust/review/check_review.py",
+      "exit_code": 1,
+      "reason": "부모의 의도적 request-cleared 변이 실행 중 trace를 읽어 request10/0 차이로 거부했다. 부모의 정상 trace 원복을 기다린 뒤 동일 검토를 다시 실행했다."
+    },
+    {
+      "command": "python3 bench/oracle/m3_push_recompute_rust/review/check_review.py",
+      "exit_code": 0,
+      "reason": "정상 소스·trace 원복 후 전체 재실행 통과"
+    }
+  ]
+}

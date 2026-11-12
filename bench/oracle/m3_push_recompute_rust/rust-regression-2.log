@@ -1,0 +1,7 @@
+    Checking rsolver-lp v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-18/crates/lp)
+   Compiling pyo3-macros v0.24.2
+    Checking pyo3 v0.24.2
+    Checking rsolver-mip v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-18/crates/mip)
+    Checking rsolver-driver v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-18/crates/driver)
+    Checking rsolver v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-18/crates/py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.85s

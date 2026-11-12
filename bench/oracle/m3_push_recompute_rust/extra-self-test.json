@@ -1,0 +1,86 @@
+[
+  {
+    "name": "binary-zero",
+    "first_difference": "extra[0].binary_sha256: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+    "name": "input-hash-zero",
+    "first_difference": "extra[0].input_sha256: 기준='3dd482deb3ad991350a1dd7814e17c7d0061c4d028c738f444db4254c7dc5c7f', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+    "name": "tool-hash-zero",
+    "first_difference": "extra[0].tool_sha256: 기준='ceee567d5e8d10cb8b18fcb29110e2cdfd9e9d64e75ce23d8e217f1c4800d173', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+    "name": "slice-hash-zero",
+    "first_difference": "extra[0].slice_tool_sha256: 기준='89b5e2b0d316b44abcafce3a7fb7f0ab9fa0a2fed8654067cc8498142ee23584', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+    "name": "manifest-empty",
+    "first_difference": "extra manifest files/inputs/binary.files: 필드 기준=['tools/push_recompute_extra.py', 'tools/push_recompute_synthetic.py', 'tools/push_recompute_check.py', 'bench/oracle/m3_push_recompute/manifest.json', 'bench/oracle/m3_push_recompute/source.asm', 'bench/oracle/m3_push_recompute_rust/extra-1.json', 'bench/oracle/m3_push_recompute_rust/extra-2.json', 'bench/oracle/m3_push_recompute_rust/extra-3.json'], 실제=[]"
+  },
+  {
+    "name": "empty-events",
+    "first_difference": "extra[0].nonempty count: 기준=10, 실제=0"
+  },
+  {
+    "name": "repeat-difference",
+    "first_difference": "extra[1].events: 길이 기준=10, 실제=9"
+  },
+  {
+    "name": "null-result",
+    "first_difference": "extra[0].pivot-lower-sentinel-wide.result: 타입 기준=dict, 실제=NoneType"
+  },
+  {
+    "name": "input-change",
+    "first_difference": "extra[0].pivot-lower-sentinel-wide.input.input.header: 길이 기준=1, 실제=0"
+  },
+  {
+    "name": "result-pinf",
+    "first_difference": "extra[0].pivot-above-association.result.pinf: 기준='0000000000001440', 실제='0000000000000000'"
+  },
+  {
+    "name": "result-violations",
+    "first_difference": "extra[0].pivot-above-association.result.violations: 기준=2, 실제=0"
+  },
+  {
+    "name": "result-basic",
+    "first_difference": "extra[0].pivot-above-association.result.basic: 길이 기준=2, 실제=0"
+  },
+  {
+    "name": "result-width",
+    "first_difference": "extra[0].pivot-above-association.result.width: 길이 기준=2, 실제=0"
+  },
+  {
+    "name": "result-marks",
+    "first_difference": "extra[0].pivot-above-association.result.marks: 길이 기준=2, 실제=0"
+  },
+  {
+    "name": "result-request",
+    "first_difference": "extra[0].pivot-above-association.result.request: 기준=10, 실제=0"
+  },
+  {
+    "name": "result-retry",
+    "first_difference": "extra[0].pivot-above-association.result.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "result-exit",
+    "first_difference": "extra[0].pivot-above-association.result.exit: 기준='normal', 실제='retry'"
+  },
+  {
+    "name": "result-calls",
+    "first_difference": "extra[0].pivot-above-association.result.calls: 길이 기준=1, 실제=0"
+  },
+  {
+    "name": "result-preserved",
+    "first_difference": "extra[0].pivot-above-association.result.preserved: 필드 기준=['header', 'lb', 'ub', 'rhs'], 실제=[]"
+  },
+  {
+    "name": "result-aliases",
+    "first_difference": "extra[0].pivot-above-association.result.aliases: 필드 기준=['rhs_input', 'raw_basic'], 실제=[]"
+  },
+  {
+    "name": "case-order",
+    "first_difference": "extra[0].pivot-lower-sentinel-wide.input.name: 기준='pivot-lower-sentinel-wide', 실제='round-basis-accumulation'"
+  }
+]

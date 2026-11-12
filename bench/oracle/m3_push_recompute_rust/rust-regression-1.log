@@ -1,0 +1,324 @@
+   Compiling rsolver-lp v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-18/crates/lp)
+   Compiling rsolver-mip v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-18/crates/mip)
+   Compiling rsolver-driver v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-18/crates/driver)
+   Compiling rsolver v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-18/crates/py)
+    Finished `release` profile [optimized] target(s) in 12.27s
+     Running unittests src/lib.rs (target/release/deps/_core-5cee7a98d4244e8c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/rsolver_driver-99791c27fd157534)
+
+running 4 tests
+test tests::adjust_table ... ok
+test tests::big_uncrush_status_matches_gurobi_fault_injection ... ok
+test tests::status_rules ... ok
+test tests::method_table ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/rsolver_lp-32ab7f7b2bfe86e5)
+
+running 38 tests
+test barrier::chol::tests::vsum_orders ... ok
+test barrier::ldl::tests::spd_and_semidefinite ... ok
+test barrier::f80::tests::extended_rounding ... ok
+test barrier::normal::tests::small ... ok
+test barrier::ordering::tests::afiro_matches_gurobi ... ok
+test barrier::ordering::tests::shell_sort_keeps_equal_keys_in_place_for_gap_one ... ok
+test barrier::setup::tests::common_column_preserves_cancellation_in_residual_product ... ok
+test bfrt::tests::passes_cheap_breakpoints_then_enters ... ok
+test bfrt::tests::sparse_column_wins_harris_tie ... ok
+test common::rng_tests::rng_matches_original ... ok
+test barrier::tests::afiro ... ok
+test fp::tests::ilogb_and_pow2 ... ok
+test lu::tests::dot8_peel_order ... ok
+test lu::tests::gather_lane_order ... ok
+test common::tests::sorts_descending_with_index ... ok
+test lu::tests::markowitz_and_forrest_tomlin_reproduce_the_basis_inverse ... ok
+test lu::tests::sum_squares_lane_order ... ok
+test pdhg::kern::tests::red8_order ... ok
+test presolve::deprow::tests::buckets_keep_the_original_order ... ok
+test lu::tests::mixed_singleton_and_markowitz_basis_of_sc50a ... ok
+test presolve::parallel::tests::facing_rows_become_a_range ... ok
+test presolve::postsolve::tests::simd_sum_order ... ok
+test presolve::sort::tests::sorts_and_carries_index ... ok
+test presolve::symmetry::tests::rand31_first_values ... ok
+test presolve::symmetry::tests::real_gcd_cases ... ok
+test pricing::tests::rebuild_keeps_untouched_order_and_merges ... ok
+test simplex::tests::bfrt_accounts_for_integer_column_weight ... ok
+test simplex::tests::integer_basics_get_preference_in_both_pricing_modes_and_updates ... ok
+test simplex::tests::integer_cost_perturbation_preserves_continuous_columns_and_rng_order ... ok
+test simplex::tests::reduced_costs_follow_row_order_with_upper_and_fixed_nonbasics ... ok
+test start::tests::sort_orders_keys_and_keeps_the_original_tie_order ... ok
+test simplex::tests::warm_start_from_the_optimal_basis_takes_no_pivots ... ok
+test simplex::tests::warm_start_from_an_intermediate_basis_reaches_the_optimum ... ok
+test barrier::ordering::tests::factor_counts_match_gurobi ... ok
+test barrier::ordering::tests::wide_supernodes_split_at_192 ... ok
+test barrier::tests::work_estimate_matches_oracle ... ok
+test barrier::ordering::tests::bench_lps_match_gurobi ... ok
+test barrier::chol::tests::agrees_with_scalar_ldl ... ok
+
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
+     Running tests/bfrt_corpus.rs (target/release/deps/bfrt_corpus-3a9b4e01d6bbe624)
+
+running 1 test
+test bfrt_corpus_replay ... ignored, driven by tools/m1_bfrt_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_chain.rs (target/release/deps/push_chain-31c8923e28d082a5)
+
+running 1 test
+test chain_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/push_decision.rs (target/release/deps/push_decision-5f614a569466ec20)
+
+running 1 test
+test decision_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_factor.rs (target/release/deps/push_factor-a5325a2dba542276)
+
+running 1 test
+test factor_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_ratio.rs (target/release/deps/push_ratio-dd59be714bce3673)
+
+running 5 tests
+test ratio_trace ... ok
+test infeasible_ratio_trace ... ok
+test reentry_trace ... ok
+test retry_ratio_trace ... ok
+test violated_reentry_trace ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_recompute.rs (target/release/deps/push_recompute-7b870091f5eca9a6)
+
+running 1 test
+test recompute_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_supplier.rs (target/release/deps/push_supplier-94bfdcc34d03c750)
+
+running 1 test
+test supplier_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/rsolver_mip-0ed4cb08d46668c9)
+
+running 70 tests
+test bnb::tests::restores_affine_and_slack_records_like_native ... ok
+test bnb::tests::restores_mixed_records_in_reverse_order ... ok
+test bnb::tests::restores_parallel_columns_like_native ... ok
+test components::tests::blocks_of_path_and_triangle ... ok
+test conflict::tests::merge_dedups_and_keeps_order ... ok
+test bnb::tests::searches_fractional_root_and_respects_node_limit ... ok
+test bnb::tests::restores_integer_parallel_columns_like_native ... ok
+test bnb::tests::original_pipeline_restores_eliminated_variable ... ok
+test bnb::tests::solves_and_restores_an_empty_reduced_model ... ok
+test cutoff::tests::native_objective_steps_match_bits ... ok
+test cutoff::tests::parent_step_requires_congruent_offsets_and_enabled_inference ... ok
+test dive_rows::tests::clauses ... ok
+test dive_rows::tests::row_list ... ok
+test grow::tests::grow_queues_and_marks ... ok
+test heur::tests::bound_sweeps_preserve_fixed_and_free_columns_and_skip_infinite_bounds ... ok
+test cutoff::tests::native_cutoff_fixtures_match_bits ... ok
+test heur::tests::disabled_search_preserves_root_and_explicit_incumbents ... ok
+test heur::tests::free_and_unbounded_columns_do_not_create_nonfinite_incumbents ... ok
+test heur::tests::bound_sweeps_find_an_incumbent_after_row_repair_fails ... ok
+test heur::tests::maximization_improves_with_negative_coefficients_and_fixed_integers ... ok
+test heur::tests::perturb_counts_general_integers_when_setting_restart_size ... ok
+test heur::tests::perturb_flips_first_pass_and_restores_later_passes ... ok
+test heur::tests::perturb_preserves_fixed_and_general_integer_columns ... ok
+test heur::tests::repairs_equalities_but_never_submits_infeasible_or_fractional_points ... ok
+test heur::tests::repairs_mixed_cover_and_automatically_tightens_root ... ok
+test heur::tests::restart_recovers_from_a_stalled_binary_repair ... ok
+test heur::tests::work_limit_stops_between_rows_not_between_candidates ... ok
+test heur::tests::restart_repairs_the_last_failed_row_first ... ok
+test knapsack::tests::gcd_excl_segment_tree ... ok
+test modk::tests::neg_inv_tables ... ok
+test node_heap::tests::equal_keys_follow_the_original_rules ... ok
+test node_heap::tests::keys ... ok
+test post::tests::subst_layout_matches_39d9e1 ... ok
+test post::tests::t10_t11_layouts ... ok
+test post::tests::xor_layout_offsets ... ok
+test knapsack::tests::knap_big_matches_gurobi ... ok
+test probe::tests::sort_desc_moves_payload ... ok
+test presolve_state_tests::retains_records_for_removed_fixed_variable ... ok
+test propagate::tests::duplicate_entries_and_tolerated_continuous_solution ... ok
+test probe::tests::probing_fixes_a_binary ... ok
+test propagate::tests::objective_reaches_all_rows_and_detects_exhaustion ... ok
+test retry::tests::retry_rules ... ok
+test propagate::tests::infinite_endpoints_negative_coefficients_and_empty_rows ... ok
+test root::tests::automatic_incumbents_must_satisfy_the_original_presolved_bounds ... ok
+test root::tests::binary_empty_intersections_within_bound_tolerance_fix_to_the_endpoint ... ok
+test root::tests::binary_incumbent_rejects_values_outside_its_type_domain ... ok
+test root::tests::binary_fixed_and_empty_domains_have_consistent_root_contracts ... ok
+test root::tests::binary_type_bounds_constrain_the_root_lp_with_or_without_heuristics ... ok
+test root::tests::binary_validation_uses_bound_and_integrality_tolerances_separately ... ok
+test root::tests::domain_infers_integer_equalities_without_changing_input ... ok
+test root::tests::incumbent_bounds_respect_sense_and_validation ... ok
+test root::tests::objective_lattice_tightens_integer_bounds_and_can_be_disabled ... ok
+test root::tests::original_pipeline_handles_presolve_failure_and_preserves_incumbent ... ok
+test root::tests::original_pipeline_keeps_maximization_incumbent_after_elimination ... ok
+test root::tests::root_method_thresholds ... ok
+test root::tests::original_cutoff_uses_the_reduced_maximization_objective ... ok
+test root::tests::root_without_columns_returns_none_even_with_residual_rows ... ok
+test propagate::tests::propagation_preserves_every_feasible_point_on_small_integer_models ... ok
+test roundend::tests::gcd_and_inverse ... ok
+test root::tests::user_cutoff_applies_without_an_incumbent_in_both_directions ... ok
+test root::tests::progress_maximization_normalizes_cutoff_bounds_and_objective_stops ... ok
+test symmetry::tests::rand31_first_values ... ok
+test symmetry::tests::real_gcd_cases ... ok
+test termination::tests::gaps_are_strict_and_zero_disables_them ... ok
+test state::tests::lists_keep_model_order ... ok
+test termination::tests::lattice_and_final_cutoff ... ok
+test termination::tests::priorities_and_limits ... ok
+test termination::tests::resource_and_objective_stops ... ok
+test tworows::tests::knapsack_takes_cheapest_ratio_first ... ok
+test tworows::tests::vector_sum_matches_scalar_on_exact_values ... ok
+
+test result: ok. 70 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/bnb_profile.rs (target/release/deps/bnb_profile-7eeee219f82c3982)
+
+running 1 test
+test bnb_profile ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/clique.rs (target/release/deps/clique-b1242eb08509d9c8)
+
+running 5 tests
+test mas74_none ... ok
+test glass4_rows ... ok
+test neos859080_pairs ... ok
+test graphdraw_probing ... ok
+test sp150x300d_partial ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dive_gate_l1.rs (target/release/deps/dive_gate_l1-5ba31dafc180872f)
+
+running 1 test
+test dive_gate_replay ... ignored, driven by tools/mip_dive_gate_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dive_list_l1.rs (target/release/deps/dive_list_l1-dbfb828f19a01e2b)
+
+running 1 test
+test dive_list_replay ... ignored, driven by tools/mip_dive_list_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dive_rows_l1.rs (target/release/deps/dive_rows_l1-842ac355a8cc297d)
+
+running 1 test
+test dive_rows_replay ... ignored, driven by tools/mip_dive_rows_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dive_split_l1.rs (target/release/deps/dive_split_l1-abdb107623213cd8)
+
+running 1 test
+test dive_split_replay ... ignored, driven by tools/mip_dive_split_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/node_heap_l1.rs (target/release/deps/node_heap_l1-ca0817333c802d39)
+
+running 1 test
+test node_heap_replay ... ignored, driven by tools/mip_node_heap_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/node_key_l1.rs (target/release/deps/node_key_l1-3d466c69bc1c44cc)
+
+running 1 test
+test node_key_replay ... ignored, driven by tools/mip_node_key_check.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/node_life_l1.rs (target/release/deps/node_life_l1-5c3d65d88057b491)
+
+running 1 test
+test node_life_replay ... ignored, driven by tools/mip_node_life_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/plunge_l1.rs (target/release/deps/plunge_l1-65efb01172f84460)
+
+running 1 test
+test plunge_replay ... ignored, driven by tools/mip_plunge_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/pseudocost_l1.rs (target/release/deps/pseudocost_l1-4d3fe2d716616444)
+
+running 1 test
+test pseudocost_replay ... ignored, driven by tools/mip_pseudocost_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/retry_l1.rs (target/release/deps/retry_l1-afd4ef360cc93199)
+
+running 1 test
+test nidda_stress_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/strong_branch_l1.rs (target/release/deps/strong_branch_l1-2ef232a516f84fae)
+
+running 3 tests
+test replay ... ignored, run by tools/mip_sb_control_rust.py with original inputs
+test clamp_and_signed_zero ... ok
+test sentinel_returns_unported_after_restoration ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/rsolver_model-80d6caf518ccf667)
+
+running 3 tests
+test fingerprint::tests::matches_original_on_tiny_models ... ok
+test mps_write::tests::integer_markers_and_bounds ... ok
+test mps_write::tests::number_format_matches_a8030d ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests rsolver_driver
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests rsolver_lp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests rsolver_mip
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests rsolver_model
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

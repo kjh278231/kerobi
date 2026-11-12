@@ -1,0 +1,338 @@
+[
+  {
+    "name": "empty-targets",
+    "first_difference": "trace case count: 기준=138, 실제=0"
+  },
+  {
+    "name": "missing-case",
+    "first_difference": "trace case count: 기준=138, 실제=137"
+  },
+  {
+    "name": "case-order",
+    "first_difference": "trace case order: 기준='arms/1/1/round', 실제='arms/1/2/round'"
+  },
+  {
+    "name": "input-hash-zero",
+    "first_difference": "trace schema/input hash"
+  },
+  {
+    "name": "arms/1/1/round/exit",
+    "first_difference": "arms/1/1/round.exit: 기준='normal', 실제='invalid'"
+  },
+  {
+    "name": "arms/1/1/round/basic",
+    "first_difference": "arms/1/1/round.basic.length: 기준=25, 실제=0"
+  },
+  {
+    "name": "arms/1/1/round/width",
+    "first_difference": "arms/1/1/round.width.length: 기준=25, 실제=0"
+  },
+  {
+    "name": "arms/1/1/round/marks",
+    "first_difference": "arms/1/1/round.marks.length: 기준=25, 실제=0"
+  },
+  {
+    "name": "arms/1/1/round/pinf",
+    "first_difference": "arms/1/1/round.pinf: 기준='0000000000000000', 실제='invalid'"
+  },
+  {
+    "name": "arms/1/1/round/violations",
+    "first_difference": "arms/1/1/round.violations: 기준=0, 실제=1"
+  },
+  {
+    "name": "arms/1/1/round/retry",
+    "first_difference": "arms/1/1/round.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "arms/1/1/round/request",
+    "first_difference": "arms/1/1/round.request: 기준=10, 실제=11"
+  },
+  {
+    "name": "arms/1/1/round/raw_basic",
+    "first_difference": "arms/1/1/round.raw_basic: 기준=False, 실제=True"
+  },
+  {
+    "name": "arms/1/1/round/preserved",
+    "first_difference": "arms/1/1/round.preserved.keys: 기준={'header', 'lb', 'ub'}, 실제=set()"
+  },
+  {
+    "name": "arms/1/1/round/duplicate",
+    "first_difference": "duplicate JSON key: request"
+  },
+  {
+    "name": "synthetic/pivot-mixed/exit",
+    "first_difference": "synthetic/pivot-mixed.exit: 기준='normal', 실제='invalid'"
+  },
+  {
+    "name": "synthetic/pivot-mixed/basic",
+    "first_difference": "synthetic/pivot-mixed.basic.length: 기준=6, 실제=0"
+  },
+  {
+    "name": "synthetic/pivot-mixed/width",
+    "first_difference": "synthetic/pivot-mixed.width.length: 기준=6, 실제=0"
+  },
+  {
+    "name": "synthetic/pivot-mixed/marks",
+    "first_difference": "synthetic/pivot-mixed.marks.length: 기준=6, 실제=0"
+  },
+  {
+    "name": "synthetic/pivot-mixed/pinf",
+    "first_difference": "synthetic/pivot-mixed.pinf: 기준='000000000000e03f', 실제='invalid'"
+  },
+  {
+    "name": "synthetic/pivot-mixed/violations",
+    "first_difference": "synthetic/pivot-mixed.violations: 기준=2, 실제=3"
+  },
+  {
+    "name": "synthetic/pivot-mixed/retry",
+    "first_difference": "synthetic/pivot-mixed.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/pivot-mixed/request",
+    "first_difference": "synthetic/pivot-mixed.request: 기준=10, 실제=11"
+  },
+  {
+    "name": "synthetic/pivot-mixed/raw_basic",
+    "first_difference": "synthetic/pivot-mixed.raw_basic: 기준=False, 실제=True"
+  },
+  {
+    "name": "synthetic/pivot-mixed/preserved",
+    "first_difference": "synthetic/pivot-mixed.preserved.keys: 기준={'header', 'lb', 'ub'}, 실제=set()"
+  },
+  {
+    "name": "synthetic/pivot-mixed/duplicate",
+    "first_difference": "duplicate JSON key: request"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/exit",
+    "first_difference": "synthetic/round-alias-1-1.exit: 기준='normal', 실제='invalid'"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/basic",
+    "first_difference": "synthetic/round-alias-1-1.basic.length: 기준=2, 실제=0"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/width",
+    "first_difference": "synthetic/round-alias-1-1.width.length: 기준=2, 실제=0"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/marks",
+    "first_difference": "synthetic/round-alias-1-1.marks.length: 기준=2, 실제=0"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/pinf",
+    "first_difference": "synthetic/round-alias-1-1.pinf: 기준='0000000000000000', 실제='invalid'"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/violations",
+    "first_difference": "synthetic/round-alias-1-1.violations: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/retry",
+    "first_difference": "synthetic/round-alias-1-1.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/request",
+    "first_difference": "synthetic/round-alias-1-1.request: 기준=10, 실제=11"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/raw_basic",
+    "first_difference": "synthetic/round-alias-1-1.raw_basic: 기준=True, 실제=False"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/preserved",
+    "first_difference": "synthetic/round-alias-1-1.preserved.keys: 기준={'header', 'lb', 'ub'}, 실제=set()"
+  },
+  {
+    "name": "synthetic/round-alias-1-1/duplicate",
+    "first_difference": "duplicate JSON key: request"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/exit",
+    "first_difference": "synthetic/pivot-accumulation.exit: 기준='normal', 실제='invalid'"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/basic",
+    "first_difference": "synthetic/pivot-accumulation.basic.length: 기준=3, 실제=0"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/width",
+    "first_difference": "synthetic/pivot-accumulation.width.length: 기준=3, 실제=0"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/marks",
+    "first_difference": "synthetic/pivot-accumulation.marks.length: 기준=3, 실제=0"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/pinf",
+    "first_difference": "synthetic/pivot-accumulation.pinf: 기준='0000000000005043', 실제='invalid'"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/violations",
+    "first_difference": "synthetic/pivot-accumulation.violations: 기준=3, 실제=4"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/retry",
+    "first_difference": "synthetic/pivot-accumulation.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/request",
+    "first_difference": "synthetic/pivot-accumulation.request: 기준=10, 실제=11"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/raw_basic",
+    "first_difference": "synthetic/pivot-accumulation.raw_basic: 기준=False, 실제=True"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/preserved",
+    "first_difference": "synthetic/pivot-accumulation.preserved.keys: 기준={'header', 'lb', 'ub'}, 실제=set()"
+  },
+  {
+    "name": "synthetic/pivot-accumulation/duplicate",
+    "first_difference": "duplicate JSON key: request"
+  },
+  {
+    "name": "synthetic/round-empty/exit",
+    "first_difference": "synthetic/round-empty.exit: 기준='normal', 실제='invalid'"
+  },
+  {
+    "name": "synthetic/round-empty/basic",
+    "first_difference": "synthetic/round-empty.basic.length: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/round-empty/width",
+    "first_difference": "synthetic/round-empty.width.length: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/round-empty/marks",
+    "first_difference": "synthetic/round-empty.marks.length: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/round-empty/pinf",
+    "first_difference": "synthetic/round-empty.pinf: 기준='0000000000000000', 실제='invalid'"
+  },
+  {
+    "name": "synthetic/round-empty/violations",
+    "first_difference": "synthetic/round-empty.violations: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/round-empty/retry",
+    "first_difference": "synthetic/round-empty.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "synthetic/round-empty/request",
+    "first_difference": "synthetic/round-empty.request: 기준=10, 실제=11"
+  },
+  {
+    "name": "synthetic/round-empty/raw_basic",
+    "first_difference": "synthetic/round-empty.raw_basic: 기준=False, 실제=True"
+  },
+  {
+    "name": "synthetic/round-empty/preserved",
+    "first_difference": "synthetic/round-empty.preserved.keys: 기준={'header', 'lb', 'ub'}, 실제=set()"
+  },
+  {
+    "name": "synthetic/round-empty/duplicate",
+    "first_difference": "duplicate JSON key: request"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/exit",
+    "first_difference": "extra/pivot-basis-accumulation.exit: 기준='normal', 실제='invalid'"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/basic",
+    "first_difference": "extra/pivot-basis-accumulation.basic.length: 기준=4, 실제=0"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/width",
+    "first_difference": "extra/pivot-basis-accumulation.width.length: 기준=4, 실제=0"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/marks",
+    "first_difference": "extra/pivot-basis-accumulation.marks.length: 기준=4, 실제=0"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/pinf",
+    "first_difference": "extra/pivot-basis-accumulation.pinf: 기준='0000000000005043', 실제='invalid'"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/violations",
+    "first_difference": "extra/pivot-basis-accumulation.violations: 기준=4, 실제=5"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/retry",
+    "first_difference": "extra/pivot-basis-accumulation.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/request",
+    "first_difference": "extra/pivot-basis-accumulation.request: 기준=10, 실제=11"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/raw_basic",
+    "first_difference": "extra/pivot-basis-accumulation.raw_basic: 기준=False, 실제=True"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/preserved",
+    "first_difference": "extra/pivot-basis-accumulation.preserved.keys: 기준={'header', 'lb', 'ub'}, 실제=set()"
+  },
+  {
+    "name": "extra/pivot-basis-accumulation/duplicate",
+    "first_difference": "duplicate JSON key: request"
+  },
+  {
+    "name": "extra/round-above-association/exit",
+    "first_difference": "extra/round-above-association.exit: 기준='normal', 실제='invalid'"
+  },
+  {
+    "name": "extra/round-above-association/basic",
+    "first_difference": "extra/round-above-association.basic.length: 기준=2, 실제=0"
+  },
+  {
+    "name": "extra/round-above-association/width",
+    "first_difference": "extra/round-above-association.width.length: 기준=2, 실제=0"
+  },
+  {
+    "name": "extra/round-above-association/marks",
+    "first_difference": "extra/round-above-association.marks.length: 기준=2, 실제=0"
+  },
+  {
+    "name": "extra/round-above-association/pinf",
+    "first_difference": "extra/round-above-association.pinf: 기준='0000000000001440', 실제='invalid'"
+  },
+  {
+    "name": "extra/round-above-association/violations",
+    "first_difference": "extra/round-above-association.violations: 기준=2, 실제=3"
+  },
+  {
+    "name": "extra/round-above-association/retry",
+    "first_difference": "extra/round-above-association.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "extra/round-above-association/request",
+    "first_difference": "extra/round-above-association.request: 기준=10, 실제=11"
+  },
+  {
+    "name": "extra/round-above-association/raw_basic",
+    "first_difference": "extra/round-above-association.raw_basic: 기준=False, 실제=True"
+  },
+  {
+    "name": "extra/round-above-association/preserved",
+    "first_difference": "extra/round-above-association.preserved.keys: 기준={'header', 'lb', 'ub'}, 실제=set()"
+  },
+  {
+    "name": "extra/round-above-association/duplicate",
+    "first_difference": "duplicate JSON key: request"
+  },
+  {
+    "name": "f64-one-bit/basic",
+    "first_difference": "arms/1/1/round.basic[0]: 기준='0000000000000040', 실제='0100000000000040'"
+  },
+  {
+    "name": "f64-one-bit/width",
+    "first_difference": "arms/1/1/round.width[0]: 기준='0000000000003540', 실제='0100000000003540'"
+  },
+  {
+    "name": "f64-one-bit/pinf",
+    "first_difference": "arms/1/1/round.pinf: 기준='0000000000000000', 실제='0100000000000000'"
+  }
+]

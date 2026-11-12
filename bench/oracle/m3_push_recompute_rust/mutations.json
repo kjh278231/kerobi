@@ -1,0 +1,167 @@
+[
+  {
+    "name": "no-raw-copy",
+    "result": "rejected",
+    "first_difference": "arms/1/1/round.basic[0]: 기준='0000000000000040', 실제='0000000000e05e40'"
+  },
+  {
+    "name": "no-shift",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-shifted-minus-h-below.basic[0]: 기준='100000000000c0bf', 실제='ffffffffffff0640'"
+  },
+  {
+    "name": "wrong-shift-sign",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-shifted-minus-h-below.basic[0]: 기준='100000000000c0bf', 실제='0000000000801740'"
+  },
+  {
+    "name": "wrong-column",
+    "result": "rejected",
+    "first_difference": "arms/1/1/round.width[0]: 기준='0000000000003540', 실제='0000000000002440'"
+  },
+  {
+    "name": "lower-sentinel-strict",
+    "result": "rejected",
+    "first_difference": "extra/pivot-lower-sentinel-wide.width[0]: 기준='ea8ca039593e2946', 실제='b06938ebc2ee3246'"
+  },
+  {
+    "name": "shift-sentinel-equality",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-free.basic[0]: 기준='00000000000022c0', 실제='ea8ca039593e2946'"
+  },
+  {
+    "name": "upper-sentinel-strict",
+    "result": "rejected",
+    "first_difference": "extra/pivot-upper-sentinel-wide.width[0]: 기준='ea8ca039593e2946', 실제='ea8ca039593e1946'"
+  },
+  {
+    "name": "width-is-upper",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-shifted-minus-h-below.width[0]: 기준='0000000000001040', 실제='0000000000001c40'"
+  },
+  {
+    "name": "free-as-normal",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-free.marks[0]: 기준='46', 실제='4e'"
+  },
+  {
+    "name": "free-ignore-upper",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-lower-infinite.marks[0]: 기준='4e', 실제='46'"
+  },
+  {
+    "name": "free-ignore-lower",
+    "result": "rejected",
+    "first_difference": "arms/1/1/round.marks[12]: 기준='4e', 실제='46'"
+  },
+  {
+    "name": "below-inclusive",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-bounded-minus-h-exact.marks[0]: 기준='4c', 실제='42'"
+  },
+  {
+    "name": "lower-inclusive",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-bounded-h-exact.marks[0]: 기준='4e', 실제='4c'"
+  },
+  {
+    "name": "fixed-as-lower",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-fixed-minus-h-exact.marks[0]: 기준='58', 실제='4c'"
+  },
+  {
+    "name": "lower-as-fixed",
+    "result": "rejected",
+    "first_difference": "arms/1/1/round.marks[5]: 기준='4c', 실제='58'"
+  },
+  {
+    "name": "normal-inclusive",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-bounded-width-minus-h-exact.marks[0]: 기준='55', 실제='4e'"
+  },
+  {
+    "name": "normal-no-h",
+    "result": "rejected",
+    "first_difference": "arms/1/1/round.marks[6]: 기준='55', 실제='4e'"
+  },
+  {
+    "name": "normal-no-infinite",
+    "result": "rejected",
+    "first_difference": "extra/pivot-infinite-width-large-value.marks[0]: 기준='4e', 실제='41'"
+  },
+  {
+    "name": "above-strict",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-bounded-width-plus-h-exact.marks[0]: 기준='41', 실제='55'"
+  },
+  {
+    "name": "above-no-h",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-bounded-width-plus-h-below.marks[0]: 기준='55', 실제='41'"
+  },
+  {
+    "name": "no-below-count",
+    "result": "rejected",
+    "first_difference": "retry/1/1/round.violations: 기준=3, 실제=1"
+  },
+  {
+    "name": "no-above-count",
+    "result": "rejected",
+    "first_difference": "retry/1/1/round.violations: 기준=3, 실제=2"
+  },
+  {
+    "name": "below-wrong-sign",
+    "result": "rejected",
+    "first_difference": "retry/1/1/round.pinf: 기준='046c95607138d33f', 실제='443333333333d3bf'"
+  },
+  {
+    "name": "above-no-width",
+    "result": "rejected",
+    "first_difference": "retry/1/1/round.pinf: 기준='046c95607138d33f', 실제='61ab048bc3992440'"
+  },
+  {
+    "name": "reassociate-above",
+    "result": "rejected",
+    "first_difference": "extra/pivot-above-association.pinf: 기준='0000000000001440', 실제='0000000000001040'"
+  },
+  {
+    "name": "reverse-basis",
+    "result": "rejected",
+    "first_difference": "extra/pivot-basis-accumulation.pinf: 기준='0000000000005043', 실제='0100000000005043'"
+  },
+  {
+    "name": "pinf-not-reset",
+    "result": "rejected",
+    "first_difference": "arms/1/1/round.pinf: 기준='0000000000000000', 실제='0000000000c058c0'"
+  },
+  {
+    "name": "count-not-reset",
+    "result": "rejected",
+    "first_difference": "arms/1/1/round.violations: 기준=0, 실제=29"
+  },
+  {
+    "name": "retry-inclusive",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-retry-0x1.2a05f20000000p+33-2-0.exit: 기준='normal', 실제='retry'"
+  },
+  {
+    "name": "retry-ignore-status",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-accumulation.exit: 기준='normal', 실제='retry'"
+  },
+  {
+    "name": "retry-ignore-attempt",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-retry-0x1.2a05f20000001p+33-2-1.exit: 기준='normal', 실제='retry'"
+  },
+  {
+    "name": "retry-no-write",
+    "result": "rejected",
+    "first_difference": "synthetic/pivot-retry-0x1.2a05f20000001p+33-2-0.retry: 기준=1, 실제=0"
+  },
+  {
+    "name": "request-cleared",
+    "result": "rejected",
+    "first_difference": "arms/1/1/round.request: 기준=10, 실제=0"
+  }
+]
