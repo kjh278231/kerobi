@@ -15,6 +15,7 @@ pub mod barrier;
 pub mod pdhg;
 pub mod crossover;
 pub mod crossover_factor;
+pub mod crossover_ftran;
 pub mod crossover_recompute;
 pub mod crossover_round;
 pub mod crossover_supplier;

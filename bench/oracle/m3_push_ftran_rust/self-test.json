@@ -1,0 +1,3002 @@
+[
+  {
+    "name": "zero-target",
+    "first_difference": "사례 목록·순서: 길이 기준=50, 실제=0"
+  },
+  {
+    "name": "missing-case",
+    "first_difference": "사례 목록·순서: 길이 기준=50, 실제=49"
+  },
+  {
+    "name": "input-hash-zero",
+    "first_difference": "trace 입력 해시: 기준='M3-04c-21b-v1 43639181d43056185bd1b1b086828c297caa3f25a4c3cdaf3a4e4db6f1176a51', 실제='M3-04c-21b-v1 0000000000000000000000000000000000000000000000000000000000000000'"
+  },
+  {
+    "name": "case-order",
+    "first_difference": "사례 목록·순서[0]: 기준='arms/1', 실제='arms/2'"
+  },
+  {
+    "name": "arms/1/leave.output.val",
+    "first_difference": "불일치 arms/1.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/1/leave.output.count",
+    "first_difference": "불일치 arms/1.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/1/leave.input_after.val",
+    "first_difference": "불일치 arms/1.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/1/leave.input_after.idx",
+    "first_difference": "불일치 arms/1.leave.input_after.idx[0]: 원본 21 != Rust 22"
+  },
+  {
+    "name": "arms/1/leave.alias",
+    "first_difference": "불일치 arms/1.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/1/leave.spike.count",
+    "first_difference": "불일치 arms/1.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/1/scratch",
+    "first_difference": "불일치 arms/1.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/1/unknown-cell",
+    "first_difference": "불일치 arms/1.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/1/error",
+    "first_difference": "arms/1: Rust 오류 injected"
+  },
+  {
+    "name": "arms/1/kernel-missing",
+    "first_difference": "불일치 arms/1.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/1/kernel-name",
+    "first_difference": "불일치 arms/1.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/1/kernel-phase",
+    "first_difference": "불일치 arms/1.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/1/kernel-input-count",
+    "first_difference": "불일치 arms/1.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/1/kernel-output-val",
+    "first_difference": "불일치 arms/1.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/1/kernel-order",
+    "first_difference": "불일치 arms/1.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/2/leave.output.val",
+    "first_difference": "불일치 arms/2.leave.output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/2/leave.output.count",
+    "first_difference": "불일치 arms/2.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/2/leave.input_after.val",
+    "first_difference": "불일치 arms/2.leave.input_after.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/2/leave.input_after.idx",
+    "first_difference": "불일치 arms/2.leave.input_after.idx[0]: 원본 20 != Rust 21"
+  },
+  {
+    "name": "arms/2/leave.alias",
+    "first_difference": "불일치 arms/2.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/2/leave.spike.count",
+    "first_difference": "불일치 arms/2.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/2/scratch",
+    "first_difference": "불일치 arms/2.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/2/unknown-cell",
+    "first_difference": "불일치 arms/2.leave.output.val[0]: 형식 '000000000000f0bf' != None"
+  },
+  {
+    "name": "arms/2/error",
+    "first_difference": "arms/2: Rust 오류 injected"
+  },
+  {
+    "name": "arms/2/kernel-missing",
+    "first_difference": "불일치 arms/2.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/2/kernel-name",
+    "first_difference": "불일치 arms/2.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/2/kernel-phase",
+    "first_difference": "불일치 arms/2.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/2/kernel-input-count",
+    "first_difference": "불일치 arms/2.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/2/kernel-output-val",
+    "first_difference": "불일치 arms/2.kernels[3].output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/2/kernel-order",
+    "first_difference": "불일치 arms/2.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/3/leave.output.val",
+    "first_difference": "불일치 arms/3.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/3/leave.output.count",
+    "first_difference": "불일치 arms/3.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/3/leave.input_after.val",
+    "first_difference": "불일치 arms/3.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/3/leave.input_after.idx",
+    "first_difference": "불일치 arms/3.leave.input_after.idx[0]: 원본 18 != Rust 19"
+  },
+  {
+    "name": "arms/3/leave.alias",
+    "first_difference": "불일치 arms/3.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/3/leave.spike.count",
+    "first_difference": "불일치 arms/3.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/3/scratch",
+    "first_difference": "불일치 arms/3.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/3/unknown-cell",
+    "first_difference": "불일치 arms/3.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/3/error",
+    "first_difference": "arms/3: Rust 오류 injected"
+  },
+  {
+    "name": "arms/3/kernel-missing",
+    "first_difference": "불일치 arms/3.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/3/kernel-name",
+    "first_difference": "불일치 arms/3.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/3/kernel-phase",
+    "first_difference": "불일치 arms/3.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/3/kernel-input-count",
+    "first_difference": "불일치 arms/3.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/3/kernel-output-val",
+    "first_difference": "불일치 arms/3.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/3/kernel-order",
+    "first_difference": "불일치 arms/3.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/4/leave.output.val",
+    "first_difference": "불일치 arms/4.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/4/leave.output.count",
+    "first_difference": "불일치 arms/4.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/4/leave.input_after.val",
+    "first_difference": "불일치 arms/4.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/4/leave.input_after.idx",
+    "first_difference": "불일치 arms/4.leave.input_after.idx[0]: 원본 14 != Rust 15"
+  },
+  {
+    "name": "arms/4/leave.alias",
+    "first_difference": "불일치 arms/4.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/4/leave.spike.count",
+    "first_difference": "불일치 arms/4.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/4/scratch",
+    "first_difference": "불일치 arms/4.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/4/unknown-cell",
+    "first_difference": "불일치 arms/4.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/4/error",
+    "first_difference": "arms/4: Rust 오류 injected"
+  },
+  {
+    "name": "arms/4/kernel-missing",
+    "first_difference": "불일치 arms/4.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/4/kernel-name",
+    "first_difference": "불일치 arms/4.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/4/kernel-phase",
+    "first_difference": "불일치 arms/4.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/4/kernel-input-count",
+    "first_difference": "불일치 arms/4.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/4/kernel-output-val",
+    "first_difference": "불일치 arms/4.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/4/kernel-order",
+    "first_difference": "불일치 arms/4.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/5/leave.output.val",
+    "first_difference": "불일치 arms/5.leave.output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/5/leave.output.count",
+    "first_difference": "불일치 arms/5.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/5/leave.input_after.val",
+    "first_difference": "불일치 arms/5.leave.input_after.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/5/leave.input_after.idx",
+    "first_difference": "불일치 arms/5.leave.input_after.idx[0]: 원본 19 != Rust 20"
+  },
+  {
+    "name": "arms/5/leave.alias",
+    "first_difference": "불일치 arms/5.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/5/leave.spike.count",
+    "first_difference": "불일치 arms/5.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/5/scratch",
+    "first_difference": "불일치 arms/5.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/5/unknown-cell",
+    "first_difference": "불일치 arms/5.leave.output.val[0]: 형식 '000000000000f0bf' != None"
+  },
+  {
+    "name": "arms/5/error",
+    "first_difference": "arms/5: Rust 오류 injected"
+  },
+  {
+    "name": "arms/5/kernel-missing",
+    "first_difference": "불일치 arms/5.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/5/kernel-name",
+    "first_difference": "불일치 arms/5.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/5/kernel-phase",
+    "first_difference": "불일치 arms/5.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/5/kernel-input-count",
+    "first_difference": "불일치 arms/5.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/5/kernel-output-val",
+    "first_difference": "불일치 arms/5.kernels[3].output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/5/kernel-order",
+    "first_difference": "불일치 arms/5.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/6/leave.output.val",
+    "first_difference": "불일치 arms/6.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/6/leave.output.count",
+    "first_difference": "불일치 arms/6.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/6/leave.input_after.val",
+    "first_difference": "불일치 arms/6.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/6/leave.input_after.idx",
+    "first_difference": "불일치 arms/6.leave.input_after.idx[0]: 원본 17 != Rust 18"
+  },
+  {
+    "name": "arms/6/leave.alias",
+    "first_difference": "불일치 arms/6.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/6/leave.spike.count",
+    "first_difference": "불일치 arms/6.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/6/scratch",
+    "first_difference": "불일치 arms/6.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/6/unknown-cell",
+    "first_difference": "불일치 arms/6.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/6/error",
+    "first_difference": "arms/6: Rust 오류 injected"
+  },
+  {
+    "name": "arms/6/kernel-missing",
+    "first_difference": "불일치 arms/6.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/6/kernel-name",
+    "first_difference": "불일치 arms/6.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/6/kernel-phase",
+    "first_difference": "불일치 arms/6.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/6/kernel-input-count",
+    "first_difference": "불일치 arms/6.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/6/kernel-output-val",
+    "first_difference": "불일치 arms/6.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/6/kernel-order",
+    "first_difference": "불일치 arms/6.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/7/leave.output.val",
+    "first_difference": "불일치 arms/7.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/7/leave.output.count",
+    "first_difference": "불일치 arms/7.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/7/leave.input_after.val",
+    "first_difference": "불일치 arms/7.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/7/leave.input_after.idx",
+    "first_difference": "불일치 arms/7.leave.input_after.idx[0]: 원본 11 != Rust 12"
+  },
+  {
+    "name": "arms/7/leave.alias",
+    "first_difference": "불일치 arms/7.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/7/leave.spike.count",
+    "first_difference": "불일치 arms/7.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/7/scratch",
+    "first_difference": "불일치 arms/7.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/7/unknown-cell",
+    "first_difference": "불일치 arms/7.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/7/error",
+    "first_difference": "arms/7: Rust 오류 injected"
+  },
+  {
+    "name": "arms/7/kernel-missing",
+    "first_difference": "불일치 arms/7.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/7/kernel-name",
+    "first_difference": "불일치 arms/7.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/7/kernel-phase",
+    "first_difference": "불일치 arms/7.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/7/kernel-input-count",
+    "first_difference": "불일치 arms/7.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/7/kernel-output-val",
+    "first_difference": "불일치 arms/7.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/7/kernel-order",
+    "first_difference": "불일치 arms/7.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/8/leave.output.val",
+    "first_difference": "불일치 arms/8.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/8/leave.output.count",
+    "first_difference": "불일치 arms/8.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/8/leave.input_after.val",
+    "first_difference": "불일치 arms/8.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/8/leave.input_after.idx",
+    "first_difference": "불일치 arms/8.leave.input_after.idx[0]: 원본 12 != Rust 13"
+  },
+  {
+    "name": "arms/8/leave.alias",
+    "first_difference": "불일치 arms/8.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/8/leave.spike.count",
+    "first_difference": "불일치 arms/8.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/8/scratch",
+    "first_difference": "불일치 arms/8.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/8/unknown-cell",
+    "first_difference": "불일치 arms/8.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/8/error",
+    "first_difference": "arms/8: Rust 오류 injected"
+  },
+  {
+    "name": "arms/8/kernel-missing",
+    "first_difference": "불일치 arms/8.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/8/kernel-name",
+    "first_difference": "불일치 arms/8.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/8/kernel-phase",
+    "first_difference": "불일치 arms/8.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/8/kernel-input-count",
+    "first_difference": "불일치 arms/8.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/8/kernel-output-val",
+    "first_difference": "불일치 arms/8.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/8/kernel-order",
+    "first_difference": "불일치 arms/8.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/9/leave.output.val",
+    "first_difference": "불일치 arms/9.leave.output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/9/leave.output.count",
+    "first_difference": "불일치 arms/9.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/9/leave.input_after.val",
+    "first_difference": "불일치 arms/9.leave.input_after.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/9/leave.input_after.idx",
+    "first_difference": "불일치 arms/9.leave.input_after.idx[0]: 원본 13 != Rust 14"
+  },
+  {
+    "name": "arms/9/leave.alias",
+    "first_difference": "불일치 arms/9.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/9/leave.spike.count",
+    "first_difference": "불일치 arms/9.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/9/scratch",
+    "first_difference": "불일치 arms/9.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/9/unknown-cell",
+    "first_difference": "불일치 arms/9.leave.output.val[0]: 형식 '000000000000f0bf' != None"
+  },
+  {
+    "name": "arms/9/error",
+    "first_difference": "arms/9: Rust 오류 injected"
+  },
+  {
+    "name": "arms/9/kernel-missing",
+    "first_difference": "불일치 arms/9.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/9/kernel-name",
+    "first_difference": "불일치 arms/9.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/9/kernel-phase",
+    "first_difference": "불일치 arms/9.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/9/kernel-input-count",
+    "first_difference": "불일치 arms/9.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/9/kernel-output-val",
+    "first_difference": "불일치 arms/9.kernels[3].output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/9/kernel-order",
+    "first_difference": "불일치 arms/9.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/10/leave.output.val",
+    "first_difference": "불일치 arms/10.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/10/leave.output.count",
+    "first_difference": "불일치 arms/10.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/10/leave.input_after.val",
+    "first_difference": "불일치 arms/10.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/10/leave.input_after.idx",
+    "first_difference": "불일치 arms/10.leave.input_after.idx[0]: 원본 15 != Rust 16"
+  },
+  {
+    "name": "arms/10/leave.alias",
+    "first_difference": "불일치 arms/10.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/10/leave.spike.count",
+    "first_difference": "불일치 arms/10.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/10/scratch",
+    "first_difference": "불일치 arms/10.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/10/unknown-cell",
+    "first_difference": "불일치 arms/10.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/10/error",
+    "first_difference": "arms/10: Rust 오류 injected"
+  },
+  {
+    "name": "arms/10/kernel-missing",
+    "first_difference": "불일치 arms/10.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/10/kernel-name",
+    "first_difference": "불일치 arms/10.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/10/kernel-phase",
+    "first_difference": "불일치 arms/10.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/10/kernel-input-count",
+    "first_difference": "불일치 arms/10.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/10/kernel-output-val",
+    "first_difference": "불일치 arms/10.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/10/kernel-order",
+    "first_difference": "불일치 arms/10.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/11/leave.output.val",
+    "first_difference": "불일치 arms/11.leave.output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/11/leave.output.count",
+    "first_difference": "불일치 arms/11.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/11/leave.input_after.val",
+    "first_difference": "불일치 arms/11.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/11/leave.input_after.idx",
+    "first_difference": "불일치 arms/11.leave.input_after.idx[0]: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/11/leave.alias",
+    "first_difference": "불일치 arms/11.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/11/leave.spike.count",
+    "first_difference": "불일치 arms/11.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/11/scratch",
+    "first_difference": "불일치 arms/11.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/11/unknown-cell",
+    "first_difference": "불일치 arms/11.leave.output.val[0]: 형식 '000000000000f0bf' != None"
+  },
+  {
+    "name": "arms/11/error",
+    "first_difference": "arms/11: Rust 오류 injected"
+  },
+  {
+    "name": "arms/11/kernel-missing",
+    "first_difference": "불일치 arms/11.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/11/kernel-name",
+    "first_difference": "불일치 arms/11.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/11/kernel-phase",
+    "first_difference": "불일치 arms/11.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/11/kernel-input-count",
+    "first_difference": "불일치 arms/11.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/11/kernel-output-val",
+    "first_difference": "불일치 arms/11.kernels[3].output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/11/kernel-order",
+    "first_difference": "불일치 arms/11.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/12/leave.output.val",
+    "first_difference": "불일치 arms/12.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/12/leave.output.count",
+    "first_difference": "불일치 arms/12.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/12/leave.input_after.val",
+    "first_difference": "불일치 arms/12.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/12/leave.input_after.idx",
+    "first_difference": "불일치 arms/12.leave.input_after.idx[0]: 원본 9 != Rust 10"
+  },
+  {
+    "name": "arms/12/leave.alias",
+    "first_difference": "불일치 arms/12.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/12/leave.spike.count",
+    "first_difference": "불일치 arms/12.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/12/scratch",
+    "first_difference": "불일치 arms/12.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/12/unknown-cell",
+    "first_difference": "불일치 arms/12.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/12/error",
+    "first_difference": "arms/12: Rust 오류 injected"
+  },
+  {
+    "name": "arms/12/kernel-missing",
+    "first_difference": "불일치 arms/12.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/12/kernel-name",
+    "first_difference": "불일치 arms/12.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/12/kernel-phase",
+    "first_difference": "불일치 arms/12.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/12/kernel-input-count",
+    "first_difference": "불일치 arms/12.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/12/kernel-output-val",
+    "first_difference": "불일치 arms/12.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/12/kernel-order",
+    "first_difference": "불일치 arms/12.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/13/leave.output.val",
+    "first_difference": "불일치 arms/13.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/13/leave.output.count",
+    "first_difference": "불일치 arms/13.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/13/leave.input_after.val",
+    "first_difference": "불일치 arms/13.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/13/leave.input_after.idx",
+    "first_difference": "불일치 arms/13.leave.input_after.idx[0]: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/13/leave.alias",
+    "first_difference": "불일치 arms/13.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/13/leave.spike.count",
+    "first_difference": "불일치 arms/13.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/13/scratch",
+    "first_difference": "불일치 arms/13.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/13/unknown-cell",
+    "first_difference": "불일치 arms/13.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/13/error",
+    "first_difference": "arms/13: Rust 오류 injected"
+  },
+  {
+    "name": "arms/13/kernel-missing",
+    "first_difference": "불일치 arms/13.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/13/kernel-name",
+    "first_difference": "불일치 arms/13.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/13/kernel-phase",
+    "first_difference": "불일치 arms/13.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/13/kernel-input-count",
+    "first_difference": "불일치 arms/13.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/13/kernel-output-val",
+    "first_difference": "불일치 arms/13.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/13/kernel-order",
+    "first_difference": "불일치 arms/13.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/14/leave.output.val",
+    "first_difference": "불일치 arms/14.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/14/leave.output.count",
+    "first_difference": "불일치 arms/14.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/14/leave.input_after.val",
+    "first_difference": "불일치 arms/14.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/14/leave.input_after.idx",
+    "first_difference": "불일치 arms/14.leave.input_after.idx[0]: 원본 10 != Rust 11"
+  },
+  {
+    "name": "arms/14/leave.alias",
+    "first_difference": "불일치 arms/14.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/14/leave.spike.count",
+    "first_difference": "불일치 arms/14.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/14/scratch",
+    "first_difference": "불일치 arms/14.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/14/unknown-cell",
+    "first_difference": "불일치 arms/14.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/14/error",
+    "first_difference": "arms/14: Rust 오류 injected"
+  },
+  {
+    "name": "arms/14/kernel-missing",
+    "first_difference": "불일치 arms/14.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/14/kernel-name",
+    "first_difference": "불일치 arms/14.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/14/kernel-phase",
+    "first_difference": "불일치 arms/14.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/14/kernel-input-count",
+    "first_difference": "불일치 arms/14.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/14/kernel-output-val",
+    "first_difference": "불일치 arms/14.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/14/kernel-order",
+    "first_difference": "불일치 arms/14.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/15/leave.output.val",
+    "first_difference": "불일치 arms/15.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/15/leave.output.count",
+    "first_difference": "불일치 arms/15.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/15/leave.input_after.val",
+    "first_difference": "불일치 arms/15.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/15/leave.input_after.idx",
+    "first_difference": "불일치 arms/15.leave.input_after.idx[0]: 원본 24 != Rust 25"
+  },
+  {
+    "name": "arms/15/leave.alias",
+    "first_difference": "불일치 arms/15.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/15/leave.spike.count",
+    "first_difference": "불일치 arms/15.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/15/scratch",
+    "first_difference": "불일치 arms/15.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/15/unknown-cell",
+    "first_difference": "불일치 arms/15.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/15/error",
+    "first_difference": "arms/15: Rust 오류 injected"
+  },
+  {
+    "name": "arms/15/kernel-missing",
+    "first_difference": "불일치 arms/15.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/15/kernel-name",
+    "first_difference": "불일치 arms/15.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/15/kernel-phase",
+    "first_difference": "불일치 arms/15.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/15/kernel-input-count",
+    "first_difference": "불일치 arms/15.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/15/kernel-output-val",
+    "first_difference": "불일치 arms/15.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/15/kernel-order",
+    "first_difference": "불일치 arms/15.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/16/leave.output.val",
+    "first_difference": "불일치 arms/16.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/16/leave.output.count",
+    "first_difference": "불일치 arms/16.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/16/leave.input_after.val",
+    "first_difference": "불일치 arms/16.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/16/leave.input_after.idx",
+    "first_difference": "불일치 arms/16.leave.input_after.idx[0]: 원본 16 != Rust 17"
+  },
+  {
+    "name": "arms/16/leave.alias",
+    "first_difference": "불일치 arms/16.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/16/leave.spike.count",
+    "first_difference": "불일치 arms/16.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/16/scratch",
+    "first_difference": "불일치 arms/16.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/16/unknown-cell",
+    "first_difference": "불일치 arms/16.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/16/error",
+    "first_difference": "arms/16: Rust 오류 injected"
+  },
+  {
+    "name": "arms/16/kernel-missing",
+    "first_difference": "불일치 arms/16.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/16/kernel-name",
+    "first_difference": "불일치 arms/16.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/16/kernel-phase",
+    "first_difference": "불일치 arms/16.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/16/kernel-input-count",
+    "first_difference": "불일치 arms/16.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "arms/16/kernel-output-val",
+    "first_difference": "불일치 arms/16.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/16/kernel-order",
+    "first_difference": "불일치 arms/16.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/17/leave.output.val",
+    "first_difference": "불일치 arms/17.leave.output.val[0]: 원본 '48afbc9af2d77a3e' != Rust '49afbc9af2d77a3e'"
+  },
+  {
+    "name": "arms/17/leave.output.count",
+    "first_difference": "불일치 arms/17.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/17/leave.input_after.val",
+    "first_difference": "불일치 arms/17.leave.input_after.val[1]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/17/leave.input_after.idx",
+    "first_difference": "불일치 arms/17.leave.input_after.idx[1]: 원본 8 != Rust 9"
+  },
+  {
+    "name": "arms/17/leave.alias",
+    "first_difference": "불일치 arms/17.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/17/leave.spike.count",
+    "first_difference": "불일치 arms/17.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/17/scratch",
+    "first_difference": "불일치 arms/17.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/17/unknown-cell",
+    "first_difference": "불일치 arms/17.leave.output.val[0]: 형식 '48afbc9af2d77a3e' != None"
+  },
+  {
+    "name": "arms/17/error",
+    "first_difference": "arms/17: Rust 오류 injected"
+  },
+  {
+    "name": "arms/17/kernel-missing",
+    "first_difference": "불일치 arms/17.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/17/kernel-name",
+    "first_difference": "불일치 arms/17.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/17/kernel-phase",
+    "first_difference": "불일치 arms/17.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/17/kernel-input-count",
+    "first_difference": "불일치 arms/17.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/17/kernel-output-val",
+    "first_difference": "불일치 arms/17.kernels[3].output.val[0]: 원본 '48afbc9af2d77a3e' != Rust '49afbc9af2d77a3e'"
+  },
+  {
+    "name": "arms/17/kernel-order",
+    "first_difference": "불일치 arms/17.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/18/leave.output.val",
+    "first_difference": "불일치 arms/18.leave.output.val[0]: 원본 '2d431cebe2361a3f' != Rust '2c431cebe2361a3f'"
+  },
+  {
+    "name": "arms/18/leave.output.count",
+    "first_difference": "불일치 arms/18.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/18/leave.input_after.val",
+    "first_difference": "불일치 arms/18.leave.input_after.val[1]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/18/leave.input_after.idx",
+    "first_difference": "불일치 arms/18.leave.input_after.idx[1]: 원본 7 != Rust 8"
+  },
+  {
+    "name": "arms/18/leave.alias",
+    "first_difference": "불일치 arms/18.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/18/leave.spike.count",
+    "first_difference": "불일치 arms/18.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/18/scratch",
+    "first_difference": "불일치 arms/18.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/18/unknown-cell",
+    "first_difference": "불일치 arms/18.leave.output.val[0]: 형식 '2d431cebe2361a3f' != None"
+  },
+  {
+    "name": "arms/18/error",
+    "first_difference": "arms/18: Rust 오류 injected"
+  },
+  {
+    "name": "arms/18/kernel-missing",
+    "first_difference": "불일치 arms/18.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/18/kernel-name",
+    "first_difference": "불일치 arms/18.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/18/kernel-phase",
+    "first_difference": "불일치 arms/18.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/18/kernel-input-count",
+    "first_difference": "불일치 arms/18.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/18/kernel-output-val",
+    "first_difference": "불일치 arms/18.kernels[3].output.val[0]: 원본 '2d431cebe2361a3f' != Rust '2c431cebe2361a3f'"
+  },
+  {
+    "name": "arms/18/kernel-order",
+    "first_difference": "불일치 arms/18.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/19/leave.output.val",
+    "first_difference": "불일치 arms/19.leave.output.val[0]: 원본 '0000000000000040' != Rust '0100000000000040'"
+  },
+  {
+    "name": "arms/19/leave.output.count",
+    "first_difference": "불일치 arms/19.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "arms/19/leave.input_after.val",
+    "first_difference": "불일치 arms/19.leave.input_after.val[24]: 원본 '00000000e07cdbbd' != Rust '01000000e07cdbbd'"
+  },
+  {
+    "name": "arms/19/leave.alias",
+    "first_difference": "불일치 arms/19.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "arms/19/leave.spike.count",
+    "first_difference": "불일치 arms/19.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/19/scratch",
+    "first_difference": "불일치 arms/19.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/19/unknown-cell",
+    "first_difference": "불일치 arms/19.leave.output.val[0]: 형식 '0000000000000040' != None"
+  },
+  {
+    "name": "arms/19/error",
+    "first_difference": "arms/19: Rust 오류 injected"
+  },
+  {
+    "name": "arms/19/kernel-missing",
+    "first_difference": "불일치 arms/19.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/19/kernel-name",
+    "first_difference": "불일치 arms/19.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/19/kernel-phase",
+    "first_difference": "불일치 arms/19.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/19/kernel-input-count",
+    "first_difference": "불일치 arms/19.kernels[0].input.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "arms/19/kernel-output-val",
+    "first_difference": "불일치 arms/19.kernels[3].output.val[0]: 원본 '0000000000000040' != Rust '0100000000000040'"
+  },
+  {
+    "name": "arms/19/kernel-order",
+    "first_difference": "불일치 arms/19.kernels[0].input.val[18]: 원본 '0000000000005940' != Rust '8affffffffbf5740'"
+  },
+  {
+    "name": "arms/20/leave.output.val",
+    "first_difference": "불일치 arms/20.leave.output.val[0]: 원본 '48afbc9af2d77a3e' != Rust '49afbc9af2d77a3e'"
+  },
+  {
+    "name": "arms/20/leave.output.count",
+    "first_difference": "불일치 arms/20.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/20/leave.input_after.val",
+    "first_difference": "불일치 arms/20.leave.input_after.val[1]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/20/leave.input_after.idx",
+    "first_difference": "불일치 arms/20.leave.input_after.idx[1]: 원본 19 != Rust 20"
+  },
+  {
+    "name": "arms/20/leave.alias",
+    "first_difference": "불일치 arms/20.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/20/leave.spike.count",
+    "first_difference": "불일치 arms/20.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/20/scratch",
+    "first_difference": "불일치 arms/20.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/20/unknown-cell",
+    "first_difference": "불일치 arms/20.leave.output.val[0]: 형식 '48afbc9af2d77a3e' != None"
+  },
+  {
+    "name": "arms/20/error",
+    "first_difference": "arms/20: Rust 오류 injected"
+  },
+  {
+    "name": "arms/20/kernel-missing",
+    "first_difference": "불일치 arms/20.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/20/kernel-name",
+    "first_difference": "불일치 arms/20.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/20/kernel-phase",
+    "first_difference": "불일치 arms/20.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/20/kernel-input-count",
+    "first_difference": "불일치 arms/20.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/20/kernel-output-val",
+    "first_difference": "불일치 arms/20.kernels[3].output.val[0]: 원본 '48afbc9af2d77a3e' != Rust '49afbc9af2d77a3e'"
+  },
+  {
+    "name": "arms/20/kernel-order",
+    "first_difference": "불일치 arms/20.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/21/leave.output.val",
+    "first_difference": "불일치 arms/21.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/21/leave.output.count",
+    "first_difference": "불일치 arms/21.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/21/leave.input_after.val",
+    "first_difference": "불일치 arms/21.leave.input_after.val[1]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/21/leave.input_after.idx",
+    "first_difference": "불일치 arms/21.leave.input_after.idx[1]: 원본 13 != Rust 14"
+  },
+  {
+    "name": "arms/21/leave.alias",
+    "first_difference": "불일치 arms/21.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/21/leave.spike.count",
+    "first_difference": "불일치 arms/21.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/21/scratch",
+    "first_difference": "불일치 arms/21.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/21/unknown-cell",
+    "first_difference": "불일치 arms/21.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/21/error",
+    "first_difference": "arms/21: Rust 오류 injected"
+  },
+  {
+    "name": "arms/21/kernel-missing",
+    "first_difference": "불일치 arms/21.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/21/kernel-name",
+    "first_difference": "불일치 arms/21.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/21/kernel-phase",
+    "first_difference": "불일치 arms/21.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/21/kernel-input-count",
+    "first_difference": "불일치 arms/21.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/21/kernel-output-val",
+    "first_difference": "불일치 arms/21.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/21/kernel-order",
+    "first_difference": "불일치 arms/21.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/22/leave.output.val",
+    "first_difference": "불일치 arms/22.leave.output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/22/leave.output.count",
+    "first_difference": "불일치 arms/22.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/22/leave.input_after.val",
+    "first_difference": "불일치 arms/22.leave.input_after.val[1]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/22/leave.input_after.idx",
+    "first_difference": "불일치 arms/22.leave.input_after.idx[1]: 원본 15 != Rust 16"
+  },
+  {
+    "name": "arms/22/leave.alias",
+    "first_difference": "불일치 arms/22.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/22/leave.spike.count",
+    "first_difference": "불일치 arms/22.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/22/scratch",
+    "first_difference": "불일치 arms/22.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/22/unknown-cell",
+    "first_difference": "불일치 arms/22.leave.output.val[0]: 형식 '000000000000f0bf' != None"
+  },
+  {
+    "name": "arms/22/error",
+    "first_difference": "arms/22: Rust 오류 injected"
+  },
+  {
+    "name": "arms/22/kernel-missing",
+    "first_difference": "불일치 arms/22.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/22/kernel-name",
+    "first_difference": "불일치 arms/22.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/22/kernel-phase",
+    "first_difference": "불일치 arms/22.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/22/kernel-input-count",
+    "first_difference": "불일치 arms/22.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/22/kernel-output-val",
+    "first_difference": "불일치 arms/22.kernels[3].output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/22/kernel-order",
+    "first_difference": "불일치 arms/22.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/23/leave.output.val",
+    "first_difference": "불일치 arms/23.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/23/leave.output.count",
+    "first_difference": "불일치 arms/23.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/23/leave.input_after.val",
+    "first_difference": "불일치 arms/23.leave.input_after.val[1]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/23/leave.input_after.idx",
+    "first_difference": "불일치 arms/23.leave.input_after.idx[1]: 원본 14 != Rust 15"
+  },
+  {
+    "name": "arms/23/leave.alias",
+    "first_difference": "불일치 arms/23.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/23/leave.spike.count",
+    "first_difference": "불일치 arms/23.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/23/scratch",
+    "first_difference": "불일치 arms/23.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/23/unknown-cell",
+    "first_difference": "불일치 arms/23.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/23/error",
+    "first_difference": "arms/23: Rust 오류 injected"
+  },
+  {
+    "name": "arms/23/kernel-missing",
+    "first_difference": "불일치 arms/23.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/23/kernel-name",
+    "first_difference": "불일치 arms/23.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/23/kernel-phase",
+    "first_difference": "불일치 arms/23.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/23/kernel-input-count",
+    "first_difference": "불일치 arms/23.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/23/kernel-output-val",
+    "first_difference": "불일치 arms/23.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/23/kernel-order",
+    "first_difference": "불일치 arms/23.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/24/leave.output.val",
+    "first_difference": "불일치 arms/24.leave.output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/24/leave.output.count",
+    "first_difference": "불일치 arms/24.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/24/leave.input_after.val",
+    "first_difference": "불일치 arms/24.leave.input_after.val[1]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/24/leave.input_after.idx",
+    "first_difference": "불일치 arms/24.leave.input_after.idx[1]: 원본 16 != Rust 17"
+  },
+  {
+    "name": "arms/24/leave.alias",
+    "first_difference": "불일치 arms/24.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/24/leave.spike.count",
+    "first_difference": "불일치 arms/24.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/24/scratch",
+    "first_difference": "불일치 arms/24.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/24/unknown-cell",
+    "first_difference": "불일치 arms/24.leave.output.val[0]: 형식 '000000000000f0bf' != None"
+  },
+  {
+    "name": "arms/24/error",
+    "first_difference": "arms/24: Rust 오류 injected"
+  },
+  {
+    "name": "arms/24/kernel-missing",
+    "first_difference": "불일치 arms/24.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/24/kernel-name",
+    "first_difference": "불일치 arms/24.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/24/kernel-phase",
+    "first_difference": "불일치 arms/24.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/24/kernel-input-count",
+    "first_difference": "불일치 arms/24.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/24/kernel-output-val",
+    "first_difference": "불일치 arms/24.kernels[3].output.val[0]: 원본 '000000000000f0bf' != Rust '010000000000f0bf'"
+  },
+  {
+    "name": "arms/24/kernel-order",
+    "first_difference": "불일치 arms/24.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/25/leave.output.val",
+    "first_difference": "불일치 arms/25.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/25/leave.output.count",
+    "first_difference": "불일치 arms/25.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/25/leave.input_after.val",
+    "first_difference": "불일치 arms/25.leave.input_after.val[1]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/25/leave.input_after.idx",
+    "first_difference": "불일치 arms/25.leave.input_after.idx[1]: 원본 17 != Rust 18"
+  },
+  {
+    "name": "arms/25/leave.alias",
+    "first_difference": "불일치 arms/25.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/25/leave.spike.count",
+    "first_difference": "불일치 arms/25.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/25/scratch",
+    "first_difference": "불일치 arms/25.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/25/unknown-cell",
+    "first_difference": "불일치 arms/25.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "arms/25/error",
+    "first_difference": "arms/25: Rust 오류 injected"
+  },
+  {
+    "name": "arms/25/kernel-missing",
+    "first_difference": "불일치 arms/25.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/25/kernel-name",
+    "first_difference": "불일치 arms/25.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/25/kernel-phase",
+    "first_difference": "불일치 arms/25.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/25/kernel-input-count",
+    "first_difference": "불일치 arms/25.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/25/kernel-output-val",
+    "first_difference": "불일치 arms/25.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/25/kernel-order",
+    "first_difference": "불일치 arms/25.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/26/leave.output.val",
+    "first_difference": "불일치 arms/26.leave.output.val[0]: 원본 '0000000000000040' != Rust '0100000000000040'"
+  },
+  {
+    "name": "arms/26/leave.output.count",
+    "first_difference": "불일치 arms/26.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "arms/26/leave.input_after.val",
+    "first_difference": "불일치 arms/26.leave.input_after.val[24]: 원본 '00000000e07cdbbd' != Rust '01000000e07cdbbd'"
+  },
+  {
+    "name": "arms/26/leave.alias",
+    "first_difference": "불일치 arms/26.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "arms/26/leave.spike.count",
+    "first_difference": "불일치 arms/26.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/26/scratch",
+    "first_difference": "불일치 arms/26.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/26/unknown-cell",
+    "first_difference": "불일치 arms/26.leave.output.val[0]: 형식 '0000000000000040' != None"
+  },
+  {
+    "name": "arms/26/error",
+    "first_difference": "arms/26: Rust 오류 injected"
+  },
+  {
+    "name": "arms/26/kernel-missing",
+    "first_difference": "불일치 arms/26.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/26/kernel-name",
+    "first_difference": "불일치 arms/26.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/26/kernel-phase",
+    "first_difference": "불일치 arms/26.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/26/kernel-input-count",
+    "first_difference": "불일치 arms/26.kernels[0].input.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "arms/26/kernel-output-val",
+    "first_difference": "불일치 arms/26.kernels[3].output.val[0]: 원본 '0000000000000040' != Rust '0100000000000040'"
+  },
+  {
+    "name": "arms/26/kernel-order",
+    "first_difference": "불일치 arms/26.kernels[0].input.val[13]: 원본 '0000000000408f40' != Rust 'c4cb780000288f40'"
+  },
+  {
+    "name": "arms/27/leave.output.val",
+    "first_difference": "불일치 arms/27.leave.output.val[0]: 원본 '48afbc9af2d77a3e' != Rust '49afbc9af2d77a3e'"
+  },
+  {
+    "name": "arms/27/leave.output.count",
+    "first_difference": "불일치 arms/27.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/27/leave.input_after.val",
+    "first_difference": "불일치 arms/27.leave.input_after.val[1]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "arms/27/leave.input_after.idx",
+    "first_difference": "불일치 arms/27.leave.input_after.idx[1]: 원본 19 != Rust 20"
+  },
+  {
+    "name": "arms/27/leave.alias",
+    "first_difference": "불일치 arms/27.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/27/leave.spike.count",
+    "first_difference": "불일치 arms/27.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/27/scratch",
+    "first_difference": "불일치 arms/27.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/27/unknown-cell",
+    "first_difference": "불일치 arms/27.leave.output.val[0]: 형식 '48afbc9af2d77a3e' != None"
+  },
+  {
+    "name": "arms/27/error",
+    "first_difference": "arms/27: Rust 오류 injected"
+  },
+  {
+    "name": "arms/27/kernel-missing",
+    "first_difference": "불일치 arms/27.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/27/kernel-name",
+    "first_difference": "불일치 arms/27.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/27/kernel-phase",
+    "first_difference": "불일치 arms/27.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/27/kernel-input-count",
+    "first_difference": "불일치 arms/27.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "arms/27/kernel-output-val",
+    "first_difference": "불일치 arms/27.kernels[3].output.val[0]: 원본 '48afbc9af2d77a3e' != Rust '49afbc9af2d77a3e'"
+  },
+  {
+    "name": "arms/27/kernel-order",
+    "first_difference": "불일치 arms/27.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "arms/28/leave.output.val",
+    "first_difference": "불일치 arms/28.leave.output.val[0]: 원본 '0000000000000040' != Rust '0100000000000040'"
+  },
+  {
+    "name": "arms/28/leave.output.count",
+    "first_difference": "불일치 arms/28.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "arms/28/leave.input_after.val",
+    "first_difference": "불일치 arms/28.leave.input_after.val[24]: 원본 '00000000e07cdbbd' != Rust '01000000e07cdbbd'"
+  },
+  {
+    "name": "arms/28/leave.alias",
+    "first_difference": "불일치 arms/28.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "arms/28/leave.spike.count",
+    "first_difference": "불일치 arms/28.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "arms/28/scratch",
+    "first_difference": "불일치 arms/28.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "arms/28/unknown-cell",
+    "first_difference": "불일치 arms/28.leave.output.val[0]: 형식 '0000000000000040' != None"
+  },
+  {
+    "name": "arms/28/error",
+    "first_difference": "arms/28: Rust 오류 injected"
+  },
+  {
+    "name": "arms/28/kernel-missing",
+    "first_difference": "불일치 arms/28.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "arms/28/kernel-name",
+    "first_difference": "불일치 arms/28.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "arms/28/kernel-phase",
+    "first_difference": "불일치 arms/28.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "arms/28/kernel-input-count",
+    "first_difference": "불일치 arms/28.kernels[0].input.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "arms/28/kernel-output-val",
+    "first_difference": "불일치 arms/28.kernels[3].output.val[0]: 원본 '0000000000000040' != Rust '0100000000000040'"
+  },
+  {
+    "name": "arms/28/kernel-order",
+    "first_difference": "불일치 arms/28.kernels[0].input.val[13]: 원본 '0000000000408f40' != Rust 'c4cb780000288f40'"
+  },
+  {
+    "name": "retry/1/leave.output.val",
+    "first_difference": "불일치 retry/1.leave.output.val[0]: 원본 'fca9f1d24d62403f' != Rust 'fda9f1d24d62403f'"
+  },
+  {
+    "name": "retry/1/leave.output.count",
+    "first_difference": "불일치 retry/1.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/1/leave.input_after.val",
+    "first_difference": "불일치 retry/1.leave.input_after.val[0]: 원본 'fca9f1d24d62403f' != Rust 'fda9f1d24d62403f'"
+  },
+  {
+    "name": "retry/1/leave.input_after.idx",
+    "first_difference": "불일치 retry/1.leave.input_after.idx[0]: 원본 8 != Rust 9"
+  },
+  {
+    "name": "retry/1/leave.alias",
+    "first_difference": "불일치 retry/1.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/1/leave.spike.count",
+    "first_difference": "불일치 retry/1.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/1/scratch",
+    "first_difference": "불일치 retry/1.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/1/unknown-cell",
+    "first_difference": "불일치 retry/1.leave.output.val[0]: 형식 'fca9f1d24d62403f' != None"
+  },
+  {
+    "name": "retry/1/error",
+    "first_difference": "retry/1: Rust 오류 injected"
+  },
+  {
+    "name": "retry/1/kernel-missing",
+    "first_difference": "불일치 retry/1.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/1/kernel-name",
+    "first_difference": "불일치 retry/1.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/1/kernel-phase",
+    "first_difference": "불일치 retry/1.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/1/kernel-input-count",
+    "first_difference": "불일치 retry/1.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/1/kernel-output-val",
+    "first_difference": "불일치 retry/1.kernels[3].output.val[0]: 원본 'fca9f1d24d62403f' != Rust 'fda9f1d24d62403f'"
+  },
+  {
+    "name": "retry/1/kernel-order",
+    "first_difference": "불일치 retry/1.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/2/leave.output.val",
+    "first_difference": "불일치 retry/2.leave.output.val[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/2/leave.output.count",
+    "first_difference": "불일치 retry/2.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/2/leave.input_after.val",
+    "first_difference": "불일치 retry/2.leave.input_after.val[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/2/leave.input_after.idx",
+    "first_difference": "불일치 retry/2.leave.input_after.idx[0]: 원본 7 != Rust 8"
+  },
+  {
+    "name": "retry/2/leave.alias",
+    "first_difference": "불일치 retry/2.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/2/leave.spike.count",
+    "first_difference": "불일치 retry/2.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/2/scratch",
+    "first_difference": "불일치 retry/2.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/2/unknown-cell",
+    "first_difference": "불일치 retry/2.leave.output.val[0]: 형식 '8dedb5a0f7c6a03e' != None"
+  },
+  {
+    "name": "retry/2/error",
+    "first_difference": "retry/2: Rust 오류 injected"
+  },
+  {
+    "name": "retry/2/kernel-missing",
+    "first_difference": "불일치 retry/2.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/2/kernel-name",
+    "first_difference": "불일치 retry/2.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/2/kernel-phase",
+    "first_difference": "불일치 retry/2.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/2/kernel-input-count",
+    "first_difference": "불일치 retry/2.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/2/kernel-output-val",
+    "first_difference": "불일치 retry/2.kernels[3].output.val[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/2/kernel-order",
+    "first_difference": "불일치 retry/2.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/3/leave.output.val",
+    "first_difference": "불일치 retry/3.leave.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "retry/3/leave.output.count",
+    "first_difference": "불일치 retry/3.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/3/leave.input_after.val",
+    "first_difference": "불일치 retry/3.leave.input_after.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "retry/3/leave.input_after.idx",
+    "first_difference": "불일치 retry/3.leave.input_after.idx[0]: 원본 4 != Rust 5"
+  },
+  {
+    "name": "retry/3/leave.alias",
+    "first_difference": "불일치 retry/3.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/3/leave.spike.count",
+    "first_difference": "불일치 retry/3.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/3/scratch",
+    "first_difference": "불일치 retry/3.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/3/unknown-cell",
+    "first_difference": "불일치 retry/3.leave.output.val[0]: 형식 '000000000000f03f' != None"
+  },
+  {
+    "name": "retry/3/error",
+    "first_difference": "retry/3: Rust 오류 injected"
+  },
+  {
+    "name": "retry/3/kernel-missing",
+    "first_difference": "불일치 retry/3.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/3/kernel-name",
+    "first_difference": "불일치 retry/3.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/3/kernel-phase",
+    "first_difference": "불일치 retry/3.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/3/kernel-input-count",
+    "first_difference": "불일치 retry/3.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/3/kernel-output-val",
+    "first_difference": "불일치 retry/3.kernels[3].output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "retry/3/kernel-order",
+    "first_difference": "불일치 retry/3.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/4/leave.output.val",
+    "first_difference": "불일치 retry/4.leave.output.val[0]: 원본 '2d431cebe2361a3f' != Rust '2c431cebe2361a3f'"
+  },
+  {
+    "name": "retry/4/leave.output.count",
+    "first_difference": "불일치 retry/4.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "retry/4/leave.input_after.val",
+    "first_difference": "불일치 retry/4.leave.input_after.val[1]: 원본 'fca9f1d24d62403f' != Rust 'fda9f1d24d62403f'"
+  },
+  {
+    "name": "retry/4/leave.input_after.idx",
+    "first_difference": "불일치 retry/4.leave.input_after.idx[1]: 원본 5 != Rust 6"
+  },
+  {
+    "name": "retry/4/leave.alias",
+    "first_difference": "불일치 retry/4.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/4/leave.spike.count",
+    "first_difference": "불일치 retry/4.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/4/scratch",
+    "first_difference": "불일치 retry/4.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/4/unknown-cell",
+    "first_difference": "불일치 retry/4.leave.output.val[0]: 형식 '2d431cebe2361a3f' != None"
+  },
+  {
+    "name": "retry/4/error",
+    "first_difference": "retry/4: Rust 오류 injected"
+  },
+  {
+    "name": "retry/4/kernel-missing",
+    "first_difference": "불일치 retry/4.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/4/kernel-name",
+    "first_difference": "불일치 retry/4.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/4/kernel-phase",
+    "first_difference": "불일치 retry/4.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/4/kernel-input-count",
+    "first_difference": "불일치 retry/4.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "retry/4/kernel-output-val",
+    "first_difference": "불일치 retry/4.kernels[3].output.val[0]: 원본 '2d431cebe2361a3f' != Rust '2c431cebe2361a3f'"
+  },
+  {
+    "name": "retry/4/kernel-order",
+    "first_difference": "불일치 retry/4.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/5/leave.output.val",
+    "first_difference": "불일치 retry/5.leave.output.val[0]: 원본 'fca9f1d24d62403f' != Rust 'fda9f1d24d62403f'"
+  },
+  {
+    "name": "retry/5/leave.output.count",
+    "first_difference": "불일치 retry/5.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "retry/5/leave.input_after.val",
+    "first_difference": "불일치 retry/5.leave.input_after.val[1]: 원본 '2d431cebe2363a3f' != Rust '2c431cebe2363a3f'"
+  },
+  {
+    "name": "retry/5/leave.input_after.idx",
+    "first_difference": "불일치 retry/5.leave.input_after.idx[1]: 원본 2 != Rust 3"
+  },
+  {
+    "name": "retry/5/leave.alias",
+    "first_difference": "불일치 retry/5.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/5/leave.spike.count",
+    "first_difference": "불일치 retry/5.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/5/scratch",
+    "first_difference": "불일치 retry/5.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/5/unknown-cell",
+    "first_difference": "불일치 retry/5.leave.output.val[0]: 형식 'fca9f1d24d62403f' != None"
+  },
+  {
+    "name": "retry/5/error",
+    "first_difference": "retry/5: Rust 오류 injected"
+  },
+  {
+    "name": "retry/5/kernel-missing",
+    "first_difference": "불일치 retry/5.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/5/kernel-name",
+    "first_difference": "불일치 retry/5.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/5/kernel-phase",
+    "first_difference": "불일치 retry/5.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/5/kernel-input-count",
+    "first_difference": "불일치 retry/5.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "retry/5/kernel-output-val",
+    "first_difference": "불일치 retry/5.kernels[3].output.val[0]: 원본 'fca9f1d24d62403f' != Rust 'fda9f1d24d62403f'"
+  },
+  {
+    "name": "retry/5/kernel-order",
+    "first_difference": "불일치 retry/5.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/6/leave.output.val",
+    "first_difference": "불일치 retry/6.leave.output.val[0]: 원본 'fca9f1d24d62403f' != Rust 'fda9f1d24d62403f'"
+  },
+  {
+    "name": "retry/6/leave.output.count",
+    "first_difference": "불일치 retry/6.leave.output.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "retry/6/leave.input_after.val",
+    "first_difference": "불일치 retry/6.leave.input_after.val[1]: 원본 '2d431cebe2363a3f' != Rust '2c431cebe2363a3f'"
+  },
+  {
+    "name": "retry/6/leave.input_after.idx",
+    "first_difference": "불일치 retry/6.leave.input_after.idx[1]: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/6/leave.alias",
+    "first_difference": "불일치 retry/6.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/6/leave.spike.count",
+    "first_difference": "불일치 retry/6.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/6/scratch",
+    "first_difference": "불일치 retry/6.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/6/unknown-cell",
+    "first_difference": "불일치 retry/6.leave.output.val[0]: 형식 'fca9f1d24d62403f' != None"
+  },
+  {
+    "name": "retry/6/error",
+    "first_difference": "retry/6: Rust 오류 injected"
+  },
+  {
+    "name": "retry/6/kernel-missing",
+    "first_difference": "불일치 retry/6.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/6/kernel-name",
+    "first_difference": "불일치 retry/6.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/6/kernel-phase",
+    "first_difference": "불일치 retry/6.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/6/kernel-input-count",
+    "first_difference": "불일치 retry/6.kernels[0].input.count: 원본 2 != Rust 3"
+  },
+  {
+    "name": "retry/6/kernel-output-val",
+    "first_difference": "불일치 retry/6.kernels[3].output.val[0]: 원본 'fca9f1d24d62403f' != Rust 'fda9f1d24d62403f'"
+  },
+  {
+    "name": "retry/6/kernel-order",
+    "first_difference": "불일치 retry/6.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/7/leave.output.val",
+    "first_difference": "불일치 retry/7.leave.output.val[0]: 원본 '0000000000001440' != Rust '0100000000001440'"
+  },
+  {
+    "name": "retry/7/leave.output.count",
+    "first_difference": "불일치 retry/7.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "retry/7/leave.input_after.val",
+    "first_difference": "불일치 retry/7.leave.input_after.val[9]: 원본 '0000000000405a40' != Rust '0100000000405a40'"
+  },
+  {
+    "name": "retry/7/leave.alias",
+    "first_difference": "불일치 retry/7.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "retry/7/leave.spike.count",
+    "first_difference": "불일치 retry/7.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/7/scratch",
+    "first_difference": "불일치 retry/7.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/7/unknown-cell",
+    "first_difference": "불일치 retry/7.leave.output.val[0]: 형식 '0000000000001440' != None"
+  },
+  {
+    "name": "retry/7/error",
+    "first_difference": "retry/7: Rust 오류 injected"
+  },
+  {
+    "name": "retry/7/kernel-missing",
+    "first_difference": "불일치 retry/7.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/7/kernel-name",
+    "first_difference": "불일치 retry/7.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/7/kernel-phase",
+    "first_difference": "불일치 retry/7.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/7/kernel-input-count",
+    "first_difference": "불일치 retry/7.kernels[0].input.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "retry/7/kernel-output-val",
+    "first_difference": "불일치 retry/7.kernels[3].output.val[0]: 원본 '0000000000001440' != Rust '0100000000001440'"
+  },
+  {
+    "name": "retry/7/kernel-order",
+    "first_difference": "불일치 retry/7.kernels[0].input.val[2]: 원본 '5305a3923a012440' != Rust 'e388b5f814002440'"
+  },
+  {
+    "name": "retry/8/leave.output.val",
+    "first_difference": "불일치 retry/8.leave.output.val[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/8/leave.output.count",
+    "first_difference": "불일치 retry/8.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/8/leave.input_after.val",
+    "first_difference": "불일치 retry/8.leave.input_after.val[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/8/leave.input_after.idx",
+    "first_difference": "불일치 retry/8.leave.input_after.idx[0]: 원본 8 != Rust 9"
+  },
+  {
+    "name": "retry/8/leave.alias",
+    "first_difference": "불일치 retry/8.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/8/leave.spike.count",
+    "first_difference": "불일치 retry/8.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/8/scratch",
+    "first_difference": "불일치 retry/8.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/8/unknown-cell",
+    "first_difference": "불일치 retry/8.leave.output.val[0]: 형식 '8dedb5a0f7c6a03e' != None"
+  },
+  {
+    "name": "retry/8/error",
+    "first_difference": "retry/8: Rust 오류 injected"
+  },
+  {
+    "name": "retry/8/kernel-missing",
+    "first_difference": "불일치 retry/8.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/8/kernel-name",
+    "first_difference": "불일치 retry/8.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/8/kernel-phase",
+    "first_difference": "불일치 retry/8.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/8/kernel-input-count",
+    "first_difference": "불일치 retry/8.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/8/kernel-output-val",
+    "first_difference": "불일치 retry/8.kernels[3].output.val[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/8/kernel-order",
+    "first_difference": "불일치 retry/8.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/9/leave.output.val",
+    "first_difference": "불일치 retry/9.leave.output.val[0]: 원본 '0000000000001440' != Rust '0100000000001440'"
+  },
+  {
+    "name": "retry/9/leave.output.count",
+    "first_difference": "불일치 retry/9.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "retry/9/leave.input_after.val",
+    "first_difference": "불일치 retry/9.leave.input_after.val[9]: 원본 '0000000000405a40' != Rust '0100000000405a40'"
+  },
+  {
+    "name": "retry/9/leave.alias",
+    "first_difference": "불일치 retry/9.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "retry/9/leave.spike.count",
+    "first_difference": "불일치 retry/9.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "retry/9/scratch",
+    "first_difference": "불일치 retry/9.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/9/unknown-cell",
+    "first_difference": "불일치 retry/9.leave.output.val[0]: 형식 '0000000000001440' != None"
+  },
+  {
+    "name": "retry/9/error",
+    "first_difference": "retry/9: Rust 오류 injected"
+  },
+  {
+    "name": "retry/9/kernel-missing",
+    "first_difference": "불일치 retry/9.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/9/kernel-name",
+    "first_difference": "불일치 retry/9.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/9/kernel-phase",
+    "first_difference": "불일치 retry/9.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/9/kernel-input-count",
+    "first_difference": "불일치 retry/9.kernels[0].input.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "retry/9/kernel-output-val",
+    "first_difference": "불일치 retry/9.kernels[3].output.val[0]: 원본 '0000000000001440' != Rust '0100000000001440'"
+  },
+  {
+    "name": "retry/9/kernel-order",
+    "first_difference": "불일치 retry/9.kernels[0].input.val[2]: 원본 '5305a3923a012440' != Rust 'e388b5f814002440'"
+  },
+  {
+    "name": "retry/10/leave.output.val",
+    "first_difference": "불일치 retry/10.leave.output.val[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/10/leave.output.count",
+    "first_difference": "불일치 retry/10.leave.output.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/10/leave.input_after.val",
+    "first_difference": "불일치 retry/10.leave.input_after.val[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/10/leave.input_after.idx",
+    "first_difference": "불일치 retry/10.leave.input_after.idx[0]: 원본 8 != Rust 9"
+  },
+  {
+    "name": "retry/10/leave.alias",
+    "first_difference": "불일치 retry/10.leave.alias.out.val: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "retry/10/leave.spike.count",
+    "first_difference": "불일치 retry/10.leave.spike.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/10/leave.spike.value",
+    "first_difference": "불일치 retry/10.leave.spike.values[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/10/scratch",
+    "first_difference": "불일치 retry/10.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "retry/10/unknown-cell",
+    "first_difference": "불일치 retry/10.leave.output.val[0]: 형식 '8dedb5a0f7c6a03e' != None"
+  },
+  {
+    "name": "retry/10/error",
+    "first_difference": "retry/10: Rust 오류 injected"
+  },
+  {
+    "name": "retry/10/kernel-missing",
+    "first_difference": "불일치 retry/10.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "retry/10/kernel-name",
+    "first_difference": "불일치 retry/10.kernels[0].kernel: 원본 '21b9de' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "retry/10/kernel-phase",
+    "first_difference": "불일치 retry/10.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "retry/10/kernel-input-count",
+    "first_difference": "불일치 retry/10.kernels[0].input.count: 원본 1 != Rust 2"
+  },
+  {
+    "name": "retry/10/kernel-output-val",
+    "first_difference": "불일치 retry/10.kernels[3].output.val[0]: 원본 '8dedb5a0f7c6a03e' != Rust '8cedb5a0f7c6a03e'"
+  },
+  {
+    "name": "retry/10/kernel-order",
+    "first_difference": "불일치 retry/10.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/1/leave.output.val",
+    "first_difference": "불일치 interior/1.leave.output.val[0]: 원본 '000000000000c0bf' != Rust '010000000000c0bf'"
+  },
+  {
+    "name": "interior/1/leave.output.count",
+    "first_difference": "불일치 interior/1.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/1/leave.input_after.val",
+    "first_difference": "불일치 interior/1.leave.input_after.val[5]: 원본 '000000000000e0bf' != Rust '010000000000e0bf'"
+  },
+  {
+    "name": "interior/1/leave.input_after.idx",
+    "first_difference": "불일치 interior/1.leave.input_after.idx[5]: 원본 4 != Rust 5"
+  },
+  {
+    "name": "interior/1/leave.alias",
+    "first_difference": "불일치 interior/1.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/1/leave.spike.count",
+    "first_difference": "불일치 interior/1.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "interior/1/scratch",
+    "first_difference": "불일치 interior/1.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/1/unknown-cell",
+    "first_difference": "불일치 interior/1.leave.output.val[0]: 형식 '000000000000c0bf' != None"
+  },
+  {
+    "name": "interior/1/error",
+    "first_difference": "interior/1: Rust 오류 injected"
+  },
+  {
+    "name": "interior/1/kernel-missing",
+    "first_difference": "불일치 interior/1.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/1/kernel-name",
+    "first_difference": "불일치 interior/1.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/1/kernel-phase",
+    "first_difference": "불일치 interior/1.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/1/kernel-input-count",
+    "first_difference": "불일치 interior/1.kernels[0].input.count: 원본 6 != Rust 7"
+  },
+  {
+    "name": "interior/1/kernel-output-val",
+    "first_difference": "불일치 interior/1.kernels[3].output.val[0]: 원본 '000000000000c0bf' != Rust '010000000000c0bf'"
+  },
+  {
+    "name": "interior/1/kernel-order",
+    "first_difference": "불일치 interior/1.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/2/leave.output.val",
+    "first_difference": "불일치 interior/2.leave.output.val[0]: 원본 '0ee92329a1eb2040' != Rust '0fe92329a1eb2040'"
+  },
+  {
+    "name": "interior/2/leave.output.count",
+    "first_difference": "불일치 interior/2.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/2/leave.input_after.val",
+    "first_difference": "불일치 interior/2.leave.input_after.val[7]: 원본 'ac485274f20308c0' != Rust 'ad485274f20308c0'"
+  },
+  {
+    "name": "interior/2/leave.alias",
+    "first_difference": "불일치 interior/2.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/2/leave.spike.count",
+    "first_difference": "불일치 interior/2.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "interior/2/scratch",
+    "first_difference": "불일치 interior/2.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/2/unknown-cell",
+    "first_difference": "불일치 interior/2.leave.output.val[0]: 형식 '0ee92329a1eb2040' != None"
+  },
+  {
+    "name": "interior/2/error",
+    "first_difference": "interior/2: Rust 오류 injected"
+  },
+  {
+    "name": "interior/2/kernel-missing",
+    "first_difference": "불일치 interior/2.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/2/kernel-name",
+    "first_difference": "불일치 interior/2.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/2/kernel-phase",
+    "first_difference": "불일치 interior/2.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/2/kernel-input-count",
+    "first_difference": "불일치 interior/2.kernels[0].input.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/2/kernel-output-val",
+    "first_difference": "불일치 interior/2.kernels[3].output.val[0]: 원본 '0ee92329a1eb2040' != Rust '0fe92329a1eb2040'"
+  },
+  {
+    "name": "interior/2/kernel-order",
+    "first_difference": "불일치 interior/2.kernels[0].input.val[1]: 원본 '23595a04b5562040' != Rust '45d67e2929742240'"
+  },
+  {
+    "name": "interior/3/leave.output.val",
+    "first_difference": "불일치 interior/3.leave.output.val[0]: 원본 '333333333333f3bf' != Rust '323333333333f3bf'"
+  },
+  {
+    "name": "interior/3/leave.output.count",
+    "first_difference": "불일치 interior/3.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/3/leave.input_after.val",
+    "first_difference": "불일치 interior/3.leave.input_after.val[6]: 원본 '000000000000e03f' != Rust '010000000000e03f'"
+  },
+  {
+    "name": "interior/3/leave.input_after.idx",
+    "first_difference": "불일치 interior/3.leave.input_after.idx[6]: 원본 5 != Rust 6"
+  },
+  {
+    "name": "interior/3/leave.alias",
+    "first_difference": "불일치 interior/3.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/3/leave.spike.count",
+    "first_difference": "불일치 interior/3.leave.spike.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/3/leave.spike.value",
+    "first_difference": "불일치 interior/3.leave.spike.values[0]: 원본 '000000000000e8bf' != Rust '010000000000e8bf'"
+  },
+  {
+    "name": "interior/3/scratch",
+    "first_difference": "불일치 interior/3.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/3/unknown-cell",
+    "first_difference": "불일치 interior/3.leave.output.val[0]: 형식 '333333333333f3bf' != None"
+  },
+  {
+    "name": "interior/3/error",
+    "first_difference": "interior/3: Rust 오류 injected"
+  },
+  {
+    "name": "interior/3/kernel-missing",
+    "first_difference": "불일치 interior/3.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/3/kernel-name",
+    "first_difference": "불일치 interior/3.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/3/kernel-phase",
+    "first_difference": "불일치 interior/3.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/3/kernel-input-count",
+    "first_difference": "불일치 interior/3.kernels[0].input.count: 원본 7 != Rust 8"
+  },
+  {
+    "name": "interior/3/kernel-output-val",
+    "first_difference": "불일치 interior/3.kernels[3].output.val[0]: 원본 '333333333333f3bf' != Rust '323333333333f3bf'"
+  },
+  {
+    "name": "interior/3/kernel-order",
+    "first_difference": "불일치 interior/3.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/4/leave.output.val",
+    "first_difference": "불일치 interior/4.leave.output.val[0]: 원본 '902449922449f23f' != Rust '912449922449f23f'"
+  },
+  {
+    "name": "interior/4/leave.output.count",
+    "first_difference": "불일치 interior/4.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/4/leave.input_after.val",
+    "first_difference": "불일치 interior/4.leave.input_after.val[6]: 원본 '000000000000d0bf' != Rust '010000000000d0bf'"
+  },
+  {
+    "name": "interior/4/leave.input_after.idx",
+    "first_difference": "불일치 interior/4.leave.input_after.idx[6]: 원본 5 != Rust 6"
+  },
+  {
+    "name": "interior/4/leave.alias",
+    "first_difference": "불일치 interior/4.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/4/leave.spike.count",
+    "first_difference": "불일치 interior/4.leave.spike.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/4/leave.spike.value",
+    "first_difference": "불일치 interior/4.leave.spike.values[0]: 원본 '000000000000e4bf' != Rust '010000000000e4bf'"
+  },
+  {
+    "name": "interior/4/scratch",
+    "first_difference": "불일치 interior/4.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/4/unknown-cell",
+    "first_difference": "불일치 interior/4.leave.output.val[0]: 형식 '902449922449f23f' != None"
+  },
+  {
+    "name": "interior/4/error",
+    "first_difference": "interior/4: Rust 오류 injected"
+  },
+  {
+    "name": "interior/4/kernel-missing",
+    "first_difference": "불일치 interior/4.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/4/kernel-name",
+    "first_difference": "불일치 interior/4.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/4/kernel-phase",
+    "first_difference": "불일치 interior/4.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/4/kernel-input-count",
+    "first_difference": "불일치 interior/4.kernels[0].input.count: 원본 7 != Rust 8"
+  },
+  {
+    "name": "interior/4/kernel-output-val",
+    "first_difference": "불일치 interior/4.kernels[3].output.val[0]: 원본 '902449922449f23f' != Rust '912449922449f23f'"
+  },
+  {
+    "name": "interior/4/kernel-order",
+    "first_difference": "불일치 interior/4.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/5/leave.output.val",
+    "first_difference": "불일치 interior/5.leave.output.val[0]: 원본 'cdbac114f9acdbbf' != Rust 'ccbac114f9acdbbf'"
+  },
+  {
+    "name": "interior/5/leave.output.count",
+    "first_difference": "불일치 interior/5.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/5/leave.input_after.val",
+    "first_difference": "불일치 interior/5.leave.input_after.val[7]: 원본 '000000000000f03f' != Rust '010000000000f03f'"
+  },
+  {
+    "name": "interior/5/leave.alias",
+    "first_difference": "불일치 interior/5.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/5/leave.spike.count",
+    "first_difference": "불일치 interior/5.leave.spike.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/5/leave.spike.value",
+    "first_difference": "불일치 interior/5.leave.spike.values[0]: 원본 '000000000000e0bf' != Rust '010000000000e0bf'"
+  },
+  {
+    "name": "interior/5/scratch",
+    "first_difference": "불일치 interior/5.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/5/unknown-cell",
+    "first_difference": "불일치 interior/5.leave.output.val[0]: 형식 'cdbac114f9acdbbf' != None"
+  },
+  {
+    "name": "interior/5/error",
+    "first_difference": "interior/5: Rust 오류 injected"
+  },
+  {
+    "name": "interior/5/kernel-missing",
+    "first_difference": "불일치 interior/5.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/5/kernel-name",
+    "first_difference": "불일치 interior/5.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/5/kernel-phase",
+    "first_difference": "불일치 interior/5.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/5/kernel-input-count",
+    "first_difference": "불일치 interior/5.kernels[0].input.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/5/kernel-output-val",
+    "first_difference": "불일치 interior/5.kernels[3].output.val[0]: 원본 'cdbac114f9acdbbf' != Rust 'ccbac114f9acdbbf'"
+  },
+  {
+    "name": "interior/5/kernel-order",
+    "first_difference": "불일치 interior/5.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/6/leave.output.val",
+    "first_difference": "불일치 interior/6.leave.output.val[0]: 원본 '28f259379822ff3f' != Rust '29f259379822ff3f'"
+  },
+  {
+    "name": "interior/6/leave.output.count",
+    "first_difference": "불일치 interior/6.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/6/leave.input_after.val",
+    "first_difference": "불일치 interior/6.leave.input_after.val[7]: 원본 '000000000000c03f' != Rust '010000000000c03f'"
+  },
+  {
+    "name": "interior/6/leave.alias",
+    "first_difference": "불일치 interior/6.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/6/leave.spike.count",
+    "first_difference": "불일치 interior/6.leave.spike.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/6/leave.spike.value",
+    "first_difference": "불일치 interior/6.leave.spike.values[0]: 원본 '000000000000c0bf' != Rust '010000000000c0bf'"
+  },
+  {
+    "name": "interior/6/scratch",
+    "first_difference": "불일치 interior/6.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/6/unknown-cell",
+    "first_difference": "불일치 interior/6.leave.output.val[0]: 형식 '28f259379822ff3f' != None"
+  },
+  {
+    "name": "interior/6/error",
+    "first_difference": "interior/6: Rust 오류 injected"
+  },
+  {
+    "name": "interior/6/kernel-missing",
+    "first_difference": "불일치 interior/6.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/6/kernel-name",
+    "first_difference": "불일치 interior/6.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/6/kernel-phase",
+    "first_difference": "불일치 interior/6.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/6/kernel-input-count",
+    "first_difference": "불일치 interior/6.kernels[0].input.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/6/kernel-output-val",
+    "first_difference": "불일치 interior/6.kernels[3].output.val[0]: 원본 '28f259379822ff3f' != Rust '29f259379822ff3f'"
+  },
+  {
+    "name": "interior/6/kernel-order",
+    "first_difference": "불일치 interior/6.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/7/leave.output.val",
+    "first_difference": "불일치 interior/7.leave.output.val[0]: 원본 '0fc779f9ba942340' != Rust '0ec779f9ba942340'"
+  },
+  {
+    "name": "interior/7/leave.output.count",
+    "first_difference": "불일치 interior/7.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/7/leave.input_after.val",
+    "first_difference": "불일치 interior/7.leave.input_after.val[7]: 원본 '2e238fc18b4110c0' != Rust '2f238fc18b4110c0'"
+  },
+  {
+    "name": "interior/7/leave.alias",
+    "first_difference": "불일치 interior/7.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/7/leave.spike.count",
+    "first_difference": "불일치 interior/7.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "interior/7/scratch",
+    "first_difference": "불일치 interior/7.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/7/unknown-cell",
+    "first_difference": "불일치 interior/7.leave.output.val[0]: 형식 '0fc779f9ba942340' != None"
+  },
+  {
+    "name": "interior/7/error",
+    "first_difference": "interior/7: Rust 오류 injected"
+  },
+  {
+    "name": "interior/7/kernel-missing",
+    "first_difference": "불일치 interior/7.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/7/kernel-name",
+    "first_difference": "불일치 interior/7.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/7/kernel-phase",
+    "first_difference": "불일치 interior/7.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/7/kernel-input-count",
+    "first_difference": "불일치 interior/7.kernels[0].input.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/7/kernel-output-val",
+    "first_difference": "불일치 interior/7.kernels[3].output.val[0]: 원본 '0fc779f9ba942340' != Rust '0ec779f9ba942340'"
+  },
+  {
+    "name": "interior/7/kernel-order",
+    "first_difference": "불일치 interior/7.kernels[0].input.val[6]: 원본 '6881f2cf99be1d40' != Rust 'f5f0a772cd8b1c40'"
+  },
+  {
+    "name": "interior/8/leave.output.val",
+    "first_difference": "불일치 interior/8.leave.output.val[0]: 원본 'bc86f21aca6be2bf' != Rust 'bd86f21aca6be2bf'"
+  },
+  {
+    "name": "interior/8/leave.output.count",
+    "first_difference": "불일치 interior/8.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/8/leave.input_after.val",
+    "first_difference": "불일치 interior/8.leave.input_after.val[7]: 원본 '000000000000e0bf' != Rust '010000000000e0bf'"
+  },
+  {
+    "name": "interior/8/leave.input_after.idx",
+    "first_difference": "불일치 interior/8.leave.input_after.idx[7]: 원본 4 != Rust 5"
+  },
+  {
+    "name": "interior/8/leave.alias",
+    "first_difference": "불일치 interior/8.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/8/leave.spike.count",
+    "first_difference": "불일치 interior/8.leave.spike.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/8/leave.spike.value",
+    "first_difference": "불일치 interior/8.leave.spike.values[0]: 원본 '000000000000e4bf' != Rust '010000000000e4bf'"
+  },
+  {
+    "name": "interior/8/scratch",
+    "first_difference": "불일치 interior/8.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/8/unknown-cell",
+    "first_difference": "불일치 interior/8.leave.output.val[0]: 형식 'bc86f21aca6be2bf' != None"
+  },
+  {
+    "name": "interior/8/error",
+    "first_difference": "interior/8: Rust 오류 injected"
+  },
+  {
+    "name": "interior/8/kernel-missing",
+    "first_difference": "불일치 interior/8.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/8/kernel-name",
+    "first_difference": "불일치 interior/8.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/8/kernel-phase",
+    "first_difference": "불일치 interior/8.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/8/kernel-input-count",
+    "first_difference": "불일치 interior/8.kernels[0].input.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/8/kernel-output-val",
+    "first_difference": "불일치 interior/8.kernels[3].output.val[0]: 원본 'bc86f21aca6be2bf' != Rust 'bd86f21aca6be2bf'"
+  },
+  {
+    "name": "interior/8/kernel-order",
+    "first_difference": "불일치 interior/8.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/9/leave.output.val",
+    "first_difference": "불일치 interior/9.leave.output.val[0]: 원본 'b12026571093efbf' != Rust 'b02026571093efbf'"
+  },
+  {
+    "name": "interior/9/leave.output.count",
+    "first_difference": "불일치 interior/9.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/9/leave.input_after.val",
+    "first_difference": "불일치 interior/9.leave.input_after.val[7]: 원본 '000000000000c0bf' != Rust '010000000000c0bf'"
+  },
+  {
+    "name": "interior/9/leave.alias",
+    "first_difference": "불일치 interior/9.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/9/leave.spike.count",
+    "first_difference": "불일치 interior/9.leave.spike.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/9/leave.spike.value",
+    "first_difference": "불일치 interior/9.leave.spike.values[0]: 원본 '000000000000c0bf' != Rust '010000000000c0bf'"
+  },
+  {
+    "name": "interior/9/scratch",
+    "first_difference": "불일치 interior/9.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/9/unknown-cell",
+    "first_difference": "불일치 interior/9.leave.output.val[0]: 형식 'b12026571093efbf' != None"
+  },
+  {
+    "name": "interior/9/error",
+    "first_difference": "interior/9: Rust 오류 injected"
+  },
+  {
+    "name": "interior/9/kernel-missing",
+    "first_difference": "불일치 interior/9.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/9/kernel-name",
+    "first_difference": "불일치 interior/9.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/9/kernel-phase",
+    "first_difference": "불일치 interior/9.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/9/kernel-input-count",
+    "first_difference": "불일치 interior/9.kernels[0].input.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/9/kernel-output-val",
+    "first_difference": "불일치 interior/9.kernels[3].output.val[0]: 원본 'b12026571093efbf' != Rust 'b02026571093efbf'"
+  },
+  {
+    "name": "interior/9/kernel-order",
+    "first_difference": "불일치 interior/9.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/10/leave.output.val",
+    "first_difference": "불일치 interior/10.leave.output.val[0]: 원본 'ff1e7cf0c1871140' != Rust 'fe1e7cf0c1871140'"
+  },
+  {
+    "name": "interior/10/leave.output.count",
+    "first_difference": "불일치 interior/10.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/10/leave.input_after.val",
+    "first_difference": "불일치 interior/10.leave.input_after.val[7]: 원본 '000000000000e43f' != Rust '010000000000e43f'"
+  },
+  {
+    "name": "interior/10/leave.alias",
+    "first_difference": "불일치 interior/10.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/10/leave.spike.count",
+    "first_difference": "불일치 interior/10.leave.spike.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/10/leave.spike.value",
+    "first_difference": "불일치 interior/10.leave.spike.values[0]: 원본 '000000000000e0bf' != Rust '010000000000e0bf'"
+  },
+  {
+    "name": "interior/10/scratch",
+    "first_difference": "불일치 interior/10.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/10/unknown-cell",
+    "first_difference": "불일치 interior/10.leave.output.val[0]: 형식 'ff1e7cf0c1871140' != None"
+  },
+  {
+    "name": "interior/10/error",
+    "first_difference": "interior/10: Rust 오류 injected"
+  },
+  {
+    "name": "interior/10/kernel-missing",
+    "first_difference": "불일치 interior/10.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/10/kernel-name",
+    "first_difference": "불일치 interior/10.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/10/kernel-phase",
+    "first_difference": "불일치 interior/10.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/10/kernel-input-count",
+    "first_difference": "불일치 interior/10.kernels[0].input.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/10/kernel-output-val",
+    "first_difference": "불일치 interior/10.kernels[3].output.val[0]: 원본 'ff1e7cf0c1871140' != Rust 'fe1e7cf0c1871140'"
+  },
+  {
+    "name": "interior/10/kernel-order",
+    "first_difference": "불일치 interior/10.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/11/leave.output.val",
+    "first_difference": "불일치 interior/11.leave.output.val[0]: 원본 'bf05d3502d52e5bf' != Rust 'be05d3502d52e5bf'"
+  },
+  {
+    "name": "interior/11/leave.output.count",
+    "first_difference": "불일치 interior/11.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/11/leave.input_after.val",
+    "first_difference": "불일치 interior/11.leave.input_after.val[7]: 원본 '000000000000d83f' != Rust '010000000000d83f'"
+  },
+  {
+    "name": "interior/11/leave.alias",
+    "first_difference": "불일치 interior/11.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/11/leave.spike.count",
+    "first_difference": "불일치 interior/11.leave.spike.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/11/leave.spike.value",
+    "first_difference": "불일치 interior/11.leave.spike.values[0]: 원본 '000000000000e4bf' != Rust '010000000000e4bf'"
+  },
+  {
+    "name": "interior/11/scratch",
+    "first_difference": "불일치 interior/11.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/11/unknown-cell",
+    "first_difference": "불일치 interior/11.leave.output.val[0]: 형식 'bf05d3502d52e5bf' != None"
+  },
+  {
+    "name": "interior/11/error",
+    "first_difference": "interior/11: Rust 오류 injected"
+  },
+  {
+    "name": "interior/11/kernel-missing",
+    "first_difference": "불일치 interior/11.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/11/kernel-name",
+    "first_difference": "불일치 interior/11.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/11/kernel-phase",
+    "first_difference": "불일치 interior/11.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/11/kernel-input-count",
+    "first_difference": "불일치 interior/11.kernels[0].input.count: 원본 8 != Rust 9"
+  },
+  {
+    "name": "interior/11/kernel-output-val",
+    "first_difference": "불일치 interior/11.kernels[3].output.val[0]: 원본 'bf05d3502d52e5bf' != Rust 'be05d3502d52e5bf'"
+  },
+  {
+    "name": "interior/11/kernel-order",
+    "first_difference": "불일치 interior/11.kernels[0].alias.in.idx: 원본 'in' != Rust 'out'"
+  },
+  {
+    "name": "interior/12/leave.output.val",
+    "first_difference": "불일치 interior/12.leave.output.val[0]: 원본 '18075feb280b2140' != Rust '19075feb280b2140'"
+  },
+  {
+    "name": "interior/12/leave.output.count",
+    "first_difference": "불일치 interior/12.leave.output.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/12/leave.input_after.val",
+    "first_difference": "불일치 interior/12.leave.input_after.val[7]: 원본 'fcffffffffffd73f' != Rust 'fdffffffffffd73f'"
+  },
+  {
+    "name": "interior/12/leave.alias",
+    "first_difference": "불일치 interior/12.leave.alias.out.val: 원본 'out' != Rust 'in'"
+  },
+  {
+    "name": "interior/12/leave.spike.count",
+    "first_difference": "불일치 interior/12.leave.spike.count: 원본 0 != Rust 1"
+  },
+  {
+    "name": "interior/12/scratch",
+    "first_difference": "불일치 interior/12.leave.scratch.x1b0: 길이 0 != 1"
+  },
+  {
+    "name": "interior/12/unknown-cell",
+    "first_difference": "불일치 interior/12.leave.output.val[0]: 형식 '18075feb280b2140' != None"
+  },
+  {
+    "name": "interior/12/error",
+    "first_difference": "interior/12: Rust 오류 injected"
+  },
+  {
+    "name": "interior/12/kernel-missing",
+    "first_difference": "불일치 interior/12.kernels: 길이 4 != 3"
+  },
+  {
+    "name": "interior/12/kernel-name",
+    "first_difference": "불일치 interior/12.kernels[0].kernel: 원본 '214344' != Rust 'xxxxxx'"
+  },
+  {
+    "name": "interior/12/kernel-phase",
+    "first_difference": "불일치 interior/12.kernels[0].phase: 원본 'enter' != Rust 'leave'"
+  },
+  {
+    "name": "interior/12/kernel-input-count",
+    "first_difference": "불일치 interior/12.kernels[0].input.count: 원본 -1 != Rust 0"
+  },
+  {
+    "name": "interior/12/kernel-output-val",
+    "first_difference": "불일치 interior/12.kernels[3].output.val[0]: 원본 '18075feb280b2140' != Rust '19075feb280b2140'"
+  },
+  {
+    "name": "interior/12/kernel-order",
+    "first_difference": "불일치 interior/12.kernels[0].input.val[5]: 원본 'ffffffffffff05c0' != Rust '6666666666e61040'"
+  }
+]
