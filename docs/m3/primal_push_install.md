@@ -80,6 +80,6 @@
 - 동등성: **(A) 설치 경계 통과**(111호출, 비트/정확). **(B) 연결 범위 한정 통과**: 58/59 일치, grow7 1호출 **실패**(설치 이전 루프 재분해 차이, 결과 확인 뒤 분류). 실패는 통과 수에 넣지 않는다.
 - 통과한 범위: double·Threads = 1에서 push 해 설치의 x·slack 기록, PInf·S+0x120, 설치 조건수(`116fd7`, 루프 뒤 factor — 1c가 남긴 "초기화 밖 116fd7 호출" 중 `0x1c4276`), retry(attempt 0 cond·1e30), remaining 부호(0·양수·임계값 음수·자유 후보 음수), vstat -1/-2 지정, 음수 스냅. 1c Rust 연결이 push 진입부터 반환까지 원본 재주입 없이 58호출에서 맞는다.
 - 남은 한계: P 항·임계값 양수·±τ 동률 미관측(C·asm 근거만), grow7 재분해(21i), `0x1c8a0e` 근처 다른 `116fd7` 호출, cleanup 소비(`13f716` mode 선택·`0cda5b` 설치, 04f-2), x87·work·시간·할당 실패, solver 경로 연결.
-- 후속: **M3-04c-21i**(grow7 마지막 round 재분해 피벗 순서), **M3-04f-2**(`13f716`의 remaining 소비와 `0cda5b` cleanup 진입·`0325b4` 상태 배열 설치).
+- 후속: **M3-04c-21i**(grow7 마지막 round 재분해 피벗 순서 → 원인은 `036ade` 조밀 전환, [21i](primal_push_dense_lu.md)에서 이식해 grow7 연결 통과·설치 59/59), **M3-04f-2**(`13f716`의 remaining 소비와 `0cda5b` cleanup 진입·`0325b4` 상태 배열 설치).
 - 재실행: `python3 tools/push_install_check.py --controls --acceptance && python3 tools/push_install_rust.py --write && cargo test -p rsolver-lp --test push_install --test push_init_ext && python3 tools/push_install_rust.py --compare`.
 - 교훈: `docs/lessons/original.md`(crossover primal push: 해 설치 규칙, Crossover = -1 경로), `docs/lessons/tooling.md`(검사기: xfail과 변이 판정, `116fd7` 변조 위치, 함수 중간 훅 지점 선택).

@@ -47,6 +47,8 @@ pub struct Refactor {
     pub state: LuState,
     pub o: Vec<i32>,
     pub n: Vec<i32>,
+    /// The kernel's dense switch when the factor took it (M3-04c-21i).
+    pub dense: Option<crate::lu::DenseTrace>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -100,7 +102,9 @@ pub fn refactor(
         scaling: Scaling { col: vec![1.0; n], row: vec![1.0; m], obj: 1.0 },
     };
     let head: Vec<usize> = header.iter().map(|&j| j as usize).collect();
-    let lu = Lu::factor_block(&spx, &head, tol, block);
+    // M3-04c-21i: the kernel's dense switch on, its array alignment from the pool size F+0x158
+    let mut lu = Lu::factor_dense(&spx, &head, tol, block, alloc.x158);
+    let dense = lu.dense.take();
     if !lu.complete() {
         return Err(RefactorError::Singular);
     }
@@ -278,5 +282,5 @@ pub fn refactor(
         mark: prev.map_or_else(|| vec![0; m], |s| s.mark.clone()),
         vals: prev.map_or_else(|| vec![0.0; m], |s| s.vals.clone()),
     };
-    Ok(Refactor { state, o, n: nn })
+    Ok(Refactor { state, o, n: nn, dense })
 }
