@@ -223,7 +223,7 @@ flowchart TD
     subgraph M3["M3 내부점·1차법"]
         BAR["✅ Barrier<br/>반복 수 64/64"]:::done
         PDHG["✅ PDHG<br/>반복 수 64/64"]:::done
-        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm·위반 basis·재시도 오라클 완료<br/>feasible·infeasible·재시도 ratio(재진입 포함)·단계 판단 Rust 범위 한정 통과<br/>직렬 push 루프+실제 LU backend 연결 통과(04c-24)<br/>초기화 Rust 연결(1a)·오라클(1b)·외부 값 경로(1d)·조건수 116fd7(1c) 통과, 해 설치 04f 남음"]:::doing
+        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm·위반 basis·재시도 오라클 완료<br/>feasible·infeasible·재시도 ratio(재진입 포함)·단계 판단 Rust 범위 한정 통과<br/>직렬 push 루프+실제 LU backend 연결 통과(04c-24)<br/>초기화 Rust 연결(1a)·오라클(1b)·외부 값 경로(1d)·조건수 116fd7(1c)·해 설치(04f-1, 연결 58/59) 통과<br/>grow7 재분해 21i·cleanup 04f-2 남음"]:::doing
     end
 
     subgraph M2["M2 MIP 엔진"]

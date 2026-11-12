@@ -146,6 +146,8 @@
 - **push 초기화의 retry 재호출(attempt=1)은 call 1의 factor 객체를 이어 받은 채 S+0x390=0.9로 재분해한 결과와 비트가 같다.** Rust에서 call 1의 `SerialBackend`를 그대로 두고 Markowitz만 caller 값으로 바꿔 요청 10 재분해를 하면 quality·quality_pinf call 2의 header·vstat·FTRAN·basic·factor 통계(F+0x1e0/1e8)가 원본과 일치했다. caller가 두 호출 사이에 factor를 다시 만들지 않는다는 가정과 모순되지 않는 증거(2사례)다. `12f282`는 first일 때만, 조정이 있으면 라운드마다 다시 불린다(C 219·868). 캡처·C. (M3-04c-1d, [§6](../m3/primal_push_init_ext_rust.md#6-실행-결과))
 - **push 초기화 조건수 `12f282`→`116fd7`(double)은 ‖B‖₁(슬랙 1.0, 열 |a| 합의 최대) × Hager식 ‖B⁻¹‖₁ 추정이다.** x = 1/m에서 FTRAN, est = ‖x‖₁(반복>0이고 est가 늘지 않으면 끝), 부호 벡터(엄격 < 0만 −1) BTRAN, 5회 한도, 첫 최대 |z| index가 직전과 같으면 끝, 아니면 e_j. 합은 `2207de` R과 같은 8-lane 순서(주소 8 mod 16이면 첫 항 peel)라 A 열 시작 위치·버퍼 정렬이 비트를 바꾼다. 64호출 캡처·asm. (M3-04c-1c, [§6](../m3/primal_push_condition.md#6-실행-결과))
 - **116fd7의 FTRAN(sparse e_j 입력)과 BTRAN(dense 입력)은 매번 S+0x220/0x228 헤더를 교환해 x 값 버퍼가 번갈아 바뀐다. 116fd7은 초기화 밖 push 안에서도 불린다(caller 근처 `0x1c4276`·`0x1c8a0e`, 미비교).** 슬랙 기저면 1회 만에 condition 1.0. 캡처. (M3-04c-1c, [§6](../m3/primal_push_condition.md#6-실행-결과))
+- **push 해 설치(C 2419–2582)는 first(param_7)=0이면 basic을 x·slack에 쓰지 않고, `12f282` 조건수는 first와 무관하게 다시 부른다.** remaining은 남은 후보 수에서 시작해 자유 후보가 있으면 음수, 없으면 env+0x2ba0(= Crossover 파라미터)이 -1일 때만 `max(5, S+0x46c/10)`과 비교해 부호를 정한다. 양수면 앞 후보 vstat을 `lb+ub > 2x`로 -1/-2 지정, 음수면 vstat -1/-2 전체를 bound로 스냅한다. 설치 111회에서 F+0xc=0(조건수 조기 반환 없음). 캡처·asm. (M3-04f-1, [§2·§6](../m3/primal_push_install.md))
+- **Crossover=-1(기본)에서 primal push는 Netlib 45 모두 first=0으로 불리고 후보 0으로 설치에 간다.** 임계값 분기(2ba0 = -1)는 이 경로에서 후보가 남지 않아 자연 실행으로 닿지 않았다. Crossover=3은 first=1·2ba0 = 3이라 remaining 부호는 자유 후보로만 음수가 된다. 캡처. (M3-04f-1)
 
 ## dual simplex DSE β (`28c93`·`8b473`)
 

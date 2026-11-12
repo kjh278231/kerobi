@@ -73,3 +73,5 @@ Concurrent 조사는 다음 수명 문제를 해결해야 한다.
 [04c-1d 외부 값 경로 비교](primal_push_init_ext_rust.md)는 1b 오라클 17호출을 push:enter 상태와 외부 값(τ_in·S+0x120·S+0x3c8·환경 flag·`12f282` 출력)만으로 재생해 기준 조정·Markowitz 강화·`061bfe` 한도·수치 카운터·retry와 재호출·slack -2·열 -5·first=0을 원본과 맞췄다. `12f282`는 `PushInitBackend::condition` 경계가 됐으며 1c는 이 자리에 `116fd7` 계산을 넣고 같은 하네스로 재비교한다.
 
 [04c-1c 조건수](primal_push_condition.md)는 `116fd7` 내부 경계(FTRAN/BTRAN 입출력·버퍼 교환·정렬)를 1b 15사례와 Netlib 45 자연으로 캡처하고, Rust `crossover_condition`을 1d 하네스에 넣어 조건수 주입 없이 62 push 호출을 비교한다(64호출 비트 일치). 초기화는 이로써 외부 값 없이 원본 상태만으로 재현되며, 다음은 해 설치(04f)와 초기화 밖 116fd7 호출이다.
+
+[04f-1 해 설치](primal_push_install.md)는 루프 종료 뒤 `134a87` C 2419–2582(first일 때 basic → x·slack, PInf·S+0x120, 설치 조건수 `116fd7`, retry, remaining 부호, vstat -1/-2·음수 스냅)를 Rust `push_install`로 옮겨, 1d 하네스에서 push 진입부터 반환까지 원본 재주입 없이 비교한다(58/59 일치). grow7의 연결 실패는 마지막 round 재분해 차이(21i)이고, remaining을 소비하는 `13f716`의 cleanup 선택과 `0cda5b` 설치는 04f-2다.

@@ -61,8 +61,25 @@
 
 ## 6. 실행 결과
 
-(작성 예정)
+- 환경: x86-64 WSL2 Linux, Gurobi 13.0.3(위 SHA-256), Threads = 1·Seed = 0·Presolve = 0·Method = 2·LPWarmStart = 2. 계약 `b43f8d4`, 캡처·검사기 `3fcca1b`, Rust·비교기는 이 branch의 다음 commit.
+- **범위 결정(탐색 뒤, Rust 비교 전)**: 1b·Netlib 자연 자료는 remaining 0·양수, first 0/1, 후보 0 직행만 지나고 retry·음수 remaining·자유 후보가 없었다. `+0x2ba0`가 Crossover 파라미터임을 노트(`env_param_offsets.tsv`)로 확인하고 ① Netlib 45를 **Crossover = -1(기본)**로 더했다 — 45 모두 first = 0·후보 0이라 임계값 분기는 자연으로 닿지 않았다. ② 원본 명령 합성 5종(`synthetic.json`)을 더했다: `inst_env_neg`(설치 진입에서 2ba0 = -1 → 임계값 음수·스냅), `inst_free`(남은 후보 bound를 ±I → 자유 후보 음수·스냅), `inst_retry`(설치 조건수를 1e15로 → attempt 0 retry), `inst_att1_keep`·`inst_att1_retry`(attempt 1 호출에서 1e20 → retry 없음, 1e31 → retry). 합성은 함수 출력·환경 값을 바꾼 실험이고 정상 실행 사례와 구분한다. 축소한 범위는 없다.
+- 원본 실행: 정식 330회(1b 15 + 합성 5 + Netlib 45 + Crossover = -1 Netlib 45, 각 독립 3회) 모두 성공. 이 밖에 탐색 53회(훅 확인 2, Crossover = -1 45, 합성 5, grow7 21h agent 1)와, 합성 편집 기능을 넣기 전 agent로 찍었다가 근거로 쓰기 전에 버린 180회가 있다(총 563회).
+- 통제(`push_install_check.py --controls`): 110사례 × 3회 사건열 동일, 1c 60사례 run 1 투영(install·icond 제거, push:leave 1c 필드)이 1c 자료와 같다(비간섭).
+- C 규칙 재계산(`--acceptance`): push 호출 115, 설치 111(설치 중 `116fd7` 111회 1c `check_cond` 비트 재계산), 설치 없음 4(초기화 retry). 설치 진입 slot 별칭 11종·m·n·τ·I slot 값이 모두 맞고, x·slack·vstat·S+0x120·retry·remaining·condition 경로가 모두 일치했다. 분기 집계: first 기록 65·first = 0 46·후보 0 직행 18·PInf > 0 5·remaining 0 98·양수 9·임계값 음수 1·자유 후보 1·스냅 2·attempt 0 retry 1·attempt 1 비retry 1·1e30 retry 1. 합성의 사전 필수 분기 모두 경유.
+- 검사기 판별력(`--self-test`): 변조 19종 거부(바이너리 해시·사건 비우기·run 간 차이·1c 비간섭·leave 필드·설치 입력·icond·별칭·header 보존). 첫 시도에서 `icond` 반복 0 FTRAN 출력 1비트 변조가 통과했다 — 다음 반복이 이어지면 그 값은 est 비교에만 쓰여 결과에 들어가지 않는다. 결과를 정하는 반복 1 출력으로 바꿔 거부를 확인했다(1c와 같은 방식). 규칙 변이 14종 중 필수 7종 포함 10종 거부, 생존 4: PInf 하한·τ·τ+w 경계의 동률(자료에 basic이 정확히 ±τ인 위치 없음), P = PInf(상태 2이면서 PInf > 0인 설치 없음).
+- Rust (A) 설치 경계(`cargo test --test push_install` → `push_install_rust.py --compare`): **111호출·666필드 첫 비교부터 비트/정확 일치**(합성·Crossover = -1 포함).
+- Rust (B) 연결(`--test push_init_ext init_install_trace`): 1c 62호출을 진입 → 초기화(1c Rust 조건수) → `push_loop`(SerialBackend) → 설치(루프 뒤 factor의 Rust `116fd7`)까지 원본 재주입 없이 재생했다. 1c 기대 줄 전체와 설치 쪽 626줄(install:enter·icond·push:leave)을 비교해 **설치까지 간 59호출 중 58호출 일치**(줄 1,583·필드 7,077), first = 0인 1호출(adlittle_x1)과 초기화 retry 2호출은 설치 연결 대상이 아니다.
+- **실패 1(결과 확인 뒤 분류, 사전 명시 아님)**: `netlib/grow7` call 1의 설치 진입 header가 위치 89부터 다르다(원본 234, Rust 182). 기저 집합·x·S+0x120·반복 수는 같고 위치 순서와 basic 끝자리·폭·vstat(위치 값)이 다르다. 탐색 21h agent 캡처 1회를 24 하네스에 넣어 루프 911줄 중 906줄이 일치하고 **줄 907 마지막 round 재분해**(`036ade` 진입 S+0x2c0 = 8·0x4e0 = 7)에서 header·L/U 비영 수(원본 1424/1604, Rust 1128/1284)가 갈림을 확인했다. 설치 코드가 아니라 21g·21h 재분해 범위의 차이이며 후속 **M3-04c-21i**로 넘긴다. 비교기는 이 첫 차이 서명만 "분류된 실패"로 따로 세며, 다른 차이가 생기거나 grow7이 바뀌면 실패한다. 탐색 캡처는 기준 자료가 아니다(160MB, 저장하지 않음).
+- Rust 판별력: (B) 기대 줄 변조 5,412종·(A) 666종 전부 거부(분류된 실패 호출 제외). Rust 변이 21종 중 15종 거부, 생존 6: PInf 하한·τ·τ+w 동률 3종(위와 같음), P = PInf(위와 같음), `cond ≥ 1e15`로 바꾼 retry 문턱(합성 조건수가 정확히 1e15라 구별 불가), 조건수 호출을 PInf 계산 앞으로(`116fd7`이 S+0x120을 읽지 않아 관측상 동치). 첫 변이 실행은 (B)를 분류 전 비교로 판정해 grow7 기존 실패만으로 6종을 거짓 거부로 셌고, 고친 뒤 다시 실행했다(`bench/validation/m3_push_install/rust_mutations.json`).
+- 회귀: 1c `push_cond_check --controls --acceptance`(60사례·116fd7 64), `push_cond_rust --compare`(62호출·966줄·4,378필드), 1d `push_init_rust --compare`(17호출·132줄·727필드), 24 `push_loop_rust --lu --compare`(6사례·725줄·5,575필드), 1a `--init --compare`(6사례·731줄·5,743필드), `cargo test --release --workspace` 150통과·실패 0·ignored 12, `cargo clippy --workspace --all-targets -- -D warnings` 0(첫 실행에서 NaN 의미의 부정 비교 2곳 거부 → asm `comisd`/`jb` 의미 함수로 고침).
+- 실행하지 못한 검사: P·cond > 1e16 항과 P' = PInf(status 2·PInf > 0 설치 없음), 임계값 양수(c ≥ max(5, S+0x46c/10), 남은 후보 5 이상 없음), NaN bound, x87·할당 실패.
 
 ## 7. 판정과 인수인계
 
-(작성 예정)
+- 작업 수행 상태: 완료.
+- 동등성: **(A) 설치 경계 통과**(111호출, 비트/정확). **(B) 연결 범위 한정 통과**: 58/59 일치, grow7 1호출 **실패**(설치 이전 루프 재분해 차이, 결과 확인 뒤 분류). 실패는 통과 수에 넣지 않는다.
+- 통과한 범위: double·Threads = 1에서 push 해 설치의 x·slack 기록, PInf·S+0x120, 설치 조건수(`116fd7`, 루프 뒤 factor — 1c가 남긴 "초기화 밖 116fd7 호출" 중 `0x1c4276`), retry(attempt 0 cond·1e30), remaining 부호(0·양수·임계값 음수·자유 후보 음수), vstat -1/-2 지정, 음수 스냅. 1c Rust 연결이 push 진입부터 반환까지 원본 재주입 없이 58호출에서 맞는다.
+- 남은 한계: P 항·임계값 양수·±τ 동률 미관측(C·asm 근거만), grow7 재분해(21i), `0x1c8a0e` 근처 다른 `116fd7` 호출, cleanup 소비(`13f716` mode 선택·`0cda5b` 설치, 04f-2), x87·work·시간·할당 실패, solver 경로 연결.
+- 후속: **M3-04c-21i**(grow7 마지막 round 재분해 피벗 순서), **M3-04f-2**(`13f716`의 remaining 소비와 `0cda5b` cleanup 진입·`0325b4` 상태 배열 설치).
+- 재실행: `python3 tools/push_install_check.py --controls --acceptance && python3 tools/push_install_rust.py --write && cargo test -p rsolver-lp --test push_install --test push_init_ext && python3 tools/push_install_rust.py --compare`.
+- 교훈: `docs/lessons/original.md`(crossover primal push: 해 설치 규칙, Crossover = -1 경로), `docs/lessons/tooling.md`(검사기: xfail과 변이 판정, `116fd7` 변조 위치, 함수 중간 훅 지점 선택).
