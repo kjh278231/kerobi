@@ -9,6 +9,8 @@ factor 통계·재분해 순열, 재계산 FTRAN raw)뿐이다. 원본 후상태
   --mutate-rust PATH  Rust 소스 변이마다 target 사본에서 재생·비교해 결과를 PATH(새 파일)에 기록
   --lu                M3-04c-24: tape 대신 실제 Rust backend(crossover_backend)로 재생하는 모드. 입력에는 수치 출력이
                       없고(초기화 factor 입력만, 21h 첫 재분해와 같음), canonical 줄에 init 줄과 fcall 통계를 더한다.
+  --init              M3-04c-1a: --lu에 더해 루프 시작 상태(state·round 줄)도 입력에서 빼고 push:enter 상태만 넣는다.
+                      Rust crossover_init::push_init이 초기화를 수행하며, canonical 줄에 루프 시작 상태 start 줄을 더한다.
 """
 import argparse
 from collections import Counter
@@ -31,6 +33,18 @@ TRACE = ROOT / 'target/m3_push_loop_rust/trace.txt'
 SCHEMA = 'M3-04c-22-v1'
 TEST = 'push_loop'
 LU = False
+INIT = False
+
+
+def use_init():
+    global D, INPUT, TRACE, SCHEMA, TEST, INIT
+    use_lu()
+    D = ROOT / 'bench/oracle/m3_push_init_rust'
+    INPUT = D / 'input.txt'
+    TRACE = ROOT / 'target/m3_push_init_rust/trace.txt'
+    SCHEMA = 'M3-04c-1a-v1'
+    TEST = 'push_init_loop'
+    INIT = True
 
 
 def use_lu():
@@ -71,6 +85,51 @@ def init_line(name, rec, k0):
     toks = ['lu', g[4], g[5], *g[7:12], *kk[4:7], str(fc['q']), *rest[1:m + 1], rest[m + 1], *rest[m + 3:]]
     want = ('init', dict(hdr=j(lv['header']), leave=str(lv['leave']), vstat=j(lv['vstat']), stats=stats_text(fc)))
     return toks, want
+def init_tokens(name, rec, k0, toks):
+    """M3-04c-1a 입력(case·model·cfg·enter·lu)과 기대 start 줄. 루프 시작 상태는 입력에 넣지 않는다."""
+    ev = rec['events']
+    push = next(e for e in ev if e['event'] == 'push:enter')
+    fe = next(e for e in ev if e['event'] == 'factor:enter')
+    le = next(e for e in ev if e['event'] == 'lu:enter')
+    pa = ev[k0]['state']
+    ready = next(e for e in ev[k0:] if e['event'] == 'roundctl:pass:ready')
+    se = next(e for e in ev[k0:] if e['event'] == 'supply:enter')
+    ps, ss = push['state'], se['state']
+    n, m = ps['n'], ps['m']
+    lu = toks[5]
+    require(lu[0] == 'lu' and len(lu) == 12 + m + 1 + n + m, f'{name}: lu 줄 길이')
+    # 초기화 factor 입력은 push:enter 상태와 같아야 한다(그 사이 쓰기 없음): header·S+0x2f8·vstat·Markowitz
+    require(lu[12:12 + m] == list(map(str, ps['header'])) and lu[13 + m:] == list(map(str, ps['vstat'])),
+            f'{name}: 초기 factor header/vstat != push:enter')
+    require(lu[12 + m] == str(le['leave']), f'{name}: 초기 factor S+0x2f8')
+    require(lu[2] == ps['tolerances']['390'], f'{name}: 초기 factor Markowitz != S+0x390')
+    require(fe['header'] == ps['header'] and fe['request'] == 10, f'{name}: factor:enter')
+    require(push['first'] == 1 and ps['precision'] == 0 and push['alias_contiguous'], f'{name}: 범위(first·double·별칭)')
+    require(len(ps['slack']) == m and len(ps['x']) == n, f'{name}: x·slack 길이')
+    tol, cnt = ps['tolerances'], ps['counters']
+    fc = fe['factor_ctl']['state']
+    require(fc['numeric'] == cnt['numeric'] and fc['failure'] == cnt['failure'], f'{name}: factor:enter 카운터')
+    model, cfg = toks[1], toks[2]
+    cfg = ['cfg', tol['380'], tol['398'], tol['370'], tol['3b0'], se['supplier']['drop'], str(push['model_status']),
+           str(push['attempt']), str(push['first'])]
+    enter = ['enter', *map(str, ps['vstat']), *map(str, ps['header']), *ps['x'], *ps['slack'], *push['model']['rhs'],
+             tol['390'], cnt['iterations'], str(cnt['request']), str(cnt['numeric']), str(cnt['failure']),
+             str(fc['status']), str(le['enter']), str(le['leave'])]
+    toks = [toks[0], model, cfg, enter, lu[:12]]
+    adj = any(a in (-1, -2) and b == -3 for a, b in zip(ps['vstat'], ss['vstat']))
+    sc = ss['counters']
+    start = ('start', dict(
+        cand=j(pa['candidates']), total=str(pa['total']), sup=str(pa['support']), vstat=j(ss['vstat']),
+        header=j(ss['header']), leave=str(ready['selected']['leave']), rhs=j(ss['rhs']), basic=j(ss['basic']),
+        width=j(ss['width']), marks=j(ss['marks']), pinf=ss['pinf'], iter=sc['iterations'], req=str(sc['request']),
+        numeric=str(sc['numeric']), failure=str(pa['failure']), status=str(pa['status']), retry=str(pa['retry']),
+        nlimit=str(pa['numeric_limit']), mk=ss['tolerances']['390'], limit=str(ss['factor']['limit']),
+        adj=str(int(adj)), cond='unknown', pos=str(pa['position']), dfr=str(pa['deferred']), fail=j(pa['failures']),
+        smarks=opt(pa['marks']), csum=pa['count_sum'], succ=str(pa['successes'])))
+    require(pa['request'] == sc['request'] and pa['numeric'] == sc['numeric'], f'{name}: pass/supply 카운터')
+    return toks, start
+
+
 MODELS = ('arms', 'retry', 'interior', 'adlittle', 'scsd1', 'capri')
 SITE = {'0x1c3538': 'pivot', '0x1c3d31': 'round'}
 # 계약 §4에서 캡처를 세어 고정한 집계
@@ -194,9 +253,13 @@ def project(name, rec):
         require(len(r) == m, 'recompute 길이')
     if LU:
         toks = toks[:6]  # case·model·cfg·state·round·lu: 수치 tape 없음
+    if INIT:
+        toks, start = init_tokens(name, rec, k0, toks)
 
     # 기대 canonical 사건열
     want, cnt = ([lw] if LU else []), Counter()
+    if INIT:
+        want.append(start)
     step = None
     lu_of = {}
     for i, e in enumerate(body):
@@ -596,8 +659,11 @@ def main():
     g.add_argument('--self-test', action='store_true')
     g.add_argument('--mutate-rust', type=Path)
     p.add_argument('--lu', action='store_true')
+    p.add_argument('--init', action='store_true')
     a = p.parse_args()
-    if a.lu:
+    if a.init:
+        use_init()
+    elif a.lu:
         use_lu()
     if a.write:
         write()
