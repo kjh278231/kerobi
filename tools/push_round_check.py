@@ -177,20 +177,26 @@ def natural(r,name):
     check_recompute(project(r),name)
     totals=Counter();push=None;approved=0;pass_in=None;ready=None;defer=None;bt=None;raw=None
     supply_out=None;supply_in=None;action=None;expected=None;factor=None;factor_replies=[];recomp=None;step_kind=None;accepted_event=None
+    flow_ctx=None;last_applied=None;bt_result=None
     for e in r['events']:
         tag=e['event'];label=name+'.'+tag+f'.step{e.get("step")}'
         if tag=='push:enter':push=e;approved=0
         elif tag=='supply:enter':
+            if flow_ctx is not None:equal(flow_ctx,e['supplier']['context'],label+'.P continuity')
             if ready is not None:equal(ctx(ready),e['supplier']['context'],label+'.ready handoff');ready=None
             supply_in=e
-        elif tag=='supply:leave':supply_out=e
+        elif tag=='supply:leave':supply_out=e;flow_ctx=e['supplier']['context']
         elif tag=='step:enter':step_kind=e['kind']
         elif tag=='step:applied':
             require(accepted_event is not None,label+'.accepted required');equal(step_kind,accepted_event['kind'],label+'.kind')
-            equal(e['selected'],accepted_event['selected'],label+'.selected');accepted_event=None
+            equal(e['selected'],accepted_event['selected'],label+'.selected');last_applied=accepted_event;accepted_event=None
         elif tag=='step:defer':
             require(defer is not None,label+'.defer required');equal(e['selected'],defer['selected'],label+'.selected')
             equal(e['deferred'],defer['state']['deferred'],label+'.deferred')
+        elif tag=='factorctl:select' and bt_result is not None:
+            for k in ('m','request','status','numeric','failure'):equal(bt_result[k],e['state'][k],label+'.BTRAN handoff.'+k)
+            for k in ('support','attempt','numeric_limit'):equal(bt_result[k],e['frame'][k],label+'.BTRAN handoff.'+k)
+            bt_result=None
         elif tag=='factor:enter' and factor is not None:
             equal(factor['request'],e['request'],label+'.request');factor_replies.append(None)
         elif tag=='factor:leave' and factor is not None:
@@ -226,6 +232,10 @@ def natural(r,name):
             equal(y,st,label+'.defer transition');ready=st;defer=None
         elif t=='btran:prepare':
             require(bt is None,label+'.nested btran');require(st['support']!=0,label+'.support required')
+            require(last_applied is not None,label+'.preceding applied step required')
+            equal(last_applied['step'],e['step'],label+'.applied step')
+            equal(last_applied['selected'],e['selected'],label+'.applied selected')
+            equal(last_applied['state'],st,label+'.applied state')
             equal(approved,st['approved'],label+'.approved');bt=e;raw=None
         elif t=='btran:enter':
             require(bt is not None and raw is None,label+'.prepare required')
@@ -239,7 +249,7 @@ def natural(r,name):
             y=copy.deepcopy(bt['state']);require(y['marks'] is not None,label+'.marks required')
             for j in raw['indices']:y['marks'][j]=1
             y['support_marks']=y['marks'] if y['support']>0 else None
-            equal(y,st,label+'.mark transition');bt=None;raw=None
+            equal(y,st,label+'.mark transition');bt_result=st;bt=None;raw=None
         elif t=='dense':
             require(bt is not None and isinstance(raw,dict) and raw['count']<0,label+'.dense required')
             equal(bt['state'],st,label+'.dense before')
@@ -279,7 +289,8 @@ def natural(r,name):
             equal(expected,st,label+'.end state');equal(st['total'],e['remaining'],label+'.remaining');action=None;expected=None
         elif t=='error':raise Fail(label+'.unexpected natural failure')
         else:raise Fail(label+'.unknown round event')
-    require(bt is None and defer is None and accepted_event is None and ready is None and action is None,label+'.unfinished round')
+        if st is not None:flow_ctx=ctx(st)
+    require(bt_result is None and bt is None and defer is None and accepted_event is None and ready is None and action is None,label+'.unfinished round')
     require(totals['pass:ready']>0 and totals['exhausted']>0 and totals['end']>0,name+'.target zero')
     equal(totals['pass:enter'],totals['pass:ready'],name+'.pass pairing');equal(totals['factor'],totals['factor:return'],name+'.factor pairing')
     equal(totals['defer:enter'],totals['defer:leave'],name+'.defer pairing')
@@ -343,6 +354,24 @@ def self_test(data,m):
         def remove(d,m,t=tag):
             r=d['retry'][0];r['events']=[e for e in r['events'] if e['event']!='roundctl:'+t]
         test('missing-'+tag,remove,lambda d,m:acceptance(d))
+    def coordinated(d,m,kind):
+        for r in d['retry']:
+            prep=[e for e in r['events'] if e['event']=='roundctl:btran:prepare']
+            enters=[e for e in r['events'] if e['event']=='roundctl:btran:enter']
+            raws=[e for e in r['events'] if e['event']=='roundctl:btran:leave']
+            applied=[e for e in r['events'] if e['event']=='roundctl:btran:applied']
+            if kind=='leave':
+                j=(prep[0]['selected']['leave']+1)%10
+                prep[0]['selected']['leave']=j;enters[0]['selected']['leave']=j;enters[0]['input']['indices']=[j]
+            elif kind=='request':
+                prep[0]['state']['request']=6;applied[0]['state']['request']=6
+            else:
+                prep[1]['state']['marks']=[0]*10;prep[1]['state']['support_marks']=[0]*10
+                values=[0]*10
+                for j in raws[1]['raw']['indices']:values[j]=1
+                applied[1]['state']['marks']=values;applied[1]['state']['support_marks']=values
+    for kind in ('leave','request','marks'):
+        test('coordinated-BTRAN-'+kind,lambda d,m,k=kind:coordinated(d,m,k),lambda d,m:acceptance(d))
     for i,case in enumerate(specs()):
         expected=reference(case)
         # One behavior change per case; choose an output specific to its branch.

@@ -74,7 +74,7 @@
     "cases": 106
   },
   "self_test": {
-    "rejected": 154,
+    "rejected": 157,
     "details": [
       {
         "name": "binary_sha256",
@@ -94,15 +94,15 @@
       },
       {
         "name": "manifest-empty-tools",
-        "error": "manifest.tools.keys: 기준={'tools/push_round_agent.js', 'tools/frida_resolve.cjs', 'tools/push_round_capture.js', 'tools/push_round_runs.py', 'tools/push_recompute_check.py', 'tools/push_round_check.py', 'tools/push_recompute_runs.py', 'tools/push_factor_synthetic.py', 'tools/push_round_synthetic.py', 'tools/gurun.sh', 'tools/push_recompute_synthetic.py', 'tools/push_supplier_check.py'}, 실제=set()"
+        "error": "manifest.tools.keys: 기준={'tools/push_recompute_synthetic.py', 'tools/push_round_check.py', 'tools/push_supplier_check.py', 'tools/push_recompute_check.py', 'tools/push_round_capture.js', 'tools/push_recompute_runs.py', 'tools/frida_resolve.cjs', 'tools/gurun.sh', 'tools/push_round_synthetic.py', 'tools/push_round_agent.js', 'tools/push_factor_synthetic.py', 'tools/push_round_runs.py'}, 실제=set()"
       },
       {
         "name": "manifest-empty-inputs",
-        "error": "manifest.inputs.keys: 기준={'bench/oracle/m3_push_arms/arms.lp', 'bench/oracle/m3_push_round/synthetic-inputs.json', 'bench/oracle/m3_push_retry/retry.lp', 'bench/oracle/m3_push_retry/retry.extra.json', 'bench/oracle/m3_push_arms/arms.extra.json', 'bench/oracle/m3_primal_push_step/interior.lp'}, 실제=set()"
+        "error": "manifest.inputs.keys: 기준={'bench/oracle/m3_push_round/synthetic-inputs.json', 'bench/oracle/m3_push_arms/arms.lp', 'bench/oracle/m3_primal_push_step/interior.lp', 'bench/oracle/m3_push_arms/arms.extra.json', 'bench/oracle/m3_push_retry/retry.lp', 'bench/oracle/m3_push_retry/retry.extra.json'}, 실제=set()"
       },
       {
         "name": "manifest-empty-sources",
-        "error": "manifest.sources.keys: 기준={'../re/decomp/c/001c5310_PRIVATE000000000025615c.c', '../re/decomp/c/001c0070_PRIVATE0000000000134a87.c', '../re/decomp/c/00131710_PRIVATE000000000009e376.c'}, 실제=set()"
+        "error": "manifest.sources.keys: 기준={'../re/decomp/c/00131710_PRIVATE000000000009e376.c', '../re/decomp/c/001c0070_PRIVATE0000000000134a87.c', '../re/decomp/c/001c5310_PRIVATE000000000025615c.c'}, 실제=set()"
       },
       {
         "name": "manifest-empty-assembly",
@@ -110,15 +110,15 @@
       },
       {
         "name": "manifest-empty-captures",
-        "error": "manifest.captures.keys: 기준={'bench/oracle/m3_push_round/interior-1.json', 'bench/oracle/m3_push_round/interior-2.json', 'bench/oracle/m3_push_round/control-2.json', 'bench/oracle/m3_push_round/control-3.json', 'bench/oracle/m3_push_round/arms-1.json', 'bench/oracle/m3_push_round/retry-1.json', 'bench/oracle/m3_push_round/arms-2.json', 'bench/oracle/m3_push_round/synthetic-3.json', 'bench/oracle/m3_push_round/interior-3.json', 'bench/oracle/m3_push_round/retry-3.json', 'bench/oracle/m3_push_round/synthetic-1.json', 'bench/oracle/m3_push_round/retry-2.json', 'bench/oracle/m3_push_round/control-1.json', 'bench/oracle/m3_push_round/arms-3.json', 'bench/oracle/m3_push_round/synthetic-2.json'}, 실제=set()"
+        "error": "manifest.captures.keys: 기준={'bench/oracle/m3_push_round/arms-2.json', 'bench/oracle/m3_push_round/interior-3.json', 'bench/oracle/m3_push_round/synthetic-2.json', 'bench/oracle/m3_push_round/retry-3.json', 'bench/oracle/m3_push_round/interior-2.json', 'bench/oracle/m3_push_round/retry-1.json', 'bench/oracle/m3_push_round/arms-3.json', 'bench/oracle/m3_push_round/control-1.json', 'bench/oracle/m3_push_round/control-2.json', 'bench/oracle/m3_push_round/control-3.json', 'bench/oracle/m3_push_round/interior-1.json', 'bench/oracle/m3_push_round/synthetic-1.json', 'bench/oracle/m3_push_round/synthetic-3.json', 'bench/oracle/m3_push_round/arms-1.json', 'bench/oracle/m3_push_round/retry-2.json'}, 실제=set()"
       },
       {
         "name": "manifest-empty-baselines",
-        "error": "manifest.baselines.keys: 기준={'bench/oracle/m3_push_recompute/interior-1.json', 'bench/oracle/m3_push_recompute/arms-1.json', 'bench/oracle/m3_push_recompute/retry-1.json', 'bench/oracle/m3_push_recompute/manifest.json', 'bench/oracle/m3_push_recompute/control-1.json'}, 실제=set()"
+        "error": "manifest.baselines.keys: 기준={'bench/oracle/m3_push_recompute/interior-1.json', 'bench/oracle/m3_push_recompute/manifest.json', 'bench/oracle/m3_push_recompute/arms-1.json', 'bench/oracle/m3_push_recompute/retry-1.json', 'bench/oracle/m3_push_recompute/control-1.json'}, 실제=set()"
       },
       {
         "name": "manifest-empty-history",
-        "error": "manifest.history.keys: 기준={'bench/oracle/m3_push_round/history/first-natural/agent.js', 'bench/oracle/m3_push_round/history/first-natural/arms-2.json', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic.py', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-1.json', 'bench/oracle/m3_push_round/history/first-natural/interior-3.json', 'bench/oracle/m3_push_round/history/first-natural/control-3.json', 'bench/oracle/m3_push_round/history/first-natural/arms-3.json', 'bench/oracle/m3_push_round/history/first-natural/control-2.json', 'bench/oracle/m3_push_round/history/first-natural/interior-2.json', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-2.json', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic-1.json', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic-3.json', 'bench/oracle/m3_push_round/history/first-natural/control-1.json', 'bench/oracle/m3_push_round/history/first-natural/interior-1.json', 'bench/oracle/m3_push_round/history/first-natural/retry-1.json', 'bench/oracle/m3_push_round/history/first-natural/retry-2.json', 'bench/oracle/m3_push_round/history/explore-retry.json', 'bench/oracle/m3_push_round/history/first-natural/retry-3.json', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-3.json', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic.py', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic-2.json', 'bench/oracle/m3_push_round/history/first-natural/arms-1.json'}, 실제=set()"
+        "error": "manifest.history.keys: 기준={'bench/oracle/m3_push_round/history/first-natural/interior-2.json', 'bench/oracle/m3_push_round/history/first-natural/retry-1.json', 'bench/oracle/m3_push_round/history/checker-before-btran-links.py', 'bench/oracle/m3_push_round/history/first-natural/retry-3.json', 'bench/oracle/m3_push_round/history/first-natural/control-3.json', 'bench/oracle/m3_push_round/history/verification-before-btran-links.json', 'bench/oracle/m3_push_round/history/first-natural/interior-1.json', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-1.json', 'bench/oracle/m3_push_round/history/first-natural/interior-3.json', 'bench/oracle/m3_push_round/history/first-natural/control-1.json', 'bench/oracle/m3_push_round/history/explore-retry.json', 'bench/oracle/m3_push_round/history/first-natural/arms-2.json', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic-3.json', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic-2.json', 'bench/oracle/m3_push_round/history/first-natural/arms-1.json', 'bench/oracle/m3_push_round/history/first-natural/arms-3.json', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-2.json', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic.py', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-3.json', 'bench/oracle/m3_push_round/history/first-natural/retry-2.json', 'bench/oracle/m3_push_round/history/first-natural/control-2.json', 'bench/oracle/m3_push_round/history/first-natural/agent.js', 'bench/oracle/m3_push_round/history/first-synthetic/synthetic-1.json', 'bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic.py'}, 실제=set()"
       },
       {
         "name": "manifest-binary",
@@ -250,7 +250,7 @@
       },
       {
         "name": "missing-btran:applied",
-        "error": "retry.roundctl:btran:prepare.step4.nested btran"
+        "error": "retry.supply:enter.step1.P continuity.support_marks[7]: 기준=0, 실제=1"
       },
       {
         "name": "missing-factor:return",
@@ -262,11 +262,23 @@
       },
       {
         "name": "missing-pass:ready",
-        "error": "retry.roundctl:clear.step6.prepared state required"
+        "error": "retry.supply:enter.step0.P continuity.support_marks: 타입 기준=NoneType, 실제=list"
       },
       {
         "name": "missing-end",
         "error": "retry.push:leave.step8.unfinished round"
+      },
+      {
+        "name": "coordinated-BTRAN-leave",
+        "error": "retry.roundctl:btran:prepare.step1.applied selected.leave: 기준=8, 실제=9"
+      },
+      {
+        "name": "coordinated-BTRAN-request",
+        "error": "retry.roundctl:btran:prepare.step1.applied state.request: 기준=0, 실제=6"
+      },
+      {
+        "name": "coordinated-BTRAN-marks",
+        "error": "retry.roundctl:btran:prepare.step4.applied state.support_marks[7]: 기준=1, 실제=0"
       },
       {
         "name": "defer-0.deferred",

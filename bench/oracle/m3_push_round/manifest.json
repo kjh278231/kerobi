@@ -11,7 +11,7 @@
     "tools/push_recompute_synthetic.py": "89b5e2b0d316b44abcafce3a7fb7f0ab9fa0a2fed8654067cc8498142ee23584",
     "tools/push_round_agent.js": "1aa3e46e20c77167eada9f2ba737bf195a5008dd339149d83ad1eec6172292c7",
     "tools/push_round_capture.js": "32f2125e2a8b2a1a8ffdca8bafe9298e934f932ff05ae8fa74f3ff51973e7496",
-    "tools/push_round_check.py": "cd81d61e0fb80de4da24fa4a17b550aa5eef577c4339f106c15f4abca704dab6",
+    "tools/push_round_check.py": "215c48a35f75d6f04702908dd1844c872850c2bb869f1f6dd2db0777e93c0f70",
     "tools/push_round_runs.py": "1eec8de9a61237ba1ba6ac436b3d8ddff4cd5cadde5635f0b97577ab216e9860",
     "tools/push_round_synthetic.py": "41a604b88a34596c86ce2da0d1193768c6fa483c423981067ba77dfd4351b85b",
     "tools/push_supplier_check.py": "2111b9192c5724e0cee21f0360a0cd0b75dfad0bac57036191367b4f5653df5e"
@@ -57,6 +57,7 @@
     "bench/oracle/m3_push_recompute/retry-1.json": "ede806d02e721adc6bf55d830163198c12d584cd1a52e5971c5da2ed29fbb963"
   },
   "history": {
+    "bench/oracle/m3_push_round/history/checker-before-btran-links.py": "cd81d61e0fb80de4da24fa4a17b550aa5eef577c4339f106c15f4abca704dab6",
     "bench/oracle/m3_push_round/history/explore-retry.json": "407fda5e1e878bb5a66a9f7c644e501a680c737fa12e56c5e104774073975513",
     "bench/oracle/m3_push_round/history/first-natural/agent.js": "5d1c73054d05df287c6480216e917251870cb4a93f5eeb43ab66c92138871425",
     "bench/oracle/m3_push_round/history/first-natural/arms-1.json": "1f97f92c434b92e688a80c5a2cc744271d62f50c90db754fb45705d606d9a224",
@@ -78,6 +79,7 @@
     "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-1.json": "18184e75666d25878b421dc738e5db47a2583bb6966d8145001e5d0f299dba53",
     "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-2.json": "d8e3a033a1aabec2001911f5859e2d5f54ef3c32a65686f48b174a60da18d5e3",
     "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic-3.json": "ca6910a258f3cac2d14d5d1d15b47efee9179cad1c5c284aef2239aeb37bbe43",
-    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic.py": "96be2c83870b25ee87d158df66dbcf72db9b66d33ecce4eb6af9356ce9efa3a4"
+    "bench/oracle/m3_push_round/history/pass-live-edx-failure/synthetic.py": "96be2c83870b25ee87d158df66dbcf72db9b66d33ecce4eb6af9356ce9efa3a4",
+    "bench/oracle/m3_push_round/history/verification-before-btran-links.json": "077bfe9a73512ef800584955f1317765bc95feec475ef8ffac1d31a787ec1c7c"
   }
 }
