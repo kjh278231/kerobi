@@ -68,8 +68,37 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 기준 main `d79b70b`, 계약 `519ee93`, 도구·탐색 `564e518`, 정식 캡처 `0f31888`, 검사기 `5f7d8fa`. x86-64 Linux(WSL2), Node Frida 17, Python 3.10. 바이너리 SHA는 매 캡처가 확인했다. manifest `bench/oracle/m3_push_init/manifest.json`(도구 3·캡처 45·`synthetic.json` 해시).
+- **탐색**(`history/survey-x3/`, `survey-x1/`, 기준 자료 아님, 정식 agent 이전 판으로 실행): Netlib 소형 45모델 × Crossover 3·1 = 90회 모두 성공, push 호출 90회. 기준 조정·Markowitz 강화·품질 retry·수치 카운터 증가·초기 재분해 반환≠0·slack -2·열 -5·x87 **모두 0회**. 모든 첫 push에서 S+0x120(이전 PInf)이 4.6e-15–1.3e-7로 τ(1e-6)보다 작아 조정 gate의 이전 PInf 조건은 자연 상태에서 이미 참이고, 조정을 막는 것은 PInf ≤ 1이다(tuff만 PInf 3.1e-6 > 0). S+0x390은 모든 사례 0.1이라 강화에는 잔차 > 4e-9 또는 max\|x_B\| > 1e9·max\|rhs\|가 필요한데 자연 0회다. **Crossover=1은 45모델 모두 dual 뒤 first=0 push**를 불렀다 → `adlittle_x1`을 자연 사례로 추가(계약 변경, 아래).
+- **합성 설계**: 편집 값은 21h 진입 상태와 numpy 기저 풀이로 골랐다(arms x[13]=50 → PInf 42 예상). 판정은 원본 캡처로만 한다. 필수 증거(`require`)는 탐색 캡처 전에 `synthetic.json`에 적었다.
+- **원본 3회**: 15사례 × 3회 = 45회 모두 성공. pid·run_id·stdout을 뺀 JSON 전체(사건 251개/회)가 3회 같다. 4사례(adjust·quality·adlittle_x1·capri)는 4회째 독립 재캡처도 저장 run1과 같다.
+- **21h 비간섭**: 자연 6사례의 push:enter·첫 supply:enter가 21h 캡처와 JSON 전체 일치(21h의 `step` 필드만 제거).
+- **재계산 비교**(`python3 tools/push_init_check.py --controls --acceptance`, [출력](../../bench/validation/m3_push_init_oracle/check.txt)): **15사례·17 push 호출 전부 첫 실행부터 통과**. 실패·skip 0. 비교한 것: 편집 기록=명세, S+0x1f8 진입 0, 초기 재분해 요청 10·반환, FTRAN 입력(라운드마다 m개 비트), FTRAN 출력=잔차 입력, 잔차 scratch +0, `089d8f` 출력(m개 비트), 세 최댓값으로 정한 Markowitz 후보·강화 여부·새 값·잔차 슬롯(비트), `061bfe` 한도, S+0x178, gate 직전 PInf·위반 수(비트·정확), condition으로 계산한 gate 결과(진행/retry 종류), 조정 gate의 flag·후보 수·τ(조정 뒤 τ' 비트)·셈 3개·S+0x380·S+0x120, 조정 여부, 재구성 rhs·승격 vstat·후보 순서, 첫 supply:enter의 후보 순서·총수·지원·비기저 vstat·header·S+0x200·basic·폭·표시·S+0x120·반복·S+0x178·S+0x390.
+
+| 사례 | 종류 | 관측 분기(검사기 판정) | 주요 값 |
+|---|---|---|---|
+| arms·retry·interior·adlittle·scsd1·capri | 자연 | 조정·강화·retry 없음 | τ_in = 1e-6(=S+0x380), 셈 adlittle [12,7,2]·scsd1 [2,0,0]·나머지 0, condition arms·retry·interior 1.0, adlittle 313.6, scsd1 54.6, capri 6196 |
+| adlittle_x1 | 자연(Crossover=1) | first=0: 초기 재분해·조건수 호출 없음, gate는 진입 *param_8(505.6) 사용 | 후보 16 |
+| adjust | 합성(arms x[13]=50, x[1]=0.5) | 조정 1회(셈 [1,1,1] < 23 → τ' = τ·0.001 = 1e-9), -1 승격, 재구성에서 -4 열(27, lb=ub=2) 생략, 2라운드 | PInf 42 → 44.5, 후보 23 → 24 |
+| mk_low | 합성(FTRAN 직전 S+0x390=1e-5) | 후보 1e-4 > 1e-5 → 강화, 한도 불변(S+0x3c8=20 < 50) | S+0x390 → 1e-4 |
+| mk_limit | 합성(+ S+0x3c8=200) | 강화 + `061bfe` 한도 200 → 50(S+0x3c8·F+0x188) | |
+| quality | 합성(adlittle x[11]=1e12) | 잔차 1.1e-4 → 후보 0.5 강화, 잔차 > 1e-6 → S+0x178+1, P=PInf 2.6e12 > 1e10 → retry. caller가 attempt=1·S+0x390=0.9로 push를 다시 불러 정상 초기화 | |
+| quality_pinf | 합성(arms x[13]=1e17, model_status 1) | P=1, PInf 2e17 > 1e15 → S+0x178+1·retry. 강화 없음. 재호출 attempt=1 | |
+| slack_m2 | 합성(retry slack 3: -4→-2) | rhs₃ −= 직전 xmm0(= 열 17의 x 5), 0 규칙과 다름. PInf 5.3 → 조정·slack -2 승격 | |
+| col_m5 | 합성(arms 열 27: -4→-5) | -5 = ub(2), 0 규칙과 다름 | |
+| col_m5_ub | 합성(retry 열 3: -1→-5) | -5 = ub(10), 0·lb 규칙과 다름. PInf 10.3 → 조정(승격 없음, 재구성에서 -5 생략) | |
+
+- **판별력**(`--self-test`, [기록](../../bench/validation/m3_push_init_oracle/self_test.txt)): 변조 **25종 전부 거부**(바이너리 해시 0, 사건 비우기, run2 1비트, 21h 비간섭 1비트, FTRAN 입력·출력, 잔차 출력·scratch, τ_in, 셈+1, 강화 사건 제거·새 값, 061bfe 한도, gate PInf, 조정 2회째 FTRAN 제거·flag·τ', retry 0, 후보 교환, 승격 되돌림, basic, 편집 제거·값, null-null, first 변경). 규칙 변이 14종 중 **필수 9종 거부**(slack -2=0, -5=0, -5=lb, 재구성 -4/-5 포함, τ' 항상 0.1배, 0.5 임계, 수치 카운터 임계, gate P 항상 PInf, 잔차 역순). **생존 5종**은 자료에 경계가 없는 경우다: -1 승격 strict(lb+τ'=x 없음), 0.25 임계(0.25 후보 사례 없음), `061bfe`의 √m 대신 m(두 값 모두 50 미만이라 하한 50), 셈 ≥(경계 같음 없음), lower shift 생략(기저 변수 lb가 모두 0 또는 −I).
+- **회귀**([기록](../../bench/validation/m3_push_init_oracle/regression.txt)): `push_block_check.py --controls --acceptance`, `push_init_survey.py --check`, py_compile, `node --check` 두 도구, `git diff --check` 모두 종료 0. Rust 변경이 없어 Cargo·clippy·확장·pytest는 실행하지 않았다.
+- **원본에서 새로 확인한 사실**: (1) 첫 push 진입 S+0x120은 이전 단계가 남긴 작은 PInf(4e-15 등)이다. (2) τ_in(param_1)은 자연 사례 모두 1e-6이며 S+0x380과 비트가 같다. (3) 품질 retry 뒤 caller는 attempt=1, S+0x390=0.9로 push를 다시 부르고 그때 x·slack은 편집 전 값이다(PInf 0). (4) 작은 사례의 condition은 1.0이다(1c 입력 확인 대상). (5) first=0 경로의 gate는 caller가 넘긴 condition(*param_8)을 그대로 쓴다.
+- 계약 변경: (1) 탐색에서 first=0이 자연 발생해 `adlittle_x1`을 정식 사례로 추가하고 같은 규칙으로 판정했다(§4의 "기록만" 문구 대신). (2) `init:tau`의 `0x2070`은 `0x1c0284`에서야 쓰이는 슬롯이라 첫 탐색 뒤 제거했고, first=0일 때 `(%rsp)` PInf 슬롯은 미초기화라 기록하지 않는다. (3) `mk_limit`(S+0x3c8 편집), `quality_pinf`, `col_m5_ub`를 계약 표에 더했다(자연 S+0x3c8=20이라 한도 감소가 관측되지 않음, PInf>1e15 경로와 lb≠ub -5 판별). 기존 사례·규칙은 줄이지 않았다.
+- 실행하지 않은 것: 조건수 `116fd7`의 내부(입출력만 기록), x87·batch, 할당 실패, Rust 비교(1d).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 **완료**(오라클 구축). 범위: 자연 7사례(first=1 6·first=0 1)와 합성 8사례의 초기화 중간 경계·분기가 원본 독립 3회 재현되고, 검사기가 C 규칙 재계산과 비트/정확 일치를 확인하며 변조 25종·필수 변이 9종을 거부한다.
+- 동등성: 이 오라클은 원본 동작의 기준 자료이며 **Rust 동등성은 미검증**이다(1a의 외부 값 경로 비교는 1d). 합성 사례는 바꾼 입력에 대한 원본 동작의 증거이며 자연 모델에서 그 분기가 일어난다는 증거가 아니다. 자연 Netlib 90회에서 조정·강화·retry·slack -2·-5는 0회였다.
+- 남은 한계: 0.25 Markowitz 후보, `061bfe` 한도의 √m 항(하한 50에 가림), 승격·셈의 정확 경계, lb ≠ 0인 기저 변수 shift, cond > 1e14·cond > 1e30 gate, 초기 재분해 반환 ≠ 0·S+0xf0 ≤ −1000 retry, 할당 실패는 미관측이다.
+- 후속: **M3-04c-1d** Rust `push_init`을 이 15사례(외부 값 τ_in·S+0x120·S+0x3c8·환경 flag·condition 주입)로 비교, **M3-04c-1c** 조건수 `116fd7`(이 캡처의 condition 값이 기준). 재실행 `python3 tools/push_init_check.py --controls --acceptance && python3 tools/push_init_check.py --self-test`.
+- branch `work/m3-04c-1b`, worktree `../rsolver-m3-04c-1b`, owner `claude-m3-04c1b-20261113`. 최종 commit/병합은 main `Merge M3-04c-1b` 이력을 따른다. 미커밋 선행 변경 없음.
+- 갱신: `docs/11_progress.md`·`12_roadmap_diagram.md`·`14_sprint_plan.md`·`handoff/M3.md`. 교훈 `docs/lessons/original.md`(S+0x120 진입값과 조정 gate, retry 뒤 재호출, first=0 condition), `tooling.md`(합성 편집 agent 패턴, 미초기화 스택 슬롯).

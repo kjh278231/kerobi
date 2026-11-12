@@ -141,6 +141,8 @@
 - **push 초기화의 후보 순서·rhs S+0x200·폭·표시·PInf는 push 진입 상태만으로 결정된다.** key는 열 `-(len+minsd(d,0.99))`, slack `-1-minsd(d,0.99)`, `aabbe3` 불안정 정렬이며 동률 때문에 6사례 중 4사례가 안정 정렬과 다르다. 초기 재분해(요청 10)는 기저 위치 번호(vstat ≥ 0)를 바꾸므로 진입·첫 공급의 vstat을 그대로 비교하면 안 된다. 캡처 재계산. (M3-04c-1, [§6](../m3/primal_push_init.md#6-실행-결과))
 - **push 초기화의 기준 조정은 이전 push의 PInf(S+0x120)가 τ보다 작을 때만 한다.** asm `0x1c186a–0x1c187c`는 `comisd 0x120(%r14), xmm0(τ); jbe 건너뜀`이라 조건은 `S+0x120 < τ`(비순서면 건너뜀)이고, 나머지는 `PInf > 1`(`jbe`, NaN 건너뜀)·`0.1τ셈 < 후보 수`(`jle`)다. M3-04c-1 조사 표의 "τ < S+0x120"은 방향 오기였다. asm·C 일치. (M3-04c-1a, [§1](../m3/primal_push_init_rust.md#1-범위와-주장))
 - **push 초기화의 basic(S+0x1e8)은 push:enter 상태에서 Rust로 비트 재현된다.** 초기 재분해(요청 10, push:enter header)→rhs 구성→`09cf9b` dense FTRAN→lower shift가 자연 6사례에서 원본 basic과 비트 일치했고, 잔차 `089d8f`는 FMA 없이 `a·x + acc` 순서다(`0x115e27`). 캡처. (M3-04c-1a, [§6](../m3/primal_push_init_rust.md#6-실행-결과))
+- **첫 push 진입의 S+0x120(이전 PInf)은 이미 τ보다 작다(4.6e-15–1.3e-7, Netlib 45).** 그래서 기준 조정 gate는 자연 상태에서 PInf > 1과 0.1셈 < 후보 수만 남는다. τ_in(param_1)은 자연 사례 모두 S+0x380(1e-6)과 비트가 같다. 캡처. (M3-04c-1b, [§6](../m3/primal_push_init_oracle.md#6-실행-결과))
+- **품질 retry(retry=1, init 미완료 반환) 뒤 caller는 attempt=1, S+0x390=0.9로 push를 다시 부른다.** 재호출의 x·slack은 편집 전 값이라 PInf 0으로 정상 초기화된다. first=0(Crossover=1의 dual 뒤 push)은 초기 재분해·`12f282`를 건너뛰고 gate에 caller가 넘긴 *param_8을 그대로 쓴다. 캡처. (M3-04c-1b, [§6](../m3/primal_push_init_oracle.md#6-실행-결과))
 
 ## dual simplex DSE β (`28c93`·`8b473`)
 
