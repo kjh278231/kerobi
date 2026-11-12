@@ -205,7 +205,8 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-21f | 구현 완료 | 직렬 numeric backend의 factor 수명·FT·재분해·재번호·rhs 계산 | 04c-21b·21d·21e | [완료](m3/primal_push_lu_rust.md): 재분해 `036ade` 결과만 주입, 그 사이 FT36·FTRAN120·BTRAN32·재번호19 비트 일치(207연산). FT 생략·무조건 행 eta 변이 거부. FTRAN A2 구현. rhs 입력 벡터는 push 상태 입력(루프22) |
 | M3-04c-21g | 구현 완료 | `036ade` 분해 수치와 분해 뒤 factor 설정(C:2570–2760)을 원본 배열 표현으로 생성 | 04c-21f | [완료](m3/primal_push_refactor_rust.md): M1 `Lu::factor_tol` adapter. 재분해 18/19 factor 전체 비트 일치, 그 위 FT36·FTRAN119·BTRAN32 일치(주입 0). capri 23회째 2×2 블록은 사전 명시 실패(21h). 변조42·변이23 거부. M1 `lu.rs`는 읽기 접근자·s1/s3 저장만 |
 | M3-04c-21h | 구현 완료 | `1da0b2` 2×2 블록 단계(C:686–1510, S+0x4e0/0x4e4 상태) M1 이식과 M1 t(F+0x100)=s3 정정 여부 | 04c-21g, M1 조율 | [완료](m3/primal_push_block_rust.md): 블록 상태 캡처 7사례×3회(21e 비간섭), `Lu::factor_block`. 재분해 19/19·219/219연산 비트 일치(capri 23 = B 단계). 변조54 거부, 변이23 중 생존11(A 피벗 0회 등). M1 simplex는 끈 채 불변, 켜기와 t=s3는 M1-02w |
-| M3-04c-22 | 구현 L1 | 초기화된 직렬 push 루프 연결(수치 backend 외부) | 04c-14·16·18·20·10 | 중간 원본 상태 재주입 없이 여러 round의 호출·상태·후보 비교. 초기화·최종 해 설치·수치 LU 제외 |
+| M3-04c-22 | 구현 L1 완료(범위 한정) | 초기화된 직렬 push 루프 연결(수치 backend 외부) | 04c-14·16·18·20·10 | [완료](m3/primal_push_loop_rust.md): 21e 자연 6사례 첫 패스부터 종료까지 재주입0, 719줄·5,502필드 일치, 변조103 거부, 변이25 중 생존7(자연 미경유). 초기화·해 설치·수치 LU 제외 |
+| M3-04c-24 | 구현 연결 | 실제 Rust 직렬 backend(21b–21h)를 `push_loop`에 설치 | 04c-22·21h | 초기화 factor 상태에서 tape 없이 같은 6사례의 루프 사건열·factor 연쇄를 원본과 비교. 품질 helper·batch 제외 |
 | M3-04c-23 | 조사 | batch 공급·worker·factor 별칭·무효화 | 04c-12 | Threads>1 도달성·재현성·record·work·미소비 후보의 후속 오라클/구현 분할 |
 | M3-04d | 조사 | dual push의 원본 분기 분할 | 04a | phase별 함수·상태·합성 오라클 |
 | M3-04e | 구현 | 04d의 push 분기 하나 | 04d | 해당 phase 입력·출력 상태 비교 |

@@ -78,8 +78,23 @@ Rust는 시작 상태에서 끝까지 자기 상태를 이어 간다. **원본 �
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 기준 main `abc7a4e`, 계약 `77df4fe`, 구현·도구·첫 비교 `f0776f0`. x86-64 Linux(WSL2), rustc stable. Gurobi 새 실행 0회. 자료 해시는 [manifest](../../bench/oracle/m3_push_loop_rust/manifest.json)에 고정했다.
+- 착수 기준: `push_lu_check.py --controls --acceptance`(21e 7사례 독립3회·비간섭·연쇄 규칙) 통과 뒤 투영. 캡처 집계가 §4 기대값(패스14·공급107/고갈12·flip32/pivot69/보류6·BTRAN32(dense2)·판단67·호출 pivot37/round12·재계산1/12·종료6)과 같지 않으면 `--write`가 실패하도록 고정했다.
+- `python3 tools/push_loop_rust.py --write` → `cargo test -p rsolver-lp --test push_loop` → `--compare`: **6사례·719줄·5,502필드 전부 일치**(첫 비교부터 일치). 줄 구성 leave101·pass14·ftran107·supply119·step107·btran32·select67·fcall49·rin13·recompute13·clear67·exhausted12·round12·end6. Rust는 시작 상태 외 원본 상태를 받지 않았고 6사례 모두 tape을 남김없이 소비한 뒤 `LoopExit::End`로 끝났다. theta/pivot은 NaN으로 시작했으며 새어 나온 값이 없었다. [비교 출력](../../bench/oracle/m3_push_loop_rust/compare.txt).
+- 판별력: `--self-test` **변조 103종 전부 거부**(줄 태그·필드별 첫 값 변조 96, 줄 누락·중복·순서·여분 키·끝 줄·사례 누락 6, 머리 1). [기록](../../bench/oracle/m3_push_loop_rust/self-test.txt).
+- Rust 변이 `--mutate-rust`: **25종 중 거부 18, 생존 7**. [기록](../../bench/oracle/m3_push_loop_rust/rust-mutations.json). 거부: 패스 준비·승인 초기화/증가·보류·flip 직행·BTRAN 조건·선택 support·pivot/round 재계산·round 요청 지우기·재번호(생략·vstat·S+0x2f8·역순열)·고갈 gate·지원 gate/압축·빈 목록 종료·PInf 저장. 생존 7종은 모두 자연 자료가 그 경로를 지나지 않는 경우다(캡처로 확인).
+  - `no-clear-request`: 호출 없음 ⇔ 요청 0이므로 동치.
+  - `violations-not-saved`: 재계산 13회 모두 재계산 전후 B/A 수가 같았다(retry 3→3, 나머지 0→0). C 1978·2405의 `local_1b0 = local_40`는 코드대로 둔다.
+  - `request-not-synced`: ratio 진입 시 요청이 6사례 모두 0이고 ratio 요청 2가 자연 0회.
+  - `period-not-saved`·`resume-no-period`·`updates-stale`·`resume-restarts`: 품질 주기가 모든 판단에서 50, 품질 helper 호출 0회, 갱신 수가 주기에 도달하지 않음.
+  `factor_resume`가 쓰는 품질 꼬리(`quality_tail`)는 `factor_run`에서 떼어 낸 같은 코드이며 16의 원본 합성 wrapper 31사례를 포함한 89사례 비교가 그대로 통과했다. 재계산 뒤 품질 검사로 들어가는 진입 자체는 C 1980–1982 구조 근거이고 자연 실행에서는 요청 10 뒤 k=0이라 품질이 불리지 않는 경우만 관측했다.
+- 회귀(`bench/oracle/m3_push_loop_rust/regressions.json`, 11명령 모두 종료0): factor 89/978·round 216/14,365·supplier 69·recompute 138/2,958·chain 236단계/5,144필드 재생 비교, 21h `push_lu --block` 재생성·비교, 21e controls·acceptance, py_compile, `cargo test --release --workspace` **144통과·0실패·ignored12**, `cargo clippy --workspace --all-targets -- -D warnings` 0, `git diff --check`.
+- 실행하지 않은 검사: 기존 solver 경로·Python 경계 미변경이라 확장 설치·pytest·Netlib·P3는 제외했다. 독립 검토자는 사용하지 않았다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행 **완료**, 구현 동등성 **계약 범위 통과**. 21e 자연 6사례(arms·retry·interior·adlittle·scsd1·capri)에서 첫 패스 준비부터 루프 종료까지, 수치 결과만 외부 tape으로 받고 제어·후보·실패·지원 표시·승인수·단계·basis·basic·폭·표시·rhs·PInf·factor 판단/호출 순서·재번호·재계산·round가 비트/정확 일치한다.
+- 남은 한계: 수치 backend는 원본 출력 tape(실제 Rust LU 21b–21h를 루프에 설치한 검증은 후속 **M3-04c-24**). 초기화(첫 factor·후보 구성)와 해 설치, 종료 검사·콜백, batch(23), x87, 품질 helper 수치(15a)는 제외. 자연 미관측: factor 반환 1·12·오류, status<-999, attempt0 실패/수치 게이트, 품질 호출·요청 6, 요청 2, 재계산 PInf retry, BTRAN count0/다수, 첫 공급 -1에서 미초기화 승인수. 변이 생존 7종은 위 미관측 경로에 대응한다. `push_loop`은 기존 solver 경로에서 호출하지 않는다.
+- branch `work/m3-04c-22`, worktree `../rsolver-m3-04c-22`, owner `claude-m3-04c22-20261112`. 최종 commit/병합은 main `Merge M3-04c-22` 이력을 따른다. 미커밋 선행 변경 없음.
+- 갱신: `docs/11_progress.md`·`12_roadmap_diagram.md`·`14_sprint_plan.md`(22 완료, 24 등록)·`m3/sprint_design.md`·`handoff/M3.md`. 교훈은 `docs/lessons/tooling.md`(lazy 훅 사건 순서를 canonical 줄로 맞추는 법, 자연 tape 연결 재생에서 변이 생존을 캡처로 분류하는 법).
+- 다음: **M3-04c-24**(실제 Rust 직렬 backend를 `push_loop`에 설치: 21h `crossover_lu`·`crossover_refactor`·FTRAN/BTRAN adapter와 초기화 factor 상태로 tape 없이 같은 6사례 비교) 또는 **M3-04c-23**(batch 조사). 기준 재검사 `python3 tools/push_loop_rust.py --write && cargo test -p rsolver-lp --test push_loop && python3 tools/push_loop_rust.py --compare`.

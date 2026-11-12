@@ -1,0 +1,193 @@
+{
+  "task": "M3-04c-22",
+  "results": [
+    {
+      "name": "pass-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "begin-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "accept-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "defer-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "flip-goes-on",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "btran-always",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "interior 줄18: 태그 원본 select != Rust btran"
+      ]
+    },
+    {
+      "name": "no-clear-request",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "select-support0",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "pivot-no-recompute",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "round-no-recompute",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "round-no-clear",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "no-renumber",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "renumber-no-vstat",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄111 fcall.vstat[2]: 원본 ['11', '-1', '-1'] != Rust ['17', '-1', '-1'] (길이 67/67)"
+      ]
+    },
+    {
+      "name": "renumber-no-leave",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "arms 줄111 fcall.leave2[0]: 원본 ['4'] != Rust ['23'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "renumber-inverse",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "exhausted-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "restart-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected-run",
+      "why": [
+        "error: test failed, to rerun pass `-p rsolver-lp --test push_loop`"
+      ]
+    },
+    {
+      "name": "end-on-empty-skip",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "interior 줄73: 태그 원본 end != Rust pass"
+      ]
+    },
+    {
+      "name": "pinf-not-saved",
+      "file": "crossover_loop.rs",
+      "verdict": "rejected",
+      "why": [
+        "retry 줄41 recompute.pinf[0]: 원본 ['046c95607138d33f'] != Rust ['d02406819543d33f'] (길이 1/1)"
+      ]
+    },
+    {
+      "name": "violations-not-saved",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "request-not-synced",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "period-not-saved",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "updates-stale",
+      "file": "crossover_loop.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "resume-restarts",
+      "file": "crossover_factor.rs",
+      "verdict": "survived",
+      "why": []
+    },
+    {
+      "name": "resume-no-period",
+      "file": "crossover_factor.rs",
+      "verdict": "survived",
+      "why": []
+    }
+  ],
+  "rejected": 18,
+  "total": 25
+}

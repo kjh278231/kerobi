@@ -1,0 +1,19 @@
+{
+  "task": "M3-04c-22",
+  "schema": "M3-04c-22-v1",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "source_captures": "bench/oracle/m3_push_lu_chain/*-1.json(.gz) (21e 정식 run 1, controls·acceptance 선행)",
+  "original_runs_new": 0,
+  "files": {
+    "bench/oracle/m3_push_loop_rust/input.txt": "89ba9738c61ee3c431d17130a63bfc86fe232f831843ef1846b28be28283c0e1",
+    "tools/push_loop_rust.py": "5ae78f606345ac2bc5948783f89f71919912ae8db5ffb532371b0ced31523edb",
+    "crates/lp/src/crossover_loop.rs": "7034082f2fe1e4cfbe855c0b5ad8fad5e79a3dcad44b45ac851867e6e37f7d2b",
+    "crates/lp/src/crossover_factor.rs": "72d6ee506015374b4abca80b2e6a985a6cc21bde24fbf9dd6f2f176eec1e8d38",
+    "crates/lp/tests/push_loop.rs": "c09b38f153baa2a7c9f5e600f9c85be2c3894066ea06bb98dbcc7a3422094b97",
+    "bench/oracle/m3_push_lu_chain/manifest.json": "357174cc9aee8a42c7bc6bb7ff8ff056ccd76422a31c67a30b6f61518c76008f",
+    "bench/oracle/m3_push_loop_rust/compare.txt": "dfaf76f3b02c648760f12a6061355d0738ec07bcccc3387a7c78aa9c17a23814",
+    "bench/oracle/m3_push_loop_rust/self-test.txt": "7d7f5f4893aff9c1e7c936992fa605715484b5c97f18ccebc5eea0afe9ce09f0",
+    "bench/oracle/m3_push_loop_rust/rust-mutations.json": "678da492350f0cd199767b644fe808c1b85976b25e12febcf79974dac956796b",
+    "bench/oracle/m3_push_loop_rust/regressions.json": "18f7c1aeb0794efd6e3fadda478c4e836215d7aa4d65a74649fa6ef610c3940b"
+  }
+}
