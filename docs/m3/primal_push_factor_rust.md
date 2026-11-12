@@ -48,7 +48,7 @@
 - 원본 독립3회 자료를 재사용했다. 새 원본 실행 **0회**. 선행 factor controls(271/104/137/대조0·합성55)·acceptance·self-test41종 종료0, supplier controls/acceptance/self-test31종과 chain check/self-test8종도 종료0. [원본 회귀](../../bench/oracle/m3_push_factor_rust/oracle-regression.json).
 - 새 비교기 `--self-test` **55종 모두 거부**: 빈/누락/순서·요청/종료/상태·주기·호출/별칭·소비량·중복 키. Rust `--mutate-rust` **30종 모두 출력 차이로 거부**: ==와>=·비용>0/5m²·정수합 변환·support·alpha 설치/복원·spike·반환1/12·오류 우선·status 임계/복구·attempt/failure/numeric·재계산·품질 enter/주기/요청/누적/clamp. 전부 cargo 재생 성공 뒤 비교기가 첫 차이를 검출했고, 소스 복구 뒤89입력을 다시 통과했다. [변조](../../bench/oracle/m3_push_factor_rust/self-test.json), [변이](../../bench/oracle/m3_push_factor_rust/mutations.json).
 - `cargo test --release --workspace` **132통과·실패0·기존 ignored12**, `cargo clippy --workspace --all-targets -- -D warnings` 종료0·경고0. 기존 supplier69입력·1,311필드 묶음과 chain236단계·5,144필드 비트 일치(42구간·재분해 뒤 비교 제외6 유지). [명령·로그](../../bench/oracle/m3_push_factor_rust/rust-regression.json).
-- `py_compile`·전체 작업 diff 공백 검사 통과. 작업자가 원본 C/asm·구현·입력 투영·비교기를 직접 검토했다. 독립 검토자는 사용하지 않았다. 기준 결과를 Rust 출력으로 만들거나 원본 캡처/선행 도구를 바꾸지 않았다. 계약 축소 없음.
+- 최종 전체 diff 검사에서 cargo 로그3개의 말미 빈 줄을 정리했고 다시 검사해 통과했다. 원본 캡처·입력·Rust 코드는 그대로다. `py_compile`·전체 작업 diff 공백 검사 통과. 작업자가 원본 C/asm·구현·입력 투영·비교기를 직접 검토했다. 독립 검토자는 사용하지 않았다. 기준 결과를 Rust 출력으로 만들거나 원본 캡처/선행 도구를 바꾸지 않았다. 계약 축소 없음.
 - Python API/기존 solver 경로 미변경으로 확장 설치·pytest·Netlib·P3는 제외했다. 실제 LU/FTRAN·quality 오차/Markowitz·재계산 본문·batch·x87·전체 push/work는 미검증이다. Rust numeric backend용 참조 타입은 이 경계에서 읽는 세 벡터만 표현하며 전체 원본 workspace ABI 재현을 주장하지 않는다.
 
 
