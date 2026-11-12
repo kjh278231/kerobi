@@ -234,7 +234,7 @@ impl FtranState {
 /// Σ of products in the 8-lane order of `2207de`'s R phase (asm 0x120c0e–0x120cb3): below 8 terms (or 8 + peel)
 /// in sequence, else lanes (0,1)(2,3)(4,5)(6,7) over the aligned head combined ((0+2)+(4+6)) + ((1+3)+(5+7)), the
 /// tail after in sequence; `peel` adds the first term to lane 0 first.
-fn eta_dot(terms: &[f64], peel: bool) -> f64 {
+pub(crate) fn eta_dot(terms: &[f64], peel: bool) -> f64 {
     let p = peel as usize;
     if terms.len() < 8 || terms.len() < p + 8 {
         return terms.iter().fold(0.0, |a, &t| a + t);
