@@ -55,8 +55,12 @@
 | retry | 실제 | 지원 BTRAN 4 | `bench/oracle/m3_push_retry/retry.lp`+extra | 정식3회 |
 | interior | 실제 | 지원 BTRAN 1, 요청0 갱신 뒤 eta | `bench/oracle/m3_primal_push_step/interior.lp` | 정식3회 |
 | control | 실제 | Crossover=0, push 사건0 | arms | 정식3회 |
+| adlittle | 실제(Netlib) | U 행 빈 일반 경로 1·U 행 비영 cache 기록 뒤 조밀 Lᵀ 1 | `../re/bench/data/netlib/adlittle.mps.gz`(저장소 밖, 해시 manifest) | 정식3회 + 21a agent 기준선1회 |
+| scsd1 | 실제(Netlib) | U 행 비영 cache 기록 뒤 희소 Lᵀ 1 | `../re/bench/data/netlib/scsd1.mps.gz` | 정식3회 + 기준선1회 |
+| capri | 실제(Netlib) | L level 구조(F+0x140≥0)에서 U 행 빈 2·비영 5, 희소/조밀 Lᵀ | `../re/bench/data/netlib/capri.mps.gz` | 정식3회 + 기준선1회 |
 
-- 도구: `tools/push_btran_{agent.js,capture.js,runs.py,check.py}`(21a agent 복사 + 훅 추가). 자료 `bench/oracle/m3_push_btran/`.
+- 도구: `tools/push_btran_{agent.js,capture.js,runs.py,check.py}`(21a agent 복사 + 훅 추가). 자료 `bench/oracle/m3_push_btran/`. Netlib 캡처·기준선은 크기 때문에 결정적 gzip(`mtime=0`)으로 저장한다.
+- **탐색 뒤 계약 변경(정식 캡처 전).** (1) 첫 탐색(`history/explore/`)에서 선행 자연 22호출이 모두 한 경로(U 행 빈 → 일반 희소 Uᵀ 출력 count1 → eta0 → 희소 Lᵀ)였다. 계약 분기(cache 기록·강제 Uᵀ·조밀 Lᵀ)를 실제 실행으로 얻으려고 경량 조사 훅 `tools/push_btran_survey{,_agent}.js`로 Netlib 소형 45모델(`history/survey-netlib45.json.gz`)과 중형 9모델(`survey-netlib-mid32.json.gz`, ship04l에서 size-limited 라이선스 오류로 중단)을 풀었다. 54모델 401호출에서 U 행 비영·cache 기록·커널 출력 count≥2·조밀 Lᵀ·level 구조는 나왔고 **eta>0·조밀 Uᵀ(커널 미호출)·커널 출력0·입력 count≥2는 0회**였다. 조사 자료의 모델 귀속은 stdout 줄과 Frida 메시지의 도착 순서에 의존해 근사다(stocfor1 2회로 집계됐으나 단독 실행 0회). (2) 전체 agent로 6모델을 1회씩 탐색(`history/explore2/`)해 adlittle·scsd1·capri를 정식 사례로 골랐다(recipe·share2b는 같은 분기를 더 큰 자료로 반복). Netlib은 선행21a 저장 캡처가 없으므로 **21a agent로 기준선 1회를 따로 캡처**해 비간섭 투영 기준으로 쓴다. (3) level 배열을 C:620–624(`F+0x130[행]`·`F+0x138[레벨]`, bucket `F+0x1a8[m..m+F140]`)로 확인해 `F+0x138` 길이를 F140+1로 하고 bucket을 기록 필드로 더했다. bucket 변화는 level Lᵀ 실행의 기록 증거이고 판정 규칙이 아니다. (4) 규칙2에 L 행 방향=L 열 방향의 전치(원소·값 비트)와 level 범위, 규칙1에 wrapper 입력=본체 입력, 규칙3에 U 행 빈 경우 F1d8 불변을 명시했다. 커널 출력0은 cache 여부와 관계없이 즉시 반환한다(C:1209–1211)는 점을 규칙3·5에 반영했다. 판정 규칙의 기존 문구는 바꾸지 않았다.
 - 미관측 분기는 사건 수와 함께 표로 남기고 통과로 세지 않는다.
 
 ## 5. 재실행 명령
