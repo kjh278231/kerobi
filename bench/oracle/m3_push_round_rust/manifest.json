@@ -1,0 +1,28 @@
+{
+  "task": "M3-04c-20",
+  "baseline": "55e09d6",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "oracle_manifest_sha256": "ca0e6083ec572a9b7abaeea031b44dce9f850b53372504a514896845130b2802",
+  "files": {
+    "crates/lp/src/crossover_round.rs": "8ad247ac43664911b7e67fc5af4df483b4ee6a79c46132ce758479f5228453f3",
+    "crates/lp/src/lib.rs": "9718725a6629d24fb3c39626d94a303557c478f9a18129717bfe9ad1948ca223",
+    "crates/lp/tests/push_round.rs": "a9f2f684065ea15da9cf18f6f8669444b28acd39690f5b98c8125511641a6c51",
+    "tools/push_round_rust.py": "e1aec765f956924e0f14333ed471342866457bc0246d8245fcf22c9a93c32591",
+    "tools/push_recompute_rust.py": "9acbb9942e8107c0e9d880edcfaf9f69afef0835f0d7cceb08e45123a5d3e306",
+    "bench/oracle/m3_push_round/manifest.json": "ca0e6083ec572a9b7abaeea031b44dce9f850b53372504a514896845130b2802",
+    "bench/oracle/m3_push_round_rust/baseline.json": "471e1c1f738be8d14c963a9c38b0bd40771ee8ca4e94d681d790284a87509848",
+    "bench/oracle/m3_push_round_rust/clippy.log": "ec86f64c6b1f9c96b86fb4cf670077f99445d236e1596b812070fd9ebc71fcbb",
+    "bench/oracle/m3_push_round_rust/comparison.json": "62800b366f2a971e8d622b6a18eca081af348d29b784ab9ac7de351665e24fe6",
+    "bench/oracle/m3_push_round_rust/environment.json": "06bc9c4bd8a8655ad946a9c4edd53ab3a6df4f875fb603e913aec5f5f71bffd4",
+    "bench/oracle/m3_push_round_rust/history/first-clear/crossover_round.rs": "01db71cb6a1a31343d27fd27b37c97152fc6f37c1782db3b92b96e80ca04c24c",
+    "bench/oracle/m3_push_round_rust/history/first-clear/push_round_rust.py": "07c01d9347373f116616b5c40c94c6110866994972ef2cf72b8d5a947ffc3da4",
+    "bench/oracle/m3_push_round_rust/history/first-clear/trace.txt": "9b3a3eaab328e1229286c2edf7139c02703ebfd580c2305ce2baf2a05ba2978c",
+    "bench/oracle/m3_push_round_rust/input.txt": "301585c70dcf2b632ea678ce0b45ffbaa3477aaf98ce80ebb705301590f49b10",
+    "bench/oracle/m3_push_round_rust/regressions.json": "abad80ee32cbd000beb243e2d918a4bb311cacfa6fca2c01a2d80789a4d1397d",
+    "bench/oracle/m3_push_round_rust/rust-mutations.json": "6e32c2941bf76b5cd76292e912c9db450e9f5a942da6014888aa8dac4cd18522",
+    "bench/oracle/m3_push_round_rust/self-test.json": "f7da66fd16c1163616fae81a90d2261c641953dc637292220eb0dfbf0d22d75f",
+    "bench/oracle/m3_push_round_rust/trace.txt": "8e3dc6a030fdb5f263473192b34391421d8a23e486d5e6f3ff321f13b492067b",
+    "bench/oracle/m3_push_round_rust/workspace.json": "319c18727af8b54ed7e273df35bd11bf2aaf243b9f708d2ea09f48a017bb2682",
+    "bench/oracle/m3_push_round_rust/workspace.log": "bd49cf8cf2783f2be78a0f5d9bb58d87c380357d44e93ded0eb8d2ed6b3ab7c2"
+  }
+}

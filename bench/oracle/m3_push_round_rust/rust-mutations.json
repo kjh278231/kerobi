@@ -1,0 +1,197 @@
+[
+  {
+    "name": "begin-nonzero",
+    "result": "rejected",
+    "first_difference": "arms/1/begin_accept.approved: 기준=1, 실제=2"
+  },
+  {
+    "name": "accepted-double",
+    "result": "rejected",
+    "first_difference": "arms/1/begin_accept.approved: 기준=1, 실제=2"
+  },
+  {
+    "name": "defer-wrong-column",
+    "result": "rejected",
+    "first_difference": "arms/28/defer.candidates[0]: 기준=9, 실제=0"
+  },
+  {
+    "name": "defer-no-increment",
+    "result": "rejected",
+    "first_difference": "arms/28/defer.failures[9]: 기준=1, 실제=0"
+  },
+  {
+    "name": "defer-double-increment",
+    "result": "rejected",
+    "first_difference": "arms/28/defer.failures[9]: 기준=1, 실제=2"
+  },
+  {
+    "name": "defer-no-prefix-advance",
+    "result": "rejected",
+    "first_difference": "arms/28/defer.deferred: 기준=1, 실제=0"
+  },
+  {
+    "name": "compact-no-copy",
+    "result": "rejected",
+    "first_difference": "synthetic/pass-0.candidates[2]: 기준=8, 실제=7"
+  },
+  {
+    "name": "compact-keep-length",
+    "result": "rejected",
+    "first_difference": "arms/33/exhausted.total: 기준=6, 실제=23"
+  },
+  {
+    "name": "compact-reverse",
+    "result": "rejected",
+    "first_difference": "arms/0/pass.candidates[0]: 기준=21, 실제=13"
+  },
+  {
+    "name": "compact-deduplicate",
+    "result": "rejected",
+    "first_difference": "arms/0/pass.candidates[0]: 기준=21, 실제=0"
+  },
+  {
+    "name": "compact-failure-reset",
+    "result": "rejected",
+    "first_difference": "arms/33/exhausted.failures[9]: 기준=1, 실제=0"
+  },
+  {
+    "name": "compact-stat-reset",
+    "result": "rejected",
+    "first_difference": "arms/33/exhausted.count_sum: 기준='0000000000003440', 실제='0000000000000000'"
+  },
+  {
+    "name": "pass-no-mark-clear",
+    "result": "rejected",
+    "first_difference": "arms/0/pass.marks: type mismatch"
+  },
+  {
+    "name": "pass-clear-support0",
+    "result": "rejected",
+    "first_difference": "interior/95/pass.marks[0]: 기준=1, 실제=0"
+  },
+  {
+    "name": "all-deferred-ends-supported",
+    "result": "rejected",
+    "first_difference": "arms/55/gate.support: 기준=0, 실제=1"
+  },
+  {
+    "name": "empty-does-not-end",
+    "result": "rejected",
+    "first_difference": "synthetic/empty-1.support: 기준=1, 실제=0"
+  },
+  {
+    "name": "all-deferred-keep-support",
+    "result": "rejected",
+    "first_difference": "arms/55/gate.support: 기준=0, 실제=1"
+  },
+  {
+    "name": "sqrt-equality-release",
+    "result": "rejected",
+    "first_difference": "arms/49/support.marks[7]: 기준=0, 실제=1"
+  },
+  {
+    "name": "sqrt-omitted",
+    "result": "rejected",
+    "first_difference": "arms/32/support.marks[1]: 기준=0, 실제=1"
+  },
+  {
+    "name": "support-no-clear",
+    "result": "rejected",
+    "first_difference": "arms/32/support.marks[1]: 기준=0, 실제=1"
+  },
+  {
+    "name": "restart-request6",
+    "result": "rejected",
+    "first_difference": "arms/33/exhausted.request: 기준=10, 실제=6"
+  },
+  {
+    "name": "btran-skip",
+    "result": "rejected",
+    "first_difference": "arms/2/btran.marks[13]: 기준=1, 실제=0"
+  },
+  {
+    "name": "btran-wrong-unit",
+    "result": "rejected",
+    "first_difference": "arms/2/btran.calls[0].input.values[0]: 기준='000000000000f03f', 실제='000000000000f0bf'"
+  },
+  {
+    "name": "btran-overwrite-union",
+    "result": "rejected",
+    "first_difference": "arms/4/btran.marks[13]: 기준=1, 실제=0"
+  },
+  {
+    "name": "btran-ignore-zero-value",
+    "result": "rejected",
+    "first_difference": "synthetic/sparse-2.marks[1]: 기준=1, 실제=0"
+  },
+  {
+    "name": "btran-no-mark",
+    "result": "rejected",
+    "first_difference": "arms/2/btran.marks[13]: 기준=1, 실제=0"
+  },
+  {
+    "name": "dense-support0",
+    "result": "rejected",
+    "first_difference": "synthetic/dense-a3.support: 기준=-1, 실제=0"
+  },
+  {
+    "name": "dense-no-clear",
+    "result": "rejected",
+    "first_difference": "synthetic/dense-a0.marks[0]: 기준=0, 실제=1"
+  },
+  {
+    "name": "dense-empty-factor",
+    "result": "rejected",
+    "first_difference": "synthetic/dense-empty.request: 기준=0, 실제=10"
+  },
+  {
+    "name": "factor-no-repeat",
+    "result": "rejected",
+    "first_difference": "synthetic/repeat1.calls.length: 기준=2, 실제=1"
+  },
+  {
+    "name": "return12-as-error",
+    "result": "rejected",
+    "first_difference": "synthetic/return12.retry: 기준=1, 실제=0"
+  },
+  {
+    "name": "status-boundary",
+    "result": "rejected",
+    "first_difference": "synthetic/status-999.status: 기준=-999, 실제=1"
+  },
+  {
+    "name": "status-restored0",
+    "result": "rejected",
+    "first_difference": "synthetic/status-1000.status: 기준=1, 실제=0"
+  },
+  {
+    "name": "ignore-attempt",
+    "result": "rejected",
+    "first_difference": "synthetic/failure-attempt1.retry: 기준=0, 실제=1"
+  },
+  {
+    "name": "ignore-failure",
+    "result": "rejected",
+    "first_difference": "synthetic/failure-attempt0.retry: 기준=1, 실제=0"
+  },
+  {
+    "name": "numeric-strict",
+    "result": "rejected",
+    "first_difference": "synthetic/backend-numeric.retry: 기준=1, 실제=0"
+  },
+  {
+    "name": "clear-request-early",
+    "result": "rejected",
+    "first_difference": "arms/34/wrapper.request: 기준=10, 실제=0"
+  },
+  {
+    "name": "clear-no-request",
+    "result": "rejected",
+    "first_difference": "arms/36/clear.request: 기준=0, 실제=10"
+  },
+  {
+    "name": "clear-approved-lost",
+    "result": "rejected",
+    "first_difference": "interior/109/clear.approved: type mismatch"
+  }
+]

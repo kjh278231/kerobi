@@ -1,0 +1,134 @@
+[
+  {
+    "command": [
+      "python3",
+      "tools/push_recompute_check.py",
+      "--controls",
+      "--acceptance",
+      "--self-test"
+    ],
+    "returncode": 0,
+    "output": "{\"controls\": {\"arms\": 283, \"retry\": 112, \"interior\": 149, \"control\": 0, \"synthetic\": 120}, \"acceptance\": {\"round\": 7, \"rows\": 119, \"mark_N\": 89, \"mark_L\": 21, \"mark_U\": 3, \"mark_A\": 2, \"mark_B\": 4, \"pivot\": 1, \"synthetic\": 120, \"synthetic_rows\": 152, \"synthetic_retry\": 2, \"synthetic_mark_B\": 46, \"synthetic_mark_L\": 16, \"synthetic_mark_N\": 36, \"synthetic_mark_U\": 14, \"synthetic_mark_A\": 18, \"synthetic_mark_X\": 14, \"synthetic_mark_F\": 8}, \"self_test\": {\"rejected\": 82}}\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_factor_check.py",
+      "--controls",
+      "--acceptance",
+      "--self-test"
+    ],
+    "returncode": 0,
+    "output": "{\"controls\": {\"arms\": 271, \"retry\": 104, \"interior\": 137, \"control\": 0, \"synthetic\": 55}}\n{\"acceptance\": {\"factor\": 16, \"select\": 28, \"skip\": 22, \"selected_call\": 6, \"wrapper\": 6, \"restored\": 6, \"synthetic_select\": 24, \"synthetic_wrapper\": 31}}\n{\"self_test\": {\"rejected\": 41, \"names\": [\"binary-zero\", \"model-zero\", \"tool-zero\", \"agent-zero\", \"manifest-binary-zero\", \"manifest-empty-inputs\", \"empty-events\", \"target-zero\", \"independent-difference\", \"null-null\", \"preserve-6.request\", \"limit-11.request\", \"limit-10.request\", \"cost-0.request\", \"cost-1.request\", \"skip-1.call\", \"sum-convert.preserved\", \"repeat-two.alpha_restored\", \"return12.retry\", \"error7.exit\", \"error-precedes-status.status\", \"status--999.retry\", \"status--1000.status\", \"failure-attempt-1.retry\", \"numeric-13-attempt-0.retry\", \"request-recompute.exit\", \"nonzero-clamp100.period\", \"zero-updates-period100.period\", \"quality-increment-5.period\", \"quality-request6.period\", \"quality-status12.status\", \"normal.spike_restored\", \"normal.contents_preserved\", \"min-q-term-19.request\", \"min-q-term-20.request\", \"repeat-call-order\", \"natural-alpha-restore\", \"natural-factorctl:restored.status\", \"natural-factorctl:call.attempt\", \"natural-factorctl:call.numeric_limit\", \"quality-enter\"]}}\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_supplier_check.py",
+      "--controls",
+      "--acceptance",
+      "--self-test"
+    ],
+    "returncode": 2,
+    "output": "usage: push_supplier_check.py [-h]\n                              (--controls | --acceptance | --self-test | --write-manifest)\n                              [--output OUTPUT]\npush_supplier_check.py: error: argument --acceptance: not allowed with argument --controls\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_supplier_check.py",
+      "--controls"
+    ],
+    "returncode": 0,
+    "output": "{\n \"arms\": 237,\n \"retry\": 96,\n \"interior\": 105,\n \"control\": 0\n}\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_supplier_check.py",
+      "--acceptance"
+    ],
+    "returncode": 0,
+    "output": "{\n \"natural\": {\n  \"calls\": 51,\n  \"support-positive\": 39,\n  \"support-negative\": 0,\n  \"failure-two\": 2,\n  \"success\": 42,\n  \"structural\": 40,\n  \"sparse\": 33,\n  \"slack\": 2,\n  \"skip-conflict\": 13,\n  \"skip-structural\": 14,\n  \"exhausted\": 9,\n  \"support-zero\": 12,\n  \"skip-failure\": 1,\n  \"dense\": 9\n },\n \"synthetic\": {\n  \"calls\": 18,\n  \"support-zero\": 14,\n  \"support-negative\": 1,\n  \"failure-two\": 1,\n  \"success\": 14,\n  \"structural\": 12,\n  \"sparse\": 10,\n  \"slack\": 2,\n  \"support-positive\": 4,\n  \"skip-conflict\": 4,\n  \"skip-structural\": 6,\n  \"skip-slack\": 2,\n  \"skip-failure\": 4,\n  \"exhausted\": 4,\n  \"dense\": 4\n },\n \"cases\": {\n  \"arms\": {\n   \"calls\": 29,\n   \"support-positive\": 28,\n   \"support-negative\": 0,\n   \"failure-two\": 1,\n   \"success\": 25,\n   \"structural\": 23,\n   \"sparse\": 25,\n   \"slack\": 2,\n   \"skip-conflict\": 5,\n   \"skip-structural\": 6,\n   \"exhausted\": 4,\n   \"support-zero\": 1,\n   \"skip-failure\": 1\n  },\n  \"retry\": {\n   \"calls\": 11,\n   \"support-positive\": 9,\n   \"support-negative\": 0,\n   \"failure-two\": 1,\n   \"success\": 8,\n   \"structural\": 8,\n   \"sparse\": 8,\n   \"exhausted\": 3,\n   \"support-zero\": 2\n  },\n  \"interior\": {\n   \"calls\": 11,\n   \"support-positive\": 2,\n   \"support-negative\": 0,\n   \"failure-two\": 0,\n   \"success\": 9,\n   \"structural\": 9,\n   \"dense\": 9,\n   \"skip-conflict\": 8,\n   \"skip-structural\": 8,\n   \"exhausted\": 2,\n   \"support-zero\": 9\n  },\n  \"control\": {}\n }\n}\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_supplier_check.py",
+      "--self-test"
+    ],
+    "returncode": 0,
+    "output": "{\n \"rejected\": [\n  {\n   \"name\": \"binary-zero\",\n   \"first_difference\": \"arms-1.binary_sha256: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'\"\n  },\n  {\n   \"name\": \"model-zero\",\n   \"first_difference\": \"arms-1.model_sha256: 기준='b05832f67ae340637551cda5cd191013c3f65f5cef190a0cc5a8c058070d9683', 실제='0000000000000000000000000000000000000000000000000000000000000000'\"\n  },\n  {\n   \"name\": \"tool-zero\",\n   \"first_difference\": \"arms-1.tool_sha256: 기준='0a93dfbe43563c361800b2c72bbde8609f8778710193dbe14363d0bc01a60fb7', 실제='0000000000000000000000000000000000000000000000000000000000000000'\"\n  },\n  {\n   \"name\": \"agent-zero\",\n   \"first_difference\": \"arms-1.agent_sha256: 기준='9369c0c1b55a3efab8877e4c6b68cf9bd7fdd28422c34ff83f2f2afbc3c9b329', 실제='0000000000000000000000000000000000000000000000000000000000000000'\"\n  },\n  {\n   \"name\": \"events-empty\",\n   \"first_difference\": \"arms: 목표 사건0회\"\n  },\n  {\n   \"name\": \"target-zero\",\n   \"first_difference\": \"arms: 목표 사건0회\"\n  },\n  {\n   \"name\": \"run-difference\",\n   \"first_difference\": \"arms-2.repeat.events: 길이 기준=237, 실제=236\"\n  },\n  {\n   \"name\": \"projection-difference\",\n   \"first_difference\": \"arms-1.noninterference.events[186].ret: 기준=0, 실제=9\"\n  },\n  {\n   \"name\": \"null-context\",\n   \"first_difference\": \"arms-1.supply[0]: 필수 문맥 누락\"\n  },\n  {\n   \"name\": \"null-alpha\",\n   \"first_difference\": \"arms-1.supply[0].alpha: 필수 벡터 누락\"\n  },\n  {\n   \"name\": \"candidate-ret\",\n   \"first_difference\": \"arms-1.supply[0].ret: 기준=21, 실제=3\"\n  },\n  {\n   \"name\": \"cursor\",\n   \"first_difference\": \"arms-1.supply[0].after.position: 기준=1, 실제=0\"\n  },\n  {\n   \"name\": \"deferred\",\n   \"first_difference\": \"arms-1.supply[0].after.deferred: 기준=0, 실제=1\"\n  },\n  {\n   \"name\": \"failures\",\n   \"first_difference\": \"arms-1.supply[0].after.failures[0]: 기준=0, 실제=7\"\n  },\n  {\n   \"name\": \"marks\",\n   \"first_difference\": \"arms-1.supply[0].after.support_marks[0]: 기준=0, 실제=1\"\n  },\n  {\n   \"name\": \"success-counter\",\n   \"first_difference\": \"arms-1.supply[0].after.successes: 기준=1, 실제=0\"\n  },\n  {\n   \"name\": \"count-sum\",\n   \"first_difference\": \"arms-1.supply[0].after.count_sum: 기준='000000000000f03f', 실제='0000000000c05840'\"\n  },\n  {\n   \"name\": \"output-alias\",\n   \"first_difference\": \"arms-1.supply[0].output_is_s210: 기준=True, 실제=False\"\n  },\n  {\n   \"name\": \"ftran-spike-alias\",\n   \"first_difference\": \"arms-1.supply[0].FTRAN aliases.spike_null: 기준=True, 실제=False\"\n  },\n  {\n   \"name\": \"ftran-column\",\n   \"first_difference\": \"arms-1.supply[0].FTRAN original column.values[0]: 기준='000000000000f03f', 실제='0000000000001040'\"\n  },\n  {\n   \"name\": \"raw-null\",\n   \"first_difference\": \"arms-1.supply[0].raw: 필수 벡터 누락\"\n  },\n  {\n   \"name\": \"raw-value\",\n   \"first_difference\": \"arms-1.supply[0].alpha compression/order.values[0]: 기준='0000000000001040', 실제='000000000000f03f'\"\n  },\n  {\n   \"name\": \"dense-keeps-equal-tol\",\n   \"first_difference\": \"synthetic-1.dense-boundaries.alpha compression/order.indices[0]: 기준=3, 실제=0\"\n  },\n  {\n   \"name\": \"dense-order\",\n   \"first_difference\": \"synthetic-1.dense-boundaries.alpha compression/order.indices[0]: 기준=3, 실제=8\"\n  },\n  {\n   \"name\": \"dense-count-stat\",\n   \"first_difference\": \"synthetic-1.dense-boundaries.after.count_sum: 기준='0000000000001940', 실제='0000000000802840'\"\n  },\n  {\n   \"name\": \"sparse-order\",\n   \"first_difference\": \"synthetic-1.structural-sparse.alpha compression/order.indices[0]: 기준=8, 실제=3\"\n  },\n  {\n   \"name\": \"negative-support-not-normalized\",\n   \"first_difference\": \"synthetic-1.negative-support.after.support: 기준=0, 실제=-1\"\n  },\n  {\n   \"name\": \"skip-failure-increments\",\n   \"first_difference\": \"synthetic-1.failure-three.after.failures[0]: 기준=3, 실제=4\"\n  },\n  {\n   \"name\": \"deferred-prefix-order\",\n   \"first_difference\": \"synthetic-1.prefix-preserved.after.candidates[0]: 기준=2, 실제=0\"\n  },\n  {\n   \"name\": \"exhausted-null-null\",\n   \"first_difference\": \"synthetic-1.all-failure: 필수 문맥 누락\"\n  },\n  {\n   \"name\": \"synthetic-only\",\n   \"first_difference\": \"arms: 자연 실행 필수\"\n  }\n ]\n}\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_chain_oracle.py",
+      "--check"
+    ],
+    "returncode": 0,
+    "output": "{\"shift-primal\": {\"lb-enter\": 16, \"lb-leave-shift\": 3, \"v-then-f\": 0, \"free-flip\": 1, \"f-row-loop\": 1}, \"shift-dual\": {\"lb-enter\": 15, \"lb-leave-shift\": 3, \"v-then-f\": 0, \"free-flip\": 1, \"f-row-loop\": 1}, \"resolve-primal\": {\"lb-enter\": 0, \"lb-leave-shift\": 0, \"v-then-f\": 1, \"free-flip\": 0, \"f-row-loop\": 0}, \"resolve-dual\": {\"lb-enter\": 0, \"lb-leave-shift\": 0, \"v-then-f\": 1, \"free-flip\": 0, \"f-row-loop\": 0}}\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_chain_oracle.py",
+      "--self-test"
+    ],
+    "returncode": 0,
+    "output": "{\"rejected\": [\"binary-zero\", \"events-empty\", \"lb-zero\", \"v-then-f-zero\", \"run-differs\", \"tool-sha\", \"model-sha\", \"x87\"]}\n"
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "rsolver-lp",
+      "--test",
+      "push_recompute",
+      "--test",
+      "push_factor",
+      "--test",
+      "push_supplier",
+      "--test",
+      "push_chain"
+    ],
+    "returncode": 0,
+    "output": "   Compiling rsolver-lp v0.1.0 (/home/coco0912/Workspace/rsolver-m3-04c-20/crates/lp)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.33s\n     Running tests/push_chain.rs (target/debug/deps/push_chain-5830d4edfb45a3bd)\n\nrunning 1 test\ntest chain_trace ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s\n\n     Running tests/push_factor.rs (target/debug/deps/push_factor-33926617c0f3f768)\n\nrunning 1 test\ntest factor_trace ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/push_recompute.rs (target/debug/deps/push_recompute-b9dfe2aea644493a)\n\nrunning 1 test\ntest recompute_trace ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/push_supplier.rs (target/debug/deps/push_supplier-b89b0d9dae244d86)\n\nrunning 1 test\ntest supplier_trace ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_recompute_rust.py",
+      "--compare"
+    ],
+    "returncode": 0,
+    "output": "{\"cases\": 138, \"fields\": 2958, \"rule\": \"ordered typed exact; f64 little-endian bits incl signed zero\", \"natural\": 8, \"synthetic\": 130, \"rows\": 289, \"sites\": {\"round\": 72, \"pivot\": 66}}\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_factor_rust.py",
+      "--compare"
+    ],
+    "returncode": 0,
+    "output": "{\"cases\": 89, \"fields\": 978, \"natural_select\": 28, \"natural_wrapper\": 6, \"synthetic_select\": 24, \"synthetic_wrapper\": 31, \"rule\": \"ordered typed exact fields; pointer aliases; sentinel f64 bits\"}\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_supplier_rust.py",
+      "--compare"
+    ],
+    "returncode": 0,
+    "output": "{\n \"cases\": 69,\n \"fields\": 1311,\n \"natural\": 51,\n \"synthetic\": 18,\n \"success\": 56,\n \"exhausted\": 13,\n \"rule\": \"ordered integers / f64 LE hex exact incl signed zero\"\n}\n"
+  },
+  {
+    "command": [
+      "python3",
+      "tools/push_step_chain_rust.py",
+      "--compare"
+    ],
+    "returncode": 0,
+    "output": "{\"steps\": 236, \"fields\": 5144, \"tally\": {\"flip\": 70, \"pivot\": 148, \"defer\": 18, \"recall\": 20, \"violated\": 80}, \"segments\": 42, \"refactor_skip\": 6, \"first_leave_input\": 42}\n"
+  }
+]
