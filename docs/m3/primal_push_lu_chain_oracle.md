@@ -59,6 +59,7 @@
 
 - 도구: `tools/push_lu_{agent.js,capture.js,runs.py,check.py}`(21c agent 복사 + 훅 추가). 자료 `bench/oracle/m3_push_lu_chain/`. Netlib은 결정적 gzip.
 - 미관측 분기는 사건 수와 함께 표로 남기고 통과로 세지 않는다.
+- **탐색 뒤 계약 변경(정식 캡처 전).** (1) 첫 탐색(interior 1회, `history/explore-fail1/`)은 push 초기화의 첫 `05b257` 호출(caller `0x1c07c6`, 요청10)에서 factor 배열이 아직 없어(L 시작 배열 미초기화, 순열 null) 읽기가 실패했다. 재분해는 옛 factor 수치를 읽지 않으므로(C:1336–1455, `036ade`가 F+0x20 배열을 새로 씀) **`lu:enter`의 factor 전체는 요청0일 때만** 저장하고, 요청≠0이면 header·spike count·vstat·스칼라만 저장한다. `lu:refactor`의 순열은 null이면 null로 기록한다. 규칙3은 요청≠0 진입을 연결 비교에서 건너뛰고 반환부터 다시 잇는다. (2) 규칙3의 비교에서 L 행 방향의 level bucket(`F+0x1a8[m..]`)은 factor가 아니라 FTRAN 레벨 L·BTRAN 레벨 Lᵀ가 같이 쓰는 scratch라(21a §2, 21c C:620–624) 제외하고 변화 수만 센다. FTRAN 스냅숏(21a `factorState`)에 없는 스칼라 x140·x1e0은 공통 키만 비교한다. (3) 기대 호출 수를 탐색에서 고정했다: push 안 `05b257` arms4·retry3·interior9·adlittle14·scsd1 2·capri23(선행 집계 arms4·retry3·interior9와 일치). 판정 규칙의 기존 문구는 바꾸지 않았다. 탐색 7사례 모두 새 사건을 빼면 21c 정식 캡처와 JSON 전체가 같았다.
 
 ## 5. 재실행 명령
 
