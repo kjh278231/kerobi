@@ -10,6 +10,7 @@
 
 ## Frida 훅
 
+- **기존 agent의 gate된 훅 주소에 호출자 구분 없는 사건을 더할 때는 같은 `Interceptor.attach` 안에서 gate 앞에 내보내고, `active`를 읽는 공용 `emit` 대신 null 안전 `send`를 쓴다.** push 밖 `036ade` 호출에서는 `active`가 null이다. 새 사건만 뺀 사건열이 기준 캡처와 JSON 전체 같으면 비간섭이고, 이 경계는 한 회 약 4초라 7사례 × 3회가 2분 안에 끝난다. (M3-04c-21h, [§6](../m3/primal_push_block_rust.md#6-실행-결과))
 - **함수 중간의 합성 진입은 stack뿐 아니라 caller의 live register도 입력이다.** `134a87@0x1c1ff8`의 support0은 edx=후보총수를 그대로 사용한다. entry주소를rdx로 넘긴 trampoline은 total2/2/4 재현 실패를 냈다. 실패3회를 보존하고 edx=P.total을 준비한 뒤 원본3회가 일치했다. 초기화 전 승인수 슬롯·support 표시도 유효 시점 이후에만 기록한다. asm·캡처. (M3-04c-19, [실패 보존](../m3/primal_push_round_oracle.md#실패-보존과-보정))
 
 - **경계 양쪽 자료를 함께 변조해 caller 연결 검사의 누락을 찾는다.** BTRAN prepare/enter의 leave·unit row, prepare/applied의 요청, 기존 support marks를 서로 맞춰 바꾸면 단독 helper 재생과3회 일치를 모두 통과했다. 직전 applied→BTRAN→다음 공급자 P/factor 입력을 연결해 초기 생존3종을 거부했다. 파일 해시 검사만으로 동작 연결의 판별력을 대신하지 않는다. 캡처·변조검사. (M3-04c-19, [독립검토](../../bench/oracle/m3_push_round/review/review.md))

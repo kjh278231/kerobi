@@ -1,0 +1,117 @@
+[
+  {
+    "name": "block-phase-skipped",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.perm.x20[140]: 원본 218 != Rust 149"
+  },
+  {
+    "name": "x4e0-not-counted",
+    "result": "rejected",
+    "first": "3개 연산 불일치: 첫 capri#2 G.block.leave.x4e0: 원본 1 != Rust 0"
+  },
+  {
+    "name": "run-threshold-50-65",
+    "result": "rejected",
+    "first": "3개 연산 불일치: 첫 capri#2 G.block.leave.x4e0: 원본 1 != Rust 0"
+  },
+  {
+    "name": "run-threshold-50-49",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "table-size-2active",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "A-skipped",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "A-pivot-row-reversed",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "A-accept-0",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "A-value-swap",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "B-skipped",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.perm.x20[140]: 원본 218 != Rust 149"
+  },
+  {
+    "name": "B-pivot-col-reversed",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.perm.x28[140]: 원본 152 != Rust 206"
+  },
+  {
+    "name": "B-key-order-reversed",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.perm.x20[140]: 원본 218 != Rust 217"
+  },
+  {
+    "name": "B-accept-0",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "B-accept-huge",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.perm.x20[140]: 원본 218 != Rust 149"
+  },
+  {
+    "name": "B-U-merge-reversed",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.factor.U.row[141].cols[0]: 원본 249 != Rust 233"
+  },
+  {
+    "name": "B-U-no-drop",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "B-other-col-last-dropped",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.factor.U.col[141].vals[0]: 원본 '000000000000e03f' != Rust '0000000000000000'"
+  },
+  {
+    "name": "B-col-singletons-skipped",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.perm.x20[143]: 원본 149 != Rust 262"
+  },
+  {
+    "name": "pairs-fifo",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "update-threshold-20-19",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "settle-reversed",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "xe4-after-blocks",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.factor.L.beg[145]: 원본 292 != Rust 291"
+  },
+  {
+    "name": "block-L-generic",
+    "result": "rejected",
+    "first": "2개 연산 불일치: 첫 capri#813 G.factor.L.beg[141]: 원본 290 != Rust 289"
+  }
+]

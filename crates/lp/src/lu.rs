@@ -8,6 +8,9 @@ use crate::spx::Spx;
 /// Drop tolerance (GURO_PAR_ZERO, spx+0x3a8 / LU+0x10).
 pub const ZERO: f64 = 1e-13;
 
+/// (index, value) entries in storage order.
+type Sparse = Vec<(usize, f64)>;
+
 pub struct Lu {
     /// Pivot steps in factor order: (row, basis position, diagonal). FT updates replace the diagonal in place.
     pub steps: Vec<(usize, usize, f64)>,
@@ -60,7 +63,7 @@ pub struct Lu {
     /// L DAG level of each step (LU+0x118) and the deepest level LU+0x128 (−1 without levels), `036ade` C:5764–5830.
     llev: Option<Vec<usize>>,
     lmax: i64,
-    /// L entries in the columns of steps ≥ `n_singleton` (LU+0xe4): `21b9de`'s path test reads it.
+    /// L entries in the columns of steps ≥ `s4` (LU+0xe4): `21b9de`'s path test reads it.
     ltail: usize,
     /// U has off-diagonals (Markowitz part or updates): BTRAN leaves the iteration-0 emulation.
     general: bool,
@@ -71,6 +74,11 @@ pub struct Lu {
     /// `1da0b2` leaves it, C:1514–1532).
     s1: usize,
     s3: usize,
+    /// LU+0xe4: steps before the 2×2 block phase when it ran (`local_88`, C:1512–1520), else `n_singleton`.
+    s4: usize,
+    /// L column (row, l) and U row (position, u) of each step the 2×2 block phase took (steps s4..n_singleton), in
+    /// the original's storage order.
+    blk: Vec<(Sparse, Sparse)>,
     /// U rows of the kernel steps by step: (position, u), moved into `ucol` after the factor.
     kernel_u: Vec<Vec<(usize, f64)>>,
     /// Singular factor: (position, row) pairs of the empty columns and rows in discovery order (tail steps m−1,
@@ -102,6 +110,77 @@ pub struct LuParts<'a> {
     pub n_singleton: usize,
     pub s1: usize,
     pub s3: usize,
+    pub s4: usize,
+}
+
+/// The `1da0b2` 2×2 block phase state on the simplex struct: S+0x2c0 (refactor count, raised by `05b257` C:1399
+/// before the call), S+0x4e0 (runs of the phase) and S+0x4e4 (LU2X2BLOCK: −1 off, 2e9 always, else the runs that
+/// pivoted 20 or more steps; `02f7e1` C:270–281, `1da0b2` C:1494–1510).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BlockState {
+    pub x2c0: i32,
+    pub x4e0: i32,
+    pub x4e4: i32,
+}
+
+impl BlockState {
+    /// The phase switched off (what the M1 simplex path factors with).
+    pub const OFF: BlockState = BlockState { x2c0: 0, x4e0: 0, x4e4: -1 };
+}
+
+/// `76fa2`: the smallest 6k±1 number ≥ p that passes its trial division (a prime for the sizes used here).
+fn next_prime(p: i32) -> i32 {
+    let test = |x: i32| -> bool {
+        if (x / 3) * 3 == x {
+            return false;
+        }
+        let s = (x as f64).sqrt() as i32;
+        let mut i2 = 5;
+        if s < 5 || (x / 5) * 5 == x {
+            return s < 5;
+        }
+        loop {
+            let i1 = i2 + 2;
+            if x % i1 == 0 {
+                return s < i1;
+            }
+            i2 += 6;
+            if s < i2 {
+                return true;
+            }
+            if x % i2 == 0 {
+                return false;
+            }
+        }
+    };
+    if !(0..0x773593e6).contains(&p) {
+        return 0x7735940b;
+    }
+    if p < 2 {
+        return p;
+    }
+    if p < 4 {
+        return 3;
+    }
+    let mut v = ((p as f64 / 6.0).ceil() * 6.0 - 1.0) as i32;
+    if v < p {
+        if test(v + 2) {
+            return v + 2;
+        }
+        v += 6;
+    }
+    loop {
+        if v > 0x773593e4 {
+            return 0x773593e5;
+        }
+        if test(v) {
+            return v;
+        }
+        if test(v + 2) {
+            return v + 2;
+        }
+        v += 6;
+    }
 }
 
 /// What `036ade` adds to the dual work counter: q = singleton-phase L + U entries ((P0 + local_100) − local_110 after
@@ -274,6 +353,7 @@ impl Lu {
             n_singleton: self.n_singleton,
             s1: self.s1,
             s3: self.s3,
+            s4: self.s4,
         }
     }
 
@@ -283,6 +363,12 @@ impl Lu {
 
     /// Factor with Markowitz threshold `tol` (MarkowitzTol, raised by the numerics ladder).
     pub fn factor_tol(spx: &Spx, head: &[usize], tol: f64) -> Lu {
+        let mut st = BlockState::OFF;
+        Lu::factor_block(spx, head, tol, &mut st)
+    }
+
+    /// Factor with the `1da0b2` 2×2 block phase state `st` (read and updated as the original does on S).
+    pub fn factor_block(spx: &Spx, head: &[usize], tol: f64, st: &mut BlockState) -> Lu {
         let (m, n) = (spx.m, spx.n);
         let mut rc = vec![0usize; m];
         for &j in head {
@@ -343,6 +429,8 @@ impl Lu {
             n_singleton: 0,
             s1: 0,
             s3: 0,
+            s4: 0,
+            blk: Vec::new(),
             kernel_u: Vec::new(),
             singular: Vec::new(),
             fw: FactorWork::default(),
@@ -408,51 +496,58 @@ impl Lu {
 
         let s3 = lu.steps.len();
         lu.s3 = s3;
-        {
-            let mut cc = vec![0usize; m];
-            // active row copy, ascending position, flat
-            let mut cstart = vec![0usize; m + 1];
-            for c in 0..m {
-                if ppos[c] == -1 {
-                    for (i, _) in spx.col(head[c]) {
-                        if lu.prow[i] < 0 {
-                            cc[c] += 1;
-                            cstart[i + 1] += 1;
-                        }
+        // C:470–560: the active row copy (rows by index, their entries in the unpivoted columns in ascending
+        // position with values) and the column counts over the active rows
+        let mut cc = vec![0i64; m];
+        let mut cstart = vec![0usize; m + 1];
+        for c in 0..m {
+            if ppos[c] == -1 {
+                for (i, _) in spx.col(head[c]) {
+                    if lu.prow[i] < 0 {
+                        cc[c] += 1;
+                        cstart[i + 1] += 1;
                     }
                 }
             }
-            for i in 0..m {
-                cstart[i + 1] += cstart[i];
-            }
-            let mut rcopy = vec![0usize; cstart[m]];
-            let mut fill = cstart.clone();
-            for c in 0..m {
-                if ppos[c] == -1 {
-                    for (i, _) in spx.col(head[c]) {
-                        if lu.prow[i] < 0 {
-                            rcopy[fill[i]] = c;
-                            fill[i] += 1;
-                        }
+        }
+        for i in 0..m {
+            cstart[i + 1] += cstart[i];
+        }
+        let mut rcopy = vec![0usize; cstart[m]];
+        let mut rval = vec![0.0f64; cstart[m]];
+        let mut fill = cstart.clone();
+        for c in 0..m {
+            if ppos[c] == -1 {
+                for (i, a) in spx.col(head[c]) {
+                    if lu.prow[i] < 0 {
+                        rcopy[fill[i]] = c;
+                        rval[fill[i]] = a;
+                        fill[i] += 1;
                     }
                 }
             }
-            let mut stack: Vec<usize> = if s3 != s1 { (0..m).filter(|&c| cc[c] == 1).collect() } else { Vec::new() };
-            while let Some(c) = stack.pop() {
-                if cc[c] == 0 {
-                    continue;
-                }
-                let (r, d) = spx.col(head[c]).find(|&(i, _)| lu.prow[i] == -1).expect("active entry");
-                pivot(&mut lu, &mut ppos, r, c, d);
-                for &c2 in &rcopy[cstart[r]..cstart[r + 1]] {
-                    if ppos[c2] == -1 {
-                        cc[c2] -= 1;
-                        if cc[c2] == 1 {
-                            stack.push(c2);
-                        }
+        }
+        let mut stack: Vec<usize> = if s3 != s1 { (0..m).filter(|&c| cc[c] == 1).collect() } else { Vec::new() };
+        while let Some(c) = stack.pop() {
+            if cc[c] == 0 {
+                continue;
+            }
+            let (r, d) = spx.col(head[c]).find(|&(i, _)| lu.prow[i] == -1).expect("active entry");
+            pivot(&mut lu, &mut ppos, r, c, d);
+            for &c2 in &rcopy[cstart[r]..cstart[r + 1]] {
+                if ppos[c2] == -1 {
+                    cc[c2] -= 1;
+                    if cc[c2] == 1 {
+                        stack.push(c2);
                     }
                 }
             }
+        }
+        lu.s4 = lu.steps.len();
+        // C:681–1510: 2×2 blocks, skipped with the phases 2–4 when phases 2–3 pivoted nothing (C:440)
+        if s3 != s1 {
+            let rcnt: Vec<i64> = rc.iter().map(|&x| x as i64).collect();
+            lu.block_phase(spx, &mut ppos, rcnt, cc, cstart, rcopy, rval, st);
         }
 
         let ns = lu.steps.len();
@@ -471,16 +566,21 @@ impl Lu {
 
         // L and U of the singleton steps come straight from the columns (their pivot rows have no other active
         // entries, so the kernel values are unaffected); kernel columns keep their entries in singleton rows as U
+        let s4 = lu.s4;
         for k in 0..m {
             let (_, pos, d) = lu.steps[k];
             for (i, a) in spx.col(head[pos]) {
                 let ki = lu.prow[i] as usize;
-                if k < ns && ki > k {
+                if k < s4 && ki > k {
                     lu.lcol[k].push((i, a / d));
-                } else if ki < k && ki < ns {
+                } else if ki < k && ki < s4 {
                     lu.ucol[k].push((i, a));
                 }
             }
+        }
+        // the block phase's steps keep the L columns and U rows it built (C:806–1495)
+        for (b, (l, _)) in lu.blk.iter().enumerate() {
+            lu.lcol[s4 + b] = l.clone();
         }
         // row-wise U in the original's storage order (LU+0xb0/0xd0/0xc8): singleton rows by column position
         // (1da0b2 C:530–560, C:657–677), kernel rows in their list order (036ade C:600–690, C:2366–2393)
@@ -489,9 +589,16 @@ impl Lu {
             let k = ppos[pos] as usize;
             for (i, a) in spx.col(head[pos]) {
                 let ki = lu.prow[i] as usize;
-                if ki < k && ki < ns {
+                if ki < k && ki < s4 {
                     lu.urow[ki].push((k, a));
                 }
+            }
+        }
+        for (b, (_, u)) in std::mem::take(&mut lu.blk).into_iter().enumerate() {
+            let (k, r) = (s4 + b, lu.steps[s4 + b].0);
+            for (p2, v) in u {
+                lu.ucol[ppos[p2] as usize].push((r, v));
+                lu.urow[k].push((ppos[p2] as usize, v));
             }
         }
         for (k, ku) in std::mem::take(&mut lu.kernel_u).into_iter().enumerate() {
@@ -561,12 +668,368 @@ impl Lu {
         w.add(0xf51af, m.saturating_sub(self.e8 + 1) as f64 * X148);
     }
 
+    /// `1da0b2` C:681–1510: the 2×2 block phase after the column singletons of phase 4. It runs when 4 ≤ active ≤
+    /// 5·10⁸ and S+0x4e4 ≥ 0, and with S+0x4e4 < 2e9 only for active ≥ 50 (C:681–684). Phase A pairs active rows of
+    /// count 2 on the same two columns (`1d9af1`, chained hash of `76fa2(2·active)` buckets, pairs taken LIFO), pivots
+    /// the row with the larger |a| in the first column and then the other row on the Schur value, accepted when
+    /// |s| ≥ 1e-10; row singletons it leaves follow at once. Phase B does the same for active columns of count 2 on
+    /// the same two rows, with column singletons after each block. The blocks change no other active entry, so the
+    /// kernel sees the original values. `rcnt`/`cc`: active row/column counts (local_e0/local_108), `rbeg`/`rpos`/
+    /// `rval`: the active row copy (local_b0/98/a0), which `1d9af1` compacts in place.
+    /// shortcut: the pool checks that return −1 (C:765, 806, 977, 1062, 1338; `036ade` then retries) are not ported.
+    #[allow(clippy::too_many_arguments)]
+    fn block_phase(&mut self, spx: &Spx, ppos: &mut [i64], mut rcnt: Vec<i64>, mut cc: Vec<i64>, rbeg: Vec<usize>,
+                   mut rpos: Vec<usize>, mut rval: Vec<f64>, st: &mut BlockState) {
+        let m = self.head.len();
+        let s4 = self.steps.len();
+        let active = m as i64 - s4 as i64;
+        if (active - 4) as u32 > 0x1dcd64fc || st.x4e4 < 0 || (st.x4e4 < 2_000_000_000 && active < 50) {
+            return;
+        }
+        st.x4e0 += 1;
+        let prime = next_prime((active * 2) as i32) as i64;
+        let mi = m as i64;
+        let head = self.head.clone();
+        let pivot = |lu: &mut Lu, ppos: &mut [i64], r: usize, pos: usize, d: f64, l: Vec<(usize, f64)>, u: Vec<(usize, f64)>| {
+            let k = lu.steps.len() as i64;
+            lu.prow[r] = k;
+            ppos[pos] = k;
+            lu.steps.push((r, pos, d));
+            lu.blk.push((l, u));
+        };
+        // the chained hash of `1d9af1` and C:1040–1100: items (line, key), bucket heads, next links, pair list
+        struct Hash {
+            line: Vec<usize>,
+            key: Vec<i64>,
+            next: Vec<i64>,
+            head: Vec<i64>,
+            pairs: Vec<usize>,
+        }
+        impl Hash {
+            fn new(n: usize) -> Hash {
+                Hash { line: Vec::new(), key: Vec::new(), next: Vec::new(), head: vec![-1; n], pairs: Vec::new() }
+            }
+            fn insert(&mut self, line: usize, key: i64) {
+                let item = self.line.len();
+                self.line.push(line);
+                self.key.push(key);
+                self.next.push(-1);
+                let b = (key % self.head.len() as i64) as usize;
+                let h = self.head[b];
+                if h == -1 {
+                    self.head[b] = item as i64;
+                    self.next[item] = -1;
+                    return;
+                }
+                let (mut cur, mut prev) = (h, -1i64);
+                loop {
+                    if h >= 0 && self.key[cur as usize] == key {
+                        self.pairs.push(cur as usize);
+                        self.pairs.push(item);
+                        let nx = self.next[cur as usize];
+                        if prev == -1 { self.head[b] = nx } else { self.next[prev as usize] = nx }
+                        return;
+                    }
+                    let nx = if h >= 0 { self.next[cur as usize] } else { -1 };
+                    if nx < 0 {
+                        self.next[item] = h;
+                        self.head[b] = item as i64;
+                        return;
+                    }
+                    prev = cur;
+                    cur = nx;
+                }
+            }
+            fn pop(&mut self) -> Option<(usize, usize)> {
+                let b = self.pairs.pop()?;
+                let a = self.pairs.pop()?;
+                Some((a, b))
+            }
+        }
+        // `1d9af1`: move the row's active entries to the front (positions swap, values copy one way), order the two
+        // active columns by (count, index), key = first + m·second
+        let hash_row = |h: &mut Hash, r: usize, rpos: &mut [usize], rval: &mut [f64], cc: &[i64]| {
+            let (lo, hi) = (rbeg[r], rbeg[r + 1]);
+            let mut w = lo;
+            for j in lo..hi {
+                if cc[rpos[j]] > 0 {
+                    if w < j {
+                        rpos.swap(w, j);
+                        rval[w] = rval[j];
+                    }
+                    w += 1;
+                }
+            }
+            let (a, b) = (rpos[w - 2], rpos[w - 1]);
+            let key = if cc[b] < cc[a] || (cc[b] == cc[a] && b < a) {
+                rpos[w - 2] = b;
+                rpos[w - 1] = a;
+                rval.swap(w - 2, w - 1);
+                b as i64 + mi * a as i64
+            } else {
+                a as i64 + mi * b as i64
+            };
+            h.insert(r, key);
+        };
+        // C:1043–1066 inline: the column's first two active rows ordered by (count, index), key = first + m·second
+        let hash_col = |h: &mut Hash, c: usize, rcnt: &[i64]| {
+            let (mut first, mut second) = (-1i64, -1i64);
+            for (i, _) in spx.col(head[c]) {
+                if rcnt[i] > 0 {
+                    if first == -1 {
+                        first = i as i64;
+                    } else {
+                        second = i as i64;
+                        break;
+                    }
+                }
+            }
+            let (c2, c1) = (rcnt[second as usize], rcnt[first as usize]);
+            let (a, b) = if c2 < c1 || (c2 == c1 && second < first) { (second, first) } else { (first, second) };
+            h.insert(c, a + b * mi);
+        };
+
+        // phase A (C:686–1031)
+        let mut h = Hash::new(prime as usize);
+        for idx in 0..m {
+            if ppos[idx] != -1 {
+                cc[idx] = -1;
+            }
+            if self.prow[idx] == -1 {
+                if rcnt[idx] == 2 {
+                    hash_row(&mut h, idx, &mut rpos, &mut rval, &cc);
+                }
+            } else {
+                rcnt[idx] = -1;
+            }
+        }
+        let mut w = vec![0.0f64; m];
+        let mut stack: Vec<usize> = Vec::new();
+        while let Some((i0, i1)) = h.pop() {
+            let (r6, r10) = (h.line[i0], h.line[i1]);
+            if !(rcnt[r6] > 1 && rcnt[r10] > 1) {
+                continue;
+            }
+            let (p, q) = (rbeg[r6], rbeg[r10]);
+            let (c1, c2) = (rpos[p], rpos[p + 1]);
+            let (v39, mut v42, v41, mut v43) = (rval[p], rval[q], rval[p + 1], rval[q + 1]);
+            let (mut v38, mut v40, mut piv, mut oth) = (v41, v39, r6, r10);
+            if v39.abs() < v42.abs() {
+                v38 = v43;
+                v40 = v42;
+                v42 = v39;
+                v43 = v41;
+                piv = r10;
+                oth = r6;
+            }
+            let s = v43 - (v42 * v38) / v40;
+            if s.abs() < 1e-10 {
+                continue;
+            }
+            rcnt[piv] = 0;
+            cc[c1] = 0;
+            let mut l = Vec::new();
+            for (i, a) in spx.col(head[c1]) {
+                if rcnt[i] > 0 {
+                    w[i] = (-a * v38) / v40;
+                    l.push((i, a / v40));
+                    rcnt[i] -= 1;
+                    if rcnt[i] == 1 {
+                        stack.push(i);
+                    } else if rcnt[i] == 2 {
+                        hash_row(&mut h, i, &mut rpos, &mut rval, &cc);
+                    }
+                }
+            }
+            let lk = l.clone();
+            pivot(self, ppos, piv, c1, v40, l, vec![(c2, v38)]);
+            rcnt[oth] = 0;
+            cc[c2] = 0;
+            w[oth] = 0.0;
+            let mut l = Vec::new();
+            for (i, a) in spx.col(head[c2]) {
+                if rcnt[i] > 0 {
+                    let v = (a + w[i]) / s;
+                    w[i] = 0.0;
+                    if ZERO < v.abs() {
+                        l.push((i, v));
+                    }
+                    rcnt[i] -= 1;
+                    if rcnt[i] == 1 {
+                        stack.push(i);
+                    } else if rcnt[i] == 2 {
+                        hash_row(&mut h, i, &mut rpos, &mut rval, &cc);
+                    }
+                }
+            }
+            for &(i, _) in &lk {
+                if ZERO < (w[i] / s).abs() {
+                    l.push((i, w[i] / s));
+                }
+                w[i] = 0.0;
+            }
+            pivot(self, ppos, oth, c2, s, l, Vec::new());
+            // row singletons (C:959–1027)
+            while let Some(r) = stack.pop() {
+                if rcnt[r] <= 0 {
+                    continue;
+                }
+                let mut j = rbeg[r];
+                while j < rbeg[r + 1] && cc[rpos[j]] < 1 {
+                    j += 1;
+                }
+                let (c, d) = (rpos[j], rval[j]);
+                rcnt[r] = 0;
+                cc[c] = 0;
+                let mut l = Vec::new();
+                for (i, a) in spx.col(head[c]) {
+                    if rcnt[i] > 0 {
+                        l.push((i, a / d));
+                        rcnt[i] -= 1;
+                        if rcnt[i] == 1 {
+                            stack.push(i);
+                        } else if rcnt[i] == 2 {
+                            hash_row(&mut h, i, &mut rpos, &mut rval, &cc);
+                        }
+                    }
+                }
+                pivot(self, ppos, r, c, d, l, Vec::new());
+            }
+        }
+
+        // phase B (C:1032–1493)
+        let mut h = Hash::new(prime as usize);
+        for c in 0..m {
+            if cc[c] == 2 {
+                hash_col(&mut h, c, &rcnt);
+            }
+        }
+        let mut w = vec![0.0f64; m];
+        let mut stack: Vec<usize> = Vec::new();
+        while let Some((i0, i1)) = h.pop() {
+            let (ca, cb, key) = (h.line[i0], h.line[i1], h.key[i0]);
+            if !(cc[ca] > 1 && cc[cb] > 1) {
+                continue;
+            }
+            let (ra, rb) = ((key % mi) as usize, (key / mi) as usize);
+            let (mut va, mut vb) = (0.0f64, 0.0f64);
+            let mut uk = Vec::new();
+            for j in rbeg[ra]..rbeg[ra + 1] {
+                let c = rpos[j];
+                if cc[c] > 0 {
+                    if c == ca {
+                        va = rval[j];
+                    } else if c == cb {
+                        vb = rval[j];
+                    } else {
+                        uk.push((c, rval[j]));
+                    }
+                }
+            }
+            let (mut vp, mut vo, mut piv, mut oth) = (va, vb, ca, cb);
+            if va.abs() < vb.abs() {
+                vo = va;
+                piv = cb;
+                vp = vb;
+                oth = ca;
+            }
+            uk.push((oth, vo));
+            let (mut bp, mut bo) = (0.0f64, 0.0f64);
+            let mut uk1 = Vec::new();
+            for j in rbeg[rb]..rbeg[rb + 1] {
+                let c = rpos[j];
+                if cc[c] > 0 {
+                    if c == piv {
+                        bp = rval[j];
+                    } else if c == oth {
+                        bo = rval[j];
+                    } else {
+                        uk1.push((c, rval[j]));
+                    }
+                }
+            }
+            let s = bo - (vo * bp) / vp;
+            if s.abs() < 1e-10 {
+                continue;
+            }
+            rcnt[ra] = 0;
+            cc[piv] = 0;
+            for &(c, u) in &uk[..uk.len() - 1] {
+                w[c] = (-bp * u) / vp;
+                cc[c] -= 1;
+                if cc[c] == 1 {
+                    stack.push(c);
+                } else if cc[c] == 2 {
+                    hash_col(&mut h, c, &rcnt);
+                }
+            }
+            let ua: Vec<usize> = uk[..uk.len() - 1].iter().map(|e| e.0).collect();
+            pivot(self, ppos, ra, piv, vp, vec![(rb, bp / vp)], uk);
+            rcnt[rb] = 0;
+            cc[oth] = 0;
+            let mut u = Vec::new();
+            for (c, x) in uk1 {
+                cc[c] -= 1;
+                if cc[c] == 1 {
+                    stack.push(c);
+                } else if cc[c] == 2 {
+                    hash_col(&mut h, c, &rcnt);
+                }
+                if ZERO < (x + w[c]).abs() {
+                    u.push((c, x + w[c]));
+                }
+                w[c] = 0.0;
+            }
+            for c in ua {
+                if ZERO < w[c].abs() {
+                    u.push((c, w[c]));
+                }
+                w[c] = 0.0;
+            }
+            pivot(self, ppos, rb, oth, s, Vec::new(), u);
+            // column singletons (C:1384–1493)
+            while let Some(c) = stack.pop() {
+                if cc[c] <= 0 {
+                    continue;
+                }
+                let (r, d) = spx.col(head[c]).find(|&(i, _)| rcnt[i] >= 1).expect("active row");
+                cc[c] = 0;
+                rcnt[r] = 0;
+                let mut u = Vec::new();
+                for j in rbeg[r]..rbeg[r + 1] {
+                    let c2 = rpos[j];
+                    if cc[c2] > 0 {
+                        u.push((c2, rval[j]));
+                        cc[c2] -= 1;
+                        if cc[c2] == 1 {
+                            stack.push(c2);
+                        } else if cc[c2] == 2 {
+                            hash_col(&mut h, c2, &rcnt);
+                        }
+                    }
+                }
+                pivot(self, ppos, r, c, d, Vec::new(), u);
+            }
+        }
+
+        // C:1494–1510
+        if st.x4e4 < 2_000_000_000 {
+            if self.steps.len() as i64 - s4 as i64 > 19 {
+                st.x4e4 += 1;
+            }
+            if st.x2c0 > 20 {
+                st.x4e4 = if st.x4e4 * 2 < st.x4e0 { -1 } else { 2_000_000_000 };
+            }
+        }
+    }
+
     /// Sparse Markowitz kernel of `036ade` (L546–2570, docs/m1/m1_notes.md §6.7) on the rows and positions the singleton
     /// phases leave: column singletons, then row singletons, then a Markowitz search over count buckets (LIFO
     /// circular lists, rotated heads), threshold `tol·max < |a|` on the searched line's max, ties to the larger
     /// |a|/max; multipliers a/v, updates a − l·u and fill −(l·u) dropped under ZERO, fill prepended to its lists.
     /// Empty rows and columns pair up in discovery order as the singular tail (`self.singular`).
-    /// shortcut: no 2x2 block phase, no dense switches (036ade L1542/L1762: fill > 0.325·n² with n > 50, or
+    /// The 2×2 block phase runs before it in `block_phase` (only with a `BlockState` that allows it).
+    /// shortcut: no dense switches (036ade L1542/L1762: fill > 0.325·n² with n > 50, or
     /// 201 ≤ n ≤ 9999 with a costly search) and no 1e99 pivot cap; those cases stay sparse.
     fn kernel(&mut self, spx: &Spx, ppos: &mut [i64], tol: f64) -> bool {
         let m = self.head.len();
@@ -895,7 +1358,7 @@ impl Lu {
             self.lmax = lev.iter().copied().max().unwrap_or(0) as i64;
             self.llev = Some(lev);
         }
-        self.ltail = self.lcol[self.n_singleton.min(m)..].iter().map(Vec::len).sum();
+        self.ltail = self.lcol[self.s4.min(m)..].iter().map(Vec::len).sum();
     }
 
     /// BTRAN `221173`: yᵀ = xᵀB⁻¹ for x given as (basis position, value) in input order. Returns (row, value) in the
@@ -1173,7 +1636,7 @@ impl Lu {
     /// `ftran_lr`); 0 calls on the degen2/kb2/boeing1 captures (M1-02j).
     fn l_sparse(&self, input: &[(usize, f64)]) -> Option<Vec<(usize, f64)>> {
         let m = self.head.len();
-        let dm = (m - self.n_singleton.min(m)) as f64;
+        let dm = (m - self.s4.min(m)) as f64;
         if !(dm < 6.0 || dm * (10.0 * dm) <= m as f64 || self.ltail as f64 <= 10.0 * dm) {
             return None;
         }
@@ -1842,7 +2305,7 @@ pub fn sum_squares(v: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{dot8_peel, gather, sum_squares, Lu};
+    use super::{dot8_peel, gather, next_prime, sum_squares, BlockState, Lu};
     use crate::scaling::Scaling;
     use crate::spx::Spx;
 
@@ -1916,6 +2379,76 @@ mod tests {
                 assert!((dot - if p == q { 1.0 } else { 0.0 }).abs() < 1e-9, "btran row {p}");
             }
         }
+    }
+
+    /// Factor `a` (structural columns 0..n, the slack of the last row basic) with the 2×2 block phase always on.
+    fn block_factor(a: &[Vec<f64>]) -> (Spx, Lu, BlockState) {
+        let spx = spx_of(a);
+        let mut head: Vec<usize> = (0..spx.n).collect();
+        head.push(spx.n + spx.m - 1);
+        let mut st = BlockState { x2c0: 1, x4e0: 0, x4e4: 2_000_000_000 };
+        let lu = Lu::factor_block(&spx, &head, super::MARKOWITZ_TOL, &mut st);
+        assert!(lu.complete());
+        check(&spx, &lu);
+        (spx, lu, st)
+    }
+
+    // rows 0 and 1 have their two active entries in columns 0 and 1: phase A pairs them (C:686–1031)
+    const PAIR: [[f64; 6]; 7] = [
+        [2.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 3.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 4.0, 1.0, 0.0, 0.0],
+        [0.0, 1.0, 1.0, 0.0, 2.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0, 1.0, 3.0],
+        [0.0, 0.0, 1.0, 2.0, 1.0, 1.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+    ];
+
+    /// Synthetic (no original comparison): the block steps keep B = LU and the state update of C:681–1510.
+    #[test]
+    fn block_phase_a_reproduces_the_basis_inverse() {
+        let a: Vec<Vec<f64>> = PAIR.iter().map(|r| r.to_vec()).collect();
+        let (_, lu, st) = block_factor(&a);
+        let p = lu.parts();
+        // slack, then the row block: row 0 (|2| > |1| in column 0) on position 0, row 1 on the Schur value 3 − 1·1/2
+        assert_eq!((p.s4, st.x4e0, st.x4e4), (1, 1, 2_000_000_000));
+        assert_eq!(&p.steps[1..3], &[(0, 0, 2.0), (1, 1, 2.5)]);
+        // without the phase the Markowitz kernel pivots these rows differently
+        let off = Lu::factor_tol(&spx_of(&a), &lu.head, super::MARKOWITZ_TOL);
+        assert_ne!(&off.parts().steps[1..3], &p.steps[1..3]);
+    }
+
+    #[test]
+    fn block_phase_b_reproduces_the_basis_inverse() {
+        // the transpose of PAIR's 6×6 part: columns 0 and 1 have their two active entries in rows 0 and 1 (C:1032–1493)
+        let mut a: Vec<Vec<f64>> = (0..6).map(|i| (0..6).map(|j| PAIR[j][i]).collect()).collect();
+        a.push(vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
+        let (_, lu, st) = block_factor(&a);
+        let p = lu.parts();
+        assert_eq!((p.s4, st.x4e0), (1, 1));
+        // row 0 (the smaller (count, index)) pivots on column 0 (|2| > |1|), row 1 on column 1 with 3 − 1·1/2
+        assert_eq!(&p.steps[1..3], &[(0, 0, 2.0), (1, 1, 2.5)]);
+    }
+
+    #[test]
+    fn block_phase_gate_and_state() {
+        let a: Vec<Vec<f64>> = PAIR.iter().map(|r| r.to_vec()).collect();
+        let spx = spx_of(&a);
+        let mut head: Vec<usize> = (0..spx.n).collect();
+        head.push(spx.n + spx.m - 1);
+        // S+0x4e4 = 0 with 6 active (< 50): the phase does not run, nothing changes
+        let mut st = BlockState { x2c0: 21, x4e0: 3, x4e4: 0 };
+        let lu = Lu::factor_block(&spx, &head, super::MARKOWITZ_TOL, &mut st);
+        assert_eq!(st, BlockState { x2c0: 21, x4e0: 3, x4e4: 0 });
+        assert_eq!(lu.parts().s4, lu.n_singleton);
+        // off: same factor as factor_tol
+        let mut st = BlockState::OFF;
+        let a2 = Lu::factor_block(&spx, &head, super::MARKOWITZ_TOL, &mut st);
+        assert_eq!(a2.parts().steps, lu.parts().steps);
+        assert_eq!(next_prime(12), 13);
+        assert_eq!(next_prime(128), 131);
+        assert_eq!(next_prime(262), 263);
+        assert_eq!(next_prime(25), 29);
     }
 
     #[test]

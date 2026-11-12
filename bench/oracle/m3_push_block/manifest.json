@@ -1,0 +1,37 @@
+{
+ "task": "M3-04c-21h",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tools": {
+  "tools/push_block_agent.js": "58180cc01590628b6eba1d9174ae163a161ada56df38b081686d338f3f5ce47f",
+  "tools/push_block_capture.js": "d646339230e8b7b11c8a55000ddfee8972f69d60ff3bb196dea85527dddff9f3",
+  "tools/push_block_runs.py": "665e578a6e0008253dd5cd6c9a57589aa5854c7f167244b840062810d70e993d",
+  "tools/push_lu_runs.py": "6fd8906c4b02fd5382059aefedc103af391ed9cdcf3b85da4a1a527a9cc787fa",
+  "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec",
+  "tools/gurun.sh": "7efb6a90dd1fae5f71997b24c112601d4f76b822546ddcce8d53920369f0d48f",
+  "tools/push_block_check.py": "09d07366f824d9e4c494916375d9749ceef6bbb798a915a9f8da62bfc8c78e63"
+ },
+ "captures": {
+  "bench/oracle/m3_push_block/adlittle-1.json.gz": "eceea85a5f4af93aa38bc4f0affdd72c1be1988cc461b81e5c835a5fa69de443",
+  "bench/oracle/m3_push_block/adlittle-2.json.gz": "c8022cf7310f0d9c34ab739f6539125ea46c586babe5e7a1ab2175a22c867907",
+  "bench/oracle/m3_push_block/adlittle-3.json.gz": "5e161c3a745a25df9eb7ff4c658a2b807be93607201c28c723c0f621622d0002",
+  "bench/oracle/m3_push_block/arms-1.json": "544b7266462dfb1665ffec38b0d02bf0b8e6194d85a38f986060c09595f624ae",
+  "bench/oracle/m3_push_block/arms-2.json": "875b228e537a655c20817ed9763c1c87834a7bd11addd50f755c08ce2f49b60f",
+  "bench/oracle/m3_push_block/arms-3.json": "f6b31389ae38d100d2a48edfedde8ebf9e79283afc43bd6339630bfbfe82726b",
+  "bench/oracle/m3_push_block/capri-1.json.gz": "b11785786b1d548b430c6d8a917b88fe6242b83de588fbd3a578627d7890ceb5",
+  "bench/oracle/m3_push_block/capri-2.json.gz": "1cfbcd4cd6cd41557db05377d38288bea5953686bfaeec40541e171b1bb22583",
+  "bench/oracle/m3_push_block/capri-3.json.gz": "f77179d0691d17cccb52c97bc205f9f46e93e64d617d28a2d74f3bcd9bf072b1",
+  "bench/oracle/m3_push_block/control-1.json": "e8e2c077fd14a1ef1cf587aa6c2de6d7af4529936c1a929ab832a53f540ad15a",
+  "bench/oracle/m3_push_block/control-2.json": "a01812db13ae6a3adbeaf2ecd453611b1f6e26139719970dfda2ec6b9735b75a",
+  "bench/oracle/m3_push_block/control-3.json": "ba4fe3e745ac21681041189bc3550fa75272cf8bcfa14303d7b1619cbe600edf",
+  "bench/oracle/m3_push_block/interior-1.json": "4da980d1c28e142ce9268a1e1403dcccf040c85321588adf6b5b8e7be2b250bc",
+  "bench/oracle/m3_push_block/interior-2.json": "ded5e68cd7101a8f7b99c914d858ce9183c56dcaa66203c8b8095befe00c847a",
+  "bench/oracle/m3_push_block/interior-3.json": "f7a93c6dd93c1c6b1d32a05887c5db4bd0f34aef5223d03464445a3f76899eda",
+  "bench/oracle/m3_push_block/retry-1.json": "03471d231ac948af964eaa693898d7997674dc8ec880d4ce7e909f5bca7555cd",
+  "bench/oracle/m3_push_block/retry-2.json": "f2303cf324c7c4908d43bb6e12a16dbb32c1c59afb4d7fc58fd07f013c9f9792",
+  "bench/oracle/m3_push_block/retry-3.json": "cde37fbdd4c30ad51f42cc917a6a20067c797a44ef42be87b57db54ca0bff82f",
+  "bench/oracle/m3_push_block/scsd1-1.json.gz": "8d578ae9e8f6b2447e04c0e2de03015418c74ada54a1db4722bbd66cb4bb38e7",
+  "bench/oracle/m3_push_block/scsd1-2.json.gz": "a25a1e181aedaba7fa6f25a93368c7ae0dd278e3288ac9b30346fa5fe2e8d4ca",
+  "bench/oracle/m3_push_block/scsd1-3.json.gz": "0568e6a9325b86cd51653e0036ef692820f488953c4d7b6b5a8f2ec2a6cd0053"
+ },
+ "baseline": "bench/oracle/m3_push_lu_chain (21e manifest)"
+}

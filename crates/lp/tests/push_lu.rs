@@ -5,6 +5,7 @@ use rsolver_lp::crossover_btran::Cache;
 use rsolver_lp::crossover_ftran::{Buffer, Cells, Spike, VecSnap};
 use rsolver_lp::crossover_lu::*;
 use rsolver_lp::crossover_refactor::{refactor, Alloc, Matrix, BUCKET_UNKNOWN};
+use rsolver_lp::lu::BlockState;
 use std::str::SplitWhitespace;
 
 fn next<T: std::str::FromStr>(t: &mut SplitWhitespace<'_>) -> T {
@@ -331,6 +332,8 @@ fn run_case(lines: &[&str], out: &mut Vec<String>) {
     let mut st: Option<LuState> = None;
     let mut matrix: Option<Matrix> = None;
     let mut failed: Option<String> = None;
+    // 21h: the 1da0b2 block state (S+0x2c0/0x4e0/0x4e4) the next refactor enters with; None = phase off (21g)
+    let mut block: Option<BlockState> = None;
     for line in lines {
         let mut t = line.split_whitespace();
         let op: String = next(&mut t);
@@ -350,6 +353,11 @@ fn run_case(lines: &[&str], out: &mut Vec<String>) {
                     matrix = Some(Matrix { m, n, beg, len, ind, val });
                     Ok("{\"op\":\"M\"}".into())
                 }
+                "K" => {
+                    // 21h: the block state of S at the push's first refactor (the capture's 036ade entry)
+                    block = Some(BlockState { x2c0: next(&mut t), x4e0: next(&mut t), x4e4: next(&mut t) });
+                    Ok("{\"op\":\"K\"}".into())
+                }
                 "G" => {
                     // 21g: the refactor's factor comes from the Rust factorization, nothing of the original's output
                     let a = matrix.as_ref().ok_or("refactor before the matrix")?;
@@ -368,11 +376,23 @@ fn run_case(lines: &[&str], out: &mut Vec<String>) {
                         (h, _) => float(&mut h.split_whitespace()),
                     };
                     let (header, leave, vstat) = (ints(&mut t), next::<i32>(&mut t), ints(&mut t));
-                    let rf = refactor(a, &header, zero, tol, alloc, st.as_ref()).map_err(|e| format!("{e:?}"))?;
+                    let enter = block.unwrap_or(BlockState::OFF);
+                    let mut b = enter;
+                    let rf = refactor(a, &header, zero, tol, alloc, st.as_ref(), &mut b).map_err(|e| format!("{e:?}"))?;
+                    // 05b257 C:1399 raises S+0x2c0 before every refactor; the push's refactors follow each other on S
+                    let bj = block.map_or(String::new(), |_| {
+                        format!(
+                            ",\"block\":{{\"enter\":{{\"x2c0\":{},\"x4e0\":{},\"x4e4\":{}}},\"leave\":{{\"x4e0\":{},\"x4e4\":{}}}}}",
+                            enter.x2c0, enter.x4e0, enter.x4e4, b.x4e0, b.x4e4
+                        )
+                    });
+                    if block.is_some() {
+                        block = Some(BlockState { x2c0: b.x2c0 + 1, ..b });
+                    }
                     let mut s = rf.state;
                     let r = s.renumber(&header, leave, &vstat, &rf.o, &rf.n);
                     let json = format!(
-                        "{{\"op\":\"G\",\"perm\":{{\"x20\":{},\"x28\":{},\"x30\":{},\"x38\":{}}},\"header\":{},\"leave\":{},\"vstat\":{},\"spike_count\":{},\"buffers\":{{\"spike_idx_is_old_header\":true,\"header_is_old_spike_idx\":true}},\"factor\":{}}}",
+                        "{{\"op\":\"G\",\"perm\":{{\"x20\":{},\"x28\":{},\"x30\":{},\"x38\":{}}},\"header\":{},\"leave\":{},\"vstat\":{},\"spike_count\":{},\"buffers\":{{\"spike_idx_is_old_header\":true,\"header_is_old_spike_idx\":true}},\"factor\":{}{}}}",
                         il(&s.x20),
                         il(&rf.o),
                         il(&s.x30),
@@ -381,7 +401,8 @@ fn run_case(lines: &[&str], out: &mut Vec<String>) {
                         r.leave,
                         il(&r.vstat),
                         s.spike.count,
-                        snap(&s)
+                        snap(&s),
+                        bj
                     );
                     st = Some(s);
                     Ok(json)
@@ -513,6 +534,12 @@ fn lu_chain_trace() {
 #[test]
 fn refactor_chain_trace() {
     replay("m3_push_refactor_rust");
+}
+
+/// M3-04c-21h: the generated chains with the 1da0b2 2×2 block phase on, its state chained from the push's first refactor.
+#[test]
+fn block_chain_trace() {
+    replay("m3_push_block_rust");
 }
 
 fn replay(dir: &str) {

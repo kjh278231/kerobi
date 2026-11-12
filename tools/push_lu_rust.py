@@ -34,6 +34,40 @@ def use_generate():
     TRACE = ROOT / 'target/m3_push_refactor_rust/trace.txt'
     SCHEMA = 'M3-04c-21g-v1'
     GENERATE = True
+
+
+BLOCK = False
+
+
+def use_block():
+    """21h: 생성 모드 + `1da0b2` 2×2 블록 단계. 첫 push 재분해의 S+0x2c0/0x4e0/0x4e4만 원본(K 연산)에서 넣고 이후는 Rust 연쇄."""
+    global D, TRACE, SCHEMA, BLOCK
+    use_generate()
+    D = ROOT / 'bench/oracle/m3_push_block_rust'
+    TRACE = ROOT / 'target/m3_push_block_rust/trace.txt'
+    SCHEMA = 'M3-04c-21h-v1'
+    BLOCK = True
+
+
+def block_rows(name):
+    """21h 블록 상태 캡처(정식 *-1)의 push 재분해 표: lu id → (진입, 반환). 검사기 controls·acceptance를 먼저 통과해야 한다."""
+    import push_block_check as pbc
+    global BLOCK_CHECKED
+    if not BLOCK_CHECKED:
+        caps, base = pbc.load_all()
+        try:
+            pbc.controls(caps, base)
+            pbc.acceptance(caps)
+        except pbc.Fail as e:
+            raise Fail(f'블록 상태 캡처 검사 실패: {e}')
+        BLOCK_CHECKED = True
+    rows, outside = pbc.table(pbc.load(pbc.path_of(pbc.D, name, 1)), name)
+    ids = [r['block'] for r in rows]
+    require(not [o for o in outside if ids[0] < o['block'] < ids[-1]], f'{name}: push 재분해 사이에 push 밖 036ade')
+    return {r['lu']: r for r in rows}
+
+
+BLOCK_CHECKED = False
 MODELS = ('arms', 'retry', 'interior', 'adlittle', 'scsd1', 'capri')
 
 
@@ -109,6 +143,7 @@ def matrix(e):
 def program(name, r, generate=False):
     """push 안 연산 열: (op, ev 번호, 입력 토큰, 원본 기대값). generate면 재분해 factor를 주입하지 않고 Rust가 만든다(21g)."""
     ev = r['events']; out = []; inside = False; markowitz = None; first = True
+    brows = block_rows(name) if BLOCK else None; bfirst = True
     for i, e in enumerate(ev):
         k = e['event']
         if k == 'push:enter':
@@ -148,6 +183,15 @@ def program(name, r, generate=False):
                         alloc = ['0']
                     toks = ['G', name, str(i), str(m), (e['factor'] or lv['factor'])['zero'] if was_first else '-', markowitz] + alloc + ints(e['header']) + [str(e['leave'])] + ints(e['vstat'])
                     want['perm'] = {k: st[k] for k in ('x20', 'x28', 'x30', 'x38')}
+                    if BLOCK:
+                        row = brows.get(ref[-1]['id'])
+                        require(row is not None, f'{name}#{i}: 블록 상태 캡처에 lu {ref[-1]["id"]} 없음')
+                        want['block'] = {'enter': row['enter'], 'leave': row['leave']}
+                        if bfirst:
+                            # push 첫 재분해의 036ade 진입 상태만 원본에서 넣는다(이후 0x2c0 +1, 0x4e0/0x4e4는 Rust 반환값)
+                            b = row['enter']
+                            out.append(('K', i, ['K', name, str(i), str(m), str(b['x2c0']), str(b['x4e0']), str(b['x4e4'])], None))
+                            bfirst = False
                     out.append(('G', i, toks, want))
                 else:
                     toks = ['R', name, str(i), str(m)] + inject(lv['factor'], lv['buffers']) + ints(e['header']) + [str(e['leave'])] + ints(e['vstat']) + ints(st['x28']) + ints(st['x38'])
@@ -261,7 +305,7 @@ def unknown_bucket(want, got, key):
 def pairs(op, want, got):
     """(이름, 원본, Rust) 비교 쌍."""
     H = ('header',)
-    if op == 'M':
+    if op in ('M', 'K'):
         return []
     if GENERATE and op != 'G':
         want = dict(want)
@@ -269,7 +313,7 @@ def pairs(op, want, got):
             if k in want and k in got:
                 want[k] = unknown_bucket(want[k], got[k], f'{op} bucket')
     if op == 'G':
-        return [('perm', want['perm'], got['perm'])] + pairs('R', dict(want, factor=unknown_bucket(want['factor'], got['factor'], 'G bucket')), got)
+        return ([('block', want['block'], got.get('block'))] if BLOCK else []) + [('perm', want['perm'], got['perm'])] + pairs('R', dict(want, factor=unknown_bucket(want['factor'], got['factor'], 'G bucket')), got)
     if op == 'R':
         return [('header', want['header'], got['header']), ('leave', want['leave'], got['leave']),
                 ('vstat', want['vstat'], got['vstat']), ('spike_count', want['spike_count'], got['spike_count']),
@@ -307,9 +351,15 @@ def fail_key(f):
     return name, int(rest.split(' ', 1)[0])
 
 
+def expected_set():
+    """21h(블록 단계 이식)에서는 예상 실패가 없다."""
+    return {} if BLOCK else EXPECTED
+
+
 def expected(f):
     name, ev = fail_key(f)
-    return GENERATE and name in EXPECTED and ev >= EXPECTED[name]
+    exp = expected_set()
+    return GENERATE and name in exp and ev >= exp[name]
 
 
 def compare(trace, cs, head, verbose=True):
@@ -363,7 +413,7 @@ def judge(fails):
     if bad:
         raise Fail(f'{len(bad)}개 연산 불일치: 첫 {bad[0]}')
     if GENERATE:
-        for name, ev in EXPECTED.items():
+        for name, ev in expected_set().items():
             first = [f for f in fails if fail_key(f)[0] == name]
             require(first and fail_key(first[0])[1] == ev and ' G.' in first[0], f'예상 실패가 {name}#{ev} 재분해에서 시작하지 않음: {first[:1]}')
 
@@ -550,7 +600,7 @@ def self_test_generate(cs, head):
     judge(fails)
     tmp = TRACE.parent / 'mutated.txt'
     rejected = []
-    for name, fn in GEN_TRACE_MUTATIONS:
+    for name, fn in GEN_TRACE_MUTATIONS + (BLOCK_TRACE_MUTATIONS if BLOCK else []):
         tmp.write_text('\n'.join(fn(base)) + '\n')
         try:
             _, f2, _, _ = compare(tmp, cs, head, verbose=False)
@@ -600,7 +650,7 @@ GEN_MUTATIONS = [
     # 계약 §3: 재분해를 건너뛰고 직전 factor 유지(반드시 거부)
     ('refactor-skipped(직전 factor 유지)', '    let (m, n) = (a.m, a.n);\n',
      '    let (m, n) = (a.m, a.n);\n    if let Some(p) = prev {\n        let id: Vec<i32> = (0..m as i32).collect();\n        return Ok(Refactor { state: p.clone(), o: id.clone(), n: id });\n    }\n'),
-    ('markowitz-default', 'Lu::factor_tol(&spx, &head, tol)', 'Lu::factor_tol(&spx, &head, crate::lu::MARKOWITZ_TOL)'),
+    ('markowitz-default', 'Lu::factor_block(&spx, &head, tol, block)', 'Lu::factor_block(&spx, &head, crate::lu::MARKOWITZ_TOL, block)'),
     ('L-order-reversed', 'for &(i, l) in &p.lcol[k] {', 'for &(i, l) in p.lcol[k].iter().rev() {'),
     ('L-rows-not-steps', 'lrows.push(step(i));', 'lrows.push(i as i32);'),
     ('Lt-order-reversed', 'for &(j, l) in &p.lrow[k] {', 'for &(j, l) in p.lrow[k].iter().rev() {'),
@@ -616,12 +666,67 @@ GEN_MUTATIONS = [
     ('mean-empty-1', '} else { 1.5 };', '} else { 1.0 };'),
     ('x1e0-no-diag', 'x1e0: (m + lnnz) as i64,', 'x1e0: lnnz as i64,'),
     ('xd8-slack-end', 'xd8: p.s1 as i32,', 'xd8: p.dc as i32,'),
-    ('xe4-phase3', 'xe4: p.n_singleton as i32,', 'xe4: p.s3 as i32,'),
+    ('xe4-phase3', 'xe4: p.s4 as i32,', 'xe4: p.s3 as i32,'),
     ('lst-last-summed', 'for l in 1..=levels {', 'for l in 1..=levels + 1 {'),
     ('Lt-lst-kept', '            lst.pop();\n', ''),
     ('F1a0-zero', 'oldest: vec![2_000_000_000; m],', 'oldest: vec![0; m],'),
     ('spike-unknown', '                    val.set(i, 0.0);\n', ''),
     ('o-inverse', 'let o: Vec<i32> = p.steps.iter().map(|s| s.1 as i32).collect();', 'let o: Vec<i32> = p.steps.iter().map(|s| s.0 as i32).collect();'),
+]
+
+
+# 21h: `1da0b2` 2×2 블록 단계(lu.rs block_phase) 소스 변이(임시 Cargo 사본). 계약 §3: 블록 단계 끔은 반드시 거부.
+BLOCK_SOURCE = Path('crates/lp/src/lu.rs')
+BLOCK_MUTATIONS = [
+    # 반드시 거부: 블록 단계를 건너뜀(S+0x4e0 증가는 그대로라 거부는 factor에서 나야 한다)
+    ('block-phase-skipped', '        st.x4e0 += 1;\n', '        st.x4e0 += 1;\n        return;\n'),
+    ('x4e0-not-counted', '        st.x4e0 += 1;\n', ''),
+    ('run-threshold-50-65', 'st.x4e4 < 2_000_000_000 && active < 50', 'st.x4e4 < 2_000_000_000 && active < 65'),
+    ('run-threshold-50-49', 'st.x4e4 < 2_000_000_000 && active < 50', 'st.x4e4 < 2_000_000_000 && active < 49'),
+    ('table-size-2active', 'let prime = next_prime((active * 2) as i32) as i64;', 'let prime = active * 2;'),
+    ('A-skipped', '        while let Some((i0, i1)) = h.pop() {\n            let (r6, r10)', '        h.pairs.clear();\n        while let Some((i0, i1)) = h.pop() {\n            let (r6, r10)'),
+    ('A-pivot-row-reversed', 'if v39.abs() < v42.abs() {', 'if v39.abs() > v42.abs() {'),
+    ('A-accept-0', '            let s = v43 - (v42 * v38) / v40;\n            if s.abs() < 1e-10 {', '            let s = v43 - (v42 * v38) / v40;\n            if s.abs() < 0.0 {'),
+    ('A-value-swap', 'rval[w] = rval[j];', 'rval.swap(w, j);'),
+    ('B-skipped', '        while let Some((i0, i1)) = h.pop() {\n            let (ca, cb, key)', '        h.pairs.clear();\n        while let Some((i0, i1)) = h.pop() {\n            let (ca, cb, key)'),
+    ('B-pivot-col-reversed', 'if va.abs() < vb.abs() {', 'if va.abs() > vb.abs() {'),
+    ('B-key-order-reversed', '{ (second, first) } else { (first, second) }', '{ (first, second) } else { (second, first) }'),
+    ('B-accept-0', '            let s = bo - (vo * bp) / vp;\n            if s.abs() < 1e-10 {', '            let s = bo - (vo * bp) / vp;\n            if s.abs() < 0.0 {'),
+    ('B-accept-huge', '            let s = bo - (vo * bp) / vp;\n            if s.abs() < 1e-10 {', '            let s = bo - (vo * bp) / vp;\n            if s.abs() < 1e10 {'),
+    ('B-U-merge-reversed', 'for (c, x) in uk1 {', 'for (c, x) in uk1.into_iter().rev() {'),
+    ('B-U-no-drop', 'if ZERO < (x + w[c]).abs() {', 'if true {'),
+    ('B-other-col-last-dropped', '            uk.push((oth, vo));\n', '            uk.push((oth, 0.0));\n'),
+    ('B-col-singletons-skipped', '            // column singletons (C:1384–1493)\n            while let Some(c) = stack.pop() {', '            // column singletons (C:1384–1493)\n            stack.clear();\n            while let Some(c) = stack.pop() {'),
+    ('pairs-fifo', 'let b = self.pairs.pop()?;\n                let a = self.pairs.pop()?;', 'if self.pairs.is_empty() { return None; }\n                let a = self.pairs.remove(0);\n                let b = self.pairs.remove(0);'),
+    ('update-threshold-20-19', 'if self.steps.len() as i64 - s4 as i64 > 19 {', 'if self.steps.len() as i64 - s4 as i64 > 18 {'),
+    ('settle-reversed', 'st.x4e4 = if st.x4e4 * 2 < st.x4e0 { -1 } else { 2_000_000_000 };', 'st.x4e4 = if st.x4e4 * 2 < st.x4e0 { 2_000_000_000 } else { -1 };'),
+    ('xe4-after-blocks', '        lu.n_singleton = ns;\n        // 036ade C:543', '        lu.n_singleton = ns;\n        lu.s4 = ns;\n        // 036ade C:543'),
+    ('block-L-generic', '            lu.lcol[s4 + b] = l.clone();\n', ''),
+]
+
+
+def blk_g(g):
+    """블록 단계가 피벗한 재분해(capri 23회째: F+0xe4 = 블록 전 단계 수 140)."""
+    return g.get('block') and g['block']['leave']['x4e0'] > g['block']['enter']['x4e0'] and gf(g)['scalars']['xe4'] == 140
+
+
+def ran_g(g):
+    return g.get('block') and g['block']['leave']['x4e0'] > g['block']['enter']['x4e0']
+
+
+BLOCK_TRACE_MUTATIONS = [
+    ('K: 블록 상태 연산 누락', lambda L: [x for x in L if '"op": "K"' not in x and '"op":"K"' not in x]),
+    ('G: 블록 진입 x2c0', lambda L: edit(L, 'G', lambda g: g['block']['enter'].update(x2c0=g['block']['enter']['x2c0'] + 1), ran_g)),
+    ('G: 블록 진입 x4e0', lambda L: edit(L, 'G', lambda g: g['block']['enter'].update(x4e0=g['block']['enter']['x4e0'] + 1), ran_g)),
+    ('G: 블록 진입 x4e4', lambda L: edit(L, 'G', lambda g: g['block']['enter'].update(x4e4=-1), ran_g)),
+    ('G: 블록 반환 x4e0', lambda L: edit(L, 'G', lambda g: g['block']['leave'].update(x4e0=g['block']['enter']['x4e0']), ran_g)),
+    ('G: 블록 반환 x4e4', lambda L: edit(L, 'G', lambda g: g['block']['leave'].update(x4e4=1), ran_g)),
+    ('G: 블록 없음', lambda L: edit(L, 'G', lambda g: g.pop('block'), ran_g)),
+    ('G(블록): F+0xe4', lambda L: edit(L, 'G', lambda g: bump(gf(g)['scalars'], 'xe4', 3), blk_g)),
+    ('G(블록): 피벗 행 x20', lambda L: edit(L, 'G', lambda g: g['perm']['x20'].__setitem__(140, 217), blk_g)),
+    ('G(블록): Schur 대각 비트', lambda L: edit(L, 'G', lambda g: gf(g)['diag'].__setitem__(141, flipbit(gf(g)['diag'][141])), blk_g)),
+    ('G(블록): 두 번째 U 행 순서', lambda L: edit(L, 'G', lambda g: gf(g)['U']['row'][141]['cols'].reverse(), blk_g)),
+    ('G(블록): 첫 L 열 값', lambda L: edit(L, 'G', lambda g: gf(g)['L']['vals'].__setitem__(gf(g)['L']['beg'][140], flipbit(gf(g)['L']['vals'][gf(g)['L']['beg'][140]])), blk_g)),
 ]
 
 
@@ -633,12 +738,12 @@ def mutate_rust(path, cs, head):
     for file in ('Cargo.toml', 'Cargo.lock'):
         shutil.copy2(ROOT / file, scratch / file)
     shutil.copytree(ROOT / 'crates', scratch / 'crates')
-    for sub in ('m3_push_lu_rust', 'm3_push_refactor_rust'):
+    for sub in ('m3_push_lu_rust', 'm3_push_refactor_rust', 'm3_push_block_rust'):
         if (ROOT / 'bench/oracle' / sub / 'input.txt').exists():
             (scratch / 'bench/oracle' / sub).mkdir(parents=True)
             shutil.copy2(ROOT / 'bench/oracle' / sub / 'input.txt', scratch / 'bench/oracle' / sub / 'input.txt')
-    source, mutations = (GEN_SOURCE, GEN_MUTATIONS) if GENERATE else (SOURCE, MUTATIONS)
-    test = 'refactor_chain_trace' if GENERATE else 'lu_chain_trace'
+    source, mutations = (BLOCK_SOURCE, BLOCK_MUTATIONS) if BLOCK else (GEN_SOURCE, GEN_MUTATIONS) if GENERATE else (SOURCE, MUTATIONS)
+    test = 'block_chain_trace' if BLOCK else 'refactor_chain_trace' if GENERATE else 'lu_chain_trace'
     original = (ROOT / source).read_text(); results = []
     trace = scratch / TRACE.relative_to(ROOT)
     for name, old, new in mutations:
@@ -672,15 +777,20 @@ def manifest():
              ROOT / 'crates/lp/src/crossover_btran.rs', Path(__file__).resolve(), ROOT / oracle.D / 'manifest.json']
     if GENERATE:
         files += [ROOT / GEN_SOURCE, ROOT / 'crates/lp/src/lu.rs']
-    return dict(task='M3-04c-21g' if GENERATE else 'M3-04c-21f', schema=SCHEMA, binary_sha256=oracle.BINARY_SHA,
+    if BLOCK:
+        files += [ROOT / 'bench/oracle/m3_push_block/manifest.json', ROOT / 'tools/push_block_check.py']
+    return dict(task='M3-04c-21h' if BLOCK else 'M3-04c-21g' if GENERATE else 'M3-04c-21f', schema=SCHEMA, binary_sha256=oracle.BINARY_SHA,
                 files={str(p.relative_to(ROOT)): sha(p) for p in files})
 
 
 def main():
-    if '--generate' in sys.argv:
+    if '--block' in sys.argv:
+        use_block()
+    elif '--generate' in sys.argv:
         use_generate()
     ap = argparse.ArgumentParser()
     ap.add_argument('--generate', action='store_true', help='21g: 재분해 factor를 Rust가 생성(주입 없음)')
+    ap.add_argument('--block', action='store_true', help='21h: 생성 모드 + 2×2 블록 단계(블록 상태 연쇄)')
     ap.add_argument('--write', action='store_true')
     ap.add_argument('--compare', action='store_true')
     ap.add_argument('--trace', default=str(TRACE))

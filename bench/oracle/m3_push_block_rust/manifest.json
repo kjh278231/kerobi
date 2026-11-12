@@ -1,0 +1,18 @@
+{
+ "task": "M3-04c-21h",
+ "schema": "M3-04c-21h-v1",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "files": {
+  "bench/oracle/m3_push_block_rust/input.txt": "4fc0b31f1532670dedf0897ab617af51388bfe1e45b56bbdf4852850d440af7f",
+  "crates/lp/src/crossover_lu.rs": "4100985595c3bae309256c1732e59dff5ef3233a95ad0ab6be29a901424f95b3",
+  "crates/lp/tests/push_lu.rs": "21f32c7f07f7e3b048a56a982d1f6dd40b82f05c6d7fed277f717b258c8523d1",
+  "crates/lp/src/crossover_ftran.rs": "130f9c26ac084a61ae131d97d20a2276fa12f070d1ae6ec7644257fb561384ae",
+  "crates/lp/src/crossover_btran.rs": "97f0d0bc45a7a9c1035a827530c38bea049f3e8b7ee5f1edb187683660de599a",
+  "tools/push_lu_rust.py": "e45f33618d2b7b5173bda552caf31a0237f1bb132a03a44692dab39a92726ed2",
+  "bench/oracle/m3_push_lu_chain/manifest.json": "357174cc9aee8a42c7bc6bb7ff8ff056ccd76422a31c67a30b6f61518c76008f",
+  "crates/lp/src/crossover_refactor.rs": "a537e2b1ae4a337900ab3a06edc28268a363f4bb2350fc2f438dac2aae7d8255",
+  "crates/lp/src/lu.rs": "9e07dfc6acfdc3ac85c5d4d380351337a743cf4260fe897ca3ba70e7f2cd19f7",
+  "bench/oracle/m3_push_block/manifest.json": "2b6e35e97301133437fe94b4ac59f68dc467fd2e60095628e7dfc79020d01774",
+  "tools/push_block_check.py": "09d07366f824d9e4c494916375d9749ceef6bbb798a915a9f8da62bfc8c78e63"
+ }
+}
