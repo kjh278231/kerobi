@@ -20,7 +20,7 @@
 |---|---|
 | 후보·실패·cursor/deferred·support·marks·approved·요청/status/numeric/failure/retry·종료 | 배열 순서·중복·정수·형식 정확 일치 |
 | count_sum·BTRAN 입력/raw 값 | ±0 포함 f64 little-endian 비트; count_sum/successes 보존 |
-| 호출 순서·인자 | BTRAN e_leave, factor request/반환/状態 변경을 원본 사건과 직접 비교 |
+| 호출 순서·인자 | BTRAN e_leave, factor request/반환/상태 변경을 원본 사건과 직접 비교 |
 | 자연 경계 | pass/defer/accepted/BTRAN/exhausted/support/factor/clear 입력에서 원본 다음 사건 후상태와 비교; 실제 전체 루프 연결 주장은22로 유보 |
 
 일반 유한 수와 내부 sentinel만 입력한다. NaN/IEEE무한대·정수 overflow는 제외한다. batch0 전제를 검사한다. sqrt는 비음수 m의 f64 제곱근을 사용한다. 미사용 marks null을 성공 출력으로 만들지 않고 실제 clear/사용 시만 배열을 만든다.
