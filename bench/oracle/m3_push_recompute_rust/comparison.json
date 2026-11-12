@@ -1,0 +1,12 @@
+{
+  "cases": 138,
+  "fields": 2958,
+  "rule": "ordered typed exact; f64 little-endian bits incl signed zero",
+  "natural": 8,
+  "synthetic": 130,
+  "rows": 289,
+  "sites": {
+    "round": 72,
+    "pivot": 66
+  }
+}

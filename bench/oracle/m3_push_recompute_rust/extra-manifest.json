@@ -1,0 +1,15 @@
+{
+  "schema": "M3-04c-18-extra-v1",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "input_sha256": "3dd482deb3ad991350a1dd7814e17c7d0061c4d028c738f444db4254c7dc5c7f",
+  "files": {
+    "tools/push_recompute_extra.py": "ceee567d5e8d10cb8b18fcb29110e2cdfd9e9d64e75ce23d8e217f1c4800d173",
+    "tools/push_recompute_synthetic.py": "89b5e2b0d316b44abcafce3a7fb7f0ab9fa0a2fed8654067cc8498142ee23584",
+    "tools/push_recompute_check.py": "a15cc232b8c6a40ba852c42d29a8b25738e7a65f3b65f9fbecd1d7b1e117cc78",
+    "bench/oracle/m3_push_recompute/manifest.json": "59a90720179c4ec9815ea30f6e9ec22a1f6e99fbca9af2001505e8ad5e49a3d7",
+    "bench/oracle/m3_push_recompute/source.asm": "aacbd42ac4bbc3d8c1aefec20cac78816de0636450f4f89667199a96d4bb5ec7",
+    "bench/oracle/m3_push_recompute_rust/extra-1.json": "8be4aefe58f7bf931eb9da2949163ebba536adf32f1b72c498b6f4270321beba",
+    "bench/oracle/m3_push_recompute_rust/extra-2.json": "3455e9ef2315bc230494068560bfa1e1d510764338f5332ed77b66d62daaede5",
+    "bench/oracle/m3_push_recompute_rust/extra-3.json": "c06fe6d5a7349d3ff911af5842059f300184f0e25fe88c78e064ff330b7f8d2d"
+  }
+}

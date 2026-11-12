@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 import push_recompute_check as oracle
+import push_recompute_extra as extra
 
 ROOT = Path(__file__).resolve().parents[1]
 D = ROOT / 'bench/oracle/m3_push_recompute_rust'
@@ -44,7 +45,10 @@ def cases():
     for e in data['synthetic'][0]['events']:
         out.append(dict(name='synthetic/'+e['name'], site=e['site'], origin='synthetic',
                         input=e['input'], result=e['result']))
-    oracle.equal(128, len(out), '8 natural + 120 synthetic')
+    for e in extra.load_checked()[0]['events']:
+        out.append(dict(name='extra/'+e['name'], site=e['site'], origin='extra-synthetic',
+                        input=e['input'], result=e['result']))
+    oracle.equal(138, len(out), '8 natural + 120 synthetic + 10 extra synthetic')
     oracle.equal(len(out), len({c['name'] for c in out}), 'unique cases')
     return out
 
@@ -116,7 +120,8 @@ def self_test(txt, expected, header):
     reject('case-order', lines[:1]+[lines[2], lines[1]]+lines[3:])
     reject('input-hash-zero', [SCHEMA+' '+'0'*64]+lines[1:])
     for case in ('arms/1/1/round', 'synthetic/pivot-mixed', 'synthetic/round-alias-1-1',
-                 'synthetic/pivot-accumulation', 'synthetic/round-empty'):
+                 'synthetic/pivot-accumulation', 'synthetic/round-empty',
+                 'extra/pivot-basis-accumulation', 'extra/round-above-association'):
         index = list(expected).index(case)+1
         for key in expected[case]:
             altered = lines.copy()
@@ -146,9 +151,7 @@ def self_test(txt, expected, header):
     return results
 
 
-# Fix expected classifications before executing Rust mutants. Four predicates cannot
-# be distinguished by this captured corpus (see contract); retain those limitations.
-SURVIVORS = {'lower-sentinel-strict', 'upper-sentinel-strict', 'normal-no-infinite', 'reassociate-above'}
+# All33 must now fail by a trace difference; the initial failed28/33 run is preserved.
 MUTATIONS = [
     ('no-raw-copy', 'basic.copy_from_slice(raw);', 'let _ = raw;'),
     ('no-shift', 'basic[p] -= lower;', 'basic[p] += 0.0;'),
@@ -212,7 +215,7 @@ def mutate_rust(path, expected, header):
         path.write_text(json.dumps(results, ensure_ascii=False, indent=2)+'\n')
     oracle.equal(len(MUTATIONS), len(results), 'all mutants executed')
     for result in results:
-        oracle.equal('survived' if result['name'] in SURVIVORS else 'rejected', result['result'],
+        oracle.equal('rejected', result['result'],
                      'fixed mutation expectation '+result['name'])
     return dict(rejected=sum(x['result']=='rejected' for x in results),
                 unverified=[x['name'] for x in results if x['result']=='survived'])
@@ -244,7 +247,7 @@ def main():
         oracle.equal(source, INPUT.read_text(), 'fixed input projection')
         txt = TRACE.read_text()
         result = compare(txt, expected, header)
-        result.update(natural=8, synthetic=120, rows=sum(c['input']['m'] for c in cs),
+        result.update(natural=8, synthetic=130, rows=sum(c['input']['m'] for c in cs),
                       sites=dict(Counter(c['site'] for c in cs)))
         if args.mutate_rust:
             result['mutations'] = mutate_rust(args.mutate_rust, expected, header)
