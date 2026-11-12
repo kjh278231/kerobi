@@ -1,0 +1,22 @@
+{
+  "task": "M3-04c-21d",
+  "baseline": "4c99d26",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "oracle_manifest_sha256": "cf950a526fac5c1a42824fb382eedafa3ebfe4dc2a627cbb423241d14734f71d",
+  "files": {
+    "crates/lp/src/crossover_btran.rs": "97f0d0bc45a7a9c1035a827530c38bea049f3e8b7ee5f1edb187683660de599a",
+    "crates/lp/src/lib.rs": "6f9608f42607a64f2e8257848337fd76d51a1b5abf7e7dab664e0ddce56fc643",
+    "crates/lp/tests/push_btran.rs": "ec2cc452c40d7a0fffd1db4cb9cc5e3765bab0ccc6be3be7e7f8d7bf851c1076",
+    "tools/push_btran_rust.py": "f5707c0611b5836469c3f3bf137542a2d344d1027816bdc63c3904396deebf48",
+    "tools/push_btran_check.py": "417b895ad5624790f7c0bc8c37378b52fd0e7f99f52693ade07a6a03561dad90",
+    "bench/oracle/m3_push_btran/manifest.json": "cf950a526fac5c1a42824fb382eedafa3ebfe4dc2a627cbb423241d14734f71d",
+    "bench/oracle/m3_push_btran_rust/comparison.json": "10b1d7f8617bc4b7871cb684789bb6cb4ecd395ab0f122fc8d5d4398de2a4bcf",
+    "bench/oracle/m3_push_btran_rust/input.txt": "1ebce88e7086caf6837af5320cb1e675ed5cb76f44e10854575847b58e854961",
+    "bench/oracle/m3_push_btran_rust/regression/clippy.log": "7c6e6f984c28d5b22aa3d91a3dbcc0b1087f24a7bc71a17628671c4da730aa7e",
+    "bench/oracle/m3_push_btran_rust/regression/summary.txt": "6130b9e0fcc2a5df6d58cf8d86944f82404ad4200222209114541e58ac501642",
+    "bench/oracle/m3_push_btran_rust/regression/workspace.log": "2ea1ca9ae7e5d2835a0a17356f5f108f8db0fe2eb2afc5d30d625e496cf7712e",
+    "bench/oracle/m3_push_btran_rust/rust-mutations.json": "1245f53c7ad85729051d2d31c40a1c1e2b4393174e84d81c73143cd146821501",
+    "bench/oracle/m3_push_btran_rust/self-test.json": "63469ddf7a70c3cdadd24af4b8a06a006dfe9c65e8790361826413b1ab13a68d",
+    "bench/oracle/m3_push_btran_rust/trace.txt": "c7f309059e5c09de4f8ffe3df4a04e91a8f89c01d13138a852196fd3bead0713"
+  }
+}
