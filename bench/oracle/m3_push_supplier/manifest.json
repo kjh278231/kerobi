@@ -1,0 +1,60 @@
+{
+ "task": "M3-04c-13",
+ "schema_version": 1,
+ "original_version": "13.0.3",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "float_encoding": "IEEE-754 binary64 LE hex, exact bits incl signed zero",
+ "tools": {
+  "tools/push_supplier_capture.js": "0a93dfbe43563c361800b2c72bbde8609f8778710193dbe14363d0bc01a60fb7",
+  "tools/push_supplier_agent.js": "9369c0c1b55a3efab8877e4c6b68cf9bd7fdd28422c34ff83f2f2afbc3c9b329",
+  "tools/push_supplier_synthetic.py": "35dde0a2f26afa06c917f8b910c6da3d961acf890f8004e056002539bfea6fbe",
+  "tools/push_supplier_runs.py": "c1cc394a87618fcb4e29231c588c14679c63e4c8f39dbf49e6141bfc5f5d1da9",
+  "tools/push_supplier_check.py": "2111b9192c5724e0cee21f0360a0cd0b75dfad0bac57036191367b4f5653df5e",
+  "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec",
+  "tools/gurun.sh": "7efb6a90dd1fae5f71997b24c112601d4f76b822546ddcce8d53920369f0d48f"
+ },
+ "sources": {
+  "../re/decomp/c/001c5310_PRIVATE000000000025615c.c": "acbf6b5539de8967b02005efd5bb3581e1487d56b2881508ad4309a4305793bd",
+  "../re/decomp/c/00120680_PRIVATE000000000009d008.c": "26aec435ba5288663a23a0670ad59fac818bc3afd932162cd7cd0b948d89d348"
+ },
+ "inputs": {
+  "bench/oracle/m3_push_arms/arms.lp": "b05832f67ae340637551cda5cd191013c3f65f5cef190a0cc5a8c058070d9683",
+  "bench/oracle/m3_push_arms/arms.extra.json": "7843373b048b87370821eaedb90b918828759254061a3c3f37b60d51f3a1a46d",
+  "bench/oracle/m3_push_retry/retry.lp": "2be78262e14b9c8482ce0c96fe0ab10d68246bc11eae184dc2bdb9c2f8516986",
+  "bench/oracle/m3_push_retry/retry.extra.json": "a14e2011d1e13d4abf085d97bc3043a5781a1b0daaea2298f036a5a4692d5e1b",
+  "bench/oracle/m3_primal_push_step/interior.lp": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0"
+ },
+ "baselines": {
+  "bench/oracle/m3_push_arms/arms-primal-1.json": "003eafeeb138c28fe13aba9250cec827e69d5c60114245b3149c5a75383f90bc",
+  "bench/oracle/m3_push_arms/manifest.json": "3eda99a7c5fde9d2ccc4e0e53ddce860c7d4b14184e951eb1efc596650b5ed23",
+  "bench/oracle/m3_push_retry/retry-primal-1.json": "6b5705fa668c83cdd4ba00354f27ce9ccdc790b591809ed3e03b02daa62942f7",
+  "bench/oracle/m3_push_retry/manifest.json": "cf15107257f845d8204aeaf0442b2d9aff85c687657485dced72be50f355a4db",
+  "bench/oracle/m3_primal_push_step/primal-1.json": "2a371f4bad943f1ac70e624d0f485e790bb418c518bb5b88a87254912bbec4e9",
+  "bench/oracle/m3_primal_push_step/manifest.json": "201e446e0e1467aeea81cd74b420f35e1f06321505d60688c70cee200ae1a6ed",
+  "bench/oracle/m3_push_arms/arms-control-1.json": "bb6fe68e10b8c3e23583f8061cbf7bb86dcfed05e8df6974122d478e6d63a21c"
+ },
+ "captures": {
+  "bench/oracle/m3_push_supplier/arms-1.json": "1775d20a89a36d9a9851f59f26ee175aaf9269f128d0aa93375698b8046d62eb",
+  "bench/oracle/m3_push_supplier/arms-2.json": "9c9077c58454a1722d25c825097c1070eafad49573014b7e0e19c8fe38e2dd14",
+  "bench/oracle/m3_push_supplier/arms-3.json": "a3c82447385d36dd0e11bca1085cdb9efab6781654c38196f608e7af5c4423ee",
+  "bench/oracle/m3_push_supplier/retry-1.json": "ccf71f10c33413e69102824b7dc9368be1585aec186acd311cea2a72e88face7",
+  "bench/oracle/m3_push_supplier/retry-2.json": "9b99d90055f295293a687004f53e776ef0d220fc00de822f61ef1be1ab77b419",
+  "bench/oracle/m3_push_supplier/retry-3.json": "a0cd2bac97d0b6d03fc37b6ab6240764153a2b7141206a29f0a2f89a1ff4c0a5",
+  "bench/oracle/m3_push_supplier/interior-1.json": "d2be9b2c03efe9977bb9a977d92ea3f2d17f0a9eed2b56b32c7dd51582196545",
+  "bench/oracle/m3_push_supplier/interior-2.json": "760126e3416a968af5bc07d4a90f14246d30acebb1e1fe1bbf24b47682924a4e",
+  "bench/oracle/m3_push_supplier/interior-3.json": "c84fdb687c2e0cae973cd346340e880063d0c2a188a7f1f8a1b6b3d98ab6716a",
+  "bench/oracle/m3_push_supplier/control-1.json": "0f6ab3f0b87ed0230b91c46c792cf56cc8cbafd92818362686889c9b26c11b96",
+  "bench/oracle/m3_push_supplier/control-2.json": "4d80c566367e101d4ef150e637501e8526250f412a5c1e0479aeb51682004390",
+  "bench/oracle/m3_push_supplier/control-3.json": "aa2bf30f23f9b9de257ea0639f08713af18d3c9de13f83406e1f9f9becd41048",
+  "bench/oracle/m3_push_supplier/synthetic-1.json": "fbc59e9d66386981eb7a15b84fd64358a7fd30335be5d34166cf419e1b15b111",
+  "bench/oracle/m3_push_supplier/synthetic-2.json": "c5dc37fcf77efcf2b89e0903d4271811677b202c785f9f0369ded90efd280f1f",
+  "bench/oracle/m3_push_supplier/synthetic-3.json": "48909c473f3f2528a5901c743776b77c1944779a5df1642a880298196e00cd3b"
+ },
+ "history": {
+  "bench/oracle/m3_push_supplier/history/arms-primal-probe.json": "c4d5583754458b9f24387851654699665b15b9bc324bd8ec934522cc1dec8a6a",
+  "bench/oracle/m3_push_supplier/history/synthetic-m9-error-1.json": "c9072a42f0c8bb26c8b6c49afea83959fd45cca90e26e387e4d8aeaa1d1d2932",
+  "bench/oracle/m3_push_supplier/history/synthetic-m9-error-2.json": "0474a77dbdf90a0625334c8193ed6c0f3d374cf574e0bd49f9732cc3c63b8905",
+  "bench/oracle/m3_push_supplier/history/synthetic-m9-error-3.json": "33053bcbb748fe16f5fb3e73fdb50e69a20083c0c4c943511f0785c6ddb29faa",
+  "bench/oracle/m3_push_supplier/history/synthetic-probe.json": "9d7041382dfdea726c0f380ff4620c3f43112a04c71387d3c176aba5cf129b1f"
+ }
+}

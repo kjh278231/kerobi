@@ -1,0 +1,2625 @@
+{
+ "schema": "M3-04c-13-synthetic-v1",
+ "origin": "synthetic-backend",
+ "substitution": "09d008@0x120680 replaced by explicit synthetic FTRAN backend; supplier@0x1c5310 is original",
+ "run_id": "b3b4eb6a-7e7e-42bf-9964-dc9e04fdba9b",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "tool_sha256": "35dde0a2f26afa06c917f8b910c6da3d961acf890f8004e056002539bfea6fbe",
+ "input_sha256": "6dcae4289b75c7d3b14006278b2267f6ad613a53633625b245f00fdcfa741a5f",
+ "environment": {
+  "machine": "x86_64",
+  "system": "Linux",
+  "python": "3.13.14"
+ },
+ "events": [
+  {
+   "name": "structural-sparse",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000802440",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 0,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     8,
+     0,
+     3
+    ],
+    "values": [
+     "0000000000000040",
+     "0000000000000080",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 3,
+      "indices": [
+       5,
+       1,
+       8
+      ],
+      "values": [
+       "0000000000000040",
+       "000000000000f0bf",
+       "0000000000000840"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 3,
+      "indices": [
+       8,
+       0,
+       3
+      ],
+      "values": [
+       "0000000000000040",
+       "0000000000000080",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "slack-sparse",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     6
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     6
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000802440",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 6,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     8,
+     0,
+     3
+    ],
+    "values": [
+     "0000000000000040",
+     "0000000000000080",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 1,
+      "indices": [
+       3
+      ],
+      "values": [
+       "000000000000f03f"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 3,
+      "indices": [
+       8,
+       0,
+       3
+      ],
+      "values": [
+       "0000000000000040",
+       "0000000000000080",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "negative-support",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": -1,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000802440",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 0,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     8,
+     0,
+     3
+    ],
+    "values": [
+     "0000000000000040",
+     "0000000000000080",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 3,
+      "indices": [
+       5,
+       1,
+       8
+      ],
+      "values": [
+       "0000000000000040",
+       "000000000000f0bf",
+       "0000000000000840"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 3,
+      "indices": [
+       8,
+       0,
+       3
+      ],
+      "values": [
+       "0000000000000040",
+       "0000000000000080",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "positive-support",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 1,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "support_marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "count_sum": "0000000000802440",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 0,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     8,
+     0,
+     3
+    ],
+    "values": [
+     "0000000000000040",
+     "0000000000000080",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 3,
+      "indices": [
+       5,
+       1,
+       8
+      ],
+      "values": [
+       "0000000000000040",
+       "000000000000f0bf",
+       "0000000000000840"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": true,
+      "spike_f1c8": false,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 3,
+      "indices": [
+       8,
+       0,
+       3
+      ],
+      "values": [
+       "0000000000000040",
+       "0000000000000080",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "structural-conflict",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 1,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 2
+   },
+   "after": {
+    "m": 9,
+    "total": 2,
+    "candidates": [
+     0,
+     1
+    ],
+    "position": 2,
+    "deferred": 1,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "support_marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "count_sum": "0000000000802440",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 1,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     8,
+     0,
+     3
+    ],
+    "values": [
+     "0000000000000040",
+     "0000000000000080",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 2,
+      "indices": [
+       2,
+       7
+      ],
+      "values": [
+       "000000000000e03f",
+       "00000000000000c0"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": true,
+      "spike_f1c8": false,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 3,
+      "indices": [
+       8,
+       0,
+       3
+      ],
+      "values": [
+       "0000000000000040",
+       "0000000000000080",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "slack-conflict",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     8,
+     6
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 1,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 2
+   },
+   "after": {
+    "m": 9,
+    "total": 2,
+    "candidates": [
+     8,
+     6
+    ],
+    "position": 2,
+    "deferred": 1,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "support_marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "count_sum": "0000000000802440",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 6,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     8,
+     0,
+     3
+    ],
+    "values": [
+     "0000000000000040",
+     "0000000000000080",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 1,
+      "indices": [
+       3
+      ],
+      "values": [
+       "000000000000f03f"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": true,
+      "spike_f1c8": false,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 3,
+      "indices": [
+       8,
+       0,
+       3
+      ],
+      "values": [
+       "0000000000000040",
+       "0000000000000080",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "failure-two",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000802440",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 0,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     8,
+     0,
+     3
+    ],
+    "values": [
+     "0000000000000040",
+     "0000000000000080",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 3,
+      "indices": [
+       5,
+       1,
+       8
+      ],
+      "values": [
+       "0000000000000040",
+       "000000000000f0bf",
+       "0000000000000840"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 3,
+      "indices": [
+       8,
+       0,
+       3
+      ],
+      "values": [
+       "0000000000000040",
+       "0000000000000080",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "failure-three",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 2
+   },
+   "after": {
+    "m": 9,
+    "total": 2,
+    "candidates": [
+     0,
+     1
+    ],
+    "position": 2,
+    "deferred": 1,
+    "failures": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000802440",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 1,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     8,
+     0,
+     3
+    ],
+    "values": [
+     "0000000000000040",
+     "0000000000000080",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 2,
+      "indices": [
+       2,
+       7
+      ],
+      "values": [
+       "000000000000e03f",
+       "00000000000000c0"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 3,
+      "indices": [
+       8,
+       0,
+       3
+      ],
+      "values": [
+       "0000000000000040",
+       "0000000000000080",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "all-failure",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0,
+     1
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     3,
+     4,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 2
+   },
+   "after": {
+    "m": 9,
+    "total": 2,
+    "candidates": [
+     0,
+     1
+    ],
+    "position": 2,
+    "deferred": 2,
+    "failures": [
+     3,
+     4,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": -1,
+   "output_is_s210": true,
+   "alpha": null,
+   "ftran": []
+  },
+  {
+   "name": "all-conflict",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0,
+     8
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 1,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 2
+   },
+   "after": {
+    "m": 9,
+    "total": 2,
+    "candidates": [
+     0,
+     8
+    ],
+    "position": 2,
+    "deferred": 2,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 1,
+    "support_marks": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": -1,
+   "output_is_s210": true,
+   "alpha": null,
+   "ftran": []
+  },
+  {
+   "name": "already-exhausted",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": -1,
+   "output_is_s210": true,
+   "alpha": null,
+   "ftran": []
+  },
+  {
+   "name": "empty-list",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 0
+   },
+   "after": {
+    "m": 9,
+    "total": 0,
+    "candidates": [],
+    "position": 0,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": -1,
+   "output_is_s210": true,
+   "alpha": null,
+   "ftran": []
+  },
+  {
+   "name": "empty-column",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     2
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     2
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 2,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 0,
+    "indices": [],
+    "values": []
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 0,
+      "indices": [],
+      "values": []
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 0,
+      "indices": [],
+      "values": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "dense-boundaries",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000001940",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 0,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 4,
+    "indices": [
+     3,
+     4,
+     7,
+     8
+    ],
+    "values": [
+     "010000000000d03f",
+     "010000000000d0bf",
+     "0000000000000040",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 3,
+      "indices": [
+       5,
+       1,
+       8
+      ],
+      "values": [
+       "0000000000000040",
+       "000000000000f0bf",
+       "0000000000000840"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": -1,
+      "indices": null,
+      "values": [
+       "000000000000d03f",
+       "000000000000d0bf",
+       "ffffffffffffcf3f",
+       "010000000000d03f",
+       "010000000000d0bf",
+       "0000000000000000",
+       "0000000000000080",
+       "0000000000000040",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "dense-even",
+   "m": 8,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     7,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 8,
+    "total": 1
+   },
+   "after": {
+    "m": 8,
+    "total": 1,
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000001940",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 0,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     3,
+     4,
+     7
+    ],
+    "values": [
+     "010000000000d03f",
+     "010000000000d0bf",
+     "0000000000000040"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 3,
+      "indices": [
+       5,
+       1,
+       7
+      ],
+      "values": [
+       "0000000000000040",
+       "000000000000f0bf",
+       "0000000000000840"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": -1,
+      "indices": null,
+      "values": [
+       "000000000000d03f",
+       "000000000000d0bf",
+       "ffffffffffffcf3f",
+       "010000000000d03f",
+       "010000000000d0bf",
+       "0000000000000000",
+       "0000000000000080",
+       "0000000000000040"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "dense-all-drop",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000001940",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 0,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 0,
+    "indices": [],
+    "values": []
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 3,
+      "indices": [
+       5,
+       1,
+       8
+      ],
+      "values": [
+       "0000000000000040",
+       "000000000000f0bf",
+       "0000000000000840"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": -1,
+      "indices": null,
+      "values": [
+       "0000000000000080",
+       "0000000000000080",
+       "0000000000000080",
+       "0000000000000080",
+       "0000000000000080",
+       "0000000000000080",
+       "0000000000000080",
+       "0000000000000080",
+       "0000000000000080"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "dense-negative-count",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     0
+    ],
+    "position": 0,
+    "deferred": 0,
+    "support": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 1
+   },
+   "after": {
+    "m": 9,
+    "total": 1,
+    "candidates": [
+     0
+    ],
+    "position": 1,
+    "deferred": 0,
+    "failures": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "000000000000d03f",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 0,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 4,
+    "indices": [
+     3,
+     4,
+     7,
+     8
+    ],
+    "values": [
+     "010000000000d03f",
+     "010000000000d0bf",
+     "0000000000000040",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 3,
+      "indices": [
+       5,
+       1,
+       8
+      ],
+      "values": [
+       "0000000000000040",
+       "000000000000f0bf",
+       "0000000000000840"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": -7,
+      "indices": null,
+      "values": [
+       "000000000000d03f",
+       "000000000000d0bf",
+       "ffffffffffffcf3f",
+       "010000000000d03f",
+       "010000000000d0bf",
+       "0000000000000000",
+       "0000000000000080",
+       "0000000000000040",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "prefix-preserved",
+   "m": 9,
+   "n": 3,
+   "model": {
+    "starts": [
+     0,
+     3,
+     5
+    ],
+    "lengths": [
+     3,
+     2,
+     0
+    ],
+    "rows": [
+     5,
+     1,
+     8,
+     2,
+     7
+    ],
+    "values": [
+     "0000000000000040",
+     "000000000000f0bf",
+     "0000000000000840",
+     "000000000000e03f",
+     "00000000000000c0"
+    ]
+   },
+   "drop": "000000000000d03f",
+   "before": {
+    "candidates": [
+     2,
+     0,
+     1
+    ],
+    "position": 1,
+    "deferred": 1,
+    "support": 0,
+    "failures": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support_marks": null,
+    "count_sum": "0000000000001d40",
+    "successes": 4,
+    "batch": [
+     0,
+     0,
+     0
+    ],
+    "m": 9,
+    "total": 3
+   },
+   "after": {
+    "m": 9,
+    "total": 3,
+    "candidates": [
+     2,
+     0,
+     1
+    ],
+    "position": 3,
+    "deferred": 2,
+    "failures": [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "support": 0,
+    "support_marks": null,
+    "count_sum": "0000000000802440",
+    "successes": 5,
+    "batch": [
+     0,
+     0,
+     0
+    ]
+   },
+   "ret": 1,
+   "output_is_s210": true,
+   "alpha": {
+    "count": 3,
+    "indices": [
+     8,
+     0,
+     3
+    ],
+    "values": [
+     "0000000000000040",
+     "0000000000000080",
+     "00000000000008c0"
+    ]
+   },
+   "ftran": [
+    {
+     "input": {
+      "count": 2,
+      "indices": [
+       2,
+       7
+      ],
+      "values": [
+       "000000000000e03f",
+       "00000000000000c0"
+      ]
+     },
+     "aliases": {
+      "factor": true,
+      "input_s220": true,
+      "output_s210": true,
+      "spike_null": false,
+      "spike_f1c8": true,
+      "work": true,
+      "zeros": [
+       true,
+       true,
+       true
+      ]
+     },
+     "raw": {
+      "count": 3,
+      "indices": [
+       8,
+       0,
+       3
+      ],
+      "values": [
+       "0000000000000040",
+       "0000000000000080",
+       "00000000000008c0"
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
