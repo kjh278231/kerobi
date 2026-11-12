@@ -42,6 +42,8 @@
 
 [04c-22 루프 연결](primal_push_loop_rust.md)은 14·16·18·20과 10의 L1 조각을 `push_loop` 하나로 이어 첫 패스 준비부터 종료까지 원본 상태 재주입 없이 비교한다. 수치는 21e 캡처 tape이고 재분해 재번호만 루프가 적용한다. 자연 6사례 719줄이 일치했다. 다음 24는 tape 대신 21b–21h의 실제 Rust backend를 설치하는 연결이며, batch23·품질15a·초기화·해 설치는 여전히 별도다.
 
+[04c-24 실제 backend 설치](primal_push_loop_lu.md)는 tape을 `crossover_backend::SerialBackend`(21b–21h의 LuState·refactor·블록 단계, 판단 통계 F190·F1e0·F1e8)로 바꿔, 초기화 factor 입력만 받고 같은 6사례를 원본 수치 재주입 없이 비교한다. 다음은 batch23, 품질 helper 15a, 그리고 초기화(후보 구성)와 해 설치(04f)를 이어 solver 경로에 연결하는 일이다.
+
 ## 2. Method 선택과 Concurrent
 
 자동 선택은 입력 분류→Method 결정→실행 경로를 추적한다. M3-05a는 명시 Method, 자동 Method, 모델 분류, 관련 파라미터에 대한 원본 결정표를 만든다. 선택 분기를 고치는 작업과 concurrent 엔진을 만드는 작업은 독립 번호다.

@@ -510,7 +510,27 @@ MUTATIONS = [
 ]
 
 
-LU_MUTATIONS = []
+# M3-04c-24: 실제 backend 변이(자연 경로를 지나면 거부돼야 함). 루프 제어 변이는 22 목록과 같은 효과라 그대로 함께 돌린다.
+LU_MUTATIONS = [
+    ('column-work-skip', 'crossover_backend.rs', '            self.add_column_work(workspace.expect("update without a work column"));\n', ''),
+    ('column-work-no-plus1', 'crossover_backend.rs', '            i64::from(w.count) + 1\n', '            i64::from(w.count)\n'),
+    ('column-work-no-reset', 'crossover_backend.rs', '        self.column_work = 0;\n        let alloc', '        let alloc'),
+    ('u-stat-no-m', 'crossover_backend.rs', '        lu.re[m - 1] + m as i64', '        lu.re[m - 1]'),
+    ('u-stat-stale', 'crossover_backend.rs', '        self.u_nnz = u_stat(&lu);\n        self.lu = lu;', '        self.lu = lu;'),
+    ('no-wrapper-clear', 'crossover_backend.rs', '            self.lu.wrapper_clear();\n', ''),
+    ('supplier-save0', 'crossover_backend.rs', '.ftran(input.count, &input.indices, &input.values, with_spike as i32, with_spike)', '.ftran(input.count, &input.indices, &input.values, 0, with_spike)'),
+    ('supplier-no-spike', 'crossover_backend.rs', '.ftran(input.count, &input.indices, &input.values, with_spike as i32, with_spike)', '.ftran(input.count, &input.indices, &input.values, with_spike as i32, false)'),
+    ('ft-header-stale', 'crossover_backend.rs', '            self.lu.header = st.header.clone();\n', ''),
+    ('ft-leave-zero', 'crossover_backend.rs', '            self.lu.ft_update(st.leave as usize)', '            self.lu.ft_update(0)'),
+    ('refactor-no-lu-renumber', 'crossover_backend.rs', '        lu.renumber(&st.header, st.leave, &st.vstat, &rf.o, &rf.n);\n', ''),
+    ('refactor-prev-none', 'crossover_backend.rs', 'alloc, Some(&self.lu), &mut self.block)', 'alloc, None, &mut self.block)'),
+    ('refactor-block-off', 'crossover_backend.rs', 'alloc, Some(&self.lu), &mut self.block)', 'alloc, Some(&self.lu), &mut BlockState::OFF.clone())'),
+    ('refactor-block-no-raise', 'crossover_backend.rs', '        self.block.x2c0 += 1;\n', ''),
+    ('initial-block-no-raise', 'crossover_backend.rs', '        block.x2c0 += 1;\n        let mut lu = rf.state;\n        let r =', '        let mut lu = rf.state;\n        let r ='),
+    ('btran-no-cache', 'crossover_backend.rs', 'input.values, 0, true, 0.0)', 'input.values, 0, false, 0.0)'),
+    ('rhs-ftran-save1', 'crossover_backend.rs', 'self.lu.ftran(-1, &[], rhs, 0, false)', 'self.lu.ftran(-1, &[], rhs, 1, false)'),
+    ('stats-interval-zero', 'crossover_backend.rs', '            interval: self.interval,\n', '            interval: 0,\n'),
+    ('loop-no-workspace', 'crossover_loop.rs', 'FactorSite::Pivot, &mut ctl, Some(vectors.workspace), self.trace)', 'FactorSite::Pivot, &mut ctl, None, self.trace)')] + MUTATIONS
 
 
 def mutate_rust(out):
@@ -534,11 +554,21 @@ def mutate_rust(out):
         orig = (ROOT / 'crates/lp/src' / fname).read_text()
         require(orig.count(old) == 1, f'{name}: 원문 {orig.count(old)}회')
         f.write_text(orig.replace(old, new))
-        r = subprocess.run(['cargo', 'test', '-q', '-p', 'rsolver-lp', '--test', TEST], cwd=work,
-                           capture_output=True, text=True, timeout=900)
+        # 빌드는 먼저 끝내고 재생만 시간 제한: 실제 backend에서는 tape 고갈이 없어 루프가 끝나지 않는 변이가 있다
+        subprocess.run(['cargo', 'test', '-q', '--no-run', '-p', 'rsolver-lp', '--test', TEST], cwd=work,
+                       capture_output=True, text=True, timeout=900)
         trace = work / TRACE.relative_to(ROOT)
-        if r.returncode != 0:
-            verdict, why = 'rejected-run', (r.stderr or r.stdout).strip().splitlines()[-1:]
+        try:
+            r = subprocess.run(['cargo', 'test', '-q', '-p', 'rsolver-lp', '--test', TEST], cwd=work,
+                               capture_output=True, text=True, timeout=120)
+        except subprocess.TimeoutExpired:
+            r = None
+        if r is None:
+            verdict, why = 'rejected-timeout', ['재생 120초 초과(루프 미종료)']
+        elif r.returncode != 0:
+            text = (r.stdout + r.stderr).splitlines()
+            why = [ln.strip() for ln in text if 'panicked' in ln or ln.strip().startswith(('left', 'right', 'assertion'))][:3]
+            verdict, why = 'rejected-run', why or text[-1:]
         else:
             try:
                 head, got = parse_trace(trace.read_text())

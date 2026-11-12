@@ -52,8 +52,24 @@
 
 ## 6. 실행 결과
 
-(작성 예정)
+- 기준 main `6340a20`, 계약 `778ae39`, 구현·첫 비교 `19e693f`. x86-64 Linux(WSL2), rustc stable. Gurobi 새 실행 0회. 자료 해시는 [manifest](../../bench/oracle/m3_push_loop_lu/manifest.json)에 고정했다.
+- 구현: `crates/lp/src/crossover_backend.rs`(`SerialBackend`: `initial`·`PushLoopBackend` 구현, F190·F1e0·F1e8 통계), `crossover_loop.rs`(`factor`가 push 상태와 작업 열을 받음, `LoopEvent::Factor`에 호출 뒤 통계), `crates/lp/tests/loop_io/mod.rs`(22·24 공통 입력·canonical 줄), `crates/lp/tests/push_loop_lu.rs`, `tools/push_loop_rust.py --lu`. 22 tape 재생은 공통 모듈로 옮긴 뒤에도 입력·trace가 바뀌지 않았다(719줄·5,502필드 그대로 일치).
+- 착수 검사: 21e `push_lu_check` controls·acceptance와 21h `push_block_check` controls·acceptance를 통과한 뒤 투영했다. 입력 파일은 사례마다 case·model·cfg·state·round·lu 6줄이며 수치 출력 tape이 없다.
+- `python3 tools/push_loop_rust.py --lu --write` → `cargo test -p rsolver-lp --test push_loop_lu` → `--lu --compare`: **6사례·725줄·5,575필드 전부 일치**(첫 비교부터). 줄 구성은 22의 719줄 + init 6, 필드는 22의 5,502 + init 24 + fcall 통계 49. Rust 초기화 factor의 재번호 header는 6사례 모두 루프 시작 header와 같았다. 수치 경로: 공급 FTRAN 107(spike 저장 51)·지원 BTRAN 32(dense 2)·FT 갱신 36·재분해 19(초기화 6 + 루프 13: pivot 1·round 12, capri 블록 단계 포함)·재계산 FTRAN 13. [비교 출력](../../bench/oracle/m3_push_loop_lu/compare.txt).
+- 판별력: `--lu --self-test` **변조 108종 전부 거부**(줄 태그·필드별 첫 값 101, 구조 6, 머리 1). [기록](../../bench/oracle/m3_push_loop_lu/self-test.txt).
+- Rust 변이 `--lu --mutate-rust`: **44종(backend 19 + 22 루프 25) 중 거부 31(시간 초과 1), 생존 13**. [기록](../../bench/oracle/m3_push_loop_lu/rust-mutations.json). 거부: F190 누적 생략·+1 생략·재분해 0 생략, F1e8 식·갱신 생략, S+0x46c, wrapper clear 생략, 공급 save·spike 인자, FT 이탈 위치, 블록 단계 끔(capri 23회째 재분해 header 차이), 재계산 FTRAN save, 작업 열 미전달, 22 루프 변이 18종(그중 `exhausted-skip`은 tape 고갈이 없어 루프가 끝나지 않아 120초 시간 초과). 생존은 모두 자연 자료가 그 값을 읽지 않는 경우다.
+  - `ft-header-stale`: FT 갱신·FTRAN·BTRAN은 F+0x18을 읽지 않는다(LuState의 header는 재번호 출력과 스냅숏용). 동치.
+  - `refactor-no-lu-renumber`·`refactor-prev-none`: 재분해 뒤 spike·cache·F1d8·scratch의 차이. 다음 spike FTRAN은 wrapper clear로 spike를 먼저 지우고, spike 없는 FTRAN은 F1c8을 읽지 않으며, scratch는 호출 사이 늘 0이고, cache는 FT의 F1d8=r 재사용(자연 0회)에서만 읽힌다.
+  - `refactor-block-no-raise`·`initial-block-no-raise`: S+0x2c0은 `1da0b2` C:1494–1510에서 `> 20`일 때만 읽히는데 push는 1에서 시작해 사례당 재분해가 최대 4회다.
+  - `btran-no-cache`: cache는 BTRAN 출력에 영향이 없고 F1d8=r 재사용(자연 0회)에서만 소비된다.
+  - 22와 같은 루프 생존 7종(`no-clear-request` 동치, `violations-not-saved`·`request-not-synced`·`period-not-saved`·`updates-stale`·`resume-restarts`·`resume-no-period`)은 22 §6의 분류와 같다.
+- 회귀(`bench/oracle/m3_push_loop_lu/regressions.json`, 12명령 모두 종료0): 22 tape 재투영(입력 파일 불변 `git diff --exit-code`)·재생·비교, factor·round·supplier·recompute·chain 재생 비교, 21h `push_lu --block` 재생성·비교, 21e controls·acceptance, py_compile, `cargo test --release --workspace` **145통과·0실패·ignored12**(새 `push_loop_lu` 1), `cargo clippy --workspace --all-targets -- -D warnings` 0, `git diff --check`. 변이 도구의 시간 초과 처리 수정 뒤 py_compile·22/24 비교·self-test·clippy를 다시 실행해 통과했다.
+- 실행하지 않은 검사: 기존 solver 경로·Python 경계 미변경이라 확장 설치·pytest·Netlib·P3는 제외했다. 독립 검토자는 사용하지 않았다.
 
 ## 7. 판정과 인수인계
 
-(작성 예정)
+- 작업 수행 **완료**, 구현 동등성 **계약 범위 통과**. 자연 6사례에서 Rust가 초기화 factor 입력만 받아 초기 factor를 만들고, 그 뒤 `push_loop`이 실제 Rust 수치 backend(FTRAN·BTRAN·FT 갱신·재분해·블록 단계·재번호·rhs FTRAN)와 그 통계로 첫 패스부터 종료까지 원본과 비트/정확 일치한다. 원본 수치 출력·factor 재주입 0회.
+- 남은 한계: 초기화의 나머지(첫 factor 이전 상태 구성·후보 구성·정렬, C 1143 이전)와 해 설치(C 2420 이후)는 입력/비교 밖이며 `push_loop`은 기존 solver 경로에서 호출하지 않는다. 품질 helper(15a), batch(23), x87, 종료 검사·콜백, work·시간 미구현. 자연 미관측: factor 반환 1·12·오류와 FT 실패·재할당, FT cache 재사용(F1d8=r), BTRAN eta>0, S+0x2c0>20, 그리고 22 §7의 루프 미관측 경로. 수치 카운터 S+0x178/0x184/0xf0과 F+0x1f0은 갱신하지 않는다(자연 경로에서 불변, F1f0은 루프가 읽지 않음).
+- branch `work/m3-04c-24`, worktree `../rsolver-m3-04c-24`, owner `claude-m3-04c24-20261112`. 최종 commit/병합은 main `Merge M3-04c-24` 이력을 따른다. 미커밋 선행 변경 없음.
+- 갱신: `docs/11_progress.md`·`12_roadmap_diagram.md`·`14_sprint_plan.md`(24 완료)·`m3/sprint_design.md`·`handoff/M3.md`. 교훈은 `docs/lessons/original.md`(F190·F1e0·F1e8 규칙), `tooling.md`(Ghidra 10진 오프셋, tape→실제 backend 교체와 기본 인자 함정).
+- 다음: **M3-04c-23**(batch 조사) 또는 초기화·해 설치를 이어 solver 경로에서 push를 부르는 연결(04f 계열, 후보 구성 `C 1143 이전` 조사 포함). 기준 재검사 `python3 tools/push_loop_rust.py --lu --write && cargo test -p rsolver-lp --test push_loop_lu && python3 tools/push_loop_rust.py --lu --compare`.
