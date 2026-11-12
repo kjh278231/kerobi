@@ -1,0 +1,1 @@
+초기 51사례 캡처·도구·manifest·검토 재캡처/변조를 원형 보존했다. 합성 분기 판별 보강과 quality enter·벡터 sentinel 내용 검사를 추가하기 전 자료다. explore-synthetic의 종료 레지스터 값은 ASLR 주소 영향을 받았으므로 정식 검증 자료가 아니다. 정식 자료는 반환 stub으로 종료 마커를 고정했다. 최종 기준은 상위 디렉터리 manifest다.

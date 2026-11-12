@@ -3,10 +3,10 @@
  "origin": "synthetic-original-slice",
  "substitution": "original in-place selector/wrapper; exit stubs; wrapper factor, quality, context helpers replaced; no numeric LU",
  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
- "tool_sha256": "470ef1fa2e9ed9dd814a090fcbdf3bf036b119d94950db992b24bc8483856da7",
- "input_sha256": "160cff354c928768363462a388689aa899e5a51d9cc166432505c30808745f82",
- "run_id": "215814c3-4f12-4ef4-9851-58d2bc3c4acc",
- "pid": 223661,
+ "tool_sha256": "c2c8d5061108956b569263d931f70d0ba7778dc817b06f58bffcb211d0fde2e9",
+ "input_sha256": "66c508466ee88a0c36c0b709e384ab48ef9fee292a94ce06186c0a2c96e40214",
+ "run_id": "e4eef1a1-82fe-416f-936a-77b3353e0f13",
+ "pid": 226464,
  "environment": {
   "machine": "x86_64",
   "system": "Linux",
@@ -410,7 +410,51 @@
    }
   },
   {
-   "name": "min-q-term",
+   "name": "min-q-term-19",
+   "kind": "select",
+   "input": {
+    "m": 2,
+    "request": 0,
+    "numeric": 0,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 19,
+    "E": 0,
+    "L": 50,
+    "U": 50,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "min-q-term-20",
+   "kind": "select",
+   "input": {
+    "m": 2,
+    "request": 0,
+    "numeric": 0,
+    "k": 4,
+    "limit": 10,
+    "q": 4,
+    "C": 20,
+    "E": 0,
+    "L": 50,
+    "U": 50,
+    "support": 0
+   },
+   "result": {
+    "request": 0,
+    "call": true,
+    "preserved": true
+   }
+  },
+  {
+   "name": "min-q-term-21",
    "kind": "select",
    "input": {
     "m": 2,
@@ -457,16 +501,16 @@
    "name": "sum-convert",
    "kind": "select",
    "input": {
-    "m": 7,
+    "m": 2,
     "request": 0,
     "numeric": 0,
     "k": 4,
     "limit": 10,
     "q": 4,
-    "C": 1,
-    "E": -1,
+    "C": 2,
+    "E": 0,
     "L": 9007199254740993,
-    "U": 2,
+    "U": -9007199254740987,
     "support": 0
    },
    "result": {
@@ -508,7 +552,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -527,6 +572,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -551,7 +597,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -573,6 +620,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -606,7 +654,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -631,6 +680,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -663,6 +713,112 @@
    }
   },
   {
+   "name": "repeat-request",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "enter": 7
+   },
+   "replies": [
+    {
+     "ret": 1,
+     "request": 6
+    },
+    {
+     "ret": 0
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 201,
+    "request": 6,
+    "status": 1,
+    "numeric": 3,
+    "failure": 0,
+    "retry": 0,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "contents_preserved": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 1,
+       "request": 6
+      }
+     },
+     {
+      "event": "factor",
+      "request": 6,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "numeric-crossed-by-backend",
+   "kind": "wrapper",
+   "input": {
+    "request": 0,
+    "numeric": 3,
+    "failure": 0,
+    "status": 1,
+    "k": 1,
+    "period": 50,
+    "attempt": 0,
+    "numeric_limit": 13,
+    "enter": 7
+   },
+   "replies": [
+    {
+     "ret": 0,
+     "numeric": 13
+    }
+   ],
+   "qualities": [],
+   "result": {
+    "exit": 202,
+    "request": 0,
+    "status": 1,
+    "numeric": 13,
+    "failure": 0,
+    "retry": 1,
+    "period": 50,
+    "k": 1,
+    "alpha_restored": true,
+    "spike_restored": true,
+    "contents_preserved": true,
+    "calls": [
+     {
+      "event": "factor",
+      "request": 0,
+      "alpha_current": true,
+      "spike_original": true,
+      "reply": {
+       "ret": 0,
+       "numeric": 13
+      }
+     }
+    ]
+   }
+  },
+  {
    "name": "return12",
    "kind": "wrapper",
    "input": {
@@ -673,7 +829,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -692,6 +849,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -716,7 +874,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -735,6 +894,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -759,7 +919,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -779,6 +940,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -804,7 +966,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -823,6 +986,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -847,7 +1011,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -866,6 +1031,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -890,7 +1056,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -909,6 +1076,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -933,7 +1101,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -952,6 +1121,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -976,7 +1146,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -995,6 +1166,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1019,7 +1191,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1038,6 +1211,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1062,7 +1236,8 @@
     "k": 1,
     "period": 50,
     "attempt": 1,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1081,6 +1256,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1105,7 +1281,8 @@
     "k": 1,
     "period": 50,
     "attempt": 1,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1124,6 +1301,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1148,7 +1326,8 @@
     "k": 1,
     "period": 50,
     "attempt": 1,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1167,6 +1346,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1191,7 +1371,8 @@
     "k": 1,
     "period": 50,
     "attempt": 1,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1210,6 +1391,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1234,7 +1416,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1253,6 +1436,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1277,7 +1461,8 @@
     "k": 1,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1296,6 +1481,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1320,7 +1506,8 @@
     "k": 0,
     "period": 100,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1339,6 +1526,7 @@
     "k": 0,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1363,7 +1551,8 @@
     "k": 1,
     "period": 100,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1382,6 +1571,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1406,7 +1596,8 @@
     "k": 1,
     "period": 20,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1425,6 +1616,7 @@
     "k": 1,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1449,7 +1641,8 @@
     "k": 50,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1473,6 +1666,7 @@
     "k": 50,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1485,6 +1679,7 @@
      },
      {
       "event": "quality",
+      "enter": 7,
       "period": 50,
       "request": 0,
       "reply": {
@@ -1506,7 +1701,8 @@
     "k": 50,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1530,6 +1726,7 @@
     "k": 50,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1542,6 +1739,7 @@
      },
      {
       "event": "quality",
+      "enter": 7,
       "period": 50,
       "request": 0,
       "reply": {
@@ -1563,7 +1761,8 @@
     "k": 50,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1587,6 +1786,7 @@
     "k": 50,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1599,6 +1799,7 @@
      },
      {
       "event": "quality",
+      "enter": 7,
       "period": 50,
       "request": 0,
       "reply": {
@@ -1620,7 +1821,8 @@
     "k": 50,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1644,6 +1846,7 @@
     "k": 50,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1656,6 +1859,7 @@
      },
      {
       "event": "quality",
+      "enter": 7,
       "period": 50,
       "request": 0,
       "reply": {
@@ -1677,7 +1881,8 @@
     "k": 51,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1701,6 +1906,7 @@
     "k": 51,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1713,6 +1919,7 @@
      },
      {
       "event": "quality",
+      "enter": 7,
       "period": 50,
       "request": 0,
       "reply": {
@@ -1734,7 +1941,8 @@
     "k": 50,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1762,6 +1970,7 @@
     "k": 0,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1774,6 +1983,7 @@
      },
      {
       "event": "quality",
+      "enter": 7,
       "period": 50,
       "request": 0,
       "reply": {
@@ -1805,7 +2015,8 @@
     "k": 50,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1836,6 +2047,7 @@
     "k": 0,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1848,6 +2060,7 @@
      },
      {
       "event": "quality",
+      "enter": 7,
       "period": 50,
       "request": 0,
       "reply": {
@@ -1888,7 +2101,8 @@
     "k": 50,
     "period": 50,
     "attempt": 0,
-    "numeric_limit": 13
+    "numeric_limit": 13,
+    "enter": 7
    },
    "replies": [
     {
@@ -1913,6 +2127,7 @@
     "k": 50,
     "alpha_restored": true,
     "spike_restored": true,
+    "contents_preserved": true,
     "calls": [
      {
       "event": "factor",
@@ -1925,6 +2140,7 @@
      },
      {
       "event": "quality",
+      "enter": 7,
       "period": 50,
       "request": 0,
       "reply": {

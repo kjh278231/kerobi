@@ -38,17 +38,21 @@ def specs():
     for cost in (-1, 0, 1):
         # m=2, L+U=5 -> a²=4; (C+E)*2m=4 when C+E=1.
         add(f'cost-{cost}', m=2, k=4, C=1+cost, L=2, U=3, q=4)
-    add('min-q-term', m=2, k=4, C=21, L=50, U=50, q=4)
+    for C in (19,20,21):add(f'min-q-term-{C}', m=2, k=4, C=C, L=50, U=50, q=4)
     add('min-q-zero', m=2, k=0, C=1, L=2, U=3, q=0)
-    add('sum-convert', m=7, k=4, C=1, E=-1, L=2**53+1, U=2, q=4)
+    # Signed machine-input boundary, not reachable nonnegative nnz counters:
+    # integer sum is 6; separately converted L/U sum is 5.
+    add('sum-convert', m=2, k=4, C=2, E=0, L=2**53+1, U=-2**53+5, q=4)
     add('negative-cost-support', m=2, k=4, C=0, L=2, U=3, support=1)
-    base = dict(request=0, numeric=3, failure=0, status=1, k=1, period=50, attempt=0, numeric_limit=13)
+    base = dict(request=0, numeric=3, failure=0, status=1, k=1, period=50, attempt=0, numeric_limit=13, enter=7)
     def wrap(name, replies=None, qualities=None, **kw):
         cases.append(dict(name=name, kind='wrapper', input=dict(base, **kw),
                           replies=replies or [dict(ret=0)], qualities=qualities or []))
     wrap('normal')
     wrap('repeat-one', [dict(ret=1), dict(ret=0)])
     wrap('repeat-two', [dict(ret=1), dict(ret=1), dict(ret=0)])
+    wrap('repeat-request', [dict(ret=1,request=6),dict(ret=0)])
+    wrap('numeric-crossed-by-backend', [dict(ret=0,numeric=13)])
     wrap('return12', [dict(ret=12)])
     wrap('error7', [dict(ret=7)])
     wrap('error-precedes-status', [dict(ret=7, status=-1000)])
@@ -127,6 +131,8 @@ def capture():
             retry=buf(4);oldalpha=buf(24);alpha=buf(24);spike=buf(24)
             put(frame,0,c.c_void_p,ca+len(pro))
             put(s,0x470,c.c_void_p,f);put(s,0x210,c.c_void_p,oldalpha);put(f,0x1c8,c.c_void_p,spike)
+            sentinels=[(oldalpha,bytes(range(24))),(alpha,bytes(range(24,48))),(spike,bytes(range(48,72)))]
+            for at,content in sentinels:c.memmove(at,content,len(content))
             put(frame,0x2048,c.c_void_p,f);put(frame,0x2090,c.c_void_p,alpha);put(frame,0x20e8,c.c_void_p,retry)
             x=case['input']
             for off,key in ((0x294,'request'),(0x178,'numeric'),(0x184,'failure'),(0xf0,'status'),(0x46c,'q')):
@@ -134,6 +140,7 @@ def capture():
             for off,key in ((0x18c,'k'),(0x188,'limit'),(0x184,'E')):put(f,off,c.c_int,x.get(key,0))
             for off,key in ((0x190,'C'),(0x1e0,'L'),(0x1e8,'U')):put(f,off,c.c_int64,x.get(key,0))
             put(frame,0x209c,c.c_int,x.get('support',0))
+            put(s,0x2fc,c.c_int,x.get('enter',7))
             put(frame,0x1fa0,c.c_int,x.get('attempt',0));put(frame,0x1fe0,c.c_int,x.get('numeric_limit',10))
             put(frame,0x1fd8,c.c_int,x.get('period',50))
             m=float(x.get('m',8))
@@ -166,9 +173,9 @@ def capture():
                 def quality(ws, enter, inc, work):
                     nonlocal qi
                     try:
-                        assert ws==s and not work and qi<len(case['qualities'])
+                        assert ws==s and not work and qi<len(case['qualities']) and enter==x['enter']
                         reply=case['qualities'][qi];qi+=1
-                        calls.append(dict(event='quality',period=read(frame,0x1fd8),request=read(s,0x294),reply=reply))
+                        calls.append(dict(event='quality',enter=enter,period=read(frame,0x1fd8),request=read(s,0x294),reply=reply))
                         put(inc,0,c.c_int,reply['increment']);put(s,0x294,c.c_int,reply['request'])
                         if 'status' in reply:put(s,0xf0,c.c_int,reply['status'])
                     except BaseException as exc:errors.append(repr(exc));put(s,0xf0,c.c_int,12)
@@ -181,7 +188,7 @@ def capture():
                 assert fi==len(case['replies']) and qi==len(case['qualities']),(case['name'],fi,qi)
                 result=dict(exit=ret,request=read(s,0x294),status=read(s,0xf0),numeric=read(s,0x178),failure=read(s,0x184),
                             retry=read(retry,0),period=read(frame,0x1fd8),k=read(f,0x18c),
-                            alpha_restored=read(s,0x210,c.c_void_p)==oldalpha,spike_restored=read(f,0x1c8,c.c_void_p)==spike,calls=calls)
+                            alpha_restored=read(s,0x210,c.c_void_p)==oldalpha,spike_restored=read(f,0x1c8,c.c_void_p)==spike,contents_preserved=all(c.string_at(at,24)==content for at,content in sentinels),calls=calls)
             patch.restore()
             events.append(dict(case,result=result))
     finally:patch.restore()
