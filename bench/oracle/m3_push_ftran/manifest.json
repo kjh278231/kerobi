@@ -1,0 +1,63 @@
+{
+  "task": "M3-04c-21a",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tools": {
+    "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec",
+    "tools/gurun.sh": "7efb6a90dd1fae5f71997b24c112601d4f76b822546ddcce8d53920369f0d48f",
+    "tools/push_ftran_agent.js": "da123ebea77c4fb3b3d9bba728bcdaf744601de5a550eecef180f9906fb035ff",
+    "tools/push_ftran_capture.js": "56b06ddfc6873c467c5e7371866dec355b4048cc2a37f85edcb2ce964493d9af",
+    "tools/push_ftran_check.py": "936668ac54669151d207af7718ea226ab8756c77bfd1bcfb364cb68b56067aaa",
+    "tools/push_ftran_runs.py": "f09b58900d54a05d7f3097d76609b4b2645ad0787b93bf33dbdbb3a20c490002",
+    "tools/push_supplier_check.py": "2111b9192c5724e0cee21f0360a0cd0b75dfad0bac57036191367b4f5653df5e"
+  },
+  "inputs": {
+    "bench/oracle/m3_primal_push_step/interior.lp": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0",
+    "bench/oracle/m3_push_arms/arms.extra.json": "7843373b048b87370821eaedb90b918828759254061a3c3f37b60d51f3a1a46d",
+    "bench/oracle/m3_push_arms/arms.lp": "b05832f67ae340637551cda5cd191013c3f65f5cef190a0cc5a8c058070d9683",
+    "bench/oracle/m3_push_retry/retry.extra.json": "a14e2011d1e13d4abf085d97bc3043a5781a1b0daaea2298f036a5a4692d5e1b",
+    "bench/oracle/m3_push_retry/retry.lp": "2be78262e14b9c8482ce0c96fe0ab10d68246bc11eae184dc2bdb9c2f8516986"
+  },
+  "sources": {
+    "../re/decomp/c/001205d0_PRIVATE000000000009cf9b.c": "56ca286a9f131998eb974d6a4ad78daeb66f14404c8ad525993c3853b592be80",
+    "../re/decomp/c/00120680_PRIVATE000000000009d008.c": "26aec435ba5288663a23a0670ad59fac818bc3afd932162cd7cd0b948d89d348",
+    "../re/decomp/c/00120740_PRIVATE00000000002207de.c": "5124f10fccc1eb5e85d57f781b2a97c28f8d8d1ef94b221e84583dbb4ece5baa",
+    "../re/decomp/c/00121ef0_PRIVATE00000000002126cd.c": "e4b8064f0dd20cfd1eb000c0371134f9de709e61dd0abb7dff706cd906f85340",
+    "../re/decomp/c/001223e0_PRIVATE000000000021686f.c": "fdd332440e4912fedb7abae96eae187472eefeb045ceaf10b1c4669aba155398",
+    "../re/decomp/c/0012a990_PRIVATE000000000021b9de.c": "4fd5d5772905ca520224ca0f1446cd4272f96c9582bcd01341ce6d610b53e6c7",
+    "../re/decomp/c/0012bd30_PRIVATE0000000000214344.c": "ecb79a46f71c1bbe6dd33a5423a45ce8feace792721719559b1c8f2031804795"
+  },
+  "assembly": {
+    "bench/oracle/m3_push_ftran/source.asm": "2044bc2020843b39b993abd1b9bd9bc303033be0900ce56bb09405c4f3f7d8d1"
+  },
+  "captures": {
+    "bench/oracle/m3_push_ftran/arms-1.json": "8a05d9ab3c17f1584e0a82296ac9c6cd6b01a920a043bb209ff99cbe0e81e483",
+    "bench/oracle/m3_push_ftran/arms-2.json": "c70f45b93b2056a57cd870f397192ec48f195feeecfb256e2c3e9f6dd99ddc53",
+    "bench/oracle/m3_push_ftran/arms-3.json": "189e1612304449c107875a8b9c9506416d6e6a1a56bab1df73ae730c19e3d2f7",
+    "bench/oracle/m3_push_ftran/control-1.json": "68de422a033e7f6216816e57a68cc08817f2f4e73401160f72bb66b7f01900f9",
+    "bench/oracle/m3_push_ftran/control-2.json": "f01eee26a6d796ce8655f4de41ebed0a476be808130655e2bebd1485d1fe2606",
+    "bench/oracle/m3_push_ftran/control-3.json": "e76977efa0780ec3f6a4b47848395a8ac480e42021e1ffeab8ad9a6ab0875b3e",
+    "bench/oracle/m3_push_ftran/interior-1.json": "7515abd61f3aaf2623a16c964d77fa58d1ec0772ba0ad77b68e4e5237dc5530c",
+    "bench/oracle/m3_push_ftran/interior-2.json": "8630edc13d3193a3d6b461a4e2d053c2dccda88b2adc2a4242c286d8b7da76e1",
+    "bench/oracle/m3_push_ftran/interior-3.json": "3ca3c8e2d51aadedfa633f6b56f77374d31d9dbc68d421e253489354d227c840",
+    "bench/oracle/m3_push_ftran/retry-1.json": "22519b8ec324bcbf6977645f8fd67bc9447fd237a964c5de0c4e4787cdbdfb9f",
+    "bench/oracle/m3_push_ftran/retry-2.json": "5fce5496ae159eb2d283ba1225b014b395573629251abd2cf877f877b862cd82",
+    "bench/oracle/m3_push_ftran/retry-3.json": "e0224c82e3a2dd6d21a1978206acdd03fe36a6024b68082db30556a3c9542816"
+  },
+  "baselines": {
+    "bench/oracle/m3_push_round/arms-1.json": "ffab573cfcdefb260ebb0dc92ec2b26f28dc3356e562d6c256f0550bb43cd344",
+    "bench/oracle/m3_push_round/control-1.json": "2d85e8f4c06b48825504781b73a4067c4c14f2bf1429814a1717e94cc07c2f89",
+    "bench/oracle/m3_push_round/interior-1.json": "75a486ec597c2290a6a893774587106433a46f0b2d7a7f1e6a6ad0a40f951a37",
+    "bench/oracle/m3_push_round/manifest.json": "ca0e6083ec572a9b7abaeea031b44dce9f850b53372504a514896845130b2802",
+    "bench/oracle/m3_push_round/retry-1.json": "7a4c20c863fb94523c23c1c131c7f7034646332e239b9668bd23eeb91e8fd082"
+  },
+  "history": {
+    "bench/oracle/m3_push_ftran/history/explore/arms-1.json": "6d581cbc02fa76d753ebb3bdf06a53fdaaf52dda693fa3683e755cde5cd1d4b3",
+    "bench/oracle/m3_push_ftran/history/explore/control-1.json": "d074ea027da4c5bb205d8b5572312f03cb330f05652ee210257900b62ec0da83",
+    "bench/oracle/m3_push_ftran/history/explore/interior-1.json": "0cf82528f3002ae0321b9b3f7affb2b00b33292b9e30cd1b32355dbd5f9c3eab",
+    "bench/oracle/m3_push_ftran/history/explore/retry-1.json": "ab8e2fd6de063d5c45e58eb7cffa8c4482d534ebf9e495527866928277784bfc",
+    "bench/oracle/m3_push_ftran/history/explore2/arms-1.json": "2200737e107c6edcfbe1774ab3758ab99f5dfe71c02e84ba2902d90b8c028cb1",
+    "bench/oracle/m3_push_ftran/history/explore2/control-1.json": "7b0268472b9ca930c1d6f4f831cc1fa727f42365efc75fe151e89ca77d38cff9",
+    "bench/oracle/m3_push_ftran/history/explore2/interior-1.json": "c80ef4a361fd45f668323b86f69b0701b776d3547dec0b3bab42e7032bf6829c",
+    "bench/oracle/m3_push_ftran/history/explore2/retry-1.json": "5da7a7ac3814030a49fad2adeeaf0fa24e9bec8c354443f305e16e02b893f0ab"
+  }
+}

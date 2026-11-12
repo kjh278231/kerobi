@@ -38,7 +38,7 @@
 
 [04c-20 round Rust L1](primal_push_round_rust.md)은 보류·실패 증가·승인수·지원 표시·순서/중복 보존 압축·고갈 종료·요청10·BTRAN caller·round factor/retry·재계산 뒤 요청 clear를 구현했다. 자연110+합성106, 총216경계·14,365필드 정확/비트 일치와 trace변조4,093종·Rust변이39종 거부, workspace134통과·clippy0·선행 회귀를 확인했다. 원본19 독립3회 자료 재사용·새 원본0회이며 독립검토자는 사용하지 않았다. 현재 API는 기존 solver 루프에서 호출하지 않고 수치 BTRAN/factor는 외부 backend다. 다음21은 FTRAN/BTRAN 목록·spike·지연 LU·재분해 번호 대응의 수치 연결 조사이며,22의 루프 연결·23의 batch와 구분한다.
 
-[04c-21 직렬 수치 backend 조사](primal_push_lu_survey.md)는 한 RHS FTRAN의 입력 변환·L/R 뒤 spike·버퍼 교환, BTRAN의 지원 좌표·Uᵀ cache, 현재 header와 지연 factor 상태·재분해 번호 대응을 C/asm으로 특정했다. 선행19 대표 자연3모델751사건에서 FTRAN42·BTRAN22·factor16(FT5)·재계산8을 집계했고 신규 수치 동등성은 미검증이다. 후속은 FTRAN21a→21b, BTRAN21c→21d, 지연 LU/재분해21e→21f(각 오라클→실제 수치 구현)다. 초기 factor 스냅숏의 같은 상태를 쓰는 커널 검증과 Rust factor 생성 검증을 구분하며 원본 중간 출력 재주입은 금지한다. 외부 backend L1 루프22·품질15a·batch23·실제 backend를 루프에 설치하는 연결 검증은 별도다.
+[04c-21 직렬 수치 backend 조사](primal_push_lu_survey.md)는 한 RHS FTRAN의 입력 변환·L/R 뒤 spike·버퍼 교환, BTRAN의 지원 좌표·Uᵀ cache, 현재 header와 지연 factor 상태·재분해 번호 대응을 C/asm으로 특정했다. 선행19 대표 자연3모델751사건에서 FTRAN42·BTRAN22·factor16(FT5)·재계산8을 집계했고 신규 수치 동등성은 미검증이다. 후속은 FTRAN21a→21b, BTRAN21c→21d, 지연 LU/재분해21e→21f(각 오라클→실제 수치 구현)다. 초기 factor 스냅숏의 같은 상태를 쓰는 커널 검증과 Rust factor 생성 검증을 구분하며 원본 중간 출력 재주입은 금지한다. 외부 backend L1 루프22·품질15a·batch23·실제 backend를 루프에 설치하는 연결 검증은 별도다. [04c-21a FTRAN 오라클](primal_push_ftran_oracle.md)은 자연50호출의 초기 factor·커널 경계·spike·raw를 독립3회 캡처하고 원본 C 규칙 판정·변조36 거부로 고정했다. 21b는 그 `ftran:enter` factor를 초기 상태로 Rust 한 RHS FTRAN을 비트 비교한다.
 
 ## 2. Method 선택과 Concurrent
 

@@ -1,0 +1,13 @@
+ftran-controls rc=0
+ftran-acceptance rc=0
+ftran-selftest rc=0
+round rc=0
+lu-survey rc=0
+lu-survey-selftest rc=0
+chain-check rc=0
+chain-selftest rc=0
+cargo-push-chain rc=0
+chain-rust-compare rc=0
+py-compile rc=0
+node-check rc=0
+node-check-capture rc=0

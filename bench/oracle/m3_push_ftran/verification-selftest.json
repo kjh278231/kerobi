@@ -1,0 +1,283 @@
+{
+  "controls": {
+    "arms": {
+      "events": 578,
+      "ftran": 168
+    },
+    "retry": {
+      "events": 221,
+      "ftran": 60
+    },
+    "interior": {
+      "events": 252,
+      "ftran": 72
+    },
+    "control": {
+      "events": 0,
+      "ftran": 0
+    }
+  },
+  "acceptance": {
+    "models": {
+      "arms": {
+        "calls": 28,
+        "save0": 28,
+        "save1": 0,
+        "clear_nonempty": 0,
+        "input_dense": 3,
+        "input_sparse": 25,
+        "input_zero": 0,
+        "count0": 0,
+        "L_21b9de": 25,
+        "L_214344": 3,
+        "L_out0": 0,
+        "U_21686f": 25,
+        "U_2126cd": 3,
+        "spike_dense": 0,
+        "spike_sparse": 0,
+        "out_dense": 3,
+        "out_sparse": 25,
+        "eta_pos": 0,
+        "perm_nonid": 28,
+        "eta0_passthrough": 28
+      },
+      "retry": {
+        "calls": 10,
+        "save0": 9,
+        "save1": 1,
+        "clear_nonempty": 0,
+        "input_dense": 2,
+        "input_sparse": 8,
+        "input_zero": 0,
+        "count0": 0,
+        "L_21b9de": 8,
+        "L_214344": 2,
+        "L_out0": 0,
+        "U_21686f": 8,
+        "U_2126cd": 2,
+        "spike_dense": 0,
+        "spike_sparse": 1,
+        "out_dense": 2,
+        "out_sparse": 8,
+        "eta_pos": 0,
+        "perm_nonid": 10,
+        "eta0_passthrough": 10
+      },
+      "interior": {
+        "calls": 12,
+        "save0": 4,
+        "save1": 8,
+        "clear_nonempty": 1,
+        "input_dense": 3,
+        "input_sparse": 9,
+        "input_zero": 0,
+        "count0": 0,
+        "L_21b9de": 0,
+        "L_214344": 12,
+        "L_out0": 0,
+        "U_21686f": 0,
+        "U_2126cd": 12,
+        "spike_dense": 8,
+        "spike_sparse": 0,
+        "out_dense": 12,
+        "out_sparse": 0,
+        "eta_pos": 5,
+        "perm_nonid": 12,
+        "eta0_passthrough": 7
+      },
+      "control": {
+        "calls": 0,
+        "save0": 0,
+        "save1": 0,
+        "clear_nonempty": 0,
+        "input_dense": 0,
+        "input_sparse": 0,
+        "input_zero": 0,
+        "count0": 0,
+        "L_21b9de": 0,
+        "L_214344": 0,
+        "L_out0": 0,
+        "U_21686f": 0,
+        "U_2126cd": 0,
+        "spike_dense": 0,
+        "spike_sparse": 0,
+        "out_dense": 0,
+        "out_sparse": 0,
+        "eta_pos": 0,
+        "perm_nonid": 0,
+        "eta0_passthrough": 0
+      }
+    },
+    "total": {
+      "calls": 50,
+      "save0": 41,
+      "save1": 9,
+      "clear_nonempty": 1,
+      "input_dense": 8,
+      "input_sparse": 42,
+      "input_zero": 0,
+      "count0": 0,
+      "L_21b9de": 33,
+      "L_214344": 17,
+      "L_out0": 0,
+      "U_21686f": 33,
+      "U_2126cd": 17,
+      "spike_dense": 8,
+      "spike_sparse": 1,
+      "out_dense": 17,
+      "out_sparse": 33,
+      "eta_pos": 5,
+      "perm_nonid": 50,
+      "eta0_passthrough": 45
+    }
+  },
+  "self_test": {
+    "rejected": 36,
+    "details": [
+      {
+        "name": "binary-hash",
+        "error": "arms/2.binary: 기준='8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c', 실제='0000000000000000000000000000000000000000000000000000000000000000'"
+      },
+      {
+        "name": "manifest-hash",
+        "error": "manifest.tools/push_ftran_agent.js: 기준='0000000000000000000000000000000000000000000000000000000000000000', 실제='da123ebea77c4fb3b3d9bba728bcdaf744601de5a550eecef180f9906fb035ff'"
+      },
+      {
+        "name": "empty-events",
+        "error": "retry/1.projection: 길이 기준=161, 실제=0"
+      },
+      {
+        "name": "run-diff",
+        "error": "interior/2.events[12].output.val[0]: 기준='000000000000c0bf', 실제='0000000000000080'"
+      },
+      {
+        "name": "projection-diff",
+        "error": "arms/1.projection[7].raw.count: 기준=1, 실제=9"
+      },
+      {
+        "name": "baseline-result",
+        "error": "retry/1.baseline_result.status: 기준=2, 실제=3"
+      },
+      {
+        "name": "no-new-events",
+        "error": "arms: 새 FTRAN 사건0"
+      },
+      {
+        "name": "null-null",
+        "error": "retry#1.본체 출력=U 출력: 타입 기준=dict, 실제=NoneType"
+      },
+      {
+        "name": "missing-leave",
+        "error": "retry#1: 본체 enter/leave 1회"
+      },
+      {
+        "name": "extra-call",
+        "error": "wrapper 밖 FTRAN 사건 ftran:enter"
+      },
+      {
+        "name": "R2-zero",
+        "error": "arms#1.enter.factor.zero: 기준='82764968c2253c3d', 실제='0000000000000000'"
+      },
+      {
+        "name": "R2-perm",
+        "error": "arms#1.enter.factor.F20/F30: 역순열[0]: 기준=0, 실제=14"
+      },
+      {
+        "name": "R2-eta-len",
+        "error": "interior#5.enter.factor.eta 길이합: 기준=2, 실제=3"
+      },
+      {
+        "name": "R2-scratch",
+        "error": "retry#1.leave.factor.scratch.x1b0: 길이 기준=0, 실제=1"
+      },
+      {
+        "name": "R2-factor-changed",
+        "error": "interior#3.factor 불변.diag[0]: 기준='000000000000e43f', 실제='000000000000f03f'"
+      },
+      {
+        "name": "R2-Ubound",
+        "error": "arms#2.enter.factor.U.col[0] 경계"
+      },
+      {
+        "name": "R3-sparse-perm",
+        "error": "arms#1.sparse 행 치환.idx[0]: 기준=21, 실제=22"
+      },
+      {
+        "name": "R3-dense-gather",
+        "error": "interior#2.dense gather.val[0]: 기준='51e36c7389261540', 실제='9ed577e84bdffebf'"
+      },
+      {
+        "name": "R3-swap-alias",
+        "error": "interior#2.dense 교환.val: 기준='out', 실제='in'"
+      },
+      {
+        "name": "R4-L",
+        "error": "arms#1.L 경로 기준=21b9de, 실제=['214344']"
+      },
+      {
+        "name": "R4-U",
+        "error": "retry#1.U 경로: 기준='21686f', 실제='2126cd'"
+      },
+      {
+        "name": "R4-x104",
+        "error": "arms#1.L 경로 기준=214344, 실제=['21b9de']"
+      },
+      {
+        "name": "R4-U-condition",
+        "error": "retry#1.U 경로: 기준='2126cd', 실제='21686f'"
+      },
+      {
+        "name": "R5-spike-order",
+        "error": "interior#3.spike 반환.indices[0]: 기준=0, 실제=7"
+      },
+      {
+        "name": "R5-spike-value",
+        "error": "interior#3.spike 반환.values[0]: 기준='000000000000e8bf', 실제='000000000000f03f'"
+      },
+      {
+        "name": "R5-spike-drop",
+        "error": "interior#3.spike 반환.count: 기준=8, 실제=7"
+      },
+      {
+        "name": "R5-clear",
+        "error": "interior#6.clear values[0]: 기준='0000000000000000', 실제='000000000000f03f'"
+      },
+      {
+        "name": "R5-save0-spike",
+        "error": "arms#1.save0 반환 spike.count: 기준=0, 실제=1"
+      },
+      {
+        "name": "R5-save-flag",
+        "error": "retry#10.save: 기준=1, 실제=0"
+      },
+      {
+        "name": "R6-output-bit",
+        "error": "arms#1.본체 출력=U 출력.val[0]: 기준='000000000000f03f', 실제='010000000000f03f'"
+      },
+      {
+        "name": "R6-output-order",
+        "error": "retry#4.본체 출력=U 출력.idx[0]: 기준=6, 실제=5"
+      },
+      {
+        "name": "R6-recompute-input",
+        "error": "arms#19.입력 후상태[0]: 기준='0000009af2d79abe', 실제='0100009af2d79abe'"
+      },
+      {
+        "name": "R6-alias",
+        "error": "arms#1.ctx alias"
+      },
+      {
+        "name": "R5-spike-at-U-enter",
+        "error": "interior#3.spike 저장.indices[0]: 기준=0, 실제=7"
+      },
+      {
+        "name": "R-eta0-passthrough",
+        "error": "arms#1.eta0 U 입력=L 출력.val[0]: 기준='000000000000f03f', 실제='010000000000f03f'"
+      },
+      {
+        "name": "R6-wrapper-raw",
+        "error": "arms#1.wrapper raw.val[0]: 기준='000000000000f03f', 실제='010000000000f03f'"
+      }
+    ]
+  }
+}

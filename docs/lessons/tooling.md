@@ -95,6 +95,8 @@
 
 ## 검사기
 
+- **변조 self-test는 거부 이유까지 확인한다.** 경로 이름만 바꾼 변조는 enter/leave 쌍 검사에서, factor 스칼라 한쪽 변조는 불변 검사에서 먼저 거부돼 대상 규칙(L/U 경로 판정)은 시험되지 않았다. 관련 사건을 함께 바꾸는 협조형 변조로 대상 규칙의 메시지가 나오는지 확인했다. (M3-04c-21a, [§6](../m3/primal_push_ftran_oracle.md#6-실행-결과))
+- **0이어야 할 scratch를 비영 위치 목록으로 기록하면 형식·길이 오류가 바로 드러난다.** 끝쪽 위치에만 heap 헤더 같은 값이 보이면 배열 길이나 원소 크기를 잘못 읽은 것이다. 전체 배열 대신 비영 목록이라 정상 자료도 작다. (M3-04c-21a)
 - **외부 backend를 사용하는 L1 재생은 실제 호출 인자와 버퍼 별칭을 검사한다.** scratch의 종료 내용만 비교하면 다른 인자·임시 출력 버퍼로 backend를 부른 오류가 숨을 수 있다. 호출 때 원본 열을 복사해 기록하고 alpha/spike 동일 버퍼를 검사하며, 고갈에는 기존 버퍼와 work canary 보존을 확인한다. 원본 after·ret·압축 alpha는 구현 입력에 넣지 않는다. Rust69입력 재생·변이22종으로 확인. (M3-04c-14, [§6](../m3/primal_push_supplier_rust.md#6-실행-결과))
 
 - **합성 경계의 차원은 생성 명세·실제 ABI 인자·벡터 길이를 함께 대조한다.** supplier 짝수 dense 사례의 m=8이 문맥 안으로만 들어가 실제 호출은 m=9였다. raw 길이 검사가 거부한 자료를 history에 보존하고 전달을 고쳐3회 재캡처했다. 기존 Rust 연쇄 비교는 새 worktree에서 먼저 `cargo test -p rsolver-lp --test push_chain`으로 trace를 만든 뒤 `push_step_chain_rust.py --compare`를 실행한다. (M3-04c-13, [§6](../m3/primal_push_supplier_oracle.md#6-실행-결과))
@@ -184,6 +186,7 @@
 
 ## git worktree
 
+- **`tools/session.py`의 작업 번호 정규식은 `M3-04c-21a`처럼 끝 문자가 붙은 하위 번호를 거부했다.** `(?:-\d+[a-z]?)*`로 넓혔다. 점유 실패를 다른 번호로 우회하지 않는다. (M3-04c-21a)
 - **이 컴퓨터(coco0912)의 worktree에는 git 사용자 신원이 설정돼 있지 않아 `git commit`이 `Author identity unknown`으로 실패했다.** 전역 설정을 바꾸지 않고 기존 이력과 같은 신원을 `git -c user.name=… -c user.email=… commit`으로 커밋마다 넘겼다. (M3-04c-5)
 - **`session.py claim … && claim shared && git worktree add …` 한 줄은 shared 점유 실패에서 멈춰 worktree가 생기지 않는다.** 그 뒤 Write 도구로 worktree 경로에 파일을 쓰면 git 저장소가 아닌 일반 디렉터리가 생긴다. 점유와 worktree 생성을 나눠 실행하고 `git -C <worktree> status`로 확인한다. (M2-03d-5)
 - **ignore된 `target/`(재생성할 수 있는 탐색 출력)이 남아 있으면 `git worktree remove`에 `--force`가 필요하다.** 미커밋·미추적 파일이 그것뿐인지 먼저 확인한다. (M2-03c-2)
