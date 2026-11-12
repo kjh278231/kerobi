@@ -46,7 +46,9 @@ def survey(label, rec):
     last_supply = None
     factor_rows = []
     for i, e in enumerate(events):
-        if e['event'] == 'supply:leave':
+        if e['event'] == 'push:enter':
+            last_supply = None
+        elif e['event'] == 'supply:leave':
             last_supply = e['candidate']
         elif e['event'] == 'factor:enter':
             leave = events[i + 1]

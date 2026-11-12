@@ -1,0 +1,72 @@
+{
+  "task": "M3-04c-12",
+  "kind": "research-validation",
+  "base_commit": "ec76fd6",
+  "survey_tool_sha256": "e6ecdcc35b78cad148ad966bd5cc75904675e37c4548b352702729859885ce66",
+  "survey_sha256": "14cdc39d32a37b50ba3a1b081a0ed556d7d3a7d31a48f2b614003f6905869594",
+  "new_original_runs": 0,
+  "solver_source_changes": false,
+  "checks": [
+    {
+      "command": "python3 tools/push_loop_survey.py > /tmp/m3-push-loop-survey.json && cmp bench/validation/m3_push_loop/survey.json /tmp/m3-push-loop-survey.json",
+      "exit_code": 0,
+      "totals": {
+        "datasets": 18,
+        "supplied": 236,
+        "exhausted": 38,
+        "defer": 18,
+        "factor_calls": 73,
+        "requests": {
+          "0": 26,
+          "10": 47
+        },
+        "returns": {
+          "0": 73
+        },
+        "header_reordered": 33,
+        "dense_outputs": 0,
+        "batch_capacities": [
+          0
+        ]
+      }
+    },
+    {
+      "command": "python3 -m py_compile tools/push_loop_survey.py",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 tools/push_chain_oracle.py --check",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 tools/push_chain_oracle.py --self-test",
+      "exit_code": 0,
+      "rejected": 8
+    },
+    {
+      "command": "cargo test -p rsolver-lp --test push_chain && python3 tools/push_step_chain_rust.py --compare",
+      "exit_code": 0,
+      "tests_passed": 1,
+      "steps": 236,
+      "fields": 5144,
+      "segments": 42,
+      "refactor_skip": 6
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "implementation_equivalence": "unverified",
+  "next_task": "M3-04c-13",
+  "documentation_checks": {
+    "relative_links_checked": 14,
+    "sprint_rows_checked": 12,
+    "source_hashes_checked": 6
+  },
+  "independent_review": {
+    "result": "passed",
+    "reviewer": "/root/m3_04c12_review",
+    "record": "bench/validation/m3_push_loop/review.md"
+  }
+}
