@@ -28,6 +28,8 @@
 
 [04c-15 factor 제어 오라클](primal_push_factor_oracle.md)은 자연 판단28(호출6·생략22)과 원본 선택/wrapper 명령 구간의 합성55사례를 독립3회 검증한다. 자연 helper 수치는 실행되지 않았고, 합성 factor·quality 계산은 외부 backend다. 재계산 직전에서 중단하며 실제 재계산17→18과 연결22는 별도다. 16은 이 제어 경계의 L1 구현이고 품질 helper `089f61`의 수치 오차·Markowitz는15a로 분리한다.
 
+[04c-16 factor 제어 Rust L1](primal_push_factor_rust.md)은 자연 판단28·wrapper6와 합성55, 총89입력·978필드의 요청·호출·복원·retry/status·품질 주기 비교를 통과했다. 비교기 변조55종·Rust 동작 변이30종 모두 거부, workspace132·clippy0와 기존 supplier/chain 회귀도 통과했다. 원본 독립3회 자료를 재사용했으며 실제 factor/quality 계산은 외부 backend다. 요청 비영은 재계산 직전에서 멈춘다. 다음은17 재계산 오라클이며 실제 계산18·루프 연결22는 별도다.
+
 ## 2. Method 선택과 Concurrent
 
 자동 선택은 입력 분류→Method 결정→실행 경로를 추적한다. M3-05a는 명시 Method, 자동 Method, 모델 분류, 관련 파라미터에 대한 원본 결정표를 만든다. 선택 분기를 고치는 작업과 concurrent 엔진을 만드는 작업은 독립 번호다.

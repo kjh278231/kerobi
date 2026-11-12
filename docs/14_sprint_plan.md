@@ -190,7 +190,7 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-14 | 구현 L1 완료(범위 한정) | 단일 공급자 제어(FTRAN은 외부 backend) | 04c-13 | [자연51+합성18입력·1,311필드 묶음 비트 일치, 변조29종·Rust 변이22종 거부, workspace131·clippy0](m3/primal_push_supplier_rust.md). 실제 LU21·루프 연결22·batch23 제외 |
 | M3-04c-15 | 오라클 구축 완료(경계 한정) | 직렬 factor 요청 선택·호출·복원·품질 caller | 04c-12 | [자연 판단28·wrapper6, 원본 slice 합성55사례 각3회·변조41종](m3/primal_push_factor_oracle.md). 수치 factor/quality 외부 backend, 재계산 직전까지 |
 | M3-04c-15a | 오라클 구축 | 품질 helper `089f61`의 FTRAN·오차·Markowitz·요청6/상태12 | 04c-15, ABI 조사 | 원본 helper 전후·sparse/dense 오차 계산·임계/비유한 전제·수치카운터·Markowitz 후상태 비교. caller16의 외부 backend와 구분 |
-| M3-04c-16 | 구현 L1 | 직렬 factor 요청·호출 제어(수치 backend 외부) | 04c-15 | 요청·호출 횟수·별칭 복원·상태·품질 주기 비교. factor 내부는 별도 |
+| M3-04c-16 | 구현 L1 완료(범위 한정) | 직렬 factor 요청·호출 제어(수치 backend 외부) | 04c-15 | [자연34+합성55입력·978필드 일치, 변조55종·Rust 변이30종 거부, workspace132·clippy0](m3/primal_push_factor_rust.md). 재계산 직전 종료, 실제LU21·품질수치15a·루프22 별도 |
 | M3-04c-17 | 오라클 구축 | 재분해 뒤 rhs FTRAN·basic 재계산 두 경계 | 04c-12 | 새 header·rhs·raw FTRAN·폭·표시·위반 수·PInf·retry, 무한/shift/분류 동률·별칭 비교 |
 | M3-04c-18 | 구현 L1 | FTRAN 결과의 shift·분류·PInf·retry | 04c-17 | basis 순서·수치 비트·두 진입점 비교. FTRAN 수치 backend 외부 |
 | M3-04c-19 | 오라클 구축 | 보류·지원 BTRAN·고갈·재처리 라운드 | 04c-12 | 실패 한도·승인 수·support해제·후보 압축 순서·요청10·종료, 자연/합성 구분 |
