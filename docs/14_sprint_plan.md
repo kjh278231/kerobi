@@ -198,7 +198,7 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04c-21 | 조사 완료 | 직렬 수치 backend와 Rust Lu 연결 | 04c-12, M1 LU 계약 | [C/asm·자연751사건 집계, FTRAN42·BTRAN22·factor16·재계산8](m3/primal_push_lu_survey.md). 수치 동등성 미검증, 후속21a–f 분할 |
 | M3-04c-21a | 오라클 완료 | 한 RHS FTRAN의 factor 입력·L/R·spike·U·raw/입력 후상태·alias | 04c-21, 13, 17 | [완료](m3/primal_push_ftran_oracle.md): 자연 50호출(공급42·재계산8) 독립3회·선행19 비간섭, C 규칙 전부 통과·변조36 거부. eta>0 5·희소 U 33·spike dense8/sparse1. count0·레벨 L·접두 희소 U·sparse R 미관측 |
 | M3-04c-21b | 구현 완료 | Rust 한 RHS FTRAN의 수치·표현·spike·clear adapter | 04c-21a | [완료](m3/primal_push_ftran_rust.md): push 50호출 커널 경계200·raw·입력 후상태·별칭·spike·scratch 5,520필드와 M1 원본 커널186호출 비트 일치. 변조1,493 거부, 변이26 중 생존9(원본에 없는 ZERO 경계·긴 eta·save∉{0,1} 등 미검증). sparse R·count0·A2/B·`21574d`·M1 `Lu` 통합 범위 밖. M1 공유 코드 변경 없음 |
-| M3-04c-21c | 오라클 구축 | 지원 BTRAN의 수치·표현·F1d0/F1d8 cache | 04c-21, 19 | 자연22회는count1만. U 행 빈/비영·강제 Uᵀ·eta/Lᵀ sparse/dense의 실제 계산과 지원 좌표·cache 비교 |
+| M3-04c-21c | 오라클 완료 | 지원 BTRAN의 수치·표현·F1d0/F1d8 cache | 04c-21, 19 | [완료](m3/primal_push_btran_oracle.md): 자연 32호출(선행22+Netlib adlittle·scsd1·capri 10) 독립3회·21a/기준선 비간섭, C 규칙 전부 통과·변조41 거부. U 행 빈25/비영7(cache 기록7)·Lᵀ 희소30/조밀2·level 7. eta>0·조밀 Uᵀ·커널 출력0 미관측 |
 | M3-04c-21d | 구현 | Rust BTRAN 결과·dense flag·cache adapter | 04c-21c | raw/지원 행·cache·입력 변화 비교. M1-02k 일반 밀도 근사를 적용 범위에서 해결하거나 제외 명시 |
 | M3-04c-21e | 오라클 구축 | 지연 LU→FT/재분해→재번호·rhs FTRAN의 수치 연쇄 | 04c-21a·21c | support 생략22·요청0 갱신5·header 변경7의 내부 상태/순열·버퍼 수명 확보. 실패/singular는 실제 증거 전 미검증 |
 | M3-04c-21f | 구현 | 직렬 numeric backend의 factor 수명·FT·재분해·재번호·rhs 계산 | 04c-21b·21d·21e | 같은 초기 factor 뒤 중간 상태 재주입 없이 수치 연쇄 일치. 매번 재분해/무조건 갱신 변이 거부. 전체 루프 설치는 별도 |
