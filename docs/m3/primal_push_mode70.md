@@ -18,8 +18,8 @@
 
 - Gurobi 13.0.3 `libgurobi130.so` SHA-256 `8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c`. CPU 13th Gen Intel i7-13700F(WSL2).
 - C: `../re/decomp/c/000d4190_PRIVATE0000000000036ade.c` C:296–366(풀 첫 채움), C:541–606(커널 노드 할당), C:1750–1764(진입 판정), C:2440–2490(채움 노드 chunk), C:2569–3300·C:3686–3966(모드 본체), `05b257` C:1427–1518(재호출). asm `0xd5010`(할당 뒤), `0xd6ab6`(판정), `0xd85b4`/`0xd85ee`(모드 진입·풀 검사 입력), `0xd881b`(풀 부족), `0xd9f5b`(모드 피벗), `0xdb025`(커널 끝).
-- 스택 위치(asm 대조): `local_1b8` 0x180, `local_1c0` 0x178, `local_f8` 0x240, `local_138` 0x200, 활성 n 0x100, `local_60` 0x2d8, `local_f0` 0x248, 초기 노드 수 0x68. `param_15` = 036ade 15번째 인자(F+0x148).
-- 캡처 경계(`tools/push_mode70_agent.js`): 21i agent 사본에 함수형 probe(창 안 착지점 0 확인)를 더한다. `pool:start`(0xd5010), `pool:mode70`(0xd85ee), `pool:short70`(0xd881b), `mode70:pivot`(0xd9f5b: 조밀 평탄 번호 esi, n r14d), `pool:end`(0xdb025). 풀 사건은 `local_1b8`·`local_1c0`·`param_15[2..4]`·`local_138`·`local_f8`를 담는다.
+- 스택 위치(asm 대조): `local_1b8` 0x180, `local_1c0` 0x178, `local_f8` 0x240, `local_138` 0x200, 활성 n 0x100, `local_60` 0x2d8, `local_f0` 0x248, 초기 노드 수 0x68. `param_15` = 036ade 15번째 인자(F+0x148, 앞의 double 2개가 xmm이므로 정수 인자 a[12]).
+- 캡처 경계(`tools/push_mode70_agent.js`): 21i agent 사본에 함수형 probe(창 안 착지점 0 확인)를 더한다. `pool:start`(0xd5010), `pool:mode70`(0xd85ee), `pool:short70`(0xd881b), `mode70:pivot`(0xd9f5b: 조밀 평탄 번호 esi, n r14d), `pool:end`(0xdb025), `pool:dense`(0xd88d6, 조밀 전환 풀 검사 입력). 풀 사건은 `local_1b8`·`local_1c0`·`param_15[2..4]`·`local_138`·`local_f8`를 담는다.
 - 시작 경계: 21i와 같다(push 재분해 `036ade` 진입). 종료 경계: `036ade` 반환 순열과 재분해 `lu:leave` factor 전체, 재호출이면 마지막 호출의 반환.
 
 ## 3. 비교 계약
@@ -28,7 +28,7 @@
 |---|---|
 | 캡처 재현성 | 5모델 × 독립 3회 사건열 정확 일치(pid·run_id 제외) |
 | 캡처 비간섭 | 5모델·21i 대조군 7사례: 새 agent 사건열 − 새 사건(`pool:*`, `mode70:*`) = 21i 정식 같은 사례 사건열(JSON 정확) |
-| (A) 풀 계수 | 5모델 push 재분해 `036ade` 호출 전부: Rust가 센 `pool:start`·`pool:end`(+ `pool:mode70`) 값 = 원본(정수 정확) |
+| (A) 풀 계수 | 5모델 push 재분해 `036ade` 호출 전부: Rust가 센 `pool:start`·`pool:end`·`pool:dense`·`pool:mode70` 값 = 원본(정수 정확) |
 | (B) 재분해 생성 | 5모델 push 재분해 전부(21i 범위 안 28 + grow22 3): 21h `--block` 입력 규칙으로 Rust가 만든 `036ade` 반환 순열·factor 전체·블록 상태 = 원본. 모드 재분해는 추가로 Rust 피벗 순서 = `mode70:pivot`, 풀 부족 재호출 수와 새 F+0x158 = 원본 |
 | (C) 연결 | 21i `push_dense_rust.py --compare`(조밀 21회·28/28 유지), 04f-1 설치 59/59, 21h `--block` 219/219, 24·1a·1c·1d 회귀 |
 
