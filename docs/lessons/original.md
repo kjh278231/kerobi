@@ -1,5 +1,7 @@
 # 원본 사실
 
+- **primal push 재계산은 두 진입점에서 새 factor header로 같은 분류를 수행하고, m=0도 dense FTRAN을 1회 호출한다.** C/asm과 자연8회·합성120사례 캡처. basic은 유한 하한만 빼며 폭0도 v<h 절을 먼저 지나므로 양의 h 경계에서는 X가 아니다. PInf는 basis 위치 순서의 순차 합이다. (M3-04c-17, [계약/결과](../m3/primal_push_recompute_oracle.md))
+
 형식과 근거 표시는 [README](README.md)를 따른다. 주소는 `libgurobi130.so` file offset이며 디컴파일 파일 이름의 앞 숫자와 같다.
 
 ## MIP 노드 힙 키

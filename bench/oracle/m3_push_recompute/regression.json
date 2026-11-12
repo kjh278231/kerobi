@@ -1,0 +1,84 @@
+{
+  "task": "M3-04c-17",
+  "commit": "9f69dbf9990442e8ded202334e2da1dab65f1f65",
+  "environment": {
+    "machine": "x86_64",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+    "python": "3.10.12"
+  },
+  "commands": [
+    {
+      "command": "python3 tools/push_factor_check.py --controls --acceptance --self-test",
+      "exit": 0,
+      "result": "controls 271/104/137/0 사건, 자연 판단28/wrapper6 + 합성55, self-test41종 거부"
+    },
+    {
+      "command": "python3 tools/push_supplier_check.py --controls",
+      "exit": 0,
+      "result": "자연237/96/105사건, 대조군0"
+    },
+    {
+      "command": "python3 tools/push_supplier_check.py --acceptance",
+      "exit": 0,
+      "result": "자연51 + 합성18 공급 제어 일치"
+    },
+    {
+      "command": "python3 tools/push_supplier_check.py --self-test",
+      "exit": 0,
+      "result": "변조31종 거부"
+    },
+    {
+      "command": "python3 tools/push_chain_oracle.py --check",
+      "exit": 0,
+      "result": "shift/resolve 목표 태그 유지"
+    },
+    {
+      "command": "python3 tools/push_chain_oracle.py --self-test",
+      "exit": 0,
+      "result": "변조8종 거부"
+    },
+    {
+      "command": "cargo test -p rsolver-lp --test push_chain",
+      "exit": 0,
+      "result": "chain_trace 1통과·실패0"
+    },
+    {
+      "command": "python3 tools/push_step_chain_rust.py --compare",
+      "exit": 0,
+      "result": "236단계·5,144필드 비트 일치, 42구간, 재분해 비교 제외6 유지"
+    },
+    {
+      "command": "python3 -m py_compile tools/push_recompute_synthetic.py tools/push_recompute_runs.py tools/push_recompute_check.py",
+      "exit": 0,
+      "result": "통과"
+    },
+    {
+      "command": "node --check tools/push_recompute_agent.js",
+      "exit": 0,
+      "result": "통과"
+    },
+    {
+      "command": "node --check tools/push_recompute_capture.js",
+      "exit": 0,
+      "result": "통과"
+    },
+    {
+      "command": "git diff --check 36f93ff",
+      "exit": 0,
+      "result": "작업 전체 diff 통과"
+    }
+  ],
+  "excluded": "Rust/API/solver 경로 미변경으로 workspace 전체·clippy·확장 설치·pytest·Netlib·P3 제외",
+  "invocation_errors": [
+    {
+      "command": "python3 tools/push_supplier_check.py --controls --acceptance --self-test",
+      "exit": 2,
+      "reason": "상호 배타 옵션; 각 옵션을 별도 실행하여 전부 통과"
+    },
+    {
+      "command": "python3 tools/push_chain_oracle.py --check --self-test",
+      "exit": 2,
+      "reason": "상호 배타 옵션; 각 옵션을 별도 실행하여 전부 통과"
+    }
+  ]
+}

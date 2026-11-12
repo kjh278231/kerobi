@@ -32,7 +32,7 @@
     "../re/decomp/c/001c0070_PRIVATE0000000000134a87.c": "a1296140baae3e2d019eecf68744cfc1f569257ff8b1bcb82a1ccf3a5eb585bb"
   },
   "assembly": {
-    "bench/oracle/m3_push_recompute/source.asm": "a3486da5b017b71a614413f1f1b8ab3c23141afa404157894bce9c5ec6c9b554"
+    "bench/oracle/m3_push_recompute/source.asm": "aacbd42ac4bbc3d8c1aefec20cac78816de0636450f4f89667199a96d4bb5ec7"
   },
   "captures": {
     "bench/oracle/m3_push_recompute/arms-1.json": "a00abc17dbe2d864480207a66d80f73487ff2808580d238b483ebbe0eac6ae4e",

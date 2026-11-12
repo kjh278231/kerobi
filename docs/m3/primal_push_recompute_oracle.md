@@ -14,8 +14,8 @@
 - 시작: pivot wrapper 뒤 `0x1c3872`, round factor 뒤 `0x1c3db4`. 새 F+0x18 header를 읽기 직전이다.
 - FTRAN `09cf9b@0x1205d0`: 호출 `0x1c38de`/`0x1c3e20`, 복귀 `0x1c38e3`/`0x1c3e25`. 인자 F, 입력 벡터, 출력 벡터, 0, work. 입력 count=-1.
 - 정상 종료 `0x1c3aed`/`0x1c400a`는 분류·PInf·retry 게이트 뒤다. retry 쓰기 뒤 cleanup 진입 `0x1c08d5`도 관측한다. 후속 quality/공급자 실행은 범위 밖이다.
-- frame: F +0x2048, rhs +0x1fd0, 입력/출력 벡터 +0x2000/+0x2008, basic +0x2010, marks +0x2018, width +0x1ff0, lb/ub +0x1f90/+0x1f88, m +0x2068/+0x1f50, I/-I +0x1fc8/+0x1f00, h/-h +0x2070/+0x1f08, attempt/status +0x1fa0/+0x1f98, 위반수 +0x1f28, retry 포인터 +0x20e8. round는 r12d=r13d=0으로 시작한다.
-- 자연 계측은 읽기 전용이다. 합성은 원본 제어 명령을 그대로 실행하고 입출구와 FTRAN/로그만 대체한다. callee-saved·스택 정렬·출구를 확인한다. m=0도 호출·분류 생략 경로를 확인한다.
+- frame: F +0x2048, rhs +0x1fd0, 입력/출력 벡터 +0x2000/+0x2008, basic +0x2010, marks +0x2018, width +0x1ff0, lb/ub +0x1f90/+0x1f88, m +0x2068/+0x1f50, I/-I +0x1fc8/+0x1f00, h/-h +0x2070/+0x1f08, attempt/status +0x1fa0/+0x1f98, 위반수 +0x1f28, 복사 길이(m*8) +0x1f10, retry 포인터 +0x20e8. round는 r12d=r13d=0으로 시작한다.
+- 자연 계측은 읽기 전용이다. 합성은 원본 제어 명령을 그대로 실행하고 입출구와 FTRAN/로그만 대체한다. callee-saved·스택 정렬·출구를 확인한다. m=0도 FTRAN은 1회 호출하며 분류 루프만 생략한다.
 
 ## 3. 비교 계약
 
@@ -37,7 +37,15 @@
 
 ## 5. 재실행 명령
 
-예정: `python3 tools/push_recompute_runs.py <새-출력디렉터리>`; `python3 tools/push_recompute_check.py --controls`, `--acceptance`, `--self-test`.
+저장소 루트에서 실행한다. 새 캡처는 `python3 tools/push_recompute_runs.py <새-출력디렉터리>`이며 기존 출력 덮어쓰기를 거부한다. 표준 검사기는 고정 기준 디렉터리를 읽는다.
+
+```bash
+python3 tools/push_recompute_check.py --controls
+python3 tools/push_recompute_check.py --acceptance
+python3 tools/push_recompute_check.py --self-test
+```
+
+출처·도구·입력·기준선·원본 C·전체 asm·캡처 해시는 [manifest](../../bench/oracle/m3_push_recompute/manifest.json), 사례별 오류 거부 이유는 [검증 결과](../../bench/oracle/m3_push_recompute/verification.json)에 있다.
 회귀: 선행 factor/supplier controls·acceptance·self-test, `push_chain_oracle.py --check`·`--self-test`, `cargo test -p rsolver-lp --test push_chain`, `push_step_chain_rust.py --compare`. Rust/API 변경이 없어 workspace 전체·확장 설치·pytest·Netlib·P3는 제외한다.
 
 ## 6. 실행 결과
@@ -45,8 +53,15 @@
 - 자연 arms/retry/interior/대조군 각각 독립3회, 283/112/149/0사건이 동일하고 선행15 투영·최종 출력과 일치했다. 자연 재계산8회(pivot1/round7), 119행에서 N89/L21/U3/A2/B4를 관측했다.
 - 합성120사례·152행 독립3회 및 재생 일치. F8/X14/L16/N36/U14/A18/B46, retry2회(두 진입점 각각1회). 자연 별칭은 모두 false이며 별칭 true와 free/fixed·정확 경계·retry는 합성 증거다.
 - 초기 합성 frame의 복사 길이 슬롯 +0x1f10 누락은 basic 비트 비교 실패로 잡았다. history/missing-copy-bytes-synthetic-{1,2,3}.json에 보존하고 m*8을 설정한 뒤 독립3회 재캡처했다. shifted 경계는 raw 좌표에서 nextafter를 적용한다.
-- `python3 tools/push_recompute_check.py --write-manifest --controls --acceptance --self-test --report bench/oracle/m3_push_recompute/verification.json` 종료0. 변조82종을 모두 거부했다. 회귀·독립 검토는 진행 중이다.
+- `python3 tools/push_recompute_check.py --write-manifest --controls --acceptance --self-test --report bench/oracle/m3_push_recompute/verification.json` 종료0. 변조82종을 모두 거부했다. 선행 factor controls/acceptance/self-test41종, supplier controls/acceptance/self-test31종, chain check/self-test8종도 종료0이다.
+- `cargo test -p rsolver-lp --test push_chain` 1통과, `push_step_chain_rust.py --compare` 236단계·5,144필드 비트 일치(42구간·재분해 비교 제외6 유지). py_compile·node --check·전체 diff 검사 통과. [회귀 명령/결과·환경](../../bench/oracle/m3_push_recompute/regression.json). Rust/API/기존 solver 실행 경로 변경이 없어 workspace 전체·clippy·Python 확장 설치·pytest·Netlib·P3는 제외한다.
+- 독립 검토 **통과**: `/root/m3_04c17_review`가 C/asm·두 경계·ABI·출구를 확인하고 자연 interior149사건과 합성120사례를 새 원본 프로세스로 각각1회 재캡처해 사건 전체·환경·식별값·자연 최종 출력/basis 일치를 확인했다. 추가 변조15종을 전부 거부했다. [검토 기록](../../bench/oracle/m3_push_recompute/review/review.md), [재캡처·해시/추가 변조 결과](../../bench/oracle/m3_push_recompute/review/review.json).
+- 보존 asm이 dc.py 기본200줄에서 잘린 점은 전체4036줄로 보강하고 manifest를 갱신했다. 독립 검토자의 신선 asm 실행과 파일 전체가 일치한다. 정식 캡처15회(자연12·합성3), 탐색2회, 실패 합성3회, 독립 재캡처2회로 새 원본 실행은 총22회다. 탐색/실패를 합격 건수에 포함하지 않는다.
 
 ## 7. 판정과 인수인계
 
-작업 수행: 진행 중. 동등성: 미검증. 완료 전 독립 검토를 받는다. 다음 단계는 asm 경계와 별칭 대응 확인 후 탐색1회다. 교훈과 최종 인계는 실행 후 갱신한다.
+- 작업 수행: **오라클 구축 완료, 계약 범위 통과**. 오라클 경계는 자연8회·119행 및 합성120사례·152행에서 비트 일치한다. Rust 신규 구현 동등성은 미검증이며 18의 작업이다.
+- 다음은 **M3-04c-18**. `python3 tools/session.py status` → `python3 tools/session.py claim M3-04c-18 --owner <새-owner>` 후 본 계약과 `primal_push_loop.md` §2.5를 읽고, raw FTRAN을 외부 입력으로 받아 basic·width·marks·위반수·PInf·retry L1을 구현한다. 행 순서를 보존하고 두 진입점의 요청 지우기 전 경계를 대조한다.
+- 자연 별칭 true·free/fixed·정확 경계·retry의 도달성은 미검증(합성만). FTRAN/LU 수치 재구현21·caller 루프22·batch23·x87·전체 work/P3도 미검증이다.
+- branch `work/m3-04c-17`, 기준 main `36f93ff`, 계약 `14a560d`, 도구 첫 동작 `2824795`, 정식 캡처/검사 `9f69dbf`. 최종 commit/병합은 main의 `Merge M3-04c-17` 이력을 따른다. 선행 미커밋 없음. 병합 후 같은 단계에서 worktree·branch와 17/shared 점유를 정리한다.
+- 진행·로드맵·스프린트·설계·인계는 본 branch에서 갱신해 병합한다. 교훈은 `docs/lessons/original.md`(재계산 두 경계와 0행 FTRAN), `tooling.md`(fake frame 복사 길이·round의 rsp 쓰기·asm 보존)에 기록한다. 원격 동작/외부 업로드 없음.
