@@ -45,11 +45,13 @@ python3 tools/push_recompute_rust.py --mutate-rust bench/oracle/m3_push_recomput
 
 비교는 128입력의 모든 계약 필드·순서를 확인하고 첫 차이에서 실패한다. 빈 목표·누락·중복키·변경된 비트·분류·요청·retry 등의 trace 변조와 Rust 경계/누적/요청 변이를 거부해야 한다. 소스 변이는 반드시 원복 후 정상 trace를 재생한다.
 
+Rust 변이 실행 전에 입력과 연산을 분석해 기대 분류를 고정했다. 33종 중 29종은 거부해야 한다. `lower-sentinel-strict`·`upper-sentinel-strict`는 I=1e30에서 작은 bound의 덧셈/뺄셈이 I로 반올림되어 같은 width를 낸다. `normal-no-infinite`는 모든 해당 입력이 이미 v<w-h다. `reassociate-above`는 현재 A행의 크기/누적에서 비트 차이를 만들지 않는다. 이 4종은 생존 예상으로 고정하고 **미검증 경계**로 보고하며 원본 asm대로 구현한다. 이 계산 분석은 Rust 변이 실행 결과가 아니며 원본 동등성 사례 수를 늘리지 않는다.
+
 회귀: `push_recompute_check.py --controls --acceptance --self-test`, 선행 factor/supplier의 controls·acceptance·self-test, factor/supplier Rust 재생, `push_chain_oracle.py --check --self-test`, `cargo test --release --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, `push_step_chain_rust.py --compare`, py_compile·diff 검사. 기존 solver/API 경로 미변경으로 확장 설치·pytest·Netlib·P3는 제외한다.
 
 ## 6. 실행 결과
 
-구현 전. 실행 후 건수·해시·판별력·회귀 결과를 기록한다.
+- 첫 동작: `--write` → `cargo test -p rsolver-lp --test push_recompute` → `--compare` 종료0. 자연8·합성120, 총128입력·271행·2,790필드 비트/정확 일치. `--self-test`는62종 trace 변조를 모두 거부했다. 경계·회귀·Rust 변이는 다음 단계다.
 
 ## 7. 판정과 인수인계
 
