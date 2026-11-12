@@ -4,6 +4,7 @@
 //! `089f61`, the update's failure/reallocation paths and the pricing objects are not implemented: reaching one panics.
 //! Contract and C references: docs/m3/primal_push_loop_lu.md.
 use crate::crossover::PushState;
+use crate::crossover_condition::{self, CondEntry, CondEvent};
 use crate::crossover_ftran::VecSnap;
 use crate::crossover_loop::{FactorCtl, FactorSite, FactorStats, PushLoopBackend, Renumber};
 use crate::crossover_init::PushInitBackend;
@@ -78,6 +79,11 @@ impl SerialBackend {
         let u_nnz = u_stat(&lu);
         let backend = SerialBackend { lu, matrix, tol, block, interval, drop, column_work: 0, u_nnz };
         (backend, r, Renumber { old_of_new: rf.o, new_of_old: rf.n })
+    }
+
+    /// `12f282`→`116fd7` on this factor (double path; the caller checks S+0x28 = 0).
+    pub fn condition(&mut self, e: CondEntry, ev: &mut dyn FnMut(CondEvent<'_>)) -> f64 {
+        crossover_condition::condition(&mut self.lu, &self.matrix, e, ev)
     }
 
     /// `05b257` C:144–251: the update adds the work column's count + 1 (dense: 1 + its entries above S+0x3a8).

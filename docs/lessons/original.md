@@ -144,6 +144,8 @@
 - **첫 push 진입의 S+0x120(이전 PInf)은 이미 τ보다 작다(4.6e-15–1.3e-7, Netlib 45).** 그래서 기준 조정 gate는 자연 상태에서 PInf > 1과 0.1셈 < 후보 수만 남는다. τ_in(param_1)은 자연 사례 모두 S+0x380(1e-6)과 비트가 같다. 캡처. (M3-04c-1b, [§6](../m3/primal_push_init_oracle.md#6-실행-결과))
 - **품질 retry(retry=1, init 미완료 반환) 뒤 caller는 attempt=1, S+0x390=0.9로 push를 다시 부른다.** 재호출의 x·slack은 편집 전 값이라 PInf 0으로 정상 초기화된다. first=0(Crossover=1의 dual 뒤 push)은 초기 재분해·`12f282`를 건너뛰고 gate에 caller가 넘긴 *param_8을 그대로 쓴다. 캡처. (M3-04c-1b, [§6](../m3/primal_push_init_oracle.md#6-실행-결과))
 - **push 초기화의 retry 재호출(attempt=1)은 call 1의 factor 객체를 이어 받은 채 S+0x390=0.9로 재분해한 결과와 비트가 같다.** Rust에서 call 1의 `SerialBackend`를 그대로 두고 Markowitz만 caller 값으로 바꿔 요청 10 재분해를 하면 quality·quality_pinf call 2의 header·vstat·FTRAN·basic·factor 통계(F+0x1e0/1e8)가 원본과 일치했다. caller가 두 호출 사이에 factor를 다시 만들지 않는다는 가정과 모순되지 않는 증거(2사례)다. `12f282`는 first일 때만, 조정이 있으면 라운드마다 다시 불린다(C 219·868). 캡처·C. (M3-04c-1d, [§6](../m3/primal_push_init_ext_rust.md#6-실행-결과))
+- **push 초기화 조건수 `12f282`→`116fd7`(double)은 ‖B‖₁(슬랙 1.0, 열 |a| 합의 최대) × Hager식 ‖B⁻¹‖₁ 추정이다.** x = 1/m에서 FTRAN, est = ‖x‖₁(반복>0이고 est가 늘지 않으면 끝), 부호 벡터(엄격 < 0만 −1) BTRAN, 5회 한도, 첫 최대 |z| index가 직전과 같으면 끝, 아니면 e_j. 합은 `2207de` R과 같은 8-lane 순서(주소 8 mod 16이면 첫 항 peel)라 A 열 시작 위치·버퍼 정렬이 비트를 바꾼다. 64호출 캡처·asm. (M3-04c-1c, [§6](../m3/primal_push_condition.md#6-실행-결과))
+- **116fd7의 FTRAN(sparse e_j 입력)과 BTRAN(dense 입력)은 매번 S+0x220/0x228 헤더를 교환해 x 값 버퍼가 번갈아 바뀐다. 116fd7은 초기화 밖 push 안에서도 불린다(caller 근처 `0x1c4276`·`0x1c8a0e`, 미비교).** 슬랙 기저면 1회 만에 condition 1.0. 캡처. (M3-04c-1c, [§6](../m3/primal_push_condition.md#6-실행-결과))
 
 ## dual simplex DSE β (`28c93`·`8b473`)
 

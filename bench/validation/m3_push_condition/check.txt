@@ -1,0 +1,66 @@
+controls 통과 (사례 60 × 3회, 1b 비간섭 15사례)
+acceptance 통과 (116fd7 호출 64개)
+  arms call1#0           m   25 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  retry call1#0          m   10 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  interior call1#0       m    8 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  adlittle call1#0       m   56 ‖B‖₁ 3.9206 반복 2 종료 repeat j [47, 47] FTRAN 출력 count [-1, 27] 버퍼 ['Y', 'X'] cond 313.646
+  scsd1 call1#0          m   77 ‖B‖₁ 2.68328 반복 2 종료 repeat j [4, 4] FTRAN 출력 count [-1, 14] 버퍼 ['Y', 'X'] cond 54.6187
+  capri call1#0          m  271 ‖B‖₁ 8.92812 반복 2 종료 repeat j [251, 251] FTRAN 출력 count [-1, 131] 버퍼 ['Y', 'X'] cond 6196.16
+  adjust call1#0         m   25 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  adjust call1#1         m   25 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  mk_low call1#0         m    8 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  mk_limit call1#0       m    8 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  quality call1#0        m   56 ‖B‖₁ 3.9206 반복 2 종료 repeat j [47, 47] FTRAN 출력 count [-1, 27] 버퍼 ['Y', 'X'] cond 313.646
+  quality call2#0        m   56 ‖B‖₁ 3.9206 반복 2 종료 repeat j [47, 47] FTRAN 출력 count [-1, 27] 버퍼 ['Y', 'X'] cond 313.646
+  quality_pinf call1#0   m   25 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  quality_pinf call2#0   m   25 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  slack_m2 call1#0       m   10 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  slack_m2 call1#1       m   10 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  col_m5 call1#0         m   25 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  col_m5_ub call1#0      m   10 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  col_m5_ub call1#1      m   10 ‖B‖₁ 1 반복 1 종료 est    j [0] FTRAN 출력 count [-1, 1] 버퍼 ['Y', 'X'] cond 1
+  netlib/afiro call1#0   m   27 ‖B‖₁ 3.361 반복 2 종료 repeat j [2, 2] FTRAN 출력 count [-1, 12] 버퍼 ['Y', 'X'] cond 25.2406
+  netlib/sc50b call1#0   m   50 ‖B‖₁ 3.1 반복 2 종료 repeat j [0, 0] FTRAN 출력 count [-1, 48] 버퍼 ['Y', 'X'] cond 69.4569
+  netlib/sc50a call1#0   m   50 ‖B‖₁ 3.1 반복 2 종료 repeat j [5, 5] FTRAN 출력 count [-1, -1] 버퍼 ['Y', 'X'] cond 79.9008
+  netlib/sc105 call1#0   m  105 ‖B‖₁ 3.1 반복 5 종료 limit  j [79, 57, 46, 35] FTRAN 출력 count [-1, 92, -1, -1, -1] 버퍼 ['Y', 'X', 'Y', 'X', 'Y'] cond 286.337
+  netlib/kb2 call1#0     m   43 ‖B‖₁ 7.64576 반복 2 종료 repeat j [9, 9] FTRAN 출력 count [-1, -1] 버퍼 ['Y', 'X'] cond 352.908
+  netlib/stocfor1 call1#0 m  117 ‖B‖₁ 3 반복 2 종료 repeat j [79, 79] FTRAN 출력 count [-1, 59] 버퍼 ['Y', 'X'] cond 313.527
+  netlib/adlittle call1#0 m   56 ‖B‖₁ 3.9206 반복 2 종료 repeat j [47, 47] FTRAN 출력 count [-1, 27] 버퍼 ['Y', 'X'] cond 313.646
+  netlib/blend call1#0   m   74 ‖B‖₁ 5.8375 반복 2 종료 repeat j [61, 61] FTRAN 출력 count [-1, -1] 버퍼 ['Y', 'X'] cond 259.622
+  netlib/scagr7 call1#0  m  129 ‖B‖₁ 5.345 반복 3 종료 repeat j [2, 0, 0] FTRAN 출력 count [-1, 94, 95] 버퍼 ['Y', 'X', 'Y'] cond 3054.52
+  netlib/sc205 call1#0   m  205 ‖B‖₁ 3.1 반복 3 종료 repeat j [5, 46, 46] FTRAN 출력 count [-1, -1, -1] 버퍼 ['Y', 'X', 'Y'] cond 1645.13
+  netlib/share2b call1#0 m   96 ‖B‖₁ 8.00234 반복 2 종료 repeat j [45, 45] FTRAN 출력 count [-1, 34] 버퍼 ['Y', 'X'] cond 356.185
+  netlib/recipe call1#0  m   91 ‖B‖₁ 4.15937 반복 2 종료 repeat j [14, 14] FTRAN 출력 count [-1, 10] 버퍼 ['Y', 'X'] cond 17.3004
+  netlib/lotfi call1#0   m  153 ‖B‖₁ 5.50781 반복 2 종료 repeat j [26, 26] FTRAN 출력 count [-1, 23] 버퍼 ['Y', 'X'] cond 937.235
+  netlib/vtpbase call1#0 m  198 ‖B‖₁ 9.9375 반복 2 종료 repeat j [11, 11] FTRAN 출력 count [-1, 53] 버퍼 ['Y', 'X'] cond 1803.21
+  netlib/share1b call1#0 m  117 ‖B‖₁ 5.48398 반복 2 종료 repeat j [21, 21] FTRAN 출력 count [-1, 49] 버퍼 ['Y', 'X'] cond 1255.69
+  netlib/boeing2 call1#0 m  166 ‖B‖₁ 9.78404 반복 2 종료 repeat j [46, 46] FTRAN 출력 count [-1, 60] 버퍼 ['Y', 'X'] cond 4225.41
+  netlib/scorpion call1#0 m  388 ‖B‖₁ 4.07 반복 2 종료 repeat j [168, 168] FTRAN 출력 count [-1, 30] 버퍼 ['Y', 'X'] cond 3120.71
+  netlib/bore3d call1#0  m  233 ‖B‖₁ 9.61247 반복 2 종료 repeat j [18, 18] FTRAN 출력 count [-1, 121] 버퍼 ['Y', 'X'] cond 1293.91
+  netlib/sctap1 call1#0  m  300 ‖B‖₁ 6.125 반복 2 종료 repeat j [211, 211] FTRAN 출력 count [-1, 29] 버퍼 ['Y', 'X'] cond 1004.89
+  netlib/scagr25 call1#0 m  471 ‖B‖₁ 5.345 반복 3 종료 repeat j [2, 0, 0] FTRAN 출력 count [-1, 311, 312] 버퍼 ['Y', 'X', 'Y'] cond 3466.74
+  netlib/israel call1#0  m  174 ‖B‖₁ 15.8436 반복 3 종료 repeat j [64, 142, 142] FTRAN 출력 count [-1, 158, 158] 버퍼 ['Y', 'X', 'Y'] cond 2488.66
+  netlib/brandy call1#0  m  220 ‖B‖₁ 8.9145 반복 2 종료 repeat j [43, 43] FTRAN 출력 count [-1, 102] 버퍼 ['Y', 'X'] cond 1892.32
+  netlib/scsd1 call1#0   m   77 ‖B‖₁ 2.68328 반복 2 종료 repeat j [4, 4] FTRAN 출력 count [-1, 14] 버퍼 ['Y', 'X'] cond 54.6187
+  netlib/standata call1#0 m  359 ‖B‖₁ 3 반복 2 종료 repeat j [210, 210] FTRAN 출력 count [-1, 8] 버퍼 ['Y', 'X'] cond 76.1625
+  netlib/capri call1#0   m  271 ‖B‖₁ 8.92812 반복 2 종료 repeat j [251, 251] FTRAN 출력 count [-1, 131] 버퍼 ['Y', 'X'] cond 6196.16
+  netlib/standgub call1#0 m  361 ‖B‖₁ 3 반복 2 종료 repeat j [212, 212] FTRAN 출력 count [-1, 8] 버퍼 ['Y', 'X'] cond 76.1625
+  netlib/grow7 call1#0   m  140 ‖B‖₁ 2 반복 2 종료 repeat j [88, 88] FTRAN 출력 count [-1, -1] 버퍼 ['Y', 'X'] cond 128.045
+  netlib/etamacro call1#0 m  400 ‖B‖₁ 5.2 반복 2 종료 repeat j [134, 134] FTRAN 출력 count [-1, 106] 버퍼 ['Y', 'X'] cond 3730.69
+  netlib/scfxm1 call1#0  m  330 ‖B‖₁ 6.68342 반복 2 종료 repeat j [297, 297] FTRAN 출력 count [-1, 47] 버퍼 ['Y', 'X'] cond 420.641
+  netlib/e226 call1#0    m  223 ‖B‖₁ 10.5317 반복 2 종료 repeat j [201, 201] FTRAN 출력 count [-1, 89] 버퍼 ['Y', 'X'] cond 7778.85
+  netlib/beaconfd call1#0 m  173 ‖B‖₁ 4.06974 반복 2 종료 repeat j [111, 111] FTRAN 출력 count [-1, 35] 버퍼 ['Y', 'X'] cond 20.1552
+  netlib/standmps call1#0 m  467 ‖B‖₁ 3.70312 반복 2 종료 repeat j [216, 216] FTRAN 출력 count [-1, 17] 버퍼 ['Y', 'X'] cond 206.033
+  netlib/finnis call1#0  m  497 ‖B‖₁ 6.67404 반복 2 종료 repeat j [337, 337] FTRAN 출력 count [-1, 16] 버퍼 ['Y', 'X'] cond 2561.05
+  netlib/agg call1#0     m  488 ‖B‖₁ 22.0941 반복 2 종료 repeat j [166, 166] FTRAN 출력 count [-1, 109] 버퍼 ['Y', 'X'] cond 2431.5
+  netlib/bandm call1#0   m  305 ‖B‖₁ 8.05064 반복 2 종료 repeat j [262, 262] FTRAN 출력 count [-1, 165] 버퍼 ['Y', 'X'] cond 6579.21
+  netlib/forplan call1#0 m  161 ‖B‖₁ 6.37136 반복 2 종료 repeat j [62, 62] FTRAN 출력 count [-1, 73] 버퍼 ['Y', 'X'] cond 4762.93
+  netlib/gfrd-pnc call1#0 m  616 ‖B‖₁ 2.29371 반복 2 종료 repeat j [438, 438] FTRAN 출력 count [-1, 6] 버퍼 ['Y', 'X'] cond 233.959
+  netlib/degen2 call1#0  m  444 ‖B‖₁ 21 반복 2 종료 repeat j [108, 108] FTRAN 출력 count [-1, 69] 버퍼 ['Y', 'X'] cond 823.2
+  netlib/scsd6 call1#0   m  147 ‖B‖₁ 2.68328 반복 2 종료 repeat j [22, 22] FTRAN 출력 count [-1, 34] 버퍼 ['Y', 'X'] cond 231.805
+  netlib/boeing1 call1#0 m  351 ‖B‖₁ 17.5607 반복 2 종료 repeat j [350, 350] FTRAN 출력 count [-1, 69] 버퍼 ['Y', 'X'] cond 4198.86
+  netlib/modszk1 call1#0 m  687 ‖B‖₁ 5.8428 반복 2 종료 repeat j [321, 321] FTRAN 출력 count [-1, 384] 버퍼 ['Y', 'X'] cond 1635.49
+  netlib/scrs8 call1#0   m  490 ‖B‖₁ 2.88656 반복 2 종료 repeat j [248, 248] FTRAN 출력 count [-1, 58] 버퍼 ['Y', 'X'] cond 1961.66
+  netlib/tuff call1#0    m  333 ‖B‖₁ 7.39107 반복 2 종료 repeat j [237, 237] FTRAN 출력 count [-1, 70] 버퍼 ['Y', 'X'] cond 695.448
+  netlib/shell call1#0   m  536 ‖B‖₁ 2.125 반복 2 종료 repeat j [359, 359] FTRAN 출력 count [-1, 40] 버퍼 ['Y', 'X'] cond 501.5
+  netlib/ship04s call1#0 m  402 ‖B‖₁ 5.7648 반복 2 종료 repeat j [246, 246] FTRAN 출력 count [-1, 12] 버퍼 ['Y', 'X'] cond 228.087

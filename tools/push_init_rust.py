@@ -166,6 +166,10 @@ def project_call(case, c, evs, a1):
                 w['factor'] = f"{f['updates']} {f['limit']} {sv.i64(f['nnzL'])} {sv.i64(f['nnzU'])}"
             want.append(('start', w))
             break
+        elif k == 'push:leave' and e['retry'] == 0:
+            # 후보 0: 초기화 뒤 곧바로 해 설치(LAB_002c4050)로 가 supply 없이 반환(M3-04c-1c Netlib에서 관측)
+            require(e['ret'] == 0 and e['init'], f'{case} call{c}: supply 없이 push:leave(retry·End 아님)')
+            want.append(('exit', {'End': ''}))
         elif k == 'push:leave':
             require(e['retry'] == 1, f'{case} call{c}: supply 없이 push:leave(retry 아님)')
             x = e['extra']
@@ -303,7 +307,7 @@ def self_test():
     tried, survived = 0, []
 
     def flip(v):
-        a = v.split()
+        a = v.split() or ['']
         t = a[0]
         if len(t) == 16 and all(ch in '0123456789abcdef' for ch in t):
             a[0] = format(int(t, 16) ^ 1, '016x')

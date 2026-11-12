@@ -1,0 +1,26 @@
+REJECTED     바이너리 해시 0  ← arms-1 binary_sha256
+REJECTED     사건 비우기  ← interior-2 사건 없음
+REJECTED     run2 BTRAN 출력 1비트  ← capri run2≠run1: events 사건 14
+REJECTED     1b 비간섭: push:enter x 1비트(3회 모두)  ← retry: 1b 투영 사건 0 다름
+REJECTED     1b 비간섭: 12f282 출력 1비트(3회 모두)  ← adlittle: 1b 투영 사건 9 다름
+REJECTED     condition 1비트  ← scsd1 call1#0: condition 6a0bac3e304f4b40 != 재계산 6b0bac3e304f4b40
+REJECTED     header 최대 열 → 슬랙  ← capri call1#0: condition 38bd3e582934b840 != 재계산 c886599a0ab08540
+REJECTED     A 정렬 8(share2b)  ← netlib/share2b call1#0: condition c4772fb9f3427640 != 재계산 c2772fb9f3427640
+REJECTED     x·y 버퍼 정렬 8(전체)  ← netlib/stocfor1 call1#0: condition 894832396d987340 != 재계산 8a4832396d987340
+REJECTED     첫 FTRAN 입력 1비트  ← adlittle call1#0: k0 FTRAN 입력 다름(count -1/-1)
+REJECTED     FTRAN 출력 상위 가수 1비트  ← adlittle call1#0: condition 04cd643a549a7340 != 재계산 b7d9d5e63f9e7340
+REJECTED     부호 벡터 1개 반전  ← scsd1 call1#0: k0 부호 벡터 다름
+REJECTED     e_j index +1  ← adlittle call1#0: k1 FTRAN 입력 다름(count 1/1)
+REJECTED     마지막 BTRAN 사건 제거  ← capri call1#0: 사건 7 cond:btran:leave 기대, 끝
+REJECTED     cond:leave 제거  ← arms call1#0: cond:leave 없음
+REJECTED     null-null: FTRAN 입력·출력 비우기  ← interior call1#0: k0 FTRAN 입력 다름(count -1/-1)
+REJECTED     변이 합산 순차(lane 무시)  ← retry call1#0: 사건 6 cond:btran:enter 기대, 끝
+REJECTED     변이 슬랙 열 노름 0  ← interior call1#0: condition 000000000000f03f != 재계산 0000000000000000
+REJECTED     변이 부호 ≤ 0  ← capri call1#0: k0 부호 벡터 다름
+REJECTED     변이 반복 한도 4  ← netlib/sc105 call1#0: 종료(limit) 뒤 사건 4개 남음
+REJECTED     변이 추정 비증가 엄격 >  ← arms call1#0: 사건 6 cond:btran:enter 기대, 끝
+REJECTED     변이 argmax 마지막 최대  ← arms call1#0: k1 FTRAN 입력 다름(count 1/1)
+SURVIVED     변이 ‖B‖₁ max ≥
+REJECTED     변이 peel 무시  ← netlib/share2b call1#0: condition c4772fb9f3427640 != 재계산 c2772fb9f3427640
+SURVIVED     변이 합산 버퍼 = y 출력 버퍼
+필수 변조/변이 통과 0

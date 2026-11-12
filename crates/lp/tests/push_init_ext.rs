@@ -2,11 +2,15 @@
 //! push:enter state plus the values outside it (param_1, S+0x120, S+0x3c8, the environment flag, the `12f282`
 //! outputs; for first=0 the dense FTRAN output). It stops before the first supply; the comparison is
 //! `tools/push_init_rust.py --compare`. Contract: docs/m3/primal_push_init_ext_rust.md.
+//! M3-04c-1c: with a `cond` record the `12f282` outputs are not injected; `116fd7` runs on the Rust factor
+//! (`crossover_condition`) and its internal boundaries are written as `cnorm`/`cft`/`cest`/`cbt`/`cres` lines
+//! (`tools/push_cond_rust.py --compare`, contract docs/m3/primal_push_condition.md).
 mod loop_io;
 
 use loop_io::*;
 use rsolver_lp::crossover::{PushLp, PushParams, PushState};
 use rsolver_lp::crossover_backend::{SerialBackend, SerialStart};
+use rsolver_lp::crossover_condition::{CondEntry, CondEvent, CondVec, Phys};
 use rsolver_lp::crossover_init::*;
 use rsolver_lp::crossover_loop::*;
 use rsolver_lp::crossover_refactor::{Alloc, Matrix};
@@ -25,6 +29,8 @@ struct Ext {
     serial: Option<SerialStart>,
     tape: VecDeque<Vec<f64>>,
     conditions: VecDeque<f64>,
+    /// M3-04c-1c: `116fd7` entries of the Rust estimate (None: the output tape).
+    entries: Option<VecDeque<CondEntry>>,
     /// S+0x3c8 and, without a factor, F+0x188.
     s3c8: i32,
     f188: i32,
@@ -68,7 +74,16 @@ impl PushInitBackend for Ext {
         }
     }
     fn condition(&mut self, _before: Option<f64>) -> Option<f64> {
-        Some(self.conditions.pop_front().expect("12f282 output tape exhausted"))
+        let Some(entries) = self.entries.as_mut() else {
+            return Some(self.conditions.pop_front().expect("12f282 output tape exhausted"));
+        };
+        let e = entries.pop_front().expect("116fd7 entry tape exhausted");
+        let out = self.out.clone();
+        let b = self.serial.as_mut().and_then(|s| s.backend.as_mut()).expect("116fd7 without a factor");
+        let mut lines = Vec::new();
+        let c = b.condition(e, &mut |ev| lines.push(cond_line(ev)));
+        out.borrow_mut().extend(lines);
+        Some(c)
     }
     fn observe(&mut self, ev: InitEvent<'_>) {
         let s = match ev {
@@ -84,6 +99,33 @@ impl PushInitBackend for Ext {
             }
         };
         self.line(s);
+    }
+}
+
+fn ph(p: Phys) -> &'static str {
+    match p {
+        Phys::X => "X",
+        Phys::Y => "Y",
+    }
+}
+
+fn cvec(v: &CondVec) -> String {
+    format!("{} | {} | {}", v.count, ints(&v.idx), hexs(&v.val))
+}
+
+fn cond_line(ev: CondEvent<'_>) -> String {
+    match ev {
+        CondEvent::Norm { norm, header } => format!("cnorm;norm {};hdr {}", hex(norm), ints(header)),
+        CondEvent::Ftran { k, input, output, x, y } => {
+            format!("cft;k {k};in {};out {};x {};y {}", cvec(input), cvec(output), ph(x), ph(y))
+        }
+        CondEvent::Estimate { k, est } => format!("cest;k {k};est {}", hex(est)),
+        CondEvent::Btran { k, input, output, x, y } => {
+            format!("cbt;k {k};in {};out {};x {};y {}", hexs(input), cvec(output), ph(x), ph(y))
+        }
+        CondEvent::Done { stop, iterations, condition } => {
+            format!("cres;stop {stop:?};iter {iterations};cond {}", hex(condition))
+        }
     }
 }
 
@@ -147,16 +189,26 @@ fn run_call(case: &[&str], prev: Option<SerialBackend>, out: &Out) -> Option<Ser
         other => panic!("lu kind {other}"),
     };
     t.done();
+    let entries = (case.len() > 6).then(|| {
+        let mut t = rec(case, 6, "cond");
+        let k: usize = t.i();
+        let v: VecDeque<CondEntry> = (0..k)
+            .map(|_| CondEntry { f0c: t.i(), a_val_mod16: t.i(), x_mod16: t.i(), y_mod16: t.i() })
+            .collect();
+        t.done();
+        v
+    });
 
     let lp = PushLp { n, m, starts: &starts, lengths: &lengths, rows: &rows, values: &values, cost: &cost, lb: &lb,
                       ub: &ub };
-    let mut backend = Ext { serial, tape, conditions, s3c8, f188, out: out.clone() };
+    let mut backend = Ext { serial, tape, conditions, entries, s3c8, f188, out: out.clone() };
     let entry = InitEntry { rhs: &rhs, vstat, header, xs, iterations, request, numeric, failure, status, enter, leave,
                             direction: 0, markowitz, first: first != 0, attempt, model_status,
                             tau_in: Some(tau_in), prev_pinf: Some(prev_pinf), condition: Some(condition),
                             tighten: Some(TightenInput { update_limit: s3c8, env_2c54 }) };
     let res = push_init(&lp, &par, entry, &mut backend);
     assert!(backend.conditions.is_empty() && backend.tape.is_empty(), "unused condition or FTRAN tape");
+    assert!(backend.entries.as_ref().is_none_or(|e| e.is_empty()), "unused 116fd7 entries");
     let s = &res.state;
     let r = &s.round;
     match res.exit {
@@ -183,16 +235,39 @@ fn run_call(case: &[&str], prev: Option<SerialBackend>, out: &Out) -> Option<Ser
 
 #[test]
 fn init_ext_trace() {
+    replay("m3_push_init_ext_rust", "tools/push_init_rust.py --write");
+}
+
+#[test]
+fn init_cond_trace() {
+    replay("m3_push_cond_rust", "tools/push_cond_rust.py --write");
+}
+
+/// Records of one call: from a `case` line up to the next.
+fn records<'a>(rest: &[&'a str]) -> Vec<Vec<&'a str>> {
+    let mut out: Vec<Vec<&str>> = Vec::new();
+    for &l in rest {
+        if l.starts_with("case ") {
+            out.push(Vec::new());
+        }
+        out.last_mut().expect("input does not start with a case record").push(l);
+    }
+    out
+}
+
+fn replay(dir: &str, writer: &str) {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
-    let text = std::fs::read_to_string(format!("{root}/bench/oracle/m3_push_init_ext_rust/input.txt"))
-        .expect("missing bench/oracle/m3_push_init_ext_rust/input.txt (tools/push_init_rust.py --write)");
+    let Ok(text) = std::fs::read_to_string(format!("{root}/bench/oracle/{dir}/input.txt")) else {
+        panic!("missing bench/oracle/{dir}/input.txt ({writer})");
+    };
     let mut lines = text.lines();
     let out: Out = Rc::new(RefCell::new(vec![lines.next().unwrap().to_string()]));
-    let _dump = Dump(out.clone(), format!("{root}/target/m3_push_init_ext_rust"));
+    let _dump = Dump(out.clone(), format!("{root}/target/{dir}"));
     let rest: Vec<&str> = lines.collect();
     let mut failed = Vec::new();
     let mut prev: Option<(String, Option<SerialBackend>)> = None;
-    for case in rest.chunks(6) {
+    for case in records(&rest) {
+        let case = &case[..];
         let mut t = rec(case, 0, "case");
         let name = t.s().to_string();
         let call: i32 = t.i();

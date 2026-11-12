@@ -762,8 +762,12 @@ pub fn u_sparse(f: &FtranFactor, s: &mut FtranState) {
                     }
                 }
             }
+            // the heap grows down from sec2 − 1 and the outputs up from 0 over distinct non-prefix rows (heap +
+            // outputs ≤ m − F_ec), so an output cell is written after any heap use of it: only cells ≥ out are left
             for k in 0..reached.max(ntail).min(sec2) {
-                s.idx[oi].forget(sec2 - 1 - k);
+                if sec2 - 1 - k >= out {
+                    s.idx[oi].forget(sec2 - 1 - k);
+                }
             }
             let tail_out: Vec<(usize, f64)> =
                 (direct..out).map(|q| (s.idx[oi].get(q) as usize, s.val[ov].get(q))).collect();

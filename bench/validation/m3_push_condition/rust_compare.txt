@@ -1,0 +1,2 @@
+호출 62·줄 966·필드 4378 비교, 불일치 0
+Rust 줄 종류 {'cbt': 121, 'cest': 135, 'cft': 135, 'cnorm': 64, 'cond': 64, 'cres': 64, 'exit': 7, 'ftin': 65, 'ftout': 65, 'gate': 63, 'lu': 61, 'mk': 3, 'res': 65, 'retry': 2, 'start': 53}
