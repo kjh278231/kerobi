@@ -1,0 +1,17 @@
+$ python3 tools/push_block_check.py --controls --acceptance → 종료 0
+  scsd1: push 2 [1:1/0/0→0/0 2:2/0/0→0/0] push 밖 5 (사이 [])
+  capri: push 3 [1:1/0/0→1/0 2:2/1/0→2/0 23:3/2/0→3/0] push 밖 2 (사이 [])
+acceptance 통과
+$ python3 tools/push_init_survey.py --check → 종료 0
+scsd1: n=760 m=77 후보=12 조정=False Markowitz강화=False 위반=0
+capri: n=353 m=271 후보=31 조정=False Markowitz강화=False 위반=0
+통과
+$ python3 -m py_compile tools/push_init_check.py tools/push_init_runs.py → 종료 0
+
+$ node --check tools/push_init_agent.js → 종료 0
+
+$ node --check tools/push_init_capture.js → 종료 0
+
+$ git diff --check → 종료 0
+
+$ (독립 재캡처 4회째, scratchpad) push_init_runs.py --explore --only=adjust,quality,adlittle_x1,capri → 4/4 성공, pid·run_id·output 제외 JSON 전체가 저장 run1과 같음(사건 22·27·10·13)

@@ -1,0 +1,40 @@
+REJECTED     바이너리 해시 0  ← arms-1 binary_sha256
+REJECTED     사건 비우기  ← interior-2 사건 없음
+REJECTED     run2 FTRAN 출력 1비트  ← arms run2≠run1: events 사건 5
+REJECTED     21h 비간섭: push:enter x 1비트(3회 모두)  ← retry 21h 비간섭 push:enter.state
+REJECTED     FTRAN 입력 1비트  ← capri call1: round1 FTRAN 입력 행3 기대 ae47e17a144052c0 실제 af47e17a144052c0
+REJECTED     FTRAN 출력 1비트  ← adlittle call1: round1 잔차 입력 ≠ FTRAN 출력
+REJECTED     잔차 출력 1비트  ← scsd1 call1: round1 잔차 출력 행0 기대 0000000000000000 실제 0100000000000000
+REJECTED     잔차 scratch 비영  ← interior call1: round1 잔차 scratch 진입이 +0이 아님
+REJECTED     τ_in 1비트  ← adlittle call1: round1 조정 gate 상태 flag 0 후보 22 τ 8dedb5a0f7c6b03e ≠ 0,22,8cedb5a0f7c6b03e
+REJECTED     0.1셈 +1  ← adlittle call1: round1 첫 스캔 셈 [12, 7, 3] ≠ [12, 7, 2]
+REJECTED     강화 사건 제거  ← mk_low call1: round1 강화 기대인데 사건 없음
+REJECTED     강화 새 값 1비트  ← quality call1: round1 강화 새 값 010000000000e03f ≠ 000000000000e03f
+REJECTED     061bfe 한도 변경  ← mk_limit call1: round1 061bfe 한도 51,50 ≠ 50,50
+REJECTED     gate PInf 1비트  ← retry call1: round1 gate PInf/위반 d12406819543d33f,5 ≠ d02406819543d33f,5
+REJECTED     조정 2회째 FTRAN 제거  ← adjust call1: round2 FTRAN 없음
+REJECTED     조정 flag 반전  ← adjust call1: round2 조정 gate 상태 flag 0 후보 24 τ 95d626e80b2e113e ≠ 1,24,95d626e80b2e113e
+REJECTED     조정 τ' 1비트  ← col_m5_ub call1: round2 조정 gate 상태 flag 1 후보 6 τ 94d626e80b2e113e ≠ 1,6,95d626e80b2e113e
+REJECTED     품질 retry 0  ← quality call1: round1 retry_p 기대인데 다음 사건 push:leave retry 0
+REJECTED     supply 후보 교환  ← arms call1: 후보 순서 [24, 21, 0, 7, 4, 2] ≠ [21, 24, 0, 7, 4, 2]
+REJECTED     supply 승격 되돌림  ← adjust call1: 비기저 vstat(승격 포함) 불일치
+REJECTED     supply basic 1비트  ← interior call1: basic ≠ FTRAN 출력 − lb
+REJECTED     편집 사건 제거  ← slack_m2 call1: 편집 수 0 ≠ 명세 1
+REJECTED     편집 값 변경  ← col_m5_ub call1: 편집 불일치 {'event': 'edit', 'call': 1, 'at': 'enter', 'field': 'vstat', 'index': 3, 'before': -1, 'after': -4} vs {'at': 'enter', 'field': 'vstat', 'index': 3, 'int': -5}
+REJECTED     null-null: FTRAN 입력·출력 비우기  ← interior call1: round1 FTRAN 입력 행8 기대 None 실제 None
+REJECTED     first=0 사례 first=1로  ← adlittle_x1 call1: first≠0인데 요청 10 초기 재분해 없음
+REJECTED     변이 slack -2 = 0  ← slack_m2 call1: round1 FTRAN 입력 행3 기대 40431cebe2361abf 실제 1cebe2361a0014c0
+REJECTED     변이 열 -5 = 0  ← col_m5 call1: round1 FTRAN 입력 행17 기대 0000000000000040 실제 000000000010a83c
+REJECTED     변이 열 -5 = lb  ← col_m5_ub call1: round1 FTRAN 입력 행1 기대 30431cebe2360a3f 실제 39454772f9ff23c0
+REJECTED     변이 재구성에서 -4/-5도 뺌  ← adjust call1: round2 FTRAN 입력 행17 기대 000000000010a83c 실제 0000000000000040
+REJECTED     변이 τ' 항상 0.1배  ← adjust call1: round2 조정 gate 상태 flag 1 후보 24 τ 95d626e80b2e113e ≠ 1,24,48afbc9af2d77a3e
+SURVIVED     변이 -1 승격 strict
+REJECTED     변이 Markowitz 0.5 임계 1e-3  ← quality call1: round1 강화 새 값 000000000000e03f ≠ 000000000000d03f
+SURVIVED     변이 Markowitz 0.25 임계 1e-3
+REJECTED     변이 수치 카운터 임계 1e-3  ← quality call1: round1 gate 직전 S+0x178 1 ≠ 0
+SURVIVED     변이 061bfe √m 대신 m
+REJECTED     변이 gate P 항상 PInf  ← quality_pinf call1: retry 반환 S+0x178 1 ≠ 0
+SURVIVED     변이 셈 ≥
+SURVIVED     변이 basic lower shift 생략
+REJECTED     변이 잔차 역순  ← adlittle call1: round1 잔차 출력 행0 기대 30565b5acd7bd3bf 실제 2c565b5acd7bd3bf
+필수 변조/변이 통과 0
