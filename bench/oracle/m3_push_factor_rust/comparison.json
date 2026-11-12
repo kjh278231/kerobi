@@ -1,0 +1,9 @@
+{
+  "cases": 89,
+  "fields": 978,
+  "natural_select": 28,
+  "natural_wrapper": 6,
+  "synthetic_select": 24,
+  "synthetic_wrapper": 31,
+  "rule": "ordered typed exact fields; pointer aliases; sentinel f64 bits"
+}

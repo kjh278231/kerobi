@@ -1,0 +1,90 @@
+M3-04c-16-v1
+arms/1/1/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/2/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/4/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/6/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/7/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/8/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/9/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/10/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/11/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/15/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/16/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/18/select select 25 0 0 0 20 4 0 0 25 25 1
+arms/1/20/select select 25 0 0 0 20 4 0 0 26 25 1
+arms/1/21/select select 25 0 0 0 20 4 0 0 26 25 1
+arms/1/22/select select 25 0 0 0 20 4 0 0 26 25 1
+arms/1/23/select select 25 0 0 0 20 4 0 0 26 25 1
+arms/1/24/select select 25 0 0 0 20 4 0 0 26 25 1
+retry/1/1/select select 10 0 0 0 20 2 0 0 10 10 1
+retry/1/4/select select 10 0 0 0 20 2 0 0 10 10 1
+retry/1/5/select select 10 0 0 0 20 2 0 0 10 10 1
+retry/1/6/select select 10 0 0 0 20 2 0 0 10 10 1
+interior/1/1/select select 8 0 0 0 20 2 0 0 8 8 1
+interior/1/2/select select 8 0 0 0 20 2 0 0 13 8 0
+interior/1/2/wrapper wrapper 0 0 0 1 0 50 0 10 7 1 0 1 0 0 0 1 0
+interior/1/3/select select 8 0 0 1 20 2 8 0 13 8 0
+interior/1/3/wrapper wrapper 0 0 0 1 1 50 0 10 7 1 0 1 0 0 0 2 0
+interior/1/5/select select 8 0 0 2 20 2 16 2 13 8 0
+interior/1/5/wrapper wrapper 10 0 0 1 2 50 0 10 7 1 0 1 0 0 10 0 0
+interior/1/6/select select 8 0 0 0 20 2 0 0 11 23 0
+interior/1/6/wrapper wrapper 0 0 0 1 0 50 0 10 7 1 0 1 0 0 0 1 0
+interior/1/7/select select 8 0 0 1 20 2 8 3 11 23 0
+interior/1/7/wrapper wrapper 0 0 0 1 1 50 0 10 7 1 0 1 0 0 0 2 0
+interior/1/8/select select 8 0 0 2 20 2 16 3 11 23 0
+interior/1/8/wrapper wrapper 0 0 0 1 2 50 0 10 7 1 0 1 0 0 0 3 0
+synthetic/update select 8 0 0 2 10 4 0 0 20 20 0
+synthetic/preserve-2 select 8 2 0 10 10 4 0 0 20 20 1
+synthetic/preserve-6 select 8 6 0 10 10 4 0 0 20 20 1
+synthetic/preserve-10 select 8 10 0 10 10 4 0 0 20 20 1
+synthetic/limit-9 select 8 0 0 9 10 12 0 0 20 20 0
+synthetic/limit-10 select 8 0 0 10 10 12 0 0 20 20 0
+synthetic/limit-11 select 8 0 0 11 10 12 0 0 20 20 0
+synthetic/q-3-numeric-0 select 8 0 0 3 10 4 0 0 20 20 0
+synthetic/q-3-numeric-1 select 8 0 1 3 10 4 0 0 20 20 0
+synthetic/q-4-numeric-0 select 8 0 0 4 10 4 0 0 20 20 0
+synthetic/q-4-numeric-1 select 8 0 1 4 10 4 0 0 20 20 0
+synthetic/q-5-numeric-0 select 8 0 0 5 10 4 0 0 20 20 0
+synthetic/q-5-numeric-1 select 8 0 1 5 10 4 0 0 20 20 0
+synthetic/skip-1 select 8 0 0 2 10 4 0 0 20 20 1
+synthetic/skip--1 select 8 0 0 2 10 4 0 0 20 20 -1
+synthetic/cost--1 select 2 0 0 4 10 4 0 0 2 3 0
+synthetic/cost-0 select 2 0 0 4 10 4 1 0 2 3 0
+synthetic/cost-1 select 2 0 0 4 10 4 2 0 2 3 0
+synthetic/min-q-term-19 select 2 0 0 4 10 4 19 0 50 50 0
+synthetic/min-q-term-20 select 2 0 0 4 10 4 20 0 50 50 0
+synthetic/min-q-term-21 select 2 0 0 4 10 4 21 0 50 50 0
+synthetic/min-q-zero select 2 0 0 0 10 0 1 0 2 3 0
+synthetic/sum-convert select 2 0 0 4 10 4 2 0 9007199254740993 -9007199254740987 0
+synthetic/negative-cost-support select 2 0 0 4 10 4 0 0 2 3 1
+synthetic/normal wrapper 0 3 0 1 1 50 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/repeat-one wrapper 0 3 0 1 1 50 0 13 7 2 1 _ _ _ _ _ 0 _ _ _ _ _ 0
+synthetic/repeat-two wrapper 0 3 0 1 1 50 0 13 7 3 1 _ _ _ _ _ 1 _ _ _ _ _ 0 _ _ _ _ _ 0
+synthetic/repeat-request wrapper 0 3 0 1 1 50 0 13 7 2 1 _ _ _ 6 _ 0 _ _ _ _ _ 0
+synthetic/numeric-crossed-by-backend wrapper 0 3 0 1 1 50 0 13 7 1 0 _ 13 _ _ _ 0
+synthetic/return12 wrapper 0 3 0 1 1 50 0 13 7 1 12 _ _ _ _ _ 0
+synthetic/error7 wrapper 0 3 0 1 1 50 0 13 7 1 7 _ _ _ _ _ 0
+synthetic/error-precedes-status wrapper 0 3 0 1 1 50 0 13 7 1 7 -1000 _ _ _ _ 0
+synthetic/status--999 wrapper 0 3 0 -999 1 50 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/status--1000 wrapper 0 3 0 -1000 1 50 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/failure-attempt-0 wrapper 0 3 1 1 1 50 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/numeric-12-attempt-0 wrapper 0 12 0 1 1 50 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/numeric-13-attempt-0 wrapper 0 13 0 1 1 50 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/numeric-14-attempt-0 wrapper 0 14 0 1 1 50 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/failure-attempt-1 wrapper 0 3 1 1 1 50 1 13 7 1 0 _ _ _ _ _ 0
+synthetic/numeric-12-attempt-1 wrapper 0 12 0 1 1 50 1 13 7 1 0 _ _ _ _ _ 0
+synthetic/numeric-13-attempt-1 wrapper 0 13 0 1 1 50 1 13 7 1 0 _ _ _ _ _ 0
+synthetic/numeric-14-attempt-1 wrapper 0 14 0 1 1 50 1 13 7 1 0 _ _ _ _ _ 0
+synthetic/request-recompute wrapper 10 3 0 1 1 50 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/request-preserved-on-retry wrapper 6 3 0 1 1 50 0 13 7 1 12 _ _ _ _ _ 0
+synthetic/zero-updates-period100 wrapper 0 3 0 1 0 100 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/nonzero-clamp100 wrapper 0 3 0 1 1 100 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/period20-kept wrapper 0 3 0 1 1 20 0 13 7 1 0 _ _ _ _ _ 0
+synthetic/quality-increment-5 wrapper 0 3 0 1 50 50 0 13 7 1 0 _ _ _ _ _ 1 5 _ _ _ 0 _
+synthetic/quality-increment-10 wrapper 0 3 0 1 50 50 0 13 7 1 0 _ _ _ _ _ 1 10 _ _ _ 0 _
+synthetic/quality-increment-20 wrapper 0 3 0 1 50 50 0 13 7 1 0 _ _ _ _ _ 1 20 _ _ _ 0 _
+synthetic/quality-increment-50 wrapper 0 3 0 1 50 50 0 13 7 1 0 _ _ _ _ _ 1 50 _ _ _ 0 _
+synthetic/quality-above-period wrapper 0 3 0 1 51 50 0 13 7 1 0 _ _ _ _ _ 1 10 _ _ _ 0 _
+synthetic/quality-request6 wrapper 0 3 0 1 50 50 0 13 7 2 0 _ _ _ _ _ 0 _ _ _ _ 0 1 5 _ _ _ 6 _
+synthetic/quality-request6-repeat wrapper 0 3 0 1 50 50 0 13 7 3 0 _ _ _ _ _ 1 _ _ _ _ _ 0 _ _ _ _ 0 1 20 _ _ _ 6 _
+synthetic/quality-status12 wrapper 0 3 0 1 50 50 0 13 7 1 0 _ _ _ _ _ 1 50 12 _ _ 0 _
