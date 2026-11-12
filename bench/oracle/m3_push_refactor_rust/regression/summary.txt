@@ -1,0 +1,66 @@
+== python3 tools/push_lu_check.py --controls --acceptance
+exit 0
+{"controls": {"arms": {"events": 662, "lu": 16}, "retry": {"events": 249, "lu": 12}, "interior": {"events": 288, "lu": 32}, "control": {"events": 0, "lu": 0}, "adlittle": {"events": 547, "lu": 52}, "scsd1": {"events": 237, "lu": 8}, "capri": {"events": 832, "lu": 80}}, "acceptance": {"models": {"arms": {"calls": 4, "ft": 0, "roweta": 0, "cache_reuse": 0, "span_trivial": 0, "eta_added": 0, "refactor": 4, "refactor_calls": 4, "init": 1, "refactor_push": 3, "leave_renumbered": 4, "header_reordered": 2, "old_perm_nonid": 2, "links": 45, "links_header_changed": 17, "links_bucket_changed": 0, "links_after_lu": 4, "links_into_lu": 0}, "retry": {"calls": 3, "ft": 0, "roweta": 0, "cache_reuse": 0, "span_trivial": 0, "eta_added": 0, "refactor": 3, "refactor_calls": 3, "init": 1, "refactor_push": 2, "leave_renumbered": 3, "header_reordered": 2, "old_perm_nonid": 2, "links": 14, "links_header_changed": 4, "links_bucket_changed": 0, "links_after_lu": 3, "links_into_lu": 0}, "interior": {"calls": 9, "ft": 5, "roweta": 3, "cache_reuse": 0, "span_trivial": 2, "eta_added": 3, "refactor": 4, "refactor_calls": 4, "init": 1, "refactor_push": 3, "leave_renumbered": 3, "header_reordered": 3, "old_perm_nonid": 3, "links": 18, "links_header_changed": 6, "links_bucket_changed": 0, "links_after_lu": 9, "links_into_lu": 5}, "control": {"calls": 0, "ft": 0, "roweta": 0, "cache_reuse": 0, "span_trivial": 0, "eta_added": 0, "refactor": 0, "refactor_calls": 0, "init": 0, "refactor_push": 0, "leave_renumbered": 0, "header_reordered": 0, "old_perm_nonid": 0, "links": 0, "links_header_changed": 0, "links_bucket_changed": 0, "links_after_lu": 0, "links_into_lu": 0}, "adlittle": {"calls": 14, "ft": 11, "roweta": 9, "cache_reuse": 0, "span_trivial": 2, "eta_added": 6, "refactor": 3, "refactor_calls": 3, "init": 1, "refactor_push": 2, "leave_renumbered": 3, "header_reordered": 3, "old_perm_nonid": 3, "links": 37, "links_header_changed": 13, "links_bucket_changed": 0, "links_after_lu": 13, "links_into_lu": 11}, "scsd1": {"calls": 2, "ft": 0, "roweta": 0, "cache_reuse": 0, "span_trivial": 0, "eta_added": 0, "refactor": 2, "refactor_calls": 2, "init": 1, "refactor_push": 1, "leave_renumbered": 2, "header_reordered": 2, "old_perm_nonid": 2, "links": 14, "links_header_changed": 1, "links_bucket_changed": 0, "links_after_lu": 2, "links_into_lu": 0}, "capri": {"calls": 23, "ft": 20, "roweta": 14, "cache_reuse": 0, "span_trivial": 6, "eta_added": 14, "refactor": 3, "refactor_calls": 3, "init": 1, "refactor_push": 2, "leave_renumbered": 3, "header_reordered": 3, "old_perm_nonid": 3, "links": 60, "links_header_changed": 27, "links_bucket_changed": 19, "links_after_lu": 22, "links_into_lu": 20}}, "total": {"calls": 55, "ft": 36, "roweta": 26, "cache_reuse": 0, "span_trivial": 10, "eta_added": 23, "refactor": 19, "refactor_calls": 19, "init": 6, "refactor_push": 13, "leave_renumbered": 18, "header_reordered": 15, "old_perm_nonid": 15, "links": 188, "links_header_changed": 68, "links_bucket_changed": 19, "links_after_lu": 53, "links_into_lu": 36}}}
+== python3 tools/push_lu_rust.py --write
+exit 0
+input: 207 연산 {'R': 19, 'F': 120, 'B': 32, 'U': 36}
+== git diff --exit-code --stat bench/oracle/m3_push_lu_rust/input.txt
+exit 0
+== python3 tools/push_lu_rust.py --generate --write
+exit 0
+input: 213 연산 {'M': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}
+== cargo test -p rsolver-lp --test push_lu
+exit 0
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+== python3 tools/push_lu_rust.py --compare
+exit 0
+비교 연산 207 {'R': 19, 'F': 120, 'B': 32, 'U': 36}, 통과 {'R': 19, 'F': 120, 'B': 32, 'U': 36}, 필드 1257225, 실패 0
+FT 분기 {'cache_reuse=False': 36, 'cycle=False': 15, 'cycle=True': 21, 'dot_lanes=False': 25, 'dot_lanes=True': 11, 'eta=False': 13, 'eta=True': 23, 'interval_trivial=False': 26, 'interval_trivial=True': 10, 'local80=0': 7, 'local80=1': 17, 'local80=2': 6, 'local80=3': 6, 'moved_column=False': 3, 'moved_column=True': 33, 'moved_rows=0': 6, 'moved_rows=1': 7, 'moved_rows=11': 1, 'moved_rows=2': 6, 'moved_rows=23': 1, 'moved_rows=3': 5, 'moved_rows=4': 3, 'moved_rows=5': 1, 'moved_rows=53': 1, 'moved_rows=6': 1, 'moved_rows=7': 2, 'moved_rows=8': 2, 'promoted=False': 22, 'promoted=True': 14}
+FTRAN/BTRAN 분기 {'B.entry=cache': 7, 'B.entry=cache-empty-row': 25, 'B.eta=none': 32, 'B.kernel=heap': 25, 'B.kernel=heap+seq': 7, 'B.lt=dense': 2, 'B.lt=heap': 23, 'B.lt=heap+seq': 1, 'B.lt=level': 6, 'B.u=21a941': 32, 'F.input=dense': 13, 'F.input=sparse': 107, 'F.l=214344': 48, 'F.l=21b9de': 47, 'F.l=21b9de A2': 25, 'F.r=dense': 25, 'F.r=none': 79, 'F.r=sparse': 13, 'F.r=sparse-dense': 3, 'F.spike=dense': 36, 'F.spike=save0': 69, 'F.spike=sparse': 15, 'F.u=2126cd': 51, 'F.u=21686f H2': 50, 'F.u=21686f S1': 8, 'F.u=21686f S2': 11}
+미지 칸(비교 제외) {'supplier input_after': 2255}
+OK
+== python3 tools/push_lu_rust.py --generate --compare
+exit 0
+생성 재분해 통과 분류 {'triangular': 9, 'no levels': 16, 'kernel': 9, 'L levels': 2}
+예상 실패(2×2 블록, 계약 §1) ['capri#813 G.perm.x20[140]: 원본 218 != Rust 149', 'capri#821 F.enter.L.beg[142]: 원본 290 != Rust 291']
+FT 분기 {'cache_reuse=False': 36, 'cycle=False': 15, 'cycle=True': 21, 'dot_lanes=False': 25, 'dot_lanes=True': 11, 'eta=False': 13, 'eta=True': 23, 'interval_trivial=False': 26, 'interval_trivial=True': 10, 'local80=0': 7, 'local80=1': 17, 'local80=2': 6, 'local80=3': 6, 'moved_column=False': 3, 'moved_column=True': 33, 'moved_rows=0': 6, 'moved_rows=1': 7, 'moved_rows=11': 1, 'moved_rows=2': 6, 'moved_rows=23': 1, 'moved_rows=3': 5, 'moved_rows=4': 3, 'moved_rows=5': 1, 'moved_rows=53': 1, 'moved_rows=6': 1, 'moved_rows=7': 2, 'moved_rows=8': 2, 'promoted=False': 22, 'promoted=True': 14}
+FTRAN/BTRAN 분기 {'B.entry=cache': 7, 'B.entry=cache-empty-row': 25, 'B.eta=none': 32, 'B.kernel=heap': 25, 'B.kernel=heap+seq': 7, 'B.lt=dense': 2, 'B.lt=heap': 23, 'B.lt=heap+seq': 1, 'B.lt=level': 6, 'B.u=21a941': 32, 'F.input=dense': 12, 'F.input=sparse': 107, 'F.l=214344': 47, 'F.l=21b9de': 47, 'F.l=21b9de A2': 25, 'F.r=dense': 25, 'F.r=none': 78, 'F.r=sparse': 13, 'F.r=sparse-dense': 3, 'F.spike=dense': 36, 'F.spike=save0': 68, 'F.spike=sparse': 15, 'F.u=2126cd': 50, 'F.u=21686f H2': 50, 'F.u=21686f S1': 8, 'F.u=21686f S2': 11}
+미지 칸(비교 제외) {'supplier input_after': 2255, 'G bucket': 34}
+OK (예상 실패 2연산 제외)
+== python3 tools/push_lu_rust.py --self-test
+exit 0
+  거부 F: 재계산 입력 후상태: arms#431 F.input_after.val[0]: 원본 '0000009af2d79abe' != Rust '0100009af2d79abe'
+  거부 B: cache 값: adlittle#68 B.leave.cache.val[0]: 원본 '651ab69be549f4bf' != Rust '641ab69be549f4bf'
+  거부 B: F1d8: arms#26 B.leave.x1d8: 원본 -1 != Rust 0
+  거부 B: level bucket: capri#26 B.leave.Lrow.bucket[0]: 원본 2 != Rust 3
+  거부 B: 출력 목록: arms#26 B.output.idx[0]: 원본 13 != Rust 14
+trace 변조 45종 모두 거부
+== python3 tools/push_lu_rust.py --generate --self-test
+exit 0
+  거부 G: vstat: 1개 연산 불일치: 첫 arms#2 G.vstat[32]: 원본 0 != Rust 1
+  거부 G: x40 별칭 identity: 1개 연산 불일치: 첫 interior#148 G.factor.perm.x40[0]: 원본 0 != Rust 7
+  거부 F: 출력 값 비트: 1개 연산 불일치: 첫 arms#11 F.output.val[0]: 원본 '000000000000f03f' != Rust '010000000000f03f'
+  거부 U: 반환 대각 비트: 1개 연산 불일치: 첫 interior#80 U.leave.diag[0]: 원본 '000000000000e43f' != Rust '010000000000e43f'
+  거부 B: cache 값: 1개 연산 불일치: 첫 adlittle#68 B.leave.cache.val[0]: 원본 '651ab69be549f4bf' != Rust '641ab69be549f4bf'
+trace 변조 42종 모두 거부
+== cargo test -p rsolver-lp --test push_ftran
+exit 0
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+== python3 tools/push_ftran_rust.py --compare
+exit 0
+{"calls": 50, "compared_leaves": 5520, "branches": {"input:dense": 8, "input:sparse": 42, "l:214344": 17, "l:21b9de": 33, "r:dense": 5, "r:none": 45, "spike:dense": 8, "spike:save0": 41, "spike:sparse": 1, "u:2126cd": 17, "u:21686f H2": 30, "u:21686f S1": 3}, "kernel_events": 200, "models": {"arms": 28, "retry": 10, "interior": 12}, "m1": {"calls": 186, "paths": {"21686f H1": 1, "21686f H2": 128, "21686f S1": 9, "21686f S2": 29, "21b9de": 19}, "skipped": {"21b9de A2": 695}}}
+== cargo test -p rsolver-lp --test push_btran
+exit 0
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+== python3 tools/push_btran_rust.py --compare
+exit 0
+{"calls": 32, "compared_leaves": 3096, "branches": {"entry:cache": 7, "entry:cache-empty-row": 25, "eta:none": 32, "kernel:heap": 25, "kernel:heap+seq": 7, "lt:dense": 2, "lt:heap": 23, "lt:heap+seq": 1, "lt:level": 6, "u:21a941": 32}, "kernel_events": 64, "models": {"arms": 17, "retry": 4, "interior": 1, "adlittle": 2, "scsd1": 1, "capri": 7}}
+== python3 -m py_compile tools/push_lu_rust.py
+exit 0
+== cargo clippy --workspace --all-targets -- -D warnings
+exit 0
+== cargo test --release --workspace 2>&1 | grep -E '^test result|FAILED|panicked' | awk '{p+=$4; f+=$6; i+=$8} END {print "passed", p, "failed", f, "ignored", i}'; exit ${PIPESTATUS[0]}
+exit 0
+passed 139 failed 0 ignored 12
+== git diff --check
+exit 0

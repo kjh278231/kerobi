@@ -1,0 +1,8 @@
+  ft-skipped(매번 재분해 대체): rejected 79개 연산 불일치: 첫 interior#80 U.leave.U.col[6].rows: 길이 7 != 0
+  roweta-always(무조건 행 eta): rejected 59개 연산 불일치: 첫 interior#80 U.roweta: 형식 None != 6
+  roweta-never: rejected 79개 연산 불일치: 첫 interior#105 U.roweta: 형식 7 != None
+  local40-first: rejected 42개 연산 불일치: 첫 interior#80 U.leave.scalars.x100: 원본 7 != Rust 8
+  local40-last: survived 
+  promote-never: rejected 62개 연산 불일치: 첫 adlittle#245 U.leave.U.col_bound[54]: 원본 49 != Rust 50
+  local80-3-0: rejected 59개 연산 불일치: 첫 adlittle#166 U.leave.U.col[42].rows[2]: 원본 27 != Rust 43
+  local80-1-2: rejected 77개 연산 불일치: 첫 interior#105 U.leave.U.col[6].rows[0]: 원본 0 != Rust 7

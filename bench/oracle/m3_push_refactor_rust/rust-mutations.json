@@ -1,0 +1,117 @@
+[
+  {
+    "name": "refactor-skipped(직전 factor 유지)",
+    "result": "rejected",
+    "first": "124개 연산 불일치: 첫 arms#423 G.perm.x20[0]: 원본 22 != Rust 20"
+  },
+  {
+    "name": "markowitz-default",
+    "result": "rejected",
+    "first": "16개 연산 불일치: 첫 capri#2 G.perm.x20[215]: 원본 80 != Rust 81"
+  },
+  {
+    "name": "L-order-reversed",
+    "result": "rejected",
+    "first": "120개 연산 불일치: 첫 interior#42 G.factor.L.rows[0]: 원본 6 != Rust 5"
+  },
+  {
+    "name": "L-rows-not-steps",
+    "result": "rejected",
+    "first": "147개 연산 불일치: 첫 arms#595 G.factor.L.rows[1]: 원본 15 != Rust 16"
+  },
+  {
+    "name": "Lt-order-reversed",
+    "result": "rejected",
+    "first": "53개 연산 불일치: 첫 interior#148 G.factor.Lrow.cols[1]: 원본 6 != Rust 5"
+  },
+  {
+    "name": "Urow-order-reversed",
+    "result": "rejected",
+    "first": "128개 연산 불일치: 첫 interior#148 G.factor.U.row[0].cols[0]: 원본 6 != Rust 5"
+  },
+  {
+    "name": "Ucol-order-reversed",
+    "result": "rejected",
+    "first": "128개 연산 불일치: 첫 interior#148 G.factor.U.col[5].rows[0]: 원본 4 != Rust 0"
+  },
+  {
+    "name": "pool-fill-U-only",
+    "result": "rejected",
+    "first": "160개 연산 불일치: 첫 arms#423 G.factor.scalars.x160: 원본 2 != Rust 0"
+  },
+  {
+    "name": "column-base-after-rows",
+    "result": "rejected",
+    "first": "79개 연산 불일치: 첫 interior#80 U.leave.U.col_bound[6]: 원본 5 != Rust 10"
+  },
+  {
+    "name": "t-M1-prefix",
+    "result": "rejected",
+    "first": "40개 연산 불일치: 첫 adlittle#2 G.factor.U.col_bound[48]: 원본 20 != Rust 19"
+  },
+  {
+    "name": "tail-bound-strict",
+    "result": "rejected",
+    "first": "128개 연산 불일치: 첫 interior#148 G.factor.U.col_bound[6]: 원본 5 != Rust 4"
+  },
+  {
+    "name": "xe8-nonempty",
+    "result": "rejected",
+    "first": "68개 연산 불일치: 첫 interior#148 G.factor.scalars.xe8: 원본 5 != Rust 7"
+  },
+  {
+    "name": "f8-dc-inclusive",
+    "result": "rejected",
+    "first": "128개 연산 불일치: 첫 interior#148 G.factor.prefix.flag[0]: 원본 0 != Rust -1"
+  },
+  {
+    "name": "x108-x110-swapped",
+    "result": "rejected",
+    "first": "128개 연산 불일치: 첫 interior#148 G.factor.scalars.x108: 원본 '0000000000000040' != Rust '3333333333330b40'"
+  },
+  {
+    "name": "mean-empty-1",
+    "result": "rejected",
+    "first": "77개 연산 불일치: 첫 arms#2 G.factor.scalars.x108: 원본 '000000000000f83f' != Rust '000000000000f03f'"
+  },
+  {
+    "name": "x1e0-no-diag",
+    "result": "rejected",
+    "first": "86개 연산 불일치: 첫 arms#2 G.factor.scalars.x1e0: 원본 25 != Rust 0"
+  },
+  {
+    "name": "xd8-slack-end",
+    "result": "rejected",
+    "first": "194개 연산 불일치: 첫 arms#2 G.factor.scalars.xd8: 원본 2 != Rust 25"
+  },
+  {
+    "name": "xe4-phase3",
+    "result": "rejected",
+    "first": "77개 연산 불일치: 첫 scsd1#2 G.factor.scalars.xe4: 원본 70 != Rust 62"
+  },
+  {
+    "name": "lst-last-summed",
+    "result": "rejected",
+    "first": "61개 연산 불일치: 첫 capri#2 G.factor.L.lst[11]: 원본 1 != Rust 271"
+  },
+  {
+    "name": "Lt-lst-kept",
+    "result": "rejected",
+    "first": "29개 연산 불일치: 첫 capri#2 G.factor.Lrow.lst: 길이 11 != 12"
+  },
+  {
+    "name": "F1a0-zero",
+    "result": "rejected",
+    "first": "205개 연산 불일치: 첫 arms#2 G.factor.eta_oldest[0]: 원본 2000000000 != Rust 0"
+  },
+  {
+    "name": "spike-unknown",
+    "result": "rejected",
+    "first": "68개 연산 불일치: 첫 adlittle#191 U: Rust 오류 read of an unknown cell 42"
+  },
+  {
+    "name": "o-inverse",
+    "result": "rejected",
+    "first": "18개 연산 불일치: 첫 arms#2 G.perm.x28[0]: 원본 14 != Rust 20"
+  }
+]
