@@ -278,7 +278,7 @@ def self_test(data,m):
     mut('R2-level','capri','btran:enter',0,lambda e:e['factor']['Lrow']['lev'].__setitem__(0,10**6))
     mut('R2-scratch','retry','btran:leave',0,lambda e:e['factor']['scratch']['x1b0'].append([0,1]))
     mut('R2-kernel-scratch','capri','btran:kernel',0,lambda e:e['scratch']['x1b8'].append([0,'000000000000f03f']),phase='leave')
-    mut('R2-factor-changed','scsd1','btran:leave',0,lambda e:e['factor']['diag'].__setitem__(0,'000000000000f03f'))
+    mut('R2-factor-changed','scsd1','btran:leave',0,lambda e:e['factor']['diag'].__setitem__(0,flip(e['factor']['diag'][0])))
     # 규칙3 cache
     def first_nonempty(d,model,event,phase=None):
         for k,e in enumerate([e for e in d[model][0]['events'] if e['event']=='btran:enter']):

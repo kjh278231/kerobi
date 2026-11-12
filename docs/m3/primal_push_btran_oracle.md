@@ -6,7 +6,7 @@
 
 - 작업 종류: **오라클 구축**. 기준 main `6d52021`(M3-04c-21b 병합), branch `work/m3-04c-21c`, worktree `../rsolver-m3-04c-21c`. 선행 미커밋 변경 없음. main의 미추적 `.claude/settings.local.json`은 작업과 무관하며 보존한다. 사용자의 "다음 M3 스프린트 진행해 너가 작업자야" 지시로 이 세션이 작업자로 수행한다(작업자 선택 질문 생략).
 - 완료할 동작: crossover push 지원 라운드의 BTRAN wrapper `09e376`이 본체 `221173`을 cache 인자(F+0x1d0)와 함께 부를 때, **같은 호출의 초기 factor 상태(L 열·행 방향, U 열·행, eta, 순열)·입력 벡터·cache F1d0/F1d8·Uᵀ 커널 `21a941` 경계·raw 출력·입력 후상태·버퍼 별칭·scratch**를 읽기 전용 훅으로 수집해 원본 독립3회·선행21a 비간섭·판정 규칙·변조 거부로 고정한다.
-- 포함 분기: 자연 arms/retry/interior의 지원 BTRAN 22회(선행19 집계: 17/4/1, 모두 입력 count1). U 행 빈/비영, 강제 희소 Uᵀ, Uᵀ 출력 count0 조기 종료, cache 복사, eta 없음/있음과 그 sparse/dense 경로, Lᵀ sparse/dense, 최종 sparse 출력의 F+0x20 치환·dense 출력의 F+0x30 gather와 버퍼 교환 중 **자연 실행에서 나오는 만큼** 센다. 미관측 분기는 미관측으로 기록하고 통과로 세지 않는다.
+- 포함 분기: 자연 arms/retry/interior의 지원 BTRAN 22회(선행19 집계: 17/4/1, 모두 입력 count1)와, 탐색 뒤 추가한 Netlib 자연 실행 adlittle·scsd1·capri의 10회(§4). U 행 빈/비영, 강제 희소 Uᵀ, Uᵀ 출력 count0 조기 종료, cache 복사, eta 없음/있음과 그 sparse/dense 경로, Lᵀ sparse/dense, 최종 sparse 출력의 F+0x20 치환·dense 출력의 F+0x30 gather와 버퍼 교환 중 **자연 실행에서 나오는 만큼** 센다. 미관측 분기는 미관측으로 기록하고 통과로 세지 않는다.
 - 제외 범위: Rust 구현과 수치 비트 재생(21d), 지연 LU·FT 갱신·재분해 연쇄(21e·21f), cache를 소비하는 `05b257` FT 갱신의 수치, 일반 BTRAN `09e288`·simplex caller, L 레벨 경로(F+0x140≥0)의 수치, 품질15a·루프22·batch23·x87·work 산술의 동등성·전체 P3. 원본 수치 명령을 실행하는 합성 경계는 이번 범위에서 만들지 않는다. 자연 미관측 분기(입력 count≥2·dense 입력·sparse eta·level Lᵀ·±ZERO 정확 경계)는 21d 착수 전 보강 후보로 남긴다.
 
 ## 2. 원본과 상태 경계
@@ -71,8 +71,35 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: WSL2 x86-64 Linux 6.6.87.2, Node v22.22.1, Python 3.10(검사기)·3.13(gurobipy venv). 바이너리 해시는 매 캡처에서 위 값과 일치했다. 정식 도구 해시: agent `99092edf…2f50d3`, capture `653cb399…8b7a01`(전체 값은 [manifest](../../bench/oracle/m3_push_btran/manifest.json)). 계약 `0a594b2`, 도구·탐색·계약 보강 `ddc92c6`.
+- 원본 실행: Gurobi 프로세스 총 36회. 탐색 1차 4회(`history/explore/`), 조사 2프로세스(Netlib 54모델), 탐색 2차 6회(`history/explore2/`), 정식 21회(7사례×3), Netlib 21a agent 기준선 3회(`baseline/`). 탐색·조사 자료는 판정에 쓰지 않았다.
+- **재현성·비간섭**(`--controls` 종료0): arms 646사건(새 68)·retry 237(16)·interior 256(4)·adlittle 495(8)·scsd1 229(4)·capri 752(28)·대조군 0사건이 각각 독립 pid/run_id 3회에서 동일하다. 새 `btran:*` 사건을 빼면 arms/retry/interior/control은 선행21a [`m3_push_ftran`](../../bench/oracle/m3_push_ftran/) `*-1.json`, Netlib은 21a agent 기준선과 사건·최종 결과·출력 전체가 같다.
+- **판정 규칙**(`--acceptance` 종료0, [보고](../../bench/oracle/m3_push_btran/verification.json)): 지원 BTRAN **32호출**(arms17·retry4·interior1·adlittle2·scsd1 1·capri7) 전부 규칙 1–6 통과.
+
+| 분기 | 관측 수 | 비고 |
+|---|---:|---|
+| 입력 count1 / ≥2 | 32 / 0 | 지원 caller는 이탈 위치 단위 벡터(C:1999–2023)라 ≥2는 이 caller에서 구조적으로 없음 |
+| U 행 r 빈(일반 경로) / 비영(cache 경로) | 25 / 7 | 비영 7은 adlittle1·scsd1 1·capri5. 선행 22회는 모두 빈 행 |
+| 희소 Uᵀ 커널 호출 / 조밀 Uᵀ | 32 / 0 | 일반 경로 판정 `(int)(F108+F110)·1 ≤ m`이 모두 참 |
+| 커널 출력 count1 / ≥2 / 0 / −1 | 25 / 7 / 0 / 0 | ≥2는 모두 cache 경로 |
+| cache 기록(F1d0=Uᵀ 출력, F1d8=r) | 7 | 빈 행 25회는 cache.count=0·F1d8 불변 |
+| eta 0 / 조밀 eta / 희소 eta | 32 / 0 / 0 | 54모델 조사에서도 eta>0은 0회 |
+| Lᵀ 희소 / 조밀 | 30 / 2 | 조밀 2는 adlittle·capri의 cache 경로(출력 count −1, out 구조체가 자기 버퍼 유지) |
+| L level 구조(F140≥0) / bucket 변화 | 7 / 6 | 모두 capri. 희소 Lᵀ 6회에서 bucket(F1a8[m..])이 바뀌어 level 경로 실행을 기록, 조밀 Lᵀ 1회는 불변 |
+| 비identity 순열 | 32 | |
+| 반환 out 버퍼 = 입력 쪽(희소) / 자기 쪽(조밀) | 30 / 2 | 기록 필드 |
+
+- **변조 거부**(`--self-test` 종료0): 41종. 바이너리·manifest·모델 해시, 빈 사건, 회차 차이, 선행21a·Netlib 기준선 투영 차이, 기준 결과, 새 사건0, null-null, 본체 leave·커널 누락, wrapper 밖 사건, 규칙1(cache 인자·wrapper 입력), 규칙2(ZERO·역순열·L 행 값/열·level 범위·scratch·커널 scratch·factor 변경), 규칙3(cache 값·순서·누락, 반환/커널 진입 F1d8, 빈 행 cache·F1d8, U 행 협조 위조), 규칙4(커널 입력·인자, 일반 경로 판정 입력), 규칙5(x104·x140 협조 변조, 조밀 eta 위조, 조밀 출력을 희소로), 규칙6(출력 비트·중복·wrapper raw). 모든 거부 메시지가 해당 규칙의 첫 차이를 가리키는지 확인했다(처음 `R2-factor-changed`는 scsd1 대각 0번이 원래 1.0이라 같은 값으로 바꿔 거부되지 않았고, 비트 반전으로 고쳤다).
+- **회귀**([요약](../../bench/oracle/m3_push_btran/regression/summary.txt), 16명령 모두 종료0): 21c controls/acceptance/self-test, 선행21a `push_ftran_check.py` 3종, `push_round_check.py --controls --acceptance --self-test`, `push_lu_survey.py --check`, `cargo test -p rsolver-lp --test push_ftran`·`push_ftran_rust.py --compare`(21b), py_compile·`node --check` 4종, `git diff --check`.
+- 실행하지 않은 검사: Rust·확장 코드 변경이 없어 workspace 전체·clippy·확장 설치·pytest·Netlib 풀이 비교·P3는 제외했다. 독립 검토자는 쓰지 않았다(사용자 지시로 이 세션이 작업자·마스터를 겸했고 별도 검토 세션을 띄우지 않음).
+- 계약 변경: §4의 "탐색 뒤 계약 변경"에 정식 캡처 전 변경 네 가지를 기록했다. 판정 규칙 문구는 바꾸지 않았고, Netlib 사례 추가로 범위를 넓혔다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **오라클 구축 완료**(계약 범위). 원본 식별·독립3회·선행21a/기준선 비간섭·C 규칙 판정·변조 41종 거부를 확인했다. 독립 검토는 미실시다.
+- 동등성: Rust 구현을 포함하지 않는다. Uᵀ·Lᵀ 값의 독립 재계산과 Rust 비트 비교는 **미검증**(21d).
+- 기록만 하고 판정하지 않는 필드: 반환 out/in 별칭, 입력 후상태, level bucket 변화, F+0x200 work.
+- 남은 한계(자연 미관측): **eta>0(희소·조밀 eta)**, 조밀 Uᵀ(일반 경로 판정 거짓), 커널 출력0 조기 종료, 커널 출력 −1, 입력 count≥2·dense 입력(이 caller에서는 구조적으로 없음). eta>0이 지원 라운드에서 구조적으로 불가능한지는 C로 확인하지 않았다. 지원 모드의 pivot은 factor 갱신을 생략하므로 eta는 그 epoch 앞선 요청0 FT 갱신에서만 생길 수 있고, 21e(지연 LU 연쇄) 조사에서 함께 확인한다. level Lᵀ의 내부 하위 분기(heap 경로와 level 경로의 선택식)는 bucket 변화로만 기록했고 판정식은 21d에서 C로 확정한다.
+- 다음: **M3-04c-21d**. `python3 tools/session.py status` → `python3 tools/session.py claim M3-04c-21d --owner <새-owner>` → 이 문서 §2·§6과 `docs/m1/m1_02i_eta.md`, `primal_push_ftran_rust.md`를 읽고 `bench/oracle/m3_push_btran/*-1.json(.gz)`의 `btran:enter` factor를 초기 상태로 Rust 지원 BTRAN(희소 Uᵀ 커널·cache·Lᵀ 희소/level/조밀·출력 치환/gather·버퍼 교환)을 32호출에서 비트 비교한다. 기준 재검사는 `python3 tools/push_btran_check.py --controls --acceptance --self-test`. eta>0 사례가 필요하면 21e 캡처와 묶거나 별도 오라클로 등록한다.
+- branch `work/m3-04c-21c`, worktree `../rsolver-m3-04c-21c`, 선행 미커밋 없음. 최종 commit·병합은 main `Merge M3-04c-21c` 이력을 따른다. main 미추적 `.claude/settings.local.json` 보존. 원격/업로드 없음.
+- 교훈: `docs/lessons/original.md`(지원 BTRAN 자연 경로와 cache 조건), `tooling.md`(조사 훅의 모델 귀속 경합, size-limited 라이선스, 같은 값 변조).

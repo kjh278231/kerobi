@@ -1,0 +1,16 @@
+exit=0  python3 tools/push_btran_check.py --controls
+exit=0  python3 tools/push_btran_check.py --acceptance
+exit=0  python3 tools/push_btran_check.py --self-test
+exit=0  python3 tools/push_ftran_check.py --controls
+exit=0  python3 tools/push_ftran_check.py --acceptance
+exit=0  python3 tools/push_ftran_check.py --self-test
+exit=0  python3 tools/push_round_check.py --controls --acceptance --self-test
+exit=0  python3 tools/push_lu_survey.py --check
+exit=0  cargo test -p rsolver-lp --test push_ftran
+exit=0  python3 tools/push_ftran_rust.py --compare
+exit=0  python3 -m py_compile tools/push_btran_check.py tools/push_btran_runs.py
+exit=0  node --check tools/push_btran_agent.js
+exit=0  node --check tools/push_btran_capture.js
+exit=0  node --check tools/push_btran_survey.js
+exit=0  node --check tools/push_btran_survey_agent.js
+exit=0  git diff --check HEAD

@@ -1,0 +1,83 @@
+{
+  "task": "M3-04c-21c",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tools": {
+    "tools/frida_resolve.cjs": "803d4def1698b0b2f0427de41ae28d8f326249d1b70f953308c24aa1db605eec",
+    "tools/gurun.sh": "7efb6a90dd1fae5f71997b24c112601d4f76b822546ddcce8d53920369f0d48f",
+    "tools/push_btran_agent.js": "99092edf0e656eb69cd0fa2daab929b4e19cc8ff5bf7edb3d61f74e11a2f50d3",
+    "tools/push_btran_capture.js": "653cb399d0954048bed3da0eeda9bd828f61fd408af75d0fd35a34ccb58b7a01",
+    "tools/push_btran_check.py": "417b895ad5624790f7c0bc8c37378b52fd0e7f99f52693ade07a6a03561dad90",
+    "tools/push_btran_runs.py": "edbbabc3faeff6479736f540acc87dd0fe7ae02d93be086e79f934beca9159a8",
+    "tools/push_btran_survey.js": "2ff0c2bfbab0930fde9de3bf4c81bf03aed62fc1bf658362d3398f380cc8a1e3",
+    "tools/push_btran_survey_agent.js": "dd2ff745657aa4abe22a47c4edbc53827134af01579d14f533184b1ddf06df20",
+    "tools/push_ftran_agent.js": "da123ebea77c4fb3b3d9bba728bcdaf744601de5a550eecef180f9906fb035ff",
+    "tools/push_ftran_capture.js": "56b06ddfc6873c467c5e7371866dec355b4048cc2a37f85edcb2ce964493d9af",
+    "tools/push_ftran_check.py": "936668ac54669151d207af7718ea226ab8756c77bfd1bcfb364cb68b56067aaa",
+    "tools/push_supplier_check.py": "2111b9192c5724e0cee21f0360a0cd0b75dfad0bac57036191367b4f5653df5e"
+  },
+  "inputs": {
+    "../re/bench/data/netlib/adlittle.mps.gz": "9c9e7581b9157b13ba6985783f4ece702b478b53b813205d14c807aa6e5233c3",
+    "../re/bench/data/netlib/capri.mps.gz": "7d87ac34aad7f5e377efcf61e2cfb332ac255c91af36cce272fb595e47d6b780",
+    "../re/bench/data/netlib/scsd1.mps.gz": "6114a4838ce69cdc2a3c4398817ed240316a365a8a592b247d751bd5833e5e02",
+    "bench/oracle/m3_primal_push_step/interior.lp": "e62f130897e3149d77148ecf0799838a056004608c61c9ef58baadc9609009d0",
+    "bench/oracle/m3_push_arms/arms.extra.json": "7843373b048b87370821eaedb90b918828759254061a3c3f37b60d51f3a1a46d",
+    "bench/oracle/m3_push_arms/arms.lp": "b05832f67ae340637551cda5cd191013c3f65f5cef190a0cc5a8c058070d9683",
+    "bench/oracle/m3_push_retry/retry.extra.json": "a14e2011d1e13d4abf085d97bc3043a5781a1b0daaea2298f036a5a4692d5e1b",
+    "bench/oracle/m3_push_retry/retry.lp": "2be78262e14b9c8482ce0c96fe0ab10d68246bc11eae184dc2bdb9c2f8516986"
+  },
+  "sources": {
+    "../re/decomp/c/0012de60_PRIVATE0000000000221173.c": "2770a43287349d418883e6af6610e330089223b6651944d56afe343d2c558898",
+    "../re/decomp/c/00130b70_PRIVATE000000000021a941.c": "a1e3dce085ccd220a5bdd080f57bf69f0cd900ef85e5456f78f34d5fd722bb19",
+    "../re/decomp/c/00131710_PRIVATE000000000009e376.c": "9a8a6fc9f8e73a7c4f62bb52d38bd66fb8d7210000914e1857e344aa4e3525fb"
+  },
+  "assembly": {
+    "bench/oracle/m3_push_btran/source.asm": "087aca0a02407352d5ca49a2fce00fa4b5b0df7ed4b10be29155b7935055e091"
+  },
+  "captures": {
+    "bench/oracle/m3_push_btran/adlittle-1.json.gz": "bce98434d62f936df5d099721e0bd9dfdbc8d3e119749cdc976abfe03ed1d419",
+    "bench/oracle/m3_push_btran/adlittle-2.json.gz": "f35b9eb037ff34dbbc72a5ae7f03837939ab1902d3c45d06056aa64d8f6da519",
+    "bench/oracle/m3_push_btran/adlittle-3.json.gz": "f59e4b335c6c63fc8bcab9466362c6784b930dcf9ef61dbefdb44651b22bed3f",
+    "bench/oracle/m3_push_btran/arms-1.json": "49909c7a7a683c948e3924cb21be59642341d1fa1ead9bdff0c193250e2fc8ad",
+    "bench/oracle/m3_push_btran/arms-2.json": "704a33707ad1a0610fc9371ebdb6d3ccc6e8d502b20068b4b5ae888878046929",
+    "bench/oracle/m3_push_btran/arms-3.json": "a7068f158b82f2622b18dcb7bfd3fdc4d7957528a476bf33a8a52b9a1a2f4ee1",
+    "bench/oracle/m3_push_btran/capri-1.json.gz": "da7fe9819e3b5389ad8180411926d3f62f35f65f175eb61136e2161a0198afef",
+    "bench/oracle/m3_push_btran/capri-2.json.gz": "36394733886053eb596328aaa23e756f4e1bfce0ba0315289a3afc2cf1856ce2",
+    "bench/oracle/m3_push_btran/capri-3.json.gz": "e0c8e003a78ab6db26ead94f03bb00a1d50aa5611ed13693621a62b19c5d5198",
+    "bench/oracle/m3_push_btran/control-1.json": "c347a2d3a52a8b8c2853ac5d31668470462425dfb8865d60a7d0de0c03cabe57",
+    "bench/oracle/m3_push_btran/control-2.json": "422a0d532213eaded13e551d0ba3c9de0c919c269d5ac1e74ce9db914d591395",
+    "bench/oracle/m3_push_btran/control-3.json": "5a372c525fa4922ca35afe9ff1ab1fe2a5b356fe6b22637edaff769e0853f936",
+    "bench/oracle/m3_push_btran/interior-1.json": "e739be27a6584eb03bc4a28ae21fe28c38c552737a5a6f7580de3636a28e475b",
+    "bench/oracle/m3_push_btran/interior-2.json": "8cc9034bf8e7db86f63e7645daac56620bf167b90c04c3fc83ca7495fa5d6ee1",
+    "bench/oracle/m3_push_btran/interior-3.json": "3841337b440ddc38f42b5ec5edfb506e70ce616a56ee61340ca64c7f9b23e849",
+    "bench/oracle/m3_push_btran/retry-1.json": "6b776d306ea486fd67b5135adafe1f5b21cdfea2db7fdc939ae60519a1756b60",
+    "bench/oracle/m3_push_btran/retry-2.json": "783249e55485534b83dc0893c40ea6d1ca35e68354c4ea1f334a0e757b1d5d92",
+    "bench/oracle/m3_push_btran/retry-3.json": "2d1955567a07ed24f6039bbc70ea00faef24a5996deda7efcdb85b30f2612ab7",
+    "bench/oracle/m3_push_btran/scsd1-1.json.gz": "7ae8262bfc73de69ff1c86ec5d50847316648604956b38d59c3bebd4866c6bd8",
+    "bench/oracle/m3_push_btran/scsd1-2.json.gz": "69e8d6058d21d726a5fcab7a7ac043de9149a6e47acf432e3054b2dfc85fcf3e",
+    "bench/oracle/m3_push_btran/scsd1-3.json.gz": "80f869f3d911a3549289fcb9f2648b3354be8b93ebe3a5fc0380025582793f7b"
+  },
+  "baselines": {
+    "bench/oracle/m3_push_btran/baseline/adlittle-1.json.gz": "4272a69dae2ad0670200c671cdc5b5557f672ddbe578fd97bd07a2997ae60b0d",
+    "bench/oracle/m3_push_btran/baseline/capri-1.json.gz": "bf3bf10ef0a5fde55889d5935e5463afa3cadb61ab434245ae0c4973c0a007c2",
+    "bench/oracle/m3_push_btran/baseline/scsd1-1.json.gz": "844c79bf91eafad81b7ace70adf47d776c9d7d6326453ce325d73ef976110326",
+    "bench/oracle/m3_push_ftran/arms-1.json": "8a05d9ab3c17f1584e0a82296ac9c6cd6b01a920a043bb209ff99cbe0e81e483",
+    "bench/oracle/m3_push_ftran/control-1.json": "68de422a033e7f6216816e57a68cc08817f2f4e73401160f72bb66b7f01900f9",
+    "bench/oracle/m3_push_ftran/interior-1.json": "7515abd61f3aaf2623a16c964d77fa58d1ec0772ba0ad77b68e4e5237dc5530c",
+    "bench/oracle/m3_push_ftran/manifest.json": "95c456ab7bacdd4445d72de0235e95711731ced5bc53754e8d9664ecc4319eab",
+    "bench/oracle/m3_push_ftran/retry-1.json": "22519b8ec324bcbf6977645f8fd67bc9447fd237a964c5de0c4e4787cdbdfb9f"
+  },
+  "history": {
+    "bench/oracle/m3_push_btran/history/explore/arms-1.json.gz": "10e5dfb5c6defd59c9b6fe8f39140d14403b8ff012bdab647d8a956c2be9f12d",
+    "bench/oracle/m3_push_btran/history/explore/control-1.json.gz": "2c9be17dd96dc4e5bcd8972366c280ae94f3ce7feb9e66c285657bcae3dd817c",
+    "bench/oracle/m3_push_btran/history/explore/interior-1.json.gz": "fc043eb4103c0a4594c4b8e2eb7ca3dd74081f9e3d01c1ddcf9f658adeed5ecd",
+    "bench/oracle/m3_push_btran/history/explore/retry-1.json.gz": "d69f067af4b0da6f248414ff9fa435fefca00150c78fc4463d0f3014e05ce8b3",
+    "bench/oracle/m3_push_btran/history/explore2/adlittle-1.json.gz": "3be37e3539d43cd8847af87e973b0ec4814d7b5a52a29dacb2d99ed471d2cbfa",
+    "bench/oracle/m3_push_btran/history/explore2/capri-1.json.gz": "f75db05742cc79f4ec3a4271a3e8d1e359587997b4e05d45caac5fee6b78d020",
+    "bench/oracle/m3_push_btran/history/explore2/recipe-1.json.gz": "ee0b166a5bfddd7afa647645046b48b9beff27596af304907307aba56a7baef1",
+    "bench/oracle/m3_push_btran/history/explore2/scsd1-1.json.gz": "268ff4c1803c99e0e218a48312d110849b5eac1821c86851aedb28e905940d93",
+    "bench/oracle/m3_push_btran/history/explore2/share2b-1.json.gz": "28324a80f5f637784354b4a2f622e0e71e2c8109671c431699bc443dadf536e4",
+    "bench/oracle/m3_push_btran/history/explore2/stocfor1-1.json.gz": "1b9855b6b91796f719d76c8cd719fe469f818247b3fd4032275c82b88f46ab1d",
+    "bench/oracle/m3_push_btran/history/survey-netlib-mid32.json.gz": "dcd75fcee315e01423386c8fcc16e1a17c01d96ad238dba5215156062e373506",
+    "bench/oracle/m3_push_btran/history/survey-netlib45.json.gz": "13f3ff658c5ad8179e6e34c8c263aa4101a48a145f4fdf9b5b19093b41a9bc0b"
+  }
+}

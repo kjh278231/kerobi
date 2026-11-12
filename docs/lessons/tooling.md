@@ -92,6 +92,7 @@
 - **Codex 세션이 사용량 한도로 끝나면 rollout JSONL(`~/.codex/sessions/YYYY/MM/DD/*<id>.jsonl`)의 `task_complete.error`와 마지막 `custom_tool_call_output`로 중단 지점을 복구한다.** 마지막 출력에 남은 캡처 결과가 미추적 파일로 남아 있을 수 있다. (M3-04b-1)
 - **`tools/hrun.sh --timeout 580000`과 `--wait`가 명령이 도는 중인데 곧바로 124(still running)를 돌려준 적이 있다(원인 미확인, 같은 세션의 첫 호출은 정상).** 그때는 `until herdr pane read <pane> --source recent-unwrapped --lines 5 | grep -qE '<끝 표시>|Error|Traceback'; do sleep 5; done`를 Bash 백그라운드로 돌려 끝을 기다린다. 끝 표시는 스크립트가 직접 찍는 문자열로 둔다. (M3-04c-7)
 - **`tools/gurun.sh`는 출력에 잠금 메시지가 있으면 같은 명령을 다시 돌린다.** 캡처 도구가 잠금 오류로 끝난 실행의 출력 파일을 먼저 쓰면 재시도가 덮어쓰기 금지에 걸린다. 잠금 메시지(`Gurobi is already running`)면 파일을 쓰지 않고 끝내게 한다(`tools/m1_beta_path.js`). (M1-02a)
+- **여러 모델을 한 Gurobi 프로세스에서 푸는 조사 훅은 모델 귀속이 근사다.** stdout의 `MODEL` 줄과 Frida 메시지의 도착 순서가 어긋나 사건이 이웃 모델로 붙을 수 있다(stocfor1 2회로 집계됐지만 단독 실행 0회). 후보 선별에만 쓰고, 정식 사례는 모델별 단독 캡처로 확인한다. 또 이 환경의 Gurobi는 size-limited 라이선스라 ship04l 같은 큰 Netlib은 `Model too large`로 멈추므로 조사 목록은 작은 모델부터 둔다. (M3-04c-21c, [§4](../m3/primal_push_btran_oracle.md#4-사례와-원본-자료))
 
 ## 검사기
 
@@ -177,6 +178,7 @@
 - **trace 변조 자기 검사는 기준(원본 쪽)에 그 필드가 있는 단계를 고른다.** Rust trace에는 frame이 늘 있지만 04b-1 캡처에는 없어 비교기가 그 필드를 건너뛴다. 첫 단계를 고르면 변조가 비교 밖이 되어 '미검출'로 끝난다. 대상은 `'frame' in want`로 고른다. (M3-04c-10)
 
 - **원본 사건의 필드 생략은 상태를 지우라는 명령이 아니다.** round 재계산 뒤 agent가 다음 패스에서 승인수를 생략하지만 후보0으로 종료하는 사건에는 마지막 승인수가 남는다. 초기 Rust가 clear에서 승인수를None으로 만들어 마지막 자연 종료 비교가 실패했다. 원본의 요청0 쓰기만 복원하고, 필드 관측 여부는 출력기에서만 처리한다. 생략 필드를 null끼리 비교해 필수 검증으로 세지 않는다. 원본 C/asm·캡처 근거. (M3-04c-20, [초기 실패](../m3/primal_push_round_rust.md#초기-실패-보존))
+- **변조 self-test는 값을 '바꾼' 것이 실제로 다른지 확인한다.** 상수(예: 대각 1.0)를 1.0으로 덮으면 변조가 아니어서 NOT REJECTED가 난다. 비트 반전(`flip`)처럼 원래 값과 반드시 다른 변조를 쓴다. (M3-04c-21c)
 
 ## Rust 비용 계측
 
