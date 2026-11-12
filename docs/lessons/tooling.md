@@ -68,6 +68,7 @@
 - **4바이트 함수(`6edd89`: `mov %esi,0x60(%rdi); ret`)는 `Interceptor.attach`가 "unable to intercept function"으로 실패하고, 그 뒤의 훅 설치도 멈춘다.** callgraph의 호출 지점마다 함수형 probe를 붙여 인자 레지스터를 읽는다. 작은 setter는 인라인 복사본이 있을 수 있으니, 그 값을 읽는 쪽과 대조하는 사슬 검사를 함께 둔다. M2-06g는 η 사슬이 어긋나 `62f909`의 인라인 쓰기 5곳을 찾았다. (M2-06g, [§2.5](../m2/mip_sb_read.md#25-ηsb-반복-한도))
 - **call 명령에 probe를 붙이면 재배치된 call이 트램펄린 주소를 반환 주소로 넣어, 피호출자 훅의 `returnAddress`가 엉뚱한 값이 된다.** `0x54287f`에 붙였더니 `6ee5d1`의 반환 주소가 `0x1c5a3840`처럼 나왔다(실패한 접근). call 앞의 명령에 붙이되, 읽을 레지스터가 그 사이에 바뀌지 않고 재배치 창(5바이트)에 점프 대상이 없는 곳을 고른다(`0x5421a0`은 점프 대상이라 `0x54219d` 대신 `0x542199`). (M2-06g, [§6](../m2/mip_sb_read.md#6-실행-결과))
 - **캡처 도구의 Frida require 경로(`/home/sds/.npm/_npx/.../frida`)는 원래 캡처 컴퓨터 전용이지만, 도구를 고치면 안 된다.** 캡처는 도구 자기 해시(`hash(__filename)`)를 기록하고 검사기 약 40개가 manifest·캡처의 `tool_sha256`을 현재 파일 해시와 대조한다. 대신 `tools/gurun.sh`가 `NODE_OPTIONS=--require tools/frida_resolve.cjs`로 그 경로를 `FRIDA_NODE` 또는 `~/.local/share/frida-node/node_modules/frida`로 돌린다. 이렇게 고정 도구 `primal_push_recall_capture.js`로 재캡처한 04c-8 feasible primal이 저장 캡처와 사건·해시·출력까지 같았다. 캡처 도구는 `node`를 직접 부르지 말고 `tools/gurun.sh node ...`로 실행한다. (M3-04c-10 발견, shared 정리)
+- **call 명령에 훅을 붙이면 그 call이 trampoline으로 옮겨져, 호출된 함수(특히 tail call로 넘겨받는 함수)의 return address가 원래 다음 명령이 아니다.** 116fd7 진입을 return address `0x1c17b8`로 거르자 0회였다. 호출 전·후 훅에서 플래그를 세워 구간으로 식별한다. (M3-04c-1c, [§6](../m3/primal_push_condition.md#6-실행-결과))
 
 ## 디컴파일 조회
 
@@ -196,6 +197,7 @@
 - **캡처에 없는 원본 입력은 `Option`으로 받아 필요한 분기에서 실패시킨다.** param_1·S+0x120·S+0x3c8처럼 자연 경로가 읽지 않는 값은 None이면 panic하게 두면 추정값을 넣지 않고도 "자연 경로가 그 값을 읽지 않았음"이 재생으로 증명된다. 자연 경로가 읽는 값(조건수)은 결과에 unknown 표시를 남겨 미검증 항을 드러낸다. (M3-04c-1a)
 - **외부 경계 출력을 tape로 넣는 재생은 tape가 남거나 모자라면 실패하게 한다.** 1d의 조건수(`12f282` 출력)·first=0 FTRAN tape는 원본 호출 횟수만큼만 있어, 조정 라운드 수나 retry 시점을 바꾼 Rust 변이(조정 안 함·두 번, slack -2=0, -5=lb, gate P 규칙, `12f282`를 first=0에서 부름)가 줄 비교 전에 `tape exhausted/unused`로 거부됐다. 거부 이유를 결과에 남겨 줄 비교 판별과 구분한다. (M3-04c-1d, [§6](../m3/primal_push_init_ext_rust.md#6-실행-결과))
 - **결과 구조체의 보고 필드는 원본이 그 상태를 쓰는 지점에서 갱신한다.** 1a의 `InitResult.markowitz`는 루프 준비에서만 갱신돼, 강화 뒤 retry로 끝나면 진입 S+0x390을 보고했다(1a 자연 자료는 retry가 없어 미검출, 1d quality call 1에서 첫 비교 불일치). 값을 쓰는 C 위치(강화 C 791)에서 결과도 갱신하고, 조기 반환 경로의 보고 필드를 변이 목록에 넣는다. 변이 원문을 바꾼 뒤에는 `원문 없음`(무효) 변이가 0인지 확인하고 전체를 다시 돌린다. (M3-04c-1d, [§6](../m3/primal_push_init_ext_rust.md#6-실행-결과))
+- **미지값으로 표시하는 근사 범위가 이미 확정된 출력 칸을 덮지 않는지 확인한다.** 21686f H 경로 힙 칸을 sec2 아래 고정 폭으로 지우던 것이 큰 모델(modszk1)에서 출력 index까지 지워 `read of an unknown cell`이 났다. 힙과 출력의 성장 방향·서로소 조건으로 위치 ≥ out만 지우게 고쳤고 원본 출력과 같았다. 작은 자료에서 통과한 미지값 근사는 새 모델을 넣을 때 다시 의심한다. (M3-04c-1c, [§6](../m3/primal_push_condition.md#6-실행-결과))
 
 ## Rust 비용 계측
 
