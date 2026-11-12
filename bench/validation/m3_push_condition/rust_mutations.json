@@ -1,0 +1,87 @@
+[
+ {
+  "result": "거부",
+  "first": "('arms', 1) 줄7 cest.est[0]: 원본 000000000000f03f Rust 010000000000f03f (길이 1/1)",
+  "name": "sum-sequential"
+ },
+ {
+  "result": "거부",
+  "first": "('netlib/share2b', 1) 줄5 cnorm.norm[0]: 원본 3433333333012040 Rust 3333333333012040 (길이 1/1)",
+  "name": "sum-no-peel"
+ },
+ {
+  "result": "거부",
+  "first": "('netlib/share2b', 1) 줄5 cnorm.norm[0]: 원본 3433333333012040 Rust 3333333333012040 (길이 1/1)",
+  "name": "a-align-ignored"
+ },
+ {
+  "result": "거부",
+  "first": "('interior', 1) 줄5 cnorm.norm[0]: 원본 000000000000f03f Rust 0000000000000000 (길이 1/1)",
+  "name": "slack-norm-zero"
+ },
+ {
+  "result": "거부",
+  "first": "('arms', 1) 줄5 cnorm.norm[0]: 원본 000000000000f03f Rust 0000000000003940 (길이 1/1)",
+  "name": "norm-sum-not-max"
+ },
+ {
+  "result": "거부",
+  "first": "('arms', 1) 줄6 cft.in[3]: 원본 7b14ae47e17aa43f Rust 000000000000f03f (길이 28/28)",
+  "name": "start-ones"
+ },
+ {
+  "result": "거부",
+  "first": "('arms', 1): 사건 순서 11: 원본 ['cres', 'gate', 'start'] Rust ['cbt', 'cres', 'gate']",
+  "name": "stop-strict"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "name": "stop-first-iter"
+ },
+ {
+  "result": "거부",
+  "first": "('capri', 1) 줄8 cbt.in[39]: 원본 000000000000f03f Rust 000000000000f0bf (길이 271/271)",
+  "name": "sign-le"
+ },
+ {
+  "result": "거부",
+  "first": "('adlittle', 1): 사건 순서 12: 원본 ['cres', 'gate', 'start'] Rust ['cft', 'cest', 'cres']",
+  "name": "sign-sparse-packed"
+ },
+ {
+  "result": "거부",
+  "first": "('netlib/sc105', 1): 사건 순서 18: 원본 ['cft', 'cest', 'cbt'] Rust ['cres', 'gate', 'exit']",
+  "name": "limit-4"
+ },
+ {
+  "result": "거부",
+  "first": "('arms', 1) 줄9 cft.in[2]: 원본 0 Rust 24 (길이 5/5)",
+  "name": "argmax-last"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "name": "argmax-position"
+ },
+ {
+  "result": "거부",
+  "first": "('adlittle', 1): 사건 순서 12: 원본 ['cres', 'gate', 'start'] Rust ['cft', 'cest', 'cres']",
+  "name": "repeat-never"
+ },
+ {
+  "result": "거부",
+  "first": "('adlittle', 1) 줄12 cres.cond[0]: 원본 04cd643a549a7340 Rust 8da367d1f5ff5340 (길이 1/1)",
+  "name": "result-est-only"
+ },
+ {
+  "result": "거부",
+  "first": "('arms', 1) 줄9 cft.x[0]: 원본 Y Rust X (길이 1/1)",
+  "name": "buffer-no-swap"
+ },
+ {
+  "result": "거부",
+  "first": "('arms', 1): Rust 오류 read of an unknown cell 0",
+  "name": "btran-cache"
+ }
+]

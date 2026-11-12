@@ -307,7 +307,7 @@ def self_test():
     tried, survived = 0, []
 
     def flip(v):
-        a = v.split()
+        a = v.split() or ['']
         t = a[0]
         if len(t) == 16 and all(ch in '0123456789abcdef' for ch in t):
             a[0] = format(int(t, 16) ^ 1, '016x')

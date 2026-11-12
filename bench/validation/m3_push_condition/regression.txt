@@ -1,0 +1,111 @@
+$ python3 tools/push_init_rust.py --write
+입력 불변: bench/oracle/m3_push_init_ext_rust/input.txt
+종료 0
+$ cargo test -q --release -p rsolver-lp --test push_init_ext
+..
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+종료 0
+$ python3 tools/push_init_rust.py --compare
+호출 17·줄 132·필드 727 비교, 불일치 0
+종료 0
+$ python3 tools/push_init_check.py --controls --acceptance
+  slack_m2      adjust promote
+  col_m5        -
+  col_m5_ub     adjust
+종료 0
+$ python3 tools/push_loop_rust.py --init --write
+input bench/oracle/m3_push_init_rust/input.txt 사례 6 줄 30 sha256 eb8e136e33e54a6faf2936f7edda515a74668ed0cc72060b599ad316bdd1234f
+종료 0
+$ cargo test -q --release -p rsolver-lp --test push_init_loop
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+종료 0
+$ python3 tools/push_loop_rust.py --init --compare
+일치: 사례 6 줄 731 필드 5743 태그 {'btran': 32, 'clear': 67, 'end': 6, 'exhausted': 12, 'fcall': 49, 'ftran': 107, 'init': 6, 'leave': 101, 'pass': 14, 'recompute': 13, 'rin': 13, 'round': 12, 'select': 67, 'start': 6, 'step': 107, 'supply': 119}
+종료 0
+$ python3 tools/push_loop_rust.py --lu --write
+input bench/oracle/m3_push_loop_lu/input.txt 사례 6 줄 36 sha256 ec9735e23ea82eb3f35ba189d543e8d1bd0c28c3563416d4552a7197ff373a20
+종료 0
+$ cargo test -q --release -p rsolver-lp --test push_loop_lu
+.
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+종료 0
+$ python3 tools/push_loop_rust.py --lu --compare
+일치: 사례 6 줄 725 필드 5575 태그 {'btran': 32, 'clear': 67, 'end': 6, 'exhausted': 12, 'fcall': 49, 'ftran': 107, 'init': 6, 'leave': 101, 'pass': 14, 'recompute': 13, 'rin': 13, 'round': 12, 'select': 67, 'step': 107, 'supply': 119}
+종료 0
+$ python3 tools/push_ftran_rust.py --write
+{"written": 50, "m1_written": 186, "m1_skipped": {"21b9de A2": 695}}
+종료 0
+$ cargo test -q --release -p rsolver-lp --test push_ftran
+..
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+종료 0
+$ python3 tools/push_ftran_rust.py --compare
+{"calls": 50, "compared_leaves": 5520, "branches": {"input:dense": 8, "input:sparse": 42, "l:214344": 17, "l:21b9de": 33, "r:dense": 5, "r:none": 45, "spike:dense": 8, "spike:save0": 41, "spike:sparse": 1, "u:2126cd": 17, "u:21686f H2": 30, "u:21686f S1": 3}, "kernel_events": 200, "models": {"arms": 28, "retry": 10, "interior": 12}, "m1": {"calls": 186, "paths": {"21686f H1": 1, "21686f H2": 128, "21686f S1": 9, "21686f S2": 29, "21b9de": 19}, "skipped": {"21b9de A2": 695}}}
+종료 0
+$ python3 tools/push_lu_rust.py --write
+input: 207 연산 {'R': 19, 'F': 120, 'B': 32, 'U': 36}
+종료 0
+$ cargo test -q --release -p rsolver-lp --test push_lu
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+종료 0
+$ python3 tools/push_lu_rust.py --compare
+FTRAN/BTRAN 분기 {'B.entry=cache': 7, 'B.entry=cache-empty-row': 25, 'B.eta=none': 32, 'B.kernel=heap': 25, 'B.kernel=heap+seq': 7, 'B.lt=dense': 2, 'B.lt=heap': 23, 'B.lt=heap+seq': 1, 'B.lt=level': 6, 'B.u=21a941': 32, 'F.input=dense': 13, 'F.input=sparse': 107, 'F.l=214344': 48, 'F.l=21b9de': 47, 'F.l=21b9de A2': 25, 'F.r=dense': 25, 'F.r=none': 79, 'F.r=sparse': 13, 'F.r=sparse-dense': 3, 'F.spike=dense': 36, 'F.spike=save0': 69, 'F.spike=sparse': 15, 'F.u=2126cd': 51, 'F.u=21686f H2': 50, 'F.u=21686f S1': 8, 'F.u=21686f S2': 11}
+미지 칸(비교 제외) {'supplier input_after': 2255}
+OK
+종료 0
+$ python3 tools/push_lu_rust.py --generate --write
+input: 213 연산 {'M': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}
+종료 0
+$ python3 tools/push_lu_rust.py --generate --compare
+FTRAN/BTRAN 분기 {'B.entry=cache': 7, 'B.entry=cache-empty-row': 25, 'B.eta=none': 32, 'B.kernel=heap': 25, 'B.kernel=heap+seq': 7, 'B.lt=dense': 2, 'B.lt=heap': 23, 'B.lt=heap+seq': 1, 'B.lt=level': 6, 'B.u=21a941': 32, 'F.input=dense': 12, 'F.input=sparse': 107, 'F.l=214344': 47, 'F.l=21b9de': 47, 'F.l=21b9de A2': 25, 'F.r=dense': 25, 'F.r=none': 78, 'F.r=sparse': 13, 'F.r=sparse-dense': 3, 'F.spike=dense': 36, 'F.spike=save0': 68, 'F.spike=sparse': 15, 'F.u=2126cd': 50, 'F.u=21686f H2': 50, 'F.u=21686f S1': 8, 'F.u=21686f S2': 11}
+미지 칸(비교 제외) {'supplier input_after': 2255, 'G bucket': 34}
+OK (예상 실패 2연산 제외)
+종료 0
+$ python3 tools/push_lu_rust.py --block --write
+input: 219 연산 {'M': 6, 'K': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}
+종료 0
+$ python3 tools/push_lu_rust.py --block --compare
+FTRAN/BTRAN 분기 {'B.entry=cache': 7, 'B.entry=cache-empty-row': 25, 'B.eta=none': 32, 'B.kernel=heap': 25, 'B.kernel=heap+seq': 7, 'B.lt=dense': 2, 'B.lt=heap': 23, 'B.lt=heap+seq': 1, 'B.lt=level': 6, 'B.u=21a941': 32, 'F.input=dense': 13, 'F.input=sparse': 107, 'F.l=214344': 48, 'F.l=21b9de': 47, 'F.l=21b9de A2': 25, 'F.r=dense': 25, 'F.r=none': 79, 'F.r=sparse': 13, 'F.r=sparse-dense': 3, 'F.spike=dense': 36, 'F.spike=save0': 69, 'F.spike=sparse': 15, 'F.u=2126cd': 51, 'F.u=21686f H2': 50, 'F.u=21686f S1': 8, 'F.u=21686f S2': 11}
+미지 칸(비교 제외) {'supplier input_after': 2255, 'G bucket': 34}
+OK
+종료 0
+$ cargo test -q --release -p rsolver-lp --test push_lu
+ | test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+종료 0
+$ python3 tools/push_lu_rust.py --generate --compare
+ | OK (예상 실패 2연산 제외)
+종료 0
+$ python3 tools/push_lu_rust.py --block --compare
+ | OK
+종료 0
+$ cargo test --release --workspace
+ | test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s | test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s | test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s | test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s | test result:
+종료 0
+$ cargo clippy --workspace --all-targets -- -D warnings
+ | error: manual implementation of `.is_multiple_of()` | error: could not compile `rsolver-lp` (lib) due to 1 previous error | warning: build failed, waiting for other jobs to finish... | error: could not compile `rsolver-lp` (lib test) due to 1 previous error
+종료 101
+$ python3 -m py_compile tools/push_cond_check.py tools/push_cond_rust.py tools/push_cond_runs.py tools/push_init_rust.py
+
+종료 0
+$ node --check tools/push_cond_agent.js
+
+종료 0
+$ git diff --check
+
+종료 0
+# clippy 첫 실행은 crossover_condition.rs:66 `% 8 == 0`(manual is_multiple_of) 1건으로 실패(종료 101) → `is_multiple_of(8)`로 고친 뒤 재실행:
+$ cargo clippy --workspace --all-targets -- -D warnings
+종료 0
+$ cargo test --release --workspace
+37 바이너리, 148 통과, 0 실패, ignored 12
+종료 0
+$ cargo test -q --release -p rsolver-lp --test push_init_ext && python3 tools/push_cond_rust.py --compare && python3 tools/push_init_rust.py --compare
+호출 62·줄 966·필드 4378 비교, 불일치 0 / 호출 17·줄 132·필드 727 비교, 불일치 0
+종료 0

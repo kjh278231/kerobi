@@ -63,7 +63,7 @@ pub enum CondEvent<'a> {
 /// Σ|v| in the order of asm 0x1a96e3–0x1a97fd (and 0x1a9387–0x1a948b for the columns): a buffer at 8 mod 16 adds its
 /// first term to lane 0 before the aligned 8-lane body.
 fn asum(vals: &[f64], mod16: u8) -> f64 {
-    assert!(mod16 % 8 == 0, "buffer not 8-byte aligned");
+    assert!(mod16.is_multiple_of(8), "buffer not 8-byte aligned");
     let a: Vec<f64> = vals.iter().map(|v| v.abs()).collect();
     eta_dot(&a, mod16 == 8)
 }
