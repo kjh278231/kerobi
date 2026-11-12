@@ -456,7 +456,10 @@ Process.attachModuleObserver({onAdded(mod) {
   Interceptor.attach(b.add(0xd4190),{
     onEnter(a){this.enabled=lu!==null&&this.returnAddress.sub(b).toUInt32()===0xf34f2;if(!this.enabled)return;
       this.e1=a[10];this.e2=a[11];
-      emit('lu:refactor',{id:lu.id,phase:'enter',args:{S:a[0].equals(active.s),m:a[2].toInt32()},state:lightPerm(lu.F)});},
+      // 진입 순열은 036ade가 새로 쓰는 출력 칸이고(읽지 않음) push 초기화 첫 호출에서는 미초기화라 저장하지 않는다(정식1차 history/formal-fail1).
+      const F=lu.F,P=o=>F.add(o).readPointer();
+      const st={header:ints(P(0x18),F.add(8).readS32()),spike_count:P(0x1c8).readS32(),x180:F.add(0x180).readS32(),x184:F.add(0x184).readS32(),x18c:F.add(0x18c).readS32()};
+      emit('lu:refactor',{id:lu.id,phase:'enter',args:{S:a[0].equals(active.s),m:a[2].toInt32()},state:st});},
     onLeave(r){if(!this.enabled)return;
       emit('lu:refactor',{id:lu.id,phase:'leave',ret:r.toInt32(),out:[this.e1.readS32(),this.e2.readS32()],status:active.s.add(0xf0).readS32(),state:lightPerm(lu.F)});}
   });
