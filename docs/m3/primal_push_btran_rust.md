@@ -22,7 +22,7 @@
 - 시작 경계: 21c `btran:enter`(wrapper가 F+0x200=0을 쓴 뒤 본체 진입). 종료: `btran:leave`. Rust 입력은 enter의 factor·입력 벡터·out count·cache(count·목록)·F1d8·F+0x200·bucket뿐이다. out 구조체의 idx/val 버퍼 내용, cache 버퍼의 count 밖 칸, F1a8[0..m)은 캡처되지 않으므로 **미지값**으로 시작하고, 비교 대상 영역에서 미지값을 읽으면 그 필드는 실패다(21b와 같은 방식).
 - 버퍼 모델: 원래 in/out의 idx·val 버퍼 4개(길이 m)와 두 구조체(count, idx 버퍼, val 버퍼)를 원본처럼 교환한다. 별칭은 구조체가 가리키는 버퍼의 원래 소속(`in`/`out`)이다. 커널·Lᵀ heap이 out idx 버퍼 위쪽에 쓰는 heap 칸도 원본과 같은 위치에 쓴다.
 - 원본 연산 규칙(구현에 그대로 옮김). 곱셈은 교환해도 비트가 같고, `-(a·b)+c`는 `c−a·b`와 비트가 같다(IEEE). 덧셈 결합 순서는 C 그대로 둔다.
-  - work: 커널 `F200 = acc + F200`(acc는 C 순서의 지역 합). 조밀 Uᵀ `F200 = (c·2+m)+F200`, `F200 = (m+m)+F200`, 행마다 `len·2+F200`. eta는 지역 `x184·2+F200`을 조밀 Lᵀ로 넘기고, 희소 eta는 `(((2ne + 5c) + Σ3len) + 2(n−c)) + 3n + F200`(C:1488–1490 결합 순서). 희소 Lᵀ heap `l·7·(2m+F1e0)/(m+1)`, level `l·5·(F1e0+2m)/(m+1)`, B `3c + Σ2len + 2((d8−e4)+max) + …`. 조밀 Lᵀ `(dv + m) + m` 뒤 행마다 `len·2+F200`.
+  - work: 커널 `F200 = acc + F200`(acc는 C 순서의 지역 합: 순차 경로 `3c + Σ2len + 2(m−low) + …`, heap 경로 pop·순차 꼬리의 `Σ2len`). 조밀 Uᵀ `F200 = (2c+m)+F200`, `F200 = (m+m)+F200`, 행마다 `2len+F200`. 조밀 eta는 지역 `2·F184+F200`을 조밀 Lᵀ로 넘기고, 희소 eta는 `F200 = (((2ne+5c)+Σ3len) + 2(n−c)) + 3n) + F200`(C:1488–1490). 희소 Lᵀ는 지역 dv를 `F200 = dv + F200`으로 한 번 더한다: heap `((l·7)·((m+m)+F1e0))/(m+1)`, level `((l·5)·(F1e0+2m))/(m+1)`(정수 합 뒤 변환), B `((3c + Σ2len) + 2((d8−e4)+max)) + Σ2len`. 조밀 Lᵀ는 희소 입력이면 `F200 = (dv+2c)+m` 뒤 `F200 = (dv'+m)+m`, 행마다 `2len+F200`.
 
 ## 3. 비교 계약
 
@@ -58,8 +58,41 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: WSL2 x86-64 Linux 6.6.87.2, Python 3.10, Rust stable(clippy 1.99). 계약 `a32ef14`, adapter·재생·비교기 `7a2dfed`. 원본 실행 **0회**(21c 정식 캡처 재사용). 증거 `bench/oracle/m3_push_btran_rust/`(입력 `input.txt`, Rust `trace.txt`, `comparison.json`, `self-test.json`, `rust-mutations.json`, manifest, 회귀 기록).
+- **지원 BTRAN 32호출**(`--compare` 종료0): arms17·retry4·interior1·adlittle2·scsd1 1·capri7 전부 커널 사건 64개(enter/leave의 in/out·out count·별칭·scratch·cache·F1d8·F+0x200)와 본체 반환(raw out·입력 후상태·별칭·cache·F1d8·scratch·level bucket·F+0x200)이 원본과 비트/정확 일치. 비교 필드 3,096개. 첫 실행부터 일치했다.
+
+| 분기 | 관측 | 비고 |
+|---|---:|---|
+| 진입 cache 경로 / U 행 빈(일반 경로) | 7 / 25 | 빈 행 25는 모두 일반 희소 Uᵀ 판정 참 |
+| 커널 heap / heap→순차 전환 / F108>5 순차 | 25 / 7 / 0 | 전환 7은 cache 경로. 모든 사례 F108 ≤ 3.08 |
+| 조밀 Uᵀ / 커널 출력0 | 0 / 0 | |
+| eta 없음 / 조밀 / 희소 | 32 / 0 / 0 | |
+| Lᵀ heap / heap→순차 / level / 경로 B / 조밀 | 23 / 1 / 6 / 0 / 2 | level 6은 capri, 조밀 2는 adlittle·capri의 cache 경로 |
+| level bucket(F1a8[m..]) 반환 상태 | 7 | capri 7호출 모두 비교(조밀 Lᵀ 1회는 진입 값 유지) |
+| F+0x200 work | 64 커널 경계 + 32 반환 | 21c에서 기록만 하던 필드를 비교로 올렸고 전부 비트 일치 |
+
+- **trace 변조**(`--self-test` 종료0): 600종 모두 첫 차이로 거부(사례 누락·순서·입력 해시0·빈 trace, 사례마다 출력 값 비트·목록·순서·count, 입력 후상태 값·count, 별칭, cache count·값, F1d8, scratch, F+0x200, bucket, 미지값, 오류 주입, 커널 사건 누락·단계·F1d8·work·출력 값·scratch).
+- **Rust 소스 변이**(임시 Cargo 사본, 32종, `rust-mutations.json`): 첫 차이 거부 20, 재생 거부 1(`lt-level-no-bucket-reset`: 미지 F1a8 칸을 읽어 사례가 오류로 끝남, 비교기가 그 사례를 거부), **생존 11**.
+
+| 생존 변이 | 이유 |
+|---|---|
+| `kernel-never-seq`, `kernel-always-seq`, `lt-heap-never-seq`, `lt-heap-always-seq` | **동치**: heap과 순차 sweep은 같은 순서(커널 U 위치 오름차순, Lᵀ 행 내림차순)로 처리하고 heap 밖 칸은 값이 0이라 건너뛴다. 출력·scratch·work가 같고 다른 것은 out idx 버퍼의 heap 칸(비교 대상 밖)뿐이다 |
+| `kernel-strict-direct`(`upos < t` → `≤`) | 입력 행의 U 위치 = t인 사례 없음 |
+| `kernel-nonstrict`, `lt-heap-strict` | `|x| = ZERO` 또는 0 아닌 `|x| ≤ ZERO` 값 없음 |
+| `lt-sparse-boundary` | `F104·count = m` 동률 없음 |
+| `lt-path-b-never` | 경로 B를 고르는 사례 없음(관측 0) |
+| `lt-heap-work-assoc`, `lt-dense-work-order` | work 항이 모두 작은 정수라 결합 순서와 무관하게 정확 |
+
+- **회귀**([요약](../../bench/oracle/m3_push_btran_rust/regression/summary.txt) 12명령 종료0): 21c `push_btran_check.py --controls --acceptance --self-test`, `push_btran` 재생·비교·self-test, 21b `push_ftran` 재생·비교, `push_round` 재생·비교, `push_chain` 재생·`push_step_chain_rust.py --compare`, py_compile, `git diff --check`, `cargo test --release --workspace` **137통과·0실패·기존 ignored12**, `cargo clippy --workspace --all-targets -- -D warnings` 0. clippy 첫 실행이 `x = y + x` 꼴 8건(assign_op)으로 실패해 `x += y`로 고쳤다(IEEE 덧셈 교환이라 비트 동일, 결합은 그대로). 고친 뒤 재생·변조·변이를 다시 실행해 같은 결과를 얻었다.
+- 실행하지 않은 검사: solver·확장·Python 경로를 바꾸지 않아(`lib.rs`에 모듈 등록만) 확장 설치·pytest·Netlib·P3는 제외했다. 원본 캡처 0회. 독립 검토자는 쓰지 않았다(사용자 지시로 이 세션이 작업자·마스터를 겸함).
+- 계약 변경: 없음. 판정 규칙과 사례는 착수 전 계약 그대로다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **구현 완료(계약 범위)**. 동등성: 지원 BTRAN 자연 32호출의 커널 경계·raw·입력 후상태·별칭·cache·F1d8·scratch·level bucket·F+0x200 work가 원본과 **비트 일치(통과)**.
+- 미검증(C 근거 구현, 원본 비교 0회): 조밀 Uᵀ, 커널 F108>5 순차 경로·출력0, 조밀·희소 eta 전체, Lᵀ 경로 B, 입력 count≥2·dense 입력, 위 생존 변이의 경계(ZERO 동률·`F104·count = m`·`upos = t`). eta>0은 21c 54모델 조사에서도 0회라 21e(지연 LU 연쇄) 캡처에서 같이 확인한다.
+- 범위 밖: 다른 BTRAN caller, `05b257`의 cache 소비, M1 `Lu`와의 통합, factor 생성·갱신과 밀도 근사 필드(F104·F108·F110·F140) 계산(M1-02k는 이번 범위에서 제외하고 21f로 넘김), solver 경로 연결, 루프22, x87, P3.
+- 다음: **M3-04c-21e**(지연 LU→FT/재분해→재번호·rhs FTRAN 수치 연쇄 오라클). `python3 tools/session.py claim M3-04c-21e --owner <새-owner>` → `primal_push_lu_survey.md` §4, 이 문서 §7, `primal_push_ftran_oracle.md`·`primal_push_btran_oracle.md`를 읽고 support 생략22·요청0 갱신5·header 변경7의 내부 상태 캡처 계약을 쓴다. eta>0 BTRAN·FTRAN 사례가 나오면 21b·21d adapter로 바로 재생한다.
+- 재실행: `python3 tools/push_btran_rust.py --write` → `cargo test -p rsolver-lp --test push_btran` → `python3 tools/push_btran_rust.py --compare` / `--self-test` / `--compare --mutate-rust <새 경로>`.
+- branch `work/m3-04c-21d`, worktree `../rsolver-m3-04c-21d`, 선행 미커밋 없음. 최종 commit·병합은 main `Merge M3-04c-21d` 이력을 따른다. main 미추적 `.claude/settings.local.json` 보존. 원격/업로드 없음.
+- 교훈: `docs/lessons/original.md`(BTRAN Lᵀ·커널의 ZERO 비교 방향, level bucket이 반환 뒤 남음, F108>5 커널 경로), `tooling.md`(같은 처리 순서의 heap↔순차 전환 변이는 동치로 분류, work를 비교 대상으로 올리기).
