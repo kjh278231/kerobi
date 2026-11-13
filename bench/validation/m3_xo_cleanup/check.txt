@@ -1,0 +1,45 @@
+controls: 사례 256 × 3회 동일
+  branch auto/rem+/-/dual: 3
+  branch auto/rem-/-/primal: 6
+  branch auto/rem-/dualchk/dual: 6
+  branch auto/rem0/-/primal: 138
+  branch auto/rem0/dualchk/dual: 15
+  branch auto/rem0/dualchk/primal: 3
+  branch auto/retry/-/primal: 3
+  branch x1/rem+/-/primal: 9
+  branch x1/rem0/-/primal: 138
+  branch x2/rem+/-/dual: 6
+  branch x2/rem0/-/dual: 138
+  branch x2/retry/-/dual: 3
+  branch x3/rem+/-/primal: 6
+  branch x3/rem-/-/primal: 3
+  branch x3/rem0/-/primal: 138
+  branch x3/retry/-/primal: 3
+  branch x4/rem+/-/dual: 9
+  branch x4/rem-/-/primal: 3
+  branch x4/rem0/-/dual: 138
+  cleanup ret=0 status=2: 768
+  install: 27
+  install changed: 342
+  install flag3c: 0
+  install superbasic: 345
+  mode 0: 738
+  mode 1: 30
+  retry_reset: 9
+  runs: 768
+  synthetic: 48
+acceptance: 실행 768 통과
+  자료 변조 13종 중 거부 13, 생존 0
+  거부(규칙 변이): reset_mid — ('case', 'syn_retry_auto') run1: retry 재설정 vstat[0] 기대 -2 실제 -1
+  거부(규칙 변이): auto_pos_primal — ('case', 'syn_pos_auto') run1: 선택 기대 False 실제 r14=1
+  거부(규칙 변이): auto_no_s120 — 쌍대 검사 경로인데 sel:dual 없음
+  거부(규칙 변이): cross_mask — (3, 'adlittle') run1: 선택 기대 True 실제 r14=0
+  거부(규칙 변이): neg_ignored — ('case', 'syn_neg_x4') run1: 선택 기대 True 실제 r14=0
+  생존(규칙 변이): dual_le
+  생존(규칙 변이): dual_no_tol_skip
+  거부(규칙 변이): dual_upper_sign — ('case', 'syn_dualchk_capri') run1: 선택 기대 False 실제 r14=1
+  거부(규칙 변이): no_fix — ('case', 'arms_x-1') run1: 0325b4 vstat[27] 기대 -1 실제 -4
+  생존(규칙 변이): no_cost_gate
+  생존(규칙 변이): no_tiny
+  생존(규칙 변이): row_ub
+  규칙 변이 12종 중 거부 7

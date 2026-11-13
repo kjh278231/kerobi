@@ -1,0 +1,195 @@
+{
+ "_note": "M3-04f-2 합성: 13f716 0x1bf2ee에서 retry·remaining slot 또는 S+0x2d8·S+0x120을 바꾼 원본 실행 실험(정상 실행 사례와 구분). 값은 결과 확인 전에 정했다. fca9f1d24d62503f = 1e-3.",
+ "syn_neg_x3": {
+  "model": "adlittle",
+  "crossover": 3,
+  "edits": [
+   {
+    "field": "remaining",
+    "int": -1
+   }
+  ]
+ },
+ "syn_neg_x4": {
+  "model": "adlittle",
+  "crossover": 4,
+  "edits": [
+   {
+    "field": "remaining",
+    "int": -1
+   }
+  ]
+ },
+ "syn_neg_auto": {
+  "model": "adlittle",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "remaining",
+    "int": -1
+   }
+  ]
+ },
+ "syn_pos_auto": {
+  "model": "adlittle",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "remaining",
+    "int": 2
+   }
+  ]
+ },
+ "syn_pos_x1": {
+  "model": "adlittle",
+  "crossover": 1,
+  "edits": [
+   {
+    "field": "remaining",
+    "int": 2
+   }
+  ]
+ },
+ "syn_pos_x4": {
+  "model": "adlittle",
+  "crossover": 4,
+  "edits": [
+   {
+    "field": "remaining",
+    "int": 2
+   }
+  ]
+ },
+ "syn_dualchk_afiro": {
+  "model": "afiro",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "s2d8",
+    "hex": "0000000000000000"
+   },
+   {
+    "field": "s120",
+    "hex": "fca9f1d24d62503f"
+   }
+  ]
+ },
+ "syn_dualchk_adl": {
+  "model": "adlittle",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "s2d8",
+    "hex": "0000000000000000"
+   },
+   {
+    "field": "s120",
+    "hex": "fca9f1d24d62503f"
+   }
+  ]
+ },
+ "syn_dualchk_neg": {
+  "model": "adlittle",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "remaining",
+    "int": -1
+   },
+   {
+    "field": "s2d8",
+    "hex": "0000000000000000"
+   },
+   {
+    "field": "s120",
+    "hex": "fca9f1d24d62503f"
+   }
+  ]
+ },
+ "syn_retry_x3": {
+  "model": "adlittle",
+  "crossover": 3,
+  "edits": [
+   {
+    "field": "retry",
+    "int": 1
+   }
+  ]
+ },
+ "syn_retry_auto": {
+  "model": "adlittle",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "retry",
+    "int": 1
+   }
+  ]
+ },
+ "syn_retry_x2": {
+  "model": "afiro",
+  "crossover": 2,
+  "edits": [
+   {
+    "field": "retry",
+    "int": 1
+   }
+  ]
+ },
+ "syn_dualchk_scsd1": {
+  "model": "scsd1",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "s2d8",
+    "hex": "0000000000000000"
+   },
+   {
+    "field": "s120",
+    "hex": "fca9f1d24d62503f"
+   }
+  ]
+ },
+ "syn_dualchk_capri": {
+  "model": "capri",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "s2d8",
+    "hex": "0000000000000000"
+   },
+   {
+    "field": "s120",
+    "hex": "fca9f1d24d62503f"
+   }
+  ]
+ },
+ "syn_dualchk_israel": {
+  "model": "israel",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "s2d8",
+    "hex": "0000000000000000"
+   },
+   {
+    "field": "s120",
+    "hex": "fca9f1d24d62503f"
+   }
+  ]
+ },
+ "syn_dualchk_grow7": {
+  "model": "grow7",
+  "crossover": -1,
+  "edits": [
+   {
+    "field": "s2d8",
+    "hex": "0000000000000000"
+   },
+   {
+    "field": "s120",
+    "hex": "fca9f1d24d62503f"
+   }
+  ]
+ }
+}

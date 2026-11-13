@@ -149,6 +149,12 @@
 - **push 해 설치(C 2419–2582)는 first(param_7)=0이면 basic을 x·slack에 쓰지 않고, `12f282` 조건수는 first와 무관하게 다시 부른다.** remaining은 남은 후보 수에서 시작해 자유 후보가 있으면 음수, 없으면 env+0x2ba0(= Crossover 파라미터)이 -1일 때만 `max(5, S+0x46c/10)`과 비교해 부호를 정한다. 양수면 앞 후보 vstat을 `lb+ub > 2x`로 -1/-2 지정, 음수면 vstat -1/-2 전체를 bound로 스냅한다. 설치 111회에서 F+0xc=0(조건수 조기 반환 없음). 캡처·asm. (M3-04f-1, [§2·§6](../m3/primal_push_install.md))
 - **Crossover=-1(기본)에서 primal push는 Netlib 45 모두 first=0으로 불리고 후보 0으로 설치에 간다.** 임계값 분기(2ba0 = -1)는 이 경로에서 후보가 남지 않아 자연 실행으로 닿지 않았다. Crossover=3은 first=1·2ba0 = 3이라 remaining 부호는 자유 후보로만 음수가 된다. 캡처. (M3-04f-1)
 
+## crossover cleanup 선택과 basis 설치 (`13f716`·`0cda5b`·`0325b4`)
+
+- **cleanup 알고리즘은 Crossover 값과 마지막 primal push의 signed remaining으로 정해진다.** 1·3은 primal, 2·4는 remaining < 0일 때만 primal이고 나머지는 dual, 자동(−1)은 retry 잔존이면 primal, remaining > 0이면 dual, 그 밖에는 S+0x2d8 = 0·PInf > 0일 때만 쌍대 검사(기저 |d| 최댓값 + OptTol 이상 비기저 위반 최댓값 < OptTol)로 dual을 고른다. remaining 초기값은 −1이라 primal push가 없으면 음수로 취급된다. 캡처(Netlib 45 × Crossover 5값 자연 + 1b 자연 + 합성)·asm. (M3-04f-2, [§2.1](../m3/crossover_cleanup_entry.md))
+- **primal cleanup에서 remaining ≠ 0일 때만 basis 인자를 넘기며, 그 인자는 workspace 자기 상태 배열(S+0x168, +4n)과 push의 x·x+8n이다.** dual cleanup은 remaining > 0이어도 basis 인자를 넘기지 않는다. `0325b4`는 같은 배열을 자기 자신에게 복사한 뒤 비기저를 bound 거리로 −1/−2/−4/−3(superbasic)으로 다시 분류하고 S+0x440/0x448/0x450에 superbasic 목록을 만든다. 열은 빈 열이고 |c| ≤ OptTol이면 상태를 유지하고 |x| ≤ 1e-13이면 목록에서 뺀다. 행은 ub 검사·1e-13 검사가 없다. crossover는 S+0x4d8 = 1이라 스케일 변환이 꺼진다. 캡처·C. (M3-04f-2)
+- **Crossover = −1 자연에서도 remaining이 음수가 된다(1b arms·retry, mode 1).** 04f-1의 임계값 규칙(`max(5, S+0x46c/10)`)으로 남은 후보 1개가 −1이 되고, retry 사례는 S+0x2d8 = 0·PInf > 0이라 자연으로 쌍대 검사를 거쳐 dual이 된다. Netlib 소형 45(barrier 뒤 mode 0)는 Crossover 5값 모두 remaining = 0이었다. 캡처. (M3-04f-2)
+
 ## dual simplex DSE β (`28c93`·`8b473`)
 
 - **반복별 DSE β=‖ρ_r‖²(spx+0x310)는 `8b473` C:105–222가 spx+0x218 벡터를 저장 순서대로 8레인 `((0+2)+(4+6))+((1+3)+(5+7))` 합산해 쓴다(n≤6이면 순차).** 그 벡터는 `28c93` C:149–163이 BTRAN `09e376`의 조밀 출력(nnz<0)을 \|x_i\|>spx+0x3a8(kb2 1e-13) 원소만 인덱스 순으로 제자리 압축한 것이다. 희소 출력은 거르지 않는다(C만, kb2 희소 출력에는 문턱 이하 원소가 없었다). 조밀 m개를 그대로 더하면 마지막 비트가 갈린다. `1bae9c` L1971–2110은 초기 정확 노름 루프이고 반복별 β가 아니다. (M1-02a, 캡처 kb2 38피벗, [근거](../m1/m1_02a_beta.md#62-고정-캡처)) 조밀 여부는 출력 길이가 아니라 BTRAN이 조밀 Lᵀ 경로로 끝났는지로 정한다. Rust `Lu::btran_dense`의 조밀 표시가 kb2 피벗 0–21에서 원본 nnz<0과 같다. (M1-02b, 캡처 대조, [근거](../m1/m1_02b_beta.md#6-실행-결과))
