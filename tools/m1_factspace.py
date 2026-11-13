@@ -106,8 +106,9 @@ def check_pool(pool, self_test):
         assert factspace(27, 32, 83) == 1607  # afiro by hand: (181 + 1)·6 + 27·3·83·5/32 = 2142.47, ·0.75 → 1607
         for name, kw in {'k=4': dict(k=4), 'k=6': dict(k=6), 'c=1': dict(c=1), 'half': dict(mut='half'),
                          '10n': dict(mut='10n'), '0.75': dict(mut='0.75')}.items():
-            moved = sum(factspace(m, n, z, **kw) != got for m, n, z, got in rows)
-            print(f'mutant {name}: {moved} captures rejected')
+            hit = [nm for (m, n, z, got), (nm, *_) in zip(rows, cases) if factspace(m, n, z, **kw) != got]
+            moved = len(hit)
+            print(f'mutant {name}: {moved} captures rejected' + (f' {hit}' if moved < 10 else ''))
             assert moved > 0, name
         print('SELF-TEST PASS')
     return 1 if bad else 0
@@ -140,6 +141,10 @@ def check_direct(d):
             if e['x168'] != e['x158'] - 1 or e['x160'] != 0: errs.append('x160/x168')
             if e['nnz'] != nnz: errs.append(f"spx nnz {e['nnz']} != rsolver {nnz}")
             if not nxt or nxt['ev'] != 'factor' or nxt['x158'] != e['x158']: errs.append('first 036ade F+0x158')
+            # discriminating cases fixed before the capture (contract §3): k 7 → 1922; grow15 after reset() reads c 0
+            if name == 'afiro_k7' and (e['k'], e['x158']) != (7, 1922): errs.append('k7 case: expected k 7, 1922')
+            if name == 'grow15_twice' and i > 0 and (e['c'], e['x158']) != (0, 131899):
+                errs.append('reset re-solve: observed c 0, 131899 expected')
             bad += bool(errs)
             print(f"{os.path.basename(f):24} call {i}: ret {e['ret']:#x} m={e['m']} n={e['n']} nnz={e['nnz']} "
                   f"k={e['k']} c={e['c']} x158={e['x158']} {'ok' if not errs else 'FAIL ' + '; '.join(errs)}")
