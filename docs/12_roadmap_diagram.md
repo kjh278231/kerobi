@@ -1,6 +1,8 @@
 # 12. 로드맵 다이어그램
 
 <!-- progress:begin -->
+M1-02w 조사 완료: stair LU+0x108 차이 = M1 재분해 조밀 전환 끔. 원본 F+0x158로 `factor_dense`를 쓰면 U 비트 일치·stair pathcmp 완전 일치. 후속 M1-02w-2(초기 풀 크기 규칙)·M1-02w-3(구현).
+
 M1-01e 구현 완료: M1 재분해 2×2 블록 단계 켜기(원본 상태 수명)와 t = s3. 255재분해 주입 재생 일치, pathcmp 중앙 0.886, IterCount 34/64.
 
 M2-06h-6 SB 비전파 경로(VarBranch=3, Node = NULL)를 Rust `Bounds::Direct`로 옮겼다(구현 L1, 통과). 직접 bound 요청과 무조건 복구(내부 bound × 배율, 문턱 밖 ∓1e100, work 없음)가 VarBranch=3 4모델 100묶음에서 원본과 비트까지 같고 기존 289묶음도 그대로다. 다음은 M2-06h-7(모순·연속 열 탐색), M2-06h-8(타이머 산술), M2-06i. [기록](m2/mip_sb_direct_rust.md).
