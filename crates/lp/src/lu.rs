@@ -2413,8 +2413,9 @@ impl Lu {
         }
         self.order = (0..m).collect();
         self.upos = (0..m).collect();
-        // 5b257 L2595–2733 after a factor: t = leading empty U columns, LU+0xe8 = highest empty column above t
-        self.prefix = self.ucol.iter().take_while(|c| c.is_empty()).count();
+        // t = LU+0x100 as `1da0b2` leaves it: the end of column-singleton phase 3 (C:1514–1532); 05b257 L2595–2733
+        // only reads it. LU+0xe8 = highest empty column above t
+        self.prefix = self.s3;
         self.e8 = m.saturating_sub(1);
         while self.e8 > self.prefix && !self.ucol[self.e8].is_empty() {
             self.e8 -= 1;
