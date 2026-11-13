@@ -1,0 +1,2 @@
+stair.mps.gz e_r 337 m 356: diag diff 0 []
+row diff 0 []
