@@ -376,6 +376,7 @@ fn finish_simplex(md: &Model, spx: &Spx, e: &Engine, status: Status) -> (Reopt, 
         let mut check = Engine::new(&unscaled);
         check.iter = e.iter;
         check.block = e.block; // the same S: the unscaled check continues the block-phase state
+        check.pool = e.pool; // and its LU pool size F+0x158 (same F; not compared with the original)
         check.iter_limit = e.iter_limit;
         if let Some(st) = check.resolve_unscaled(basis.clone()) {
             let (r, more, basis) = collect(&unscaled, &check, st);

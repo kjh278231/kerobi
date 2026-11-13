@@ -3,7 +3,7 @@
 //! for tools/m1_dense_check.py.
 //! Input lines: `model path`, then per factor `x2c0 x4e0 x4e4 tol_bits cap head...`; output per factor
 //! `next_cap x4e0 x4e4 d8 dc e0 e4 t dense_n mode70 diag_bits...` (next_cap −1 without a shortage, dense_n −1 without
-//! the dense switch, diagonal by factor step = the position after the refactor's renumbering, hex bits).
+//! the dense switch, mode70 = the `local_70` mode was entered (0xd85b4, before its pool test), diagonal by factor step = the position after the refactor's renumbering, hex bits).
 use rsolver_lp::lu::{BlockState, Lu};
 use rsolver_lp::spx::Spx;
 use std::fmt::Write;
@@ -36,7 +36,7 @@ fn replay(input: &str) -> String {
         let f = lu.block_fields();
         let next = lu.short.map_or(-1, |s| s.next_cap(cap));
         let dense = lu.dense.as_ref().map_or(-1, |d| d.n as i64);
-        write!(out, "{next} {} {} {} {} {} {} {} {dense} {}", st.x4e0, st.x4e4, f[0], f[1], f[2], f[3], f[4], lu.mode70.is_some() as i32)
+        write!(out, "{next} {} {} {} {} {} {} {} {dense} {}", st.x4e0, st.x4e4, f[0], f[1], f[2], f[3], f[4], lu.pool_trace.iter().any(|e| e.kind == "mode70") as i32)
             .unwrap();
         if lu.short.is_none() && lu.complete() {
             for s in lu.parts().steps {

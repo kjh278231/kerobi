@@ -289,7 +289,7 @@ impl<'a> Engine<'a> {
     /// `RSOLVER_BLOCK_PROBE=<file>` (M1-01e): one JSON line per factor with the basis head, the block state at entry
     /// and exit, the singular count and LU+0xd8/0xdc/0xe0/0xe4/0x100 (tools/m1_block_check.py); M1-02w-3 adds the
     /// pool size F+0x158 at entry, the pool size after a shortage (−1 return, else null), the dense switch's n and
-    /// whether the `local_70` mode ran (tools/m1_dense_check.py).
+    /// whether the `local_70` mode was entered (tools/m1_dense_check.py).
     fn block_probe(&self, enter: BlockState, cap: i64) {
         let Ok(path) = std::env::var("RSOLVER_BLOCK_PROBE") else { return };
         use std::io::Write;
@@ -299,7 +299,7 @@ impl<'a> Engine<'a> {
         let line = format!(
             "{{\"iter\":{},\"head\":{:?},\"enter\":[{},{},{}],\"leave\":[{},{}],\"rc\":{},\"lu\":{:?},\"cap\":{cap},\"short\":{short},\"dense\":{dense},\"mode70\":{}}}\n",
             self.iter, self.head, enter.x2c0, enter.x4e0, enter.x4e4, b.x4e0, b.x4e4, self.lu.singular.len(), lu,
-            self.lu.mode70.is_some()
+            self.lu.pool_trace.iter().any(|e| e.kind == "mode70")
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
             let _ = f.write_all(line.as_bytes());

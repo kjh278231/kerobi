@@ -2093,7 +2093,47 @@ impl Lu {
                 // C:3301–3392: the exact count over the dense columns replaces the estimate
                 est = cnt_c.iter().filter(|&&c| c >= 0).map(|&c| (c + 1) as f64).sum();
                 cov[10] += 1;
-                assert!(est <= nsq * 0.325, "036ade local_70 mode dense switch (C:3405): not ported");
+                if est > nsq * 0.325 {
+                    // C:3405 → LAB_001d88bf with local_70 set: the dense switch of the remaining n = m − steps
+                    if !self.pool_dense() {
+                        return false;
+                    }
+                    assert!(st.ecols.is_empty() && st.erows.is_empty(), "036ade local_70 dense switch with empty lines: not ported");
+                    let nd = m - steps;
+                    // C:3460–3480: positions in column-count bucket order (local_1f0 heads, +4 link), local_1e0 their index
+                    let (mut rows, mut didx) = (Vec::with_capacity(nd), vec![usize::MAX; n]);
+                    for k in 0..n {
+                        let Ok(h) = usize::try_from(cb.head[k]) else { continue };
+                        let mut x = h;
+                        loop {
+                            didx[x] = rows.len();
+                            rows.push(colmap[x]);
+                            x = cb.prv[x];
+                            if x == h {
+                                break;
+                            }
+                        }
+                    }
+                    // C:3482–3525: the live rows in local_70 row order, values |v| ≥ ZERO (local_88) of the old array
+                    let mut cols = Vec::with_capacity(nd);
+                    let mut ad = vec![0.0f64; nd * nd];
+                    for r in (0..n).filter(|&r| cnt_r[r] >= 0) {
+                        let kk = cols.len();
+                        cols.push(rowmap[r]);
+                        for c in 0..n {
+                            let v = a[r * n + c];
+                            if ZERO <= v.abs() {
+                                ad[kk * nd + didx[c]] = v;
+                            }
+                        }
+                    }
+                    assert!(rows.len() == nd && cols.len() == nd, "036ade local_70 dense switch size");
+                    // the new array starts at param_15[1] + param_15[3]·8 (C:3409), after the local_70 array
+                    let mat16 = if self.fpool.as_ref().map_or(0, |pl| pl.p3) % 2 != 0 { 8 } else { 0 };
+                    self.mode70 = Some(Mode70Trace { step: steps0, n, pivots, stats: cov });
+                    self.dense_steps(ppos, nd, ad, rows, cols, mat16);
+                    return true;
+                }
             }
             let cmin = (0..n).find(|&k| cb.head[k] >= 0).unwrap_or(n);
             let rmin = (0..n).find(|&k| rb.head[k] >= 0).unwrap_or(n);
@@ -2426,6 +2466,12 @@ impl Lu {
             }
         }
         let mat16 = if pool_first_fill(self.fw.nnz_b, m, cap) % 2 != 0 { 8 } else { 0 };
+        self.dense_steps(ppos, n, a, rows, cols, mat16);
+    }
+
+    /// The dense switch's own LU and conversion (C:3968–5300) on the gathered column-major array `a` (row `cols[kk]`
+    /// at kk·n, position `rows[i]` at + i) whose 16-byte offset is `mat16`.
+    fn dense_steps(&mut self, ppos: &mut [i64], n: usize, mut a: Vec<f64>, rows: Vec<usize>, cols: Vec<usize>, mat16: usize) {
         let (a_in, cols_in) = (a.clone(), cols.clone());
         let (mut cols, mut rows2) = (cols, rows.clone());
         let deficits = match dense_lu(&mut a, n, &mut cols, &mut rows2, ZERO, mat16, 0, true) {

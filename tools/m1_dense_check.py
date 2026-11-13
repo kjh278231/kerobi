@@ -25,7 +25,7 @@ args = sys.argv[1:]
 D = os.path.join(ROOT, args[args.index('--dir') + 1]) if '--dir' in args else os.path.join(ROOT, 'bench/oracle/m1_02w3/formal')
 MODELS = ['grow15', 'grow22', 'perold', 'pilot4', 'stair']
 # Rust calls compared before the first head difference (M1-02w-3 result): fewer means the probe or build broke
-NEED = {'grow15': 0, 'grow22': 0, 'perold': 0, 'pilot4': 0, 'stair': 0}
+NEED = {'grow15': 5, 'grow22': 8, 'perold': 7, 'pilot4': 12, 'stair': 12}
 sha = lambda p: hashlib.sha256(open(p, 'rb').read()).hexdigest()
 
 
@@ -126,7 +126,9 @@ def replay(runs, cap=None):
             if c['first'] is None: c['first'] = f'call {e["i"]} (k {e["k"]}): Rust panic: {" ".join(r[1:])}'
             continue
         v = list(map(int, r[:10]))
-        got = dict(next=None if v[0] == -1 else v[0], leave=v[1:3], lu=[v[3], v[6], v[7]],
+        # rc -1: the original's LU+0x100 is the block phase's t = s3 (1da0b2 C:1514-1534, written before the pool
+        # shortage); Rust stores t in finish(), which a shortage skips, so compare it with Rust s3 (LU+0xe0) there
+        got = dict(next=None if v[0] == -1 else v[0], leave=v[1:3], lu=[v[3], v[6], v[5] if v[0] != -1 else v[7]],
                    dense=[] if v[8] == -1 else [v[8]], mode70=v[9] == 1)
         want = original_fields(e)
         c['calls'] += 1
@@ -150,8 +152,9 @@ def rust_probe(model):
         env = dict(os.environ, RSOLVER_BLOCK_PROBE=out)
         code = (f"import rsolver; m=rsolver.read({os.path.join(NETLIB, model + '.mps.gz')!r}); m.Params['Method']=1; "
                 "m.Params['Presolve']=0; m.optimize()")
-        subprocess.run([PY, '-c', code], env=env, check=True, capture_output=True)
-        return [json.loads(l) for l in open(out)] if os.path.exists(out) else []
+        r = subprocess.run([PY, '-c', code], env=env, capture_output=True, text=True)
+        err = None if r.returncode == 0 else (r.stderr.strip().splitlines() or ['?'])[-1]
+        return ([json.loads(l) for l in open(out)] if os.path.exists(out) else []), err
 
 
 def compare(name, orig, rust):
@@ -161,7 +164,7 @@ def compare(name, orig, rust):
         if not (o['head'] == r['head'] or (i == 0 and sorted(o['head']) == sorted(r['head']))):
             return None, n, f'{name}: head differs at call {i} (original k {o["k"]}, Rust iter {r["iter"]}); {n} compared'
         want = dict(original_fields(o), enter=o['enter'], cap=o['pool'][0])
-        got = dict(next=r['short'], leave=r['leave'], lu=[r['lu'][0], r['lu'][3], r['lu'][4]],
+        got = dict(next=r['short'], leave=r['leave'], lu=[r['lu'][0], r['lu'][3], r['lu'][2 if r['short'] is not None else 4]],
                    dense=[] if r['dense'] is None else [r['dense']], mode70=r['mode70'], enter=r['enter'], cap=r['cap'])
         diff = [f'{k}: original {want[k]} Rust {got[k]}' for k in want if want[k] != got[k]]
         if diff:
@@ -192,7 +195,10 @@ def main():
     if '--rust' in args:
         for n in MODELS:
             if n not in runs: continue
-            err, cnt, note = compare(n, calls(runs[n][1]), rust_probe(n))
+            probe, crash = rust_probe(n)
+            err, cnt, note = compare(n, calls(runs[n][1]), probe)
+            if crash:
+                fail.append(f'{n}: Rust run failed after {len(probe)} calls: {crash}'); print('rust FAIL', fail[-1])
             if err: fail.append(err); print('rust FAIL', err)
             else:
                 print('rust', note)
