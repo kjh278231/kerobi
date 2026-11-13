@@ -1,0 +1,6 @@
+--- a/crates/lp/src/lu.rs
++++ b/crates/lp/src/lu.rs
+@@ pub fn factor_tol
+-        let mut st = BlockState::OFF;
++        let mut st = BlockState { x2c0: 0, x4e0: 0, x4e4: 0 }; // EXPERIMENT
+         Lu::factor_block(spx, head, tol, &mut st)
