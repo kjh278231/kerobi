@@ -1,8 +1,7 @@
 //! One strong-branching batch: the candidate loop with an external LP, propagation and
 //! saved-state backend. The backend owns the LP numbers, the propagation itself, the parent
 //! snapshot and the timer; this module owns the candidate control and the values it writes.
-//! shortcut: integer, unflipped candidates only. Propagation contradiction returns Unported
-//! (no original case yet); upgrade when one is captured.
+//! shortcut: integer, unflipped candidates only.
 
 const INF: f64 = 1e100;
 
@@ -89,7 +88,6 @@ pub struct Evaluation {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error<E> {
     Backend(E),
-    Unported,
 }
 
 /// maxsd(gain, 1e-10) on both gains, then the geometric mean shifted by 1e-5.
@@ -113,14 +111,17 @@ struct Loop<'a, B: Backend> {
 
 impl<B: Backend> Loop<'_, B> {
     /// One direction: propagate (or request the bound), solve, consume, pre-fill later candidates, restore.
-    fn direction(&mut self, k: usize, side: Side, value: f64) -> Result<(), Error<B::Error>> {
+    /// Returns true on a propagation contradiction: the direction is infeasible without an LP.
+    fn direction(&mut self, k: usize, side: Side, value: f64) -> Result<bool, Error<B::Error>> {
         let parent = self.b.parent_obj;
         let j = self.b.columns[k];
         let p = match self.b.bounds {
             Bounds::Propagate { .. } => {
                 let p = self.lp.propagate(j, side, value, self.work).map_err(Error::Backend)?;
                 if p.contradiction {
-                    return Err(Error::Unported);
+                    if side == Side::Lower { self.up[k] = INF } else { self.down[k] = INF }
+                    self.undo(&p)?;
+                    return Ok(true);
                 }
                 Some(p)
             }
@@ -144,18 +145,25 @@ impl<B: Backend> Loop<'_, B> {
         }
         self.lp.reset().map_err(Error::Backend)?;
         self.lp.restore(self.work).map_err(Error::Backend)?;
-        let (p, lower, upper) = match (p, self.b.bounds) {
-            (Some(p), Bounds::Propagate { lower, upper }) => (p, lower, upper),
+        let p = match (p, self.b.bounds) {
+            (Some(p), Bounds::Propagate { .. }) => p,
             (_, Bounds::Direct { lower, upper, scale, infinity }) => {
                 // Read at candidate start (C:410-427): beyond +-infinity becomes +-1e100, else scaled.
                 let s = |v: f64| match scale { Some(s) => v * s[j], None => v };
                 let v = if side == Side::Lower {
                     if -infinity < lower[j] { s(lower[j]) } else { -INF }
                 } else if upper[j] < infinity { s(upper[j]) } else { INF };
-                return self.lp.bound(j, side, v).map_err(Error::Backend);
+                return self.lp.bound(j, side, v).map(|_| false).map_err(Error::Backend);
             }
             _ => unreachable!(),
         };
+        self.undo(&p)?;
+        Ok(false)
+    }
+
+    /// Requests back every bound the propagation tightened, then adds 6 work per list entry.
+    fn undo(&mut self, p: &Propagation) -> Result<(), Error<B::Error>> {
+        let Bounds::Propagate { lower, upper } = self.b.bounds else { unreachable!() };
         // The original clears a column's flags after its first entry, so a repeated entry is a no-op.
         let mut done: Vec<usize> = Vec::new();
         for c in &p.changes {
@@ -231,7 +239,8 @@ pub fn run<B: Backend>(b: &Batch, lp: &mut B, iterations: &mut f64, work: &mut f
             } else if s.down[k] <= -INF && !(s.down_est[k] < INF
                 && best >= score(s.down_est[k] - parent, s.up[k] - parent)) {
                 s.down[k] = parent;
-                s.direction(k, Side::Upper, split)?;
+                // A down contradiction skips the judgement, stall counter included (asm 572e64 -> 572e6c).
+                judge = !s.direction(k, Side::Upper, split)?;
             }
         }
         if judge {
