@@ -8,6 +8,7 @@ requested check passes.
                state, tol and F+0x158: next F+0x158, block exit, LU+0xd8/0xe4/0x100, dense n, local_70, diagonal bits
   --rust       this worktree's build (PYTHONPATH=$PWD/python, RSOLVER_BLOCK_PROBE) up to the first head difference:
                the same fields except the diagonal plus the entry block state and F+0x158
+  --pool64     every model of bench/oracle/m1_02w/pool: Rust first F+0x158 = original, and the Rust chain
   --self-test  input mutants of the replay (cap 1,000,000: dense array alignment; cap x10: no shortage) and tampers of
                the original data must be rejected
   --dir D      capture directory (default bench/oracle/m1_02w3/formal)
@@ -64,6 +65,8 @@ def check_capture(c, name):
     if not c.get('ok') or c.get('errors'): return f'{name}: run not ok'
     ev = calls(c)
     if not ev: return f'{name}: no calls'
+    if not any(e['dense'] for e in ev): return f'{name}: no dense switch (target)'
+    if not any(e['diag'] for e in ev): return f'{name}: no diagonal read'
     want = factspace(ev[0]['m'], ev[0]['n'], nnz(name.rsplit('-', 1)[0]))
     if ev[0]['pool'][0] != want: return f'{name}: first F+0x158 {ev[0]["pool"][0]}, FactSpace {want}'
     for i, e in enumerate(ev):
@@ -95,11 +98,14 @@ def repro(runs):
         for r in (2, 3):
             if rr[r]['events'] != rr[1]['events'] or rr[r]['output'] != rr[1]['output']:
                 bad.append(f'{n}: run {r} differs from run 1')
+    ev = [e for rr in runs.values() if 1 in rr for e in calls(rr[1])]
+    if not any(e['rc'] == -1 for e in ev): bad.append('no pool shortage (-1) in the set (target)')
+    if not any(e['mode70'] and e['dense'] for e in ev): bad.append('no local_70 dense switch in the set (target)')
     return bad
 
 
 def original_fields(e):
-    return dict(next=next_cap(e), leave=e['leave'], lu=[e['lu'][0], e['lu'][3], e['lu'][4]],
+    return dict(next=next_cap(e), leave=e['leave'], lu=e['lu'],
                 dense=e['dense'], mode70=e['mode70'] > 0)
 
 
@@ -128,7 +134,7 @@ def replay(runs, cap=None):
         v = list(map(int, r[:10]))
         # rc -1: the original's LU+0x100 is the block phase's t = s3 (1da0b2 C:1514-1534, written before the pool
         # shortage); Rust stores t in finish(), which a shortage skips, so compare it with Rust s3 (LU+0xe0) there
-        got = dict(next=None if v[0] == -1 else v[0], leave=v[1:3], lu=[v[3], v[6], v[5] if v[0] != -1 else v[7]],
+        got = dict(next=None if v[0] == -1 else v[0], leave=v[1:3], lu=v[3:7] + [v[5] if v[0] != -1 else v[7]],
                    dense=[] if v[8] == -1 else [v[8]], mode70=v[9] == 1)
         want = original_fields(e)
         c['calls'] += 1
@@ -157,6 +163,44 @@ def rust_probe(model):
         return ([json.loads(l) for l in open(out)] if os.path.exists(out) else []), err
 
 
+def chain(name, rust):
+    """The whole Rust probe, past the head difference: after a shortage the same 05b257 calls 036ade again (same x2c0
+    and head, cap = the new size); after a singular factor (rc > 0) the same x2c0 with repaired head; otherwise the
+    next factorization raises x2c0 by one and keeps cap. Returns (error, shortages)."""
+    if not rust: return f'{name}: empty Rust probe', 0
+    for i in range(1, len(rust)):
+        a, b = rust[i - 1], rust[i]
+        if a['short'] is not None:
+            ok = b['enter'][0] == a['enter'][0] and b['head'] == a['head'] and b['cap'] == a['short']
+        elif a['rc'] > 0:
+            ok = b['enter'][0] == a['enter'][0] and b['cap'] == a['cap']
+        else:
+            ok = b['enter'][0] == a['enter'][0] + 1 and b['cap'] == a['cap']
+        if not ok:
+            return (f'{name}: Rust chain at factor {i}: previous x2c0 {a["enter"][0]} cap {a["cap"]} short {a["short"]} '
+                    f'rc {a["rc"]}, next x2c0 {b["enter"][0]} cap {b["cap"]}'), 0
+    return None, sum(r['short'] is not None for r in rust)
+
+
+def pool64():
+    """First Rust cap (F+0x158 at the first 036ade) and the Rust chain on every model of the M1-02w 64-model sweep."""
+    bad, shorts = [], {}
+    for p in sorted(glob.glob(os.path.join(ROOT, 'bench/oracle/m1_02w/pool/*.json.gz'))):
+        d = load(p)
+        n = d['model'][:-len('.mps.gz')]
+        probe, crash = rust_probe(n)
+        if crash: bad.append(f'{n}: Rust run failed: {crash}'); continue
+        if not probe: bad.append(f'{n}: empty Rust probe'); continue
+        if probe[0]['cap'] != d['events'][0]['enter'][0]:
+            bad.append(f'{n}: first cap Rust {probe[0]["cap"]} original {d["events"][0]["enter"][0]}')
+        err, s = chain(n, probe)
+        if err: bad.append(err)
+        if s: shorts[n] = s
+    print(f'pool64: {len(glob.glob(os.path.join(ROOT, "bench/oracle/m1_02w/pool/*.json.gz")))} models, '
+          f'first cap and chain {"PASS" if not bad else "FAIL"}, Rust shortages {shorts or 0}')
+    return bad
+
+
 def compare(name, orig, rust):
     """Call by call up to the first head difference: entry block state and F+0x158, then the replay fields."""
     n = 0
@@ -164,7 +208,7 @@ def compare(name, orig, rust):
         if not (o['head'] == r['head'] or (i == 0 and sorted(o['head']) == sorted(r['head']))):
             return None, n, f'{name}: head differs at call {i} (original k {o["k"]}, Rust iter {r["iter"]}); {n} compared'
         want = dict(original_fields(o), enter=o['enter'], cap=o['pool'][0])
-        got = dict(next=r['short'], leave=r['leave'], lu=[r['lu'][0], r['lu'][3], r['lu'][2 if r['short'] is not None else 4]],
+        got = dict(next=r['short'], leave=r['leave'], lu=r['lu'][:4] + [r['lu'][2 if r['short'] is not None else 4]],
                    dense=[] if r['dense'] is None else [r['dense']], mode70=r['mode70'], enter=r['enter'], cap=r['cap'])
         diff = [f'{k}: original {want[k]} Rust {got[k]}' for k in want if want[k] != got[k]]
         if diff:
@@ -196,6 +240,9 @@ def main():
         for n in MODELS:
             if n not in runs: continue
             probe, crash = rust_probe(n)
+            cerr, s = chain(n, probe)
+            print(f'rust {n}: chain over {len(probe)} Rust factors {"ok" if not cerr else "FAIL"}, Rust shortages {s}')
+            if cerr: fail.append(cerr)
             err, cnt, note = compare(n, calls(runs[n][1]), probe)
             if crash:
                 fail.append(f'{n}: Rust run failed after {len(probe)} calls: {crash}'); print('rust FAIL', fail[-1])
@@ -203,11 +250,22 @@ def main():
             else:
                 print('rust', note)
                 if cnt < NEED[n]: fail.append(f'{n}: {cnt} calls compared, need {NEED[n]}')
+    if '--pool64' in args:
+        fail += pool64()
     if '--self-test' in args:
         for name, cap in [('cap 1000000', lambda e: 1000000), ('cap x10', lambda e: e['pool'][0] * 10)]:
             b, _ = replay(runs, cap)
             print(f'mutant {name}: {len(b)} models rejected', b[0][:200] if b else '')
             if not b: fail.append(f'mutant {name} not rejected')
+        for name, f in [('empty events (all runs)', lambda c: c.update(events=[])),
+                        ('no dense switch (all runs)', lambda c: [e.update(dense=[]) for e in c['events'] if 'dense' in e]),
+                        ('no -1 (all runs)', lambda c: [e.update(rc=0) for e in c['events'] if e.get('rc') == -1]),
+                        ('zero binary hash (all runs)', lambda c: c.update(binary_sha256='0' * 64))]:
+            t = copy.deepcopy(runs)
+            for m_ in ('grow15', 'grow22'):
+                for r in (1, 2, 3): f(t[m_][r])
+            if not repro(t): fail.append(f'tamper {name} not rejected')
+            else: print(f'tamper {name}: rejected')
         n = MODELS[0]
         for name, f in [('binary hash', lambda c: c.update(binary_sha256='0' * 64)),
                         ('first F+0x158', lambda c: c['events'][0]['pool'].__setitem__(0, c['events'][0]['pool'][0] + 1)),

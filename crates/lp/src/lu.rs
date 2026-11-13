@@ -2123,6 +2123,8 @@ impl Lu {
                         for c in 0..n {
                             let v = a[r * n + c];
                             if ZERO <= v.abs() {
+                                // a live value only sits in a column still in the buckets (C writes local_1e0 there)
+                                assert!(didx[c] != usize::MAX, "036ade local_70 dense switch: value in a finished column");
                                 ad[kk * nd + didx[c]] = v;
                             }
                         }
