@@ -1,0 +1,11 @@
+model natural synthetic dense band rust_er_matched
+kb2 87 18 12 6 38/38 (end) c_B 4 paired (1 old-sparse) 0 unpaired
+degen2 1094 18 12 6 356/634 (r 426/419) c_B 9 paired (0 old-sparse) 0 unpaired
+sc50b 93 11 7 3 36/36 (end) c_B 6 paired (5 old-sparse) 0 unpaired
+scsd1 178 7 5 3 42/89 (r 27/30) c_B 5 paired (3 old-sparse) 1 unpaired
+stair 725 14 10 6 356/356 (end) c_B 10 paired (2 old-sparse) 1 unpaired
+forplan 325 7 5 3 150/150 (end) c_B 9 paired (6 old-sparse) 0 unpaired
+fit1p 1214 14 10 6 117/568 (etas 30/0) c_B 5 paired (4 old-sparse) 0 unpaired
+bnl1 1723 11 7 3 299/1050 (r 612/249) c_B 3 paired (1 old-sparse) 5 unpaired
+LU+0x108 > 5 cases 14
+PASS original + rust
