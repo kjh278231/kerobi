@@ -22,7 +22,7 @@
 | M2 | `crates/mip` | `docs/handoff/M2.md` |
 | M3 | LP barrier·PDHG와 후속 crossover·concurrent | `docs/handoff/M3.md` |
 
-`crates/driver`, `crates/py`, `python/rsolver`, 공통 파라미터·모델, 시작 지침과 전체 진행 문서는 공유 경계다. 수정 전 `claim shared --owner ...`를 추가로 얻고 다른 영역의 변경과 충돌 여부를 확인한다. 한 branch를 여러 세션이 함께 수정하지 않는다. 테스트·성능 측정의 공유 자원 제한도 적용한다. Gurobi는 한 프로세스, 공유 가상환경 설치는 main worktree에서만 수행한다. 변경한 `tools/build_local.sh`의 동작을 확인하지 않은 채 성공했다고 보고하지 않는다.
+`crates/driver`, `crates/py`, `python/rsolver`, 공통 파라미터·모델, 시작 지침과 전체 진행 문서는 공유 경계다. 이 가운데 11·12·13·14와 인수인계 맨 위는 작업 branch에서 고치지 않는다(3절). 그 밖의 공유 파일은 수정 전 `claim shared --owner ...`를 추가로 얻고 다른 영역의 변경과 충돌 여부를 확인한다. 한 branch를 여러 세션이 함께 수정하지 않는다. 테스트·성능 측정의 공유 자원 제한도 적용한다. Gurobi는 한 프로세스, 공유 가상환경 설치는 main worktree에서만 수행한다. 변경한 `tools/build_local.sh`의 동작을 확인하지 않은 채 성공했다고 보고하지 않는다.
 
 ## 3. 세션 종료와 인수인계
 
