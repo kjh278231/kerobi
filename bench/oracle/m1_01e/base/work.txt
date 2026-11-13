@@ -1,0 +1,38 @@
+degen2: {'C writes': 15812, 'F 0x150 = work at 05b257 entry': 16, 'F 0x3d0': 635, 'F calls without 036ade': 621, 'F factorizations (reason 1)': 1, 'F factorizations (reason 10)': 13, 'F factorizations (reason 4)': 2, 'N decisions': 635, 'Q 05b257 3m (LU+0x1f8)': 16, 'Q 05b257 9m': 16, 'Q 1bae9c m': 1, 'Q 1ca57 (m+n)(2 + [spx+0x338])': 12, 'Q 534f7 A nnz': 1, 'Q 9e60b 3m (LU+0x1f8)': 16, 'Q x148 = LU+0x1f8': True, 'R k%10=9 decisions': 59, 'R work true': 6, 'S sites': 68} margin rhs/lhs min 0.1048 max 1.2643
+kb2: {'C writes': 971, 'F 0x150 = work at 05b257 entry': 5, 'F 0x3d0': 39, 'F calls without 036ade': 35, 'F factorizations (reason 1)': 1, 'F factorizations (reason 10)': 3, 'F factorizations (reason 4)': 1, 'N decisions': 39, 'Q 05b257 3m (LU+0x1f8)': 5, 'Q 05b257 9m': 5, 'Q 1bae9c m': 1, 'Q 1ca57 (m+n)(2 + [spx+0x338])': 5, 'Q 534f7 A nnz': 1, 'Q x148 = LU+0x1f8': True, 'R k%10=9 decisions': 2, 'S sites': 60} margin rhs/lhs min 0.5631 max 0.6273
+G degen2 from pivot 0 (reason 1): total 177869: 1bae9c 45605, 1c8477 30369, 2207de 21547, 36ade 14278, 1c35c5 12470, 9e288 11525
+G degen2 from pivot 16 (reason 10): total 116737: 1bae9c 24605, 36ade 15812, 2207de 13852, 9d112 11672, 5b257 11099, 1c8477 10829
+G degen2 from pivot 37 (reason 10): total 127971: 1bae9c 26175, 36ade 17359, 9d112 15801, 2207de 15788, 5b257 12064, 1c8477 10068
+G degen2 from pivot 82 (reason 10): total 158031: 9d112 48416, 36ade 20754, 1bae9c 20075, 5b257 14663, 2207de 9223, a4109 7778
+G degen2 from pivot 131 (reason 4): total 321080: 9d112 133791, a4109 40279, 1bae9c 36661, 36ade 23136, 9e376 20030, 48d5f 18260
+G degen2 from pivot 167 (reason 10): total 456875: 9d112 209876, a4109 57018, 1bae9c 44929, 9e376 38683, 5b257 27604, 36ade 24747
+G degen2 from pivot 228 (reason 10): total 634478: 9d112 251411, a4109 103130, 1bae9c 72353, 9e376 65106, 5b257 32183, 1c35c5 30001
+G degen2 from pivot 278 (reason 10): total 832639: 9d112 318555, a4109 156343, 9e376 107405, 5b257 55262, 1c35c5 42543, 48d5f 41894
+G degen2 from pivot 316 (reason 10): total 1066922: 9d112 443645, a4109 194835, 9e376 130983, 5b257 72296, 1c35c5 52979, 48d5f 52868
+G degen2 from pivot 356 (reason 10): total 1041190: 9d112 466791, a4109 178473, 9e376 123728, 5b257 61727, 1bae9c 50846, 36ade 46168
+G degen2 from pivot 396 (reason 10): total 1311726: 9d112 562797, a4109 234284, 9e376 165615, 5b257 83769, 1c35c5 60411, 48d5f 59814
+G degen2 from pivot 436 (reason 10): total 1147704: 9d112 550134, a4109 168073, 9e376 117779, 5b257 71453, 1bae9c 61724, 36ade 53765
+G degen2 from pivot 486 (reason 10): total 1255523: 9d112 675278, a4109 147438, 9e376 130445, 1bae9c 70177, 5b257 69510, 36ade 60683
+G degen2 from pivot 536 (reason 10): total 1510333: 9d112 751655, a4109 218459, 9e376 189395, 5b257 69020, 1bae9c 67748, 36ade 67640
+G degen2 from pivot 586 (reason 10): total 1681433: 9d112 794567, a4109 269353, 9e376 220232, 36ade 85225, 5b257 72717, 1c35c5 68739
+G degen2 from pivot 634 (reason 4): total 126993: 36ade 89475, 5b257 7812, 2207de 7170, 9e288 6544, 1bae9c 5195, 48d5f 4161
+G degen2 increments not a multiple of 0.5*x148 (count, writes): {'9e288': (444, 460), '2207de': (94, 113), '9e376': (291, 634), '9d112': (476, 634)}
+G kb2 from pivot 0 (reason 1): total 11885: 9d112 3433, 9e288 1554, 36ade 1421, 5b257 1355, 1bae9c 867, 1c35c5 618
+G kb2 from pivot 6 (reason 10): total 20439: 9d112 7869, 36ade 1951, 1c35c5 1945, a4109 1878, 5b257 1836, 1bae9c 1670
+G kb2 from pivot 15 (reason 10): total 36772: 9d112 14726, a4109 4804, 5b257 2926, 1bae9c 2788, 9e376 2778, 36ade 2613
+G kb2 from pivot 26 (reason 10): total 56286: 9d112 24664, a4109 5599, 1bae9c 4648, 5b257 4449, 36ade 4443, 9e376 4135
+G kb2 from pivot 38 (reason 4): total 10160: 36ade 6604, 2207de 840, 5b257 755, 48d5f 519, 1bae9c 519, 9e288 484
+G kb2 increments not a multiple of 0.5*x148 (count, writes): {'9e288': (43, 48), '9e376': (10, 38), '9d112': (13, 38)}
+T binary hash 0: rejected (M kb2: binary 000000000000 ok True events 1092)
+T no events: rejected (M degen2: binary 8e87fca221fd ok True events 0)
+T one write deleted (degen2 pivot 200): rejected (S degen2: pc 0x129671 in 9d112 runs 633, inventory 634)
+T one write attributed to another function (degen2 pivot 200): rejected (S degen2: pc 0x120114 in 8b473 runs 633, inventory 634)
+T write pc not in the inventory (kb2): rejected (S kb2: pc 0xe84b9 in 534f7 runs 0, inventory 1)
+T 0x158 return bit (degen2 refactor before pivot 356): rejected (F degen2 05b257 pivot 356: 0x158 40e3510126666685, model 40e3510126666684 (old 40e016fbe6666649, last 036ade w)
+T 0x150 return bit (degen2 refactor before pivot 316): rejected (F degen2 05b257 pivot 316: 0x150 4145fd3bce8ec792, work before the first 036ade write 4145fd3bce8ec793)
+T 0x3d0 + 1 (kb2): rejected (F kb2 decision pivot 1: spx+0x3d0 287, A nonzeros 286)
+T decision work bit (degen2 before pivot 356): rejected (C degen2 D pivot 356: work 414e2110f172d22b last written 414e2110f172d22a same pointer True)
+T model: 0x158 average without 0.5: rejected (F degen2 05b257 pivot 16: 0x158 40cd627333333334, model 40dd627333333334 (old 40cbe2f333333338, last 036ade wr)
+T model: 0x158 from the work at the 05b257 return: rejected (F degen2 05b257 pivot 0: 0x158 40cbe2f333333338, model 40d816e000000004 (old 0000000000000000, last 036ade wri)
+T model: 1ca57 amount without the spx+0x338 term: rejected (Q kb2 pivot 15 pc 0xbf981 (1ca57 (m+n)(2 + [spx+0x338])): 40e4a7326666666b, model 40e4998c00000005)
+PASS
