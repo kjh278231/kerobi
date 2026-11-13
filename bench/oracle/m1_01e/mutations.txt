@@ -1,0 +1,7 @@
+reset-each-refactor rejected | FAIL 25fv47: factor 5 (k 405) enter: original [6, 1, 1] Rust [6, 0, 0]
+no-x2c0-increment rejected | FAIL 25fv47: factor 0 (k 0) enter: original [1, 0, 0] Rust [0, 0, 0]
+start-x2c0-1 rejected | FAIL 25fv47: factor 0 (k 0) enter: original [1, 0, 0] Rust [2, 0, 0]
+block-off rejected | FAIL 25fv47: factor 4 (k 305) leave: original [1, 1] Rust [0, 0]
+decide-x2c0-21 rejected | replay 25fv47: k 1259 enter [21, 16, 8]: original (x4e0,x4e4,d8,e4,t) [17, -1, 262, 515] Rust [17, 8, 262, 515]
+decide-le rejected | replay 25fv47: k 1259 enter [21, 16, 8]: original (x4e0,x4e4,d8,e4,t) [17, -1, 262, 515] Rust [17, 2000000000, 262, 515]
+MUTATE_DONE

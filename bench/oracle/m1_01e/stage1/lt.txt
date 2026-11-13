@@ -1,0 +1,1 @@
+FAIL bnl1: e_r call 130: pinned order difference not seen (same order, or other rows)

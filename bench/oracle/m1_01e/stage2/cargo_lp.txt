@@ -1,0 +1,191 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (target/debug/deps/rsolver_lp-ac32e0bbb9242716)
+
+running 41 tests
+test barrier::chol::tests::vsum_orders ... ok
+test barrier::f80::tests::extended_rounding ... ok
+test barrier::normal::tests::small ... ok
+test barrier::ldl::tests::spd_and_semidefinite ... ok
+test barrier::ordering::tests::shell_sort_keeps_equal_keys_in_place_for_gap_one ... ok
+test barrier::setup::tests::common_column_preserves_cancellation_in_residual_product ... ok
+test bfrt::tests::sparse_column_wins_harris_tie ... ok
+test bfrt::tests::passes_cheap_breakpoints_then_enters ... ok
+test common::rng_tests::rng_matches_original ... ok
+test barrier::ordering::tests::afiro_matches_gurobi ... ok
+test fp::tests::ilogb_and_pow2 ... ok
+test lu::tests::block_phase_gate_and_state ... ok
+test lu::tests::block_phase_a_reproduces_the_basis_inverse ... ok
+test lu::tests::block_phase_b_reproduces_the_basis_inverse ... ok
+test lu::tests::dot8_peel_order ... ok
+test lu::tests::gather_lane_order ... ok
+test pdhg::kern::tests::red8_order ... ok
+test presolve::deprow::tests::buckets_keep_the_original_order ... ok
+test presolve::parallel::tests::facing_rows_become_a_range ... ok
+test presolve::symmetry::tests::real_gcd_cases ... ok
+test simplex::tests::integer_basics_get_preference_in_both_pricing_modes_and_updates ... ok
+test lu::tests::sum_squares_lane_order ... ok
+test simplex::tests::reduced_costs_follow_row_order_with_upper_and_fixed_nonbasics ... ok
+test simplex::tests::integer_cost_perturbation_preserves_continuous_columns_and_rng_order ... ok
+test simplex::tests::bfrt_accounts_for_integer_column_weight ... ok
+test presolve::postsolve::tests::simd_sum_order ... ok
+test lu::tests::markowitz_and_forrest_tomlin_reproduce_the_basis_inverse ... ok
+test presolve::symmetry::tests::rand31_first_values ... ok
+test start::tests::sort_orders_keys_and_keeps_the_original_tie_order ... ok
+test common::tests::sorts_descending_with_index ... ok
+test pricing::tests::rebuild_keeps_untouched_order_and_merges ... ok
+test presolve::sort::tests::sorts_and_carries_index ... ok
+test barrier::tests::afiro ... ok
+test lu::tests::mixed_singleton_and_markowitz_basis_of_sc50a ... ok
+test simplex::tests::warm_start_from_the_optimal_basis_takes_no_pivots ... ok
+test simplex::tests::warm_start_from_an_intermediate_basis_reaches_the_optimum ... ok
+test barrier::ordering::tests::wide_supernodes_split_at_192 ... ok
+test barrier::ordering::tests::factor_counts_match_gurobi ... ok
+test barrier::tests::work_estimate_matches_oracle ... ok
+test barrier::ordering::tests::bench_lps_match_gurobi ... ok
+test barrier::chol::tests::agrees_with_scalar_ldl ... ok
+
+test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.29s
+
+     Running tests/bfrt_corpus.rs (target/debug/deps/bfrt_corpus-3f11637dcce5c1cb)
+
+running 1 test
+test bfrt_corpus_replay ... ignored, driven by tools/m1_bfrt_rust.py, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/m1_block_replay.rs (target/debug/deps/m1_block_replay-2953298984fe9c4c)
+
+running 1 test
+test m1_block_replay ... ignored, driven by tools/m1_block_check.py --replay, which generates the input
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_btran.rs (target/debug/deps/push_btran-c63e3f600a0f6d2c)
+
+running 1 test
+test btran_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/push_chain.rs (target/debug/deps/push_chain-5830d4edfb45a3bd)
+
+running 1 test
+test chain_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/push_decision.rs (target/debug/deps/push_decision-f465a26fb8e2cc16)
+
+running 1 test
+test decision_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/push_dense.rs (target/debug/deps/push_dense-bcb1fe734f1e4063)
+
+running 1 test
+test dense_unit_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running tests/push_factor.rs (target/debug/deps/push_factor-33926617c0f3f768)
+
+running 1 test
+test factor_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_ftran.rs (target/debug/deps/push_ftran-84e9dcb8735c7a78)
+
+running 2 tests
+test ftran_trace ... ok
+test m1_kernel_trace ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+     Running tests/push_init_ext.rs (target/debug/deps/push_init_ext-f41d3250045595ab)
+
+running 3 tests
+test init_ext_trace ... ok
+test init_cond_trace ... ok
+test init_install_trace ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.66s
+
+     Running tests/push_init_loop.rs (target/debug/deps/push_init_loop-ef6f96c67965b772)
+
+running 1 test
+test init_loop_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running tests/push_install.rs (target/debug/deps/push_install-e4089344b690e1e2)
+
+running 1 test
+test install_unit_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+     Running tests/push_loop.rs (target/debug/deps/push_loop-2f92f31bc95371f2)
+
+running 1 test
+test loop_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests/push_loop_lu.rs (target/debug/deps/push_loop_lu-7b42464c0540450a)
+
+running 1 test
+test loop_lu_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running tests/push_lu.rs (target/debug/deps/push_lu-418e3cbb5ec50658)
+
+running 5 tests
+test lu_chain_trace ... ok
+test block_chain_trace ... ok
+test mode70_chain_trace ... ok
+test refactor_chain_trace ... ok
+test dense_chain_trace ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.64s
+
+     Running tests/push_ratio.rs (target/debug/deps/push_ratio-97f439fffcfcc6b3)
+
+running 5 tests
+test infeasible_ratio_trace ... ok
+test ratio_trace ... ok
+test reentry_trace ... ok
+test retry_ratio_trace ... ok
+test violated_reentry_trace ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_recompute.rs (target/debug/deps/push_recompute-b9dfe2aea644493a)
+
+running 1 test
+test recompute_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_round.rs (target/debug/deps/push_round-6345c627434b57d2)
+
+running 1 test
+test round_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/push_supplier.rs (target/debug/deps/push_supplier-b89b0d9dae244d86)
+
+running 1 test
+test supplier_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests rsolver_lp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

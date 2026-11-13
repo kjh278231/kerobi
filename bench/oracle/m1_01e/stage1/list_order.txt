@@ -1,0 +1,50 @@
+pivot  0 r 12 U 21686f  UNSORTED 
+pivot  1 r 14 U 21686f  UNSORTED 
+pivot  2 r 10 U 21686f  UNSORTED 
+pivot  3 r 11 U 21686f  UNSORTED 
+pivot  4 r 28 U 21686f  sorted   
+pivot  5 r 13 U 2126cd  sorted   
+pivot  6 r 21 U -       sorted   mode1 appended [17, 18, 19] x1.1
+pivot  7 r 16 U -       sorted   mode1 appended [] x1.1
+pivot  8 r 30 U -       sorted   mode1 appended [23, 24, 25]
+pivot  9 r 24 U -       sorted   mode1 appended [] x1.1
+pivot 10 r 18 U -       sorted   mode1 appended []
+pivot 11 r  6 U -       sorted   mode1 appended [9, 10, 15, 17, 18, 19, 20, 22]
+pivot 12 r 15 U -       sorted   mode1 appended [11]
+pivot 13 r 18 U -       sorted   mode1 appended [3, 6, 32, 35]
+pivot 14 r  6 U -       sorted   mode1 refactor after (not replayed)
+pivot 15 r  5 U -       sorted   mode1 appended []
+pivot 16 r 31 U -       sorted   mode1 appended [9, 12, 20, 23, 24, 25]
+pivot 17 r 20 U -       sorted   mode1 appended [5, 17, 18, 19, 26, 29]
+pivot 18 r 12 U -       sorted   mode1 appended [13]
+pivot 19 r 18 U -       sorted   mode1 appended [14, 26, 28]
+pivot 20 r 28 U -       sorted   mode1 appended [9, 23, 24, 25, 31]
+pivot 21 r 24 U 21841f  UNSORTED mode1 appended [20, 5, 17, 13, 19]
+pivot 22 r 13 U -       sorted   mode1 appended [9, 31]
+pivot 23 r 31 U -       sorted   mode1 appended [36, 37, 38, 42]
+pivot 24 r 14 U 21841f  UNSORTED mode1 appended [28, 30]
+pivot 25 r 37 U -       sorted   mode1 refactor after (not replayed)
+pivot 26 r 41 U -       sorted   mode1 appended [5, 15, 17, 32, 33]
+pivot 27 r 17 U -       sorted   mode1 appended [25, 26, 29, 30, 37, 38]
+pivot 28 r 36 U -       sorted   mode1 appended [9, 17, 39]
+pivot 29 r 20 U -       sorted   mode1 appended [16, 18, 19]
+pivot 30 r 16 U -       sorted   
+pivot 31 r 17 U -       sorted   
+pivot 32 r 10 U -       sorted   
+pivot 33 r 32 U -       sorted   
+pivot 34 r  4 U -       sorted   
+pivot 35 r 24 U -       sorted   
+pivot 36 r 14 U -       sorted   
+pivot 37 r 12 U -       sorted   
+L: 22 mode-1 pivots (6-29) replayed, list and marks equal; scan 0, x1.1 3, flip pivots 0; refactor pivots [14, 25] not replayed; discriminating pivots [21]
+P2: 21b9de iff LU+0x104*nnz(a_q) <= m on 38 pivots; P3: sparse-U output order rule on 7 pivots, discriminating [1, 3, 4, 21, 24]
+V tail-asc: rejected at pivots [21, 24]
+V prefix-upos: rejected at pivots [1, 3, 4, 21, 24]
+V index: rejected at pivots [1, 3, 4, 21, 24]
+V neg-last: rejected at pivots [1, 2, 3]
+V position order: rejected at L pivot 21: list differs at 8: snapshot 22 [20, 5, 17, 13, 19] replay [5, 13, 17, 19, 20] (appended [5, 13, 17, 19, 20], alpha_q [28, 18, 12, 20, 5, 3
+T aq order: rejected: L pivot 21: list differs at 8: snapshot 22 [20, 5, 17, 13, 19] replay [5, 20, 17, 13, 19] (appended [5, 20, 17, 13, 19], alpha_q [28, 18, 12, 5, 20, 3
+T list order: rejected: L pivot 21: list differs at 8: snapshot 22 [5, 20, 17, 13, 19] replay [20, 5, 17, 13, 19] (appended [20, 5, 17, 13, 19], alpha_q [28, 18, 12, 20, 5, 3
+T mark: rejected: L pivot 20: mark of position 5: snapshot 1 replay 3
+T 02a-1 run: rejected: M: 02a-1 pivot 21 alpha_q list differs between runs
+PASS (+ self-test)

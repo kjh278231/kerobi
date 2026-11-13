@@ -31,7 +31,7 @@ RANGE = {'degen2': 356, 'fit1p': 117}
 # refactor numbering of M1-02z. Pinned exactly: a pinned call that agrees or any other difference fails. Form and
 # LU+0x140 are compared on every call.
 KNOWN_VAL = {}
-KNOWN_IDX = {'bnl1': [130, 134, 144, 153, 159, 162, 173]}
+KNOWN_IDX = {}  # M1-01e: the bnl1 order differences (130 ... 173) were the 2x2 block phase (M1-02z)
 WRAP, M, NNZ, X180, R, OUT, X140, HIT, IDX, VAL = 0, 1, 2, 5, 8, 10, 11, 12, 13, 14
 
 
@@ -191,10 +191,6 @@ def tampers(data, routs):
 
     stair = lambda r, k: r['stair'][k]
 
-    def pinned_agrees(d, r):  # the original's bnl1 e_r 130 output set to Rust's in every run
-        for c in d['bnl1']['caps']:
-            e = [x for x in c['events'] if tuple(x[WRAP][:2]) == ER][130]
-            e[IDX], e[VAL] = list(r['bnl1'][130]['idx']), list(r['bnl1'][130]['val'])
     out = {
         'binary sha': t(lambda d, r: d['degen2']['caps'][1].update(binary_sha256='0' * 64)),
         'empty events': t(lambda d, r: [c.update(events=[]) for c in d['fit1p']['caps']]),
@@ -212,8 +208,7 @@ def tampers(data, routs):
             'Rust value bits': t(lambda d, r: stair(r, 118)['val'].__setitem__(5, 'deadbeef00000000')),
             'Rust idx order': t(lambda d, r: next(x for x in r['degen2'] if not x['od'] and len(x['idx']) > 1)['idx'].reverse()),
             'Rust etas': t(lambda d, r: r['fit1p'][3].update(e=99)),
-            'pinned call agrees': t(pinned_agrees),
-            'pinned order call: other rows': t(lambda d, r: r['bnl1'][130]['idx'].__setitem__(0, 9999)),
+            'bnl1 e_r 130 other rows': t(lambda d, r: r['bnl1'][130]['idx'].__setitem__(0, 9999)),
             'no target in range': t(lambda d, r: [[e.__setitem__(HIT, None) for e in
                                                    [x for x in c['events'] if tuple(x[WRAP][:2]) == ER][:KNOWN_D['stair']]
                                                    if e[HIT] is not None and is_tgt(e)] for c in d['stair']['caps']]),

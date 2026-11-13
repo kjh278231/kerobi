@@ -786,6 +786,11 @@ impl Lu {
         Lu::factor_tol(spx, head, MARKOWITZ_TOL)
     }
 
+    /// LU+0xd8, 0xdc, 0xe0, 0xe4 and 0x100 (t) as the factor leaves them (M1-01e probe).
+    pub fn block_fields(&self) -> [usize; 5] {
+        [self.s1, self.dc, self.s3, self.s4, self.prefix]
+    }
+
     /// Factor with Markowitz threshold `tol` (MarkowitzTol, raised by the numerics ladder).
     pub fn factor_tol(spx: &Spx, head: &[usize], tol: f64) -> Lu {
         let mut st = BlockState::OFF;
@@ -2408,8 +2413,9 @@ impl Lu {
         }
         self.order = (0..m).collect();
         self.upos = (0..m).collect();
-        // 5b257 L2595–2733 after a factor: t = leading empty U columns, LU+0xe8 = highest empty column above t
-        self.prefix = self.ucol.iter().take_while(|c| c.is_empty()).count();
+        // t = LU+0x100 as `1da0b2` leaves it: the end of column-singleton phase 3 (C:1514–1532); 05b257 L2595–2733
+        // only reads it. LU+0xe8 = highest empty column above t
+        self.prefix = self.s3;
         self.e8 = m.saturating_sub(1);
         while self.e8 > self.prefix && !self.ucol[self.e8].is_empty() {
             self.e8 -= 1;
