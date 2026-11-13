@@ -19,6 +19,8 @@ PY = os.path.join(ROOT, '../.venv/bin/python')
 NETLIB = os.path.join(ROOT, '../re/bench/data/netlib')
 args = sys.argv[1:]
 D = os.path.join(ROOT, args[args.index('--dir') + 1]) if '--dir' in args else os.path.join(ROOT, 'bench/oracle/m1_01e/formal')
+# Rust factors compared before the first head difference (M1-01e result): fewer means the probe or build broke
+NEED = {'25fv47': 6, 'bnl1': 6, 'degen2': 9, 'grow15': 5, 'grow22': 8, 'kb2': 5, 'maros': 11, 'perold': 7, 'scfxm2': 7, 'stair': 7}
 sha = lambda p: hashlib.sha256(open(p, 'rb').read()).hexdigest()
 
 
@@ -171,7 +173,9 @@ def main():
             orig = rr[1]['events']
             e = check_capture(rr[1], n)
             if e: fail.append(e); continue
-            bad, upto, note = compare(n, orig, rust_probe(n), '--lu' in args)
+            rust = rust_probe(n)
+            bad, upto, note = compare(n, orig, rust, '--lu' in args)
+            if not bad and upto < NEED.get(n, 1): bad = f'{n}: only {upto} factors compared (need {NEED.get(n, 1)}, Rust lines {len(rust)})'
             if bad: fail.append(bad); print('FAIL', bad); continue
             print(note, coverage(orig, upto))
     print('FAIL' if fail else 'PASS', *fail[:20], sep='\n' if fail else ' ')
