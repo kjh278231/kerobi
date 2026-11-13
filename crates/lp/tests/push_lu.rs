@@ -328,7 +328,7 @@ fn inject(t: &mut SplitWhitespace<'_>, m: usize, prev: Option<&LuState>) -> LuSt
     s
 }
 
-fn run_case(lines: &[&str], out: &mut Vec<String>) {
+fn run_case(lines: &[&str], out: &mut Vec<String>, pool_out: bool) {
     let mut st: Option<LuState> = None;
     let mut matrix: Option<Matrix> = None;
     let mut failed: Option<String> = None;
@@ -418,6 +418,25 @@ fn run_case(lines: &[&str], out: &mut Vec<String>) {
                         bj
                     ) + "";
                     let json = if dj.is_empty() { json } else { format!("{}{}}}", &json[..json.len() - 1], dj) };
+                    // M3-04c-21j: every 036ade call's pool positions, the pool sizes and the local_70 mode's pivots
+                    let json = if !pool_out {
+                        json
+                    } else {
+                        let ev = |e: &rsolver_lp::lu::PoolEvent| {
+                            format!(
+                                "{{\"kind\":\"{}\",\"nodes\":{},\"n\":{},\"b8\":{},\"c0\":{},\"f8\":{},\"x138\":{},\"p2\":{},\"p3\":{},\"p4\":{}}}",
+                                e.kind, e.nodes, e.n, e.b8, e.c0, e.f8, e.x138, e.p2, e.p3, e.p4
+                            )
+                        };
+                        let calls: Vec<String> = rf.pool.iter().map(|c| format!("[{}]", c.iter().map(ev).collect::<Vec<_>>().join(","))).collect();
+                        let sizes: Vec<String> = rf.sizes.iter().map(|x| x.to_string()).collect();
+                        let m70 = rf.mode70.as_ref().map_or("null".to_string(), |t| {
+                            let pv: Vec<String> = t.pivots.iter().map(|x| x.to_string()).collect();
+                            let sv: Vec<String> = t.stats.iter().map(|x| x.to_string()).collect();
+                            format!("{{\"step\":{},\"n\":{},\"pivots\":[{}],\"stats\":[{}]}}", t.step, t.n, pv.join(","), sv.join(","))
+                        });
+                        format!("{},\"pool\":[{}],\"sizes\":[{}],\"mode70\":{}}}", &json[..json.len() - 1], calls.join(","), sizes.join(","), m70)
+                    };
                     st = Some(s);
                     Ok(json)
                 }
@@ -562,6 +581,12 @@ fn dense_chain_trace() {
     replay("m3_push_dense_rust");
 }
 
+/// M3-04c-21j: the same refactors from the 21j capture with the pool positions, pool shortage calls and local_70 mode.
+#[test]
+fn mode70_chain_trace() {
+    replay("m3_push_mode70_rust");
+}
+
 fn replay(dir: &str) {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
     let Ok(source) = std::fs::read_to_string(format!("{root}/bench/oracle/{dir}/input.txt")) else {
@@ -577,7 +602,7 @@ fn replay(dir: &str) {
         while j < body.len() && body[j].split_whitespace().nth(1).unwrap() == case {
             j += 1;
         }
-        run_case(&body[i..j], &mut output);
+        run_case(&body[i..j], &mut output, dir == "m3_push_mode70_rust");
         i = j;
     }
     let dir = format!("{root}/target/{dir}");

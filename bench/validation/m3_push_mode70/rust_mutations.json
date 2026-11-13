@@ -1,0 +1,170 @@
+[
+  {
+    "name": "모드 끔(필수)",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "6: grow22#489 G.perm.x20[229]: 원본 202 != Rust 102"
+  },
+  {
+    "name": "풀 부족 끔(필수)",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "4: grow22#749 G.block.leave.x4e0: 원본 14 != Rust 13"
+  },
+  {
+    "name": "판정 201→200",
+    "file": "lu.rs",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "판정 0.1→0.2",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "4: grow22#749 G.perm.x20[193]: 원본 0 != Rust 400"
+  },
+  {
+    "name": "판정 0.25→0.3",
+    "file": "lu.rs",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "새 크기 1.4→1.5",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "4: grow22#749 G.factor.scalars.x158: 원본 291984 != Rust 312840"
+  },
+  {
+    "name": "iVar67 식",
+    "file": "lu.rs",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "표지값 대신 0",
+    "file": "lu.rs",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "1e-100 → 0",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "6: grow22#489 G.perm.x20[367]: 원본 75 != Rust 78"
+  },
+  {
+    "name": "모드 열 전체 탐색 동률 무시(실행 0회)",
+    "file": "lu.rs",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "모드 열 목록 동률 무시",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "6: grow22#489 G.perm.x20[426]: 원본 258 != Rust 255"
+  },
+  {
+    "name": "모드 행 목록 동률 무시",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "6: grow22#489 G.perm.x20[257]: 원본 429 != Rust 433"
+  },
+  {
+    "name": "모드 피벗 뒤 열 max 유지",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "4: grow22#489 G.perm.x20[409]: 원본 216 != Rust 152"
+  },
+  {
+    "name": "모드 재계수 생략",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "3: grow22#489 G: Rust 오류 036ade local_70 mode dense switch (C:3405): not ported"
+  },
+  {
+    "name": "모드 추정 −2 제거",
+    "file": "lu.rs",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "모드 탐색 한도 4→5",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "5: grow22#489 G.perm.x20[232]: 원본 140 != Rust 220"
+  },
+  {
+    "name": "모드 bucket 0 제외",
+    "file": "lu.rs",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "모드 head 회전 생략",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "4: grow22#749 G.perm.x20[319]: 원본 258 != Rust 74"
+  },
+  {
+    "name": "모드 행 우선 탐색 순서(열 prv→nxt)",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "4: grow22#489 G.perm.x20[396]: 원본 151 != Rust 141"
+  },
+  {
+    "name": "모드 새 비영 목록 추가 생략",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "3: grow22#489 G: Rust 오류 index out of bounds: the len is 212 but the index is 18446744073709551615"
+  },
+  {
+    "name": "모드 행 순서 역순",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "6: grow22#489 G.perm.x20[248]: 원본 81 != Rust 375"
+  },
+  {
+    "name": "모드 L 값 역수 곱",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "3: grow22#489 G.factor.L.vals[592]: 원본 'c2e8399e5ad2c6bf' != Rust 'c1e8399e5ad2c6bf'"
+  },
+  {
+    "name": "chunk 4m → 4m+4",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "19: grow7#98 (lu 65) G.pool: 호출 0 pool:end: x138 원본 20834 != Rust 20850, p3 원본 20834 != Rust 20850"
+  },
+  {
+    "name": "정수 쪽 chunk 무시",
+    "file": "lu.rs",
+    "result": "survived",
+    "first": null
+  },
+  {
+    "name": "start L 계수 −1",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "33: grow22#749 G.factor.scalars.x158: 원본 291984 != Rust 291982"
+  },
+  {
+    "name": "U 계수 생략(모드)",
+    "file": "lu.rs",
+    "result": "rejected",
+    "first": "3: grow22#489 (lu 392) G.pool: 호출 0 pool:end: c0 원본 3491 != Rust 2202"
+  },
+  {
+    "name": "재호출 크기 ×1.5 고정",
+    "file": "crossover_refactor.rs",
+    "result": "rejected",
+    "first": "4: grow22#749 G.factor.scalars.x158: 원본 291984 != Rust 290766"
+  },
+  {
+    "name": "재호출 블록 상태 되돌림",
+    "file": "crossover_refactor.rs",
+    "result": "rejected",
+    "first": "2: grow22#749 G.block.leave.x4e0: 원본 14 != Rust 13"
+  }
+]

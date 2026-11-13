@@ -1,0 +1,32 @@
+{
+  "pid": 369643,
+  "run_id": "f69c0408-6110-47fa-afed-06936a85a07f",
+  "schema": "M3-04c-21j-survey-v1",
+  "origin": "natural",
+  "kind": "primal",
+  "agent_sha256": "d985afdf25611e4dd7ca8f7329d1efe7e073e70f8be0570bc9d93528f6ab3006",
+  "model_sha256": "6f203234486f7ee0970d70ec553b3d474db39e39378a388f1c9090e2d5fd26f4",
+  "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "tool_sha256": "b82d54b416b1ccf22a41865c16e4e252e7514ea1ab14c84d956de2d8c58f8cda",
+  "params": {
+    "Threads": 1,
+    "Seed": 0,
+    "OutputFlag": 0,
+    "Presolve": 0,
+    "Method": 2,
+    "Crossover": 3,
+    "LPWarmStart": 2
+  },
+  "starts": null,
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.6.87.2-microsoft-standard-WSL2",
+    "node": "v22.22.1"
+  },
+  "output": "Traceback (most recent call last):\n  File \"<string>\", line 12, in <module>\n    m.optimize()\n    ~~~~~~~~~~^^\n  File \"src/gurobipy/_model.pyx\", line 926, in gurobipy._model.Model.optimize\ngurobipy._exception.GurobiError: Model too large for size-limited license; visit https://gurobi.com/unrestricted for more information\n",
+  "result": null,
+  "reason": "process-terminated",
+  "errors": [],
+  "events": []
+}

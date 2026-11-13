@@ -49,6 +49,11 @@ pub struct Refactor {
     pub n: Vec<i32>,
     /// The kernel's dense switch when the factor took it (M3-04c-21i).
     pub dense: Option<crate::lu::DenseTrace>,
+    /// M3-04c-21j: the pool positions of every `036ade` call (a pool shortage calls it again), the last call's
+    /// `local_70` mode, and the calls' pool sizes (F+0x158 at each call).
+    pub pool: Vec<Vec<crate::lu::PoolEvent>>,
+    pub mode70: Option<crate::lu::Mode70Trace>,
+    pub sizes: Vec<i64>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -102,9 +107,28 @@ pub fn refactor(
         scaling: Scaling { col: vec![1.0; n], row: vec![1.0; m], obj: 1.0 },
     };
     let head: Vec<usize> = header.iter().map(|&j| j as usize).collect();
-    // M3-04c-21i: the kernel's dense switch on, its array alignment from the pool size F+0x158
-    let mut lu = Lu::factor_dense(&spx, &head, tol, block, alloc.x158);
+    // M3-04c-21i: the kernel's dense switch on, its array alignment from the pool size F+0x158.
+    // M3-04c-21j: a pool shortage returns −1 and `05b257` C:1479–1513 frees the pool, takes F+0x158 as `036ade` left
+    // it (×1.5 when it is still F+0x168 + 1), allocates again and calls `036ade` from the start (the block phase
+    // runs again on S). The new pool keeps the old alignment (the capture's reallocations stayed 16-aligned).
+    let mut alloc = alloc;
+    let (mut pool, mut sizes) = (Vec::new(), Vec::new());
+    let mut lu = loop {
+        sizes.push(alloc.x158);
+        let mut lu = Lu::factor_dense(&spx, &head, tol, block, alloc.x158);
+        pool.push(std::mem::take(&mut lu.pool_trace));
+        match lu.short {
+            None => break lu,
+            Some(crate::lu::Short::Grow(c)) => alloc.x158 = c,
+            Some(crate::lu::Short::Keep) => {
+                let g = alloc.x158 as f64 * 1.5;
+                alloc.x158 = if g < 9.223372036854776e18 { g as i64 } else { i64::MAX };
+            }
+        }
+        assert!(sizes.len() < 64, "036ade pool shortage does not end");
+    };
     let dense = lu.dense.take();
+    let mode70 = lu.mode70.take();
     if !lu.complete() {
         return Err(RefactorError::Singular);
     }
@@ -282,5 +306,5 @@ pub fn refactor(
         mark: prev.map_or_else(|| vec![0; m], |s| s.mark.clone()),
         vals: prev.map_or_else(|| vec![0.0; m], |s| s.vals.clone()),
     };
-    Ok(Refactor { state, o, n: nn, dense })
+    Ok(Refactor { state, o, n: nn, dense, pool, mode70, sizes })
 }
