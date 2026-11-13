@@ -2,10 +2,11 @@
 // 함수 중간 지점은 함수형 probe(교훈 tooling: 객체형 중간 훅 금지). 주소는 ELF file offset = 모듈 base 기준.
 //   0x1bf2ee  retry 검사(push 시도 루프·뒤처리 끝)      → sel:enter
 //   0x1bf6c2  Crossover 읽기(retry 잔존 재설정 뒤 합류)  → sel:reset
-//   0x1bfae2  auto 쌍대 검사 251b4f 반환 직후            → sel:dual
+//   0x1bfae6  auto 쌍대 검사 251b4f 반환·add rsp 직후     → sel:dual
 //   0x1bf6f2  선택 결과 r14d                             → sel:decide
 //   0x153cc0  0cda5b 진입(반환 주소가 13f716 안일 때만)  → cda5b:enter / cda5b:leave
 //   0xd3150   0325b4 진입·반환(위 cda5b 안)              → i325b4:enter / i325b4:leave
+// CONFIG.edits: [{field:'retry'|'remaining', int} | {field:'s2d8'|'s120', hex}] 0x1bf2ee에서 기록 전에 적용(합성 실험).
 // 스택 slot: rsp+0x50 retry, +0x54 remaining, +0x230 S, +0x2d0 local_98, +0x2d8 OptimalityTol, +0x250 n+m.
 const CONFIG = __CONFIG__;
 Process.attachModuleObserver({onAdded(mod) {
@@ -28,7 +29,8 @@ Process.attachModuleObserver({onAdded(mod) {
   Interceptor.attach(BODY0, {
     onEnter(a) { if (xo) throw Error('13f716 중첩'); xo = {model: a[0], mode: a[1].toInt32()};
       const env = a[0].add(0x100).readPointer();
-      emit('xo:enter', {mode: xo.mode, crossover: env.add(0x2ba0).readS32(), opttol: hex(env.add(0x2470), 8), feastol: hex(env.add(0x2460), 8)}); },
+      emit('xo:enter', {mode: xo.mode, crossover: env.add(0x2ba0).readS32(), opttol: hex(env.add(0x2470), 8), feastol: hex(env.add(0x2460), 8),
+        fixtol: hex(env.add(0x24d0), 8), perturb: hex(env.add(0x24a0), 8)}); },
     onLeave(r) { emit('xo:leave', {ret: r.toInt32(), model_status: xo.model.add(100).readS32()}); xo = null; }
   });
   // push 반환: primal 134a87 (rdi S, esi status, edx attempt, rcx x, r8 slack, r9 first, [6]&cond, [7]&retry, [8]&remaining)
@@ -45,20 +47,28 @@ Process.attachModuleObserver({onAdded(mod) {
   Interceptor.attach(b.add(0x1bf2ee), function () {
     const {sp, S} = frame(this.context), {m, n} = dims(S), nm = sp.add(0x250).readS32();
     if (nm !== n + m) throw Error('n+m slot 불일치');
-    const env = xo.model.add(0x100).readPointer();
+    const env = xo.model.add(0x100).readPointer(), Dm = xo.model.add(0xe8).readPointer();
+    for (const e of (CONFIG.edits || [])) {
+      const p = e.field === 'retry' ? sp.add(0x50) : e.field === 'remaining' ? sp.add(0x54) : e.field === 's2d8' ? S.add(0x2d8) : e.field === 's120' ? S.add(0x120) : null;
+      if (!p) throw Error('알 수 없는 편집 ' + e.field);
+      const before = e.int !== undefined ? p.readS32() : hex(p, 8);
+      if (e.int !== undefined) p.writeS32(e.int); else p.writeByteArray(e.hex.match(/../g).map(t => parseInt(t, 16)));
+      emit('edit', {field: e.field, before, after: e.int !== undefined ? p.readS32() : hex(p, 8)});
+    }
     emit('sel:enter', {m, n, retry: sp.add(0x50).readS32(), remaining: sp.add(0x54).readS32(), local_98: sp.add(0x2d0).readS32(),
       opttol_slot: hex(sp.add(0x2d8), 8), crossover: env.add(0x2ba0).readS32(), env_2340: env.add(0x2340).readS32(),
       s2d8: hex(S.add(0x2d8), 8), s120: hex(S.add(0x120), 8), precision: S.add(0x28).readS32(), status: S.add(0xf0).readS32(),
       s184: S.add(0x184).readS32(), s178: S.add(0x178).readS32(), s180: S.add(0x180).readS32(),
       tol: Object.fromEntries([0x370, 0x380].map(o => [o.toString(16), hex(S.add(o), 8)])),
-      lb: vec(S, 0xa8, n), ub: vec(S, 0xb0, n), x: arr(this.context.rbx, n, 8), vstat: vec(S, 0x168, n + m, 4)});
+      lb: vec(S, 0xa8, n), ub: vec(S, 0xb0, n), x: arr(this.context.rbx, n, 8), vstat: vec(S, 0x168, n + m, 4),
+      d_lb: vec(Dm, 0x390, n), d_ub: vec(Dm, 0x398, n)});
   });
   Interceptor.attach(b.add(0x1bf6c2), function () {
     const {sp, S} = frame(this.context), {m, n} = dims(S), env = xo.model.add(0x100).readPointer();
     emit('sel:reset', {retry: sp.add(0x50).readS32(), remaining: sp.add(0x54).readS32(), s184: S.add(0x184).readS32(),
       env_24a0: hex(env.add(0x24a0), 8), vstat: vec(S, 0x168, n + m, 4)});
   });
-  Interceptor.attach(b.add(0x1bfae2), function () {
+  Interceptor.attach(b.add(0x1bfae6), function () {
     const {sp, S} = frame(this.context), {m, n} = dims(S);
     emit('sel:dual', {d: vec(S, 0x1e0, n + m), vstat: vec(S, 0x168, n + m, 4)});
   });

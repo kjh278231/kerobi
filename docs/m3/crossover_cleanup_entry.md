@@ -10,7 +10,7 @@
   2. 두 번째 시도 뒤에도 retry가 남는 경우(C 1363–1521) 상태 배열·remaining을 어떻게 재설정하는가.
   3. `0cda5b`가 basis 인자를 받았을 때 `0325b4`가 workspace 상태 배열(S+0x168)·x·slack·superbasic 목록(S+0x440·0x448·0x450)에 하는 일, 그리고 그 진입 조건(S+0xf0 = 1, D+0x324 < 1).
   4. 위 경계를 원본 실행에서 재현 가능하게 캡처하고 C 규칙 재계산으로 검사하는 오라클 방법.
-- 포함: double(S+0x28 = 0), Threads = 1, mode 0(barrier 뒤 crossover), Presolve = 0, Method = 2, Crossover ∈ {−1, 1, 2, 3, 4}의 Netlib 소형 45 자연 실행.
+- 포함: double(S+0x28 = 0), Threads = 1, mode 0(barrier 뒤 crossover), Presolve = 0, Method = 2, Crossover ∈ {−1, 1, 2, 3, 4}의 Netlib 소형 45 자연 실행. **범위 추가(탐색 뒤, 판정 전)**: Netlib 45가 모두 remaining = 0이라 04f-1에서 remaining > 0이 자연으로 나온 1b 사례(arms·retry, PStart/DStart가 있어 `0c3d0d` → `13f716` **mode 1**)와 interior를 Crossover 5값으로 더한다. push 뒤 선택 코드(C 1363–1690)는 mode를 읽지 않는다(mode는 S+0x2d8 초기값 C 366–384와 로그 필드 C 1338만 바꿈). mode 1 진입 구조 자체는 계속 제외한다. 자연에서 안 나오는 분기는 `0x1bf2ee` slot 편집 합성(`synthetic.json`)으로 따로 캡처한다.
 - 제외와 후속: cleanup simplex 본체(`0cda5b` 반복)와 최종 basis·해의 일치(04f-3 이후 구현 단위), x87(S+0x28 ≠ 0), mode 1(warm start `0c3d0d` 경로), Crossover = 5·threads ≥ 2(`9b54f1`), 재시작(`Restart crossover`, 04g), 할당 실패, 시간·work, Rust 구현.
 - 선행 commit: main `02b60e3`. 미커밋 선행 변경 없음(main의 미추적 `.claude/settings.local.json`은 무관).
 
@@ -29,7 +29,7 @@
 |---|---|---|---|
 | `sel:enter` | retry, remaining, Crossover, S+0x2d8, S+0x120, S+0x28, local_98, OptTol, vstat(n+m), S+0x184 | 정확·비트 | `0x1bf2ee` 훅 |
 | `sel:reset` | retry 잔존 재설정 뒤 vstat·remaining·S+0x184·env+0x24a0 | C 1363–1521 재계산과 정확 | `0x1bf6c2` 훅 |
-| `sel:dual` | auto 쌍대 검사(`251b4f` 뒤 d(n+m), vstat) | C 1530–1651 재계산과 비트 | `0x1bfae2` 훅 |
+| `sel:dual` | auto 쌍대 검사(`251b4f` 뒤 d(n+m), vstat) | C 1530–1651 재계산과 비트 | `0x1bfae6` 훅 |
 | `sel:decide` | 선택 bool(r14d), S+0x180·S+0x178 | §4 규칙 재계산과 정확 | `0x1bf6f2` 훅 |
 | `cda5b:enter` | alg, vbasis/cbasis/x/slack 포인터의 별칭(S+0x168·+4n·x·x+8n 여부) | 정확 | `0x153cc0`(호출자 13f716) |
 | `i325b4:enter/leave` | vstat·x·slack 전후, S+0x450·0x440·0x448, lb·ub·τ·FIXTOL·OptTol·열 길이·c, S+0x4d8, sense flag | C 규칙 재계산과 정확·비트 | `0xd3150` 진입·반환 |
