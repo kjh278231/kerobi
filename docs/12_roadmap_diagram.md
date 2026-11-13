@@ -202,7 +202,7 @@ M2-03c-2 재풀이 basis 오라클을 완료했다. 입력 basis는 노드에 �
 
 M2-03c-1은 **부분 완료**다(main 병합). 사용자 결정으로 계약을 바꿨다. Gurobi 원본에서 자연 상태 12 재풀이 2건(비루트·루트)의 입출력·파라미터 복구·basis 입력/header, 합성 5→12 재분류, 상태 3 호출자 `682037`을 각 3회 검증했다. 병합 전 원본 33회 재실행에서 비교 30건이 모두 일치했다. 재풀이 후 VBasis·입력 basis 출처·factor/norm은 M2-03c-2로 분리했다. 상태 10·자연 5→12(정상 산술에서 불가능, 미관측)는 미검증이다. Rust는 변경하지 않았고 동등성은 미검증이다. 상세는 [M2-03c-1](m2/mip_linear_child_trace.md) §10–13.
 
-상태: ✅ 완료 · 🔄 진행 · 🔎 에이전트 검증 완료·병합 대기 · ⏳ 예정 (2026-11-10 기준. main에 병합된 구현과 남은 작업을 표시한다. 세부 기록은 [11_progress.md](11_progress.md), 심플렉스 최신 검증은 [10_porting.md §9.2](10_porting.md))
+상태: ✅ 완료 · 🔄 진행 · 🔎 에이전트 검증 완료·병합 대기 · ⏳ 예정 (2026-11-13 기준. main에 병합된 구현과 남은 작업을 표시한다. 세부 기록은 [11_progress.md](11_progress.md), 심플렉스 최신 검증은 [10_porting.md §9.2](10_porting.md))
 
 M1·M2·M3의 세부 작업 번호, 상태와 확인 방법은 [작업 단위 목록](13_work_units.md)에 있다. G1~G6은 기존 검증 관문이다.
 
@@ -229,7 +229,7 @@ flowchart TD
 
     subgraph M1["M1 LP 엔진"]
         PRE["✅ LP presolve·postsolve<br/>64/64"]:::done
-        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 29/64(02f 뒤 lp_check)<br/>kb2 β 원본 합산(02b) · BFRT 재훑기(02e 원인, 02f Rust)"]:::doing
+        SPX["🔄 심플렉스 G1<br/>Method 1(02y 뒤): 정답 90/91(pilot 회귀, 02y-2) · 반복 수 일치 32/64 · 경로 완전 일치 27/64<br/>work 계수기(02q·02r·02s·02v) 값 비트 일치 · 재분해 판정 미연결<br/>다음 02z·02w → 02y-2 → 02t → 02u"]:::doing
         DRV["🔄 LP 드라이버 G5<br/>main 병합 · 수치 차이 확인 남음"]:::doing
         GATE1["⏳ M1 관문<br/>병합 + 속도 비교표"]:::todo
     end
@@ -242,7 +242,7 @@ flowchart TD
 
     subgraph M2["M2 MIP 엔진"]
         MPRE["✅ MIP presolve G6<br/>모델·sweep·레코드 별도 검증 38/38<br/>main 병합"]:::done
-        BNB["🔄 B&B 진행 중<br/>38개 첫 기준 측정<br/>무계 재분류·대체 분기 조사 완료<br/>실제 자식 오라클 예정"]:::doing
+        BNB["🔄 B&B 진행 중<br/>38개 첫 기준 측정<br/>무계 재분류·대체 분기 조사 완료<br/>노드 선택(힙·plunge)·pseudocost·SB 모듈 L1 통과 · bnb.rs 미연결<br/>다음 06h-6 · 연결 전 M2-10b 필요"]:::doing
         CUT["⏳ Cut separator"]:::todo
         HEU["🔄 휴리스틱<br/>main 구현"]:::doing
         PROP["🔄 전파<br/>main 구현"]:::doing
