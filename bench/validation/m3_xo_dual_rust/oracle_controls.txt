@@ -1,0 +1,8 @@
+controls 통과 121 사례 ×3 {'bt_out_count:dense': 208, 'bt_out_count:sparse': 265, 'call': 473, 'corrected': 235, 'corrections': 10320, 'etas>0': 0, 'levels>=0': 193, 'r14=0': 1, 'r14=1': 7, 'site:dpush-a': 121, 'site:dpush-b': 18, 'site:dpush-c': 205, 'site:dualcheck': 8, 'site:post': 121, 'work': 473}
+거부 d 비트 - cases/retry_x-1: run 2 사건 5 dv:leave 필드 d 다름
+거부 btran leave 삭제 - cases/retry_x-1: run 3 사건 수 17 != 20
+거부 r14 - cases/retry_x-1: run 2 사건 18 sel:decide 필드 r14 다름
+거부 251b4f 0회 - cases/retry_x-1: 251b4f 사건 0회
+거부 반복 2회 - cases/retry_x-1: 반복 2
+거부 파일 해시 - 파일 해시 불일치 cases/arms_x-1-1.json.gz
+self-test 통과
