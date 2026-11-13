@@ -25,7 +25,7 @@ KNOWN_FORM = {}
 # First e_r call after a refactor (same pivot on both sides) whose LU+0x108 differs: the tail U rows of rsolver's factor
 # hold fewer entries than the original's (stair 1411 vs 1571 over m - t = 231); LU+0x110 and t agree. Pre-existing
 # factor difference, not the U^T test: the same-state range ends there.
-KNOWN_D = {'stair': 185, 'forplan': 82, 'bnl1': 174}
+KNOWN_D = {'stair': 185}  # M1-01e: forplan 82 and bnl1 174 closed by the 2x2 block phase
 
 
 CB = {}
