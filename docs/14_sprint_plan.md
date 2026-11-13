@@ -229,7 +229,7 @@ M3-01·M3-02·M3-03의 완료 범위는 유지한다. [M3 설계 보완](m3/spri
 | M3-04f-3 | 구현 완료 | cleanup 선택·retry 재설정·`0325b4` 설치 Rust 이식 | 04f-2 | [완료](m3/crossover_cleanup_rust.md): 04f-2 자료 256사례·768실행 재생, 첫 비교부터 1,563줄·6,315필드 일치(재설정 9·쌍대 검사 24·설치 27). d는 원본 주입(`251b4f` 미이식). 변조18 거부, Rust 변이28 중 거부17·생존11(자료 0회 분기) |
 | M3-04f-4 | 조사·구현 | cleanup simplex 본체(`0cda5b` 반복)를 설치 상태에서 이어 최종 VBasis/CBasis 비교, `251b4f` 쌍대값 | 04f-3 | 04f-4a·4b·4c로 분리 |
 | M3-04f-4a | 구현 완료 | `251b4f` 쌍대값(c_B·dual push 감산·BTRAN·d)·S+0x2d8 재계산·auto 쌍대 검사 | 04f-3·21d | [완료](m3/crossover_dual_values.md): 원본 363회(Netlib 45×Crossover −1·3 + 특수·합성 31, 각 3회) 재현, 고유 473호출 진입 상태(factor 포함)에서 재생, 첫 비교부터 1,419 비교·2,383,170필드 비트 일치(S+0x2d8 121·r14 8). 변조14 거부, Rust 변이19 중 거부15. eta 있는 factor·동률 미관측 |
-| M3-04f-4b | 구현 | Rust push 연쇄가 만든 최종 factor에서 `crossover_dual`로 S+0x2d8·쌍대 검사까지 연결(원본 factor 주입 제거) | 04f-4a·04f-1 | 04f-1 하네스 사례의 0x1bf09e 호출 d·S+0x2d8 비트 일치 |
+| M3-04f-4b | 구현 완료(연결) | Rust push 연쇄가 만든 최종 factor·vstat·header에서 `crossover_dual`로 이어 원본 factor 주입 제거 | 04f-4a·04f-1 | [완료](m3/crossover_dual_link.md): Crossover 3은 0x1bf09e 앞에 dual push가 돌아(39/45 basis 변경) 경계를 착수 전에 dual push 첫 호출 0x1c6b49(48사례)와 basis 불변 0x1bf09e(9사례)로 바꿈. 171 비교·1,004,433필드 첫 실행 일치(factor 전체 연결 검사 포함), 변조18 거부, 변이9 중 거부6. 감산 목록·work는 원본 입력, 바뀐 39사례는 04d·04e 뒤 |
 | M3-04f-4c | 조사 | cleanup simplex 본체(`0cda5b` primal/dual 반복)의 입력 상태·M1 simplex 재사용 가능 범위 | 04f-4a, M1 simplex 궤적 | 최종 VBasis/CBasis 비교 경계와 후속 구현 번호 |
 | M3-04g | 조사 | crossover 재시작·수치 실패 경로 | 04f | 재시작 조건별 후속 구현 번호 |
 | M3-04h | 검증 | Netlib 64 기본 crossover | 기본 push·cleanup·재시작 완료 | 상태·목적·반복과잔차 목록 |

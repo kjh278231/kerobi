@@ -60,8 +60,18 @@
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: x86-64 WSL2 Linux, 계약 `7ece5ef`, 구현 `2252782`, 검증 기록 `6f2ca2b`. 원본 실행 0회(기존 자료 재사용). 입력 `bench/oracle/m3_xo_link_rust/link.txt` SHA-256 `90334fc6…`, 04f-1 연쇄 입력 `bench/oracle/m3_push_install_rust/input.txt` SHA-256 `e45f17d0…`(변경 없음), 04f-4a 원본 자료 manifest 검사(`xo_dual_check` 파일 해시·3회 재현)는 `--write`·`--compare` 때마다 다시 돈다.
+- 입력 생성(`--write`): 48사례 모두 1c 모델의 n·m·비용이 원본 `dv:enter`와 같고 열 방향 A 전치가 원본 행 방향 A와 행·저장 순서까지 같았다. 원본 run 1에서 첫 `251b4f`는 48사례 모두 dual push 0x1c6b49였다. L1 48호출(감산 목록이 있는 호출 40), L2 9호출(dual push가 factor·header·vstat을 바꾸지 않은 arms·retry·interior·afiro·kb2·scagr7·share1b·israel·grow7). 나머지 39사례는 dual push가 basis를 바꿔 L2 대상이 아니다(§1).
+- 비교(`--compare`): **첫 실행부터** 48사례 57호출 × 원본 3회 = 171 비교, 1,004,433필드(vstat·header·factor 전체·x1d8·scratch 0, c_B, BTRAN 출력·입력 후상태·별칭·F+0x200·scratch, y, d, work, S+0x2d8 9) 차이 0. Rust push 연쇄 48사례 모두 `leave` retry 0. BTRAN 경로는 57회 모두 일반 진입·조밀 Uᵀ·eta 없음·조밀 Lᵀ.
+- 판별력: trace 변조 18종(vstat·header·x1d8·scratch·factor 두 위치·c_B·BTRAN 출력·F+0x200·y·d·work·L2 d·S+0x2d8·지점 이름·줄 삭제·Rust 오류 줄·retry 1) 모두 거부. Rust 연결 변이 9종 중 **거부 6·생존 3**: 거부는 install 전 vstat(−2 → −1), header 회전, x1d8 0, 비용 순서, 행 순서 뒤집은 전치, 행 마지막 항 누락. 생존 중 `transpose-col-reverse`(행 안 열 순서)는 한 행에 같은 열이 한 번만 있어 d 누적 순서가 바뀌지 않는 **동치 변이**다. `bucket-none`·`l2-fresh-btran-state`는 `--coverage`로 확인했듯 57호출이 모두 조밀 입력(count −1)·조밀 Lᵀ라 bucket을 읽는 level 경로와 x1d8 갱신(희소 입력 진입)을 타지 않았다(L1 factor 20개는 level 구조가 있지만 조밀 경로가 읽지 않음). 첫 시도의 `transpose-row-shift`는 범위 밖 인덱스 panic으로만 거부돼 판별력 근거가 약해 행 수를 보존하는 `transpose-rows-reverse`로 바꿨다(기록은 최종 9종).
+- 회귀(`bench/validation/m3_xo_link_rust/regression.txt`): `cargo test --release --workspace` 164 통과·실패 0·ignored 12, clippy 0, 04f-4a `xo_dual_rust --write/--compare`(473호출·1,419비교·2,383,170필드 일치, `xo_dual.rs`를 공용 `tests/dual_io`로 옮긴 뒤), 04f-1 `push_install_rust --write/--compare`((A) 111호출, (B) 59/59), py_compile, `git diff --check` 모두 종료 0.
+- 실행하지 못한 검사: pytest(Python 경계 변경 없음), 새 원본 캡처(기존 3회 재현 자료로 충분, 새 경계 아님), Netlib 전체 풀이(solver 경로 미연결). 독립 검토자는 쓰지 않았다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 판정: **구현 완료(계약 범위, 연결)**. double·Threads = 1·Crossover = 3 자연 실행 48사례에서 1c push 진입 상태 → Rust push 초기화·루프·설치 → Rust factor·vstat·header로 `251b4f`(c_B·BTRAN·y·d·work)가 dual push 첫 호출 0x1c6b49에서, dual push가 basis를 바꾸지 않은 9사례의 0x1bf09e에서는 S+0x2d8까지 원본 3회와 정확·비트 일치했다. 이 경계에서 원본 factor 주입이 사라졌다(감산 목록·S+0x3a8·S+0x380·work·출력 머리 count는 여전히 원본 캡처 입력).
+- 계획 대비 변경: 계획의 "0x1bf09e 호출" 경계는 Crossover 3에서 dual push가 사이에 끼므로 dual push 첫 호출(0x1c6b49)과 basis 불변 9사례의 0x1bf09e로 착수 전에 바꿨다(§1 근거). basis를 바꾼 39사례의 0x1bf09e는 dual push 이식(04d·04e 계열) 뒤로 남는다.
+- 미검증: 희소 입력 BTRAN의 level 경로·x1d8 갱신(자료 0회), eta가 있는 factor, dual push 감산 목록 생성(`13b3d1` C 168–240), dual push 본체·basis를 바꾼 사례, Crossover −1(primal push가 dual push factor를 이어받음), x87, solver 경로 연결.
+- 다음: **M3-04f-4c**(cleanup simplex 본체 조사), **M3-04d**(dual push 분기 분할 조사; 감산 목록 생성이 가장 작은 첫 단위 후보), 04g(재시작). 재검사 `python3 tools/xo_link_rust.py --write && cargo test --release -p rsolver-lp --test push_init_ext dual_link_trace && python3 tools/xo_link_rust.py --compare`.
+- 작업 branch `work/m3-04f-4b`(worktree `../rsolver-m3-04f-4b`), 병합은 main `Merge M3-04f-4b` 이력.
+- 교훈: `docs/lessons/original.md`(Crossover 3에서 0x1bf09e 앞의 dual push, 13b3d1 첫 251b4f 전 factor 불변), `docs/lessons/process.md`(계획 경계를 착수 전 원본 자료로 확인).

@@ -156,6 +156,7 @@
 - **Crossover = −1 자연에서도 remaining이 음수가 된다(1b arms·retry, mode 1).** 04f-1의 임계값 규칙(`max(5, S+0x46c/10)`)으로 남은 후보 1개가 −1이 되고, retry 사례는 S+0x2d8 = 0·PInf > 0이라 자연으로 쌍대 검사를 거쳐 dual이 된다. Netlib 소형 45(barrier 뒤 mode 0)는 Crossover 5값 모두 remaining = 0이었다. 캡처. (M3-04f-2)
 - **`251b4f`(crossover 쌍대값)는 push 뒤 뒤처리(0x1bf09e, S+0x2d8 재계산)·auto 쌍대 검사(0x1bfae2)·dual push 세 지점(0x1c6b49·0x1c8533·0x1c87a9)에서 불리고 Crossover 값과 관계없이 자연 실행마다 호출된다.** c_B = cost[header[i]]에서 dual push가 넘긴 목록 `[0,p3) ∪ [p4,p5)`의 값을 `c_B[vstat[j]]`에서 빼고, F1f8 = 1.0으로 `09e288`(cache 0, 조밀 입력) BTRAN 뒤 S+0x148로 되돌린다. d = c(열), −y(slack), `S+0x3a8 < |y|` 행만 행 방향 A로 `−(y·a) + d`, 마지막에 열 상태 −2의 부호를 뒤집는다(slack은 뒤집지 않음). 캡처: Netlib 45 × Crossover −1·3, 473호출 비트 일치. Crossover 1·2는 −1과, 4는 3과 사건이 같다. (M3-04f-4a, [§6](../m3/crossover_dual_values.md#6-실행-결과))
 - **S+0x2d8(push 뒤 쌍대 위반 합)는 비기저 `v = maxsd(0, −d)`(NaN·−0은 −d 그대로)가 S+0x380 이상일 때만 더한 합 + 기저 |d| 합이다.** −3은 건너뛰고 −4는 0이다. 디컴파일의 `0.0 <= −d` 표현은 NaN에서 asm과 다르므로 asm(0x1bf951–0x1bfa08)을 따른다. 캡처 121호출 비트 일치. (M3-04f-4a)
+- **Crossover 3(primal-first)에서는 0x1bf09e의 `251b4f` 앞에 dual push(`13b3d1`, param_9 = 0)가 한 번 더 돈다.** Netlib 45 중 39모델은 dual push가 factor·header·vstat을 바꿔 0x1bf09e 상태가 primal push 반환과 다르다. 반면 `13b3d1` C 150–451은 첫 `251b4f`(0x1c6b49) 전에 factor·basis를 쓰지 않으므로 0x1c6b49가 "primal push 직후 상태"를 보는 경계다. Rust push 연쇄를 뒤 단계에 이을 때 이 지점을 쓴다. C·캡처. (M3-04f-4b, [§1](../m3/crossover_dual_link.md#1-범위와-주장))
 
 ## dual simplex DSE β (`28c93`·`8b473`)
 
