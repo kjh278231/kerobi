@@ -15,4 +15,6 @@ both = [k for k in G if k in R and "dvio_col" in G[k] and "dvio_col" in R[k]]
 same = [k for k in both if G[k]["iter"] == R[k]["iter"]]
 eq = [k for k in same if G[k]["obj"] == R[k]["obj"] and v(G[k]) == v(R[k])]
 print("same IterCount", len(same), "of", len(both), "; obj and dual violation bit-equal among them", len(eq))
-print("  differing:", [k for k in same if k not in eq])
+print("  not bit-equal:", ", ".join("%s %.2e/%.2e" % (k, v(G[k]), v(R[k])) for k in same if k not in eq))
+close = [k for k in same if abs(v(G[k]) - v(R[k])) <= 1e-12 and abs(G[k]["obj"] - R[k]["obj"]) <= 1e-12 * max(1, abs(G[k]["obj"]))]
+print("  dual violation within 1e-12 and obj within 1e-12 rel:", len(close), "of", len(same))

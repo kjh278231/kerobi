@@ -9,7 +9,7 @@ same input state as pilot (Gurobi scales a different matrix), so this tests the 
 
 needs: basis.json (Rust final basis, Gurobi convention, n + m entries) and rust_x_rc.json (x, RC of the same run),
 written by the commands in docs/m1/m1_02y2_pilot.md §5.
-usage: python bench/oracle/m1_02y2/reduced_pilot.py [--keep 2000]
+usage: python bench/oracle/m1_02y2/reduced_pilot.py [--keep 2000] [--write reduced.mps]
 """
 import argparse, json
 from pathlib import Path
@@ -22,6 +22,7 @@ MPS = Path(__file__).resolve().parents[4] / "re/bench/data/netlib/pilot.mps.gz"
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--keep", type=int, default=2000)
+    ap.add_argument("--write", help="also write the reduced model to this .mps path (input for reduced_cmp.py)")
     a = ap.parse_args()
     basis = json.load(open(D / "basis.json"))
     xr = json.load(open(D / "rust_x_rc.json"))
@@ -49,6 +50,8 @@ def main():
     g.remove([v[j] for j in drop])
     g.update()
     kv = g.getVars()
+    if a.write:
+        g.write(a.write)
     vio = [j for j in keep if basis[j] == -1 and rc[j] < -1e-9 or basis[j] == -2 and rc[j] > 1e-9]
     out = {"cols": len(kv), "rows": m, "dropped": len(drop), "rust_obj": xr["obj"],
            "rust_dual_violating_kept": len(vio), "min_dropped_abs_rc": min((abs(rc[j]) for j in drop), default=None)}
