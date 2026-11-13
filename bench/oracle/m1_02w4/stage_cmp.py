@@ -5,7 +5,8 @@ usage: python3 bench/oracle/m1_02w4/stage_cmp.py ORIGINAL.json.gz RUST_SPEC.out"
 import gzip,json,sys
 o=json.load(gzip.open(sys.argv[1]))
 ev={e[0]:e for e in o['events']}
-rs=[json.loads(l) for l in open(sys.argv[2])]
+import gzip as _g
+rs=[json.loads(l) for l in (_g.open(sys.argv[2], 'rt') if sys.argv[2].endswith('.gz') else open(sys.argv[2]))]
 nat={x['k']:x for x in rs if 'r' in x and 'k' in x and 'i' not in x}
 st={x['stage']:x for x in rs if 'stage' in x}
 def ulp(a,b):
