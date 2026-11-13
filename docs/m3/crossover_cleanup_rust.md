@@ -52,13 +52,23 @@
 
 - `python3 tools/xo_cleanup_check.py --controls --acceptance`(선행: 원본 자료 재현·규칙)
 - `python3 tools/xo_cleanup_rust.py --write` → `cargo test --release -p rsolver-lp --test xo_cleanup` → `python3 tools/xo_cleanup_rust.py --compare`
-- 판별력: `python3 tools/xo_cleanup_rust.py --self-test`, `--mutate-rust`
+- 판별력: `python3 tools/xo_cleanup_rust.py --self-test`, `--mutate-rust OUT`, 생존 변이 분기의 자료 출현 수 `--coverage`
+- C 읽기 고정(원본 증거 아님): `cargo test -p rsolver-lp --lib crossover_cleanup`
 - 회귀: `cargo test -p rsolver-lp`(관련 push 테스트), `cargo test --release --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, 04f-1 `push_install_rust.py --compare`.
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: x86-64 WSL2 Linux, Rust release. 계약 `89a706d`, 구현·자료 `33234b9`. 원본 실행 0회(04f-2 자료 `bench/oracle/m3_xo_cleanup/manifest.json`, 입력 머리줄에 그 SHA-256).
+- 구현: `crates/lp/src/crossover_cleanup.rs` — `retry_reset`(C 1363–1521), `dual_check`(asm 0x1bfaf5–0x1bfc95), `select`(C 1523–1690, `Cleanup::{Dual, Primal, PrimalBasis}`·S+0x180·S+0x178), `install_basis`(`0325b4` 스케일 없는 경로, sense flag 포함). 재생 `crates/lp/tests/xo_cleanup.rs`, 비교기 `tools/xo_cleanup_rust.py`, 입력 `bench/oracle/m3_xo_cleanup_rust/input.txt`, 결과 `bench/validation/m3_xo_cleanup_rust/`(compare·rust_mutations·regression).
+- 입력 축약: 원본 3회는 사건열이 같으므로(`--controls`) Rust 입력은 사례당 run 1만 쓰고(19 MB → 6.3 MB), `--write`가 run 2·3의 입력 투영이 run 1과 같은지 검사한다. 비교는 768실행 각각의 기대 줄과 한다.
+- 비교(`--compare`): **첫 실행부터** 256사례·768실행·1,563줄(reset 768, select 768, install 27)·6,315필드 일치. 분기는 04f-2 §6과 같다(retry 재설정 9, 쌍대 검사 24(참 21·거짓 3), 설치 27·상태 변화 342·superbasic 345, 세 호출 지점·S+0x178).
+- 판별력: `--self-test` 출력 줄 변조 18종(필드별 첫 값·install 줄 삭제·사례 삭제·머리줄) 모두 거부. `--mutate-rust` 28종 중 거부 17, 생존 11, 무효 0. 첫 실행의 `inst-rows-first`는 빈 목록을 뒤집는 동치 변이라 목록 역순(`inst-list-reversed`, 거부)으로 바꿨다. 생존 11종은 `--coverage`로 자료 출현 0회를 확인했다: 재설정의 고정 열·lb + ub = 2x 동률·자유 열, auto S+0x2d8 ≠ 0이고 PInf > 0, 쌍대 합 = OptTol·기저 |d|가 결과를 바꿈·OptTol 미만 위반이 결과를 바꿈, |x − lb| = τ, 빈 열·작은 비용, |x| ≤ 1e-13, ub 쪽 행(뒤 다섯은 04f-2 검사기 생존 변이와 같은 분기). 이 경계는 C·asm 읽기로 단위 테스트 4개에 고정했으나 원본 증거는 아니다.
+- 회귀(`regression.txt`): `cargo test --release --workspace` 160 통과·실패 0·ignored 12, `cargo clippy --workspace --all-targets -D warnings` 0(첫 실행 6건: 부분 순서 부정 비교는 NaN 결과 보존을 위해 모듈 allow, 같은 블록 1건 병합 → 비교·변이 재실행), 04f-1 `push_install_check --controls --acceptance`·`push_install_rust --write/--compare`(A 111호출·B 59/59), 04f-2 `xo_cleanup_check --controls --acceptance --self-test`, py_compile, diff check 모두 종료 0.
+- 실행하지 못한 검사: 원본 재캡처(필요 없음, 계약대로 저장 자료 재생), `251b4f` 쌍대값 비교(미이식), pytest(Python 경계 변경 없음). 독립 검토자는 쓰지 않았다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 판정: **구현 완료(계약 범위)**. double·Threads = 1의 04f-2 자료 768실행에서 retry 재설정·cleanup 선택·`0cda5b` 호출 인자·`0325b4` 설치가 원본과 정확·비트 일치했다.
+- 미검증: 쌍대 검사의 d 재계산(`251b4f`, 원본 주입), 생존 변이 11종의 분기(자료 0회), sense flag(D+0x3c = 1), 스케일 경로(S+0x4d8 = 0), x87, env+0x2340 ≠ 0, D+0x324 ≥ 1, 할당 실패, 재설정 header(캡처 없음). 이 함수들은 아직 solver 경로에 연결되지 않았다.
+- 다음: cleanup simplex 본체(`0cda5b` 반복)를 설치 상태에서 이어 최종 VBasis/CBasis를 비교하는 작업(04f-4 후보, 04f-2 자료의 `result`가 기대값), `251b4f` 이식, 04g(재시작·local_98). 재검사 `python3 tools/xo_cleanup_rust.py --write && cargo test --release -p rsolver-lp --test xo_cleanup && python3 tools/xo_cleanup_rust.py --compare`.
+- 교훈: `docs/lessons/tooling.md`(반복 캡처 입력 축약, 동치 변이 점검).
