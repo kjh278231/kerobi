@@ -1,0 +1,1 @@
+killed (exit 137, OOM: 17/19 GB used by other sessions) in both --self-test and plain modes; not a result. crates/mip/src/strong_branch.rs does not use rsolver_lp/Lu; its test strong_branch_l1 passed in cargo_workspace.txt

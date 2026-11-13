@@ -1,0 +1,4 @@
+    Checking rsolver-mip v0.1.0 (/home/sds/workspace/gurobi-sandbox/rsolver-m1-02w-4/crates/mip)
+    Checking rsolver-driver v0.1.0 (/home/sds/workspace/gurobi-sandbox/rsolver-m1-02w-4/crates/driver)
+    Checking rsolver v0.1.0 (/home/sds/workspace/gurobi-sandbox/rsolver-m1-02w-4/crates/py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.36s

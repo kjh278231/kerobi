@@ -88,6 +88,7 @@
     - 기존 `diag.abs() <= ZERO || is_nan()` 대 원본 C:450 `ABS < 1e-13`.
     - `m1_er_dense.js` 머리 주석 "m by row"는 틀렸고 실제로는 원본 위치 순이다. 도구 해시가 캡처에 고정돼 있어 파일은 고치지 않았다.
   - 확인된 것: 훅 근거(0x12e912 r13 = param_2, 05b257 오프셋)와 탐침 무간섭.
+- main `a2d8c1b`(M2-06h-9, `crates/mip`·문서만) 병합 뒤(`after_main_merge/`): `cargo test --release --workspace` 통과, clippy 0. `tools/mip_sb_loop_rust.py`는 메모리 부족으로 두 번 모두 종료 137(다른 세션이 19 GB 중 17 GB 사용, 결과 아님). 그 하네스는 원본 응답을 `strong_branch.rs`에 재생하며 `Lu`를 쓰지 않고, 같은 Rust 시험 `strong_branch_l1`은 workspace 테스트에서 통과했다.
 - 실행하지 못한 것:
   - 재분해 337의 L 열 직접 비교. 간접 근거로, 수정 뒤 갱신 347개와 e_r 356호출이 전부 일치한다.
   - Method 0(primal `2207de` 쪽 S가 같은 마스크인지) 원본 대조.
