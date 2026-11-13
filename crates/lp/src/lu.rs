@@ -43,6 +43,8 @@ pub struct Lu {
     /// LU+0x108 + LU+0x110: mean U row length + 1 of the tail rows and of the rows in [0xdc, t) (`036ade`
     /// C:5725–5740), the density factor of the `09d112` U-stage test.
     dsum: f64,
+    /// LU+0x108 alone: `21a941` takes its linear path above 5.
+    d108: f64,
     /// Prefix rows with a non-empty U row (LU+0xf0, its length LU+0xec) as steps in list order, and each step's slot
     /// in it (LU+0xf8: ≥ 0 slot, −1 prefix with an empty U row, −2 tail).
     f0: Vec<usize>,
@@ -63,6 +65,8 @@ pub struct Lu {
     /// L DAG level of each step (LU+0x118) and the deepest level LU+0x128 (−1 without levels), `036ade` C:5764–5830.
     llev: Option<Vec<usize>>,
     lmax: i64,
+    /// Lᵀ DAG depth LU+0x140 (−1 without levels), read by BTRAN's sparse Lᵀ test.
+    ltmax: i64,
     /// L entries in the columns of steps ≥ `s4` (LU+0xe4): `21b9de`'s path test reads it.
     ltail: usize,
     /// U has off-diagonals (Markowitz part or updates): BTRAN leaves the iteration-0 emulation.
@@ -698,6 +702,11 @@ impl Lu {
         self.retas.iter().map(|e| e.1.len()).sum()
     }
 
+    /// Row eta count LU+0x180.
+    pub(crate) fn n_etas(&self) -> usize {
+        self.retas.len()
+    }
+
     /// Basis positions after a refactor (5b257 LAB_001f474e): the new position of a basic variable is its factor
     /// step. Returns the old position of each new one.
     pub fn renumbered(&self) -> Vec<usize> {
@@ -839,6 +848,7 @@ impl Lu {
             e8: 0,
             dc: 0,
             dsum: 3.0,
+            d108: 1.5,
             f0: Vec::new(),
             f8: Vec::new(),
             retas: Vec::new(),
@@ -849,6 +859,7 @@ impl Lu {
             level: None,
             llev: None,
             lmax: -1,
+            ltmax: -1,
             ltail: 0,
             general: false,
             n_updates: 0,
@@ -2425,7 +2436,8 @@ impl Lu {
             let n = r.len();
             if n == 0 { 1.5 } else { r.map(|k| self.urow[k].len()).sum::<usize>() as f64 / n as f64 + 1.0 }
         };
-        self.dsum = mean(t..m) + mean(dc..t.max(dc));
+        self.d108 = mean(t..m);
+        self.dsum = self.d108 + mean(dc..t.max(dc));
         self.lrow = vec![Vec::new(); m];
         for k in (0..m).rev() {
             for &(i, l) in &self.lcol[k] {
@@ -2446,6 +2458,7 @@ impl Lu {
                     lev[j] = lev[j].max(lev[k] + 1);
                 }
             }
+            self.ltmax = lev.iter().copied().max().unwrap_or(0) as i64;
             self.level = Some(lev);
             // 036ade C:5764–5830: L levels forward over the columns, LU+0x128 = the deepest
             let mut lev = vec![0; m];
@@ -2469,30 +2482,78 @@ impl Lu {
         self.btran_dense(x).0
     }
 
-    /// `btran` and whether the output is dense (the original's output nnz < 0), which `28c93` reads.
+    /// `btran` and whether the output is dense (the original's output nnz < 0), which `28c93` reads (`9e288`).
     pub fn btran_dense(&self, x: &[(usize, f64)]) -> (Vec<(usize, f64)>, bool) {
+        self.btran_ut(x, self.ut_dense(x.len()))
+    }
+
+    /// BTRAN of e_r as `9e376` hands it (dual ρ_r): a non-empty U row r forces the sparse Uᵀ kernel, an empty one
+    /// takes the general test (`221173` C:1196–1206).
+    pub fn btran_row(&self, r: usize) -> (Vec<(usize, f64)>, bool) {
+        self.btran_ut(&[(r, 1.0)], self.urow_len(r) == 0 && self.ut_dense(1))
+    }
+
+    /// Length of the U row of basis position r (LU+0xb8[r] − LU+0xb0[r]).
+    pub(crate) fn urow_len(&self, r: usize) -> usize {
+        self.urow.get(self.kpos[r]).map_or(0, Vec::len)
+    }
+
+    /// `221173` C:88–90: the Uᵀ phase is dense unless (int)(LU+0x108 + LU+0x110)·nnz ≤ m (32-bit product).
+    pub(crate) fn ut_dense(&self, nnz: usize) -> bool {
+        (self.dsum as i32).wrapping_mul(nnz as i32) > self.head.len() as i32
+    }
+
+    /// LU+0x108 + LU+0x110 (for the M1-02k probe).
+    pub(crate) fn dsum(&self) -> f64 {
+        self.dsum
+    }
+
+    /// BTRAN leaves the diagonal-U emulation (Markowitz kernel or FT updates).
+    pub(crate) fn updated(&self) -> bool {
+        self.n_updates > 0 || self.general
+    }
+
+    /// LU+0x108 and the prefix t = LU+0x100 (for the M1-02k probe).
+    pub(crate) fn d108(&self) -> f64 {
+        self.d108
+    }
+
+    /// Lᵀ DAG depth (LU+0x140), −1 without levels (for the M1-02k probe).
+    pub(crate) fn lt_depth(&self) -> i64 {
+        self.ltmax
+    }
+
+    /// `221173` C:263–268: Lᵀ goes sparse when 0x104·nnz ≤ m and LU+0x140 < 0.1m; otherwise the dense Lᵀ (asm
+    /// 0x12fee6), which hands an empty input back as nnz 0 (C:1580), the same as the sparse path.
+    fn lt_sparse_ok(&self, nnz: usize) -> bool {
+        let m = self.head.len();
+        self.sparse_mult * nnz <= m && (nnz == 0 || (self.ltmax as f64) < m as f64 * 0.1)
+    }
+
+    pub(crate) fn prefix_len(&self) -> usize {
+        self.prefix
+    }
+
+    /// BTRAN with the Uᵀ path given: dense Uᵀ outputs nnz −1, so the row etas and Lᵀ are dense too.
+    pub(crate) fn btran_ut(&self, x: &[(usize, f64)], ut_dense: bool) -> (Vec<(usize, f64)>, bool) {
         assert!(self.complete(), "singular basis");
-        if self.n_updates > 0 || self.general {
+        if self.updated() {
             // Markowitz kernel or FT updates: U is no longer diagonal, the same phase order applies
-            return self.btran_updated(x);
+            return self.btran_updated(x, ut_dense);
         }
         let m = self.head.len();
-        // Uᵀ is the diagonal: sparse (21a941, inputs in order) when (int)(LU+0x108 + LU+0x110)·nnz ≤ m, both 1.5 here
-        let sparse_u = 3 * x.len() <= m;
-        let mut xs: Vec<(usize, f64)> = Vec::with_capacity(x.len());
+        // Uᵀ is the diagonal: sparse (21a941, inputs in order) or dense (C:91–260)
+        let sparse_u = !ut_dense;
+        let xs = if sparse_u { self.ut_sparse(x) } else { Vec::new() };
         let mut dense = vec![0.0; m]; // by step
-        for &(pos, v) in x {
+        for &(pos, v) in x.iter().filter(|_| !sparse_u) {
             let k = self.kpos[pos];
             let t = v / self.steps[k].2;
-            if sparse_u {
-                if ZERO < t.abs() {
-                    xs.push((k, t));
-                }
-            } else if !(v.abs() <= ZERO || t.abs() <= ZERO) {
+            if !(v.abs() <= ZERO || t.abs() <= ZERO) {
                 dense[k] = t;
             }
         }
-        if !sparse_u || self.sparse_mult * xs.len() > m {
+        if !sparse_u || !self.lt_sparse_ok(xs.len()) {
             for &(k, t) in &xs {
                 dense[k] = t;
             }
@@ -2512,6 +2573,103 @@ impl Lu {
             return (y, true);
         }
         (self.lt_sparse(&xs), false)
+    }
+
+    /// Sparse Uᵀ kernel `21a941` on (basis position, value) inputs in input order; returns (step, x/d) in output
+    /// order. LU+0x108 ≤ 5: an input in the prefix (U position < t) goes out at once and scatters its U row, a tail
+    /// input is added to w (`w += x`, whatever its size); the touched positions then leave a min-heap in ascending
+    /// U position, scattering `w − u·t`, until (m − top) ≤ 6·heap size switches to a linear scan from top.
+    /// LU+0x108 > 5: inputs by LU+0xf8 slot (−1 out at once, ≥ 0 out and scatter, tail added to w when |x/d| > ZERO)
+    /// in input order, then a linear scan from the lowest touched tail position. Output keeps |x/d| > ZERO.
+    fn ut_sparse(&self, x: &[(usize, f64)]) -> Vec<(usize, f64)> {
+        let m = self.head.len();
+        let d = |k: usize| self.steps[k].2;
+        let mut w = vec![0.0; m]; // by step
+        let mut out = Vec::new();
+        let linear = |from: usize, w: &mut Vec<f64>, out: &mut Vec<(usize, f64)>| {
+            for p in from..m {
+                let k = self.order[p];
+                let t = w[k] / d(k);
+                if ZERO < t.abs() {
+                    out.push((k, t));
+                    for &(j, u) in &self.urow[k] {
+                        w[j] -= u * t; // = −(u·t) + w (21a941), same bits
+                    }
+                }
+                w[k] = 0.0;
+            }
+        };
+        if self.d108 > 5.0 {
+            let mut lo = m;
+            for &(pos, v) in x {
+                let k = self.kpos[pos];
+                let t = v / d(k);
+                if ZERO < t.abs() {
+                    match self.f8[k] {
+                        -1 => out.push((k, t)),
+                        s if s < 0 => {
+                            lo = lo.min(self.upos[k]);
+                            w[k] += v;
+                        }
+                        _ => {
+                            out.push((k, t));
+                            for &(j, u) in &self.urow[k] {
+                                w[j] -= u * t; // = −(u·t) + w (21a941), same bits
+                                lo = lo.min(self.upos[j]);
+                            }
+                        }
+                    }
+                }
+            }
+            linear(lo, &mut w, &mut out);
+            return out;
+        }
+        let mut mark = vec![false; m];
+        let mut heap = std::collections::BinaryHeap::new(); // Reverse(U position): min-heap
+        for &(pos, v) in x {
+            let k = self.kpos[pos];
+            if self.upos[k] < self.prefix {
+                let t = v / d(k);
+                if ZERO < t.abs() {
+                    out.push((k, t));
+                    for &(j, u) in &self.urow[k] {
+                        w[j] -= u * t; // = −(u·t) + w (21a941), same bits
+                        if !mark[j] {
+                            mark[j] = true;
+                            heap.push(std::cmp::Reverse(self.upos[j]));
+                        }
+                    }
+                }
+            } else {
+                w[k] += v;
+                if !mark[k] {
+                    mark[k] = true;
+                    heap.push(std::cmp::Reverse(self.upos[k]));
+                }
+            }
+        }
+        while let Some(&std::cmp::Reverse(top)) = heap.peek() {
+            if (m - top) as f64 <= heap.len() as f64 * 6.0 {
+                linear(top, &mut w, &mut out);
+                break;
+            }
+            heap.pop();
+            let k = self.order[top];
+            let t = w[k] / d(k);
+            if ZERO < t.abs() {
+                out.push((k, t));
+                for &(j, u) in &self.urow[k] {
+                    w[j] -= u * t;
+                    if !mark[j] {
+                        mark[j] = true;
+                        heap.push(std::cmp::Reverse(self.upos[j]));
+                    }
+                }
+            }
+            mark[k] = false;
+            w[k] = 0.0;
+        }
+        out
     }
 
     /// Sparse Lᵀ of BTRAN (`221173` L262–616) on step-indexed inputs in arrival order: the descending-step heap
@@ -2565,10 +2723,10 @@ impl Lu {
     /// BTRAN with Forrest–Tomlin updates (m1_notes §8.10): Uᵀ in U order, row etas newest first, then Lᵀ. With etas
     /// and m < 0x104·nnz(Uᵀ output) the etas are dense (`221173` C:1237–1572: |v| ≤ ZERO clears w_r and skips the
     /// eta) and so is Lᵀ (C:1573–1766); else sparse etas (v = 0.0 skips, |w| ≥ ZERO kept) and a sparse Lᵀ
-    /// (`lt_sparse`, the original's output order) when 0x104·nnz ≤ m, else dense in row order.
-    /// shortcut: the Uᵀ phase is computed densely and C:89's dense/sparse Uᵀ choice is not modelled (the eta path
-    /// follows the Uᵀ output count; differs only for inputs with (int)(0x108 + 0x110)·nnz > m, M1-02k).
-    fn btran_updated(&self, x: &[(usize, f64)]) -> (Vec<(usize, f64)>, bool) {
+    /// (`lt_sparse`, the original's output order) when `lt_sparse_ok`, else dense in row order.
+    /// A dense Uᵀ (`ut_dense`, C:91–260) zeroes |x| ≤ ZERO as well as |x/d| ≤ ZERO and hands nnz −1 on, so the etas
+    /// and Lᵀ are dense; a sparse one is `ut_sparse` (`21a941`).
+    fn btran_updated(&self, x: &[(usize, f64)], ut_dense: bool) -> (Vec<(usize, f64)>, bool) {
         let m = self.head.len();
         let mut w = vec![0.0; m]; // by step
         for &(pos, v) in x {
@@ -2577,20 +2735,31 @@ impl Lu {
         let mut y = vec![0.0; m]; // by row
         let mut list = Vec::new(); // rows in arrival order
         let mut seen = vec![false; m];
-        for &k in &self.order {
-            let (r, _, d) = self.steps[k];
-            let t = w[k] / d;
-            if t.abs() <= ZERO {
-                continue;
-            }
+        let mut put = |k: usize, t: f64, y: &mut Vec<f64>| {
+            let r = self.steps[k].0;
             y[r] = t;
-            seen[r] = true;
-            list.push(r);
-            for &(j, u) in &self.urow[k] {
-                w[j] -= u * t;
+            if !seen[r] {
+                seen[r] = true;
+                list.push(r);
+            }
+        };
+        if ut_dense {
+            for &k in &self.order {
+                let t = w[k] / self.steps[k].2;
+                if t.abs() <= ZERO || w[k].abs() <= ZERO {
+                    continue;
+                }
+                put(k, t, &mut y);
+                for &(j, u) in &self.urow[k] {
+                    w[j] -= u * t;
+                }
+            }
+        } else {
+            for (k, t) in self.ut_sparse(x) {
+                put(k, t, &mut y);
             }
         }
-        let dense_eta = !self.retas.is_empty() && m < self.sparse_mult * list.len();
+        let dense_eta = !self.retas.is_empty() && (ut_dense || m < self.sparse_mult * list.len());
         for (r, eta) in self.retas.iter().rev() {
             // 221173 eta phase (newest first): v = w_r; w_r = η_r·v, w_i = η_i·v + w_i
             let v = y[*r];
@@ -2608,11 +2777,11 @@ impl Lu {
         }
         let xs: Vec<(usize, f64)> =
             list.iter().filter(|&&r| y[r].abs() >= ZERO).map(|&r| (self.prow[r] as usize, y[r])).collect();
-        if !dense_eta && self.sparse_mult * xs.len() <= m {
+        if !dense_eta && !ut_dense && self.lt_sparse_ok(xs.len()) {
             return (self.lt_sparse(&xs), false);
         }
         let mut dense = vec![0.0; m]; // by step
-        if dense_eta {
+        if dense_eta || ut_dense {
             // the dense eta output goes to Lᵀ whole, values below ZERO included
             for (r, &v) in y.iter().enumerate() {
                 dense[self.prow[r] as usize] = v;

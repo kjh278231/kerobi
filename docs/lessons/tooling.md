@@ -70,6 +70,12 @@
 - **캡처 도구의 Frida require 경로(`/home/sds/.npm/_npx/.../frida`)는 원래 캡처 컴퓨터 전용이지만, 도구를 고치면 안 된다.** 캡처는 도구 자기 해시(`hash(__filename)`)를 기록하고 검사기 약 40개가 manifest·캡처의 `tool_sha256`을 현재 파일 해시와 대조한다. 대신 `tools/gurun.sh`가 `NODE_OPTIONS=--require tools/frida_resolve.cjs`로 그 경로를 `FRIDA_NODE` 또는 `~/.local/share/frida-node/node_modules/frida`로 돌린다. 이렇게 고정 도구 `primal_push_recall_capture.js`로 재캡처한 04c-8 feasible primal이 저장 캡처와 사건·해시·출력까지 같았다. 캡처 도구는 `node`를 직접 부르지 말고 `tools/gurun.sh node ...`로 실행한다. (M3-04c-10 발견, shared 정리)
 - **call 명령에 훅을 붙이면 그 call이 trampoline으로 옮겨져, 호출된 함수(특히 tail call로 넘겨받는 함수)의 return address가 원래 다음 명령이 아니다.** 116fd7 진입을 return address `0x1c17b8`로 거르자 0회였다. 호출 전·후 훅에서 플래그를 세워 구간으로 식별한다. (M3-04c-1c, [§6](../m3/primal_push_condition.md#6-실행-결과))
 
+- **Frida 콜백 안 `NativeFunction` 호출은 다시 가로채지지 않으므로, 합성 호출이 어느 분기를 탔는지는 판정 입력을 강제한 두 실행과 비교해 정한다.** M1-02k는 `9e288` 합성 호출마다 LU+0x110을 바꿔 희소·조밀을 강제한 결과와 자연 결과(출력 비트·LU+0x200 work)를 비교했고, 정확히 하나와 같을 때만 판정으로 인정했다. 강제할 필드가 판정 밖에서 읽히지 않는지 C로 먼저 확인한다. 끝에 원래 비트로 되돌리고, 합성 없는 실행과 자연 사건이 같은지로 비간섭을 보인다. (M1-02k, [§2](../m1/m1_02k_btran_ut.md#2-원본과-상태-경계))
+- **원본 탐색에서 "옛 규칙과 새 규칙이 갈리는 자연 호출 0회"는 옛 Rust 동작과의 차이를 세지 않는다.** M1-02k는 원본 입력으로 `3·nnz`와 `(int)D·nnz`만 비교해 0회로 보고했다. 그런데 Rust 갱신 경로에는 판정 자체가 없었고, c_B 입력 표현(전체 길이 vs −1)도 달라 Netlib 24행이 바뀌었다. 기준 빌드의 실제 경로 표시도 함께 세고, Rust 호출 지점의 입력 표현을 원본 nnz와 대조한다. (M1-02k, [계약 변경](../m1/m1_02k_btran_ut.md#계약-변경실행-중-2026-11-11))
+
+- **함수 중간 Frida 훅으로 "앞 조건을 통과했는가"를 기록하면 함수 안의 판정 입력(여기서는 Uᵀ·eta 뒤 Lᵀ 입력 nnz)을 진입·반환 훅 없이 얻는다.** 비교 명령 직전의 읽기 명령(`221173` 0x12ec77 `mov 0x140(%rbx)`)에 붙이고 `this.context`의 레지스터(r11d = nnz, ebp = m)를 읽는다. 붙이기 전 objdump 전체에서 패치 구간(약 20바이트) 안으로 들어오는 분기가 없는지 grep한다. (M1-02x)
+- **검사기의 `need(cond, f'...{x[i:i+4]}...')`는 조건이 참이어도 메시지를 먼저 만든다.** `i`가 None이면 TypeError로 죽는다. 실패 위치를 써야 하는 메시지는 `if i is not None: raise Fail(...)`로 쓴다. (M1-02x)
+
 ## 디컴파일 조회
 
 - **`tools/dc.py <함수> --asm`은 `index.tsv` 크기에서 멈춘다. 그런데 실제 본체가 더 긴 함수가 있다.** `6e8eb3`은 색인 3,492바이트지만 점프 테이블 대상과 꼬리가 `0x5b4c50`까지 이어진다(반환 `0x5b49eb`). 이 범위를 빼고 grep하면 스택 슬롯·레지스터 쓰기를 놓친다. 점프 테이블이나 `raw:` 반환 주소가 보이면 `--range 0x시작,0x끝`으로 반환 명령까지 덤프해서 읽는다. (M2-06c)
@@ -227,3 +233,7 @@
 - **기존 무거운 agent는 사본에서 `send`를 거르는 `keep`으로 바꿔 필요한 경계 사건만 남기면 자료가 수십 배 줄고 비간섭도 같은 거르기로 보일 수 있다.** 21h agent의 grow7 캡처 160MB가 3MB가 됐고, 대조군 7사례는 "새 사건 − 조밀 사건 = 21h 정식 캡처에 같은 거르기"로 JSON 전체 비교했다. 표지 사건을 나중에 더하면 agent 해시가 바뀌므로 정식 자료를 전부 다시 찍는다(섞지 않는다). (M3-04c-21i)
 - **Frida 인자 배열은 정수 인자 순번이다. 앞에 double 인자가 있으면 C의 `param_k`와 `args[k−1]`가 어긋난다.** `036ade(double, double, S, …)`의 `param_15`는 xmm0·xmm1을 빼고 세어 `args[12]`인데 `args[14]`를 읽어 풀 크기가 모두 0으로 나왔다(실패한 접근, `history/explore1-p15wrong`). 기존 훅의 확인된 인자(`args[2]` = m = `param_5`)로 오프셋을 먼저 맞춘다. (M3-04c-21j)
 - **비간섭 변조로 "사건 하나 빼기"를 쓸 때 뺀 사건이 투영에서 사라지는 새 사건이면 변조가 통과한다.** 21j 검사기 첫 self-test에서 대조군 5번 사건(새 `pool:*`)을 빼 통과했다. 투영 뒤에도 남는 기존 사건을 골라 뺀다. (M3-04c-21j)
+- **`pkill -f <패턴>`이 자기 Bash 셸 명령줄에도 걸려 첫 kill에서 셸이 죽고 나머지 kill이 실행되지 않았다(실패한 접근).** 남은 node·gurun이 Gurobi를 붙잡고, 옮긴 출력 폴더를 다시 만들어 새 도구 해시로 옛 내용을 쓸 뻔했다. `pgrep -af`로 PID를 확인하고 `kill <PID>`로 끝낸다. 같은 Herdr pane을 재사용하면 `wait-output`이 이전 실행의 `HRUN_RC=` 표시에 바로 걸리므로 pane을 새로 만들거나 표시를 바꾼다. (M2-06h-3)
+- **bound 쓰기마다 전체 bound 배열을 저장하면 tr12-30 캡처가 JSON 문자열 한도(약 512MB)를 넘는다.** 이미 원시 값으로 검증한 큰 배열은 `길이:FNV-1a32` 요약으로 저장하고, 비간섭 비교 때 기존 자료에 같은 요약을 적용한다(`tools/mip_sb_loop.js`, `mip_sb_loop_rust.py summarize`). (M2-06h-3)
+- **`tools/mip_sb_snapshot.js`의 `691b56` 진입 훅은 Node가 null이 아니라고 가정한다.** VarBranch=3에서는 `Node+0x18` 읽기가 접근 위반을 내고 `batch` 사건만 빠진다(`ok false`). 이 경로를 캡처하려면 훅을 고쳐야 하는데, 06h-3 기준 자료의 도구 해시가 바뀌므로 새 도구로 분리한다. 훅을 단 VarBranch=3은 노드마다 전체 SB를 해 NodeLimit=300에서 모델당 300초를 넘긴다. NodeLimit을 수십으로 낮춘다. (M2-06h-4)
+- **`tools/mip_sb_census.py`로 기존 캡처의 분기 횟수를 오프라인으로 센다.** 새 모델 탐색 전에 기준 모델에서 0회가 재현되는지 먼저 확인하면 집계 방향(a=down, z=up) 오류를 잡는다. (M2-06h-4)
