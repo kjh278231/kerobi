@@ -16,6 +16,7 @@ pub mod pdhg;
 pub mod crossover;
 pub mod crossover_backend;
 pub mod crossover_btran;
+pub mod crossover_cleanup;
 pub mod crossover_condition;
 pub mod crossover_factor;
 pub mod crossover_ftran;
