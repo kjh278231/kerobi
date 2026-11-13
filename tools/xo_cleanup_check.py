@@ -278,7 +278,7 @@ def strip(d):
 
 def controls(rs):
     n = 0
-    for key, by in sorted(rs.items()):
+    for key, by in sorted(rs.items(), key=lambda t: (str(t[0][0]), t[0][1])):
         need(sorted(by) == [1, 2, 3], key, f'회차 {sorted(by)}')
         base = load(by[1])
         for r in (2, 3):
@@ -291,7 +291,7 @@ def controls(rs):
 
 def acceptance(rs, V=None, verbose=True):
     st = collections.Counter()
-    for key, by in sorted(rs.items()):
+    for key, by in sorted(rs.items(), key=lambda t: (str(t[0][0]), t[0][1])):
         for r, p in sorted(by.items()):
             check_run(load(p), f'{key} run{r}', V, st)
     if verbose:
@@ -306,7 +306,7 @@ VARIANTS = ['reset_mid', 'auto_pos_primal', 'auto_no_s120', 'cross_mask', 'neg_i
 
 def self_test(rs):
     one = {}
-    for key, by in sorted(rs.items()):
+    for key, by in sorted(rs.items(), key=lambda t: (str(t[0][0]), t[0][1])):
         d = load(by[1])
         names = [e['event'] for e in d['events']]
         for tag in ('i325b4:enter', 'sel:dual', 'cda5b:enter'):
@@ -331,14 +331,16 @@ def self_test(rs):
     mut('선택 r14 반전', 'cda5b:enter', lambda x: ev(x, 'sel:decide').__setitem__('r14', 1 - ev(x, 'sel:decide')['r14']))
     mut('alg 반전', 'cda5b:enter', lambda x: ev(x, 'cda5b:enter').__setitem__('alg', 1 - ev(x, 'cda5b:enter')['alg']))
     mut('remaining 부호', 'cda5b:enter', lambda x: [ev(x, t).__setitem__('remaining', -ev(x, t)['remaining'] - 1) for t in ('sel:enter', 'sel:reset')])
-    mut('push retry 변경', 'cda5b:enter', lambda x: ev(x, 'push:leave').__setitem__('retry', 1))
+    # 소비되는 값은 마지막 push의 retry다(앞 push의 retry는 시도 루프 흐름 = 04c 범위).
+    mut('마지막 push retry 변경', 'cda5b:enter', lambda x: [e for e in x['events'] if e['event'] == 'push:leave'][-1].__setitem__('retry', 1))
     mut('S+0x178 +1', 'cda5b:enter', lambda x: ev(x, 'cda5b:enter').__setitem__('s178', ev(x, 'cda5b:enter')['s178'] + 1))
     mut('호출 지점', 'cda5b:enter', lambda x: ev(x, 'cda5b:enter').__setitem__('ret_site', 0x1bfa54 if ev(x, 'cda5b:enter')['ret_site'] != 0x1bfa54 else 0x1bf7be))
     mut('0325b4 출력 vstat', 'i325b4:enter', lambda x: ev(x, 'i325b4:leave')['vstat'].__setitem__(0, -9))
     mut('0325b4 S+0x450', 'i325b4:enter', lambda x: ev(x, 'i325b4:leave').__setitem__('s450', ev(x, 'i325b4:leave')['s450'] + 1))
     mut('0325b4 입력 x 1비트', 'i325b4:enter', lambda x: ev(x, 'i325b4:enter')['x'].__setitem__(0, h(f(ev(x, 'i325b4:enter')['x'][0]) + 1.0)))
     mut('0325b4 사건 삭제', 'i325b4:enter', lambda x: x.__setitem__('events', [e for e in x['events'] if not e['event'].startswith('i325b4')]))
-    mut('쌍대 d 크게', 'sel:dual', lambda x: ev(x, 'sel:dual')['d'].__setitem__(0, h(1.0)))
+    # 기저 위치 d를 1.0으로: 기저 |d| 최댓값 ≥ OptTol → 선택이 바뀌어야 한다(+1.0은 하한 비기저에서 위반이 아님).
+    mut('쌍대 기저 d 크게', 'sel:dual', lambda x: ev(x, 'sel:dual')['d'].__setitem__(next(t for t, v in enumerate(ev(x, 'sel:dual')['vstat']) if v >= 0), h(1.0)))
     for name, key, x in muts:
         try:
             check_run(x, f'{key} [{name}]')
@@ -361,7 +363,7 @@ def self_test(rs):
 
 def write_manifest(rs):
     files = {}
-    for key, by in sorted(rs.items()):
+    for key, by in sorted(rs.items(), key=lambda t: (str(t[0][0]), t[0][1])):
         for r, p in sorted(by.items()):
             files[str(p.relative_to(D))] = hashlib.sha256(p.read_bytes()).hexdigest()
     man = {'task': 'M3-04f-2', 'schema': 'M3-04f-2-v1', 'binary_sha256': BIN,
