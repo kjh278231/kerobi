@@ -1979,6 +1979,19 @@ impl<'a> Engine<'a> {
             let diag: Vec<String> = (0..rows.len()).map(|p| bits(lu.diag_of(p).1)).collect();
             out += &format!("{{\"urow\":{kk},\"m\":{},\"diag\":[{}],\"rows\":[{}]}}\n", rows.len(), diag.join(","), rows.join(","));
         }
+        // M1-02w-4: `RSOLVER_STAGE_PROBE=k0,k1` also dumps the stage values (Uᵀ output, row etas, vector after them)
+        // of e_r calls k0..=k1 (the original's `tools/m1_er_dense.js` view).
+        let in_stage = std::env::var("RSOLVER_STAGE_PROBE").ok().and_then(|s| {
+            let (a, b) = s.split_once(',')?;
+            Some((a.parse::<usize>().ok()?, b.parse::<usize>().ok()?))
+        });
+        if let Some(st) = in_stage.filter(|&(a, b)| a <= kk && kk <= b).and_then(|_| lu.btran_row_stages(r)) {
+            let pairs = |v: &[(usize, f64)]| format!("[{:?},[{}]]", v.iter().map(|e| e.0).collect::<Vec<_>>(),
+                v.iter().map(|e| bits(e.1)).collect::<Vec<_>>().join(","));
+            let etas: Vec<String> = st.etas.iter().map(|(r, e)| format!("[{r},{}]", pairs(e))).collect();
+            out += &format!("{{\"stage\":{kk},\"pos_row\":{:?},\"ut\":{},\"etas\":[{}],\"eta_out\":[{}]}}\n", st.pos_row, pairs(&st.ut), etas.join(","),
+                st.eta_out.iter().map(|&v| bits(v)).collect::<Vec<_>>().join(","));
+        }
         use std::io::Write;
         let f = std::fs::OpenOptions::new().create(true).append(true).open(format!("{spec}.out"));
         f.and_then(|mut f| f.write_all(out.as_bytes())).expect("probe dump");
