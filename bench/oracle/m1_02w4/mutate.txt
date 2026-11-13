@@ -1,0 +1,10 @@
+== no mask (before the fix): let s = |i: usize| spike[i];
+FAIL stair: Rust and original updates agree for 337, pinned 347; first difference original (r, diag) (43, 'bfc6bb2e8e6f7870'), Rust (43, 'bfc6bb2e8e6f7878')
+FAIL stair: e_r call 347 output value 0: original bf978ba2c1f8e2c6 Rust bf978ba2c1f8e217
+== > to >=: let s = |i: usize| if spike[i].abs() >= ZERO { spike[i] } else { 0.0 };
+PASS original + rust
+PASS original + rust
+== mask at 1e-12 (wrong tolerance): let s = |i: usize| if spike[i].abs() > 1e-12 { spike[i] } else { 0.0 };
+PASS original + rust
+PASS original + rust
+lu.rs restored
