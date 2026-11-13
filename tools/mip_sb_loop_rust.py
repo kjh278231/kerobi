@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M2-06h-3/06h-4/06h-5/06h-6 strong-branching candidate loop: original backend responses -> Rust -> original command trace."""
+"""M2-06h-3/06h-4/06h-5/06h-6/06h-9 strong-branching candidate loop: original backend responses -> Rust -> original command trace."""
 import argparse
 import collections
 import copy
@@ -28,13 +28,18 @@ OLD_MODELS = ['pk1', 'neos5', 'tr12-30']
 # M2-06h-6: VarBranch=3 (Node = NULL, no propagation) captures, keyed 'vb3/<model>'; this manifest covers every set.
 DATA6 = ROOT / 'bench/oracle/m2_06h6/final'
 VB3_MODELS = ['markshare_4_0', 'pk1', 'neos5', 'neos-3627168-kasai']
-MODELS = {**{m: DATA for m in OLD_MODELS}, **{m: DATA4 for m in NEW_MODELS}, **{'vb3/'+m: DATA6 for m in VB3_MODELS}}
+# M2-06h-9: propagation contradiction (06h-7 captures, default settings, 'contra/<model>'). Repeats 2-3 are not
+# committed: their gz hashes in that manifest equal repeat 1's.
+DATA7 = ROOT / 'bench/oracle/m2_06h7/final'
+CONTRA_MODELS = ['csched007', 'ic97_potential']
+MODELS = {**{m: DATA for m in OLD_MODELS}, **{m: DATA4 for m in NEW_MODELS}, **{'vb3/'+m: DATA6 for m in VB3_MODELS},
+          **{'contra/'+m: DATA7 for m in CONTRA_MODELS}}
 PK1_DEFAULT = DATA6 / 'pk1_default.json.gz'
 OLD_06H3_PK1 = DATA / 'pk1_1.json.gz'
 OLD_06H2 = ROOT / 'bench/oracle/m2_06h2/capture/1.json.gz'
 OLD_06G2 = str(ROOT / 'bench/oracle/m2_06g2/final') + '/{}_iters10_1.json.gz'
 TOOLS = ['tools/mip_sb_loop.js', 'tools/mip_sb_snapshot.js', 'tools/mip_sb_loop_runs.sh', 'tools/mip_sb_census.py',
-         'tools/mip_sb_direct.js', 'tools/mip_sb_direct_runs.sh',
+         'tools/mip_sb_direct.js', 'tools/mip_sb_direct_runs.sh', 'tools/mip_sb_contra_runs.sh',
          'tools/mip_sb_loop_rust.py', 'tools/mip_sb_restore_check.py', SOURCE, TEST]
 PARAMS = dict(Threads=1, Seed=0, LogToConsole=0, NodeLimit=300, GURO_PAR_SBMAXITERS=10)
 PARAMS_VB3 = dict(Threads=1, Seed=0, LogToConsole=0, NodeLimit=20, GURO_PAR_SBMAXITERS=10, VarBranch=3)
@@ -123,9 +128,15 @@ def direct_fields(d):
 
 
 def controls(cases, manifest):
+    m7 = json.loads((DATA7/'manifest.json').read_text())
     for m, ds in cases.items():
         vb3 = m.startswith('vb3/')
         tool, kind, params = ('mip_sb_direct.js', 'mip_sb_direct', PARAMS_VB3) if vb3 else ('mip_sb_loop.js', 'mip_sb_loop', PARAMS)
+        if m.startswith('contra/'):
+            tool, kind, params = 'mip_sb_direct.js', 'mip_sb_direct', {**m7['base_params'], **m7['params'][stem(m)]}
+            for i in (2, 3):
+                same(m7['files'][f'{stem(m)}_1.json.gz'], m7['files'][f'{stem(m)}_{i}.json.gz'], m+f'.repeat {i} hash')
+            same(m7['files'][f'{stem(m)}_1.json.gz']['gz'], sha(DATA7/f'{stem(m)}_1.json.gz'), m+'.repeat 1 hash')
         for d in ds:
             same(BINARY, d['binary_sha256'], m+'.binary')
             same(manifest['models'][m], d['model_sha256'], m+'.model')
@@ -171,7 +182,7 @@ def batches(m, d, cover, skip_contradiction=False):
         at = f'{m}.double[{e["id"]}]'
         steps = e['steps']
         if skip_contradiction and any(s['kind'] == 'prop' and s['out'] != 0 for s in steps):
-            cover['skipped contradiction batch'] += 1  # M2-06h-7: Rust returns Unported here
+            cover['skipped contradiction batch'] += 1  # M2-06h-7 view; Rust handles these since M2-06h-9
             continue
         # C:343: propagation only with Node and Node+0x18; older captures have no field and always propagated.
         direct = e.get('propagation', True) is False
@@ -228,8 +239,13 @@ def batches(m, d, cover, skip_contradiction=False):
                     same(0, steps[i]['rc'], at+'.prop bound rc')
                     i += 1
                 p = steps[i]
-                same(['prop', 0, 0], [p['kind'], p['rc'], p['out']], at+'.prop')
-                assert p['count'] == len(p['list']) > 0, at+'.prop list'
+                same(['prop', 0], [p['kind'], p['rc']], at+'.prop')
+                assert p['out'] in (0, 1) and p['count'] == len(p['list']) > 0, at+'.prop list'
+                if p['out']:  # C:669-740, 772-838: restore requests only, then the next candidate (no LP)
+                    rest = steps[i+1:]
+                    n = next((t for t, x in enumerate(rest) if x['kind'] != 'boundwrite'), len(rest))
+                    assert rest[n:n+1] == [] or rest[n]['kind'] in ('poll', 'flush'), at+'.after contradiction'
+                    cover[('up' if s['dir'] == 62 else 'down')+' contradiction'] += 1
                 cover['prop'] += 1
                 cover['extra propagation'] += p['count'] > 1
                 lines.append(' '.join(['prop', str(p['out']), str(p['count'])] +
@@ -305,6 +321,9 @@ def branches(e, cover, direct):
     """Branch evidence from the original command order and results (not from Rust)."""
     steps, cols = e['steps'], e['j']
     dirs = collections.defaultdict(list)
+    # Contradictions are counted at the prop step; keep '>= 1e100' for LP infeasibility only.
+    contra = {(s['col'], s['dir']) for i, s in enumerate(steps) if s['kind'] == 'propEnter'
+              and next(t for t in steps[i+1:] if t['kind'] != 'boundwrite')['out']}
     for i, s in enumerate(steps):
         if s['kind'] == 'propEnter':
             dirs[cols.index(s['col'])].append(s['dir'])
@@ -317,12 +336,12 @@ def branches(e, cover, direct):
     c['whole candidate skipped'] += sum(1 for k in range(last) if k not in dirs)
     for k, d in dirs.items():
         if d == [62]:
-            c['up >= 1e100' if e['z'][k] == INF else 'down gate' if e['a'][k] == NEG else 'down prefilled'] += 1
+            c['up contradiction batch' if (cols[k], 62) in contra else 'up >= 1e100' if e['z'][k] == INF else 'down gate' if e['a'][k] == NEG else 'down prefilled'] += 1
         elif d == [60]:
             c['up prefilled'] += 1
         else:
             same([62, 60], d, 'direction order')
-            c['down >= 1e100'] += e['a'][k] == INF
+            c['down >= 1e100'] += e['a'][k] == INF and (cols[k], 60) not in contra
     c['early exit'] += last < len(cols) - 1
     parent = next(s['value'] for s in steps if s['kind'] == 'attr')
     c['prefilled value'] += sum(1 for k, v in enumerate(e['a'] + e['z'])
@@ -340,7 +359,9 @@ REQUIRED = ['prop', 'extra propagation', 'values', 'restore request', 'status 2'
             'timer expired',
             # M2-06h-6 (VarBranch=3, no propagation).
             'direct request', 'direct restore', 'direct status 2', 'direct status -1000', 'direct status 3',
-            'direct values', 'direct down >= 1e100']
+            'direct values', 'direct down >= 1e100',
+            # M2-06h-9.
+            'up contradiction', 'down contradiction']
 
 
 def run(root, text, label):
@@ -494,19 +515,24 @@ def self_test(cases, manifest, inputs, expected, actual):
         ('clamp7', 'LpValue::Limited(dual) => if parent > dual { parent } else { dual },', 'LpValue::Limited(dual) => dual,'),
         ('split', 's.direction(k, Side::Lower, split + 1.0)?;', 's.direction(k, Side::Lower, split + 2.0)?;'),
         ('timer ignored', 'if s.lp.expired(s.work).map_err(Error::Backend)? {', 'if s.lp.expired(s.work).map_err(Error::Backend)? && false {'),
-        ('direct restore drop', 'return self.lp.bound(j, side, v).map_err(Error::Backend);', 'let _ = v; return Ok(());'),
-        ('direct restore gated', 'return self.lp.bound(j, side, v).map_err(Error::Backend);',
-         'if v == 0.0 { return Ok(()); } return self.lp.bound(j, side, v).map_err(Error::Backend);'),
-        ('direct work', 'return self.lp.bound(j, side, v).map_err(Error::Backend);',
-         '*self.work += 6.0; return self.lp.bound(j, side, v).map_err(Error::Backend);'),
-        ('direct side', 'return self.lp.bound(j, side, v).map_err(Error::Backend);',
-         'return self.lp.bound(j, if side == Side::Lower { Side::Upper } else { Side::Lower }, v).map_err(Error::Backend);'),
+        ('direct restore drop', 'return self.lp.bound(j, side, v).map(|_| false).map_err(Error::Backend);', 'let _ = v; return Ok(false);'),
+        ('direct restore gated', 'return self.lp.bound(j, side, v).map(|_| false).map_err(Error::Backend);',
+         'if v == 0.0 { return Ok(false); } return self.lp.bound(j, side, v).map(|_| false).map_err(Error::Backend);'),
+        ('direct work', 'return self.lp.bound(j, side, v).map(|_| false).map_err(Error::Backend);',
+         '*self.work += 6.0; return self.lp.bound(j, side, v).map(|_| false).map_err(Error::Backend);'),
+        ('direct side', 'return self.lp.bound(j, side, v).map(|_| false).map_err(Error::Backend);',
+         'return self.lp.bound(j, if side == Side::Lower { Side::Upper } else { Side::Lower }, v).map(|_| false).map_err(Error::Backend);'),
         ('direct scale', 'let s = |v: f64| match scale { Some(s) => v * s[j], None => v };', 'let s = |v: f64| { let _ = scale; v };'),
         ('direct clamp', 'if -infinity < lower[j] { s(lower[j]) } else { -INF }', 'if -infinity < lower[j] || true { s(lower[j]) } else { -INF }'),
         ('direct upper clamp', '} else if upper[j] < infinity { s(upper[j]) } else { INF };',
          '} else if upper[j] < infinity || true { s(upper[j]) } else { INF };'),
         ('direct scale none', 'None => v };', 'None => v * 0.0 };'),
         ('direct request', 'self.lp.bound(j, side, value).map_err(Error::Backend)?;', 'self.lp.bound(j, side, value + 1.0).map_err(Error::Backend)?;'),
+        # M2-06h-9 contradiction.
+        ('contra ignored', 'if p.contradiction {', 'if p.contradiction && false {'),
+        ('contra value', 'if side == Side::Lower { self.up[k] = INF } else { self.down[k] = INF }', ''),
+        ('contra undo', 'self.undo(&p)?;\n                    return Ok(true);', 'return Ok(true);'),
+        ('contra judge', 'judge = !s.direction(k, Side::Upper, split)?;', 's.direction(k, Side::Upper, split)?;'),
         ('timer return', 'if s.lp.expired(s.work).map_err(Error::Backend)? {\n            break;',
          'if s.lp.expired(s.work).map_err(Error::Backend)? {\n            return Ok(Evaluation { down: s.down, up: s.up });'),
     ]
@@ -531,8 +557,9 @@ def self_test(cases, manifest, inputs, expected, actual):
     # clamp7 is rejected since 06h-4 (neos-3627168-kasai status 7 dual below parent).
     # direct clamps: every VarBranch=3 candidate is binary, so no internal bound lies beyond infinity.
     # direct scale none: the capture writes 1.0 for a null scale array, so replay always passes Some.
+    # contra judge: at the only down contradiction (ic97_potential) a stall reset changes no later exit.
     same([('restore strict', True), ('score shift', False), ('direct clamp', True), ('direct upper clamp', True),
-          ('direct scale none', True)], survivors, 'surviving mutants')
+          ('direct scale none', True), ('contra judge', True)], survivors, 'surviving mutants')
 
 
 def synthetic(root, label):
@@ -566,11 +593,12 @@ def main():
                 print(m, 'REJECT', str(x)[:200])
         print('TOTAL', dict(tot))
         return
-    files = {m: [d/f'{stem(m)}_{i}.json.gz' for i in (1, 2, 3)] + [d/f'{stem(m)}_control.json.gz']
+    files = {m: [d/f'{stem(m)}_{1 if m.startswith("contra/") else i}.json.gz' for i in (1, 2, 3)] + [d/f'{stem(m)}_control.json.gz']
              for m, d in MODELS.items()}
-    cases = {m: [load(p) for p in ps] for m, ps in files.items()}
+    loaded = {p: load(p) for ps in files.values() for p in set(ps)}
+    cases = {m: [loaded[p] for p in ps] for m, ps in files.items()}
     if a.write_manifest:
-        paths = [p for ps in files.values() for p in ps] + [ROOT/p for p in TOOLS] + [OLD_06H2, PK1_DEFAULT] + [Path(OLD_06G2.format(m)) for m in OLD_MODELS]
+        paths = [p for ps in files.values() for p in ps] + [ROOT/p for p in TOOLS] + [OLD_06H2, PK1_DEFAULT, DATA7/'manifest.json'] + [Path(OLD_06G2.format(m)) for m in OLD_MODELS]
         manifest = dict(binary=BINARY, models={m: cases[m][0]['model_sha256'] for m in files},
                         files={str(p.relative_to(ROOT)): sha(p) for p in paths})
         (DATA6/'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')

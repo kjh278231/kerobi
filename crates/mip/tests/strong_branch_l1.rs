@@ -143,7 +143,7 @@ fn contradiction_skips_lp_and_judgement() {
     assert_eq!((r.up[0], r.down[0]), (1e100, -1e100));
     // Down contradiction leaves the stall counter as it was (here 1): candidate 3 then reaches the limit.
     let b = Batch { columns: &[0, 1, 2, 3, 4], x: &x, bounds: Bounds::Propagate { lower: &[0.0; 5], upper: &[1.0; 5] }, ..b };
-    let lim = |v: &str| [format!("prop 0 0 0"), format!("solve 7 {v} - 0"), "restore 0".to_string()];
+    let lim = |v: &str| ["prop 0 0 0".to_string(), format!("solve 7 {v} - 0"), "restore 0".to_string()];
     let mut l: Vec<String> = Vec::new();
     for (k, v) in ["3ff0000000000000", "3fe0000000000000", "3fe0000000000000", "3fe0000000000000"].iter().enumerate() {
         l.extend(lim(v));
