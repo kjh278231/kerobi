@@ -1,0 +1,6 @@
+REJECTED never peel | FAIL stair: Rust peel False n 467, original peel True n 467
+REJECTED always peel | FAIL kb2: Rust peel True n 41, original peel False n 41
+REJECTED inverted parity | FAIL stair: Rust peel False n 467, original peel True n 467
+REJECTED interval after the Full-pricing cap | FAIL degen2: Rust peel True n 534, original peel False n 534
+REJECTED diagonal ignores the flag (flag reported right) | FAIL stair: Rust and original updates agree for 27, pinned 179; first difference original (r, diag) (252, 'bfeeb36746e614e2'), Rust (252, 'bfeeb36746e614e3')
+MUTATIONS 5 / 5 rejected

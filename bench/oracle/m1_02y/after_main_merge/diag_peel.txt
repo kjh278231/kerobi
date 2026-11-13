@@ -1,0 +1,22 @@
+model events peel agree original_updates rust_updates
+stair 360 True 179 347 363
+sc50a 36 True 30 30 30
+scsd1 92 True 37 80 80
+afiro 13 True 9 9 9
+kb2 41 False 35 35 35
+degen2 637 False 348 621 614
+PASS original + rust
+rejected binary sha | kb2 run 2: binary sha 0000000000000000000000000000000000000000000000000000000000000000
+rejected empty events | sc50a: no events
+rejected run 2 diagonal | stair run 2: event 20 differs from run 1
+rejected alignment flipped | stair: update 4: values 0 mod 16, I + n = 528
+rejected carve offset | degen2: update 2: idx - W 11320 != 24I + 8 + 8(m+n) + 4m (I 71, n 534, m 444)
+rejected pool unaligned | afiro: update 1: W or LU+0x150 not 16-byte aligned (0, 8)
+rejected array moved | kb2: LU+0x1d0 value array moved during the run
+rejected one alignment only | only one alignment among the models: {True}
+rejected Rust peel flag | stair: Rust peel False n 467, original peel True n 467
+rejected Rust n | kb2: Rust peel False n 42, original peel False n 41
+rejected Rust diagonal bits | stair: Rust and original updates agree for 40, pinned 179; first difference original (r, diag) (262, 'bfe7a1ab4b72c519'), Rust (262, 'bfeeb36746e614e3
+rejected Rust update order | sc50a: Rust and original updates agree for 2, pinned 30; first difference original (r, diag) (34, 'bff0000000000000'), Rust (25, 'bff0000000000000')
+rejected original diagonal (all runs) | stair: Rust and original updates agree for 28, pinned 179; first difference original (r, diag) (189, '3ff0000000000000'), Rust (189, 'bfea916fc730ff54
+SELF-TEST PASS
