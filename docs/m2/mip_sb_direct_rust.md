@@ -40,8 +40,9 @@
 - 필수 사례(원본 자료에서 센다, 비전파 묶음만): `direct request`, `direct restore`, `direct status 2`, `direct status -1000`, `direct status 3`, `direct values`, `direct down >= 1e100`. 전파 경로의 기존 필수 사례 목록은 그대로다.
 - 판별력(기대를 먼저 적음):
   - 변조(원본 자료 단계 또는 Rust 재생에서 거부): `direct flag`(비전파 묶음의 `propagation`을 참으로 → 사전 단계 불일치), `direct inf`(문턱을 1.0으로 → 복구 값 차이), `direct scale`(배율 하나를 2.0으로 → 복구 값 차이), `direct bounds`(후보 열 `bounds0` lb를 다른 값으로 → 복구 값 차이), `no direct`(비전파 묶음 제거 → 필수 사례 0).
-  - Rust 변이(원본 재생에서 거부): `direct restore drop`(복구 요청 없음), `direct restore gated`(lb·ub가 0일 때 요청 생략), `direct work`(복구 뒤 `+6`), `direct side`(복구 요청 방향 반대), `direct clamp`(문턱 밖 값을 그대로), `direct scale`(배율 무시), `direct as prop`(Direct를 Propagate처럼 처리).
-  - 생존 변이 목록은 기존 `restore strict`·`score shift` 그대로여야 한다.
+  - Rust 변이(원본 재생에서 거부): `direct restore drop`(복구 요청 없음), `direct restore gated`(복구 값이 0이면 요청 생략), `direct work`(복구 뒤 `+6`), `direct side`(복구 요청 방향 반대), `direct scale`(배율 무시), `direct request`(직접 요청 값 +1).
+  - `direct clamp`(문턱 밖 값을 그대로)는 원본 재생에서 **생존**할 것으로 미리 적는다. 후보가 모두 이진 열이라 내부 bound가 문턱 밖인 사례가 없다(markshare_4_0 첫 묶음: lb −0, ub 8·16, 배율 0.125·0.0625). 합성 테스트가 거부해야 한다.
+  - 생존 변이 목록은 기존 `restore strict`·`score shift`에 `direct clamp`를 더한 셋이어야 한다.
 
 ## 4. 사례와 원본 자료
 

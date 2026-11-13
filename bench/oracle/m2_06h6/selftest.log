@@ -1,0 +1,58 @@
+REJECT binary
+REJECT model
+REJECT empty
+REJECT no kernel
+REJECT no propagation
+REJECT no extra propagation
+REJECT no values
+REJECT solution
+REJECT tolerance
+REJECT original bound
+REJECT later values
+REJECT work
+REJECT stall
+REJECT missing reset
+REJECT timer
+REJECT timer clear
+REJECT contradiction
+REJECT status
+REJECT direct flag
+REJECT direct inf
+REJECT direct scale
+REJECT direct bounds
+REJECT no direct
+REJECT direct values
+REJECT direct stall
+REJECT direct work
+REJECT trace order
+REJECT trace bound
+REJECT trace values
+REJECT trace result
+REJECT Rust prefill floor
+REJECT Rust prefill ceil
+REJECT Rust prefill nil
+REJECT Rust prefill min
+REJECT Rust eps
+REJECT Rust gate
+REJECT Rust down gate
+REJECT Rust stall
+REJECT Rust best
+REJECT Rust work
+SURVIVED restore strict (original unverified; synthetic rejects)
+REJECT Rust restore upper
+REJECT Rust up skip
+SURVIVED score shift (original unverified; synthetic misses)
+REJECT Rust score floor
+REJECT Rust clamp2
+REJECT Rust clamp7
+REJECT Rust split
+REJECT Rust timer ignored
+REJECT Rust direct restore drop
+REJECT Rust direct restore gated
+REJECT Rust direct work
+REJECT Rust direct side
+REJECT Rust direct scale
+SURVIVED direct clamp (original unverified; synthetic rejects)
+REJECT Rust direct request
+REJECT Rust timer return
+PASS {'prop': 1356, 'extra propagation': 734, 'limited below parent': 2, 'status 7': 954, 'restore request': 4836, 'batches': 289, 'candidates evaluated': 698, 'whole candidate skipped': 3, 'down >= 1e100': 1, 'early exit': 111, 'prefilled value': 11, 'optimal below parent': 73, 'status 2': 385, 'values': 225, 'down gate': 23, 'status 6': 10, 'up >= 1e100': 10, 'status -1000': 6, 'up prefilled': 2, 'down prefilled': 5, 'status 3': 1, 'timer expired': 5, 'direct request': 2501, 'direct status 2': 988, 'direct values': 904, 'direct restore': 2501, 'direct status -1000': 1489, 'direct batches': 100, 'direct candidates evaluated': 1340, 'direct whole candidate skipped': 8, 'direct down >= 1e100': 24, 'direct down prefilled': 80, 'direct early exit': 4, 'direct prefilled value': 12, 'direct up prefilled': 30, 'direct down gate': 69, 'direct status 6': 1, 'direct status 3': 23}
