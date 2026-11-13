@@ -30,12 +30,13 @@
 
 | 사례 | Rust 블록 단계 | e_r 126 | 129 | 130 |
 |---|---|---|---|---|
-| bnl1 Method=1 | 끔(현재, `BlockState::OFF`) | 대각 20·행 32 차이 | 같음 | 같음 |
+| bnl1 Method=1 | 끔(현재, `BlockState::OFF`) | 대각 20·행 32 차이 | 같은 차이 | 같은 차이 |
 | bnl1 Method=1 | 켬(실험, 재분해마다 `{0,0,0}`) | **전부 일치**(643행) | 일치 | 일치 |
 
 - 끔: 위치 588–609에서 Rust 번호가 원본보다 2 작다(예: 행 527 열 원본 602 ↔ Rust 600, 원본 대각 591–609 = Rust 589–607). 원본은 588·590에 빈 행·부호가 반대인 대각 쌍(`bfea47ae147ae148`, `3fea47ae147ae148`)을 두고 589에 행 [590]을 둔다. 블록 단계가 피벗한 두 단계가 단계 4 꼬리 앞에 끼어든 모양이다.
 - 켬: [block_on.patch](../../bench/oracle/m1_02z/explore/block_on.patch)를 적용한 빌드에서 세 호출 모두 행 U·대각이 비트로 같다.
 - 실험의 한계: 상태를 재분해마다 `{x2c0 0, x4e0 0, x4e4 0}`으로 새로 만들었다. 원본은 S에 상태를 남기고 재분해마다 S+0x2c0을 올리며, 블록 피벗이 20단계 이상이면 S+0x4e4를 올리고 S+0x2c0 > 20에서 −1 또는 2e9로 고정한다(`lu.rs` 1459–1464, C:1494–1510). 실험은 이 전환을 한 번도 타지 않았다. 반복 수도 원본 1050, Rust 끔 1087, 켬 1031로 아직 다르다(e_r 130 뒤 다른 차이 또는 상태 수명).
+- 증상 연결: 켬 빌드에서 `tools/m1_lt_check.py --rust`는 bnl1 고정 차이(e_r 130)가 사라져 "pinned order difference not seen"으로 실패한다([로그](../../bench/oracle/m1_02z/explore/lt_check_block_on.txt)). 고정 목록 `KNOWN_IDX`의 bnl1 7호출을 비운 임시 사본은 4모델(stair·degen2·fit1p·bnl1) 같은 상태 범위 전부가 일치해 통과했다([로그](../../bench/oracle/m1_02z/explore/lt_check_block_on_unpinned.txt), 임시 사본은 지웠다). 그래서 14의 증상(e_r 130 등 7호출)도 블록 단계로 설명된다. 범위 밖(bnl1 e_r 174 뒤 LU+0x108, M1-02w)은 보지 않았다.
 - 원본에서 블록 단계 실행을 직접 캡처하지는 않았다. "켜면 같아진다"는 Rust 재현 증거이며 원본 상태 연쇄는 M1-01e 캡처로 확인한다.
 
 ## 5. 재실행 명령
@@ -47,7 +48,7 @@ tools/build_local.sh   # worktree 격리 빌드
 python3 tools/m1_urow_cmp.py bench/oracle/m1_02y/explore/bnl1_urow126.json.gz S.spec.out   # 0 = 같음, 1 = 차이
 ```
 
-켬은 `block_on.patch`를 적용해 다시 빌드한 뒤 같은 명령이다. 원본 덤프 재생성: `tools/gurun.sh node tools/m1_urow_dump.js ../re/bench/data/netlib/bnl1.mps.gz <out> 1 126`.
+켬은 `git apply bench/oracle/m1_02z/explore/block_on.patch` 뒤 다시 빌드해 같은 명령이다. 증상 확인: 켬 빌드에서 `PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_lt_check.py --rust`(고정 목록 그대로면 bnl1 e_r 130에서 실패, `KNOWN_IDX`를 비우면 통과). 원본 덤프 재생성: `tools/gurun.sh node tools/m1_urow_dump.js ../re/bench/data/netlib/bnl1.mps.gz <out> 1 126`.
 
 ## 6. 실행 결과
 
@@ -55,12 +56,12 @@ python3 tools/m1_urow_cmp.py bench/oracle/m1_02y/explore/bnl1_urow126.json.gz S.
 - 끔: [126](../../bench/oracle/m1_02z/explore/bnl1_urow126_block_off.txt)·[129](../../bench/oracle/m1_02z/explore/bnl1_urow129_block_off.txt)·[130](../../bench/oracle/m1_02z/explore/bnl1_urow130_block_off.txt) 모두 대각 20·행 32 차이(같은 위치 집합), 종료 1.
 - 켬: [126](../../bench/oracle/m1_02z/explore/bnl1_urow126_block_on.txt)·[129](../../bench/oracle/m1_02z/explore/bnl1_urow129_block_on.txt)·[130](../../bench/oracle/m1_02z/explore/bnl1_urow130_block_on.txt) 차이 0, 종료 0.
 - 검사기 판별력: 같은 원본 덤프에 대해 끔 빌드는 종료 1, 켬 빌드는 종료 0이라 위치 번호 차이를 구분한다.
-- 회귀: 탐침은 `RSOLVER_UROW_PROBE`가 있을 때만 동작한다. `cargo test --release -p rsolver-lp`, clippy 결과는 §7 handoff에 적는다.
+- 회귀(탐침만 있는 빌드): `cargo test --release -p rsolver-lp` 종료 0, 68 통과·0 실패·1 무시([로그](../../bench/oracle/m1_02z/cargo_lp.txt)), `cargo clippy --workspace --all-targets -- -D warnings` 종료 0([로그](../../bench/oracle/m1_02z/clippy.txt)). 탐침은 `RSOLVER_UROW_PROBE`가 있을 때만 동작한다.
 - 실행하지 못한 것: 원본 재캡처(다른 세션이 Gurobi 사용 중), M1 재분해의 원본 블록 상태 연쇄, 켬 빌드의 다른 모델·검사기 회귀(M1-01e 범위).
 
 ## 7. 판정과 인수인계
 
-- 작업 수행: **완료(조사)**. 원인: M1 재분해가 `1da0b2` 2×2 블록 단계를 끈 채 돈다. 켜면 bnl1 e_r 126·129·130의 행 U·대각이 원본과 비트로 같다. 동등성 판정은 하지 않는다(조사).
+- 작업 수행: **완료(조사)**. 원인: M1 재분해가 `1da0b2` 2×2 블록 단계를 끈 채 돈다. 켜면 bnl1 e_r 126·129·130의 행 U·대각이 원본과 비트로 같고, `m1_lt_check` 같은 상태 범위의 bnl1 7호출 차이도 사라진다. 14 행은 "조사·구현"이었으나 구현은 이미 등록된 M1-01e와 같은 일이라 조사로 닫는다. 동등성 판정은 하지 않는다(조사).
 - 후속: **M1-01e**(구현). M1 spx에 S+0x2c0/0x4e0/0x4e4 수명을 두고 재분해 호출자에서 넘긴다. 원본 `036ade` 진입·반환의 상태를 M1 Method=1에서 캡처해 연쇄를 대조한다(`tools/push_block_agent.js`의 `lu:block` 훅 재사용 검토). 블록 단계가 활성 ≥ 50 재분해의 피벗 순서를 바꾸므로 pathcmp·lp_check·`m1_lt_check`(bnl1 KNOWN 7호출)·`m1_btran_check`·`m1_diag_peel_check` 회귀가 필요하다. t = s3 정정도 같은 작업이다.
 - branch `work/m1-02z`, worktree `../rsolver-m1-02z`. 미커밋 선행 없음.
 - 교훈: `docs/lessons/original.md`(bnl1 U 위치 차이 = 블록 단계 끔).

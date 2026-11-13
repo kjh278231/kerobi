@@ -1,0 +1,7 @@
+model events target control rust_matched/er target_in_range
+stair 725 6 423 185 356 2
+degen2 1094 0 735 356 634 0
+fit1p 1214 0 1195 117 568 0
+bnl1 1723 0 1317 174 1050 0
+PASS original + rust
+rc=0
