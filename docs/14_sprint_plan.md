@@ -67,7 +67,8 @@
 | M1-07b | 검증 | Method별 P1과 P2 | 02c·03c, work 계측 범위 확정 | 반복·work 비교와 미계측 항목 명시 |
 | M1-07c | 검증 | LP P3 및 M1 관문 판정 | 07a·07b | 동일 조건 속도표와 기준별 합격 여부 |
 | M1-02w-2 | 조사 완료 | M1 dual의 초기 F+0x158(원소 풀 크기) 규칙과 쓰는 함수 | 02w | [완료](m1/m1_02w2_factspace.md). `045a76` FactSpace 식(m·n·nnz·SIMPLEXALLOCS·c), 저장 64모델 일치, 직접 캡처 7사례 × 3회 일치, k 판별 일치. c는 이전 풀이 F+0x170 최댓값(reset이 0으로, warm start 3회 탐색) |
-| M1-02w-3 | 구현 | M1 재분해를 `Lu::factor_dense`(F+0x158 수명, `crossover_refactor` 풀 부족 재호출 루프 재사용)로 켜기. stair e_r 347 175 ulp 차이 포함 | 02w-2, M3-04c-21j | 5모델(stair·grow15·grow22·perold·pilot4) 원본 3회 재현 대조, stair `KNOWN_D` 제거와 btran·diag_peel·lt 범위 확장, pathcmp·lp_check 회귀 |
+| M1-02w-3 | 구현 완료 | M1 재분해를 `Lu::factor_dense`(F+0x158 수명, 풀 부족 재호출)로 켜기, `local_70` → 조밀 전환(C:3405) 포팅 | 02w-2, M3-04c-21j | [완료](m1/m1_02w3_dense.md). 5모델 × 3회 원본 동일, 주입 재생 124/124(대각 106 비트), 자연 44호출, cap 변이 5/5 거부. pathcmp 28/64·lp_check 정답 유지·IterCount 35/64·stair urow185 일치. stair e_r 347–355 값 차이 남음 |
+| M1-02w-4 | 조사 | stair e_r 347 BTRAN 출력 값 175 ulp 차이(조밀 재분해 337은 비트 일치, 뒤 갱신 9회 일치) | 02w-3 | 재분해 337의 L 열 값부터 원본과 비교(행 U·대각은 e_r 337에서 비트 일치)하고, 원본 e_r 347의 단계별 출력(R eta·Uᵀ·Lᵀ)과 Rust 탐침을 대조해 첫 단계 특정. `m1_lt_check` `KNOWN_VAL` stair 347–355 해제가 목표 |
 
 02a~02b처럼 원인 하나를 고치는 주기는 남은 불일치마다 새 접미사로 반복한다. 한 번의 수정으로 G1 전체를 끝낸다는 계획은 아니다. work 누적이 빠진 경우 07b에서 구현을 늘리지 않고 누락 경로별 작업을 등록한다.
 
