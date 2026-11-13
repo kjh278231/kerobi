@@ -1,21 +1,31 @@
 //! One strong-branching batch: the candidate loop with an external LP, propagation and
 //! saved-state backend. The backend owns the LP numbers, the propagation itself, the parent
 //! snapshot and the timer; this module owns the candidate control and the values it writes.
-//! shortcut: integer candidates on the propagation path only. Propagation contradiction returns
-//! Unported (no original case yet); upgrade when one is captured.
+//! shortcut: integer, unflipped candidates only. Propagation contradiction returns Unported
+//! (no original case yet); upgrade when one is captured.
 
 const INF: f64 = 1e100;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Side { Lower, Upper }
 
-/// Inputs read before the loop. Arrays indexed by column hold the parent LP solution and the
-/// original unscaled bounds; `columns` is the candidate order (all integer columns).
+/// Bounds a direction restores, indexed by column.
+#[derive(Clone, Copy)]
+pub enum Bounds<'a> {
+    /// Node with propagation data: original unscaled bounds from the getters; only bounds the
+    /// propagation tightened are requested back.
+    Propagate { lower: &'a [f64], upper: &'a [f64] },
+    /// No node (VarBranch=3): the LP's internal bounds, column scale and infinity. The candidate's
+    /// own bound is requested directly and requested back unconditionally.
+    Direct { lower: &'a [f64], upper: &'a [f64], scale: Option<&'a [f64]>, infinity: f64 },
+}
+
+/// Inputs read before the loop. Arrays indexed by column hold the parent LP solution;
+/// `columns` is the candidate order (all integer columns).
 pub struct Batch<'a> {
     pub columns: &'a [usize],
     pub x: &'a [f64],
-    pub lower: &'a [f64],
-    pub upper: &'a [f64],
+    pub bounds: Bounds<'a>,
     pub int_tol: f64,
     pub parent_obj: f64,
     pub stall_limit: i32,
@@ -102,13 +112,23 @@ struct Loop<'a, B: Backend> {
 }
 
 impl<B: Backend> Loop<'_, B> {
-    /// One direction: propagate, solve, consume, pre-fill later candidates, restore.
+    /// One direction: propagate (or request the bound), solve, consume, pre-fill later candidates, restore.
     fn direction(&mut self, k: usize, side: Side, value: f64) -> Result<(), Error<B::Error>> {
         let parent = self.b.parent_obj;
-        let p = self.lp.propagate(self.b.columns[k], side, value, self.work).map_err(Error::Backend)?;
-        if p.contradiction {
-            return Err(Error::Unported);
-        }
+        let j = self.b.columns[k];
+        let p = match self.b.bounds {
+            Bounds::Propagate { .. } => {
+                let p = self.lp.propagate(j, side, value, self.work).map_err(Error::Backend)?;
+                if p.contradiction {
+                    return Err(Error::Unported);
+                }
+                Some(p)
+            }
+            Bounds::Direct { .. } => {
+                self.lp.bound(j, side, value).map_err(Error::Backend)?;
+                None
+            }
+        };
         self.lp.flush().map_err(Error::Backend)?;
         let r = self.lp.solve(self.work).map_err(Error::Backend)?;
         *self.iterations += r.iterations;
@@ -124,6 +144,18 @@ impl<B: Backend> Loop<'_, B> {
         }
         self.lp.reset().map_err(Error::Backend)?;
         self.lp.restore(self.work).map_err(Error::Backend)?;
+        let (p, lower, upper) = match (p, self.b.bounds) {
+            (Some(p), Bounds::Propagate { lower, upper }) => (p, lower, upper),
+            (_, Bounds::Direct { lower, upper, scale, infinity }) => {
+                // Read at candidate start (C:410-427): beyond +-infinity becomes +-1e100, else scaled.
+                let s = |v: f64| match scale { Some(s) => v * s[j], None => v };
+                let v = if side == Side::Lower {
+                    if -infinity < lower[j] { s(lower[j]) } else { -INF }
+                } else if upper[j] < infinity { s(upper[j]) } else { INF };
+                return self.lp.bound(j, side, v).map_err(Error::Backend);
+            }
+            _ => unreachable!(),
+        };
         // The original clears a column's flags after its first entry, so a repeated entry is a no-op.
         let mut done: Vec<usize> = Vec::new();
         for c in &p.changes {
@@ -131,7 +163,7 @@ impl<B: Backend> Loop<'_, B> {
                 continue;
             }
             done.push(c.column);
-            let (lo, up) = (self.b.lower[c.column], self.b.upper[c.column]);
+            let (lo, up) = (lower[c.column], upper[c.column]);
             if c.flags & 1 != 0 && lo < c.lower {
                 self.lp.bound(c.column, Side::Lower, lo).map_err(Error::Backend)?;
             }

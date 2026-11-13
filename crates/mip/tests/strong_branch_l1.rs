@@ -1,4 +1,4 @@
-use rsolver_mip::strong_branch::{run, Backend, Batch, Change, Error, LpResult, LpValue, Propagation, Side};
+use rsolver_mip::strong_branch::{run, Backend, Batch, Bounds, Change, Error, LpResult, LpValue, Propagation, Side};
 use std::{collections::VecDeque, fmt::Write};
 
 fn number(s: &str) -> f64 { f64::from_bits(u64::from_str_radix(s, 16).unwrap()) }
@@ -62,7 +62,7 @@ impl Backend for Replay {
 fn bits(v: &[f64]) -> String { v.iter().map(|x| format!("{:016x}", x.to_bits())).collect::<Vec<_>>().join(" ") }
 
 /// Input: `batch id stall tol parent cost0 work0`, then `cols`, `x`, `lower`, `upper`
-/// (by column), then responses, then `end`.
+/// (by column), `path`, then responses, then `end`.
 #[test]
 #[ignore = "run by tools/mip_sb_loop_rust.py with original inputs"]
 fn replay() {
@@ -74,12 +74,20 @@ fn replay() {
         let mut arr = |tag: &str| { let l = lines.next().unwrap(); assert_eq!(l[0], tag); l[1..].to_vec() };
         let cols: Vec<usize> = arr("cols").iter().map(|s| s.parse().unwrap()).collect();
         let [x, lower, upper] = ["x", "lower", "upper"].map(|t| arr(t).iter().map(|s| number(s)).collect::<Vec<_>>());
+        // `path prop` or `path direct infinity scale*` (scale by column).
+        let path = arr("path");
+        let scale: Vec<f64> = path.iter().skip(2).map(|s| number(s)).collect();
+        let bounds = match path[0].as_str() {
+            "prop" => Bounds::Propagate { lower: &lower, upper: &upper },
+            "direct" => Bounds::Direct { lower: &lower, upper: &upper, scale: Some(&scale), infinity: number(&path[1]) },
+            p => panic!("path {p}"),
+        };
         let mut responses = VecDeque::new();
         for l in lines.by_ref() {
             if l[0] == "end" { break; }
             responses.push_back(l);
         }
-        let b = Batch { columns: &cols, x: &x, lower: &lower, upper: &upper, int_tol: number(&h[3]),
+        let b = Batch { columns: &cols, x: &x, bounds, int_tol: number(&h[3]),
             parent_obj: number(&h[4]), stall_limit: h[2].parse().unwrap() };
         let mut lp = Replay { responses, trace: String::new() };
         let (mut cost, mut work) = (number(&h[5]), number(&h[6]));
@@ -107,7 +115,7 @@ fn script(lines: &[&str]) -> Replay {
 fn clamp_and_signed_zero() {
     // Status 2 below the parent and status 7 with the dual below it both take the parent.
     let x = [0.5];
-    let b = Batch { columns: &[0], x: &x, lower: &[0.0], upper: &[1.0], int_tol: 1e-5, parent_obj: 1.0, stall_limit: 2 };
+    let b = Batch { columns: &[0], x: &x, bounds: Bounds::Propagate { lower: &[0.0], upper: &[1.0] }, int_tol: 1e-5, parent_obj: 1.0, stall_limit: 2 };
     let mut lp = script(&["prop 0 0 0", "solve 2 0000000000000000 - 0", "restore 0",
         "prop 0 0 0", "solve 7 3fe0000000000000 - 0", "restore 0", "solve 2 - - 0"]);
     let (mut cost, mut work) = (0.0, 0.0);
@@ -124,7 +132,7 @@ fn clamp_and_signed_zero() {
 #[test]
 fn contradiction_unported_timer_stops() {
     let x = [0.5, 0.5];
-    let b = Batch { columns: &[0, 1], x: &x, lower: &[0.0; 2], upper: &[1.0; 2], int_tol: 1e-5, parent_obj: 0.0, stall_limit: 2 };
+    let b = Batch { columns: &[0, 1], x: &x, bounds: Bounds::Propagate { lower: &[0.0; 2], upper: &[1.0; 2] }, int_tol: 1e-5, parent_obj: 0.0, stall_limit: 2 };
     let mut lp = script(&["prop 1 0 0"]);
     assert!(matches!(run(&b, &mut lp, &mut 0.0, &mut 0.0), Err(Error::Unported)));
     // Down infeasible resets the stall counter and moves on; an expired timer ends the batch
@@ -143,7 +151,7 @@ fn contradiction_unported_timer_stops() {
 fn restore_requests_only_tightened_bounds() {
     // Column 1 keeps its original bounds although both flags are set; column 2 was tightened.
     let x = [0.5, 0.0, 0.0];
-    let b = Batch { columns: &[0], x: &x, lower: &[0.0, 0.0, 0.0], upper: &[1.0, 4.0, 4.0], int_tol: 1e-5,
+    let b = Batch { columns: &[0], x: &x, bounds: Bounds::Propagate { lower: &[0.0, 0.0, 0.0], upper: &[1.0, 4.0, 4.0] }, int_tol: 1e-5,
         parent_obj: 0.0, stall_limit: 2 };
     let mut lp = script(&["prop 0 3 0 1 3ff0000000000000 3ff0000000000000 1 3 0000000000000000 4010000000000000 2 3 3ff0000000000000 4000000000000000 0",
         "solve 7 0000000000000000 - 0", "restore 0",
@@ -158,7 +166,7 @@ fn restore_requests_only_tightened_bounds() {
 fn repeated_change_and_up_prefill() {
     // A repeated list entry requests nothing more but still counts 6 work.
     let x = [0.5, 0.5];
-    let b = Batch { columns: &[0, 1], x: &x, lower: &[0.0; 2], upper: &[1.0; 2], int_tol: 1e-5,
+    let b = Batch { columns: &[0, 1], x: &x, bounds: Bounds::Propagate { lower: &[0.0; 2], upper: &[1.0; 2] }, int_tol: 1e-5,
         parent_obj: 0.0, stall_limit: 9 };
     // Up LP of candidate 0 is optimal at the parent value with candidate 1 at 1.0 (its ceil): up[1] = parent.
     let mut lp = script(&["prop 0 2 0 1 3ff0000000000000 3ff0000000000000 0 1 3ff0000000000000 3ff0000000000000 0",
@@ -172,4 +180,32 @@ fn repeated_change_and_up_prefill() {
     // Candidate 1 skips its up solve: only the down propagation follows the timer.
     assert!(lp.trace.contains("timer 0000000000000000\nprop 1 60 "));
     assert_eq!((r.up[1], r.down[1]), (0.0, 0.0));
+}
+
+#[test]
+fn direct_requests_and_restores_own_bound() {
+    // No propagation: the candidate's bound is requested, then requested back unconditionally
+    // from the internal bounds (scaled; beyond infinity -> +-1e100) with no work added.
+    let x = [0.5, 2.5];
+    let (lower, upper, scale) = ([-1e30, -0.0], [4.0, 1e30], [0.5, 2.0]);
+    let b = Batch { columns: &[0, 1], x: &x, bounds: Bounds::Direct { lower: &lower, upper: &upper,
+        scale: Some(&scale), infinity: 1e30 }, int_tol: 1e-5, parent_obj: 0.0, stall_limit: 9 };
+    let mut lp = script(&["solve 7 0000000000000000 - 0", "restore 0", "solve 7 0000000000000000 - 0", "restore 0",
+        "timer 0 0", "solve 7 0000000000000000 - 0", "restore 0", "solve 6 - - 0", "restore 0", "solve 2 - - 0"]);
+    let mut work = 0.0;
+    run(&b, &mut lp, &mut 0.0, &mut work).unwrap();
+    let requests: Vec<_> = lp.trace.lines().filter(|l| l.starts_with("bound")).collect();
+    assert_eq!(requests, ["bound 0 62 3ff0000000000000", "bound 0 62 d4b249ad2594c37d", "bound 0 60 0000000000000000",
+        "bound 0 60 4000000000000000", "bound 1 62 4008000000000000", "bound 1 62 8000000000000000",
+        "bound 1 60 4000000000000000", "bound 1 60 54b249ad2594c37d"]);
+    assert!(!lp.trace.contains("prop"));
+    assert_eq!(work, 0.0);
+    // No scale array: the internal bound is requested back as is.
+    let b = Batch { columns: &[0], x: &x, bounds: Bounds::Direct { lower: &[-0.0, 0.0], upper: &[3.0, 0.0], scale: None,
+        infinity: 1e30 }, int_tol: 1e-5, parent_obj: 0.0, stall_limit: 9 };
+    let mut lp = script(&["solve 7 0000000000000000 - 0", "restore 0", "solve 7 0000000000000000 - 0", "restore 0", "solve 2 - - 0"]);
+    run(&b, &mut lp, &mut 0.0, &mut 0.0).unwrap();
+    let requests: Vec<_> = lp.trace.lines().filter(|l| l.starts_with("bound")).collect();
+    assert_eq!(requests, ["bound 0 62 3ff0000000000000", "bound 0 62 8000000000000000", "bound 0 60 0000000000000000",
+        "bound 0 60 4008000000000000"]);
 }
