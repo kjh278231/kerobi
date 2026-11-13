@@ -158,6 +158,12 @@
 - **S+0x2d8(push 뒤 쌍대 위반 합)는 비기저 `v = maxsd(0, −d)`(NaN·−0은 −d 그대로)가 S+0x380 이상일 때만 더한 합 + 기저 |d| 합이다.** −3은 건너뛰고 −4는 0이다. 디컴파일의 `0.0 <= −d` 표현은 NaN에서 asm과 다르므로 asm(0x1bf951–0x1bfa08)을 따른다. 캡처 121호출 비트 일치. (M3-04f-4a)
 - **Crossover 3(primal-first)에서는 0x1bf09e의 `251b4f` 앞에 dual push(`13b3d1`, param_9 = 0)가 한 번 더 돈다.** Netlib 45 중 39모델은 dual push가 factor·header·vstat을 바꿔 0x1bf09e 상태가 primal push 반환과 다르다. 반면 `13b3d1` C 150–451은 첫 `251b4f`(0x1c6b49) 전에 factor·basis를 쓰지 않으므로 0x1c6b49가 "primal push 직후 상태"를 보는 경계다. Rust push 연쇄를 뒤 단계에 이을 때 이 지점을 쓴다. C·캡처. (M3-04f-4b, [§1](../m3/crossover_dual_link.md#1-범위와-주장))
 
+## crossover cleanup simplex 본체 (`0cda5b`·`02f7e1`·`0478d3`·`06268b`)
+
+- **crossover가 부른 cleanup `0cda5b`는 조기 반환을 타지 않고, `02f7e1`이 기존 spx를 유지한 채 파라미터·카운터만 다시 쓴 뒤 primal `0478d3` 또는 dual `06268b`를 한 번 부른다.** 진입에서 model+100 = 2, spx+0xf0 = 1이라 C 142의 "이미 풀림" 검사가 거짓이다. basis·header·x·superbasic은 이어받고 반복 카운터(spx+0x2a0)는 0이 되며, factor는 첫 판단에서 다시 분해한다. 캡처 240사례 × 3. (M3-04f-4c, [§6.1](../m3/crossover_cleanup_simplex.md#61-조사-답))
+- **Netlib 45 × Crossover 5값 자연 cleanup은 모두 반복 0이고 basis를 바꾸지 않는다. 최종 VBasis/CBasis는 cleanup 진입 basis(push 결과)이며, −4(고정 비기저)만 −1 또는 −2로 보고된다.** 반복이 있는 cleanup은 mode 1(PStart/DStart) arms·retry뿐이었다. 따라서 Netlib 최종 basis 비교는 dual push 이식과 "재분해 → 최적 판정" 경로로 충분하다. 캡처. (M3-04f-4c, [§6.1](../m3/crossover_cleanup_simplex.md#61-조사-답))
+- **crossover 뒤 primal cleanup의 pricing(spx+0x3ec)은 superbasic이 있으면 0, 없으면 3m ≤ n일 때 0(partial), 그 밖 2(devex)이다.** spx+0x4d8 = 1·spx+0x178 = 0 조건의 `af361` C 158–185이며, primal 시작 145회가 모두 맞았다. dual로 끝난 cleanup은 3(SE)이다. 캡처. (M3-04f-4c, [§6.1](../m3/crossover_cleanup_simplex.md#61-조사-답))
+
 ## dual simplex DSE β (`28c93`·`8b473`)
 
 - **반복별 DSE β=‖ρ_r‖²(spx+0x310)는 `8b473` C:105–222가 spx+0x218 벡터를 저장 순서대로 8레인 `((0+2)+(4+6))+((1+3)+(5+7))` 합산해 쓴다(n≤6이면 순차).** 그 벡터는 `28c93` C:149–163이 BTRAN `09e376`의 조밀 출력(nnz<0)을 \|x_i\|>spx+0x3a8(kb2 1e-13) 원소만 인덱스 순으로 제자리 압축한 것이다. 희소 출력은 거르지 않는다(C만, kb2 희소 출력에는 문턱 이하 원소가 없었다). 조밀 m개를 그대로 더하면 마지막 비트가 갈린다. `1bae9c` L1971–2110은 초기 정확 노름 루프이고 반복별 β가 아니다. (M1-02a, 캡처 kb2 38피벗, [근거](../m1/m1_02a_beta.md#62-고정-캡처)) 조밀 여부는 출력 길이가 아니라 BTRAN이 조밀 Lᵀ 경로로 끝났는지로 정한다. Rust `Lu::btran_dense`의 조밀 표시가 kb2 피벗 0–21에서 원본 nnz<0과 같다. (M1-02b, 캡처 대조, [근거](../m1/m1_02b_beta.md#6-실행-결과))
