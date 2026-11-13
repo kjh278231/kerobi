@@ -1,0 +1,59 @@
+diff --git a/crates/lp/src/simplex.rs b/crates/lp/src/simplex.rs
+index 2adb3a1..87cf6f4 100644
+--- a/crates/lp/src/simplex.rs
++++ b/crates/lp/src/simplex.rs
+@@ -1824,6 +1824,11 @@ impl<'a> Engine<'a> {
+             -3 => self.d[j].abs() > OPT_TOL,
+             _ => false,
+         });
++        if std::env::var("RSOLVER_TMP02Y2").is_ok() {
++            let pmax = (0..self.m).map(|p| self.primal_infeas(p).abs()).fold(0.0, f64::max);
++            let dmax = (0..self.n + self.m).map(|j| match self.vstat[j] { -1 | -2 => (-self.d[j]).max(0.0), -3 => self.d[j].abs(), _ => 0.0 }).fold(0.0, f64::max);
++            eprintln!("TMP unscaled entry pinf {pinf} pmax {pmax:e} dinf {dinf} dmax {dmax:e}");
++        }
+         if !pinf && !dinf {
+             return None;
+         }
+@@ -2120,19 +2125,42 @@ fn solve_model_run(
+         e2.iter_limit = iter_limit;
+         e2.deadline = deadline;
+         e2.trace_on = want_trace;
++        let tmp = std::env::var("RSOLVER_TMP02Y2").is_ok();
++        if tmp {
++            let xs = e.x();
++            let obj: f64 = (0..spx.n).map(|j| md.obj[j] * xs[j] * spx.scaling.col[j]).sum::<f64>() + md.objcon;
++            eprintln!("TMP scaled-opt obj {obj:.12} iter {}", e.iter);
++        }
+         if let Some(st) = e2.resolve_unscaled(e.vstat.clone()) {
+             let xs = e2.x();
+             let x: Vec<f64> = xs[..sp2.n].to_vec();
+             let obj = md.obj.iter().zip(&x).map(|(c, x)| c * x).sum::<f64>() + md.objcon;
++            if tmp {
++                eprintln!("TMP resolved obj {obj:.12} iter {} st {st:?}", e2.iter);
++                e2.compute_xb();
++                e2.compute_duals();
++                for j in 0..sp2.n + sp2.m {
++                    let dv = match e2.vstat[j] { -1 | -2 => -e2.d[j], -3 => e2.d[j].abs(), _ => 0.0 };
++                    if dv > 1e-9 {
++                        eprintln!("TMP dinf j {j} vstat {} d {:e} x {} l {} u {}", e2.vstat[j], e2.d[j], xs[j], sp2.l[j], sp2.u[j]);
++                    }
++                }
++            }
+             let s2 = md.sense as f64;
+             trace.extend(e2.trace.iter().map(|&(k, z, p, d, pt)| (k, z / s2 + md.objcon, p, d, pt)));
+             path.extend(e2.path.iter().copied());
++            if let Ok(f) = std::env::var("RSOLVER_TMP02Y2_BASIS") {
++                std::fs::write(f, format!("{:?}", gurobi_basis(&e2.vstat))).unwrap();
++            }
+             return LpResult { status: st, obj, x, iter: e2.iter, trace, path, basis: gurobi_basis(&e2.vstat) };
+         }
+     }
+     let xs = e.x();
+     let x: Vec<f64> = (0..spx.n).map(|j| xs[j] * spx.scaling.col[j]).collect();
+     let obj = md.obj.iter().zip(&x).map(|(c, x)| c * x).sum::<f64>() + md.objcon;
++    if let Ok(f) = std::env::var("RSOLVER_TMP02Y2_BASIS") {
++        std::fs::write(f, format!("{:?}", gurobi_basis(&e.vstat))).unwrap();
++    }
+     LpResult { status, obj, x, iter: e.iter, trace, path, basis: gurobi_basis(&e.vstat) }
+ }
+ 

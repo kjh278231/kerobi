@@ -113,6 +113,8 @@
 
 ## 검사기
 
+- **면허 크기 밖 LP의 끝점은 비기저 열을 그 값에 고정해(rhs·목적 상수로 옮김) 열 ≤ 2000으로 줄이면 원본에 물어볼 수 있다.** gurobipy `read`는 큰 모델도 읽고 `optimize`만 거부하므로 축소는 gurobipy로 한다. Rust 끝 basis는 축소 모델의 basis로 남아 VBasis·CBasis warm start가 된다. 원본 스케일링이 다른 행렬을 보므로 남기는 열 수를 바꿔 여러 번 재고 같은 입력 상태로 보고하지 않는다. 면허 검사 우회 훅은 쓰지 않는다. (M1-02y-2, `bench/oracle/m1_02y2/reduced_pilot.py`)
+- **Rust Python API의 `getAttr("Pi")`는 `>` 행 부호가 Gurobi와 반대이고(M1-06e 전까지), Presolve=0 `optimize`는 RC·Pi를 내주지 않는다(`_driver(None)`은 같은 엔진으로 내준다). Rust Slack은 비기저 행에 1e-8까지 반올림이 남으므로 tight 판정을 절대 1e-9로 하지 않는다.** (M1-02y-2, `tools/m1_end_dualvio.py`)
 - **조밀 배열 정렬 실험에서 cap을 임의로 키우면 `local_f8 = max(cap/5, nnz(B) 항)`의 cap/5 쪽이 이겨 실제와 다른 짝홀을 시험하게 된다(실패한 접근).** stair에서 cap 1,000,000은 조밀 영역 값 차이(대각 18), 1,000,005는 우연히 일치였고, 실제 cap 142,294에서는 nnz(B) 항이 정렬을 정했다. 원본 F+0x158을 캡처해 쓰거나 두 항을 계산해 어느 쪽이 이기는지 먼저 본다. (M1-02w)
 - **lazy 훅(다음 공급자 진입에서 내는 `step:leave`·`pass:ready`)이 섞인 캡처는 원본 사건 순서대로 canonical 줄을 만들고, Rust도 같은 지점(공급자 진입 직전)에서 낸다.** 그러면 dense BTRAN→round 뒤의 `step:leave`처럼 원본이 round 재계산 효과까지 담아 늦게 기록한 상태도 줄 순서와 값이 그대로 맞는다. 사건별로 따로 맞추면 이런 지연 기록을 재동기로 잘못 처리하기 쉽다. 수치 출력은 tape으로 주고 backend가 받은 입력은 같은 trace에 줄로 남긴다. (M3-04c-22, [§3](../m3/primal_push_loop_rust.md#3-비교-계약))
 - **tape backend로 연결을 먼저 검증하고 같은 canonical 줄에 실제 backend를 꽂는다.** 22의 tape 재생이 backend 입력(공급·rhs FTRAN)을 줄로 남겼기 때문에 24는 tape을 지우고 실제 Rust backend를 넣어도 기대 줄을 그대로 썼고, 원래 tape이던 출력이 supply·btran·fcall·recompute 줄에서 비교됐다. 새로 만든 통계만 필드를 더했다. 비교기 모드 전환 때 `def compare(trace=TRACE)`처럼 모듈 전역을 기본 인자로 묶으면 정의 시점 값이 남아 옛 trace를 읽으므로 `None`으로 받아 호출 시점에 고른다. (M3-04c-24, [§3](../m3/primal_push_loop_lu.md#3-비교-계약))
