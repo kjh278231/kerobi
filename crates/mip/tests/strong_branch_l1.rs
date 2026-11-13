@@ -1,4 +1,4 @@
-use rsolver_mip::strong_branch::{run, Backend, Batch, Bounds, Change, Error, LpResult, LpValue, Propagation, Side};
+use rsolver_mip::strong_branch::{run, Backend, Batch, Bounds, Change, LpResult, LpValue, Propagation, Side};
 use std::{collections::VecDeque, fmt::Write};
 
 fn number(s: &str) -> f64 { f64::from_bits(u64::from_str_radix(s, 16).unwrap()) }
@@ -130,11 +130,44 @@ fn clamp_and_signed_zero() {
 }
 
 #[test]
-fn contradiction_unported_timer_stops() {
+fn contradiction_skips_lp_and_judgement() {
+    // Up contradiction: requests back the tightened bound, adds 6 work, no LP; the down side stays unset.
+    let x = [0.5; 5];
+    let b = Batch { columns: &[0, 1], x: &x, bounds: Bounds::Propagate { lower: &[-0.0; 2], upper: &[1.0; 2] }, int_tol: 1e-5, parent_obj: 0.0, stall_limit: 2 };
+    let mut lp = script(&["prop 1 1 0 1 3ff0000000000000 3ff0000000000000 0", "timer 0 4018000000000000",
+        "prop 0 0 4018000000000000", "solve 6 - - 4018000000000000", "restore 4018000000000000", "solve 2 - - 0"]);
+    let mut work = 0.0;
+    let r = run(&b, &mut lp, &mut 0.0, &mut work).unwrap();
+    assert!(lp.trace.starts_with("poll\nprop 0 62 3ff0000000000000 prop 0000000000000000\nbound 0 62 8000000000000000\npoll\ntimer 4018000000000000\n"));
+    assert!(lp.responses.is_empty());
+    assert_eq!((r.up[0], r.down[0]), (1e100, -1e100));
+    // Down contradiction leaves the stall counter as it was (here 1): candidate 3 then reaches the limit.
+    let b = Batch { columns: &[0, 1, 2, 3, 4], x: &x, bounds: Bounds::Propagate { lower: &[0.0; 5], upper: &[1.0; 5] }, ..b };
+    let lim = |v: &str| ["prop 0 0 0".to_string(), format!("solve 7 {v} - 0"), "restore 0".to_string()];
+    let mut l: Vec<String> = Vec::new();
+    for (k, v) in ["3ff0000000000000", "3fe0000000000000", "3fe0000000000000", "3fe0000000000000"].iter().enumerate() {
+        l.extend(lim(v));
+        if k == 2 {
+            l.push("prop 1 1 2 2 0000000000000000 0000000000000000 0".into());
+        } else {
+            l.extend(lim(v));
+        }
+        l.push("timer 0 0".into());
+    }
+    l.pop();
+    l.push("solve 2 - - 0".into());
+    let mut lp = script(&l.iter().map(String::as_str).collect::<Vec<_>>());
+    let r = run(&b, &mut lp, &mut 0.0, &mut 0.0).unwrap();
+    assert!(lp.trace.contains("prop 2 60 0000000000000000 prop 0000000000000000\nbound 2 60 3ff0000000000000\npoll\n"));
+    assert!(lp.responses.is_empty() && lp.trace.ends_with("restore 0000000000000000\nflush\nsolve 0000000000000000\n"));
+    assert_eq!((r.up[2], r.down[2]), (0.5, 1e100));
+    assert_eq!(r.up[4], -1e100);
+}
+
+#[test]
+fn infeasible_down_resets_stall_timer_stops() {
     let x = [0.5, 0.5];
     let b = Batch { columns: &[0, 1], x: &x, bounds: Bounds::Propagate { lower: &[0.0; 2], upper: &[1.0; 2] }, int_tol: 1e-5, parent_obj: 0.0, stall_limit: 2 };
-    let mut lp = script(&["prop 1 0 0"]);
-    assert!(matches!(run(&b, &mut lp, &mut 0.0, &mut 0.0), Err(Error::Unported)));
     // Down infeasible resets the stall counter and moves on; an expired timer ends the batch
     // with the closing flush and re-solve, leaving later candidates unevaluated.
     let mut lp = script(&["prop 0 0 0", "solve 7 3ff0000000000000 - 0", "restore 0",
