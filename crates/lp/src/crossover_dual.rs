@@ -55,7 +55,8 @@ pub fn reduced_costs(e: &DualInput, y: &[f64]) -> Vec<f64> {
             let s = e.a.start[i];
             for k in s..s + e.a.len[i] {
                 let c = e.a.cols[k];
-                d[c] = -(y[i] * e.a.vals[k]) + d[c];
+                // the original's `-(y·a) + d` (bit-identical: IEEE addition commutes, d + (−p) = d − p)
+                d[c] -= y[i] * e.a.vals[k];
             }
         }
     }

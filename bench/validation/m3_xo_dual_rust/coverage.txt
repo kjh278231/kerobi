@@ -1,0 +1,9 @@
+column vstat -2: 3250
+post v = tol: 0
+post v > tol: 61
+post vstat -3: 2
+post vstat -3 with v >= tol: 0
+post vstat -4: 15567
+slack vstat -2: 0
+|y| = drop: 0
+|y| > drop: 79998

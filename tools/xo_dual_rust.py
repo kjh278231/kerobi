@@ -6,6 +6,7 @@
   python3 tools/xo_dual_rust.py --compare          # 각 사례 3회 기대값과 비교
   python3 tools/xo_dual_rust.py --self-test        # trace 변조 거부
   python3 tools/xo_dual_rust.py --mutate-rust OUT  # Rust 소스 변이(임시 사본) 거부/생존
+  python3 tools/xo_dual_rust.py --coverage         # 생존 변이 분기의 원본 자료 출현 수
 
 입력 평문에는 진입 상태만 넣는다(원본 반환·y·d·S+0x2d8·r14는 이 비교기만 읽는다).
 """
@@ -276,8 +277,8 @@ MUTATIONS = [
     ('rhs-identity-order', S, '(0..e.m).map(|i| e.cost[e.header[i] as usize])', '(0..e.m).map(|i| e.cost[e.header[e.m - 1 - i] as usize])'),
     ('drop-ge', S, '        if y[i].abs() > e.drop {', '        if y[i].abs() >= e.drop {'),
     ('drop-none', S, '        if y[i].abs() > e.drop {', '        if true {'),
-    ('acc-fma', S, '                d[c] = -(y[i] * e.a.vals[k]) + d[c];', '                d[c] = y[i].mul_add(-e.a.vals[k], d[c]);'),
-    ('acc-reverse', S, '            for k in s..s + e.a.len[i] {', '            for k in (s..s + e.a.len[i]).rev() {'),
+    ('acc-fma', S, '                d[c] -= y[i] * e.a.vals[k];', '                d[c] = y[i].mul_add(-e.a.vals[k], d[c]);'),
+    ('rows-reverse', S, '    for i in 0..m {\n        d[n + i] = -y[i];', '    for i in (0..m).rev() {\n        d[n + i] = -y[i];'),
     ('slack-sign', S, '        d[n + i] = -y[i];', '        d[n + i] = y[i];'),
     ('no-flip', S, '        if e.vstat[j] == -2 {\n            d[j] = -d[j];', '        if false {\n            d[j] = -d[j];'),
     ('flip-m1', S, '        if e.vstat[j] == -2 {\n            d[j] = -d[j];', '        if e.vstat[j] == -1 {\n            d[j] = -d[j];'),
@@ -334,13 +335,55 @@ def mutate_rust(out_path):
     print('변이', len(results), dict(c))
 
 
+def f64(h):
+    import struct
+    return struct.unpack('<d', bytes.fromhex(h))[0]
+
+
+def coverage():
+    """생존 변이 분기의 원본 자료 출현 수(run 1, 원본 값으로 계산)."""
+    m = oracle.load_manifest()
+    oracle.check_files(m)
+    data = oracle.records(m)
+    c = collections.Counter()
+    for case in sorted(data):
+        for k in oracle.calls(data[case][0]):
+            e, lv = k['enter'], k['leave']
+            n, mm = e['n'], e['m']
+            drop = f64(e['tol3a8'])
+            ys = [f64(h) for h in lv['y']]
+            c['|y| = drop'] += sum(abs(y) == drop for y in ys)
+            c['|y| > drop'] += sum(abs(y) > drop for y in ys)
+            c['slack vstat -2'] += sum(v == -2 for v in e['vstat'][n:])
+            c['column vstat -2'] += sum(v == -2 for v in e['vstat'][:n])
+            if k['site'] == 'post':
+                tol = f64(k['sel']['tol380'])
+                for dh, v in zip(lv['d'], e['vstat']):
+                    if v == -3:
+                        c['post vstat -3'] += 1
+                        t = -f64(dh)
+                        c['post vstat -3 with v >= tol'] += (0.0 if 0.0 > t else t) >= tol
+                    elif v in (-1, -2):
+                        t = -f64(dh)
+                        vv = 0.0 if 0.0 > t else t
+                        c['post v = tol'] += vv == tol
+                        c['post v > tol'] += vv > tol
+                    elif v == -4:
+                        c['post vstat -4'] += 1
+    for k2, v in sorted(c.items()):
+        print(f'{k2}: {v}')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--write', action='store_true')
     ap.add_argument('--compare', action='store_true')
     ap.add_argument('--self-test', action='store_true')
     ap.add_argument('--mutate-rust')
+    ap.add_argument('--coverage', action='store_true')
     a = ap.parse_args()
+    if a.coverage:
+        coverage()
     if a.write:
         text, wants, _ = build()
         OUT.mkdir(parents=True, exist_ok=True)
