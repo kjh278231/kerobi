@@ -59,7 +59,7 @@
 
 ## 5. 재실행 명령
 
-- 캡처: `tools/hrun.sh --timeout 590000 -- 'python3 tools/xo_dual_runs.py --crossover -1,3 --reps 3 && python3 tools/xo_dual_runs.py --cases --reps 3'`(작업 worktree, Gurobi 한 프로세스).
+- 캡처: `tools/hrun.sh --timeout 590000 -- 'python3 tools/xo_dual_runs.py --crossover=-1,3 --reps 3 && python3 tools/xo_dual_runs.py --cases --reps 3'`(작업 worktree, Gurobi 한 프로세스).
 - 원본 자료 검사: `python3 tools/xo_dual_check.py --controls`.
 - 구현 재생: `python3 tools/xo_dual_rust.py --write` → `cargo test --release -p rsolver-lp --test xo_dual` → `python3 tools/xo_dual_rust.py --compare`.
 - 판별력: `python3 tools/xo_dual_rust.py --self-test`, `--mutate-rust OUT`.
