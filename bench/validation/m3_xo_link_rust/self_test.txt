@@ -1,0 +1,19 @@
+거부 vstat - arms [dpush-a] run 1.vstat[0]: 원본 -2 Rust -9
+거부 header - arms [dpush-a] run 1.header[0]: 원본 36 Rust 47
+거부 x1d8 - arms [dpush-a] run 1.x1d8: 원본 -1 Rust 3
+거부 scratch0 - arms [dpush-a] run 1.scratch0: 원본 True Rust False
+거부 factor perm - arms [dpush-a] run 1.factor: 원본 '25 22 21 20 19 17 15 13 11 9 7 4 1 3 14 10 16 12 8 18 6 23 24 0 2 5 25 22 11 23 12 10 24 19 9 17 8 14 7 16 
+거부 factor 끝 - arms [dpush-a] run 1.factor: 원본 '25 22 21 20 19 17 15 13 11 9 7 4 1 3 14 10 16 12 8 18 6 23 24 0 2 5 25 22 11 23 12 10 24 19 9 17 8 14 7 16 
+거부 rhs - arms [dpush-a] run 1.rhs[0]: 원본 '000000000000f0bf' Rust '000000000000f0be'
+거부 btran output - arms [dpush-a] run 1.btran.output.val[0]: 원본 '0000000000000000' Rust '0000000000000001'
+거부 btran x200 - arms [dpush-a] run 1.btran.x200: 원본 '0000000000005940' Rust '0000000000005941'
+거부 y - arms [dpush-a] run 1.y[24]: 원본 '0000000000000000' Rust '0000000000000001'
+거부 d - arms [dpush-a] run 1.d[0]: 원본 '000000000000f03f' Rust '000000000000f03e'
+거부 work - arms [dpush-a] run 1.work: 원본 '9b999999b907c340' Rust '9b999999b907c341'
+거부 post d - arms [post] run 1.d[66]: 원본 '0000000000000080' Rust '0000000000000081'
+거부 post s2d8 - arms [post] run 1.s2d8: 원본 'e4141dc9e5ff0740' Rust 'e4141dc9e5ff0741'
+거부 지점 이름 - arms: 호출 지점 순서
+거부 post 줄 삭제 - arms: dlink 1줄, 기대 2
+거부 Rust 오류 줄 - netlib/ship04s: error;msg panic
+거부 retry 1 - arms: push 반환 retry 0 아님
+self-test 통과 18

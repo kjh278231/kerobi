@@ -277,6 +277,9 @@ MUTATIONS = [
     # 전치: 행 안 순서·값
     ('transpose-col-reverse', T, '    for j in 0..n {\n        for k in starts[j] as usize..starts[j] as usize + lengths[j] as usize {\n            let i = rows[k] as usize;',
      '    for j in (0..n).rev() {\n        for k in starts[j] as usize..starts[j] as usize + lengths[j] as usize {\n            let i = rows[k] as usize;'),
+    ('transpose-rows-reverse', T, [('            len[rows[k] as usize] += 1;', '            len[m - 1 - rows[k] as usize] += 1;'),
+                                   ('            let i = rows[k] as usize;\n            cols[fill[i]] = j;',
+                                    '            let i = m - 1 - rows[k] as usize;\n            cols[fill[i]] = j;')], None),
     ('transpose-drop-last', T, '            fill[i] += 1;\n', '            if fill[i] + 1 < start[i] + len[i] { fill[i] += 1; } else { vals[fill[i]] = 0.0; fill[i] += 1; }\n'),
 ]
 
@@ -296,11 +299,15 @@ def mutate_rust(out_path):
     for name, f, a, b in MUTATIONS:
         p = src / f
         orig = p.read_text()
-        if orig.count(a) != 1:
+        pairs = a if isinstance(a, list) else [(a, b)]
+        if any(orig.count(x) != 1 for x, _ in pairs):
             results.append(dict(name=name, result='원문 없음'))
             print(name, '원문 없음')
             continue
-        p.write_text(orig.replace(a, b))
+        new = orig
+        for x, y in pairs:
+            new = new.replace(x, y)
+        p.write_text(new)
         tr = src / 'target/m3_xo_link_rust/trace.txt'
         if tr.exists():
             tr.unlink()
@@ -322,13 +329,39 @@ def mutate_rust(out_path):
     print('변이', len(results), dict(c))
 
 
+def coverage():
+    """생존 변이가 기대는 분기의 자료 출현 수(run 1 원본 진입 상태 + Rust trace의 BTRAN 분기)."""
+    _, wants, _ = build()
+    data = oracle.records(oracle.load_manifest())
+    c = collections.Counter()
+    for name in sorted({n for n, _ in wants}):
+        ks = oracle.calls(data[oracle_case(name)][0])
+        for kind in [k for n, k in wants if n == name]:
+            k = next(x for x in ks if x['site'] == kind)
+            f, be = k['bt_enter']['factor'], k['bt_enter']
+            c[f'{kind} 호출'] += 1
+            c[f'{kind} 입력 count -1(조밀)'] += be['input']['count'] == -1
+            c[f'{kind} factor level 구조(x140 >= 0)'] += f['scalars']['x140'] >= 0
+            c[f'{kind} 진입 x1d8 != -1'] += f['x1d8'] != -1
+    if TRACE.exists():
+        _, got, _, _ = parse_trace(TRACE.read_text())
+        for gs in got.values():
+            for g in gs:
+                c[f'{g["site"]} Rust BTRAN lt={g["branches"]["lt"]}'] += 1
+    for k2, v in sorted(c.items()):
+        print(f'{k2}: {v}')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--write', action='store_true')
     ap.add_argument('--compare', action='store_true')
     ap.add_argument('--self-test', action='store_true')
     ap.add_argument('--mutate-rust')
+    ap.add_argument('--coverage', action='store_true')
     a = ap.parse_args()
+    if a.coverage:
+        coverage()
     if a.write:
         text, wants, info = build()
         OUT.mkdir(parents=True, exist_ok=True)

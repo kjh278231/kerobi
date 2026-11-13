@@ -1,0 +1,2 @@
+사례 48, 호출 {'dpush-a': 48, 'post': 9}, 비교 실행 171, 필드 1004433, 차이 0
+BTRAN 분기 {'entry=general': 57, 'eta=none': 57, 'kernel=': 57, 'lt=dense': 57, 'u=dense': 57}
