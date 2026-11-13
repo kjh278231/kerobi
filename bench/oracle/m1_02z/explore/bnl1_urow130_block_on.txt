@@ -1,0 +1,3 @@
+bnl1.mps.gz e_r 130 m 643: diag diff 0 []
+row diff 0 []
+rc=0

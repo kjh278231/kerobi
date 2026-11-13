@@ -1932,6 +1932,15 @@ impl<'a> Engine<'a> {
                 show(lu.btran_ut(&x, true))
             );
         }
+        // M1-02z: `RSOLVER_UROW_PROBE=k` also dumps row-wise U by position and the diagonal at that call
+        // (the original's `tools/m1_urow_dump.js` view).
+        if std::env::var("RSOLVER_UROW_PROBE").ok().and_then(|s| s.parse::<usize>().ok()) == Some(kk) {
+            let (rows, _) = lu.u_rows();
+            let rows: Vec<String> = rows.iter().map(|r| format!("[{:?},[{}]]", r.iter().map(|e| e.0).collect::<Vec<_>>(),
+                r.iter().map(|e| bits(e.1)).collect::<Vec<_>>().join(","))).collect();
+            let diag: Vec<String> = (0..rows.len()).map(|p| bits(lu.diag_of(p).1)).collect();
+            out += &format!("{{\"urow\":{kk},\"m\":{},\"diag\":[{}],\"rows\":[{}]}}\n", rows.len(), diag.join(","), rows.join(","));
+        }
         use std::io::Write;
         let f = std::fs::OpenOptions::new().create(true).append(true).open(format!("{spec}.out"));
         f.and_then(|mut f| f.write_all(out.as_bytes())).expect("probe dump");

@@ -1,0 +1,13 @@
+diff --git a/crates/lp/src/lu.rs b/crates/lp/src/lu.rs
+index 8d3cbca..69a116c 100644
+--- a/crates/lp/src/lu.rs
++++ b/crates/lp/src/lu.rs
+@@ -788,7 +788,7 @@ impl Lu {
+ 
+     /// Factor with Markowitz threshold `tol` (MarkowitzTol, raised by the numerics ladder).
+     pub fn factor_tol(spx: &Spx, head: &[usize], tol: f64) -> Lu {
+-        let mut st = BlockState::OFF;
++        let mut st = BlockState { x2c0: 0, x4e0: 0, x4e4: 0 }; // EXPERIMENT
+         Lu::factor_block(spx, head, tol, &mut st)
+     }
+ 
