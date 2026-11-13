@@ -1,0 +1,26 @@
+cargo_lp rc=0 | 
+cargo_workspace rc=0 | 
+clippy rc=0 |     Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.25s
+pytest rc=0 | 657 passed in 117.82s (0:01:57)
+aq_order rc=0 | PASS (+ self-test)
+beta rc=0 | PASS
+eta rc=0 | ACCEPTANCE PASS (+ self-test)
+eta_peel rc=0 | ACCEPTANCE PASS (+ self-test)
+list_order rc=0 | PASS (+ self-test)
+tau rc=0 | PASS
+urow rc=0 | PASS
+work rc=0 | PASS
+factor_work rc=0 | ACCEPTANCE PASS (+ self-test)
+lsolve rc=0 | PASS
+update rc=0 | PASS
+usolve rc=0 | PASS
+bfrt rc=0 | ACCEPTANCE PASS
+btran rc=0 | SELF-TEST PASS
+lt rc=0 | SELF-TEST PASS
+diag_peel rc=0 | SELF-TEST PASS
+urow126 rc=0 | row diff 0 []
+urow129 rc=0 | row diff 0 []
+urow130 rc=0 | row diff 0 []
+pathcmp rc=0 | median first-diff fraction 0.886, full match 27/64
+lp_check rc=0 | Method 1: correct 90/91, IterCount equal 34/64
+REGRESS_DONE

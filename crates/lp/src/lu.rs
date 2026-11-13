@@ -141,6 +141,72 @@ pub enum Short {
     Keep,
 }
 
+impl Short {
+    /// F+0x158 for the next `036ade` call after this shortage (`05b257` C:1479–1513): the size `036ade` set, or the
+    /// old size ×1.5 when it left F+0x158 alone.
+    pub fn next_cap(self, cap: i64) -> i64 {
+        match self {
+            Short::Grow(c) => c,
+            Short::Keep => {
+                let g = cap as f64 * 1.5;
+                if g < 9.223372036854776e18 { g as i64 } else { i64::MAX }
+            }
+        }
+    }
+}
+
+/// `045a76` FactSpace: the initial pool size F+0x158 of an LU for m rows, n columns, nnz(A) (spx+0x3d0),
+/// `GURO_PAR_SIMPLEXALLOCS` k (spx+0x50) and the model's pool regrowth counter c (asm 0xe3697–0xe3bf0,
+/// docs/m1/m1_02w2_factspace.md). shortcut: the first allocation try is assumed to succeed (loop 0xe3a7c), and
+/// c ≥ 8 (the paired mulpd path 0xe3a0b) is not modelled.
+pub fn factspace(m: usize, n: usize, nnz: usize, k: i32, c: u32) -> i64 {
+    assert!(c < 8, "FactSpace c >= 8 not modelled");
+    let (fm, fn_, fz) = (m as f64, n as f64, nnz as f64);
+    let d0 = if m < n {
+        let d = fz / fn_;
+        let x = if m < 500 {
+            d * d
+        } else if m < 3000 {
+            d * d.sqrt()
+        } else if m < 10000 && fm > d * 4.0 {
+            // shortcut: asm 0xe3707–0xe37cb read, no captured case; check before relying on m ≥ 3000
+            let q = d * d.sqrt().sqrt();
+            if fm * 0.25 > q { q } else { fm * 0.25 }
+        } else {
+            d
+        };
+        let half = (m / 2 + 2) as f64;
+        (if half < x { half } else { x }) * fm
+    } else if m == 0 {
+        100.0
+    } else {
+        let d = fz / fm;
+        let x = if n < 500 {
+            d * d
+        } else if n < 3000 {
+            d * d.sqrt()
+        } else if n < 10000 {
+            d * d.sqrt().sqrt() // shortcut: as above, no captured case
+        } else {
+            d
+        };
+        let half = (n / 2) as f64;
+        fz * 0.5 + (if half < x { half } else { x }) * fn_
+    };
+    let r = (d0 as i64 + 1) as f64;
+    let mut dd = if fz > fn_ * 10.0 {
+        r * 6.0 + fm * 30.0 * k as f64
+    } else if m < n {
+        r * 6.0 + fm * 3.0 * fz * k as f64 / fn_
+    } else {
+        r * 6.0 + fm * 3.0 * (m + nnz) as f64 * k as f64 / (m + 1 + n) as f64
+    };
+    for _ in 0..c {
+        dd *= 1.5;
+    }
+    (dd * 0.75) as i64 + 1
+}
+
 /// `036ade`'s element pool bookkeeping (C:296–366, C:541–606, C:2440–2490): U from 0 up, L from F+0x168 down,
 /// element nodes (32 bytes = 4 slots) from `local_f8` up in chunks of 4m nodes; each chunk's slots also give the
 /// int pool's 16-aligned rest as a later chunk (`local_2f0`).
@@ -3588,7 +3654,30 @@ pub fn sum_squares(v: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{dot8_peel, gather, next_prime, sum_squares, BlockState, Lu};
+    use super::{dot8_peel, factspace, gather, next_prime, sum_squares, BlockState, Lu};
+
+    /// `045a76` FactSpace against original F+0x158 (bench/oracle/m1_02w/pool, m1_02w2/final): one model per branch
+    /// set, SIMPLEXALLOCS 7 and c = 1 (warm start).
+    #[test]
+    fn factspace_cases() {
+        for (m, n, z, k, c, want) in [
+            (821, 1571, 10400, 5, 0, 124072), // 25fv47 m<n, m<3000
+            (56, 97, 383, 5, 0, 6421),        // adlittle m<n, m<500
+            (488, 163, 2410, 5, 0, 78215),    // agg m>=n, nnz>10n
+            (173, 262, 3375, 5, 0, 87976),    // beaconfd m<n half, nnz>10n
+            (166, 162, 1215, 5, 0, 49631),    // boeing2 m>=n, n<500
+            (1503, 1818, 24646, 5, 0, 506687), // degen3 m<3000, nnz>10n
+            (140, 301, 2612, 5, 0, 59032),    // grow7 m<n half
+            (174, 142, 2269, 5, 0, 70052),    // israel m>=n half, nnz>10n
+            (43, 41, 286, 5, 0, 6211),        // kb2 m>=n half
+            (27, 32, 83, 7, 0, 1922),         // afiro SIMPLEXALLOCS 7
+            (300, 645, 5620, 5, 0, 131899),   // grow15
+            (300, 645, 5620, 5, 1, 197849),   // grow15 warm start c = 1
+            (356, 467, 3856, 5, 0, 142294),   // stair
+        ] {
+            assert_eq!(factspace(m, n, z, k, c), want, "m {m} n {n} nnz {z} k {k} c {c}");
+        }
+    }
     use crate::scaling::Scaling;
     use crate::spx::Spx;
 

@@ -119,11 +119,7 @@ pub fn refactor(
         pool.push(std::mem::take(&mut lu.pool_trace));
         match lu.short {
             None => break lu,
-            Some(crate::lu::Short::Grow(c)) => alloc.x158 = c,
-            Some(crate::lu::Short::Keep) => {
-                let g = alloc.x158 as f64 * 1.5;
-                alloc.x158 = if g < 9.223372036854776e18 { g as i64 } else { i64::MAX };
-            }
+            Some(s) => alloc.x158 = s.next_cap(alloc.x158),
         }
         assert!(sizes.len() < 64, "036ade pool shortage does not end");
     };
