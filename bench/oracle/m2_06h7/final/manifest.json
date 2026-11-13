@@ -1,0 +1,105 @@
+{
+  "task": "M2-06h-7",
+  "binary": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+  "params": {
+    "csched007": {
+      "NodeLimit": 150,
+      "GURO_PAR_SBMAXITERS": 10
+    },
+    "ic97_potential": {
+      "NodeLimit": 1050,
+      "GURO_PAR_SBMAXITERS": 10
+    },
+    "sos2_g40k5t": {
+      "NodeLimit": 5000,
+      "GURO_PAR_SBMAXITERS": 10
+    }
+  },
+  "base_params": {
+    "Threads": 1,
+    "Seed": 0,
+    "LogToConsole": 0
+  },
+  "models": {
+    "csched007": {
+      "path": "../re/bench/data/miplib/csched007.mps.gz",
+      "sha256": "7d9ffe638f906498f432519c66db4570704070afdb88435a4bb75e5641f09973"
+    },
+    "ic97_potential": {
+      "path": "../re/bench/data/miplib/ic97_potential.mps.gz",
+      "sha256": "db709f9ca628323d2ebcad02cb681e135a7638dfb1e6bdef4853b5366b6faa92"
+    },
+    "sos2_g40k5t": {
+      "path": "bench/oracle/m2_06h7/models/sos2_g40k5t.mps",
+      "sha256": "4ae8b1cc6ed9176c3cd80a38e69e5815110a344721a8fdeb0753cd1c118da078"
+    }
+  },
+  "tools": {
+    "tools/mip_sb_direct.js": "dbd74fa296a66965412dc5ce83c7d069e946602130988a30e879be38213df129",
+    "tools/mip_sb_loop.js": "7579bf89668127e19d521232449ae6a81f210decb1593aa193d5c7695c132a58",
+    "tools/mip_sb_snapshot.js": "a2a6c5126214135596157dfbc63fdbab73e948045145ccc1ff6b0d82ea2ad718",
+    "tools/mip_sb_contra_runs.sh": "f1cbb9af201f4900e169f0f507fd564f6467098a64aaee678c76dc3aae329a5b",
+    "tools/mip_sb_scan.js": "2cc4cd7dd239e8711fdcc0e9b43fc12238cd15f24f08e64fb4da035788954eff",
+    "tools/mip_sb_scan_runs.sh": "34fd0acf4e7ad62d706a67cf3bdde5b6249f1e5198ca0ffe884cc281366ab3cb",
+    "tools/mip_sos_models.py": "7e7b4fb80010969fb0f064f45d52d8fb1aaf7bdeb1e4631583ce8835ab90a5fa",
+    "tools/mip_sb_census.py": "c787a9322b1bc50da831a9736793a41ef2ac1b9e26a7108483985d5efd60dba3",
+    "tools/mip_sb_loop_rust.py": "e8caee79718ffa8205e30d5d7c4e120276ec29e63acd177ccc8b978a5218aa8f"
+  },
+  "files": {
+    "csched007_1.json.gz": {
+      "gz": "522e5a3b7d2b90e569bee2cd8bb49f1af8f8e4fcba4a43c969950d2db94618a8",
+      "content": "7de80a2b19d25ab09c4130f5bb42d48ffdba85778faf8fd06724613a13f7741b"
+    },
+    "csched007_2.json.gz": {
+      "gz": "522e5a3b7d2b90e569bee2cd8bb49f1af8f8e4fcba4a43c969950d2db94618a8",
+      "content": "7de80a2b19d25ab09c4130f5bb42d48ffdba85778faf8fd06724613a13f7741b"
+    },
+    "csched007_3.json.gz": {
+      "gz": "522e5a3b7d2b90e569bee2cd8bb49f1af8f8e4fcba4a43c969950d2db94618a8",
+      "content": "7de80a2b19d25ab09c4130f5bb42d48ffdba85778faf8fd06724613a13f7741b"
+    },
+    "csched007_control.json.gz": {
+      "gz": "10c6b451f378d5fa035cb3a342f46b6131807876b83e004dbda747ea8b23b775",
+      "content": "907e89805ae27e994debd1def9ac8b9ce12ea745857cdbac93695c35de054413"
+    },
+    "ic97_potential_1.json.gz": {
+      "gz": "b29ac78c69795eceda510c555470be919946bf78ee3f984be4cd2a611542d507",
+      "content": "290dafb1b427e798074f77bd232b3017ae253a5f67c8d6345df976f75c80058c"
+    },
+    "ic97_potential_2.json.gz": {
+      "gz": "b29ac78c69795eceda510c555470be919946bf78ee3f984be4cd2a611542d507",
+      "content": "290dafb1b427e798074f77bd232b3017ae253a5f67c8d6345df976f75c80058c"
+    },
+    "ic97_potential_3.json.gz": {
+      "gz": "b29ac78c69795eceda510c555470be919946bf78ee3f984be4cd2a611542d507",
+      "content": "290dafb1b427e798074f77bd232b3017ae253a5f67c8d6345df976f75c80058c"
+    },
+    "ic97_potential_control.json.gz": {
+      "gz": "68de54d0b315961d9d4f0058696dfccac2be2254fdffdd97347ec4773c947cef",
+      "content": "1b97b6051980fc842e9d136fd2d43db7c8679852abe6dd29e2fa87dff8dfa1ab"
+    },
+    "sos2_g40k5t_1.json.gz": {
+      "gz": "4d4c43127a62061bf48d341095b1459f0a96389dc62abec7e2860a414b7369fb",
+      "content": "9ff281f53b263fed05ea3ef35fc4a40951c952235bd63c99f8207e5340f185bd"
+    },
+    "sos2_g40k5t_2.json.gz": {
+      "gz": "a4b7357e8118d92d2663579d85b55c106e7185db8a469a73854f4fd1d1017ba6",
+      "content": "1e62c387e80f405017f7ab895a813a194bd6c1571afc5c1dd0e6aa7bbc58226e"
+    },
+    "sos2_g40k5t_3.json.gz": {
+      "gz": "e4feaf922813eaab5963dcc34830a48bfccb602d0737f1385fc762f56e9c2880",
+      "content": "5534bdb675675fe46f1b6281374589a6cc08ca937ef691e4db9883ff438436f9"
+    },
+    "sos2_g40k5t_control.json.gz": {
+      "gz": "6a12b9559cb3104203f3d80f21c1a28610acf8aadcdf8b4158d1ba343ad46c52",
+      "content": "9789225fe563dda35cbdef69b4505c42505d50b7ec0d92e8cb52d6b3b53f0e04"
+    }
+  },
+  "not_committed": {
+    "csched007_2.json.gz": "byte-identical to csched007_1.json.gz (same gz sha256)",
+    "csched007_3.json.gz": "byte-identical to csched007_1.json.gz (same gz sha256)",
+    "ic97_potential_2.json.gz": "byte-identical to ic97_potential_1.json.gz (same gz sha256)",
+    "ic97_potential_3.json.gz": "byte-identical to ic97_potential_1.json.gz (same gz sha256)"
+  },
+  "note": "sos2_g40k5t runs differ only in the workspace+0x418 flags digest of the first double batch (bytes 2-5 and 9-11, presumed stale heap data; see docs/m2/mip_sb_contra_cases.md section 6)"
+}

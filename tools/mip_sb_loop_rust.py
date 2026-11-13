@@ -162,7 +162,7 @@ def controls(cases, manifest):
                 same(old[k], project(ds[0])[k], 'pk1.06h2.'+k)
 
 
-def batches(m, d, cover):
+def batches(m, d, cover, skip_contradiction=False):
     """Inputs and backend responses come from the original only; expected commands never feed Rust."""
     inputs, traces = [], []
     for e in d['events']:
@@ -170,6 +170,9 @@ def batches(m, d, cover):
             continue
         at = f'{m}.double[{e["id"]}]'
         steps = e['steps']
+        if skip_contradiction and any(s['kind'] == 'prop' and s['out'] != 0 for s in steps):
+            cover['skipped contradiction batch'] += 1  # M2-06h-7: Rust returns Unported here
+            continue
         # C:343: propagation only with Node and Node+0x18; older captures have no field and always propagated.
         direct = e.get('propagation', True) is False
         tag = 'direct ' if direct else ''
@@ -547,13 +550,14 @@ def main():
     ap.add_argument('--self-test', action='store_true')
     ap.add_argument('--write-manifest', action='store_true')
     ap.add_argument('--explore', help='replay every capture in DIR (exploration, not a baseline)')
+    ap.add_argument('--skip-contradiction', action='store_true', help='with --explore: count, do not replay, batches with a propagation contradiction')
     a = ap.parse_args()
     if a.explore:
         tot = collections.Counter()
         for p in sorted(Path(a.explore).glob('*.json.gz')):
             m, cover = p.name[:-8], collections.Counter()
             try:
-                i, e = batches(m, load(p), cover)
+                i, e = batches(m, load(p), cover, a.skip_contradiction)
                 if cover['batches']:
                     compare(e, run(ROOT, i, 'explore-'+m), m)
                     tot += cover
