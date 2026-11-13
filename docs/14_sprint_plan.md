@@ -66,7 +66,7 @@
 | M1-07a | 검증 | Netlib 91 상태·목적, Presolve 켬·끔 | 기준 설정 고정 | 모델별 상태·위반·목적 차이 표 |
 | M1-07b | 검증 | Method별 P1과 P2 | 02c·03c, work 계측 범위 확정 | 반복·work 비교와 미계측 항목 명시 |
 | M1-07c | 검증 | LP P3 및 M1 관문 판정 | 07a·07b | 동일 조건 속도표와 기준별 합격 여부 |
-| M1-02w-2 | 조사 | M1 dual의 초기 F+0x158(원소 풀 크기) 규칙과 쓰는 함수. `0xe7c50`·`0xf15c0` 첫 진입의 F+0x158로 쓰기 지점을 좁히고 C로 식을 세운다 | 02w | `bench/oracle/m1_02w/pool/` 64모델 초기값과 식 일치 |
+| M1-02w-2 | 조사 완료 | M1 dual의 초기 F+0x158(원소 풀 크기) 규칙과 쓰는 함수 | 02w | [완료](m1/m1_02w2_factspace.md). `045a76` FactSpace 식(m·n·nnz·SIMPLEXALLOCS·c), 저장 64모델 일치, 직접 캡처 7사례 × 3회 일치, k 판별 일치. c는 이전 풀이 F+0x170 최댓값(reset이 0으로, warm start 3회 탐색) |
 | M1-02w-3 | 구현 | M1 재분해를 `Lu::factor_dense`(F+0x158 수명, `crossover_refactor` 풀 부족 재호출 루프 재사용)로 켜기. stair e_r 347 175 ulp 차이 포함 | 02w-2, M3-04c-21j | 5모델(stair·grow15·grow22·perold·pilot4) 원본 3회 재현 대조, stair `KNOWN_D` 제거와 btran·diag_peel·lt 범위 확장, pathcmp·lp_check 회귀 |
 
 02a~02b처럼 원인 하나를 고치는 주기는 남은 불일치마다 새 접미사로 반복한다. 한 번의 수정으로 G1 전체를 끝낸다는 계획은 아니다. work 누적이 빠진 경우 07b에서 구현을 늘리지 않고 누락 경로별 작업을 등록한다.
