@@ -1,0 +1,21 @@
+M: 3 runs, binary/model/params/output, pinned file sha, tool = current file ab414034c3e2f007
+B: 38 pivots, 3 runs equal
+C: dense outputs compacted in index order with |x| > spx+0x3a8 (28 dense, 10 sparse)
+O: stored beta = sum in captured order for 38 pivots; paths [(('scalar', 0, False), 13), (('simd', 0, False), 25)]; chain combine also equal on 22/25 simd pivots
+D: Rust bt_dense = original BTRAN output nnz < 0 on pivots 0-21 (12 dense)
+R: Rust beta = sum_squares(dense output compacted to |x| > spx+0x3a8, sparse as is) = original beta on pivots 0-21
+F: snapshots 0-30 equal (vstat, x_B, d, w), first difference at None; beta and alpha_r equal 1-12
+self-test:
+  tamper binary sha: rejected M kb2_1.json.gz: binary sha
+  tamper run 3 differs: rejected B kb2_3.json.gz: event 5 differs from run 1
+  tamper file sha: rejected M kb2_2.json.gz: file sha 0000000000000000000000000000000000000000000000000000000000000000 != pinned
+  tamper tool sha (all runs): rejected M tool sha {'1111111111111111111111111111111111111111111111111111111111111111'} != current m1_beta_path.js
+  tamper empty events: rejected M kb2_1.json.gz: no events
+  tamper pivot 11 rho value bit: rejected C pivot 11: dense compaction: want 11 ([(0, '3ff0000000000000'), (7, '3fbe895c5f759ae0'), (8, '3fb0000000000000')]...), got 11 ([(0, '3ff0000000000000'), (7, '3fbe895c5f759ae0'), (8, '3fb0000000000000')]...)
+  tamper pivot 11 beta bit: rejected O pivot 11: sum 0x1.46f4755d4fd33p+2 != stored beta 0x1.46f4755d4fd32p+2
+  tamper dense compaction drops one element: rejected C pivot 12: dense compaction: want 12 ([(0, '4001a5e549a47beb'), (6, '3ff0000000000000'), (7, '3fd0d74824460cc0')]...), got 11 ([(6, '3ff0000000000000'), (7, '3fd0d74824460cc0'), (8, '3fc1a5e549a47beb')]...)
+  tamper Rust beta bit at snapshot 12: rejected R pivot 11: Rust beta 0x1.46f4755d4fd32p+2 != sum_squares(compacted dense BTRAN output) 0x1.46f4755d4fd33p+2
+  tamper Rust dense flag at pivot 11: rejected D pivot 11: Rust bt_dense False != original output nnz -1 < 0
+  tamper Rust snapshots without the dense flag: rejected D pivot 0: Rust bt_dense None != original output nnz 2 < 0
+  tamper stored oracle w bit at iteration 5: rejected F: first differing snapshot (5, 'w'), want None
+PASS

@@ -3415,8 +3415,8 @@ impl Lu {
                 }
             }
             // 05b257 C:321–372 reads the LU+0x1d0 copy of η, whose alignment `diag_peel` gives, against S in LU+0x1c8:
-            // 09d112 writes only the spike list there (C:1744–1786, C:1853–1880) and every update or refactor clears it,
-            // so a row at or below ZERO reads 0
+            // 09d112 clears the previous list on entry (C:118–138) and writes only the new list there (C:1744–1786,
+            // C:1853–1880), so a row at or below ZERO reads 0
             let s = |i: usize| if spike[i].abs() > ZERO { spike[i] } else { 0.0 };
             diag = dot8_peel(eta.iter().map(|&(i, e)| s(i) * e), diag_peel);
             w_eta = Some(eta.len());

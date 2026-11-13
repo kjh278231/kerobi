@@ -1,0 +1,32 @@
+grow15: 32 calls, dense 3, local_70 4, -1 1, F+0x158 [131899, 226935], diagonals 29
+grow22: 34 calls, dense 9, local_70 16, -1 1, F+0x158 [193844, 274696], diagonals 31
+perold: 27 calls, dense 11, local_70 0, -1 0, F+0x158 [56478], diagonals 22
+pilot4: 18 calls, dense 14, local_70 0, -1 0, F+0x158 [72480], diagonals 13
+stair: 13 calls, dense 7, local_70 0, -1 0, F+0x158 [142294], diagonals 11
+repro PASS
+replay grow15: 32/32 calls equal (dense 3, -1 1, local_70 4, diagonals compared 29, Rust panics 0)
+replay grow22: 34/34 calls equal (dense 9, -1 1, local_70 16, diagonals compared 31, Rust panics 0)
+replay perold: 27/27 calls equal (dense 11, -1 0, local_70 0, diagonals compared 22, Rust panics 0)
+replay pilot4: 18/18 calls equal (dense 14, -1 0, local_70 0, diagonals compared 13, Rust panics 0)
+replay stair: 13/13 calls equal (dense 7, -1 0, local_70 0, diagonals compared 11, Rust panics 0)
+replay PASS
+rust grow15: chain over 35 Rust factors ok, Rust shortages 1
+rust grow15: head differs at call 5 (original k 117, Rust iter 118); 5 compared
+rust grow22: chain over 52 Rust factors ok, Rust shortages 1
+rust grow22: head differs at call 8 (original k 255, Rust iter 258); 8 compared
+rust perold: chain over 25 Rust factors ok, Rust shortages 0
+rust perold: head differs at call 7 (original k 277, Rust iter 366); 7 compared
+rust pilot4: chain over 19 Rust factors ok, Rust shortages 0
+rust pilot4: 18/18 calls equal (Rust 19)
+rust stair: chain over 13 Rust factors ok, Rust shortages 0
+rust stair: head differs at call 12 (original k 356, Rust iter 356); 12 compared
+mutant cap 1000000: 5 models rejected replay grow15: call 28 (k 1020, F+0x158 131899): next: original 226935 Rust None; dense: original [] Rust [52]
+mutant cap x10: 5 models rejected replay grow15: call 28 (k 1020, F+0x158 131899): next: original 226935 Rust None; dense: original [] Rust [52]
+tamper empty events (all runs): rejected
+tamper no dense switch (all runs): rejected
+tamper no -1 (all runs): rejected
+tamper zero binary hash (all runs): rejected
+tamper binary hash: rejected
+tamper first F+0x158: rejected
+tamper event changed: rejected
+M1_DENSE PASS
