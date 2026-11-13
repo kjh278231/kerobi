@@ -36,6 +36,19 @@
 - 탐색: 면허 크기 Netlib 64개를 1회씩 캡처해 분기(블록 실행, x4e4 증가, x2c0 > 20 결정 −1/2e9, 2e9 뒤 실행, 특이 재시도 rc ≠ 0)를 덮는 모델을 고른다(`bench/oracle/m1_01e/explore/`).
 - 정식: 고른 모델 × 3회(`bench/oracle/m1_01e/formal/`). 결과는 §6에 적는다.
 
+탐색 결과(64모델 × 1회, `tools/m1_block_state.js` SHA-256 `f97e4b40…`, afiro만 head를 넣기 전 판): 모든 실행에서 `036ade` 호출자 반환 주소는 0xf34f2 하나, S는 실행당 하나, 첫 진입 (1,0,0), 연쇄 위반 0. 블록 단계는 35모델에서 돈다. 자연 분기: x4e4 증가(12모델), x2c0 > 20 결정 −1(25fv47·degen3·etamacro·grow15·grow22·perold·scagr25·scsd6), 2e9(bnl1·maros, 이후 매 재분해 실행), 반환 −1 재호출(grow15·grow22, S+0x2c0 그대로). 반환 > 0(특이)은 0회.
+
+| 정식 사례 | 재분해 | 노리는 분기 |
+|---|---|---|
+| bnl1 | 30 | 2e9 고정·M1-02z U 위치 |
+| maros | 37 | x4e4 증가 14회·2e9 고정 |
+| 25fv47 | 50 | x4e4 증가·−1 고정 |
+| grow15, grow22 | 32, 34 | −1 고정·풀 부족 재호출 |
+| scfxm2 | 12 | x4e4 증가 7회 |
+| perold | 27 | x4e4 증가·−1 고정 |
+| stair, degen2 | 13, 16 | 블록 실행(증가 없음), 기존 M1 검사기 모델 |
+| kb2 | 6 | 블록 미실행(활성 < 50) 대조군 |
+
 ## 5. 회귀 규칙(착수 때 고정)
 
 - 코드 수정 전 기준선 `bench/oracle/m1_01e/regress.sh base`를 먼저 돌린다(cargo lp·workspace·clippy, pytest, M1 검사기, pathcmp, lp_check, urow 3건).
@@ -44,10 +57,33 @@
 - `m1_lt_check.py`의 bnl1 고정 7호출(`KNOWN_IDX`)은 블록 단계로 설명되므로 이 작업에서 고정 목록을 고친다. 다른 M1 검사기는 base와 같은 결과여야 하며 바뀌면 원인을 적는다.
 - 블록 켜기와 t = s3는 커밋과 회귀를 나눈다.
 
+
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 환경: WSL2 x86-64 Linux 6.6.87.2, Python 3.13 venv, Node 22, Rust stable. 원본 실행 95회(afiro 시험 1 + 탐색 64 + 정식 30), Gurobi 한 프로세스씩(`tools/gurun.sh`).
+- **원본 재현성**(`python3 tools/m1_block_check.py --repro --self-test`): 10모델 × 3회 사건 목록·출력 정확 일치, 연쇄 검사 통과. 변조 9종 거부(바이너리 해시, 빈 사건, x2c0/x4e0/x4e4 변경, 시작값, 두 번째 S, 실행 실패, 회차 차이).
+- **구현**: `simplex.rs` `Engine.block`(시작 {0,0,0}), `refactor()`가 루프 밖에서 x2c0 +1 하고 `Lu::factor_block(…, &mut self.block)`. 2e9ae 무척도 재확인 엔진(`simplex.rs` `e2`, `driver` `check`)은 같은 S이므로 상태를 넘겨받는다. 탐침 `RSOLVER_BLOCK_PROBE`, `Lu::block_fields`. 둘째 단계: `Lu::finish`의 t = `s3`(이전: 앞쪽 빈 U 열 수).
+- **주입 재생**(`--replay`, `crates/lp/tests/m1_block_replay.rs`): 원본 재분해마다 원본 head·진입 상태로 Rust `factor_block`을 불러 반환 상태와 LU+0xd8·0xe4를 비교. **255/255 일치**(−1 고정 4건, 2e9 고정 2건, x4e4 증가 43건, 블록 실행 152건, 재호출 2건 포함). t(LU+0x100)는 1단계에서 grow15·grow22·kb2의 6재분해가 달랐고(Rust가 큼, 예: grow22 k 1089 원본 3 대 Rust 9), t = s3 뒤 `--replay --lu` 255/255.
+- **자연 궤적 비교**(`--rust --lu`): head가 같은 범위(모델당 5–11재분해)에서 진입·반환 상태와 LU+0xd8·0xe4·0x100 전부 일치. 범위 끝은 모두 기존 궤적 차이(예: bnl1 257에서 기저 열 하나 다름)이고 블록 상태 차이가 아니다.
+- **Rust 변이**(`bench/oracle/m1_01e/mutate.sh`, [결과](../../bench/oracle/m1_01e/mutations.txt)): 6/6 거부 — 재분해마다 {0,0,0}(25fv47 factor 5), x2c0 미증가, x2c0 시작 1, 블록 끔(`factor_tol`), x2c0 > 21 결정, −1/2e9 결정 반전(주입 재생에서 25fv47 k 1259).
+- **회귀**(`bench/oracle/m1_01e/regress.sh`, 로그 `base/`·`stage1/`·`stage2/`):
+
+| 항목 | base | 1단계(블록) | 2단계(+ t = s3) |
+|---|---|---|---|
+| cargo lp·workspace·clippy·pytest(657) | 통과 | 통과 | 통과 |
+| M1 검사기 16종 | 통과 | btran·lt 고정 차이 "not seen" 실패 → 고정 목록 정리 뒤 통과 | 통과 |
+| bnl1 urow 126·129·130 | 차이(대각 20·행 32) | **일치** | 일치 |
+| pathcmp 완전 일치 / 중앙 첫 차이 | 27/64, 0.752 | 27/64, **0.886** | 27/64, 0.886 |
+| lp_check 정답(M1·M0·M−1) | 90·90·90 | 90·90·90 | 90·90·90 |
+| IterCount 일치(Method 1) | 32/64 | **34/64** | 34/64 |
+
+- pathcmp 바뀐 모델 14개, 첫 차이가 앞당겨진 모델 없음(규칙 충족). 늦어진 모델: 25fv47 306→446, bnl1 220→236, boeing1 368→420, forplan 128→138, maros 475→852, perold 165→365, scfxm2 366→456, scfxm3 488→821, scrs8 107→478. grow15·grow22·sc205·scagr25는 첫 차이 그대로이고 피벗 수만 바뀜(grow15 1066→1170, grow22 1946→2046으로 원본과 더 멀어짐). 2단계는 pathcmp 출력 변화 0, lp_check는 d6cube Method 0(면허 밖, 정답 유지) 한 행만 바뀜.
+- 고정 차이 정리: `m1_btran_check.py` `KNOWN_D`에서 forplan 82(이제 150/150 끝까지)·bnl1 174(이제 299/1050, r 차이에서 끝) 제거, stair 185는 남음(M1-02w). `m1_lt_check.py` `KNOWN_IDX` bnl1 7호출 제거와 그 고정 전용 변조 1종 삭제.
+- 실행하지 않은 것: 디버그 빌드에서 t = s3의 `debug_assert`(FT 갱신 불변식)를 grow22·kb2 전체 실행으로 돌리지 않았다(cargo lp 테스트는 debug로 통과). 독립 검토자 없음(이 세션이 작업자·마스터 겸임).
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **구현 완료(계약 범위 통과)**. 동등성: 원본 10모델 255재분해에서 블록 상태 수명(S+0x2c0/0x4e0/0x4e4)과 LU+0xd8·0xe4·0x100(t)이 주입 재생으로 전부 일치하고, 자연 궤적에서도 head가 같은 범위에서 일치한다. 회귀 규칙(정답 수 유지, 완전 일치 수 유지, 첫 차이 앞당김 없음) 통과.
+- 새로 확정한 원본 사실: M1 dual(Method=1, Presolve=0)은 실행당 S 하나로 모든 `036ade`를 부르며 상태는 (1,0,0)에서 시작한다(LU2X2BLOCK 기본 → S+0x4e4 = 0). 풀 부족 −1 재호출은 S+0x2c0을 다시 올리지 않는다. `05b257`은 재분해 뒤 LU+0x100을 읽기만 한다(C:2595–2733) — t = s3.
+- 미검증: 특이 기저(반환 > 0) 재분해 뒤 상태(자연 0회), 블록 단계가 도는 상태에서의 풀 부족 재호출(Rust M1은 풀을 모델링하지 않아 한 번만 분해한다; 자연 사례 2건은 재호출 때 x4e4 = −1이라 차이 없음), Presolve가 켜진 경로·reoptimize 엔진의 S 수명, Markowitz tol 사다리(spx+0x390)가 바뀐 재분해의 주입 재생(주입은 기본 tol만 씀).
+- 후속: M1-02w(stair e_r 185 LU+0x108), M1-02y-2, M1-02t, M1-02u. grow15·grow22는 첫 차이(365, 256)가 그대로이고 반복 수가 늘었다.
