@@ -59,7 +59,7 @@
     "tools/mip_sb_census.py": "c787a9322b1bc50da831a9736793a41ef2ac1b9e26a7108483985d5efd60dba3",
     "tools/mip_sb_direct.js": "dbd74fa296a66965412dc5ce83c7d069e946602130988a30e879be38213df129",
     "tools/mip_sb_direct_runs.sh": "4b277e9f2ef4e8cdc71bd5296a18b85a5eccdada177c400b248c78661fea55b2",
-    "tools/mip_sb_loop_rust.py": "f36cd84989f045369845beed0335c02558f4ff555960a6c5aee30857bb25f5ca",
+    "tools/mip_sb_loop_rust.py": "e8caee79718ffa8205e30d5d7c4e120276ec29e63acd177ccc8b978a5218aa8f",
     "tools/mip_sb_restore_check.py": "e52df80e838e5fed075e0ce11fe0e567baf0a894ecb0acf0f341028ce038135a",
     "crates/mip/src/strong_branch.rs": "e71b85d8f2555c2111300093f8f38104093d1934ad851553025ededad18320b9",
     "crates/mip/tests/strong_branch_l1.rs": "978e7d6dafeb0c03f347c3f6f8ecc9cc1083ae63e2682f7c43b9005b44f25917",
