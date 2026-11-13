@@ -19,4 +19,5 @@ area: M2
 
 - 구역은 모두 선택이다. `date`와 `area`는 필수이며 `date`가 새로울수록 위에 놓인다.
 - 13·14 행은 첫 칸이 같은 기존 행을 대체하고, 없으면 그 영역 표의 마지막 행 뒤에 들어간다.
+- 주의: 표에 첫 칸이 같은 행이 둘 이상이면 **첫 행만** 대체되고 둘째 행은 그대로 남는다. 번호 중복은 `grep -c '^| <번호> |' docs/14_sprint_plan.md`가 1인지로 점검한다([절차 교훈](../lessons/process.md)).
 - 점검: `python3 tools/progress_index.py --check`(밀려 있으면 종료 1), 자체 시험 `--self-test`.
