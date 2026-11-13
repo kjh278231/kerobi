@@ -83,3 +83,5 @@ Concurrent 조사는 다음 수명 문제를 해결해야 한다.
 [04f-4a 쌍대값](crossover_dual_values.md)은 `251b4f`(c_B·감산·BTRAN·d)와 S+0x2d8 재계산을 `crossover_dual`로 옮겨 원본 473호출(363실행)을 진입 상태(factor 포함)에서 재생해 비트 일치시켰다. 04f-3 쌍대 검사의 d 주입이 이 경계에서 사라졌다. 다음 04f-4b는 Rust push 연쇄의 factor에서 이를 잇고, 04f-4c는 cleanup simplex 본체의 비교 경계를 조사한다.
 
 [04f-4b 연결](crossover_dual_link.md)은 04f-1 연결 하네스의 Rust push factor·vstat·header를 `crossover_dual`에 바로 넘겨 dual push 첫 호출 0x1c6b49(48사례)와 dual push가 basis를 바꾸지 않은 0x1bf09e(9사례)에서 원본 3회와 비트 일치시켰다. Crossover 3에서는 0x1bf09e 앞의 dual push가 대부분 basis를 바꾸므로 그 지점의 나머지는 dual push 이식(04d·04e) 뒤로 남는다. 다음은 04f-4c(cleanup simplex 본체 조사)와 04d(dual push 분기 분할)다.
+
+[04f-4c cleanup simplex 본체](crossover_cleanup_simplex.md)는 `0cda5b` 경로를 원본 720회로 조사했다. 자연 Netlib cleanup은 반복 0·basis 불변이라 최종 VBasis/CBasis는 cleanup 진입 basis(push 결과)이고, cleanup은 재분해·최적 판정·위치 순열만 한다. 다음 04f-5a(판정 오라클)·5b(Rust), 반복 있는 mode 1 사례는 04f-6이다.

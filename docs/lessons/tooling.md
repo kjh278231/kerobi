@@ -77,6 +77,7 @@
 - **검사기의 `need(cond, f'...{x[i:i+4]}...')`는 조건이 참이어도 메시지를 먼저 만든다.** `i`가 None이면 TypeError로 죽는다. 실패 위치를 써야 하는 메시지는 `if i is not None: raise Fail(...)`로 쓴다. (M1-02x)
 
 - **call 직후 주소에 붙인 함수형 probe에서 `rsp` 기준 slot을 읽을 때는 그 call의 stack 인자 push·`add rsp` 정리 전인지 확인한다.** `13f716` `0x1bfae2`(`251b4f` 반환 직후)는 push 4개가 남아 `rsp+0x230`이 S가 아니었고 access violation으로 캡처가 실패했다. `add $0x20,%rsp` 다음 명령(`0x1bfae6`)으로 옮겼다. (M3-04f-2)
+- **반환값을 쓰지 않는 함수의 rax는 실행마다 달라 재현성 비교를 깨뜨린다.** `048d5f`(힙 포인터 반환, 호출자가 버림)와 void `b16d3`의 onLeave 반환값이 3회 실행에서 모두 달랐다. 호출자 C에서 반환을 쓰는지 확인하고 그 함수만 정규화한 뒤, 다른 반환값 변조는 여전히 거부되는지 self-test로 남긴다. 23바이트 꼬리 호출 dispatcher(`12e6ec` 등) 뒤 함수의 `returnAddress`는 Frida trampoline이라 모듈 밖 값이 된다. (M3-04f-4c, [§6](../m3/crossover_cleanup_simplex.md#6-실행-결과))
 
 ## 디컴파일 조회
 
