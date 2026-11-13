@@ -101,5 +101,5 @@
     "ic97_potential_2.json.gz": "byte-identical to ic97_potential_1.json.gz (same gz sha256)",
     "ic97_potential_3.json.gz": "byte-identical to ic97_potential_1.json.gz (same gz sha256)"
   },
-  "note": "sos2_g40k5t runs differ only in the workspace+0x418 flags digest of the first double batch (uninitialized heap bytes 2-15, see docs/m2/mip_sb_contra_cases.md section 6)"
+  "note": "sos2_g40k5t runs differ only in the workspace+0x418 flags digest of the first double batch (bytes 2-5 and 9-11, presumed stale heap data; see docs/m2/mip_sb_contra_cases.md section 6)"
 }
