@@ -22,7 +22,7 @@
 - 06h-3 [§3](mip_sb_loop_rust.md#3-비교-계약)과 같다: 명령 trace(전파·복구·풀이·values·poll·timer 순서와 work 값)·최종 down/up 배열·반복 비용·Rust work 덧셈이 u64 비트 일치. 오차 0.
 - 만료 묶음은 원본 trace에서 `timer r=1` 뒤 남은 단계가 정확히 `flush, solve`여야 한다(하네스가 원본 자료에서 먼저 검사).
 - 기준 판정 범위(착수 때 고정): ran14x18-disj-8 94묶음 전체(만료 5 포함), 6모델 합계 289묶음. 만료 5회 모두 재생 비교에 들어가야 한다(`timer expired` 필수 사례).
-- 판별력: 기존 변조 `timer`(0 → 1)가 재생 차이로 거부돼야 한다(지금은 하네스 assert로 거부됨). 새 변조 `timer clear`(만료 1 → 0), Rust 변이 `timer ignored`(만료 무시)·`timer return`(flush·재풀이 없이 반환)를 추가하고 원본 자료로 거부돼야 한다. 생존 변이 목록은 기존 `restore strict`·`score shift` 그대로여야 한다.
+- 판별력: 기존 변조 `timer`(0 → 1)는 만료 뒤 단계 검사로, 새 변조 `timer clear`(1 → 0)는 필수 사례(`timer expired` 0회) 검사로 원본 자료 단계에서 거부돼야 한다. Rust 변이 `timer ignored`(만료 무시)·`timer return`(flush·재풀이 없이 반환)를 추가하고 원본 자료로 거부돼야 한다. 생존 변이 목록은 기존 `restore strict`·`score shift` 그대로여야 한다.
 - 시간: 만료는 work 기반 판정 결과를 원본에서 받아 쓴다. 벽시계 비교 없음.
 
 ## 4. 사례와 원본 자료
@@ -43,7 +43,7 @@
 
 - 변경: `crates/mip/src/strong_branch.rs` `run`에서 `expired()`가 참이면 `return Err(Error::Unported)` 대신 `break`(마지막 flush·재풀이 뒤 그때까지 배열 반환). 합성 테스트 `contradiction_unported_timer_stops`가 만료 뒤 `flush`·`solve`, 뒤 후보 −1e100 유지, work 반영을 확인한다. 하네스 `tools/mip_sb_loop_rust.py`는 ran14x18-disj-8을 일반 모델로 넣고 만료 묶음을 거르지 않는다. 원본 자료에서 `timer r=1` 뒤 단계가 `flush, solve`뿐인지 먼저 검사하고 `timer expired`를 필수 사례로 센다.
 - 새 Gurobi 실행 0회. 기준 자료는 06h-4 그대로이고 manifest에서 바뀐 것은 하네스·소스·테스트 해시 3개뿐이다(캡처 해시 불변).
-- `python3 tools/mip_sb_loop_rust.py --self-test` 종료 0([로그](../../bench/oracle/m2_06h5/selftest.log)). 6모델 **289묶음** 명령 trace·결과 배열·비용·work 비트 일치, `timer expired` 5(ran14x18 double[49]·[59]·[64]·[69]·[74]). 거부 43: 변조 18(새 `timer clear` 포함, 기존 `timer`도 이제 재생 차이로 거부)·직접 3·trace 4·Rust 변이 20 중 18(새 `timer ignored`·`timer return` 거부). 생존 2는 기존과 같다(`restore strict` 합성 거부, `score shift` 관측 불가).
+- `python3 tools/mip_sb_loop_rust.py --self-test` 종료 0([로그](../../bench/oracle/m2_06h5/selftest.log)). 6모델 **289묶음** 명령 trace·결과 배열·비용·work 비트 일치, `timer expired` 5(ran14x18 double[49]·[59]·[64]·[69]·[74]). 거부 43: 변조 18(`timer`는 만료 뒤 단계 검사 `after expiry`에서, 새 `timer clear`는 `no original case for timer expired`에서 Rust 실행 전에 거부. Rust 쪽 판별은 자연 만료 5묶음과 아래 두 변이가 맡는다)·직접 3·trace 4·Rust 변이 20 중 18(새 `timer ignored`·`timer return` 거부). 생존 2는 기존과 같다(`restore strict` 합성 거부, `score shift` 관측 불가).
 - `cargo test --release --workspace` 129 통과·12 무시·실패 0([로그](../../bench/oracle/m2_06h5/cargo.log)), clippy 종료 0. pytest는 Python 미변경이라 실행하지 않았다.
 - 실행하지 못한 것: 타이머 산술(`ade736`·`adf1a6`·`adf2be`)의 Rust 구현·원본 비교(범위 밖, §1).
 
