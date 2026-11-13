@@ -1,0 +1,21 @@
+## cargo test --release --workspace
+passed 160 failed 0 ignored 12
+## clippy --workspace --all-targets -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+rc=0
+## 04f-1 push_install chain
+check rc=0
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+(A) 설치 경계 111호출·줄 111·필드 666 비교, 불일치 0
+(B) 연결 62호출(설치까지 59, 통과 59·분류된 실패 0)·줄 1592(설치 쪽 626)·필드 7118 비교, 그 밖의 불일치 0
+rc=0
+## 04f-2 checker --controls --acceptance --self-test
+controls: 사례 256 × 3회 동일
+acceptance: 실행 768 통과
+  자료 변조 13종 중 거부 13, 생존 0
+  규칙 변이 12종 중 거부 7
+rc=0
+## py_compile·diff check
+rc=0
+rc=0
