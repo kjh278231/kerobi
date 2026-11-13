@@ -6,7 +6,7 @@
 //! raw reduced costs c_j − a_jᵀy (basic 0); dual feasible means d ≥ 0 at lower, ≤ 0 at upper, = 0 free.
 //! shortcut: pricing (DSE max over all rows, not the `15d2d` candidate list), Harris 2-pass instead of BFRT, the
 //! perturbation trigger and the refactor schedule are textbook stand-ins; iteration paths differ from Gurobi's.
-use crate::lu::{sum_squares, Lu, ZERO};
+use crate::lu::{sum_squares, BlockState, Lu, ZERO};
 use crate::bfrt::{bfrt, Cand};
 use crate::common::Rng;
 use crate::pricing::{Pricing, Rebuilt, BIG_M_TOL};
@@ -84,6 +84,9 @@ pub struct Engine<'a> {
     /// The primal may hand a shifted optimum over to the dual (PRIMDUALSWITCH, round budget left).
     primal_switch: bool,
     markowitz_tol: f64,
+    /// The `1da0b2` 2×2 block-phase state on S (S+0x2c0/0x4e0/0x4e4): one S per run starting at 0 (LU2X2BLOCK
+    /// default, `02f7e1` C:270–281), x2c0 raised once per `05b257` factorization (C:1399).
+    pub block: BlockState,
     in_dual: bool,
     /// Columns refused as entering after a pivot mismatch on a fresh factorization; cleared after a pivot.
     rejected: Vec<bool>,
@@ -170,6 +173,7 @@ impl<'a> Engine<'a> {
             rhs_shift: Vec::new(),
             primal_switch: true,
             markowitz_tol: crate::lu::MARKOWITZ_TOL,
+            block: BlockState { x2c0: 0, x4e0: 0, x4e4: 0 },
             in_dual: false,
             rejected: vec![false; n + m],
             trace: Vec::new(),
@@ -218,8 +222,11 @@ impl<'a> Engine<'a> {
         self.upd_cols = 0;
         self.work.enter_refactor();
         let head0 = self.head.clone();
+        self.block.x2c0 += 1;
         loop {
-            self.lu = Lu::factor_tol(self.spx, &self.head, self.markowitz_tol);
+            let enter = self.block;
+            self.lu = Lu::factor_block(self.spx, &self.head, self.markowitz_tol, &mut self.block);
+            self.block_probe(enter);
             self.work.factor(&self.lu.factor_work());
             self.fac_nnz = self.lu.factor_nnz();
             if self.lu.complete() {
@@ -266,6 +273,21 @@ impl<'a> Engine<'a> {
         }
         self.lu.refactor_work(&mut self.work, self.pr.cost_mode);
         self.work_dump(&head0);
+    }
+
+    /// `RSOLVER_BLOCK_PROBE=<file>` (M1-01e): one JSON line per factor with the basis head, the block state at entry
+    /// and exit, the singular count and LU+0xd8/0xdc/0xe0/0xe4/0x100 (tools/m1_block_check.py).
+    fn block_probe(&self, enter: BlockState) {
+        let Ok(path) = std::env::var("RSOLVER_BLOCK_PROBE") else { return };
+        use std::io::Write;
+        let (b, lu) = (self.block, self.lu.block_fields());
+        let line = format!(
+            "{{\"iter\":{},\"head\":{:?},\"enter\":[{},{},{}],\"leave\":[{},{}],\"rc\":{},\"lu\":{:?}}}\n",
+            self.iter, self.head, enter.x2c0, enter.x4e0, enter.x4e4, b.x4e0, b.x4e4, self.lu.singular.len(), lu
+        );
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = f.write_all(line.as_bytes());
+        }
     }
 
     /// `RSOLVER_WORK=<file>`: one JSON line per refactor with the factored basis, Markowitz tol, spx+0x150/0x158, the
@@ -2064,6 +2086,7 @@ fn solve_model_run(
         }
         let mut e2 = Engine::new(&sp2);
         e2.iter = e.iter;
+        e2.block = e.block; // the same S: the unscaled check continues the block-phase state
         e2.iter_limit = iter_limit;
         e2.deadline = deadline;
         e2.trace_on = want_trace;

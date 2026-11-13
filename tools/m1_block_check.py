@@ -4,6 +4,8 @@ Method=1 run, original (tools/m1_block_state.js captures) against Rust (RSOLVER_
 docs/m1/m1_01e_block_on.md section 3. Exit 0 only when every check passes.
   --repro      the formal captures <model>-{1,2,3}.json.gz agree exactly (events, output) and pass the chain check
   --rust       run this worktree's build (PYTHONPATH=$PWD/python) and compare up to the first basis-head difference
+  --replay     inject every original factor (head, entry state) into Rust Lu::factor_block (cargo test m1_block_replay)
+               and compare the exit state and LU+0xd8/0xe4/0x100 for all factors, independent of the trajectory
   --lu         also compare LU+0xd8/0xe4/0x100 (t) in that range (stage 2, t = s3)
   --self-test  tampers of the original data must be rejected
   --dir D      capture directory (default bench/oracle/m1_01e/formal)
@@ -90,15 +92,42 @@ def compare(name, orig, rust, lu):
     for i, (o, r) in enumerate(zip(og, rust)):
         same = o['head'] == r['head'] or (i == 0 and sorted(o['head']) == sorted(r['head']))
         if not same:
-            return None, f'{name}: head differs at factor {i} (original k {o["k"]}, Rust iter {r["iter"]}); {n} compared'
+            return None, n, f'{name}: head differs at factor {i} (original k {o["k"]}, Rust iter {r["iter"]}); {n} compared'
         for f in ('enter', 'leave') + (('lu',) if lu else ()):
             a, b = o[f], r[f]
             if f == 'lu': a, b = [a[0], a[3], a[4]], [b[0], b[3], b[4]]  # 0xd8, 0xe4, 0x100
             if a != b:
-                return f'{name}: factor {i} (k {o["k"]}) {f}: original {a} Rust {b}', None
+                return f'{name}: factor {i} (k {o["k"]}) {f}: original {a} Rust {b}', n, None
         n += 1
     note = f'{name}: {n}/{len(og)} factors equal' + ('' if len(og) == len(rust) else f' (Rust {len(rust)})')
-    return None, note
+    return None, n, note
+
+
+def replay(runs):
+    """All factors of run 1 of every model: exit state, LU fields; returns (failures, per-model notes)."""
+    with tempfile.TemporaryDirectory() as t:
+        src, dst, order = os.path.join(t, 'in.txt'), os.path.join(t, 'out.txt'), []
+        with open(src, 'w') as f:
+            for n, rr in sorted(runs.items()):
+                f.write(f'model {os.path.join(NETLIB, n + ".mps.gz")}\n')
+                for e in rr[1]['events']:
+                    f.write(' '.join(map(str, e['enter'] + e['head'])) + '\n'); order.append((n, e))
+        env = dict(os.environ, BLOCK_IN=src, BLOCK_OUT=dst)
+        subprocess.run(['cargo', 'test', '--release', '-q', '-p', 'rsolver-lp', '--test', 'm1_block_replay', '--', '--ignored'],
+                       cwd=ROOT, env=env, check=True, capture_output=True)
+        res = [list(map(int, l.split())) for l in open(dst) if not l.startswith('model ')]
+    fail, notes = [], {}
+    for (n, e), r in zip(order, res):
+        o = e['leave'] + [e['lu'][0], e['lu'][3], e['lu'][4]]
+        r = r[:2] + [r[2], r[5], r[6]]
+        if '--lu' not in args: o, r = o[:4], r[:4]  # t (LU+0x100) only in stage 2
+        c = notes.setdefault(n, dict(factors=0, equal=0, first=None))
+        c['factors'] += 1
+        if o == r: c['equal'] += 1
+        elif c['first'] is None: c['first'] = f'k {e["k"]} enter {e["enter"]}: original (x4e0,x4e4,d8,e4,t) {o} Rust {r}'
+    if len(res) != len(order): fail.append(f'replay: {len(res)} results for {len(order)} factors')
+    fail += [f'replay {n}: {c["first"]}' for n, c in notes.items() if c['first']]
+    return fail, notes
 
 
 def coverage(orig, upto):
@@ -132,14 +161,18 @@ def main():
         c = copy.deepcopy(rr); c[2]['events'][0]['k'] += 1
         if not repro({'x': c}): fail.append('tamper run difference accepted')
         print('self-test:', len(tampers) + 1, 'tampers', 'rejected' if not any(x.startswith('tamper') for x in fail) else 'NOT all rejected')
+    if '--replay' in args:
+        b, notes = replay(runs); fail += b
+        for n, c in sorted(notes.items()):
+            g = runs[n][1]['events']
+            print(f'replay {n}: {c["equal"]}/{c["factors"]} equal', coverage(g, len(g)), c['first'] or '')
     if '--rust' in args:
         for n, rr in sorted(runs.items()):
             orig = rr[1]['events']
             e = check_capture(rr[1], n)
             if e: fail.append(e); continue
-            bad, note = compare(n, orig, rust_probe(n), '--lu' in args)
+            bad, upto, note = compare(n, orig, rust_probe(n), '--lu' in args)
             if bad: fail.append(bad); print('FAIL', bad); continue
-            upto = int(note.split(': ')[1].split('/')[0])
             print(note, coverage(orig, upto))
     print('FAIL' if fail else 'PASS', *fail[:20], sep='\n' if fail else ' ')
     return 1 if fail else 0

@@ -786,6 +786,11 @@ impl Lu {
         Lu::factor_tol(spx, head, MARKOWITZ_TOL)
     }
 
+    /// LU+0xd8, 0xdc, 0xe0, 0xe4 and 0x100 (t) as the factor leaves them (M1-01e probe).
+    pub fn block_fields(&self) -> [usize; 5] {
+        [self.s1, self.dc, self.s3, self.s4, self.prefix]
+    }
+
     /// Factor with Markowitz threshold `tol` (MarkowitzTol, raised by the numerics ladder).
     pub fn factor_tol(spx: &Spx, head: &[usize], tol: f64) -> Lu {
         let mut st = BlockState::OFF;
