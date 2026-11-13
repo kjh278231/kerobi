@@ -1,0 +1,36 @@
+model natural synthetic dense band rust_er_matched
+kb2 87 18 12 6 38/38 (end) c_B 4 paired (1 old-sparse) 0 unpaired
+degen2 1094 18 12 6 356/634 (r 426/419) c_B 9 paired (0 old-sparse) 0 unpaired
+sc50b 93 11 7 3 36/36 (end) c_B 6 paired (5 old-sparse) 0 unpaired
+scsd1 178 7 5 3 42/89 (r 27/30) c_B 5 paired (3 old-sparse) 1 unpaired
+stair 725 14 10 6 356/356 (end) c_B 10 paired (2 old-sparse) 1 unpaired
+forplan 325 7 5 3 150/150 (end) c_B 9 paired (6 old-sparse) 0 unpaired
+fit1p 1214 14 10 6 117/568 (etas 30/0) c_B 5 paired (4 old-sparse) 0 unpaired
+bnl1 1723 11 7 3 299/1050 (r 612/249) c_B 3 paired (1 old-sparse) 5 unpaired
+LU+0x108 > 5 cases 14
+PASS original + rust
+rejected binary sha | kb2 syn_2: binary sha 0000000000000000000000000000000000000000000000000000000000000000
+rejected spec sha | degen2 syn_1: spec sha
+rejected empty synthetic cases | sc50b: 0 synthetic cases, spec has 11
+rejected empty natural events | kb2: no natural events
+rejected run 3 value | stair: syn_3 synth[2] differs from syn_1: {'k': 17, 'i': 2, 'm': 356, 'x108': '4002cb2cb2cb2cb3', 'x110': '40062cabcfe48294', 'x104': 2, 'x180': 2, 'o
+rejected interference | forplan: synthetic run natural event 5 differs from plain (interference)
+rejected natural 21a941 flag | scsd1: natural call 3 [[288, 800497, 1], 77, 1, '3ff8000000000000', '3ff8000000000000', 0, 2, None, None, 0, 1]: 21a941 ran 0 times, C:89 test says de
+rejected undetermined path | sc50b k 10 case 2: forced sparse and dense runs agree, path not identifiable
+rejected D bits (path vs C:89) | sc50b k 0 case 2: original path dense=True, (int)D*nnz <= m with D=2 nnz=17 m=50 says False
+rejected no band case | fit1p: no case where the old 3*nnz test and the original differ
+rejected c_B sparse original output | sc50b: c_B call 1: output nnz 3 (dense input must give dense U^T, L^T)
+rejected c_B interference | kb2: synthetic run c_B calls differ from plain (interference)
+rejected no c_B calls | degen2: no c_B calls
+rejected Rust path (old 3*nnz) | kb2 k 17 case 2: Rust path dense=False, original dense=True
+rejected Rust output value | kb2 k 0 case 3 forced dense: field val index 1: original (True, [], ['bff6000000000000', '0000000000000000', '3ff4000000000000', '0000000000000000']) 
+rejected Rust output order | sc50b k 0 case 0 forced sparse: field idx index 0: original (False, [14, 3, 13], ['3ff0000000000000', '3ff0000000000000', '3ff0000000000000']) Rust (F
+rejected Rust D bits | degen2: e_r call 40 field D: original 4008000000000000 Rust 4010000000000000
+rejected Rust e_r r | forplan: e_r call 3: Rust r, etas (-1, 0) vs original (160, 0) (trajectory differs before spec k 12)
+rejected Rust etas | kb2: e_r call 5: Rust r, etas (13, 99) vs original (13, 0) (trajectory differs before spec k 30)
+rejected Rust c_B output value | sc50b: c_B call 1 (e_r count 8) output row 4: original 0000000000000000 Rust deadbeef00000000
+rejected Rust c_B sparse output | forplan: c_B call 2 (e_r count 18): Rust output sparse, original dense
+rejected no c_B pairs (input bits) | kb2: no natural c_B call paired inside the same-state range
+rejected no old-sparse c_B call | no paired c_B call where the pre-M1-02k rule went sparse
+rejected Rust new form diff | degen2: e_r output form differs at calls [50], known []
+SELF-TEST PASS

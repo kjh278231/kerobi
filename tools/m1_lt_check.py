@@ -213,7 +213,7 @@ def tampers(data, routs):
             'Rust etas': t(lambda d, r: r['fit1p'][3].update(e=99)),
             'bnl1 e_r 130 other rows': t(lambda d, r: r['bnl1'][130]['idx'].__setitem__(0, 9999)),
             'no target in range': t(lambda d, r: [[e.__setitem__(HIT, None) for e in
-                                                   [x for x in c['events'] if tuple(x[WRAP][:2]) == ER][:KNOWN_D['stair']]
+                                                   [x for x in c['events'] if tuple(x[WRAP][:2]) == ER][:RANGE['stair']]
                                                    if e[HIT] is not None and is_tgt(e)] for c in d['stair']['caps']]),
         })
     return out
