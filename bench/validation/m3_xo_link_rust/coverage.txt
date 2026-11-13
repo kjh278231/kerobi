@@ -1,0 +1,10 @@
+dpush-a Rust BTRAN lt=dense: 48
+dpush-a factor level 구조(x140 >= 0): 20
+dpush-a 입력 count -1(조밀): 48
+dpush-a 진입 x1d8 != -1: 0
+dpush-a 호출: 48
+post Rust BTRAN lt=dense: 9
+post factor level 구조(x140 >= 0): 0
+post 입력 count -1(조밀): 9
+post 진입 x1d8 != -1: 0
+post 호출: 9

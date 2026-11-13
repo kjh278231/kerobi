@@ -1,0 +1,19 @@
+# M3-04f-4b 회귀 (worktree work/m3-04f-4b)
+cargo test --release --workspace: passed 164 failed 0 ignored 12
+cargo clippy --workspace --all-targets -- -D warnings: 종료 0, 경고 0
+입력 473 호출 37646 KiB
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+사례 호출 473, 비교 실행 1419, 필드 2383170, 차이 0
+BTRAN 분기 {'entry=general': 473, 'eta=none': 473, 'kernel=': 473, 'lt=dense': 473, 'u=dense': 473}
+지점 {'dpush-a': 121, 'dpush-c': 205, 'post': 121, 'dualcheck': 8, 'dpush-b': 18}
+04f-4a exit 0
+입력 불변: bench/oracle/m3_push_install_rust/input.txt
+입력 불변: bench/oracle/m3_push_install_rust/unit.txt
+연결 설치 호출 59
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+(A) 설치 경계 111호출·줄 111·필드 666 비교, 불일치 0
+(B) 연결 62호출(설치까지 59, 통과 59·분류된 실패 0)·줄 1592(설치 쪽 626)·필드 7118 비교, 그 밖의 불일치 0
+04f-1 exit 0
+?? bench/validation/m3_xo_link_rust/
+checks-ok

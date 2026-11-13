@@ -81,3 +81,5 @@ Concurrent 조사는 다음 수명 문제를 해결해야 한다.
 [04f-3 Rust 이식](crossover_cleanup_rust.md)은 `crossover_cleanup`의 `retry_reset`·`select`(`dual_check`)·`install_basis`로 같은 768실행을 재생해 첫 비교부터 일치시켰다(쌍대 검사 d는 원본 주입). 다음 04f-4는 설치 상태에서 cleanup simplex 본체를 이어 최종 VBasis/CBasis를 비교하고 `251b4f`를 이식한다.
 
 [04f-4a 쌍대값](crossover_dual_values.md)은 `251b4f`(c_B·감산·BTRAN·d)와 S+0x2d8 재계산을 `crossover_dual`로 옮겨 원본 473호출(363실행)을 진입 상태(factor 포함)에서 재생해 비트 일치시켰다. 04f-3 쌍대 검사의 d 주입이 이 경계에서 사라졌다. 다음 04f-4b는 Rust push 연쇄의 factor에서 이를 잇고, 04f-4c는 cleanup simplex 본체의 비교 경계를 조사한다.
+
+[04f-4b 연결](crossover_dual_link.md)은 04f-1 연결 하네스의 Rust push factor·vstat·header를 `crossover_dual`에 바로 넘겨 dual push 첫 호출 0x1c6b49(48사례)와 dual push가 basis를 바꾸지 않은 0x1bf09e(9사례)에서 원본 3회와 비트 일치시켰다. Crossover 3에서는 0x1bf09e 앞의 dual push가 대부분 basis를 바꾸므로 그 지점의 나머지는 dual push 이식(04d·04e) 뒤로 남는다. 다음은 04f-4c(cleanup simplex 본체 조사)와 04d(dual push 분기 분할)다.

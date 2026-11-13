@@ -1,0 +1,56 @@
+[
+ {
+  "name": "l2-fresh-btran-state",
+  "result": "생존",
+  "first": null,
+  "count": 0
+ },
+ {
+  "name": "vstat-before-install",
+  "result": "거부",
+  "first": "arms [dpush-a] run 1.d[0]: 원본 '000000000000f03f' Rust '000000000000f0bf'",
+  "count": 60
+ },
+ {
+  "name": "header-rotate",
+  "result": "거부",
+  "first": "arms [dpush-a] run 1.btran.input_after.val[0]: 원본 '000000000000f0bf' Rust '0000000000000000'",
+  "count": 171
+ },
+ {
+  "name": "x1d8-zero",
+  "result": "거부",
+  "first": "arms [dpush-a] run 1.x1d8: 원본 -1 Rust 0",
+  "count": 171
+ },
+ {
+  "name": "bucket-none",
+  "result": "생존",
+  "first": null,
+  "count": 0
+ },
+ {
+  "name": "cost-model-order",
+  "result": "거부",
+  "first": "arms [dpush-a] run 1.btran.input_after.val[0]: 원본 '000000000000f0bf' Rust '0000000000000000'",
+  "count": 165
+ },
+ {
+  "name": "transpose-col-reverse",
+  "result": "생존",
+  "first": null,
+  "count": 0
+ },
+ {
+  "name": "transpose-rows-reverse",
+  "result": "거부",
+  "first": "arms [dpush-a] run 1.d[2]: 원본 '0000000000000000' Rust '000000000000f0bf'",
+  "count": 159
+ },
+ {
+  "name": "transpose-drop-last",
+  "result": "거부",
+  "first": "arms [dpush-a] run 1.d[3]: 원본 '000000000000f03f' Rust '0000000000000000'",
+  "count": 159
+ }
+]
