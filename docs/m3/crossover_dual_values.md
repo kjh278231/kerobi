@@ -67,8 +67,19 @@
 
 ## 6. 실행 결과
 
-(작성 예정)
+- 환경: x86-64 WSL2 Linux, Gurobi 13.0.3(위 SHA-256), Threads = 1·Seed = 0·OutputFlag = 0·Presolve = 0·Method = 2·LPWarmStart = 2. 계약 `9d451e8`, 원본 자료 `681c580`, 구현 `bdcaa47`, 검증 기록 `db1e049`.
+- 조사(scratchpad, 기준 자료 아님): factor 생략 agent로 Netlib 45 × Crossover 5값 1회(225회)를 돌려 `251b4f` 953호출을 확인했다. Crossover 1·2는 −1과, 4는 3과 `251b4f` 사건이 45모델 모두 같아 정식 범위를 −1·3으로 줄였다. 첫 정식 명령은 argparse가 `--crossover -1,3`을 옵션으로 읽어 원본 실행 0회로 실패했고 `--crossover=-1,3`으로 다시 실행했다.
+- 원본 실행: 정식 **363회 모두 성공**(Netlib 45 × Crossover {−1, 3} × 3 = 270, 특수 자연 arms·retry·interior × 5값 × 3 = 45, 04f-2 합성 16 × 3 = 48). 총 원본 실행은 조사 225 + 크기 확인 4 + 정식 363 = 592회. 자료 `bench/oracle/m3_xo_dual/`(30 MB, manifest에 파일·도구 해시).
+- 재현성(`xo_dual_check.py --controls`): 121사례 × 3회 사건열(seq 제외)·최종 결과 동일. 고유 호출 473(dual push 0x1c6b49 121·0x1c8533 18·0x1c87a9 205, 뒤처리 0x1bf09e 121, 쌍대 검사 0x1bfae2 8), 감산 목록이 있는 호출 235(항목 10,320), 쌍대 검사 r14 = 1 7·0 1(04f-2의 참 21·거짓 3과 같은 사례). BTRAN 진입 factor의 eta 수는 473회 모두 0, level 구조(F140 ≥ 0) 193회. 원본 검사기 변조 6종(d 비트·btran leave 삭제·r14·`251b4f` 0회·반복 2회·파일 해시) 모두 거부.
+- 비교(`xo_dual_rust.py --compare`): **첫 실행부터** 473호출 × 3회 = 1,419 비교, 2,383,170필드(BTRAN 입력 c_B, BTRAN 출력·입력 후상태·별칭·F+0x200·scratch, y, d, work, S+0x2d8 121, r14 8) 차이 0. BTRAN 경로는 473회 모두 일반 진입·조밀 Uᵀ·eta 없음·조밀 Lᵀ였다(21d에서 미관측이던 조밀 Uᵀ와 조밀 입력이 이번에 원본 비교됨). 원본 자료의 F1f8 복원(반환 뒤 = S+0x148)과 진입 F+0x200 = 0·scratch 0은 입력 생성 단계에서 확인했다.
+- 판별력: trace 변조 14종(rhs·BTRAN 출력·입력 후상태·별칭·F+0x200·scratch·y·d 열·d 끝·work·S+0x2d8·r14·Rust 오류·사례 삭제) 모두 거부. Rust 소스 변이 19종 중 **거부 15·생존 4**. 첫 실행의 `acc-reverse`(한 행 안 누적 순서 뒤집기)는 한 행의 열이 서로 달라 동치 변이였으므로 행 순서 뒤집기(`rows-reverse`, 거부)로 바꿨다. 생존 4종은 `--coverage`로 자료 출현 0회를 확인했다: |y| = drop 동률(`drop-ge`, 0회), slack 상태 −2(`flip-slacks`, 0회), 비기저 위반 = tol 동률(`inf-tol-ge`, 0회), −3 포함(`inf-m3-counted`: −3은 2회 나왔지만 d = 0이라 v = −0 < tol, 결과에 영향 0회). 결과 `bench/validation/m3_xo_dual_rust/`(compare·coverage·rust_mutations·oracle_controls·regression).
+- 회귀(`regression.txt`): `cargo test --release --workspace` 163 통과·실패 0·ignored 12, clippy 0(첫 실행 1건 `assign_op_pattern` → `d[c] -= y·a`로 바꾸고 재비교), `crossover_dual` 단위 테스트 2, 04f-3 `xo_cleanup_rust --write/--compare`(256사례·768실행·1,563줄·6,315필드 일치), 21d `push_btran_rust --compare`(32호출), py_compile·node --check, `git diff --check` 모두 종료 0.
+- 실행하지 못한 검사: pytest(Python 경계 변경 없음), Netlib 전체 풀이(solver 경로 미연결). 독립 검토자는 쓰지 않았다.
+- 바꾼 공유 파일: `crates/lp/Cargo.toml`에 dev-dependency `flate2`(workspace 잠금 파일에 이미 있는 crate, 재생 입력 37 MB → gzip 5 MB)와 `Cargo.lock`의 의존성 한 줄.
 
 ## 7. 판정과 인수인계
 
-(작성 예정)
+- 판정: **구현 완료(계약 범위)**. double·Threads = 1에서 `251b4f` 진입 원본 상태(factor 포함)로부터 c_B·감산, `09e288`/`221173` BTRAN(조밀 입력·cache 없음), d, work, S+0x2d8 재계산, auto 쌍대 검사 r14가 원본 363실행(473 고유 호출)과 정확·비트 일치했다. 04f-3의 쌍대 검사 d 주입은 이 경계에서 Rust 계산으로 대체됐다(factor는 원본 캡처 입력).
+- 미검증: eta가 있는 factor의 BTRAN(자료 0회), |y| = drop·v = tol 동률, slack −2 부호, 영향 있는 −3, x87 변형 `0x29d3c0`, push가 Rust로 만든 factor에서 이어지는 연결(04f-4b), work 이후 소비, solver 경로 연결.
+- 다음: **M3-04f-4b**(Rust push 연쇄의 최종 factor → `crossover_dual` 연결, 04f-1 하네스 59사례 재사용), **M3-04f-4c**(cleanup simplex 본체 조사, M1 simplex 궤적 의존), 04g(재시작). 재검사 `python3 tools/xo_dual_check.py --controls && python3 tools/xo_dual_rust.py --write && cargo test --release -p rsolver-lp --test xo_dual && python3 tools/xo_dual_rust.py --compare`.
+- 교훈: `docs/lessons/original.md`(251b4f·S+0x2d8), `docs/lessons/tooling.md`(argparse 음수 목록 인자, 실행 중 변이 하네스의 입력 교체, 행 안 순서 변이의 동치성).
