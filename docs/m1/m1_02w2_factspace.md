@@ -33,7 +33,7 @@
 | 직접 캡처 z = rsolver `NumNZs`, k·c 관측값 | 정확 일치 | 같은 캡처 |
 | 3회 독립 실행 | 기록(events) 동일 | 같은 캡처 |
 
-- 판별 사례 예측(캡처 전 고정): afiro `GURO_PAR_SIMPLEXALLOCS` = 7 → k 7, F+0x158 **1922**. grow15을 같은 프로세스에서 `reset()` 뒤 다시 풀 때 `045a76`이 다시 불리면 c = 1(첫 풀이의 풀 재할당 1회), F+0x158 **197,849**. 다시 불리지 않으면 그 사실을 기록하고 c 판별은 미검증으로 둔다.
+- 판별 사례 예측(캡처 전 고정): afiro `GURO_PAR_SIMPLEXALLOCS` = 7 → k 7, F+0x158 **1922**. grow15을 같은 프로세스에서 `reset()` 뒤 다시 풀 때 `045a76`이 다시 불리면 c = 1(첫 풀이의 풀 재할당 1회), F+0x158 **197,849**. 다시 불리지 않으면 그 사실을 기록하고 c 판별은 미검증으로 둔다. (결과: §6)
 - 검사기 self-test: 식의 k·c·10n 판정·half 상한·0.75를 바꾼 변이가 저장 캡처 중 하나 이상에서 거부돼야 한다.
 
 ## 4. 사례와 원본 자료
@@ -61,8 +61,17 @@ PYTHONPATH=../rsolver/python ../.venv/bin/python tools/m1_factspace.py --direct 
 
 ## 6. 실행 결과
 
-(실행 후 작성)
+- 실행: worktree `../rsolver-m1-02w-2`, 계약 commit `24bcb0f`, x86-64 Linux(WSL2), 바이너리 `8e87fca2…`. Gurobi는 M2-06h-7 세션의 긴 캡처와 잠금을 나눴다(첫 시도는 `gurun.sh` 1시간 대기 초과 99로 끝나 재시도 루프로 다시 실행).
+- **저장 64모델**: `tools/m1_factspace.py --self-test` 64/64 정확 일치(z = rsolver `NumNZs`, k 5, c 0). 변이 거부: k 4·k 6·c 1·0.75 → 0.8 각 64, half 상한(⌊m/2⌋+2 → ⌊m/2⌋) 4, 10n → 11n 1(fit1d). 지난 분기: m<n·m<500, m<n·m<3000, m<n half 상한, m≥n·n<500, m≥n half 상한, z > 10n.
+- **직접 캡처**(`bench/oracle/m1_02w2/final`, 7사례 × 3회 = 21회): `tools/m1_factspace.py --direct` **DIRECT PASS**. 모든 `045a76` 호출(23)에서 spx+0x28 = 0, rc 0, F+0x158 = 진입 필드로 계산한 식, F+0x168 = F+0x158 − 1, F+0x160 = 0, 다음 `036ade` 진입 F+0x158 같음, spx+0x3d0 = rsolver `NumNZs`. 반환 주소는 모두 0xd1cb3(`02f7e1` C:1228, `12f54b`가 tail jump라 그 호출 지점). 사례별 3회 events 동일.
+- **판별 사례**: afiro `GURO_PAR_SIMPLEXALLOCS` = 7 → k 7 관측, F+0x158 **1922** = 사전 예측. grow15 `reset()` 뒤 재풀이는 `045a76`이 다시 불렸지만 c = **0**, F+0x158 131,899로 사전 예측(c 1, 197,849)과 **달랐다**.
+- **c 탐색**(1회씩, `bench/oracle/m1_02w2/explore_c.js`·`explore_c_mod.js`, 자료 `explore/`): 첫 풀이 안에서 `036ade` 풀 부족 −1 뒤 F+0x170 = 1, `0cda5b` 반환 때 c = 1로 써진다. `reset()` 뒤 다음 `0cda5b` 진입에서 c = 0(reset이 지움). `reset()` 없이 목적 계수 하나를 1e-7 바꿔 다시 풀면 `0cda5b` 진입 c = 1, `045a76` 진입 c 1, F+0x158 **197,849** = 식(c 1)과 사전 예측 값. 그래서 c는 같은 모델의 이전 풀이에서 쌓이고 `reset()`이 0으로 돌린다. 이 두 탐색은 3회 재현하지 않았다.
+- 실행하지 못한 것: 0회 분기(m ≥ 3000, m ≥ n이면서 n ≥ 500, m = 0, c ≥ 8 짝 mulpd, 할당 실패 재시도, quad `1dec07`, Presolve ≠ 0 차원), c 탐색의 3회 재현, `14abfb` 쪽 c 쓰기(이번 실행에서 불리지 않음).
+- 계약 변경: grow15 재풀이 사례의 c 판별을 `reset()` 사례(c 0 확인)와 warm start 탐색(c 1, 1회)으로 나눠 기록했다. 3회 기준 자료의 합격 조건은 바꾸지 않았다.
 
 ## 7. 판정과 인수인계
 
-(실행 후 작성)
+- 작업 수행: **완료(조사)**. 답: M1 dual의 초기 F+0x158은 `045a76`(LU 객체 할당, `02f7e1` C:1228 → `12f54b`)이 §2 식으로 쓰는 FactSpace다. 입력은 m·n·nnz(A)·`GURO_PAR_SIMPLEXALLOCS`(기본 5)·모델 카운터 c(이전 풀이의 F+0x170 최댓값, `reset()`이 0으로). 저장 64모델 정확 일치, 직접 캡처 7사례 3회 일치, k 판별 통과. 동등성 판정은 하지 않는다(조사).
+- 후속 **M1-02w-3**(구현): Rust M1 재분해를 `Lu::factor_dense(cap)`로 바꾸고 cap = 이 식(c = 0 첫 풀이; warm start 재풀이는 c 수명이 필요하나 Rust에 아직 모델 카운터 없음)으로 시작, 풀 부족 −1 재호출(`crossover_refactor`) 뒤 F+0x158 갱신. 식은 `tools/m1_factspace.py`의 `factspace`를 Rust로 옮긴다. 대상·회귀는 [M1-02w §7](m1_02w_lu108.md#7-판정과-인수인계).
+- branch `work/m1-02w-2`. 코드(`crates/`) 변경 없음. 새 도구 `tools/m1_factspace.js`·`tools/m1_factspace.py`, 자료 `bench/oracle/m1_02w2/`(`final/` 21, `explore/` 2, `runs.sh`).
+- `docs/progress/M1-02w-2.md` 작성. 교훈: `docs/lessons/original.md`(FactSpace 식과 c 수명), `docs/lessons/tooling.md`(`long*` 첨자 쓰기 grep 함정, `gurun.sh` 1시간 포기).
