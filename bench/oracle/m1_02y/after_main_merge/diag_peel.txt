@@ -13,7 +13,7 @@ rejected alignment flipped | stair: update 4: values 0 mod 16, I + n = 528
 rejected carve offset | degen2: update 2: idx - W 11320 != 24I + 8 + 8(m+n) + 4m (I 71, n 534, m 444)
 rejected pool unaligned | afiro: update 1: W or LU+0x150 not 16-byte aligned (0, 8)
 rejected array moved | kb2: LU+0x1d0 value array moved during the run
-rejected one alignment only | kb2 run 1: model sha
+rejected one alignment only | only one alignment among the models: {True}
 rejected Rust peel flag | stair: Rust peel False n 467, original peel True n 467
 rejected Rust n | kb2: Rust peel False n 42, original peel False n 41
 rejected Rust diagonal bits | stair: Rust and original updates agree for 40, pinned 179; first difference original (r, diag) (262, 'bfe7a1ab4b72c519'), Rust (262, 'bfeeb36746e614e3

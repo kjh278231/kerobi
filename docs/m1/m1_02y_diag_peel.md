@@ -65,8 +65,21 @@
 
 ## 6. 실행 결과
 
-(실행 뒤 작성)
+- commit: 착수·탐색 `3f6be46`, 구현·검사기·기준 자료 `7e1b029`, 최종 회귀·clippy `063e424`, main `369a35a`(M2-06h-5, `crates/mip`·문서만) 병합 `b830231`. 자료 해시 `bench/oracle/m1_02y/manifest.json`. x86-64 Linux(WSL2), glibc malloc.
+- 원본(Gurobi 18회, 6모델 × 3): 사건이 3회 모두 같다(두 힙 블록 사이 거리 `val-struct`만 기록용으로 비교에서 뺐다). 할당식·정렬 규칙이 모든 갱신에서 성립하고 LU+0x150도 16 정렬이다. peel: stair·sc50a·scsd1·afiro, 없음: kb2·degen2. 탐색 14모델(§4)과 합치면 할당식 14/14. 첫 기준 캡처는 r < 0 호출(풀이 끝 `05b257`)에서 LU+0x50 밖을 읽어 kb2 run 2가 달랐다. r ≥ 0일 때만 읽도록 고치고 18회를 다시 캡처했다.
+- Rust(`tools/m1_diag_peel_check.py --self-test`, [check.txt](../../bench/oracle/m1_02y/after_main_merge/diag_peel.txt)): 6모델 모두 Rust peel·n이 원본과 같다. 갱신 정렬(원본의 첫 분해 전 호출, r < 0 호출, 재분해 직전 원본만 하는 갱신 제외)에서 (r, 새 대각 비트)가 stair 179/347, sc50a 30/30, scsd1 37/80, afiro 9/9, kb2 35/35, degen2 348/621 갱신까지 같다. 끝나는 곳은 이미 알려진 상태 갈림이다: stair e_r 186(M1-02x/M1-02w의 고정 LU+0x108 재분해 e_r 185 바로 뒤), degen2 e_r 356(M1-02x 범위 끝), scsd1 e_r 43(r 자체가 다름, 경로 갈림). 변조 13종 거부.
+- e_r 출력(`bench/oracle/m1_02x/diffs.py`): stair 값 차이 104호출이 **모두 사라졌다**(같은 상태 범위 185호출 전부 형태·idx·값 비트 일치). bnl1 7호출(순서)은 그대로다(I + n 홀수라 이번 변경과 무관, §1). `tools/m1_lt_check.py`의 stair `KNOWN_VAL`을 비우고 `--self-test` 통과([lt.txt](../../bench/oracle/m1_02y/after_main_merge/lt.txt)). 변조 'pinned value call agrees'는 bnl1 고정 호출로 옮겼다.
+- 변이(`bench/oracle/m1_02y/mutate.py`, [mutate.txt](../../bench/oracle/m1_02y/mutate.txt)) 5/5 거부: peel 안 함·항상 peel·패리티 반전·Full pricing 뒤 interval 사용(degen2에서 갈림), 그리고 플래그는 맞게 보고하면서 대각에서 무시(stair 갱신 27, r 252 `…14e2` ≠ `…14e3`에서 값 비교로 거부). 착수 때 적은 "9항 미만 순차 경로 제거" 변이는 넣지 않았다. 1항을 선처리하고 8항 이하이면 8레인 블록이 없어 순차 합과 같으므로 판별할 수 없는 등가 변이다.
+- 회귀(`bench/oracle/m1_02y/final`, base = `bench/oracle/m1_02x/final`: 그 commit `2a4cd71`과 main `f45157e`의 LP 코드가 같다): cargo `-p rsolver-lp` 통과, `--release --workspace` 통과, clippy는 첫 실행에서 `manual_is_multiple_of` 1건 → 고쳐 0, pytest 657 통과, M1 검사기 16종 통과. main 병합 뒤(`after_main_merge/`) workspace 129 통과·0 실패·12 무시, clippy 0, `m1_diag_peel`·`m1_lt`·`m1_btran` self-test 통과.
+  - `pathcmp.py all`: 바뀐 모델 8개(25fv47·fffff800·maros·perold·scagr25·scfxm2·scfxm3·stair), 첫 차이가 앞당겨진 모델 없음. fffff800은 첫 차이 181 → 291로 늦어지고 피벗 수가 Gurobi와 같아졌다(490). full match 27/64·중앙 0.752 그대로.
+  - `lp_check` 273행 중 54행 변화(시간 열 제외), 바뀐 모델 23개는 **모두 I + n 짝수**(홀수 모델 변화 0, 규칙 충족). **정답 수: Method 1·−1이 91 → 90으로 줄었다(규칙 실패).** pilot이 −557.489561 → −557.484224(Hager 값 −557.489729, 1e-6 상대 기준 밖)로 바뀌었다. IterCount 일치는 Method 1 31 → 32/64.
+- pilot 조사(사용자 지시로 병합 전 실행, 임시 디버그는 커밋하지 않음): pilot(1441 × 3652, I = 162, I + n 짝수 → peel)은 라이선스 크기 밖이라 원본 실행·경로 오라클이 없다. Rust 최종 해는 원래 공간에서 행 위반 5e-10, bound 위반 5.6e-7로 실행 가능하다. 스케일 공간 최적(반복 4507)의 basis를 비스케일 공간에서 다시 보면 primal 위반 1.5e-6 > FeasTol이라 dual 1회로 고치고, 그때 dual infeasibility는 최대 7.2e-7(< OptTol 1e-6, 1e-9 초과 8열)이다. 그 8열 중 7열은 위 bound가 무한(1e30)이라 허용오차 이하 환산비용만으로도 목적값이 1e-5 상대만큼 남을 수 있다. 즉 이번 해는 기본 허용오차 안의 최적 basis이고, lp_check의 고정밀 참값 대비 1e-6 상대 기준이 그 보장보다 엄격하다. 변경 전 Method 1이 통과한 것은 궤적상 우연이다(변경 전 Method 0은 이미 −557.482047로 같은 기준에서 실패).
+- 실행하지 못한 것: pilot 원본 실행(라이선스), bnl1 재분해 번호(M1-02z), 같은 상태 범위 밖.
 
 ## 7. 판정과 인수인계
 
-(실행 뒤 작성)
+- 작업 수행: 완료(조사 + 구현). 동등성: **새 대각 peel 판정·값은 계약 범위 통과**(6모델 갱신별 비트 일치, stair e_r 값 차이 104호출 해소, 변이 5/5 거부). bnl1 순서 차이는 원인(재분해 위치 번호)만 특정하고 **미해결 → M1-02z**. 회귀: 홀수 패리티 모델 무변화·pathcmp 규칙은 통과, **lp_check 정답 수 규칙은 pilot 한 모델에서 실패**(허용오차 범위의 최적 basis, 원본 비교 불가, §6). 이 실패는 고친 동작의 원본 불일치가 아니라 원본 확인이 안 되는 대형 모델의 궤적 변화다. 병합 여부는 사용자 결정에 따른다(인수인계에 기록).
+- 남은 한계: malloc 16 정렬 전제(glibc x86-64, 사용자 할당 콜백 없음). 비스케일 재풀이(`resolve_unscaled`의 새 `Engine`)도 같은 I·n으로 peel을 정하는데, 원본이 그 재풀이에서 LU를 새로 할당하는지는 확인하지 않았다. Method 0·quad·Threads > 1·MIP 호출자·m ≥ 2000 모델은 원본 미확인.
+- 후속: **M1-02z**(bnl1 e_r 126 직전 재분해의 U 위치 번호 588–607, 첫 명령 `tools/gurun.sh node tools/m1_urow_dump.js ../re/bench/data/netlib/bnl1.mps.gz <out> 1 126`와 Rust U 덤프 대조), M1-02w, M1-02t, M1-02u, pilot 정확도(원본 비교 수단부터).
+- branch `work/m1-02y`, worktree `../rsolver-m1-02y`.
+- 교훈: `docs/lessons/original.md`(η 버퍼 할당식과 패리티 규칙, 재분해 번호 차이), `docs/lessons/tooling.md`(r < 0 호출에서 배열 밖 읽기, 등가 변이).
