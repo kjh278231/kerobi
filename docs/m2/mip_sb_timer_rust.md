@@ -45,6 +45,8 @@
 - 새 Gurobi 실행 0회. 기준 자료는 06h-4 그대로이고 manifest에서 바뀐 것은 하네스·소스·테스트 해시 3개뿐이다(캡처 해시 불변).
 - `python3 tools/mip_sb_loop_rust.py --self-test` 종료 0([로그](../../bench/oracle/m2_06h5/selftest.log)). 6모델 **289묶음** 명령 trace·결과 배열·비용·work 비트 일치, `timer expired` 5(ran14x18 double[49]·[59]·[64]·[69]·[74]). 거부 43: 변조 18(`timer`는 만료 뒤 단계 검사 `after expiry`에서, 새 `timer clear`는 `no original case for timer expired`에서 Rust 실행 전에 거부. Rust 쪽 판별은 자연 만료 5묶음과 아래 두 변이가 맡는다)·직접 3·trace 4·Rust 변이 20 중 18(새 `timer ignored`·`timer return` 거부). 생존 2는 기존과 같다(`restore strict` 합성 거부, `score shift` 관측 불가).
 - `cargo test --release --workspace` 129 통과·12 무시·실패 0([로그](../../bench/oracle/m2_06h5/cargo.log)), clippy 종료 0. pytest는 Python 미변경이라 실행하지 않았다.
+- 계약 변경: §3 판별력 문구는 착수 때 "기존 `timer` 변조가 재생 차이로 거부"였다. 실행해 보니 새 만료 뒤 단계 검사가 Rust 실행 전에 거부해서 `21a4da8`에서 실제 거부 지점으로 고쳐 적었다(판정 규칙은 그대로).
+- 독립 검토(Opus 하위 에이전트, `21a4da8`): 높음 0·중간 0·낮음 2(위 변조 두 개가 Rust 재생을 거치지 않음, 계약 문구 사후 수정). 검토자가 C·asm 출구(만료 반환값이 `ebx`에 들어가지 않음, `adf2be`는 읽기 전용)를 따로 확인했다. 기본 재생(289묶음·만료 5)도 다시 돌렸고, manifest 해시 0·timer 제거·만료 뒤 단계 변조 4종 거부를 실행으로 확인했다. 만료 하나만 1 → 0으로 바꾸면 Rust 재생 단계에서 거부되는 것도 확인했다(`case 49` 줄 11523). 이 부분 변조를 self-test에 고정하는 일은 선택 사항이라 넣지 않았다. 새 캡처가 없고 06h-4 기준 자료는 그쪽 검토자가 재현을 확인했으므로 재캡처하지 않았다.
 - 실행하지 못한 것: 타이머 산술(`ade736`·`adf1a6`·`adf2be`)의 Rust 구현·원본 비교(범위 밖, §1).
 
 ## 7. 판정과 인수인계
