@@ -1,0 +1,1 @@
+stair     gurobi 356 pivots 356  mine 356 pivots 356  first diff at pivot 356: g None mine None

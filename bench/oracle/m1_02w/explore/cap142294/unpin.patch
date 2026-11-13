@@ -1,0 +1,25 @@
+--- tools/m1_btran_check.py	2026-11-13 12:46:49.156093386 +0900
++++ tools/m1_btran_check.py	2026-11-13 13:32:04.743633359 +0900
+@@ -25,7 +25,7 @@
+ # First e_r call after a refactor (same pivot on both sides) whose LU+0x108 differs: the tail U rows of rsolver's factor
+ # hold fewer entries than the original's (stair 1411 vs 1571 over m - t = 231); LU+0x110 and t agree. Pre-existing
+ # factor difference, not the U^T test: the same-state range ends there.
+-KNOWN_D = {'stair': 185}  # M1-01e: forplan 82 and bnl1 174 closed by the 2x2 block phase
++KNOWN_D = {}  # M1-01e: forplan 82 and bnl1 174 closed by the 2x2 block phase
+ 
+ 
+ CB = {}
+--- tools/m1_lt_check.py	2026-11-13 12:46:49.160093372 +0900
++++ tools/m1_lt_check.py	2026-11-13 13:32:31.767631632 +0900
+@@ -22,9 +22,9 @@
+ MODELS = ['stair', 'degen2', 'fit1p', 'bnl1']
+ ER = (376, 0xc51dd)
+ # M1-02k pinned first e_r call whose LU+0x108 differs after a refactor (M1-02w): the same-state range ends there
+-KNOWN_D = {'stair': 185, 'bnl1': 174}
++KNOWN_D = {'bnl1': 174}
+ # where the r / row eta count match ends without a pinned LU+0x108 call (a shorter range fails)
+-RANGE = {'degen2': 356, 'fit1p': 117}
++RANGE = {'degen2': 356, 'fit1p': 117, 'stair': 356}
+ # Pre-existing e_r output differences inside the range, the same with the LU+0x140 test removed (M1-02x §6,
+ # bench/oracle/m1_02x/diffs_*.txt). The stair values (from call 31) were the FT new diagonal's eta alignment, fixed in
+ # M1-02y; left: bnl1 level-path order (same rows; the moved row 587 differs by <= 9e-16 relative in 4 of 7), the

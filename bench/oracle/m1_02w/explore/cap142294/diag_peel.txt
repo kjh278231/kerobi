@@ -1,0 +1,8 @@
+model events peel agree original_updates rust_updates
+stair 360 True 337 347 347
+sc50a 36 True 30 30 30
+scsd1 92 True 37 80 80
+afiro 13 True 9 9 9
+kb2 41 False 35 35 35
+degen2 637 False 348 621 614
+PASS original + rust
