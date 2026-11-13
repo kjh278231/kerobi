@@ -2518,6 +2518,12 @@ impl Lu {
         self.d108
     }
 
+    /// Step and diagonal of basis position `pos` (for the M1-02y probe after an update).
+    pub(crate) fn diag_of(&self, pos: usize) -> (usize, f64) {
+        let k = self.kpos[pos];
+        (k, self.steps[k].2)
+    }
+
     /// Lᵀ DAG depth (LU+0x140), −1 without levels (for the M1-02k probe).
     pub(crate) fn lt_depth(&self) -> i64 {
         self.ltmax
@@ -3159,7 +3165,10 @@ impl Lu {
     /// shortcut: the pool growth rules are checked on kb2 (34/34 updates) and maros pivots 0–388 only.
     /// `w`: the work stores of 05b257 (docs/m1/m1_02r_ft_work.md), gathered where Rust computes them and stored at the
     /// end in the original's order. shortcut: of the early exits only the small diagonal is modelled (0xf1beb only).
-    pub fn update(&mut self, pos: usize, var: usize, spike: &[f64], sorder: &[usize], interval: usize, w: &mut crate::work::Work) -> bool {
+    /// `diag_peel`: the η values the new diagonal reads (LU+0x1d0) are 8 but not 16-byte aligned (`Engine::new`).
+    #[allow(clippy::too_many_arguments)]
+    pub fn update(&mut self, pos: usize, var: usize, spike: &[f64], sorder: &[usize], interval: usize, diag_peel: bool,
+        w: &mut crate::work::Work) -> bool {
         // Forrest–Tomlin as 5b257 stores it (m1_notes §8.10): r = the leaving index, q its U position, t the prefix
         // LU+0x100, p = max(q, t−1), l = max(p, U positions of the spike entries ≠ r). With l ≠ p and a non-empty U
         // row r the row eta is η = e_rᵀU⁻¹ (old U, r first then U order), the new diagonal η·S and row r leaves U;
@@ -3254,9 +3263,8 @@ impl Lu {
                     w[j] -= u * z;
                 }
             }
-            // 05b257 C:321–372 reads the LU+0x1d0 copy of η. shortcut: those values are taken as 16-byte aligned (kb2
-            // capture, 38/38 pivots), the peel of an 8-byte aligned buffer is not modelled
-            diag = dot8(eta.iter().map(|&(i, e)| spike[i] * e));
+            // 05b257 C:321–372 reads the LU+0x1d0 copy of η, whose alignment `diag_peel` gives
+            diag = dot8_peel(eta.iter().map(|&(i, e)| spike[i] * e), diag_peel);
             w_eta = Some(eta.len());
             w_urow = Some(self.urow[kp].len());
             // row r out of U; a column left empty raises the LU+0xe8 cache (L1023, position before the permutation)
@@ -3777,7 +3785,7 @@ mod tests {
             let spike = x.clone();
             lu.ftran_upper(&mut x);
             let Some(pos) = (0..m).find(|&p| x[lu.steps[lu.kpos[p]].0].abs() > 0.5) else { continue };
-            assert!(lu.update(pos, j, &spike, &[], usize::MAX, &mut crate::work::Work::new()));
+            assert!(lu.update(pos, j, &spike, &[], usize::MAX, false, &mut crate::work::Work::new()));
             check(&spx, &lu);
             done += 1;
         }

@@ -26,13 +26,11 @@ KNOWN_D = {'stair': 185, 'bnl1': 174}
 # where the r / row eta count match ends without a pinned LU+0x108 call (a shorter range fails)
 RANGE = {'degen2': 356, 'fit1p': 117}
 # Pre-existing e_r output differences inside the range, the same with the LU+0x140 test removed (M1-02x §6,
-# bench/oracle/m1_02x/diffs_*.txt): stair values (1 ulp at call 31 growing to 1.1e-9 relative by call 172, updated U
-# with row etas; 165 entries below 1e-12 differ in zero/sign), bnl1 level-path order (same rows; the moved row 587
-# differs by <= 9e-16 relative in 4 of 7). Pinned
-# exactly: a pinned call that agrees or any other difference fails. Form and LU+0x140 are compared on every call.
-KNOWN_VAL = {'stair': [31, 41, 45, 47, 49, 50, 51, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 71, 75, 76, 77, 78, 79, 80, 81,
-                       82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 101, 103, 107, 108, *range(119, 139), 140, 141,
-                       *range(143, 185)]}
+# bench/oracle/m1_02x/diffs_*.txt). The stair values (from call 31) were the FT new diagonal's eta alignment, fixed in
+# M1-02y; left: bnl1 level-path order (same rows; the moved row 587 differs by <= 9e-16 relative in 4 of 7), the
+# refactor numbering of M1-02z. Pinned exactly: a pinned call that agrees or any other difference fails. Form and
+# LU+0x140 are compared on every call.
+KNOWN_VAL = {}
 KNOWN_IDX = {'bnl1': [130, 134, 144, 153, 159, 162, 173]}
 WRAP, M, NNZ, X180, R, OUT, X140, HIT, IDX, VAL = 0, 1, 2, 5, 8, 10, 11, 12, 13, 14
 
@@ -193,9 +191,10 @@ def tampers(data, routs):
 
     stair = lambda r, k: r['stair'][k]
 
-    def pinned_agrees(d, r):  # the original's stair e_r 31 output set to Rust's in every run
-        for c in d['stair']['caps']:
-            [e for e in c['events'] if tuple(e[WRAP][:2]) == ER][31][VAL] = list(stair(r, 31)['val'])
+    def pinned_agrees(d, r):  # the original's bnl1 e_r 130 output set to Rust's in every run
+        for c in d['bnl1']['caps']:
+            e = [x for x in c['events'] if tuple(x[WRAP][:2]) == ER][130]
+            e[IDX], e[VAL] = list(r['bnl1'][130]['idx']), list(r['bnl1'][130]['val'])
     out = {
         'binary sha': t(lambda d, r: d['degen2']['caps'][1].update(binary_sha256='0' * 64)),
         'empty events': t(lambda d, r: [c.update(events=[]) for c in d['fit1p']['caps']]),
@@ -213,7 +212,7 @@ def tampers(data, routs):
             'Rust value bits': t(lambda d, r: stair(r, 118)['val'].__setitem__(5, 'deadbeef00000000')),
             'Rust idx order': t(lambda d, r: next(x for x in r['degen2'] if not x['od'] and len(x['idx']) > 1)['idx'].reverse()),
             'Rust etas': t(lambda d, r: r['fit1p'][3].update(e=99)),
-            'pinned value call agrees': t(pinned_agrees),
+            'pinned call agrees': t(pinned_agrees),
             'pinned order call: other rows': t(lambda d, r: r['bnl1'][130]['idx'].__setitem__(0, 9999)),
             'no target in range': t(lambda d, r: [[e.__setitem__(HIT, None) for e in
                                                    [x for x in c['events'] if tuple(x[WRAP][:2]) == ER][:KNOWN_D['stair']]

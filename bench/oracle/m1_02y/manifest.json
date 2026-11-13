@@ -1,0 +1,47 @@
+{
+ "task": "M1-02y",
+ "binary_sha256": "8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c",
+ "params": {
+  "Threads": 1,
+  "Method": 1,
+  "Presolve": 0,
+  "OutputFlag": 0
+ },
+ "env": "x86-64 Linux (WSL2), glibc malloc",
+ "capture": "tools/m1_eta_align_runs.sh bench/oracle/m1_02y",
+ "check": "PYTHONPATH=$PWD/python ../.venv/bin/python tools/m1_diag_peel_check.py --self-test",
+ "models": {
+  "afiro": "7bf2faf46c75b9feae51b65354d1b86914b4733a2e71e26c1efe9c817df1554e",
+  "degen2": "47ad212b08b5c517cbe169bd6711cdc1051391bf1b30531bcf9893abae498346",
+  "kb2": "fd4e89375a650a3a5eb25c1d57c293e1cf9b1791e0d6fa61a0d586b76ba5d516",
+  "sc50a": "31d687049d391fcae5019f607251ddffd15bd0177b48da74fbb4185b32bfd1f2",
+  "scsd1": "6114a4838ce69cdc2a3c4398817ed240316a365a8a592b247d751bd5833e5e02",
+  "stair": "5e93434e32ad5ceac61abe7fedbd6a85a2db2813d6fa70f68e96102f3c47cc6c"
+ },
+ "files": {
+  "bench/oracle/m1_02y/afiro_1.json.gz": "8717441d88bed903d9bdde594ec5a0d2b5409bac75fb8a0705456b00e6031ef2",
+  "bench/oracle/m1_02y/afiro_2.json.gz": "8717441d88bed903d9bdde594ec5a0d2b5409bac75fb8a0705456b00e6031ef2",
+  "bench/oracle/m1_02y/afiro_3.json.gz": "8717441d88bed903d9bdde594ec5a0d2b5409bac75fb8a0705456b00e6031ef2",
+  "bench/oracle/m1_02y/degen2_1.json.gz": "0dc43b901574440b2901e69ea5c6d3e85dabad5d0aefb894cb98f0daad9f5106",
+  "bench/oracle/m1_02y/degen2_2.json.gz": "0dc43b901574440b2901e69ea5c6d3e85dabad5d0aefb894cb98f0daad9f5106",
+  "bench/oracle/m1_02y/degen2_3.json.gz": "0dc43b901574440b2901e69ea5c6d3e85dabad5d0aefb894cb98f0daad9f5106",
+  "bench/oracle/m1_02y/kb2_1.json.gz": "ef9fbe1579fa839c02006e05e994c5da9b2e62ee5c5630d15a3b3f1b9aa1181b",
+  "bench/oracle/m1_02y/kb2_2.json.gz": "ef9fbe1579fa839c02006e05e994c5da9b2e62ee5c5630d15a3b3f1b9aa1181b",
+  "bench/oracle/m1_02y/kb2_3.json.gz": "ef9fbe1579fa839c02006e05e994c5da9b2e62ee5c5630d15a3b3f1b9aa1181b",
+  "bench/oracle/m1_02y/sc50a_1.json.gz": "a54642e1f7c784d29a4c8ef4e843eab3ba0e044e5d7b7fbffcd3f45b3217f7ac",
+  "bench/oracle/m1_02y/sc50a_2.json.gz": "a54642e1f7c784d29a4c8ef4e843eab3ba0e044e5d7b7fbffcd3f45b3217f7ac",
+  "bench/oracle/m1_02y/sc50a_3.json.gz": "a54642e1f7c784d29a4c8ef4e843eab3ba0e044e5d7b7fbffcd3f45b3217f7ac",
+  "bench/oracle/m1_02y/scsd1_1.json.gz": "c1989a31c0327f2b050a13b3975d9a8b0bf2dee181e3ac5cd92d908234684993",
+  "bench/oracle/m1_02y/scsd1_2.json.gz": "c1989a31c0327f2b050a13b3975d9a8b0bf2dee181e3ac5cd92d908234684993",
+  "bench/oracle/m1_02y/scsd1_3.json.gz": "c1989a31c0327f2b050a13b3975d9a8b0bf2dee181e3ac5cd92d908234684993",
+  "bench/oracle/m1_02y/stair_1.json.gz": "47f5c02861c89c52e18bce752495152c35c88efcbe2da06eb038c945889089c0",
+  "bench/oracle/m1_02y/stair_2.json.gz": "47f5c02861c89c52e18bce752495152c35c88efcbe2da06eb038c945889089c0",
+  "bench/oracle/m1_02y/stair_3.json.gz": "47f5c02861c89c52e18bce752495152c35c88efcbe2da06eb038c945889089c0",
+  "tools/m1_eta_align.js": "89b582658ea4c8b9b9627f51087094c19a3aec798e8f60594ce7b6bdf1fd2c14",
+  "tools/m1_eta_align_runs.sh": "03b7ed6bab3065c0543093a707d81f422de3a7d4e6ab5b1bdb220e254d1a3dd6",
+  "tools/m1_diag_peel_check.py": "7bdbf8cd6ae9ecdb01dacfa27a98b9bf2f3362244f43332e15ebf2ad728ca2c4",
+  "tools/m1_er_stage.js": "059cf4fccb84dd3a120a2cff1da75f263a35c8cbde549484a0c2675fa951844a",
+  "tools/m1_urow_dump.js": "c42e27337eefc4de5f0bc4a4c573bd4d7991a20ce81c55e46a4c6a59539e4a6f",
+  "tools/m1_eta_alloc.js": "0eefb87ca3c0f92778cbfda14765f3bf3f7cc88410c95addbc240430fa30841e"
+ }
+}

@@ -59,6 +59,10 @@ pub struct Engine<'a> {
     /// Record the per-iteration trace (objective and infeasibility sums, O(n+m) each); off when nobody reads it.
     pub trace_on: bool,
     lu_interval: usize,
+    /// The η values of the FT new diagonal (LU+0x1d0) are 8 mod 16: `045a76` C:274–296 cuts them from a malloc'd
+    /// workspace at 24·I + 8 + 8(m + n) + 8m with I the interval at allocation (spx+0x3c8), so I + n even.
+    /// shortcut: assumes 16-byte aligned malloc (glibc x86-64) and no user allocator callback.
+    lu_peel: bool,
     perturbed: bool,
     /// NONDEGENFLIP spx+0x3fc: once on, the BFRT re-scans its passed breakpoints (M1-02e).
     nondeg_flip: bool,
@@ -147,6 +151,7 @@ impl<'a> Engine<'a> {
             deadline: None,
             trace_on: true,
             lu_interval: interval,
+            lu_peel: (interval + n) % 2 == 0,
             perturbed: false,
             nondeg_flip: false,
             pert_size: 2e-4,
@@ -620,9 +625,10 @@ impl<'a> Engine<'a> {
         self.work.k = self.iter as usize;
         // LU+0x1c8: the spike list `09d112` left; a completed update empties it (05b257 C:1329)
         self.spike_ns = if sorder.is_empty() { spike.iter().filter(|v| v.abs() > ZERO).count() } else { sorder.len() };
-        if refactor || !self.lu.update(r, q, spike, sorder, self.lu_interval, &mut self.work) {
+        if refactor || !self.lu.update(r, q, spike, sorder, self.lu_interval, self.lu_peel, &mut self.work) {
             self.reinvert();
         } else {
+            self.update_probe(r);
             self.spike_ns = 0;
             // LU+0x190: nonzeros of the FTRAN'd entering column (pivot included)
             self.upd_cols += self.col_nnz;
@@ -1878,6 +1884,17 @@ impl<'a> Engine<'a> {
             out.1,
             bits(&out.0)
         );
+        use std::io::Write;
+        let f = std::fs::OpenOptions::new().create(true).append(true).open(format!("{spec}.out"));
+        f.and_then(|mut f| f.write_all(line.as_bytes())).expect("probe dump");
+    }
+
+    /// M1-02y probe after an FT update: the e_r count so far, the step and new diagonal bits of position r, and the
+    /// inputs of the η alignment (peel flag, n).
+    fn update_probe(&self, r: usize) {
+        let Some((k, spec)) = &self.bt_probe else { return };
+        let (step, d) = self.lu.diag_of(r);
+        let line = format!("{{\"u\":1,\"k\":{k},\"step\":{step},\"d\":\"{:016x}\",\"peel\":{},\"n\":{}}}\n", d.to_bits(), self.lu_peel, self.n);
         use std::io::Write;
         let f = std::fs::OpenOptions::new().create(true).append(true).open(format!("{spec}.out"));
         f.and_then(|mut f| f.write_all(line.as_bytes())).expect("probe dump");
