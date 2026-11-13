@@ -225,6 +225,8 @@
 - **소스 변이 하네스는 `bench`를 심볼릭 링크로 공유하므로 실행 중에 재생 입력 파일을 지우거나 이름을 바꾸면 변이 실행이 중간에 깨진다.** 입력 형식 변경(평문 → gzip)은 변이 실행이 끝난 뒤 하고 변이를 다시 돌린다. (M3-04f-4a)
 - **한 행(또는 열) 안에서 서로 다른 칸에만 쓰는 누적의 순서 뒤집기는 동치 변이다.** `251b4f`의 행 안 순서 변이는 생존했고, 같은 칸이 여러 행에서 누적되는 행 순서 뒤집기로 바꿔 거부를 확인했다. 변이를 고를 때 같은 칸에 두 번 이상 쓰는지 본다. (M3-04f-4a)
 - **큰 재생 입력(factor 포함 37 MB)은 `gzip.compress(mtime=0)`로 저장하고 Rust 테스트가 dev-dependency `flate2`로 읽는다.** 결정적 압축이라 `--write`를 다시 해도 파일이 바뀌지 않는다. (M3-04f-4a)
+- **조밀 배열 정렬처럼 값만 바꾸는 차이는 재분해 직후 첫 `21a941`(F+0x18c = 0)의 대각 LU+0x50 비트로 판별한다.** LU 필드·개수·dense n은 cap 짝홀이 틀려도 같았다. 대각 비교에서는 cap 변이가 4모델 모두 1–2 ulp로 잡혔다(`tools/m1_dense_state.js`, `m1_dense_check.py --replay`). (M1-02w-3, [§6](../m1/m1_02w3_dense.md#6-실행-결과))
+- **`factor_dense` 같은 넓은 경로를 기본 풀이 경로에 켜면 그 안의 "not ported" assert가 모든 Method에 드러난다.** 켠 빌드를 보존해 두고 pathcmp·lp_check(3방법)를 먼저 돌려 panic 종류와 모델을 모은다. 그 목록이 실제 포팅 범위다. M1-02w-3에서는 C:3405 한 종류가 13실행에 나왔다. 재생 테스트는 `catch_unwind`로 panic을 한 줄로 보고하게 해 전체 비교가 멈추지 않게 한다. (M1-02w-3, [§6](../m1/m1_02w3_dense.md#6-실행-결과))
 
 ## Rust 비용 계측
 
@@ -260,3 +262,4 @@
 - **이 컴퓨터(`sw-edu`)에는 `~/.local/share/frida-node`가 없다.** 옛 npx 경로(`/home/sds/.npm/_npx/da7caeae9db9c589/node_modules/frida`)가 남아 있으므로 `FRIDA_NODE`를 그 경로로 주면 `tools/gurun.sh`가 그대로 돈다. (M2-06h-6)
 - **0회 분기 탐색은 전체 캡처 대신 커널 진입과 전파 반환만 거는 스캐너(`tools/mip_sb_scan.js`)로 먼저 넓게 돌린다.** 전체 캡처 도구는 NodeLimit 300에서도 300초를 넘던 모델(csched007·ic97)을 스캐너는 NodeLimit 5000으로 38모델 전부 끝냈다. 첫 사건의 커널 serial이 NodeLimit에 관계없이 같아서(궤적 앞부분 결정적) NodeLimit을 이분 탐색해 전체 캡처 크기를 줄일 수 있다. 스캐너는 시간 한도로 죽으면 결과를 남기지 않으니 rc=124 모델의 0회는 믿지 않는다. (M2-06h-7)
 - **`tools/mip_sb_loop_rust.py`는 자기 파일 해시를 `bench/oracle/m2_06h6/final/manifest.json`에 고정한다.** 하네스에 옵션만 더해도 `--self-test`가 `manifest.tools/mip_sb_loop_rust.py` 불일치로 실패하니, 고친 뒤 `--write-manifest`를 돌리고 diff가 그 한 줄뿐인지 확인한다. (M2-06h-7)
+- **`diff -u`로 만든 패치(`--- tools/x.py`, a/·b/ 접두 없음)는 `git apply`가 "No such file"로 거부한다.** `git apply -p0`으로 적용한다(M1-02w의 `unpin.patch`). (M1-02w-3)
