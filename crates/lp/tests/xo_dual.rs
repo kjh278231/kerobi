@@ -1,10 +1,12 @@
 //! M3-04f-4a replay: `251b4f` (with the original's BTRAN on the captured factor), the S+0x2d8 recompute after the
 //! pushes and the automatic dual check, from the `dv:enter` state of each call. The original's outputs are read only
 //! by tools/xo_dual_rust.py. Contract: docs/m3/crossover_dual_values.md.
+mod dual_io;
+
+use dual_io::{bits, call_members};
 use rsolver_lp::crossover_btran::*;
 use rsolver_lp::crossover_cleanup::dual_check;
 use rsolver_lp::crossover_dual::*;
-use rsolver_lp::crossover_ftran::{Buffer, VecSnap};
 use std::str::SplitWhitespace;
 
 fn next<T: std::str::FromStr>(t: &mut SplitWhitespace<'_>) -> T {
@@ -21,9 +23,6 @@ fn opt_float(t: &mut SplitWhitespace<'_>) -> Option<f64> {
     } else {
         Some(float(t))
     }
-}
-fn bits(v: f64) -> String {
-    v.to_le_bytes().iter().map(|b| format!("{b:02x}")).collect()
 }
 fn ints(t: &mut SplitWhitespace<'_>) -> Vec<i64> {
     let n = next::<usize>(t);
@@ -42,45 +41,6 @@ fn floats(t: &mut SplitWhitespace<'_>) -> Vec<f64> {
 fn rows(t: &mut SplitWhitespace<'_>, m: usize) -> Vec<SparseRow> {
     (0..m).map(|_| SparseRow { cols: usizes(t), vals: floats(t) }).collect()
 }
-fn opt_i(x: &Option<i32>) -> String {
-    x.map_or("null".into(), |v| v.to_string())
-}
-fn opt_f(x: &Option<f64>) -> String {
-    x.map_or("null".into(), |v| format!("\"{}\"", bits(v)))
-}
-fn list<T>(xs: &[T], f: impl Fn(&T) -> String) -> String {
-    format!("[{}]", xs.iter().map(f).collect::<Vec<_>>().join(","))
-}
-fn hexes(xs: &[f64]) -> String {
-    list(xs, |v| format!("\"{}\"", bits(*v)))
-}
-fn vector(v: &VecSnap) -> String {
-    let idx = v.idx.as_ref().map_or("null".into(), |i| list(i, opt_i));
-    format!("{{\"count\":{},\"idx\":{idx},\"val\":{}}}", opt_i(&v.count), list(&v.val, opt_f))
-}
-fn name(b: Buffer) -> &'static str {
-    match b {
-        Buffer::In => "in",
-        Buffer::Out => "out",
-    }
-}
-fn alias(a: &[(Buffer, Buffer); 2]) -> String {
-    format!(
-        "{{\"in\":{{\"idx\":\"{}\",\"val\":\"{}\"}},\"out\":{{\"idx\":\"{}\",\"val\":\"{}\"}}}}",
-        name(a[0].0),
-        name(a[0].1),
-        name(a[1].0),
-        name(a[1].1)
-    )
-}
-fn scratch(s: &Scratch) -> String {
-    format!(
-        "{{\"x1b0\":{},\"x1b8\":{}}}",
-        list(&s.marks, |(i, v)| format!("[{i},{v}]")),
-        list(&s.vals, |(i, v)| format!("[{i},\"{}\"]", bits(*v)))
-    )
-}
-
 /// The BTRAN factor in the field order of tools/push_btran_rust.py `line` from `relabel` on.
 fn factor(t: &mut SplitWhitespace<'_>, m: usize, zero: f64) -> (BtranFactor, Option<Vec<i32>>) {
     let relabel = usizes(t);
@@ -178,27 +138,9 @@ fn run(line: &str) -> (String, String) {
             format!("{{\"error\":{:?}}}", msg.unwrap_or_default())
         }
         Ok(c) => {
-            let (out, inp) = c.btran.snapshot(m);
             let s2d8 = tol380.map_or("null".into(), |tol| format!("\"{}\"", bits(dual_infeasibility(&c.d, &vstat, tol))));
             let r14 = opttol.map_or("null".into(), |tol| (dual_check(&c.d, &vstat, tol) as i32).to_string());
-            let br = &c.btran.branches;
-            format!(
-                "{{\"rhs\":{},\"btran\":{{\"output\":{},\"input_after\":{},\"alias\":{},\"x200\":\"{}\",\"scratch\":{}}},\"y\":{},\"d\":{},\"work\":{},\"s2d8\":{s2d8},\"r14\":{r14},\"branches\":{{\"entry\":\"{}\",\"u\":\"{}\",\"kernel\":\"{}\",\"eta\":\"{}\",\"lt\":\"{}\"}},\"error\":null}}",
-                hexes(&c.rhs),
-                vector(&out),
-                vector(&inp),
-                alias(&c.btran.alias()),
-                bits(c.btran.work),
-                scratch(&c.btran.scratch()),
-                hexes(&c.y),
-                hexes(&c.d),
-                opt_f(&c.work),
-                br.entry,
-                br.u,
-                br.kernel,
-                br.eta,
-                br.lt
-            )
+            format!("{{{},\"s2d8\":{s2d8},\"r14\":{r14},\"error\":null}}", call_members(&c, m))
         }
     };
     (case, body)
