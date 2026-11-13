@@ -79,6 +79,9 @@
 - **call 직후 주소에 붙인 함수형 probe에서 `rsp` 기준 slot을 읽을 때는 그 call의 stack 인자 push·`add rsp` 정리 전인지 확인한다.** `13f716` `0x1bfae2`(`251b4f` 반환 직후)는 push 4개가 남아 `rsp+0x230`이 S가 아니었고 access violation으로 캡처가 실패했다. `add $0x20,%rsp` 다음 명령(`0x1bfae6`)으로 옮겼다. (M3-04f-2)
 - **반환값을 쓰지 않는 함수의 rax는 실행마다 달라 재현성 비교를 깨뜨린다.** `048d5f`(힙 포인터 반환, 호출자가 버림)와 void `b16d3`의 onLeave 반환값이 3회 실행에서 모두 달랐다. 호출자 C에서 반환을 쓰는지 확인하고 그 함수만 정규화한 뒤, 다른 반환값 변조는 여전히 거부되는지 self-test로 남긴다. 23바이트 꼬리 호출 dispatcher(`12e6ec` 등) 뒤 함수의 `returnAddress`는 Frida trampoline이라 모듈 밖 값이 된다. (M3-04f-4c, [§6](../m3/crossover_cleanup_simplex.md#6-실행-결과))
 
+- **0x12ec77에 닿지 않는 조밀 e_r BTRAN의 단계 값은 `21a941` 반환(param_3 = Uᵀ 출력)과 0x12e912(r13 = param_2, 조밀 eta 뒤 벡터)에서 잡는다(`tools/m1_er_dense.js`).** 원본 Uᵀ·eta 목록 idx는 기저 위치이고 Rust 탐침(`RSOLVER_STAGE_PROBE`)은 `steps[kpos[pos]].0`이라 `pos_row`로 옮겨 비교한다. 옮기지 않으면 모든 eta가 다르게 보인다. FT 갱신 입력은 `tools/m1_upd_spike.js`(spike LU+0x1c8, η LU+0x1d0, 새 대각)로 잡고, 원본 값으로 원본 합산을 흉내 내 원본 대각이 나오는지 먼저 확인하면 공식과 입력 중 어느 쪽이 다른지 바로 갈린다. (M1-02w-4)
+- **검사기 일치 범위의 끝을 "앞선 차이의 하류"로 해석하기 전에 그 갱신과 BTRAN의 시간 순서를 확인한다.** M1-02w-3은 `m1_diag_peel_check`의 stair 범위 끝(갱신 337번째 = e_r 346 뒤 갱신)을 e_r 347 BTRAN 차이의 결과로 기록했지만, 실제로는 그 갱신이 먼저이고 원인이었다. 탐침 `u` 줄의 `k`(갱신 시점의 e_r 수)와 e_r 번호를 나란히 놓으면 바로 보인다. (M1-02w-4)
+
 ## 디컴파일 조회
 
 - **`tools/dc.py <함수> --asm`은 `index.tsv` 크기에서 멈춘다. 그런데 실제 본체가 더 긴 함수가 있다.** `6e8eb3`은 색인 3,492바이트지만 점프 테이블 대상과 꼬리가 `0x5b4c50`까지 이어진다(반환 `0x5b49eb`). 이 범위를 빼고 grep하면 스택 슬롯·레지스터 쓰기를 놓친다. 점프 테이블이나 `raw:` 반환 주소가 보이면 `--range 0x시작,0x끝`으로 반환 명령까지 덤프해서 읽는다. (M2-06c)

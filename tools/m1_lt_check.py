@@ -30,10 +30,9 @@ RANGE = {'degen2': 356, 'fit1p': 117, 'stair': 356}
 # M1-02y; left: bnl1 level-path order (same rows; the moved row 587 differs by <= 9e-16 relative in 4 of 7), the
 # refactor numbering of M1-02z. Pinned exactly: a pinned call that agrees or any other difference fails. Form and
 # LU+0x140 are compared on every call.
-# M1-02w-3 (dense switch on): stair e_r 347-355 differ in value bits only (call 347 output 0: 175 ulp). The pivot-337
-# dense refactor is bit-equal (m1_dense_check replay diagonal, natural LU fields) and 9 updates after it agree
-# (m1_diag_peel_check); the first difference is this BTRAN, then the pivot-347 FT diagonal. Cause open: M1-02w-4.
-KNOWN_VAL = {'stair': [347, 348, 349, 350, 351, 352, 353, 354, 355]}
+# M1-02w-3 pinned stair e_r 347-355 (value bits only); M1-02w-4 traced them to the new diagonal of the update after
+# e_r 346 (eta.S read a spike residual below ZERO that the original's LU+0x1c8 holds as 0) and fixed it.
+KNOWN_VAL = {}
 KNOWN_IDX = {}  # M1-01e: the bnl1 order differences (130 ... 173) were the 2x2 block phase (M1-02z)
 WRAP, M, NNZ, X180, R, OUT, X140, HIT, IDX, VAL = 0, 1, 2, 5, 8, 10, 11, 12, 13, 14
 

@@ -1,0 +1,65 @@
+25fv47    gurobi 2552 pivots 2552  mine 2422 pivots 2422  first diff at pivot 446: g ((611,), (563,)) mine ((569,), (563,))
+adlittle  gurobi 73 pivots 73  mine 73 pivots 73  first diff at pivot 73: g None mine None
+afiro     gurobi 10 pivots 10  mine 10 pivots 10  first diff at pivot 10: g None mine None
+agg       gurobi 175 pivots 175  mine 175 pivots 175  first diff at pivot 175: g None mine None
+agg2      gurobi 173 pivots 173  mine 173 pivots 173  first diff at pivot 173: g None mine None
+agg3      gurobi 169 pivots 169  mine 169 pivots 169  first diff at pivot 169: g None mine None
+bandm     gurobi 372 pivots 372  mine 381 pivots 381  first diff at pivot 154: g ((135,), (207,)) mine ((416,), (127,))
+beaconfd  gurobi 233 pivots 233  mine 233 pivots 233  first diff at pivot 233: g None mine None
+blend     gurobi 75 pivots 75  mine 75 pivots 75  first diff at pivot 75: g None mine None
+bnl1      gurobi 1050 pivots 1050  mine 1035 pivots 1035  first diff at pivot 236: g ((68,), (1197,)) mine ((57,), (1197,))
+boeing1   gurobi 651 pivots 651  mine 639 pivots 639  first diff at pivot 420: g ((509,), (340,)) mine ((523,), (340,))
+boeing2   gurobi 143 pivots 143  mine 153 pivots 153  first diff at pivot 79: g ((121,), (289,)) mine ((133,), (289,))
+bore3d    gurobi 172 pivots 172  mine 172 pivots 172  first diff at pivot 172: g None mine None
+brandy    gurobi 468 pivots 468  mine 466 pivots 466  first diff at pivot 261: g ((165,), (166,)) mine ((131,), (100,))
+capri     gurobi 237 pivots 237  mine 237 pivots 237  first diff at pivot 9: g ((124,), (551,)) mine ((124,), (537,))
+degen2    gurobi 634 pivots 634  mine 627 pivots 627  first diff at pivot 357: g ((910,), (388,)) mine ((396,), (454,))
+degen3    gurobi 2212 pivots 2212  mine 2169 pivots 2169  first diff at pivot 668: g ((758,), (696,)) mine ((1370,), (2833,))
+e226      gurobi 410 pivots 410  mine 414 pivots 414  first diff at pivot 363: g ((449,), (191,)) mine ((383,), (387,))
+etamacro  gurobi 490 pivots 490  mine 490 pivots 490  first diff at pivot 490: g None mine None
+fffff800  gurobi 490 pivots 490  mine 490 pivots 490  first diff at pivot 291: g ((399,), (522,)) mine ((491,), (522,))
+finnis    gurobi 475 pivots 475  mine 502 pivots 502  first diff at pivot 225: g ((417,), (862,)) mine ((415,), (862,))
+fit1d     gurobi 66 pivots 66  mine 66 pivots 66  first diff at pivot 66: g None mine None
+fit1p     gurobi 568 pivots 568  mine 562 pivots 562  first diff at pivot 188: g ((315,), (385,)) mine ((315,), (802,))
+forplan   gurobi 151 pivots 151  mine 151 pivots 151  first diff at pivot 151: g None mine None
+ganges    gurobi 859 pivots 859  mine 859 pivots 859  first diff at pivot 761: g ((372,), (384,)) mine ((1457,), (1456,))
+gfrd-pnc  gurobi 558 pivots 558  mine 558 pivots 558  first diff at pivot 161: g ((695,), (1557,)) mine ((689,), (1557,))
+grow15    gurobi 1033 pivots 1033  mine 1170 pivots 1170  first diff at pivot 365: g ((181,), (161,)) mine ((200,), (220,))
+grow22    gurobi 1145 pivots 1145  mine 2258 pivots 2258  first diff at pivot 256: g ((79,), (56,)) mine ((114,), (157,))
+grow7     gurobi 316 pivots 316  mine 316 pivots 316  first diff at pivot 316: g None mine None
+israel    gurobi 150 pivots 150  mine 146 pivots 146  first diff at pivot 84: g ((85,), (107,)) mine ((84,), (107,))
+kb2       gurobi 38 pivots 38  mine 38 pivots 38  first diff at pivot 38: g None mine None
+lotfi     gurobi 343 pivots 343  mine 352 pivots 352  first diff at pivot 108: g ((118,), (169,)) mine ((130,), (169,))
+maros     gurobi 1975 pivots 1975  mine 2014 pivots 2014  first diff at pivot 852: g ((348,), (1152,)) mine ((1129,), (1152,))
+modszk1   gurobi 172 pivots 172  mine 172 pivots 172  first diff at pivot 172: g None mine None
+perold    gurobi 1273 pivots 1273  mine 1253 pivots 1253  first diff at pivot 365: g ((1003,), (1347,)) mine ((684,), (339,))
+pilot4    gurobi 691 pivots 691  mine 691 pivots 691  first diff at pivot 691: g None mine None
+recipe    gurobi 45 pivots 45  mine 45 pivots 45  first diff at pivot 45: g None mine None
+sc105     gurobi 87 pivots 87  mine 87 pivots 87  first diff at pivot 87: g None mine None
+sc205     gurobi 207 pivots 207  mine 196 pivots 196  first diff at pivot 61: g ((19,), (22,)) mine ((124,), (22,))
+sc50a     gurobi 33 pivots 33  mine 33 pivots 33  first diff at pivot 33: g None mine None
+sc50b     gurobi 36 pivots 36  mine 36 pivots 36  first diff at pivot 36: g None mine None
+scagr25   gurobi 575 pivots 575  mine 608 pivots 608  first diff at pivot 165: g ((213,), (217,)) mine ((413,), (417,))
+scagr7    gurobi 224 pivots 224  mine 239 pivots 239  first diff at pivot 147: g ((166,), (17,)) mine ((39,), (48,))
+scfxm1    gurobi 381 pivots 381  mine 381 pivots 381  first diff at pivot 381: g None mine None
+scfxm2    gurobi 757 pivots 757  mine 792 pivots 792  first diff at pivot 456: g ((718,), (1443,)) mine ((754,), (1443,))
+scfxm3    gurobi 1122 pivots 1122  mine 1117 pivots 1117  first diff at pivot 821: g ((75,), (1449,)) mine ((604,), (627,))
+scorpion  gurobi 327 pivots 327  mine 326 pivots 326  first diff at pivot 136: g ((313,), (322,)) mine ((317,), (322,))
+scrs8     gurobi 505 pivots 505  mine 505 pivots 505  first diff at pivot 478: g ((86,), (140,)) mine ((471,), (431,))
+scsd1     gurobi 89 pivots 89  mine 89 pivots 89  first diff at pivot 41: g ((497,), (811,)) mine ((427,), (811,))
+scsd6     gurobi 276 pivots 276  mine 276 pivots 276  first diff at pivot 276: g None mine None
+sctap1    gurobi 246 pivots 246  mine 245 pivots 245  first diff at pivot 127: g ((266,), (218,)) mine ((265,), (218,))
+sctap2    gurobi 474 pivots 474  mine 474 pivots 474  first diff at pivot 474: g None mine None
+seba      gurobi 55 pivots 55  mine 55 pivots 55  first diff at pivot 55: g None mine None
+share1b   gurobi 175 pivots 175  mine 175 pivots 175  first diff at pivot 175: g None mine None
+share2b   gurobi 101 pivots 101  mine 101 pivots 101  first diff at pivot 101: g None mine None
+shell     gurobi 673 pivots 673  mine 673 pivots 673  first diff at pivot 673: g None mine None
+ship04s   gurobi 397 pivots 397  mine 397 pivots 397  first diff at pivot 397: g None mine None
+stair     gurobi 356 pivots 356  mine 356 pivots 356  first diff at pivot 356: g None mine None
+standata  gurobi 118 pivots 118  mine 119 pivots 119  first diff at pivot 107: g ((129,), (780,)) mine ((104,), (1213,))
+standgub  gurobi 118 pivots 118  mine 119 pivots 119  first diff at pivot 107: g ((129,), (839,)) mine ((104,), (1324,))
+standmps  gurobi 328 pivots 328  mine 321 pivots 321  first diff at pivot 96: g ((759,), (928,)) mine ((832,), (928,))
+stocfor1  gurobi 85 pivots 85  mine 85 pivots 85  first diff at pivot 85: g None mine None
+tuff      gurobi 199 pivots 199  mine 173 pivots 173  first diff at pivot 33: g ((402,), (599,)) mine ((228,), (599,))
+vtpbase   gurobi 157 pivots 157  mine 157 pivots 157  first diff at pivot 157: g None mine None
+median first-diff fraction 0.907, full match 30/64

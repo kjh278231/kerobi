@@ -1,0 +1,20 @@
+0 | python3 tools/push_lu_rust.py --write
+0 | python3 tools/push_lu_rust.py --generate --write
+0 | python3 tools/push_lu_rust.py --block --write
+0 | python3 tools/push_mode70_rust.py --write
+0 | python3 tools/push_dense_rust.py --write
+0 | python3 tools/push_install_rust.py --write
+0 | git diff --exit-code --stat bench/oracle
+0 | cargo test -p rsolver-lp --test push_lu
+0 | cargo test --release -p rsolver-lp --test push_lu mode70_chain_trace
+0 | cargo test --release -p rsolver-lp --test push_dense --test push_lu
+0 | cargo test -p rsolver-lp --test push_install --test push_init_ext
+0 | python3 tools/push_lu_rust.py --compare
+0 | python3 tools/push_lu_rust.py --generate --compare
+0 | python3 tools/push_lu_rust.py --block --compare
+0 | python3 tools/push_mode70_rust.py --compare
+0 | python3 tools/push_dense_rust.py --compare
+0 | python3 tools/push_install_rust.py --compare
+0 | python3 tools/push_loop_rust.py --lu --compare
+0 | python3 tools/push_loop_rust.py --init --compare
+PUSH_DONE

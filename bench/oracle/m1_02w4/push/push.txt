@@ -1,0 +1,132 @@
+== python3 tools/push_lu_rust.py --write
+input: 207 연산 {'R': 19, 'F': 120, 'B': 32, 'U': 36}
+exit 0
+== python3 tools/push_lu_rust.py --generate --write
+input: 213 연산 {'M': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}
+exit 0
+== python3 tools/push_lu_rust.py --block --write
+input: 219 연산 {'M': 6, 'K': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}
+exit 0
+== python3 tools/push_mode70_rust.py --write
+refactor input: 41 연산 {'M': 5, 'K': 5, 'G': 31}
+exit 0
+== python3 tools/push_dense_rust.py --write
+unit: 21 조밀 LU {'grow7': 2, 'grow22': 2, 'perold': 5, 'pilot4': 8, 'stair': 4}
+refactor input: 41 연산 {'M': 5, 'K': 5, 'G': 31}
+exit 0
+== python3 tools/push_install_rust.py --write
+입력 불변: bench/oracle/m3_push_install_rust/input.txt
+입력 불변: bench/oracle/m3_push_install_rust/unit.txt
+연결 설치 호출 59
+exit 0
+== git diff --exit-code --stat bench/oracle
+exit 0
+== cargo test -p rsolver-lp --test push_lu
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running tests/push_lu.rs (target/debug/deps/push_lu-4fc5b2e97e33b62d)
+
+running 5 tests
+test dense_chain_trace ... ok
+test block_chain_trace ... ok
+test refactor_chain_trace ... ok
+test lu_chain_trace ... ok
+test mode70_chain_trace ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.76s
+
+exit 0
+== cargo test --release -p rsolver-lp --test push_lu mode70_chain_trace
+    Finished `release` profile [optimized] target(s) in 0.01s
+     Running tests/push_lu.rs (target/release/deps/push_lu-0aa23218993a35f7)
+
+running 1 test
+test mode70_chain_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.18s
+
+exit 0
+== cargo test --release -p rsolver-lp --test push_dense --test push_lu
+    Finished `release` profile [optimized] target(s) in 0.01s
+     Running tests/push_dense.rs (target/release/deps/push_dense-6d4e29cb4d2f9c0f)
+
+running 1 test
+test dense_unit_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/push_lu.rs (target/release/deps/push_lu-0aa23218993a35f7)
+
+running 5 tests
+test mode70_chain_trace ... ok
+test dense_chain_trace ... ok
+test lu_chain_trace ... ok
+test block_chain_trace ... ok
+test refactor_chain_trace ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+exit 0
+== cargo test -p rsolver-lp --test push_install --test push_init_ext
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running tests/push_init_ext.rs (target/debug/deps/push_init_ext-e83fdbfa32272afe)
+
+running 4 tests
+test init_ext_trace ... ok
+test init_cond_trace ... ok
+test init_install_trace ... ok
+test dual_link_trace ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.93s
+
+     Running tests/push_install.rs (target/debug/deps/push_install-c04a257037e2b4d7)
+
+running 1 test
+test install_unit_trace ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+exit 0
+== python3 tools/push_lu_rust.py --compare
+비교 연산 207 {'R': 19, 'F': 120, 'B': 32, 'U': 36}, 통과 {'R': 19, 'F': 120, 'B': 32, 'U': 36}, 필드 1257225, 실패 0
+FT 분기 {'cache_reuse=False': 36, 'cycle=False': 15, 'cycle=True': 21, 'dot_lanes=False': 25, 'dot_lanes=True': 11, 'eta=False': 13, 'eta=True': 23, 'interval_trivial=False': 26, 'interval_trivial=True': 10, 'local80=0': 7, 'local80=1': 17, 'local80=2': 6, 'local80=3': 6, 'moved_column=False': 3, 'moved_column=True': 33, 'moved_rows=0': 6, 'moved_rows=1': 7, 'moved_rows=11': 1, 'moved_rows=2': 6, 'moved_rows=23': 1, 'moved_rows=3': 5, 'moved_rows=4': 3, 'moved_rows=5': 1, 'moved_rows=53': 1, 'moved_rows=6': 1, 'moved_rows=7': 2, 'moved_rows=8': 2, 'promoted=False': 22, 'promoted=True': 14}
+FTRAN/BTRAN 분기 {'B.entry=cache': 7, 'B.entry=cache-empty-row': 25, 'B.eta=none': 32, 'B.kernel=heap': 25, 'B.kernel=heap+seq': 7, 'B.lt=dense': 2, 'B.lt=heap': 23, 'B.lt=heap+seq': 1, 'B.lt=level': 6, 'B.u=21a941': 32, 'F.input=dense': 13, 'F.input=sparse': 107, 'F.l=214344': 48, 'F.l=21b9de': 47, 'F.l=21b9de A2': 25, 'F.r=dense': 25, 'F.r=none': 79, 'F.r=sparse': 13, 'F.r=sparse-dense': 3, 'F.spike=dense': 36, 'F.spike=save0': 69, 'F.spike=sparse': 15, 'F.u=2126cd': 51, 'F.u=21686f H2': 50, 'F.u=21686f S1': 8, 'F.u=21686f S2': 11}
+미지 칸(비교 제외) {'supplier input_after': 2255}
+OK
+exit 0
+== python3 tools/push_lu_rust.py --generate --compare
+비교 연산 213 {'M': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}, 통과 {'M': 6, 'G': 18, 'F': 119, 'B': 32, 'U': 36}, 필드 1234852, 실패 2
+생성 재분해 통과 분류 {'triangular': 9, 'no levels': 16, 'kernel': 9, 'L levels': 2}
+예상 실패(2×2 블록, 계약 §1) ['capri#813 G.perm.x20[140]: 원본 218 != Rust 149', 'capri#821 F.enter.L.beg[142]: 원본 290 != Rust 291']
+FT 분기 {'cache_reuse=False': 36, 'cycle=False': 15, 'cycle=True': 21, 'dot_lanes=False': 25, 'dot_lanes=True': 11, 'eta=False': 13, 'eta=True': 23, 'interval_trivial=False': 26, 'interval_trivial=True': 10, 'local80=0': 7, 'local80=1': 17, 'local80=2': 6, 'local80=3': 6, 'moved_column=False': 3, 'moved_column=True': 33, 'moved_rows=0': 6, 'moved_rows=1': 7, 'moved_rows=11': 1, 'moved_rows=2': 6, 'moved_rows=23': 1, 'moved_rows=3': 5, 'moved_rows=4': 3, 'moved_rows=5': 1, 'moved_rows=53': 1, 'moved_rows=6': 1, 'moved_rows=7': 2, 'moved_rows=8': 2, 'promoted=False': 22, 'promoted=True': 14}
+FTRAN/BTRAN 분기 {'B.entry=cache': 7, 'B.entry=cache-empty-row': 25, 'B.eta=none': 32, 'B.kernel=heap': 25, 'B.kernel=heap+seq': 7, 'B.lt=dense': 2, 'B.lt=heap': 23, 'B.lt=heap+seq': 1, 'B.lt=level': 6, 'B.u=21a941': 32, 'F.input=dense': 12, 'F.input=sparse': 107, 'F.l=214344': 47, 'F.l=21b9de': 47, 'F.l=21b9de A2': 25, 'F.r=dense': 25, 'F.r=none': 78, 'F.r=sparse': 13, 'F.r=sparse-dense': 3, 'F.spike=dense': 36, 'F.spike=save0': 68, 'F.spike=sparse': 15, 'F.u=2126cd': 50, 'F.u=21686f H2': 50, 'F.u=21686f S1': 8, 'F.u=21686f S2': 11}
+미지 칸(비교 제외) {'supplier input_after': 2255, 'G bucket': 34}
+OK (예상 실패 2연산 제외)
+exit 0
+== python3 tools/push_lu_rust.py --block --compare
+비교 연산 219 {'M': 6, 'K': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}, 통과 {'M': 6, 'K': 6, 'G': 19, 'F': 120, 'B': 32, 'U': 36}, 필드 1262508, 실패 0
+생성 재분해 통과 분류 {'triangular': 9, 'no levels': 16, 'kernel': 10, 'L levels': 3}
+예상 실패(2×2 블록, 계약 §1) []
+FT 분기 {'cache_reuse=False': 36, 'cycle=False': 15, 'cycle=True': 21, 'dot_lanes=False': 25, 'dot_lanes=True': 11, 'eta=False': 13, 'eta=True': 23, 'interval_trivial=False': 26, 'interval_trivial=True': 10, 'local80=0': 7, 'local80=1': 17, 'local80=2': 6, 'local80=3': 6, 'moved_column=False': 3, 'moved_column=True': 33, 'moved_rows=0': 6, 'moved_rows=1': 7, 'moved_rows=11': 1, 'moved_rows=2': 6, 'moved_rows=23': 1, 'moved_rows=3': 5, 'moved_rows=4': 3, 'moved_rows=5': 1, 'moved_rows=53': 1, 'moved_rows=6': 1, 'moved_rows=7': 2, 'moved_rows=8': 2, 'promoted=False': 22, 'promoted=True': 14}
+FTRAN/BTRAN 분기 {'B.entry=cache': 7, 'B.entry=cache-empty-row': 25, 'B.eta=none': 32, 'B.kernel=heap': 25, 'B.kernel=heap+seq': 7, 'B.lt=dense': 2, 'B.lt=heap': 23, 'B.lt=heap+seq': 1, 'B.lt=level': 6, 'B.u=21a941': 32, 'F.input=dense': 13, 'F.input=sparse': 107, 'F.l=214344': 48, 'F.l=21b9de': 47, 'F.l=21b9de A2': 25, 'F.r=dense': 25, 'F.r=none': 79, 'F.r=sparse': 13, 'F.r=sparse-dense': 3, 'F.spike=dense': 36, 'F.spike=save0': 69, 'F.spike=sparse': 15, 'F.u=2126cd': 51, 'F.u=21686f H2': 50, 'F.u=21686f S1': 8, 'F.u=21686f S2': 11}
+미지 칸(비교 제외) {'supplier input_after': 2255, 'G bucket': 34}
+OK
+exit 0
+== python3 tools/push_mode70_rust.py --compare
+(B) 연산 {'M': 5, 'K': 5, 'G': 31}: 통과 {'M': 5, 'K': 5, 'G': 31}, 필드 849828
+(A) 풀: {'G': 31, 'calls': 32, 'pool_events': 68, 'retry': 1, 'mode70': 3, 'pivots': 733, 'dense': 10}
+exit 0
+== python3 tools/push_dense_rust.py --compare
+(A) 조밀 LU 21회 일치, 필드 88651
+(B) 연산 {'M': 5, 'K': 5, 'G': 31}: 범위 안 통과 {'M': 5, 'K': 5, 'G': 28}, 조밀 재분해 일치 10, 필드 848548
+    범위 밖(계약 §1(i), 첫 lu {'grow7': None, 'grow22': 392, 'perold': None, 'pilot4': None, 'stair': None}): 연산 3, 그중 실패 0
+exit 0
+== python3 tools/push_install_rust.py --compare
+(A) 설치 경계 111호출·줄 111·필드 666 비교, 불일치 0
+(B) 연결 62호출(설치까지 59, 통과 59·분류된 실패 0)·줄 1592(설치 쪽 626)·필드 7118 비교, 그 밖의 불일치 0
+exit 0
+== python3 tools/push_loop_rust.py --lu --compare
+일치: 사례 6 줄 725 필드 5575 태그 {'btran': 32, 'clear': 67, 'end': 6, 'exhausted': 12, 'fcall': 49, 'ftran': 107, 'init': 6, 'leave': 101, 'pass': 14, 'recompute': 13, 'rin': 13, 'round': 12, 'select': 67, 'step': 107, 'supply': 119}
+exit 0
+== python3 tools/push_loop_rust.py --init --compare
+일치: 사례 6 줄 731 필드 5743 태그 {'btran': 32, 'clear': 67, 'end': 6, 'exhausted': 12, 'fcall': 49, 'ftran': 107, 'init': 6, 'leave': 101, 'pass': 14, 'recompute': 13, 'rin': 13, 'round': 12, 'select': 67, 'start': 6, 'step': 107, 'supply': 119}
+exit 0

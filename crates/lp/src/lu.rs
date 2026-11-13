@@ -11,6 +11,15 @@ pub const ZERO: f64 = 1e-13;
 /// (index, value) entries in storage order.
 type Sparse = Vec<(usize, f64)>;
 
+/// BTRAN stage values of one e_r call (M1-02w-4 probe).
+pub(crate) struct RowStages {
+    pub ut: Vec<(usize, f64)>,
+    pub etas: Vec<(usize, Vec<(usize, f64)>)>,
+    pub eta_out: Vec<f64>,
+    /// `steps[kpos[pos]].0` by basis position: the index the stages use for position pos.
+    pub pos_row: Vec<usize>,
+}
+
 pub struct Lu {
     /// Pivot steps in factor order: (row, basis position, diagonal). FT updates replace the diagonal in place.
     pub steps: Vec<(usize, usize, f64)>,
@@ -2853,6 +2862,22 @@ impl Lu {
     /// A dense Uᵀ (`ut_dense`, C:91–260) zeroes |x| ≤ ZERO as well as |x/d| ≤ ZERO and hands nnz −1 on, so the etas
     /// and Lᵀ are dense; a sparse one is `ut_sparse` (`21a941`).
     fn btran_updated(&self, x: &[(usize, f64)], ut_dense: bool) -> (Vec<(usize, f64)>, bool) {
+        self.btran_updated_st(x, ut_dense, None)
+    }
+
+    /// `btran_row` with the stage values (M1-02w-4 probe): the Uᵀ output (row, value) in arrival order, the row etas
+    /// and the vector by row after them (the Lᵀ input). Updated factors only.
+    pub(crate) fn btran_row_stages(&self, r: usize) -> Option<RowStages> {
+        if !self.updated() {
+            return None;
+        }
+        let pos_row = (0..self.head.len()).map(|p| self.steps[self.kpos[p]].0).collect();
+        let mut st = RowStages { ut: Vec::new(), etas: self.retas.clone(), eta_out: Vec::new(), pos_row };
+        self.btran_updated_st(&[(r, 1.0)], self.urow_len(r) == 0 && self.ut_dense(1), Some(&mut st));
+        Some(st)
+    }
+
+    fn btran_updated_st(&self, x: &[(usize, f64)], ut_dense: bool, mut st: Option<&mut RowStages>) -> (Vec<(usize, f64)>, bool) {
         let m = self.head.len();
         let mut w = vec![0.0; m]; // by step
         for &(pos, v) in x {
@@ -2885,6 +2910,9 @@ impl Lu {
                 put(k, t, &mut y);
             }
         }
+        if let Some(st) = st.as_deref_mut() {
+            st.ut = list.iter().map(|&r| (r, y[r])).collect();
+        }
         let dense_eta = !self.retas.is_empty() && (ut_dense || m < self.sparse_mult * list.len());
         for (r, eta) in self.retas.iter().rev() {
             // 221173 eta phase (newest first): v = w_r; w_r = η_r·v, w_i = η_i·v + w_i
@@ -2900,6 +2928,9 @@ impl Lu {
                     }
                 }
             }
+        }
+        if let Some(st) = st {
+            st.eta_out = y.clone();
         }
         let xs: Vec<(usize, f64)> =
             list.iter().filter(|&&r| y[r].abs() >= ZERO).map(|&r| (self.prow[r] as usize, y[r])).collect();
@@ -3383,8 +3414,11 @@ impl Lu {
                     w[j] -= u * z;
                 }
             }
-            // 05b257 C:321–372 reads the LU+0x1d0 copy of η, whose alignment `diag_peel` gives
-            diag = dot8_peel(eta.iter().map(|&(i, e)| spike[i] * e), diag_peel);
+            // 05b257 C:321–372 reads the LU+0x1d0 copy of η, whose alignment `diag_peel` gives, against S in LU+0x1c8:
+            // 09d112 clears the previous list on entry (C:118–138) and writes only the new list there (C:1744–1786,
+            // C:1853–1880), so a row at or below ZERO reads 0
+            let s = |i: usize| if spike[i].abs() > ZERO { spike[i] } else { 0.0 };
+            diag = dot8_peel(eta.iter().map(|&(i, e)| s(i) * e), diag_peel);
             w_eta = Some(eta.len());
             w_urow = Some(self.urow[kp].len());
             // row r out of U; a column left empty raises the LU+0xe8 cache (L1023, position before the permutation)

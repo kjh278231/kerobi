@@ -19,9 +19,10 @@ NETLIB = os.path.join(ROOT, '../re/bench/data/netlib')
 BINARY = '8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c'
 MODELS = ['stair', 'sc50a', 'scsd1', 'afiro', 'kb2', 'degen2']
 # updates (after the alignment filter) where Rust and the original agree in r and diagonal bits; pinned after the
-# first run of the fixed build (M1-02y §6). The ends are known state divergences: stair at the pivot-347 update (after
-# the e_r 347 BTRAN value difference, M1-02w-3; was e_r 186 before the dense switch), degen2 at e_r 356 (M1-02x range end), scsd1 at e_r 43 (r differs: path)
-RANGE = {'stair': 337, 'sc50a': 30, 'scsd1': 37, 'afiro': 9, 'kb2': 35, 'degen2': 348}
+# first run of the fixed build (M1-02y §6). stair agrees on all 347 updates since M1-02w-4 (was 337: the update after
+# e_r 346 read a spike residual below ZERO in eta.S; 186 before the M1-02w-3 dense switch). The other ends are known
+# state divergences: degen2 at e_r 356 (M1-02x range end), scsd1 at e_r 43 (r differs: path)
+RANGE = {'stair': 347, 'sc50a': 30, 'scsd1': 37, 'afiro': 9, 'kb2': 35, 'degen2': 348}
 NNZ, VAL16, CHG, X100, IDX16, VAL_IDX, VAL_STRUCT, M, W16, IDX_W, S64, S68, S3C8, X188, R, X150, NREF, RET, DIAG = range(19)
 
 
