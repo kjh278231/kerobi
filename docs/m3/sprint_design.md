@@ -75,3 +75,13 @@ Concurrent 조사는 다음 수명 문제를 해결해야 한다.
 [04c-1c 조건수](primal_push_condition.md)는 `116fd7` 내부 경계(FTRAN/BTRAN 입출력·버퍼 교환·정렬)를 1b 15사례와 Netlib 45 자연으로 캡처하고, Rust `crossover_condition`을 1d 하네스에 넣어 조건수 주입 없이 62 push 호출을 비교한다(64호출 비트 일치). 초기화는 이로써 외부 값 없이 원본 상태만으로 재현되며, 다음은 해 설치(04f)와 초기화 밖 116fd7 호출이다.
 
 [04f-1 해 설치](primal_push_install.md)는 루프 종료 뒤 `134a87` C 2419–2582(first일 때 basic → x·slack, PInf·S+0x120, 설치 조건수 `116fd7`, retry, remaining 부호, vstat -1/-2·음수 스냅)를 Rust `push_install`로 옮겨, 1d 하네스에서 push 진입부터 반환까지 원본 재주입 없이 비교한다(58/59 일치). grow7의 연결 실패는 마지막 round 재분해의 `036ade` 조밀 전환 미이식이었고 [21i 조밀 전환](primal_push_dense_lu.md)이 이를 이식해 59/59로 닫았다(grow22의 풀 부족 재호출·`local_70` 모드는 [21j](primal_push_mode70.md)가 이식해 push 재분해 31/31), remaining을 소비하는 `13f716`의 cleanup 선택과 `0cda5b` 설치는 04f-2다.
+
+[04f-2 cleanup 진입](crossover_cleanup_entry.md)은 `13f716`의 push 반환 소비(Crossover 값별 primal/dual 선택, 자동 −1의 쌍대 검사, retry 잔존 재설정)와 `0cda5b`→`0325b4` 상태 배열 설치를 원본 768회로 고정하고 C 규칙 재계산으로 검사한다. 다음 04f-3은 이 선택·설치를 Rust로 옮겨 같은 자료와 비교하고, 그 뒤 cleanup simplex 본체를 이어 최종 basis를 비교한다.
+
+[04f-3 Rust 이식](crossover_cleanup_rust.md)은 `crossover_cleanup`의 `retry_reset`·`select`(`dual_check`)·`install_basis`로 같은 768실행을 재생해 첫 비교부터 일치시켰다(쌍대 검사 d는 원본 주입). 다음 04f-4는 설치 상태에서 cleanup simplex 본체를 이어 최종 VBasis/CBasis를 비교하고 `251b4f`를 이식한다.
+
+[04f-4a 쌍대값](crossover_dual_values.md)은 `251b4f`(c_B·감산·BTRAN·d)와 S+0x2d8 재계산을 `crossover_dual`로 옮겨 원본 473호출(363실행)을 진입 상태(factor 포함)에서 재생해 비트 일치시켰다. 04f-3 쌍대 검사의 d 주입이 이 경계에서 사라졌다. 다음 04f-4b는 Rust push 연쇄의 factor에서 이를 잇고, 04f-4c는 cleanup simplex 본체의 비교 경계를 조사한다.
+
+[04f-4b 연결](crossover_dual_link.md)은 04f-1 연결 하네스의 Rust push factor·vstat·header를 `crossover_dual`에 바로 넘겨 dual push 첫 호출 0x1c6b49(48사례)와 dual push가 basis를 바꾸지 않은 0x1bf09e(9사례)에서 원본 3회와 비트 일치시켰다. Crossover 3에서는 0x1bf09e 앞의 dual push가 대부분 basis를 바꾸므로 그 지점의 나머지는 dual push 이식(04d·04e) 뒤로 남는다. 다음은 04f-4c(cleanup simplex 본체 조사)와 04d(dual push 분기 분할)다.
+
+[04f-4c cleanup simplex 본체](crossover_cleanup_simplex.md)는 `0cda5b` 경로를 원본 720회로 조사했다. 자연 Netlib cleanup은 반복 0·basis 불변이라 최종 VBasis/CBasis는 cleanup 진입 basis(push 결과)이고, cleanup은 재분해·최적 판정·위치 순열만 한다. 다음 04f-5a(판정 오라클)·5b(Rust), 반복 있는 mode 1 사례는 04f-6이다.

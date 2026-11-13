@@ -1,0 +1,37 @@
+## 2026-11-13T10:06:27+09:00 branch work/m3-04f-4a, base main c1b2315
+## cargo test --release --workspace 2>&1 | grep -E '^test result' | awk '{p+=$4;f+=$6;i+=$8}END{print "passed",p,"failed",f,"ignored",i}'
+passed 163 failed 0 ignored 12
+exit 0
+## cargo clippy --workspace --all-targets -- -D warnings 2>&1 | tail -1
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.03s
+exit 0
+## cargo test -p rsolver-lp --lib crossover_dual 2>&1 | grep 'test result'
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 45 filtered out; finished in 0.00s
+exit 0
+## python3 tools/xo_dual_check.py --controls --self-test
+거부 251b4f 0회 - cases/retry_x-1: 251b4f 사건 0회
+거부 반복 2회 - cases/retry_x-1: 반복 2
+거부 파일 해시 - 파일 해시 불일치 cases/arms_x-1-1.json.gz
+self-test 통과
+exit 0
+## python3 tools/xo_dual_rust.py --write && cargo test --release -p rsolver-lp --test xo_dual 2>&1 | grep 'test result' && python3 tools/xo_dual_rust.py --compare && python3 tools/xo_dual_rust.py --self-test
+거부 r14 - cases/retry_x-1#3 run 1 [dualcheck].r14: 원본 1 Rust 0
+거부 Rust 오류 - cases/arms_x-1#3: Rust 오류 panic
+거부 사례 삭제 - trace 사례 불일치 ['cases/arms_x-1#3']
+self-test 통과 14
+exit 0
+## python3 tools/xo_cleanup_rust.py --write && cargo test --release -p rsolver-lp --test xo_cleanup 2>&1 | grep 'test result' && python3 tools/xo_cleanup_rust.py --compare
+acceptance: 실행 768 통과
+input /home/coco0912/Workspace/rsolver-m3-04f-4a/bench/oracle/m3_xo_cleanup_rust/input.txt 256 사례(run 1 입력, run 2·3 투영 동일)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+일치: 사례 256, 실행 768, 줄 1563, 필드 6315
+exit 0
+## python3 tools/push_btran_rust.py --compare
+{"calls": 32, "compared_leaves": 3096, "branches": {"entry:cache": 7, "entry:cache-empty-row": 25, "eta:none": 32, "kernel:heap": 25, "kernel:heap+seq": 7, "lt:dense": 2, "lt:heap": 23, "lt:heap+seq": 1, "lt:level": 6, "u:21a941": 32}, "kernel_events": 64, "models": {"arms": 17, "retry": 4, "interior": 1, "adlittle": 2, "scsd1": 1, "capri": 7}}
+exit 0
+## python3 -m py_compile tools/xo_dual_check.py tools/xo_dual_rust.py tools/xo_dual_runs.py && node --check tools/xo_dual_agent.js && node --check tools/xo_dual_capture.js && echo ok
+ok
+exit 0
+## git diff --check && echo ok
+ok
+exit 0

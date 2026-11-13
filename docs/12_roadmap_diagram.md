@@ -173,7 +173,7 @@ flowchart TD
     subgraph M3["M3 내부점·1차법"]
         BAR["✅ Barrier<br/>반복 수 64/64"]:::done
         PDHG["✅ PDHG<br/>반복 수 64/64"]:::done
-        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm·위반 basis·재시도 오라클 완료<br/>feasible·infeasible·재시도 ratio(재진입 포함)·단계 판단 Rust 범위 한정 통과<br/>직렬 push 루프+실제 LU backend 연결 통과(04c-24)<br/>초기화 Rust 연결(1a)·오라클(1b)·외부 값 경로(1d)·조건수 116fd7(1c)·해 설치(04f-1)·조밀 전환(21i, 연결 59/59)·풀 부족·local_70(21j, 31/31) 통과<br/>cleanup 04f-2 남음"]:::doing
+        XO["🔄 Crossover·Concurrent<br/>정상 진입·push 한 단계·판단·arm·위반 basis·재시도 오라클 완료<br/>feasible·infeasible·재시도 ratio(재진입 포함)·단계 판단 Rust 범위 한정 통과<br/>직렬 push 루프+실제 LU backend 연결 통과(04c-24)<br/>초기화 Rust 연결(1a)·오라클(1b)·외부 값 경로(1d)·조건수 116fd7(1c)·해 설치(04f-1)·조밀 전환(21i, 연결 59/59)·풀 부족·local_70(21j, 31/31) 통과<br/>cleanup 선택·retry 재설정·0325b4 설치 오라클(04f-2, 768회)·Rust(04f-3, 768/768) 통과<br/>쌍대값 251b4f·S+0x2d8·쌍대 검사(04f-4a, 473호출×3 비트) 통과<br/>Rust push factor → 251b4f 연결(04f-4b, 0x1c6b49 48·0x1bf09e 9 × 3 비트) 통과<br/>cleanup simplex 본체 조사(04f-4c, 720회: Netlib 반복 0·basis 불변)<br/>dual push 본체·cleanup 판정(04f-5)·반복 있는 cleanup(04f-6)·최종 basis·solver 연결 남음"]:::doing
     end
 
     subgraph M2["M2 MIP 엔진"]

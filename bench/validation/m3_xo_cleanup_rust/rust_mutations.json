@@ -1,0 +1,170 @@
+[
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "reset-fix-raw"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "reset-mid-lt"
+ },
+ {
+  "result": "거부",
+  "first": "case/syn_retry_auto/1 reset.vstat[0]: Rust -2 기대 -1",
+  "count": 9,
+  "name": "reset-swap"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "reset-free-as-bound"
+ },
+ {
+  "result": "거부",
+  "first": "case/syn_retry_auto/1 reset.vstat[98]: Rust 0 기대 1",
+  "count": 9,
+  "name": "reset-rows-zero"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "dual-le"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "dual-no-skip"
+ },
+ {
+  "result": "거부",
+  "first": "case/retry_x-1/1: 줄 수 Rust 3 기대 2 (['reset', 'select', 'install'])",
+  "count": 36,
+  "name": "dual-sign"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "dual-no-basic"
+ },
+ {
+  "result": "거부",
+  "first": "case/syn_retry_auto/1 select.r14[0]: Rust 1 기대 0",
+  "count": 6,
+  "name": "auto-retry-dual"
+ },
+ {
+  "result": "거부",
+  "first": "case/syn_pos_auto/1: 줄 수 Rust 3 기대 2 (['reset', 'select', 'install'])",
+  "count": 3,
+  "name": "auto-pos-primal"
+ },
+ {
+  "result": "거부",
+  "first": "-1/recipe/1 select.r14[0]: Rust 1 기대 0",
+  "count": 54,
+  "name": "auto-no-pinf"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "auto-no-s2d8"
+ },
+ {
+  "result": "거부",
+  "first": "case/syn_dualchk_scsd1/1 select.r14[0]: Rust 1 기대 0",
+  "count": 6,
+  "name": "auto-no-check"
+ },
+ {
+  "result": "거부",
+  "first": "3/adlittle/1 select.r14[0]: Rust 1 기대 0",
+  "count": 288,
+  "name": "cross-mask"
+ },
+ {
+  "result": "거부",
+  "first": "case/syn_neg_x4/1: 줄 수 Rust 2 기대 3 (['reset', 'select'])",
+  "count": 3,
+  "name": "cross-neg-ignored"
+ },
+ {
+  "result": "거부",
+  "first": "-1/adlittle/1: 줄 수 Rust 3 기대 2 (['reset', 'select', 'install'])",
+  "count": 435,
+  "name": "basis-on-zero"
+ },
+ {
+  "result": "거부",
+  "first": "-1/adlittle/1 select.s178[0]: Rust 10 기대 0",
+  "count": 768,
+  "name": "s178-always"
+ },
+ {
+  "result": "거부",
+  "first": "case/arms_x-1/1 install.vstat[27]: Rust -1 기대 -4",
+  "count": 9,
+  "name": "inst-no-fix"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "inst-lb-lt"
+ },
+ {
+  "result": "거부",
+  "first": "case/arms_x-1/1 install.vstat[0]: Rust -1 기대 -2",
+  "count": 27,
+  "name": "inst-swap"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "inst-no-cost-gate"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "inst-no-tiny"
+ },
+ {
+  "result": "생존",
+  "first": null,
+  "count": 0,
+  "name": "inst-row-ub"
+ },
+ {
+  "result": "거부",
+  "first": "case/arms_x-1/1 install.vstat[43]: Rust -2 기대 -1",
+  "count": 27,
+  "name": "inst-row-swap"
+ },
+ {
+  "result": "거부",
+  "first": "case/arms_x1/1 install.list[0]: Rust 64 기대 0",
+  "count": 48,
+  "name": "inst-list-reversed"
+ },
+ {
+  "result": "거부",
+  "first": "case/arms_x-1/1 install.vstat[2]: Rust -3 기대 11",
+  "count": 108,
+  "name": "inst-basic-too"
+ },
+ {
+  "result": "거부",
+  "first": "case/arms_x-1/1 install.vals[0]: Rust 0000000000000000 기대 0000000000001440",
+  "count": 27,
+  "name": "inst-list-value-lb"
+ }
+]

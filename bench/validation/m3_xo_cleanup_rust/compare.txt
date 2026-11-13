@@ -1,0 +1,18 @@
+controls: 사례 256 × 3회 동일
+acceptance: 실행 768 통과
+input /home/coco0912/Workspace/rsolver-m3-04f-3/bench/oracle/m3_xo_cleanup_rust/input.txt 256 사례(run 1 입력, run 2·3 투영 동일)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+일치: 사례 256, 실행 768, 줄 1563, 필드 6315
+변조 18종 중 거부 18
+  auto-no-s2d8: auto S+0x2d8 ≠ 0이고 PInf > 0: 0
+  dual-le: 쌍대 합 = OptTol: 0
+  dual-no-basic: 기저 |d|가 결과를 바꿈: 0
+  dual-no-skip: OptTol 미만 위반이 결과를 바꿈: 0
+  inst-lb-lt: |x − lb| = τ: 0
+  inst-no-cost-gate: bound에서 먼 빈 열·|c| ≤ OptTol: 0
+  inst-no-tiny: bound에서 먼 |x| ≤ 1e-13: 0
+  inst-row-ub: lb에서 τ 이상, ub에서 τ 미만인 행: 0
+  reset-fix-raw: 재설정 고정 열(ub − lb ≤ 0): 0
+  reset-free-as-bound: 재설정 자유 열: 0
+  reset-mid-lt: 재설정 lb + ub = 2x: 0
