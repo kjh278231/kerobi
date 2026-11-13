@@ -28,7 +28,7 @@ def common_dir():
 def claim(args):
     if not re.fullmatch(r'M[123]-\d{2}[a-z](?:-\d+[a-z]?)*|shared', args.task):
         raise ValueError('하위 작업 번호 또는 shared를 지정하세요.')
-    lane = args.task[:2] if args.task != 'shared' else 'shared'
+    lane = args.task[:5] if args.task != 'shared' else 'shared'  # M2-06 group: two groups of one area may run together
     folder = common_dir() / 'rsolver-sessions'
     folder.mkdir(exist_ok=True)
     with (folder / 'lock').open('a') as lock:
