@@ -73,12 +73,17 @@ tr12-30 VB3 NodeLimit 20은 훅을 단 채 300초를 넘겨 탐색에서 뺐다.
 - 재생: `python3 tools/mip_sb_loop_rust.py` 종료 0. **389묶음**(전파 289는 06h-5와 같은 수, 비전파 100: markshare_4_0 20·pk1 20·neos5 33·kasai 27) 명령 trace·최종 배열·반복 비용·work 비트 일치. 비전파 사례: 직접 요청 2,501·복구 2,501, 상태 2 988·−1000 1,489·3 23·6 1, values 904, down ≥ 1e100 24, 후보 통째 건너뛰기 8, down 게이트 69, up 사전 채움 30, down 사전 채움 80, 사전 채움 값 12. 필수 7종 모두 0보다 크다.
 - 오류 검출: `--self-test` 종료 0([로그](../../bench/oracle/m2_06h6/selftest.log)). 거부 54: 기존 변조 18·직접 3·trace 4(기존 전파 자료에만 적용), 새 변조 5(`direct flag`·`direct inf`·`direct scale`·`direct bounds`·`no direct`, VB3 자료에만 적용), Rust 변이 27 중 24(새 6종 `direct restore drop`·`restore gated`·`work`·`side`·`scale`·`request` 모두 거부). 생존 3은 계약에 미리 적은 목록과 같다: `restore strict`(합성 거부), `score shift`(관측 불가), `direct clamp`(이진 후보뿐이라 원본 사례 없음, 합성 `direct_requests_and_restores_own_bound`가 거부). 로그의 `direct values`·`direct stall`·`direct work`는 06h-3부터 있던 "builder 직접 변조"의 이름이다(비전파와 무관).
 - 회귀: `cargo test --release --workspace` 156 통과·0 실패·12 무시([로그](../../bench/oracle/m2_06h6/cargo.log)), `cargo clippy --workspace --all-targets -- -D warnings` 경고 0. Python 확장 미변경으로 pytest 제외.
+- 독립 검토(Opus 하위 에이전트, `f6b5dfc`): 높음 0·중간 1·낮음 4. 제어 흐름 C:454–462·583–586·841–855·974–990·410–427 대조 일치, 기대 출력 누설 없음, 기본 재생 재실행 PASS, markshare_4_0 VB3 원본 재캡처가 저장본과 모든 키 동일. 반영(`--self-test` 재실행 종료 0, 거부 54, cargo 156·0·12, clippy 0):
+  - 중간: 위쪽 문턱(ub ≥ inf → 1e100)은 원본·합성 어디서도 검사되지 않았다(합성 테스트의 열 1 up이 상태 6이라 down을 안 돌았다). 합성 테스트에서 열 1 up을 상태 7로 바꿔 down 복구 `1e100`을 단언하고, 변이 `direct upper clamp`를 더했다(원본 생존·합성 거부).
+  - 낮음: `scale: None` 분기를 합성 테스트에 넣고 변이 `direct scale none`을 더했다(캡처는 null 배율을 1.0으로 적어 원본 재생은 늘 `Some`, 원본 생존·합성 거부). `pk1_default`의 모든 커널 `propagation`이 참인지 검사를 더했다. 06h-3부터 있던 builder 변조 이름을 `builder values`·`builder stall`·`builder work`로 바꿨다(VB3 자료에는 적용하지 않는다. work는 Rust 변이 `direct work`가 덮는다).
+  - 그대로 둔 것: Rust `Batch`는 type·flip 정보를 받지 않아 뒤집힌 열·`'C'` 후보가 들어오면 오류 없이 C와 다른 값을 낸다. 지금은 하네스가 거부한다(`noninteger candidate`·`flipped candidate`, 검토자 변조로 확인). `bnb.rs` 연결 때 호출자 단언이나 `Unported`를 둔다.
+  - 생존 변이는 5개가 됐다: `restore strict`·`score shift`·`direct clamp`·`direct upper clamp`·`direct scale none`(계약의 3개 + 검토 반영 2개, 둘 다 합성 거부).
 - 계약 변경(첫 Rust 재생 전): §3 Rust 변이 목록에서 `direct as prop`을 `direct request`로 바꾸고 `direct clamp`을 생존 예상으로 옮겼다(자료 확인: 후보가 모두 이진).
 
 ## 7. 판정과 인수인계
 
 - 작업 수행: **완료(오라클 + 구현 L1)**. 동등성: 비전파 경로의 직접 요청·무조건 복구·복구 값·work 미가산은 **원본 자연 사례 범위 통과**(VarBranch=3 4모델 100묶음, 오차 0). 06h-3·06h-4·06h-5 범위 289묶음 회귀 통과.
-- 미검증: 뒤집힌 열 복구 값, `'C'` 후보, 문턱 밖 bound(합성만), 비전파의 상태 7·11·타이머 만료·up ≥ 1e100·stall 종료, `62a05d` 비전파 블록 진입 조건의 배타성, Threads > 1. LP 수치·B&B 미연결.
+- 미검증: 뒤집힌 열 복구 값, `'C'` 후보(Rust는 거부하지 않음, 하네스만 거부), 문턱 밖 bound·배율 null(합성만), 비전파의 상태 7·11·타이머 만료·up ≥ 1e100·stall 종료, `62a05d` 비전파 블록 진입 조건의 배타성, Threads > 1. LP 수치·B&B 미연결.
 - 후속: **M2-06h-7**(조사: 전파 모순·연속 열 후보 탐색, 이번에 분리), **M2-06h-8**(타이머 산술, 06h-5의 가칭 06h-7에서 번호 이동), M2-06i(reliability 후보 판정).
 - branch `work/m2-06h-6`, worktree `../rsolver-m2-06h-6`. 진행 `docs/progress/M2-06h-6.md`.
 - 교훈: `docs/lessons/m2_sb_snapshot.md`(비전파 복구·요청 구분), `docs/lessons/tooling.md`(Frida 경로, 해시 고정 도구 위 치환 도구).

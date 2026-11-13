@@ -141,7 +141,9 @@ def controls(cases, manifest):
         if vb3:
             if stem(m) == 'pk1':
                 # Non-interference of the new tool: default-setting pk1 equals the 06h-3 capture without the new fields.
-                new, old = direct_fields(load(PK1_DEFAULT)), load(OLD_06H3_PK1)
+                raw = load(PK1_DEFAULT)
+                same([True], sorted({e['propagation'] for e in raw['events'] if e['e'] in ('double', 'kernel')}), 'pk1_default.propagation')
+                new, old = direct_fields(raw), load(OLD_06H3_PK1)
                 same(sha(ROOT/'tools/mip_sb_direct.js'), new['tool_sha256'], 'pk1_default.tool')
                 for k in ('events', 'output', 'counts', 'params', 'model_sha256', 'binary_sha256', 'ok', 'errors'):
                     same(old[k], new[k], 'pk1_default.'+k)
@@ -453,9 +455,9 @@ def self_test(cases, manifest, inputs, expected, actual):
             compare(e, actual if i == inputs else run(ROOT, i, 'tamper-'+name.replace(' ', '-')), name)
         reject(name, check)
     # The stored repeats are identical, so also hit the builder directly (controls() would stop first).
-    for name, mutate in [('direct values', lambda d: [s.__setitem__('v', [bits(0.5)]*len(s['v'])) for e in kernels(d) for s in e['steps'] if s['kind'] == 'values']),
-                         ('direct stall', lambda d: [e.__setitem__('stall', 1) for e in kernels(d)]),
-                         ('direct work', set_step('restore', 'w', bits(-1.0)))]:
+    for name, mutate in [('builder values', lambda d: [s.__setitem__('v', [bits(0.5)]*len(s['v'])) for e in kernels(d) for s in e['steps'] if s['kind'] == 'values']),
+                         ('builder stall', lambda d: [e.__setitem__('stall', 1) for e in kernels(d)]),
+                         ('builder work', set_step('restore', 'w', bits(-1.0)))]:
         bad = {m: [copy.deepcopy(cases[m][0])] for m in MODELS}
         for m in MODELS:
             if not m.startswith('vb3/'):
@@ -498,6 +500,9 @@ def self_test(cases, manifest, inputs, expected, actual):
          'return self.lp.bound(j, if side == Side::Lower { Side::Upper } else { Side::Lower }, v).map_err(Error::Backend);'),
         ('direct scale', 'let s = |v: f64| match scale { Some(s) => v * s[j], None => v };', 'let s = |v: f64| { let _ = scale; v };'),
         ('direct clamp', 'if -infinity < lower[j] { s(lower[j]) } else { -INF }', 'if -infinity < lower[j] || true { s(lower[j]) } else { -INF }'),
+        ('direct upper clamp', '} else if upper[j] < infinity { s(upper[j]) } else { INF };',
+         '} else if upper[j] < infinity || true { s(upper[j]) } else { INF };'),
+        ('direct scale none', 'None => v };', 'None => v * 0.0 };'),
         ('direct request', 'self.lp.bound(j, side, value).map_err(Error::Backend)?;', 'self.lp.bound(j, side, value + 1.0).map_err(Error::Backend)?;'),
         ('timer return', 'if s.lp.expired(s.work).map_err(Error::Backend)? {\n            break;',
          'if s.lp.expired(s.work).map_err(Error::Backend)? {\n            return Ok(Evaluation { down: s.down, up: s.up });'),
@@ -521,8 +526,10 @@ def self_test(cases, manifest, inputs, expected, actual):
     # No original case: a set flag on an unchanged bound (0 in the 06h-4 census too).
     # A constant score shift keeps every comparison against best (initially 0) unchanged.
     # clamp7 is rejected since 06h-4 (neos-3627168-kasai status 7 dual below parent).
-    # direct clamp: every VarBranch=3 candidate is binary, so no internal bound lies beyond infinity.
-    same([('restore strict', True), ('score shift', False), ('direct clamp', True)], survivors, 'surviving mutants')
+    # direct clamps: every VarBranch=3 candidate is binary, so no internal bound lies beyond infinity.
+    # direct scale none: the capture writes 1.0 for a null scale array, so replay always passes Some.
+    same([('restore strict', True), ('score shift', False), ('direct clamp', True), ('direct upper clamp', True),
+          ('direct scale none', True)], survivors, 'surviving mutants')
 
 
 def synthetic(root, label):

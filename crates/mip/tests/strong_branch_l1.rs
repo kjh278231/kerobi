@@ -191,12 +191,21 @@ fn direct_requests_and_restores_own_bound() {
     let b = Batch { columns: &[0, 1], x: &x, bounds: Bounds::Direct { lower: &lower, upper: &upper,
         scale: Some(&scale), infinity: 1e30 }, int_tol: 1e-5, parent_obj: 0.0, stall_limit: 9 };
     let mut lp = script(&["solve 7 0000000000000000 - 0", "restore 0", "solve 7 0000000000000000 - 0", "restore 0",
-        "timer 0 0", "solve 6 - - 0", "restore 0", "solve 2 - - 0"]);
+        "timer 0 0", "solve 7 0000000000000000 - 0", "restore 0", "solve 6 - - 0", "restore 0", "solve 2 - - 0"]);
     let mut work = 0.0;
     run(&b, &mut lp, &mut 0.0, &mut work).unwrap();
     let requests: Vec<_> = lp.trace.lines().filter(|l| l.starts_with("bound")).collect();
     assert_eq!(requests, ["bound 0 62 3ff0000000000000", "bound 0 62 d4b249ad2594c37d", "bound 0 60 0000000000000000",
-        "bound 0 60 4000000000000000", "bound 1 62 4008000000000000", "bound 1 62 8000000000000000"]);
+        "bound 0 60 4000000000000000", "bound 1 62 4008000000000000", "bound 1 62 8000000000000000",
+        "bound 1 60 4000000000000000", "bound 1 60 54b249ad2594c37d"]);
     assert!(!lp.trace.contains("prop"));
     assert_eq!(work, 0.0);
+    // No scale array: the internal bound is requested back as is.
+    let b = Batch { columns: &[0], x: &x, bounds: Bounds::Direct { lower: &[-0.0, 0.0], upper: &[3.0, 0.0], scale: None,
+        infinity: 1e30 }, int_tol: 1e-5, parent_obj: 0.0, stall_limit: 9 };
+    let mut lp = script(&["solve 7 0000000000000000 - 0", "restore 0", "solve 7 0000000000000000 - 0", "restore 0", "solve 2 - - 0"]);
+    run(&b, &mut lp, &mut 0.0, &mut 0.0).unwrap();
+    let requests: Vec<_> = lp.trace.lines().filter(|l| l.starts_with("bound")).collect();
+    assert_eq!(requests, ["bound 0 62 3ff0000000000000", "bound 0 62 8000000000000000", "bound 0 60 0000000000000000",
+        "bound 0 60 4008000000000000"]);
 }
