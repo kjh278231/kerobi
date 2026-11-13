@@ -56,8 +56,21 @@
 
 ## 6. 실행 결과
 
-(작업 중)
+- 환경: WSL2 x86-64 Linux 6.6.87.2(i7-13700F), Python 3.10, Node 22, Rust stable. 계약 `9762af2`. 원본 실행: 조사 91회(Netlib 1회씩, 면허 초과 27개는 실행 불가), 탐색 2회(grow22: 1회는 `param_15` 인자 순번 오류로 풀 크기 0, `history/explore1-p15wrong`에 보존하고 근거로 쓰지 않음), **정식 22회**(5모델 × 3 + 대조군 7).
+- **계약 변경(Rust 비교 전)**: ① `pool:dense`(0xd88d6, 조밀 전환 풀 검사 입력) probe를 정식 캡처 전에 더했다. ② 모드 안 조밀 전환(C:3405)은 C 근거 이식이 아니라 **미이식 panic**으로 두었다(자연 0회: 모드의 재계수 판정 30회 모두 0.325·n² 이하). ③ 재호출 뒤 풀 정렬(`pool_mod16`)은 할당기 값이라 이전 값을 유지하고 비교로 확인했다(캡처 [0, 0], 일치).
+- **캡처**(`bench/oracle/m3_push_mode70/`, manifest): `push_mode70_check.py --controls --acceptance --self-test` 종료0. 5모델 × 3회 JSON 동일(pid·run_id 제외), 5모델 run 1과 대조군 7사례에서 새 사건을 뺀 사건열·결과·출력·파라미터가 21i 정식 캡처와 같다(비간섭). 036ade 44호출(push 32)의 풀 사건이 C 규칙(시작 p3 = f8 + 4·노드, 풀 검사·새 크기, 모드 배열 칸, 피벗 수 = n)으로 재계산된다. 모드 5회(push 3 + 밖 1 + 풀 부족 1), 피벗 1,005개. 변조 14종 거부(첫 시도에서 대조군 "사건 누락" 변조가 새 사건을 골라 통과 → 기존 사건을 빼도록 고침).
+- **원본 사실**: [교훈](../lessons/original.md)에 풀 배치(U·L·노드 chunk 4m·정수 쪽 나머지)와 `local_70` 모드(진입 판정, 목록 상한, 표지값, 풀 부족 새 크기, 재호출)를 적었다.
+- **(A) 풀 계수·(B) 재분해 생성**(`python3 tools/push_mode70_rust.py --write` → `cargo test --release -p rsolver-lp --test push_lu mode70_chain_trace` → `--compare`): **첫 실행부터 31/31 재분해 일치**(036ade 반환 순열·factor 전체·블록 상태, 21i의 범위 밖 3재분해 포함). 풀 사건 **68개(32호출, 재호출 1)** 값 정확 일치, lu 431 재호출 크기 291,984·블록 상태 x4e0 14 일치, `local_70` 모드 3재분해 **피벗 733개** 순서 일치, 조밀 전환 10회 일치. 필드 849,828.
+- 모드 분기 실행 수(trace `stats`, 3재분해 합): 목록 열 탐색 524·목록 행 탐색 1,770, 행 전체 탐색 1, 열 전체 탐색 0, 비용 동률 수용 202, 표지값 36, 구조 0 채움 2,144, 표지 위 채움 23, 목록 가득 참 60, 빈 행·열 0, 재계수 판정 30. 목록 상한 104·123·134.
+- **판별력**: trace 변조 14종 거부(`--self-test`). Rust 소스 변이 28종(`bench/validation/m3_push_mode70/rust_mutations.json`): **거부 20·생존 8**. 필수 `모드 끔`(grow22#489 `x20[229]`)·`풀 부족 끔`(블록 상태 x4e0 14 ≠ 13) 거부. 생존 분류: 판정 경계 201→200·0.25→0.3(경계 근처 사례 없음), iVar67 식(상한 1 차이가 관측 결과를 바꾸지 않음), 표지값 대신 0(중복 목록 항목이 탐색 결과를 바꾸지 않아 관측 범위 동치), 열 전체 탐색 동률 무시(실행 0회), 모드 추정 −2 제거(모드 안 재계수가 추정을 덮어써 동치), bucket 0 제외(관측 동치), 정수 쪽 chunk 무시(관측 재분해의 chunk 수가 같음).
+- **회귀**([요약](../../bench/validation/m3_push_mode70/regression.txt)): 34명령 모두 종료0: 캡처 검사 4종, 입력 `--write` 10종 불변(`git diff --exit-code`), `cargo test --release --workspace --no-fail-fast` **153통과·0실패·ignored 12**, 비교 14종(21i 28/28 + 범위 밖 3 실패 0, 04f-1 설치 59/59, 21h·21g·21f·24·1a·1c·1d·21b·21d 일치), clippy(첫 실행 `redundant_comparisons` 1건 수정), py_compile·node check, `git diff --check`. 첫 회귀 묶음은 clippy 실패를 파이프가 숨겨 rc=0으로 찍혔고, 변이 1종 원문 불일치로 변이 실행이 멈춰 둘 다 고친 뒤 처음부터 다시 돌렸다.
+- 실행하지 않은 검사: M1 경로는 끈 채(결과 불변)라 확장 설치·pytest·pathcmp는 workspace 회귀로 대신했다. 독립 검토자는 쓰지 않았다(사용자 지시로 이 세션이 작업자·마스터를 겸함).
 
 ## 7. 판정과 인수인계
 
-(작업 중)
+- 작업 수행: **구현 완료(계약 범위 통과)**. 동등성: (A) 풀 계수 32호출·68사건 통과, (B) 5모델 push 재분해 31/31 통과(모드 3·풀 부족 재호출 1·조밀 10 포함), (C) 21i·04f-1·21h 등 회귀 유지.
+- 미검증: 열 전체 탐색(목록 넘친 열, 0회)·빈 행/열(0회)·모드 안 조밀 전환(미이식 panic)·모드 피벗 없음 0x271e(panic), 일반 Markowitz·블록 단계·조밀 전환·모드 U/L의 풀 부족 −1(`Keep`, C 근거만, 자연 0회), 판정 경계(201·9999·0.1·0.25 근처), F+0x170 재할당 수(factor 비교 밖), 할당 실패, MKL·work, M1 경로 활성화.
+- 후속: M3-04f-2(cleanup 진입 조사), M1 후속(풀 크기 수명을 두고 M1 `Lu`에 조밀 전환·풀 계수·`local_70` 켜기, pathcmp 회귀), 큰 모델(면허 크기 초과)의 모드 경로는 면허가 있는 환경에서.
+- 재실행: `python3 tools/push_mode70_check.py --controls --acceptance --self-test` → `python3 tools/push_mode70_rust.py --write` → `cargo test --release -p rsolver-lp --test push_lu mode70_chain_trace` → `python3 tools/push_mode70_rust.py --compare` / `--self-test` / `--mutate-rust <새 경로>`. 원본 재캡처는 `python3 tools/push_mode70_runs.py`(+`--controls`).
+- branch `work/m3-04c-21j`, worktree `../rsolver-m3-04c-21j`, 선행 미커밋 없음. 최종 병합은 main `Merge M3-04c-21j` 이력. main 미추적 `.claude/settings.local.json` 보존. 원격/업로드 없음.
+- 교훈: `docs/lessons/original.md`(풀 배치, `local_70` 모드·풀 부족 재호출), `tooling.md`(Frida 인자 순번과 double 인자, 투영으로 사라지는 변조).

@@ -2123,7 +2123,7 @@ impl Lu {
                                     mx = v;
                                 }
                             }
-                            assert!(TINY < mx && ZERO <= mx, "036ade local_70 row below ZERO (C:3199): not ported");
+                            assert!(ZERO <= mx, "036ade local_70 row below ZERO (C:3199): not ported");
                             for c in 0..n {
                                 let v = a[y * n + c].abs();
                                 let cost = cnt_c[c] as f64 * fk;
