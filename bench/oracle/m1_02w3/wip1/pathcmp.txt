@@ -1,0 +1,40 @@
+25fv47    gurobi 2552 pivots 2552  mine 2422 pivots 2422  first diff at pivot 446: g ((611,), (563,)) mine ((569,), (563,))
+adlittle  gurobi 73 pivots 73  mine 73 pivots 73  first diff at pivot 73: g None mine None
+afiro     gurobi 10 pivots 10  mine 10 pivots 10  first diff at pivot 10: g None mine None
+agg       gurobi 175 pivots 175  mine 175 pivots 175  first diff at pivot 175: g None mine None
+agg2      gurobi 173 pivots 173  mine 173 pivots 173  first diff at pivot 173: g None mine None
+agg3      gurobi 169 pivots 169  mine 169 pivots 169  first diff at pivot 169: g None mine None
+bandm     gurobi 372 pivots 372  mine 381 pivots 381  first diff at pivot 154: g ((135,), (207,)) mine ((416,), (127,))
+beaconfd  gurobi 233 pivots 233  mine 233 pivots 233  first diff at pivot 233: g None mine None
+blend     gurobi 75 pivots 75  mine 75 pivots 75  first diff at pivot 75: g None mine None
+bnl1      gurobi 1050 pivots 1050  mine 1035 pivots 1035  first diff at pivot 236: g ((68,), (1197,)) mine ((57,), (1197,))
+boeing1   gurobi 651 pivots 651  mine 639 pivots 639  first diff at pivot 420: g ((509,), (340,)) mine ((523,), (340,))
+boeing2   gurobi 143 pivots 143  mine 153 pivots 153  first diff at pivot 79: g ((121,), (289,)) mine ((133,), (289,))
+bore3d    gurobi 172 pivots 172  mine 172 pivots 172  first diff at pivot 172: g None mine None
+brandy    gurobi 468 pivots 468  mine 466 pivots 466  first diff at pivot 261: g ((165,), (166,)) mine ((131,), (100,))
+capri     gurobi 237 pivots 237  mine 237 pivots 237  first diff at pivot 9: g ((124,), (551,)) mine ((124,), (537,))
+degen2    gurobi 634 pivots 634  mine 627 pivots 627  first diff at pivot 357: g ((910,), (388,)) mine ((396,), (454,))
+degen3    gurobi 2212 pivots 2212  mine 2169 pivots 2169  first diff at pivot 668: g ((758,), (696,)) mine ((1370,), (2833,))
+e226      gurobi 410 pivots 410  mine 414 pivots 414  first diff at pivot 363: g ((449,), (191,)) mine ((383,), (387,))
+etamacro  gurobi 490 pivots 490  mine 490 pivots 490  first diff at pivot 490: g None mine None
+fffff800  gurobi 490 pivots 490  mine 490 pivots 490  first diff at pivot 291: g ((399,), (522,)) mine ((491,), (522,))
+finnis    gurobi 475 pivots 475  mine 502 pivots 502  first diff at pivot 225: g ((417,), (862,)) mine ((415,), (862,))
+fit1d     gurobi 66 pivots 66  mine 66 pivots 66  first diff at pivot 66: g None mine None
+fit1p     gurobi 568 pivots 568  mine 562 pivots 562  first diff at pivot 188: g ((315,), (385,)) mine ((315,), (802,))
+forplan   gurobi 151 pivots 151  mine 151 pivots 151  first diff at pivot 138: g ((270,), (136,)) mine ((271,), (136,))
+ganges    gurobi 859 pivots 859  mine 859 pivots 859  first diff at pivot 761: g ((372,), (384,)) mine ((1457,), (1456,))
+gfrd-pnc  gurobi 558 pivots 558  mine 558 pivots 558  first diff at pivot 161: g ((695,), (1557,)) mine ((689,), (1557,))
+
+thread '<unnamed>' (2138951) panicked at crates/lp/src/lu.rs:2096:17:
+036ade local_70 mode dense switch (C:3405): not ported
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Traceback (most recent call last):
+  File "/home/sds/workspace/gurobi-sandbox/rsolver-m1-02w-3/tools/proto/pathcmp.py", line 12, in <module>
+    m.optimize()
+    ~~~~~~~~~~^^
+  File "/tmp/claude-1000/-home-sds-workspace-gurobi-sandbox-rsolver/c651eddb-3b33-4297-b196-7845c2e51a3b/scratchpad/wip1py/rsolver/__init__.py", line 266, in optimize
+    st, obj, x, it, trace, self._path = core.solve(int(self._param("Method", -1)), float(self._param("IterationLimit", 1e100)),
+                                        ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                                   callback is not None)
+                                                   ^^^^^^^^^^^^^^^^^^^^^
+pyo3_runtime.PanicException: 036ade local_70 mode dense switch (C:3405): not ported

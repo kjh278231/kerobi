@@ -141,6 +141,72 @@ pub enum Short {
     Keep,
 }
 
+impl Short {
+    /// F+0x158 for the next `036ade` call after this shortage (`05b257` C:1479–1513): the size `036ade` set, or the
+    /// old size ×1.5 when it left F+0x158 alone.
+    pub fn next_cap(self, cap: i64) -> i64 {
+        match self {
+            Short::Grow(c) => c,
+            Short::Keep => {
+                let g = cap as f64 * 1.5;
+                if g < 9.223372036854776e18 { g as i64 } else { i64::MAX }
+            }
+        }
+    }
+}
+
+/// `045a76` FactSpace: the initial pool size F+0x158 of an LU for m rows, n columns, nnz(A) (spx+0x3d0),
+/// `GURO_PAR_SIMPLEXALLOCS` k (spx+0x50) and the model's pool regrowth counter c (asm 0xe3697–0xe3bf0,
+/// docs/m1/m1_02w2_factspace.md). shortcut: the first allocation try is assumed to succeed (loop 0xe3a7c), and
+/// c ≥ 8 (the paired mulpd path 0xe3a0b) is not modelled.
+pub fn factspace(m: usize, n: usize, nnz: usize, k: i32, c: u32) -> i64 {
+    assert!(c < 8, "FactSpace c >= 8 not modelled");
+    let (fm, fn_, fz) = (m as f64, n as f64, nnz as f64);
+    let d0 = if m < n {
+        let d = fz / fn_;
+        let x = if m < 500 {
+            d * d
+        } else if m < 3000 {
+            d * d.sqrt()
+        } else if m < 10000 && fm > d * 4.0 {
+            // shortcut: asm 0xe3707–0xe37cb read, no captured case; check before relying on m ≥ 3000
+            let q = d * d.sqrt().sqrt();
+            if fm * 0.25 > q { q } else { fm * 0.25 }
+        } else {
+            d
+        };
+        let half = (m / 2 + 2) as f64;
+        (if half < x { half } else { x }) * fm
+    } else if m == 0 {
+        100.0
+    } else {
+        let d = fz / fm;
+        let x = if n < 500 {
+            d * d
+        } else if n < 3000 {
+            d * d.sqrt()
+        } else if n < 10000 {
+            d * d.sqrt().sqrt() // shortcut: as above, no captured case
+        } else {
+            d
+        };
+        let half = (n / 2) as f64;
+        fz * 0.5 + (if half < x { half } else { x }) * fn_
+    };
+    let r = (d0 as i64 + 1) as f64;
+    let mut dd = if fz > fn_ * 10.0 {
+        r * 6.0 + fm * 30.0 * k as f64
+    } else if m < n {
+        r * 6.0 + fm * 3.0 * fz * k as f64 / fn_
+    } else {
+        r * 6.0 + fm * 3.0 * (m + nnz) as f64 * k as f64 / (m + 1 + n) as f64
+    };
+    for _ in 0..c {
+        dd *= 1.5;
+    }
+    (dd * 0.75) as i64 + 1
+}
+
 /// `036ade`'s element pool bookkeeping (C:296–366, C:541–606, C:2440–2490): U from 0 up, L from F+0x168 down,
 /// element nodes (32 bytes = 4 slots) from `local_f8` up in chunks of 4m nodes; each chunk's slots also give the
 /// int pool's 16-aligned rest as a later chunk (`local_2f0`).
@@ -2027,7 +2093,49 @@ impl Lu {
                 // C:3301–3392: the exact count over the dense columns replaces the estimate
                 est = cnt_c.iter().filter(|&&c| c >= 0).map(|&c| (c + 1) as f64).sum();
                 cov[10] += 1;
-                assert!(est <= nsq * 0.325, "036ade local_70 mode dense switch (C:3405): not ported");
+                if est > nsq * 0.325 {
+                    // C:3405 → LAB_001d88bf with local_70 set: the dense switch of the remaining n = m − steps
+                    if !self.pool_dense() {
+                        return false;
+                    }
+                    assert!(st.ecols.is_empty() && st.erows.is_empty(), "036ade local_70 dense switch with empty lines: not ported");
+                    let nd = m - steps;
+                    // C:3460–3480: positions in column-count bucket order (local_1f0 heads, +4 link), local_1e0 their index
+                    let (mut rows, mut didx) = (Vec::with_capacity(nd), vec![usize::MAX; n]);
+                    for k in 0..n {
+                        let Ok(h) = usize::try_from(cb.head[k]) else { continue };
+                        let mut x = h;
+                        loop {
+                            didx[x] = rows.len();
+                            rows.push(colmap[x]);
+                            x = cb.prv[x];
+                            if x == h {
+                                break;
+                            }
+                        }
+                    }
+                    // C:3482–3525: the live rows in local_70 row order, values |v| ≥ ZERO (local_88) of the old array
+                    let mut cols = Vec::with_capacity(nd);
+                    let mut ad = vec![0.0f64; nd * nd];
+                    for r in (0..n).filter(|&r| cnt_r[r] >= 0) {
+                        let kk = cols.len();
+                        cols.push(rowmap[r]);
+                        for c in 0..n {
+                            let v = a[r * n + c];
+                            if ZERO <= v.abs() {
+                                // a live value only sits in a column still in the buckets (C writes local_1e0 there)
+                                assert!(didx[c] != usize::MAX, "036ade local_70 dense switch: value in a finished column");
+                                ad[kk * nd + didx[c]] = v;
+                            }
+                        }
+                    }
+                    assert!(rows.len() == nd && cols.len() == nd, "036ade local_70 dense switch size");
+                    // the new array starts at param_15[1] + param_15[3]·8 (C:3409), after the local_70 array
+                    let mat16 = if self.fpool.as_ref().map_or(0, |pl| pl.p3) % 2 != 0 { 8 } else { 0 };
+                    self.mode70 = Some(Mode70Trace { step: steps0, n, pivots, stats: cov });
+                    self.dense_steps(ppos, nd, ad, rows, cols, mat16);
+                    return true;
+                }
             }
             let cmin = (0..n).find(|&k| cb.head[k] >= 0).unwrap_or(n);
             let rmin = (0..n).find(|&k| rb.head[k] >= 0).unwrap_or(n);
@@ -2360,6 +2468,12 @@ impl Lu {
             }
         }
         let mat16 = if pool_first_fill(self.fw.nnz_b, m, cap) % 2 != 0 { 8 } else { 0 };
+        self.dense_steps(ppos, n, a, rows, cols, mat16);
+    }
+
+    /// The dense switch's own LU and conversion (C:3968–5300) on the gathered column-major array `a` (row `cols[kk]`
+    /// at kk·n, position `rows[i]` at + i) whose 16-byte offset is `mat16`.
+    fn dense_steps(&mut self, ppos: &mut [i64], n: usize, mut a: Vec<f64>, rows: Vec<usize>, cols: Vec<usize>, mat16: usize) {
         let (a_in, cols_in) = (a.clone(), cols.clone());
         let (mut cols, mut rows2) = (cols, rows.clone());
         let deficits = match dense_lu(&mut a, n, &mut cols, &mut rows2, ZERO, mat16, 0, true) {
@@ -3588,7 +3702,30 @@ pub fn sum_squares(v: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{dot8_peel, gather, next_prime, sum_squares, BlockState, Lu};
+    use super::{dot8_peel, factspace, gather, next_prime, sum_squares, BlockState, Lu};
+
+    /// `045a76` FactSpace against original F+0x158 (bench/oracle/m1_02w/pool, m1_02w2/final): one model per branch
+    /// set, SIMPLEXALLOCS 7 and c = 1 (warm start).
+    #[test]
+    fn factspace_cases() {
+        for (m, n, z, k, c, want) in [
+            (821, 1571, 10400, 5, 0, 124072), // 25fv47 m<n, m<3000
+            (56, 97, 383, 5, 0, 6421),        // adlittle m<n, m<500
+            (488, 163, 2410, 5, 0, 78215),    // agg m>=n, nnz>10n
+            (173, 262, 3375, 5, 0, 87976),    // beaconfd m<n half, nnz>10n
+            (166, 162, 1215, 5, 0, 49631),    // boeing2 m>=n, n<500
+            (1503, 1818, 24646, 5, 0, 506687), // degen3 m<3000, nnz>10n
+            (140, 301, 2612, 5, 0, 59032),    // grow7 m<n half
+            (174, 142, 2269, 5, 0, 70052),    // israel m>=n half, nnz>10n
+            (43, 41, 286, 5, 0, 6211),        // kb2 m>=n half
+            (27, 32, 83, 7, 0, 1922),         // afiro SIMPLEXALLOCS 7
+            (300, 645, 5620, 5, 0, 131899),   // grow15
+            (300, 645, 5620, 5, 1, 197849),   // grow15 warm start c = 1
+            (356, 467, 3856, 5, 0, 142294),   // stair
+        ] {
+            assert_eq!(factspace(m, n, z, k, c), want, "m {m} n {n} nnz {z} k {k} c {c}");
+        }
+    }
     use crate::scaling::Scaling;
     use crate::spx::Spx;
 

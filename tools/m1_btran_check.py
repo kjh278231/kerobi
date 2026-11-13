@@ -22,10 +22,10 @@ ER = (376, 0xc51dd)  # 9e376 called back to 28c93: the dual e_r BTRAN
 # Natural e_r calls whose output form (dense or not) differs; U^T path and D agree there. M1-02k pinned stair 102, 118;
 # M1-02x ported the sparse L^T test LU+0x140 < 0.1m (221173 C:265-268) and emptied it. Any difference fails.
 KNOWN_FORM = {}
-# First e_r call after a refactor (same pivot on both sides) whose LU+0x108 differs: the tail U rows of rsolver's factor
-# hold fewer entries than the original's (stair 1411 vs 1571 over m - t = 231); LU+0x110 and t agree. Pre-existing
-# factor difference, not the U^T test: the same-state range ends there.
-KNOWN_D = {'stair': 185}  # M1-01e: forplan 82 and bnl1 174 closed by the 2x2 block phase
+# First e_r call after a refactor (same pivot on both sides) whose LU+0x108 differs (a factor difference, not the U^T
+# test): the same-state range ends there. M1-01e closed forplan 82 and bnl1 174 (2x2 block phase), M1-02w-3 stair 185
+# (the refactor's dense switch).
+KNOWN_D = {}
 
 
 CB = {}

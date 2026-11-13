@@ -1,0 +1,27 @@
+M1-02w-3 mutations (tools/m1_dense_check.py replay, original bench/oracle/m1_02w3/formal run 1)
+
+Input mutants (--self-test, kept in the checker):
+- cap 1000000 for every call: 5/5 models rejected
+  grow15 call 28 (k 1020): next F+0x158 original 226935, Rust none (no shortage); dense original [] Rust [52]
+  grow22 call 18 (k 697): diag position 397 original 400b5e5f15b3bbc9 Rust 400b5e5f15b3bbc8
+  perold call 16 (k 697): diag position 586 original 3fe4769e49daa17a Rust 3fe4769e49daa17c
+  pilot4 call 6 (k 77): diag position 363 original bfe665ea3302f4f6 Rust bfe665ea3302f4f5
+  stair call 6 (k 185): diag position 312 original bfea5e91e34bcb1d Rust bfea5e91e34bcb1e
+- cap x10: 5/5 models rejected (same first differences)
+
+Rust mutant (temporary edit of crates/lp/src/lu.rs, reverted, not committed):
+- local_70 dense switch alignment flipped (`pl.p3 % 2 == 0` -> 8): grow15 31/32 (call 29 k 1020: diag position 260
+  original 3fe279c2040d6424 Rust 3fe279c2040d6426), grow22 27/34 (call 18 k 697: diag position 397); perold, pilot4,
+  stair unaffected (no local_70 dense switch)
+
+Comparison rule change found during the run (docs/m1/m1_02w3_dense.md section 6): before it the two -1 calls failed
+  grow15 call 28 (k 1020): lu original [2, 8, 7] Rust [2, 8, 0]; mode70 original True Rust False
+  grow22 call 20 (k 781): lu original [0, 25, 11] Rust [0, 25, 0]; mode70 original True Rust False
+
+Engine retry (temporary edits of crates/lp/src/simplex.rs refactor(), reverted; tools/m1_dense_check.py --rust chain):
+- `continue` after a shortage removed: NOT rejected, equivalent mutant: the aborted Lu is incomplete with an empty
+  singular list, so the singular-repair branch changes nothing and the loop calls factor_dense again with the same head
+  and the new pool size (chain ok, grow15 / grow22 one Rust shortage each)
+- shortage size always x1.5 (Grow treated as Keep): rejected
+  grow15: Rust chain at factor 28: previous x2c0 28 cap 131899 short 215271, next x2c0 28 cap 197848
+  grow22: Rust chain at factor 37: previous x2c0 37 cap 193844 short 285808, next x2c0 37 cap 290766

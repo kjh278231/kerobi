@@ -87,6 +87,9 @@ pub struct Engine<'a> {
     /// The `1da0b2` 2×2 block-phase state on S (S+0x2c0/0x4e0/0x4e4): one S per run starting at 0 (LU2X2BLOCK
     /// default, `02f7e1` C:270–281), x2c0 raised once per `05b257` factorization (C:1399).
     pub block: BlockState,
+    /// LU pool size F+0x158 (`036ade` dense switch alignment): `045a76` FactSpace at the start, regrown by pool
+    /// shortages (`05b257` C:1479–1513) and kept across factorizations of the same S.
+    pub pool: i64,
     in_dual: bool,
     /// Columns refused as entering after a pivot mismatch on a fresh factorization; cleared after a pivot.
     rejected: Vec<bool>,
@@ -174,6 +177,9 @@ impl<'a> Engine<'a> {
             primal_switch: true,
             markowitz_tol: crate::lu::MARKOWITZ_TOL,
             block: BlockState { x2c0: 0, x4e0: 0, x4e4: 0 },
+            // shortcut: SIMPLEXALLOCS 5 (default) and c = 0 (no model counter: a warm start re-solve of a model whose
+            // pool regrew starts larger in the original, M1-02w-2 §6); wire both when that path is needed.
+            pool: crate::lu::factspace(m, n, spx.len.iter().map(|&l| l as usize).sum(), 5, 0),
             in_dual: false,
             rejected: vec![false; n + m],
             trace: Vec::new(),
@@ -224,11 +230,16 @@ impl<'a> Engine<'a> {
         let head0 = self.head.clone();
         self.block.x2c0 += 1;
         loop {
-            let enter = self.block;
-            self.lu = Lu::factor_block(self.spx, &self.head, self.markowitz_tol, &mut self.block);
-            self.block_probe(enter);
+            let (enter, cap) = (self.block, self.pool);
+            self.lu = Lu::factor_dense(self.spx, &self.head, self.markowitz_tol, &mut self.block, cap);
+            self.block_probe(enter, cap);
             self.work.factor(&self.lu.factor_work());
             self.fac_nnz = self.lu.factor_nnz();
+            // 05b257 C:1479–1513: a pool shortage (−1) regrows F+0x158 and calls 036ade again (S+0x2c0 not raised)
+            if let Some(s) = self.lu.short {
+                self.pool = s.next_cap(cap);
+                continue;
+            }
             if self.lu.complete() {
                 {
                     // renumber positions as the original does after every factorization; position-indexed
@@ -276,14 +287,19 @@ impl<'a> Engine<'a> {
     }
 
     /// `RSOLVER_BLOCK_PROBE=<file>` (M1-01e): one JSON line per factor with the basis head, the block state at entry
-    /// and exit, the singular count and LU+0xd8/0xdc/0xe0/0xe4/0x100 (tools/m1_block_check.py).
-    fn block_probe(&self, enter: BlockState) {
+    /// and exit, the singular count and LU+0xd8/0xdc/0xe0/0xe4/0x100 (tools/m1_block_check.py); M1-02w-3 adds the
+    /// pool size F+0x158 at entry, the pool size after a shortage (−1 return, else null), the dense switch's n and
+    /// whether the `local_70` mode was entered (tools/m1_dense_check.py).
+    fn block_probe(&self, enter: BlockState, cap: i64) {
         let Ok(path) = std::env::var("RSOLVER_BLOCK_PROBE") else { return };
         use std::io::Write;
         let (b, lu) = (self.block, self.lu.block_fields());
+        let short = self.lu.short.map_or("null".to_string(), |s| s.next_cap(cap).to_string());
+        let dense = self.lu.dense.as_ref().map_or("null".to_string(), |d| d.n.to_string());
         let line = format!(
-            "{{\"iter\":{},\"head\":{:?},\"enter\":[{},{},{}],\"leave\":[{},{}],\"rc\":{},\"lu\":{:?}}}\n",
-            self.iter, self.head, enter.x2c0, enter.x4e0, enter.x4e4, b.x4e0, b.x4e4, self.lu.singular.len(), lu
+            "{{\"iter\":{},\"head\":{:?},\"enter\":[{},{},{}],\"leave\":[{},{}],\"rc\":{},\"lu\":{:?},\"cap\":{cap},\"short\":{short},\"dense\":{dense},\"mode70\":{}}}\n",
+            self.iter, self.head, enter.x2c0, enter.x4e0, enter.x4e4, b.x4e0, b.x4e4, self.lu.singular.len(), lu,
+            self.lu.pool_trace.iter().any(|e| e.kind == "mode70")
         );
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
             let _ = f.write_all(line.as_bytes());
@@ -2087,6 +2103,7 @@ fn solve_model_run(
         let mut e2 = Engine::new(&sp2);
         e2.iter = e.iter;
         e2.block = e.block; // the same S: the unscaled check continues the block-phase state
+        e2.pool = e.pool; // and its LU pool size (same F; not compared with the original)
         e2.iter_limit = iter_limit;
         e2.deadline = deadline;
         e2.trace_on = want_trace;

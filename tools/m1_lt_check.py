@@ -22,15 +22,18 @@ BINARY = '8e87fca221fdffc922331c8619426031b3e72dfd419446422f88af0cb0e98f9c'
 MODELS = ['stair', 'degen2', 'fit1p', 'bnl1']
 ER = (376, 0xc51dd)
 # M1-02k pinned first e_r call whose LU+0x108 differs after a refactor (M1-02w): the same-state range ends there
-KNOWN_D = {'stair': 185, 'bnl1': 174}
+KNOWN_D = {'bnl1': 174}
 # where the r / row eta count match ends without a pinned LU+0x108 call (a shorter range fails)
-RANGE = {'degen2': 356, 'fit1p': 117}
+RANGE = {'degen2': 356, 'fit1p': 117, 'stair': 356}
 # Pre-existing e_r output differences inside the range, the same with the LU+0x140 test removed (M1-02x §6,
 # bench/oracle/m1_02x/diffs_*.txt). The stair values (from call 31) were the FT new diagonal's eta alignment, fixed in
 # M1-02y; left: bnl1 level-path order (same rows; the moved row 587 differs by <= 9e-16 relative in 4 of 7), the
 # refactor numbering of M1-02z. Pinned exactly: a pinned call that agrees or any other difference fails. Form and
 # LU+0x140 are compared on every call.
-KNOWN_VAL = {}
+# M1-02w-3 (dense switch on): stair e_r 347-355 differ in value bits only (call 347 output 0: 175 ulp). The pivot-337
+# dense refactor is bit-equal (m1_dense_check replay diagonal, natural LU fields) and 9 updates after it agree
+# (m1_diag_peel_check); the first difference is this BTRAN, then the pivot-347 FT diagonal. Cause open: M1-02w-4.
+KNOWN_VAL = {'stair': [347, 348, 349, 350, 351, 352, 353, 354, 355]}
 KNOWN_IDX = {}  # M1-01e: the bnl1 order differences (130 ... 173) were the 2x2 block phase (M1-02z)
 WRAP, M, NNZ, X180, R, OUT, X140, HIT, IDX, VAL = 0, 1, 2, 5, 8, 10, 11, 12, 13, 14
 
@@ -210,7 +213,7 @@ def tampers(data, routs):
             'Rust etas': t(lambda d, r: r['fit1p'][3].update(e=99)),
             'bnl1 e_r 130 other rows': t(lambda d, r: r['bnl1'][130]['idx'].__setitem__(0, 9999)),
             'no target in range': t(lambda d, r: [[e.__setitem__(HIT, None) for e in
-                                                   [x for x in c['events'] if tuple(x[WRAP][:2]) == ER][:KNOWN_D['stair']]
+                                                   [x for x in c['events'] if tuple(x[WRAP][:2]) == ER][:RANGE['stair']]
                                                    if e[HIT] is not None and is_tgt(e)] for c in d['stair']['caps']]),
         })
     return out
