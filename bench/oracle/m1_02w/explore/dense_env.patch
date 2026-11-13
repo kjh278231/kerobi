@@ -1,0 +1,16 @@
+diff --git a/crates/lp/src/simplex.rs b/crates/lp/src/simplex.rs
+index 9ecc4c2..e6cf59e 100644
+--- a/crates/lp/src/simplex.rs
++++ b/crates/lp/src/simplex.rs
+@@ -225,7 +225,10 @@ impl<'a> Engine<'a> {
+         self.block.x2c0 += 1;
+         loop {
+             let enter = self.block;
+-            self.lu = Lu::factor_block(self.spx, &self.head, self.markowitz_tol, &mut self.block);
++            self.lu = match std::env::var("RSOLVER_DENSE_CAP").ok().and_then(|s| s.parse::<i64>().ok()) {
++                Some(cap) => Lu::factor_dense(self.spx, &self.head, self.markowitz_tol, &mut self.block, cap),
++                None => Lu::factor_block(self.spx, &self.head, self.markowitz_tol, &mut self.block),
++            };
+             self.block_probe(enter);
+             self.work.factor(&self.lu.factor_work());
+             self.fac_nnz = self.lu.factor_nnz();
