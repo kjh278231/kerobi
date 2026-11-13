@@ -153,6 +153,8 @@ decomp를 옮긴 코드는 Gurobi 코드의 2차적 저작물이다. 저장소�
 
 ### 9.2 지금 상태 (2026-11-06)
 
+이 절은 2026-11-06 측정이다. 그 뒤 수치는 [11_progress.md](11_progress.md)의 M1-02* 항목과 [13_work_units.md](13_work_units.md)의 M1-02 행을 본다.
+
 범위(goal 갱신): simplex 엔진(dual·primal, Markowitz·FT LU, crash, Quad, 필요한 common). LP 드라이버(`0c3d0d`)·파라미터 표·Presolve=1 경로는 'M1 LP 드라이버' 탭(`rsolver-presolve` worktree, 브랜치 `m1-lp-driver`)이 맡는다.
 
 코드(`crates/lp`):

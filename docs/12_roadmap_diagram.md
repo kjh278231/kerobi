@@ -16,7 +16,7 @@ M3-04c-24 실제 Rust 직렬 backend를 push 루프에 설치했다(계약 범�
 
 M3-04c-22 초기화된 직렬 push 루프를 연결했다(계약 범위 통과). `crossover_loop::push_loop`이 첫 패스 준비(`0x1c1ff8`) 직전 상태에서 패스 준비·공급자·단계 선택/적용·승인/보류·지원 BTRAN(dense면 round)·factor 판단/wrapper·pivot 재계산·품질 주기·고갈 gate·지원 gate/압축·round factor·재계산·요청 지우기를 C 1143–2418 순서로 잇고, 재분해 뒤 header·vstat·S+0x2f8 재번호(`05b257` C:2036–2090)를 backend 순열로 적용한다. `crossover_factor`에는 재계산 뒤 품질 검사부터 재개하는 `factor_resume`만 더했다. 수치 결과(공급 FTRAN·지원 BTRAN·`05b257` 반환/카운터/통계/순열·재계산 FTRAN)는 21e 캡처의 출력 tape이며 원본 상태 재주입은 0회다. 자연 6사례(arms·retry·interior·adlittle·scsd1·capri)에서 **719줄·5,502필드**(패스14·공급119·단계107·BTRAN32(dense2)·판단67·`05b257` 49·재계산13·round12·종료6)가 비트/정확 일치했고, trace 변조103 전부 거부, Rust 변이25 중 거부18·생존7(재계산 전후 위반 수 동일·ratio 요청 항상 0·품질 주기 50 고정 등 자연 미경유 경로), workspace 144통과·clippy0, 선행 L1 재생 회귀 통과. 실제 Rust LU를 루프에 설치하는 검증은 M3-04c-24, 초기화·해 설치·batch·품질 수치는 미검증이다. [기록](m3/primal_push_loop_rust.md)
 
-M3-04c-21h `1da0b2` 2×2 블록 단계를 이식했다(계약 범위 통과). M1 `Lu`에 상태 입력형 `factor_block`(S+0x2c0/0x4e0/0x4e4)과 블록 단계(C:681–1510: 행 쌍 A·열 쌍 B의 체인 해시 짝짓기, |a| 큰 쪽 첫 피벗, Schur |s| ≥ 1e-10 수용, 블록 뒤 singleton 스택, 상태 갱신 C:1494–1510)를 C 그대로 옮겼고 F+0xe4는 블록 전 단계 수다. 블록 상태는 21e 훅 경계에 읽기만 더한 새 캡처(7사례 × 3회, 21e 투영 비간섭, 변조14 거부)로 얻었다: push의 S는 (1,0,0)에서 시작하고 블록 단계는 capri 3회만 돈다. 첫 push 재분해 상태만 넣고 이후 Rust 연쇄로 재생해 **재분해 19/19·219/219연산**이 원본과 비트 일치했다(필드 1,262,508, 예상 실패 0). 21g 예상 실패 capri 23회째는 **B 단계** 블록 {행 218, 217}×{위치 152, 206}과 열 singleton 1개였다. trace 변조54 거부, Rust 변이23 중 거부12(필수 `block-phase-skipped` 포함)·생존11(A 단계 피벗 0회 등 자연 미경유 분기), A·B 합성 단위 테스트는 B = LU 정합성만 확인했다. M1 simplex는 블록 단계를 끈 채라 결과 불변이며, M1에서 켜는 일과 t = s3 정정은 **M1-02z**로 넘긴다. 원본 실행22회, 독립 검토자 미사용. 다음은 **M3-04c-22 push 루프 연결**이다. [계약과 결과](m3/primal_push_block_rust.md).
+M3-04c-21h `1da0b2` 2×2 블록 단계를 이식했다(계약 범위 통과). M1 `Lu`에 상태 입력형 `factor_block`(S+0x2c0/0x4e0/0x4e4)과 블록 단계(C:681–1510: 행 쌍 A·열 쌍 B의 체인 해시 짝짓기, |a| 큰 쪽 첫 피벗, Schur |s| ≥ 1e-10 수용, 블록 뒤 singleton 스택, 상태 갱신 C:1494–1510)를 C 그대로 옮겼고 F+0xe4는 블록 전 단계 수다. 블록 상태는 21e 훅 경계에 읽기만 더한 새 캡처(7사례 × 3회, 21e 투영 비간섭, 변조14 거부)로 얻었다: push의 S는 (1,0,0)에서 시작하고 블록 단계는 capri 3회만 돈다. 첫 push 재분해 상태만 넣고 이후 Rust 연쇄로 재생해 **재분해 19/19·219/219연산**이 원본과 비트 일치했다(필드 1,262,508, 예상 실패 0). 21g 예상 실패 capri 23회째는 **B 단계** 블록 {행 218, 217}×{위치 152, 206}과 열 singleton 1개였다. trace 변조54 거부, Rust 변이23 중 거부12(필수 `block-phase-skipped` 포함)·생존11(A 단계 피벗 0회 등 자연 미경유 분기), A·B 합성 단위 테스트는 B = LU 정합성만 확인했다. M1 simplex는 블록 단계를 끈 채라 결과 불변이며, M1에서 켜는 일과 t = s3 정정은 **M1-01e**로 넘긴다. 원본 실행22회, 독립 검토자 미사용. 다음은 **M3-04c-22 push 루프 연결**이다. [계약과 결과](m3/primal_push_block_rust.md).
 
 M3-04c-21g push 재분해 factor 생성을 구현했다(계약 범위 통과, 사전 명시 예상 실패 1재분해). M1 `Lu::factor_tol`(`1da0b2` singleton 단계와 `036ade` Markowitz 커널)을 동작 변경 없이 부르고, 결과를 원본 배열 표현(순열·대각·L 열/행과 레벨·U 열/행의 풀 위치·스칼라·접두·F1a0)으로 옮기는 `crossover_refactor` adapter를 만들어 21f 연쇄의 재분해 주입점을 없앴다. push 자연 7사례 재분해 19회 중 18회(삼각 9·커널 9, L/Lᵀ 레벨 2)의 factor 전체가 원본과 비트 일치하고, 그 위에서 FT 36·FTRAN 119·BTRAN 32가 원본 factor 재주입 없이 일치했다(211/213연산, 필드 1,234,852). 나머지 capri 23회째 재분해는 원본이 `1da0b2` 2×2 블록 단계(활성 ≥ 50, 상태 S+0x4e0/0x4e4)로 피벗해 계약 전에 예상 실패로 명시했고 실제로 그 재분해와 다음 FTRAN에서 실패한다. 원본 F+0x100(t)는 열 singleton 단계 3의 끝(s3)인데 M1은 앞쪽 빈 U 열 수로 세서 adlittle에서 어긋났다. adapter는 s3를 쓰고 M1은 바꾸지 않았다. trace 변조42·Rust 변이23 전부 거부, workspace139통과·ignored12·clippy0, 원본 실행0회, 독립 검토자 미사용. 다음은 **M3-04c-21h 2×2 블록 단계(M1 조율)** 또는 **M3-04c-22 push 루프 연결**이다. [계약과 결과](m3/primal_push_refactor_rust.md).
 
@@ -202,7 +202,7 @@ M2-03c-2 재풀이 basis 오라클을 완료했다. 입력 basis는 노드에 �
 
 M2-03c-1은 **부분 완료**다(main 병합). 사용자 결정으로 계약을 바꿨다. Gurobi 원본에서 자연 상태 12 재풀이 2건(비루트·루트)의 입출력·파라미터 복구·basis 입력/header, 합성 5→12 재분류, 상태 3 호출자 `682037`을 각 3회 검증했다. 병합 전 원본 33회 재실행에서 비교 30건이 모두 일치했다. 재풀이 후 VBasis·입력 basis 출처·factor/norm은 M2-03c-2로 분리했다. 상태 10·자연 5→12(정상 산술에서 불가능, 미관측)는 미검증이다. Rust는 변경하지 않았고 동등성은 미검증이다. 상세는 [M2-03c-1](m2/mip_linear_child_trace.md) §10–13.
 
-상태: ✅ 완료 · 🔄 진행 · 🔎 에이전트 검증 완료·병합 대기 · ⏳ 예정 (2026-11-10 기준. main에 병합된 구현과 남은 작업을 표시한다. 세부 기록은 [11_progress.md](11_progress.md), 심플렉스 최신 검증은 [10_porting.md §9.2](10_porting.md))
+상태: ✅ 완료 · 🔄 진행 · 🔎 에이전트 검증 완료·병합 대기 · ⏳ 예정 (2026-11-13 기준. main에 병합된 구현과 남은 작업을 표시한다. 세부 기록은 [11_progress.md](11_progress.md), 심플렉스 최신 검증은 [10_porting.md §9.2](10_porting.md))
 
 M1·M2·M3의 세부 작업 번호, 상태와 확인 방법은 [작업 단위 목록](13_work_units.md)에 있다. G1~G6은 기존 검증 관문이다.
 
@@ -229,7 +229,7 @@ flowchart TD
 
     subgraph M1["M1 LP 엔진"]
         PRE["✅ LP presolve·postsolve<br/>64/64"]:::done
-        SPX["🔄 심플렉스 G1<br/>정답 64/64 · 반복 수 29/64(02f 뒤 lp_check)<br/>kb2 β 원본 합산(02b) · BFRT 재훑기(02e 원인, 02f Rust)"]:::doing
+        SPX["🔄 심플렉스 G1<br/>Method 1(02y 뒤): 정답 90/91(pilot 회귀, 02y-2) · 반복 수 일치 32/64 · 경로 완전 일치 27/64<br/>work 계수기(02q·02r·02s·02v) 값 비트 일치 · 재분해 판정 미연결<br/>다음 02z·02w → 02y-2 → 02t → 02u"]:::doing
         DRV["🔄 LP 드라이버 G5<br/>main 병합 · 수치 차이 확인 남음"]:::doing
         GATE1["⏳ M1 관문<br/>병합 + 속도 비교표"]:::todo
     end
@@ -242,7 +242,7 @@ flowchart TD
 
     subgraph M2["M2 MIP 엔진"]
         MPRE["✅ MIP presolve G6<br/>모델·sweep·레코드 별도 검증 38/38<br/>main 병합"]:::done
-        BNB["🔄 B&B 진행 중<br/>38개 첫 기준 측정<br/>무계 재분류·대체 분기 조사 완료<br/>실제 자식 오라클 예정"]:::doing
+        BNB["🔄 B&B 진행 중<br/>38개 첫 기준 측정<br/>무계 재분류·대체 분기 조사 완료<br/>노드 선택(힙·plunge)·pseudocost·SB 모듈 L1 통과 · bnb.rs 미연결<br/>다음 06h-6 · 연결 전 M2-10b 필요"]:::doing
         CUT["⏳ Cut separator"]:::todo
         HEU["🔄 휴리스틱<br/>main 구현"]:::doing
         PROP["🔄 전파<br/>main 구현"]:::doing

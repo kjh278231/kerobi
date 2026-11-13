@@ -5,3 +5,4 @@ __pycache__/
 .pi-run/
 bench/gurobi_rerun/
 bench/*.log
+.env
