@@ -5,13 +5,13 @@ terms there is no full lane block, so the lane sum equals the sequential one.)
 usage (worktree root): python3 bench/oracle/m1_02y/mutate.py"""
 import os, subprocess
 SIM, LU = 'crates/lp/src/simplex.rs', 'crates/lp/src/lu.rs'
-PEEL = 'lu_peel: (interval + n) % 2 == 0,'
+PEEL = 'lu_peel: (interval + n).is_multiple_of(2),'
 DIAG = 'diag = dot8_peel(eta.iter().map(|&(i, e)| spike[i] * e), diag_peel);'
 MUT = {
     'never peel': (SIM, PEEL, 'lu_peel: false,'),
     'always peel': (SIM, PEEL, 'lu_peel: true,'),
-    'inverted parity': (SIM, PEEL, 'lu_peel: (interval + n) % 2 == 1,'),
-    'interval after the Full-pricing cap': (SIM, PEEL, 'lu_peel: (((m as f64).powf(0.65) as usize).max(20) + n) % 2 == 0,'),
+    'inverted parity': (SIM, PEEL, 'lu_peel: !(interval + n).is_multiple_of(2),'),
+    'interval after the Full-pricing cap': (SIM, PEEL, 'lu_peel: (((m as f64).powf(0.65) as usize).max(20) + n).is_multiple_of(2),'),
     'diagonal ignores the flag (flag reported right)': (LU, DIAG, DIAG.replace('diag_peel);', 'false);')),
 }
 srcs = {f: open(f).read() for f in (SIM, LU)}

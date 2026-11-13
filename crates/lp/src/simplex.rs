@@ -151,7 +151,7 @@ impl<'a> Engine<'a> {
             deadline: None,
             trace_on: true,
             lu_interval: interval,
-            lu_peel: (interval + n) % 2 == 0,
+            lu_peel: (interval + n).is_multiple_of(2),
             perturbed: false,
             nondeg_flip: false,
             pert_size: 2e-4,
